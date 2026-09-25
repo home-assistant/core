@@ -2,9 +2,9 @@
 
 from copy import deepcopy
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.components.rest import create_rest_data_from_config
@@ -15,11 +15,7 @@ from homeassistant.components.rest.schema import (  # pylint: disable=home-assis
     DEFAULT_METHOD,
     METHODS,
 )
-from homeassistant.components.sensor import (
-    CONF_STATE_CLASS,
-    SensorDeviceClass,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import CONF_STATE_CLASS, DEVICE_CLASS_UNITS
 from homeassistant.config_entries import (
     SOURCE_USER,
     ConfigEntry,
@@ -48,11 +44,13 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
-    UnitOfTemperature,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    DeviceClassSelector,
+    DeviceClassSelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -60,6 +58,7 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    StateClassSelector,
     TemplateSelector,
     TextSelector,
     TextSelectorConfig,
@@ -69,7 +68,7 @@ from homeassistant.helpers.trigger_template_entity import CONF_AVAILABILITY
 
 from . import COMBINED_SCHEMA
 from .const import (
-    CONF_ADVANCED,
+    CONF_ADDITIONAL,
     CONF_AUTH,
     CONF_ENCODING,
     CONF_INDEX,
@@ -82,19 +81,19 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-RESOURCE_SETUP = vol.Schema(
+RESOURCE_SETUP = probatio.Schema(
     {
-        vol.Required(CONF_RESOURCE): TextSelector(
+        probatio.Required(CONF_RESOURCE): TextSelector(
             TextSelectorConfig(type=TextSelectorType.URL)
         ),
-        vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): SelectSelector(
+        probatio.Optional(CONF_METHOD, default=DEFAULT_METHOD): SelectSelector(
             SelectSelectorConfig(options=METHODS, mode=SelectSelectorMode.DROPDOWN)
         ),
-        vol.Optional(CONF_PAYLOAD): ObjectSelector(),
-        vol.Required(CONF_AUTH): data_entry_flow.section(
-            vol.Schema(
+        probatio.Optional(CONF_PAYLOAD): ObjectSelector(),
+        probatio.Required(CONF_AUTH): data_entry_flow.section(
+            probatio.Schema(
                 {
-                    vol.Optional(CONF_AUTHENTICATION): SelectSelector(
+                    probatio.Optional(CONF_AUTHENTICATION): SelectSelector(
                         SelectSelectorConfig(
                             options=[
                                 HTTP_BASIC_AUTHENTICATION,
@@ -103,12 +102,12 @@ RESOURCE_SETUP = vol.Schema(
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
-                    vol.Optional(CONF_USERNAME): TextSelector(
+                    probatio.Optional(CONF_USERNAME): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.TEXT, autocomplete="username"
                         )
                     ),
-                    vol.Optional(CONF_PASSWORD): TextSelector(
+                    probatio.Optional(CONF_PASSWORD): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -118,17 +117,19 @@ RESOURCE_SETUP = vol.Schema(
             ),
             data_entry_flow.SectionConfig(collapsed=True),
         ),
-        vol.Required(CONF_ADVANCED): data_entry_flow.section(
-            vol.Schema(
+        probatio.Required(CONF_ADDITIONAL): data_entry_flow.section(
+            probatio.Schema(
                 {
-                    vol.Optional(CONF_HEADERS): ObjectSelector(),
-                    vol.Optional(
+                    probatio.Optional(CONF_HEADERS): ObjectSelector(),
+                    probatio.Optional(
                         CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
                     ): BooleanSelector(),
-                    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): NumberSelector(
+                    probatio.Optional(
+                        CONF_TIMEOUT, default=DEFAULT_TIMEOUT
+                    ): NumberSelector(
                         NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
                     ),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_ENCODING, default=DEFAULT_ENCODING
                     ): TextSelector(),
                 }
@@ -138,47 +139,37 @@ RESOURCE_SETUP = vol.Schema(
     }
 )
 
-SENSOR_SETTINGS = vol.Schema(
+SENSOR_SETTINGS = probatio.Schema(
     {
-        vol.Required(CONF_SELECT): TextSelector(),
-        vol.Optional(CONF_INDEX, default=0): vol.All(
+        probatio.Required(CONF_SELECT): TextSelector(),
+        probatio.Optional(CONF_INDEX, default=0): probatio.All(
             NumberSelector(
                 NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
-        vol.Required(CONF_ADVANCED): data_entry_flow.section(
-            vol.Schema(
+        probatio.Required(CONF_ADDITIONAL): data_entry_flow.section(
+            probatio.Schema(
                 {
-                    vol.Optional(CONF_ATTRIBUTE): TextSelector(),
-                    vol.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
-                    vol.Optional(CONF_AVAILABILITY): TemplateSelector(),
-                    vol.Optional(CONF_DEVICE_CLASS): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[
-                                cls.value
-                                for cls in SensorDeviceClass
-                                if cls != SensorDeviceClass.ENUM
-                            ],
-                            mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="device_class",
-                            sort=True,
-                        )
+                    probatio.Optional(CONF_ATTRIBUTE): TextSelector(),
+                    probatio.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
+                    probatio.Optional(CONF_AVAILABILITY): TemplateSelector(),
+                    probatio.Optional(CONF_DEVICE_CLASS): DeviceClassSelector(
+                        DeviceClassSelectorConfig(domain=Platform.SENSOR)
                     ),
-                    vol.Optional(CONF_STATE_CLASS): SelectSelector(
+                    probatio.Optional(CONF_STATE_CLASS): StateClassSelector(),
+                    probatio.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
                         SelectSelectorConfig(
-                            options=[cls.value for cls in SensorStateClass],
+                            options=list(
+                                {
+                                    str(unit)
+                                    for units in DEVICE_CLASS_UNITS.values()
+                                    for unit in units
+                                    if unit is not None
+                                }
+                            ),
                             mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="state_class",
-                            sort=True,
-                        )
-                    ),
-                    vol.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[cls.value for cls in UnitOfTemperature],
                             custom_value=True,
-                            mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="unit_of_measurement",
                             sort=True,
                         )
                     ),
@@ -188,10 +179,10 @@ SENSOR_SETTINGS = vol.Schema(
         ),
     }
 )
-SENSOR_SETUP = vol.Schema(
+SENSOR_SETUP = probatio.Schema(
     # Name field is no longer allowed in config flow schemas
     # pylint: disable-next=home-assistant-config-flow-name-field
-    {vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector()}
+    {probatio.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector()}
 ).extend(SENSOR_SETTINGS.schema)
 
 
@@ -200,7 +191,7 @@ async def validate_rest_setup(
 ) -> dict[str, Any]:
     """Validate rest setup."""
     config = deepcopy(user_input)
-    config.update(config.pop(CONF_ADVANCED, {}))
+    config.update(config.pop(CONF_ADDITIONAL, {}))
     config.update(config.pop(CONF_AUTH, {}))
     rest_config: dict[str, Any] = COMBINED_SCHEMA(config)
     try:
@@ -217,22 +208,25 @@ async def validate_rest_setup(
 class ScrapeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Scrape configuration flow."""
 
-    VERSION = 2
+    VERSION = 3
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> ScrapeOptionFlow:
         """Get the options flow for this handler."""
         return ScrapeOptionFlow()
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {"entity": ScrapeSubentryFlowHandler}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -252,6 +246,7 @@ class ScrapeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
         """Start subentry flow after creating main entry."""
         subentry_result = await self.hass.config_entries.subentries.async_init(

@@ -2,12 +2,12 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pynuki import NukiBridge
 from pynuki.bridge import InvalidCredentialsException
 from requests.exceptions import RequestException
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
@@ -19,18 +19,18 @@ from .helpers import CannotConnect, InvalidAuth, parse_id
 
 _LOGGER = logging.getLogger(__name__)
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
-        vol.Required(CONF_TOKEN): str,
+        probatio.Required(CONF_HOST): str,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Coerce(int),
+        probatio.Required(CONF_TOKEN): str,
     }
 )
 
-REAUTH_SCHEMA = vol.Schema(
+REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TOKEN): str,
-        vol.Optional(CONF_ENCRYPT_TOKEN, default=True): bool,
+        probatio.Required(CONF_TOKEN): str,
+        probatio.Optional(CONF_ENCRYPT_TOKEN, default=True): bool,
     }
 )
 
@@ -68,15 +68,17 @@ class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the Nuki config flow."""
-        self.discovery_schema: vol.Schema | None = None
+        self.discovery_schema: probatio.Schema | None = None
         self._data: Mapping[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         return await self.async_step_validate(user_input)
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -85,11 +87,11 @@ class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._abort_if_unique_id_configured()
 
-        self.discovery_schema = vol.Schema(
+        self.discovery_schema = probatio.Schema(
             {
-                vol.Required(CONF_HOST, default=discovery_info.ip): str,
-                vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-                vol.Required(CONF_TOKEN): str,
+                probatio.Required(CONF_HOST, default=discovery_info.ip): str,
+                probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                probatio.Required(CONF_TOKEN): str,
             }
         )
 
@@ -157,7 +159,7 @@ class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             data_schema = USER_SCHEMA.extend(
                 {
-                    vol.Optional(CONF_ENCRYPT_TOKEN, default=True): bool,
+                    probatio.Optional(CONF_ENCRYPT_TOKEN, default=True): bool,
                 }
             )
             try:

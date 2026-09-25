@@ -1,9 +1,9 @@
 """Config flow to configure the GeoNet NZ Quakes integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -24,12 +24,12 @@ from .const import (
     DOMAIN,
 )
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_MMI, default=DEFAULT_MMI): vol.All(
-            vol.Coerce(int), vol.Range(min=-1, max=8)
+        probatio.Optional(CONF_MMI, default=DEFAULT_MMI): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=-1, max=8)
         ),
-        vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int,
+        probatio.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int,
     }
 )
 
@@ -49,6 +49,7 @@ class GeonetnzQuakesFlowHandler(ConfigFlow, domain=DOMAIN):
         """Import a config entry from configuration.yaml."""
         return await self.async_step_user(import_data)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -124,6 +124,36 @@ async def test_communication_error_on_device_info(
     assert result["result"].data == {CONF_HOST: "192.168.1.50"}
 
 
+async def test_user_flow_no_device_data(hass: HomeAssistant, mock_prana_api) -> None:
+    """No data returned when fetching device info surfaces as a form error."""
+    mock_prana_api.get_device_info.return_value = None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.50"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert "invalid_device_or_unreachable" in result["errors"].values()
+
+    # Now simulating a successful fetch, without aborting
+    device_info = await async_load_fixture(hass, "device_info.json")
+    mock_prana_api.get_device_info.return_value = SimpleNamespace(**device_info)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.50"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == device_info["label"]
+    assert result["result"].unique_id == device_info["manufactureId"]
+    assert result["result"].data == {CONF_HOST: "192.168.1.50"}
+
+
 async def test_user_flow_already_configured(
     hass: HomeAssistant, mock_prana_api, mock_config_entry
 ) -> None:

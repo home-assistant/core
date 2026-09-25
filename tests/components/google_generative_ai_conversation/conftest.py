@@ -112,9 +112,7 @@ async def mock_init_component(
 ) -> AsyncGenerator[None]:
     """Initialize integration."""
     with patch("google.genai.models.AsyncModels.get"):
-        assert await async_setup_component(
-            hass, "google_generative_ai_conversation", {}
-        )
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield
 

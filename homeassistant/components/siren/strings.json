@@ -76,7 +76,7 @@
   "title": "Siren",
   "triggers": {
     "turned_off": {
-      "description": "Triggers after one or more sirens turn off.",
+      "description": "Triggers when one or more sirens turn off.",
       "fields": {
         "behavior": {
           "name": "[%key:component::siren::common::trigger_behavior_name%]"
@@ -88,7 +88,7 @@
       "name": "Siren turned off"
     },
     "turned_on": {
-      "description": "Triggers after one or more sirens turn on.",
+      "description": "Triggers when one or more sirens turn on.",
       "fields": {
         "behavior": {
           "name": "[%key:component::siren::common::trigger_behavior_name%]"

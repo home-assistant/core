@@ -2,9 +2,9 @@
 
 import logging
 from subprocess import STDOUT, CalledProcessError, check_output
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -22,9 +22,14 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_DEVICES): vol.All(
+        probatio.Required(CONF_DEVICES): probatio.All(
             cv.ensure_list,
-            [{vol.Required(CONF_ID): cv.string, vol.Required(CONF_NAME): cv.string}],
+            [
+                {
+                    probatio.Required(CONF_ID): cv.string,
+                    probatio.Required(CONF_NAME): cv.string,
+                }
+            ],
         )
     }
 )
@@ -77,6 +82,7 @@ class X10Light(LightEntity):
         """Return calculated brightness values."""
         return int((brightness / 255) * 32)
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         old_brightness = self._attr_brightness
@@ -113,6 +119,7 @@ class X10Light(LightEntity):
         x10_command(f"{command_prefix} {self._id}{command_suffix}")
         self._attr_is_on = True
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         if self._is_cm11a:

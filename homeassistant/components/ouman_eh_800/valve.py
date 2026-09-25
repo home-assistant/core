@@ -1,6 +1,7 @@
 """Valve platform for the Ouman EH-800 integration."""
 
 from dataclasses import dataclass
+from typing import override
 
 from ouman_eh_800_api import IntControlOumanEndpoint, L1BaseEndpoints, L2BaseEndpoints
 
@@ -72,12 +73,14 @@ class OumanEh800ValveEntity(OumanEh800Entity, ValveEntity):
     )
 
     @property
+    @override
     def current_valve_position(self) -> int:
         """Return the current valve position 0-100."""
         value = self.coordinator.data[self._endpoint]
         assert isinstance(value, float)
         return int(value)
 
+    @override
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to the given position."""
         await self.coordinator.async_set_endpoint_value(self._endpoint, position)

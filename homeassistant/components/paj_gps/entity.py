@@ -1,5 +1,7 @@
 """Base entity class for the PAJ GPS integration."""
 
+from typing import override
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -29,6 +31,7 @@ class PajGpsEntity(CoordinatorEntity[PajGpsCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return False when the device has been removed from the account."""
         return super().available and self._device_id in self.coordinator.data.devices

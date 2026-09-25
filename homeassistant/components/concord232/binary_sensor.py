@@ -2,11 +2,11 @@
 
 import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from concord232 import client as concord232_client
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -32,16 +32,18 @@ DEFAULT_PORT = 5007
 
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 
-ZONE_TYPES_SCHEMA = vol.Schema({cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA})
+ZONE_TYPES_SCHEMA = probatio.Schema(
+    {cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA}
+)
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_EXCLUDE_ZONES, default=[]): vol.All(
+        probatio.Optional(CONF_EXCLUDE_ZONES, default=[]): probatio.All(
             cv.ensure_list, [cv.positive_int]
         ),
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_ZONE_TYPES, default={}): ZONE_TYPES_SCHEMA,
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_ZONE_TYPES, default={}): ZONE_TYPES_SCHEMA,
     }
 )
 
@@ -120,11 +122,13 @@ class Concord232ZoneSensor(BinarySensorEntity):
         self._attr_device_class = zone_type
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the binary sensor."""
         return self._zone["name"]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         # True means "faulted" or "open" or "abnormal state"

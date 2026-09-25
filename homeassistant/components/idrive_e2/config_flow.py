@@ -1,12 +1,13 @@
 """IDrive e2 config flow."""
 
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
+from aiobotocore.config import AioConfig
 from aiobotocore.session import AioSession
 from botocore.exceptions import ClientError, ConnectionError
 from idrive_e2 import CannotConnect, IDriveE2Client, InvalidAuth
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import config_validation as cv
@@ -31,10 +32,10 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ACCESS_KEY_ID): cv.string,
-        vol.Required(CONF_SECRET_ACCESS_KEY): TextSelector(
+        probatio.Required(CONF_ACCESS_KEY_ID): cv.string,
+        probatio.Required(CONF_SECRET_ACCESS_KEY): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -51,6 +52,7 @@ async def _list_buckets(
         endpoint_url=endpoint_url,
         aws_access_key_id=access_key,
         aws_secret_access_key=secret_key,
+        config=AioConfig(warm_up_loader_caches=True),
     ) as client:
         result = await cast(Any, client).list_buckets()
 
@@ -63,6 +65,7 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
     _data: dict[str, str]
     _buckets: list[str]
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -136,9 +139,9 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
         # Show the bucket selection form with a dropdown selector
         return self.async_show_form(
             step_id="bucket",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_BUCKET): SelectSelector(
+                    probatio.Required(CONF_BUCKET): SelectSelector(
                         config=SelectSelectorConfig(
                             options=self._buckets, mode=SelectSelectorMode.DROPDOWN
                         )

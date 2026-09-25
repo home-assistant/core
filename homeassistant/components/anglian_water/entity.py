@@ -1,6 +1,7 @@
 """Anglian Water entity."""
 
 import logging
+from typing import override
 
 from pyanglianwater.meter import SmartMeter
 
@@ -35,11 +36,13 @@ class AnglianWaterEntity(CoordinatorEntity[AnglianWaterUpdateCoordinator]):
             serial_number=smart_meter.serial_number,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is loaded."""
         self.coordinator.api.updated_data_callbacks.append(self.async_write_ha_state)
         await super().async_added_to_hass()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """When will be removed from HASS."""
         self.coordinator.api.updated_data_callbacks.remove(self.async_write_ha_state)

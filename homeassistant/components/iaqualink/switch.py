@@ -1,6 +1,6 @@
 """Support for Aqualink pool feature switches."""
 
-from typing import Any
+from typing import Any, override
 
 from iaqualink.device import AqualinkSwitch
 
@@ -49,11 +49,13 @@ class HassAqualinkSwitch(AqualinkEntity[AqualinkSwitch], SwitchEntity):
             self._attr_icon = "mdi:radiator"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether the switch is on or not."""
         return self.dev.is_on
 
     @refresh_system
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await await_or_reraise(
@@ -61,6 +63,7 @@ class HassAqualinkSwitch(AqualinkEntity[AqualinkSwitch], SwitchEntity):
         )
 
     @refresh_system
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await await_or_reraise(

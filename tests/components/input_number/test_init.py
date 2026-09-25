@@ -3,8 +3,8 @@
 from typing import Any
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.input_number import (
     ATTR_VALUE,
@@ -19,6 +19,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import Unauthorized
@@ -133,7 +134,7 @@ async def test_set_value(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) 
     state = hass.states.get(entity_id)
     assert float(state.state) == 70
 
-    with pytest.raises(vol.Invalid) as excinfo:
+    with pytest.raises(probatio.Invalid) as excinfo:
         await set_value(hass, entity_id, "110")
 
     assert "Invalid value for input_number.test_1: 110.0 (range 0.0 - 100.0)" in str(
@@ -237,6 +238,28 @@ async def test_mode(hass: HomeAssistant) -> None:
     assert state.attributes["mode"] == "slider"
 
 
+async def test_unit_of_measurement(hass: HomeAssistant) -> None:
+    """Test unit of measurement is exposed in the state attributes."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "with_unit": {"min": 0, "max": 100, "unit_of_measurement": "°C"},
+                "without_unit": {"min": 0, "max": 100},
+            }
+        },
+    )
+
+    state = hass.states.get("input_number.with_unit")
+    assert state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
+
+    state = hass.states.get("input_number.without_unit")
+    assert state
+    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
+
+
 async def test_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
@@ -327,7 +350,7 @@ async def test_input_number_context(
 ) -> None:
     """Test that input_number context works."""
     assert await async_setup_component(
-        hass, "input_number", {"input_number": {"b1": {"min": 0, "max": 100}}}
+        hass, DOMAIN, {"input_number": {"b1": {"min": 0, "max": 100}}}
     )
 
     state = hass.states.get("input_number.b1")

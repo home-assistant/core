@@ -23,12 +23,13 @@ TEST_DEVICE_1_SN = "echo_test_serial_number"
 TEST_DEVICE_1_ID = "echo_test_device_id"
 TEST_DEVICE_1 = AmazonDevice(
     account_name="Echo Test",
-    capabilities=["AUDIO_PLAYER", "MICROPHONE"],
+    capabilities=["AUDIO_PLAYER", "MICROPHONE", "ALEXA_DEVICE_REBOOT"],
     device_family="mine",
     device_type="echo",
     household_device=False,
     device_owner_customer_id="amazon_ower_id",
     device_cluster_members={TEST_DEVICE_1_SN: TEST_DEVICE_1_ID},
+    parent_clusters={},
     online=True,
     serial_number=TEST_DEVICE_1_SN,
     manufacturer="Test manufacturer",
@@ -77,17 +78,24 @@ TEST_DEVICE_1 = AmazonDevice(
         ),
     },
     media_player_supported=True,
+    communication_settings={
+        "announcements": "ON",
+        "communications": "ON",
+        "dropin": "All",
+    },
+    voice_control_supported=True,
 )
 
 TEST_DEVICE_2_SN = "echo_test_2_serial_number"
 TEST_DEVICE_2 = AmazonDevice(
     account_name="Echo Test 2",
-    capabilities=["AUDIO_PLAYER", "MICROPHONE"],
+    capabilities=["AUDIO_PLAYER", "MICROPHONE", "ALEXA_DEVICE_REBOOT"],
     device_family="mine",
     device_type="echo",
     household_device=True,
     device_owner_customer_id="amazon_ower_id",
     device_cluster_members={TEST_DEVICE_2_SN: "echo_test_2_device_id"},
+    parent_clusters={},
     online=True,
     serial_number=TEST_DEVICE_2_SN,
     manufacturer="Test manufacturer 2",
@@ -109,6 +117,8 @@ TEST_DEVICE_2 = AmazonDevice(
     notifications_supported=False,
     notifications={},
     media_player_supported=False,
+    communication_settings={},
+    voice_control_supported=True,
 )
 
 TEST_VOCAL_RECORD_INITIAL = AmazonVocalRecord(
@@ -117,6 +127,8 @@ TEST_VOCAL_RECORD_INITIAL = AmazonVocalRecord(
     intent="PlayMusicIntent",
     title="Play some music",
     sub_title="Echo Test",
+    person_first_name="John",
+    person_type="CHILD",
 )
 
 TEST_VOCAL_RECORD_EVENT = AmazonVocalRecord(
@@ -125,4 +137,6 @@ TEST_VOCAL_RECORD_EVENT = AmazonVocalRecord(
     intent="PlayMusicIntent",
     title="Play some music",
     sub_title="Echo Test",
+    person_first_name="Jane",
+    person_type="ADULT",
 )

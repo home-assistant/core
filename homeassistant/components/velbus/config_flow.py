@@ -2,12 +2,12 @@
 
 from pathlib import Path
 import shutil
-from typing import Any, Final
+from typing import Any, Final, override
 
+import probatio
 import velbusaio.controller
 from velbusaio.exceptions import VelbusConnectionFailed
 from velbusaio.vlp_reader import VlpFile
-import voluptuous as vol
 
 from homeassistant.components import usb
 from homeassistant.components.file_upload import process_uploaded_file
@@ -60,6 +60,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             return False
         return True
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -113,12 +114,12 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="network",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_TLS): bool,
-                        vol.Required(CONF_HOST): str,
-                        vol.Required(CONF_PORT): int,
-                        vol.Optional(CONF_PASSWORD): str,
+                        probatio.Required(CONF_TLS): bool,
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Required(CONF_PORT): int,
+                        probatio.Optional(CONF_PASSWORD): str,
                     }
                 ),
                 suggested_values=user_input,
@@ -153,12 +154,15 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="usbselect",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema({vol.Required(CONF_PORT): vol.In(list_of_ports)}),
+                probatio.Schema(
+                    {probatio.Required(CONF_PORT): probatio.In(list_of_ports)}
+                ),
                 suggested_values=user_input,
             ),
             errors=step_errors,
         )
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB Discovery."""
         await self.async_set_unique_id(discovery_info.serial_number)
@@ -224,9 +228,9 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="vlp",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Optional(CONF_VLP_FILE): selector.FileSelector(
+                        probatio.Optional(CONF_VLP_FILE): selector.FileSelector(
                             config=selector.FileSelectorConfig(accept=".vlp")
                         ),
                     }

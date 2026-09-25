@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 from urllib.parse import urlparse
 
 from huawei_lte_api.Client import Client
@@ -15,9 +15,9 @@ from huawei_lte_api.exceptions import (
     ResponseErrorException,
 )
 from huawei_lte_api.Session import GetResponseType
+import probatio
 from requests.exceptions import SSLError, Timeout
 from url_normalize import url_normalize
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
@@ -69,6 +69,7 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: HuaweiLteConfigEntry,
     ) -> HuaweiLteOptionsFlow:
@@ -84,23 +85,23 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input = {}
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_URL,
                         default=user_input.get(CONF_URL, self.url or ""),
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_VERIFY_SSL,
                         default=user_input.get(
                             CONF_VERIFY_SSL,
                             False,
                         ),
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME) or ""
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_PASSWORD, default=user_input.get(CONF_PASSWORD) or ""
                     ): str,
                 }
@@ -118,12 +119,12 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME) or ""
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_PASSWORD, default=user_input.get(CONF_PASSWORD) or ""
                     ): str,
                 }
@@ -194,6 +195,7 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:
             _LOGGER.exception("Disconnect error")
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -220,18 +222,18 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
             client = Client(conn)
             try:
                 device_info = client.device.information()
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.debug("Could not get device.information", exc_info=True)
                 try:
                     device_info = client.device.basic_information()
-                except Exception:  # noqa: BLE001
+                except Exception:
                     _LOGGER.debug(
                         "Could not get device.basic_information", exc_info=True
                     )
                     device_info = {}
             try:
                 wlan_settings = client.wlan.multi_basic_settings()
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.debug("Could not get wlan.multi_basic_settings", exc_info=True)
                 wlan_settings = {}
             return device_info, wlan_settings
@@ -243,11 +245,14 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         assert conn
 
+        def _get_info_and_disconnect() -> tuple[dict, dict]:
+            result = get_device_info(conn)
+            self._disconnect(conn)
+            return result
+
         info, wlan_settings = await self.hass.async_add_executor_job(
-            get_device_info, conn
+            _get_info_and_disconnect
         )
-        # pylint: disable-next=home-assistant-sequential-executor-jobs
-        await self.hass.async_add_executor_job(self._disconnect, conn)
 
         user_input.update(
             {
@@ -273,6 +278,7 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=title, data=user_input)
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -380,29 +386,29 @@ class HuaweiLteOptionsFlow(OptionsFlow):
                 ]
             return self.async_create_entry(title="", data=data)
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
                 # Name field is no longer allowed in config flow schemas
                 # pylint: disable-next=home-assistant-config-flow-name-field
-                vol.Optional(
+                probatio.Optional(
                     CONF_NAME,
                     default=self.config_entry.options.get(
                         CONF_NAME, DEFAULT_NOTIFY_SERVICE_NAME
                     ),
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_RECIPIENT,
                     default=", ".join(
                         self.config_entry.options.get(CONF_RECIPIENT, [])
                     ),
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_TRACK_WIRED_CLIENTS,
                     default=self.config_entry.options.get(
                         CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
                     ),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_UNAUTHENTICATED_MODE,
                     default=self.config_entry.options.get(
                         CONF_UNAUTHENTICATED_MODE, DEFAULT_UNAUTHENTICATED_MODE

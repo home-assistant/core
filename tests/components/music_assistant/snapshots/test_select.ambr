@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'audio_sync_translation',
         'balanced_translation',
         'lip_sync_translation',
@@ -45,8 +45,8 @@
 # name: test_select_entities[select.test_player_1_link_audio_delay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Player 1 Link audio delay',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Player 1 Link audio delay',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'audio_sync_translation',
         'balanced_translation',
         'lip_sync_translation',

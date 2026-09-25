@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientConnectorError
 from pygti.exceptions import GTIError
@@ -167,11 +167,13 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return entity state."""
         return bool(self.coordinator.data[self.idx]["state"])
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -180,6 +182,7 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if not (

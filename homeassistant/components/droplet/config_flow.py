@@ -1,9 +1,9 @@
 """Config flow for Droplet integration."""
 
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pydroplet.droplet import DropletConnection, DropletDiscovery
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CODE, CONF_DEVICE_ID, CONF_IP_ADDRESS, CONF_PORT
@@ -23,6 +23,7 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _droplet_discovery: DropletDiscovery
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -71,9 +72,9 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         return self.async_show_form(
             step_id="confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_CODE): str,
+                    probatio.Required(CONF_CODE): str,
                 }
             ),
             description_placeholders={
@@ -82,6 +83,7 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -114,8 +116,11 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_IP_ADDRESS): str, vol.Required(CONF_CODE): str}
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_IP_ADDRESS): str,
+                    probatio.Required(CONF_CODE): str,
+                }
             ),
             errors=errors,
         )

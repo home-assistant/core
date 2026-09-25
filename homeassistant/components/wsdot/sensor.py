@@ -2,9 +2,9 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 import wsdot as wsdot_api
 
 from homeassistant.components.sensor import (
@@ -33,9 +33,12 @@ SCAN_INTERVAL = timedelta(minutes=3)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_TRAVEL_TIMES): [
-            {vol.Required(CONF_ID): cv.string, vol.Optional(CONF_NAME): cv.string}
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_TRAVEL_TIMES): [
+            {
+                probatio.Required(CONF_ID): cv.string,
+                probatio.Optional(CONF_NAME): cv.string,
+            }
         ],
     }
 )
@@ -118,11 +121,13 @@ class WashingtonStateTransportSensor(SensorEntity):
         self._state: int | None = None
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self._state
@@ -154,6 +159,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
             self._state = travel_time.CurrentTime
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return other details about the sensor state."""
         if self._data is not None:

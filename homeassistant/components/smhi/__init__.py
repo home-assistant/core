@@ -47,10 +47,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: SMHIConfigEntry) -> boo
 async def async_migrate_entry(hass: HomeAssistant, entry: SMHIConfigEntry) -> bool:
     """Migrate old entry."""
 
-    if entry.version > 3:
-        # Downgrade from future version
-        return False
-
     if entry.version == 1:
         new_data = {
             CONF_NAME: entry.data[CONF_NAME],

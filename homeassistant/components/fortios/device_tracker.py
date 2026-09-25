@@ -4,11 +4,11 @@ This FortiOS integration provides a device_tracker platform.
 """
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from awesomeversion import AwesomeVersion
 from fortiosapi import FortiOSAPI
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -26,9 +26,9 @@ DEFAULT_VERIFY_SSL = False
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TOKEN): cv.string,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_TOKEN): cv.string,
+        probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
 )
 
@@ -100,11 +100,13 @@ class FortiOSDeviceScanner(DeviceScanner):
             except KeyError as kex:
                 _LOGGER.error("Key not found in clients: %s", kex)
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self.update()
         return self._clients
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         _LOGGER.debug("Getting name of device %s", device)

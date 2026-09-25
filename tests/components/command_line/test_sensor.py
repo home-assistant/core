@@ -145,6 +145,7 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
         assert len(mock_subprocess_run.mock_calls) == 1
         mock_subprocess_run.assert_called_with(
             'echo "sensor_value" "3 4"',
+            stdin=None,
             stdout=-1,
             close_fds=False,
         )

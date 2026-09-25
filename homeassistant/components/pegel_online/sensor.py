@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from aiopegelonline.models import CurrentMeasurement, StationMeasurements
 
@@ -11,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -130,8 +131,8 @@ class PegelOnlineSensor(PegelOnlineEntity, SensorEntity):
         if self.station.latitude and self.station.longitude:
             self._attr_extra_state_attributes.update(
                 {
-                    ATTR_LATITUDE: self.station.latitude,
-                    ATTR_LONGITUDE: self.station.longitude,
+                    EntityStateAttribute.LATITUDE: self.station.latitude,
+                    EntityStateAttribute.LONGITUDE: self.station.longitude,
                 }
             )
 
@@ -143,6 +144,7 @@ class PegelOnlineSensor(PegelOnlineEntity, SensorEntity):
         return measurement
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the device."""
         return self.measurement.value

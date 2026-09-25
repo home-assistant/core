@@ -2,13 +2,13 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from proxmoxer import AuthenticationError, ProxmoxAPI
 from proxmoxer.core import ResourceException
 import requests
 from requests.exceptions import ConnectTimeout, SSLError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -25,6 +25,9 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 
 from .common import sanitize_config_entry
@@ -48,32 +51,39 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-BASE_SCHEMA = vol.Schema(
+BASE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_AUTH_METHOD, default=DEFAULT_REALM): SelectSelector(
+        probatio.Required(CONF_AUTH_METHOD, default=DEFAULT_REALM): SelectSelector(
             SelectSelectorConfig(
                 options=AUTH_METHODS,
                 translation_key=CONF_AUTH_METHOD,
                 mode=SelectSelectorMode.DROPDOWN,
             )
         ),
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Required(CONF_TOKEN, default=False): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="username")
+        ),
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_TOKEN, default=False): cv.boolean,
+        probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
 )
 
-PASSWORD_SCHEMA = vol.Schema(
+PASSWORD_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            )
+        ),
     }
 )
-TOKEN_SCHEMA = vol.Schema(
+TOKEN_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TOKEN_ID): cv.string,
-        vol.Required(CONF_TOKEN_SECRET): cv.string,
+        probatio.Required(CONF_TOKEN_ID): cv.string,
+        probatio.Required(CONF_TOKEN_SECRET): cv.string,
     }
 )
 
@@ -125,7 +135,9 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
         raise ProxmoxConnectionError from err
 
     if not nodes:
-        raise ProxmoxNoNodesFound("No nodes found")
+        raise ProxmoxNoNodesFound(
+            translation_domain=DOMAIN, translation_key="no_nodes_found"
+        )
 
     nodes_data: list[dict[str, Any]] = []
     for node in nodes:
@@ -149,8 +161,8 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
         nodes_data.append(
             {
                 CONF_NODE: node["node"],
-                CONF_VMS: [vm["vmid"] for vm in vms],
-                CONF_CONTAINERS: [container["vmid"] for container in containers],
+                CONF_VMS: [int(vm["vmid"]) for vm in vms],
+                CONF_CONTAINERS: [int(container["vmid"]) for container in containers],
             }
         )
 
@@ -165,6 +177,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
     _data: dict[str, Any] = {}
     _entry: ConfigEntry
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -343,40 +356,16 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return proxmox_nodes, errors
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle a flow initiated by configuration file."""
-        self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
-
-        try:
-            proxmox_nodes = await self.hass.async_add_executor_job(
-                _get_nodes_data, import_data
-            )
-        except ProxmoxConnectTimeout:
-            return self.async_abort(reason="connect_timeout")
-        except ProxmoxAuthenticationError:
-            return self.async_abort(reason="invalid_auth")
-        except ProxmoxSSLError:
-            return self.async_abort(reason="ssl_error")
-        except ProxmoxNoNodesFound:
-            return self.async_abort(reason="no_nodes_found")
-        except ProxmoxConnectionError:
-            return self.async_abort(reason="cannot_connect")
-
-        return self.async_create_entry(
-            title=import_data[CONF_HOST],
-            data={**import_data, CONF_NODES: proxmox_nodes},
-        )
-
     def _get_auth_schema(
         self,
         data: Mapping[str, Any],
-    ) -> vol.Schema:
+    ) -> probatio.Schema:
         """Return the auth schema based on the flow data."""
         schema = PASSWORD_SCHEMA
         if data.get(CONF_TOKEN):
             schema = TOKEN_SCHEMA
         if data.get(CONF_AUTH_METHOD) == AUTH_OTHER:
-            schema = schema.extend({vol.Required(CONF_REALM): cv.string})
+            schema = schema.extend({probatio.Required(CONF_REALM): cv.string})
         return schema
 
     def _get_auth_updates(

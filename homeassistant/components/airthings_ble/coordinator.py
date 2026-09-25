@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from airthings_ble import AirthingsBluetoothDeviceData, AirthingsDevice
 from bleak.backends.device import BLEDevice
@@ -13,7 +14,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     DEFAULT_SCAN_INTERVAL,
@@ -35,9 +35,7 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
 
     def __init__(self, hass: HomeAssistant, entry: AirthingsBLEConfigEntry) -> None:
         """Initialize the coordinator."""
-        self.airthings = AirthingsBluetoothDeviceData(
-            _LOGGER, hass.config.units is METRIC_SYSTEM
-        )
+        self.airthings = AirthingsBluetoothDeviceData(_LOGGER, is_metric=True)
 
         device_model = entry.data.get(DEVICE_MODEL)
         interval = DEVICE_SPECIFIC_SCAN_INTERVAL.get(
@@ -52,6 +50,7 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
             update_interval=timedelta(seconds=interval),
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         address = self.config_entry.unique_id
@@ -96,10 +95,21 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
                 )
             )
 
+    @override
     async def _async_update_data(self) -> AirthingsDevice:
         """Get data from Airthings BLE."""
         try:
             data = await self.airthings.update_device(self.ble_device)
         except Exception as err:
             raise UpdateFailed(f"Unable to fetch data: {err}") from err
+
+        if not data.address:
+            # The device did not report its address, which means the read did not
+            # complete. Building entities from this would create a duplicate device
+            # and entities with an empty unique id prefix.
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="incomplete_read",
+            )
+
         return data

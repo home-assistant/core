@@ -2,10 +2,10 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
+import probatio
 import pyeverlights
-import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_HOSTS): vol.All(cv.ensure_list, [cv.string])}
+    {probatio.Required(CONF_HOSTS): probatio.All(cv.ensure_list, [cv.string])}
 )
 
 
@@ -98,10 +98,12 @@ class EverLightsLight(LightEntity):
         self._attr_unique_id = f"{self._mac}-{self._channel}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._status[f"ch{self._channel}Active"] == 1
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         hs_color = cast(
@@ -130,6 +132,7 @@ class EverLightsLight(LightEntity):
         self._attr_brightness = brightness
         self._attr_effect = effect
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._api.clear_pattern(self._channel)

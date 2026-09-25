@@ -1,5 +1,7 @@
 """Representation of Z-Wave buttons."""
 
+from typing import override
+
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 
@@ -72,6 +74,7 @@ class ZwaveBooleanNodeButton(ZWaveBaseEntity, ButtonEntity):
         super().__init__(config_entry, driver, info)
         self._attr_name = self.generate_name(include_value_name=True)
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._async_set_value(self.info.primary_value, True)
@@ -88,6 +91,7 @@ class ZWaveNodePingButton(ZWaveNodeBaseEntity, ButtonEntity):
         super().__init__(driver, node)
         self._attr_unique_id = f"{self._base_unique_id}.ping"
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         self.hass.async_create_task(self.node.async_ping())
@@ -110,6 +114,7 @@ class ZWaveNotificationIdleButton(ZWaveBaseEntity, ButtonEntity):
         )
         self._attr_unique_id = f"{self._attr_unique_id}.notification_idle"
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self.info.node.async_manually_idle_notification_value(

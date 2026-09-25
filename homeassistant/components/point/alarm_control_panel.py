@@ -1,6 +1,7 @@
 """Support for Minut Point."""
 
 import logging
+from typing import override
 
 from pypoint import PointSession
 
@@ -58,13 +59,14 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
         self._home = point.homes[self._home_id]
 
         self._attr_name = self._home["name"]
-        self._attr_unique_id = f"point.{home_id}"
+        self._attr_unique_id = f"point.{home_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, home_id)},
             manufacturer="Minut",
             name=self._attr_name,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to HOme Assistant."""
         await super().async_added_to_hass()
@@ -88,18 +90,21 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState:
         """Return state of the device."""
         return EVENT_MAP.get(
             self._home["alarm_status"], AlarmControlPanelState.ARMED_AWAY
         )
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         status = await self._client.alarm_disarm(self._home_id)
         if status:
             self._home["alarm_status"] = "off"
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         status = await self._client.alarm_arm(self._home_id)

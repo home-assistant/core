@@ -8,6 +8,9 @@
     "update": {
       "radio_firmware": {
         "name": "Radio firmware"
+      },
+      "rpi_firmware": {
+        "name": "Firmware"
       }
     }
   },

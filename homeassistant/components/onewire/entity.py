@@ -1,7 +1,7 @@
 """Support for 1-Wire entities."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aio_ownet.exceptions import OWServerError
 from aio_ownet.proxy import OWServerStatelessProxy
@@ -35,6 +35,7 @@ class OneWireEntity(Entity):
         self._owproxy = owproxy
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         return {

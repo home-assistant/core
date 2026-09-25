@@ -2,9 +2,9 @@
 
 import datetime
 import logging
-from typing import Final
+from typing import Final, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -80,7 +80,7 @@ def validate_query_format_for_version(conf: dict) -> dict:
     """Ensure queries are provided in correct format based on API version."""
     if conf[CONF_API_VERSION] == API_VERSION_2:
         if CONF_QUERIES_FLUX not in conf:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"{CONF_QUERIES_FLUX} is required when {CONF_API_VERSION} is"
                 f" {API_VERSION_2}"
             )
@@ -93,7 +93,7 @@ def validate_query_format_for_version(conf: dict) -> dict:
 
     else:
         if CONF_QUERIES not in conf:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"{CONF_QUERIES} is required when {CONF_API_VERSION} is"
                 f" {DEFAULT_API_VERSION}"
             )
@@ -107,44 +107,48 @@ def validate_query_format_for_version(conf: dict) -> dict:
     return conf
 
 
-_QUERY_SENSOR_SCHEMA = vol.Schema(
+_QUERY_SENSOR_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 )
 
 _QUERY_SCHEMA = {
     LANGUAGE_INFLUXQL: _QUERY_SENSOR_SCHEMA.extend(
         {
-            vol.Optional(CONF_DB_NAME): cv.string,
-            vol.Required(CONF_MEASUREMENT_NAME): cv.string,
-            vol.Optional(
+            probatio.Optional(CONF_DB_NAME): cv.string,
+            probatio.Required(CONF_MEASUREMENT_NAME): cv.string,
+            probatio.Optional(
                 CONF_GROUP_FUNCTION, default=DEFAULT_GROUP_FUNCTION
             ): cv.string,
-            vol.Optional(CONF_FIELD, default=DEFAULT_FIELD): cv.string,
-            vol.Required(CONF_WHERE): cv.template,
+            probatio.Optional(CONF_FIELD, default=DEFAULT_FIELD): cv.string,
+            probatio.Required(CONF_WHERE): cv.template,
         }
     ),
     LANGUAGE_FLUX: _QUERY_SENSOR_SCHEMA.extend(
         {
-            vol.Optional(CONF_BUCKET): cv.string,
-            vol.Optional(CONF_RANGE_START, default=DEFAULT_RANGE_START): cv.string,
-            vol.Optional(CONF_RANGE_STOP, default=DEFAULT_RANGE_STOP): cv.string,
-            vol.Required(CONF_QUERY): cv.template,
-            vol.Optional(CONF_IMPORTS): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_GROUP_FUNCTION): cv.string,
+            probatio.Optional(CONF_BUCKET): cv.string,
+            probatio.Optional(CONF_RANGE_START, default=DEFAULT_RANGE_START): cv.string,
+            probatio.Optional(CONF_RANGE_STOP, default=DEFAULT_RANGE_STOP): cv.string,
+            probatio.Required(CONF_QUERY): cv.template,
+            probatio.Optional(CONF_IMPORTS): probatio.All(cv.ensure_list, [cv.string]),
+            probatio.Optional(CONF_GROUP_FUNCTION): cv.string,
         }
     ),
 }
 
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA = probatio.All(
     SENSOR_PLATFORM_SCHEMA.extend(COMPONENT_CONFIG_SCHEMA_CONNECTION).extend(
         {
-            vol.Exclusive(CONF_QUERIES, "queries"): [_QUERY_SCHEMA[LANGUAGE_INFLUXQL]],
-            vol.Exclusive(CONF_QUERIES_FLUX, "queries"): [_QUERY_SCHEMA[LANGUAGE_FLUX]],
+            probatio.Exclusive(CONF_QUERIES, "queries"): [
+                _QUERY_SCHEMA[LANGUAGE_INFLUXQL]
+            ],
+            probatio.Exclusive(CONF_QUERIES_FLUX, "queries"): [
+                _QUERY_SCHEMA[LANGUAGE_FLUX]
+            ],
         }
     ),
     validate_version_specific_config,
@@ -219,16 +223,19 @@ class InfluxSensor(SensorEntity):
             )
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement

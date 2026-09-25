@@ -1,9 +1,9 @@
 """Config flow for the ENVERTECH EVT800 integration."""
 
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pyenvertechevt800 import EnvertechEVT800
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_TYPE
@@ -11,10 +11,10 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import DEFAULT_PORT, DOMAIN, TYPE_TCP_SERVER_MODE
 
-SCHEMA_DEVICE = vol.Schema(
+SCHEMA_DEVICE = probatio.Schema(
     {
-        vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_IP_ADDRESS): cv.string,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
 
@@ -25,6 +25,7 @@ class EnvertechFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from requests import HTTPError
 
@@ -94,10 +95,12 @@ class WallboxSelect(WallboxEntity, SelectEntity):
         )
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return an option."""
         return self.entity_description.current_option_fn(self.coordinator)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Handle the selection of an option."""
         try:

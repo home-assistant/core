@@ -3,13 +3,13 @@
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aio_geojson_usgs_earthquakes import UsgsEarthquakeHazardsProgramFeedManager
 from aio_geojson_usgs_earthquakes.feed_entry import (
     UsgsEarthquakeHazardsProgramFeedEntry,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.geo_location import (
     PLATFORM_SCHEMA as GEO_LOCATION_PLATFORM_SCHEMA,
@@ -83,11 +83,13 @@ VALID_FEED_TYPES = [
 
 PLATFORM_SCHEMA = GEO_LOCATION_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_FEED_TYPE): vol.In(VALID_FEED_TYPES),
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
-        vol.Optional(
+        probatio.Required(CONF_FEED_TYPE): probatio.In(VALID_FEED_TYPES),
+        probatio.Optional(CONF_LATITUDE): cv.latitude,
+        probatio.Optional(CONF_LONGITUDE): cv.longitude,
+        probatio.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): probatio.Coerce(
+            float
+        ),
+        probatio.Optional(
             CONF_MINIMUM_MAGNITUDE, default=DEFAULT_MINIMUM_MAGNITUDE
         ): cv.positive_float,
     }
@@ -221,6 +223,7 @@ class UsgsEarthquakesEvent(GeolocationEvent):
         self._remove_signal_delete: Callable[[], None]
         self._remove_signal_update: Callable[[], None]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self._remove_signal_delete = async_dispatcher_connect(
@@ -271,6 +274,7 @@ class UsgsEarthquakesEvent(GeolocationEvent):
         self._alert = feed_entry.alert
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {

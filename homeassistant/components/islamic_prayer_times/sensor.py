@@ -1,6 +1,7 @@
 """Platform to retrieve Islamic prayer times information for Home Assistant."""
 
 from datetime import datetime
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -86,6 +87,7 @@ class IslamicPrayerTimeSensor(
         )
 
     @property
+    @override
     def native_value(self) -> datetime:
         """Return the state of the sensor."""
         return self.coordinator.data[self.entity_description.key]

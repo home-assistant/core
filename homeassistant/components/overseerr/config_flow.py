@@ -1,14 +1,14 @@
 """Config flow for Overseerr."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
+import probatio
 from python_overseerr import (
     OverseerrAuthenticationError,
     OverseerrClient,
     OverseerrError,
 )
-import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components.webhook import async_generate_id
@@ -48,6 +48,7 @@ class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
             return "cannot_connect"
         return None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -91,8 +92,8 @@ class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_URL): str, vol.Required(CONF_API_KEY): str}
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_URL): str, probatio.Required(CONF_API_KEY): str}
             ),
             errors=errors,
         )
@@ -125,7 +126,7 @@ class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
             errors=errors,
         )
 

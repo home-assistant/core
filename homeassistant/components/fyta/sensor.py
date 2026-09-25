@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Final
+from typing import Final, override
 
 from fyta_cli.fyta_models import Plant
 
@@ -22,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_MAX_ACCEPTABLE,
@@ -132,6 +133,15 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda plant: plant.battery_level,
     ),
+    FytaSensorEntityDescription(
+        key="last_updated",
+        translation_key="last_update",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda plant: (
+            dt_util.as_local(plant.last_updated) if plant.last_updated else None
+        ),
+    ),
 ]
 
 MEASUREMENT_SENSORS: Final[list[FytaMeasurementSensorEntityDescription]] = [
@@ -238,6 +248,7 @@ class FytaPlantSensor(FytaPlantEntity, SensorEntity):
     entity_description: FytaSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state for this sensor."""
 
@@ -250,6 +261,7 @@ class FytaPlantMeasurementSensor(FytaPlantSensor):
     entity_description: FytaMeasurementSensorEntityDescription
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, float | None]:
         """Return the device state attributes."""
 

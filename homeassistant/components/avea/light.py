@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from contextlib import suppress
 import logging
-from typing import Any
+from typing import Any, override
 
 import avea
 from bleak.exc import BleakError
@@ -193,6 +193,7 @@ class AveaLight(LightEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_color_modes = {ColorMode.HS}
+    _attr_device_info: DeviceInfo | None = None
 
     def __init__(self, light: avea.Bulb, address: str) -> None:
         """Initialize an AveaLight."""
@@ -227,6 +228,7 @@ class AveaLight(LightEntity):
 
         self._device_info_updated = True
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         if not kwargs:
@@ -241,6 +243,7 @@ class AveaLight(LightEntity):
                 rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
                 self._light.set_rgb(rgb[0], rgb[1], rgb[2])
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         self._light.set_brightness(0)

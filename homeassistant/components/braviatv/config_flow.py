@@ -1,12 +1,12 @@
 """Config flow to configure the Bravia TV integration."""
 
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any, cast, override
 from urllib.parse import urlparse
 
 from aiohttp import CookieJar
+import probatio
 from pybravia import BraviaAuthError, BraviaClient, BraviaError, BraviaNotSupported
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -105,6 +105,7 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
             self._get_reauth_entry(), data=self.device_config
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -121,7 +122,7 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
             errors=errors,
         )
 
@@ -139,10 +140,10 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="authorize",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USE_PSK, default=False): bool,
-                    vol.Required(CONF_USE_SSL, default=False): bool,
+                    probatio.Required(CONF_USE_PSK, default=False): bool,
+                    probatio.Required(CONF_USE_SSL, default=False): bool,
                 }
             ),
         )
@@ -178,9 +179,9 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="pin",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PIN): str,
+                    probatio.Required(CONF_PIN): str,
                 }
             ),
             errors=errors,
@@ -207,14 +208,15 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="psk",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PIN): str,
+                    probatio.Required(CONF_PIN): str,
                 }
             ),
             errors=errors,
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:

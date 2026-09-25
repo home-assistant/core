@@ -239,18 +239,19 @@ async def test_light_invalid_effect(
     mock_config_entry: MockConfigEntry,
     mock_ultima_client: MagicMock,
 ) -> None:
-    """Test handling of invalid effect name is ignored."""
+    """Test handling of invalid effect name raises a translated error."""
     await setup_integration(hass, mock_config_entry)
 
     entity_id = "light.mock_title_ambilight"
 
     mock_ultima_client.actions.ambilight.reset_mock()
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "InvalidEffect"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError, match="Unknown effect: InvalidEffect"):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "InvalidEffect"},
+            blocking=True,
+        )
 
     mock_ultima_client.actions.ambilight.assert_not_called()
 

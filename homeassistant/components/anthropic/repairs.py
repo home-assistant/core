@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 import anthropic
 from anthropic.resources.messages.messages import DEPRECATED_MODELS
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
@@ -65,28 +65,28 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
             ]
             self._model_list_cache[entry.entry_id] = model_list
 
-        if "opus" in model:
-            family = "claude-opus"
-        elif "sonnet" in model:
-            family = "claude-sonnet"
-        else:
-            family = "claude-haiku"
+        family = (
+            model.removeprefix("claude-")
+            .removesuffix("-preview")
+            .translate(str.maketrans("", "", "0123456789-."))
+            or "haiku"
+        )
 
         suggested_model = next(
             (
                 model_option["value"]
                 for model_option in sorted(
-                    (m for m in model_list if family in m["value"]),
+                    (m for m in model_list if f"claude-{family}" in m["value"]),
                     key=lambda x: x["value"],
                     reverse=True,
                 )
             ),
-            vol.UNDEFINED,
+            probatio.UNDEFINED,
         )
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_CHAT_MODEL,
                     default=suggested_model,
                 ): SelectSelector(

@@ -1,10 +1,10 @@
 """Config flow for Rabbit Air integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from rabbitair import UdpClient
-import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -55,6 +55,7 @@ class RabbitAirConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _discovered_host: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -86,17 +87,18 @@ class RabbitAirConfigFlow(ConfigFlow, domain=DOMAIN):
         token = user_input.get(CONF_ACCESS_TOKEN)
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST, default=host): str,
-                    vol.Required(CONF_ACCESS_TOKEN, default=token): vol.All(
-                        str, vol.Length(min=32, max=32)
+                    probatio.Required(CONF_HOST, default=host): str,
+                    probatio.Required(CONF_ACCESS_TOKEN, default=token): probatio.All(
+                        str, probatio.Length(min=32, max=32)
                     ),
                 }
             ),
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

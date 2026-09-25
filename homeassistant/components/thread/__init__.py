@@ -7,6 +7,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .dataset_store import (
+    DatasetAddResult,
     DatasetEntry,
     async_add_dataset,
     async_get_dataset,
@@ -16,6 +17,7 @@ from .websocket_api import async_setup as async_setup_ws_api
 
 __all__ = [
     "DOMAIN",
+    "DatasetAddResult",
     "DatasetEntry",
     "async_add_dataset",
     "async_get_dataset",
@@ -34,9 +36,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
     async_setup_ws_api(hass)
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    hass.data[DOMAIN] = {}
     return True
 
 

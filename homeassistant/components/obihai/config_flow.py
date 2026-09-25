@@ -1,10 +1,10 @@
 """Config flow to configure the Obihai integration."""
 
 from socket import gaierror, gethostbyname
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pyobihai import PyObihai
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -15,14 +15,14 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from .connectivity import validate_auth
 from .const import DEFAULT_PASSWORD, DEFAULT_USERNAME, DOMAIN
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(
             CONF_USERNAME,
             default=DEFAULT_USERNAME,
         ): str,
-        vol.Required(
+        probatio.Required(
             CONF_PASSWORD,
             default=DEFAULT_PASSWORD,
         ): str,
@@ -52,9 +52,10 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Obihai."""
 
     VERSION = 2
-    discovery_schema: vol.Schema | None = None
+    discovery_schema: probatio.Schema | None = None
     _dhcp_discovery_info: DhcpServiceInfo | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -92,6 +93,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(data_schema, user_input),
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

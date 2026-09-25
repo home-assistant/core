@@ -1,7 +1,7 @@
 """Base entity for the radio frequency integration."""
 
 from abc import abstractmethod
-from typing import final
+from typing import final, override
 
 from rf_protocols import ModulationType, RadioFrequencyCommand
 
@@ -48,6 +48,7 @@ class RadioFrequencyTransmitterEntity(RestoreEntity):
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the entity state."""
         return self.__last_command_sent
@@ -63,6 +64,7 @@ class RadioFrequencyTransmitterEntity(RestoreEntity):
         self.async_write_ha_state()
 
     @final
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the radio frequency entity is added to hass."""
         await super().async_internal_added_to_hass()

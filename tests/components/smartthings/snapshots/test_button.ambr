@@ -39,7 +39,7 @@
 # name: test_all_entities[da_ac_air_01011][button.air_filter_reset_hepa_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air filter Reset HEPA filter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air filter Reset HEPA filter',
     }),
     'context': <ANY>,
     'entity_id': 'button.air_filter_reset_hepa_filter',
@@ -89,7 +89,7 @@
 # name: test_all_entities[da_ks_hood_01001][button.range_hood_reset_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Range hood Reset filter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Range hood Reset filter',
     }),
     'context': <ANY>,
     'entity_id': 'button.range_hood_reset_filter',
@@ -139,7 +139,7 @@
 # name: test_all_entities[da_ks_microwave_0101x][button.theater_microwave_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Microwave Stop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Microwave Stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.theater_microwave_stop',
@@ -189,7 +189,7 @@
 # name: test_all_entities[da_ks_oven_01061][button.oven_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Oven Stop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.oven_stop',
@@ -239,7 +239,7 @@
 # name: test_all_entities[da_ks_oven_0107x][button.kitchen_oven_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen oven Stop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen oven Stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.kitchen_oven_stop',
@@ -289,7 +289,7 @@
 # name: test_all_entities[da_ks_range_0101x][button.vulcan_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Vulcan Stop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vulcan Stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.vulcan_stop',
@@ -339,7 +339,7 @@
 # name: test_all_entities[da_ks_walloven_0107x][button.four_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Four Stop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Four Stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.four_stop',
@@ -389,7 +389,7 @@
 # name: test_all_entities[da_ref_normal_000001][button.theater_refrigerator_reset_water_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Reset water filter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Reset water filter',
     }),
     'context': <ANY>,
     'entity_id': 'button.theater_refrigerator_reset_water_filter',
@@ -439,7 +439,7 @@
 # name: test_all_entities[da_ref_normal_01001][button.refrigerator_1_reset_water_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator 1 Reset water filter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator 1 Reset water filter',
     }),
     'context': <ANY>,
     'entity_id': 'button.refrigerator_1_reset_water_filter',
@@ -489,7 +489,7 @@
 # name: test_all_entities[da_ref_normal_01011][button.frigo_reset_water_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Frigo Reset water filter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Frigo Reset water filter',
     }),
     'context': <ANY>,
     'entity_id': 'button.frigo_reset_water_filter',
@@ -539,7 +539,7 @@
 # name: test_all_entities[da_ref_normal_100001][button.kjoleskap_reset_water_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kjøleskap Reset water filter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kjøleskap Reset water filter',
     }),
     'context': <ANY>,
     'entity_id': 'button.kjoleskap_reset_water_filter',
@@ -589,7 +589,7 @@
 # name: test_all_entities[da_rvc_map_01011][button.robot_vacuum_reset_hepa_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot Vacuum Reset HEPA filter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robot Vacuum Reset HEPA filter',
     }),
     'context': <ANY>,
     'entity_id': 'button.robot_vacuum_reset_hepa_filter',
@@ -639,7 +639,7 @@
 # name: test_all_entities[da_wm_dw_000001][button.theater_dishwasher_cancel-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Cancel',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Cancel',
     }),
     'context': <ANY>,
     'entity_id': 'button.theater_dishwasher_cancel',
@@ -689,7 +689,7 @@
 # name: test_all_entities[da_wm_dw_000001][button.theater_dishwasher_cancel_and_drain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Cancel and drain',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Cancel and drain',
     }),
     'context': <ANY>,
     'entity_id': 'button.theater_dishwasher_cancel_and_drain',
@@ -739,7 +739,7 @@
 # name: test_all_entities[da_wm_dw_000001][button.theater_dishwasher_pause-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Pause',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Pause',
     }),
     'context': <ANY>,
     'entity_id': 'button.theater_dishwasher_pause',
@@ -789,7 +789,7 @@
 # name: test_all_entities[da_wm_dw_000001][button.theater_dishwasher_resume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Resume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Resume',
     }),
     'context': <ANY>,
     'entity_id': 'button.theater_dishwasher_resume',
@@ -839,7 +839,7 @@
 # name: test_all_entities[da_wm_dw_000001][button.theater_dishwasher_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Start',
     }),
     'context': <ANY>,
     'entity_id': 'button.theater_dishwasher_start',
@@ -889,7 +889,7 @@
 # name: test_all_entities[da_wm_dw_01011][button.dishwasher_1_cancel-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher 1 Cancel',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher 1 Cancel',
     }),
     'context': <ANY>,
     'entity_id': 'button.dishwasher_1_cancel',
@@ -939,7 +939,7 @@
 # name: test_all_entities[da_wm_dw_01011][button.dishwasher_1_cancel_and_drain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher 1 Cancel and drain',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher 1 Cancel and drain',
     }),
     'context': <ANY>,
     'entity_id': 'button.dishwasher_1_cancel_and_drain',
@@ -989,7 +989,7 @@
 # name: test_all_entities[da_wm_dw_01011][button.dishwasher_1_pause-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher 1 Pause',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher 1 Pause',
     }),
     'context': <ANY>,
     'entity_id': 'button.dishwasher_1_pause',
@@ -1039,7 +1039,7 @@
 # name: test_all_entities[da_wm_dw_01011][button.dishwasher_1_resume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher 1 Resume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher 1 Resume',
     }),
     'context': <ANY>,
     'entity_id': 'button.dishwasher_1_resume',
@@ -1089,7 +1089,7 @@
 # name: test_all_entities[da_wm_dw_01011][button.dishwasher_1_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher 1 Start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher 1 Start',
     }),
     'context': <ANY>,
     'entity_id': 'button.dishwasher_1_start',
@@ -1139,7 +1139,7 @@
 # name: test_all_entities[da_wm_mf_01001][button.filtro_in_microfibra_reset_water_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Filtro in microfibra Reset water filter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Filtro in microfibra Reset water filter',
     }),
     'context': <ANY>,
     'entity_id': 'button.filtro_in_microfibra_reset_water_filter',

@@ -4,10 +4,10 @@ import asyncio
 from datetime import timedelta
 import logging
 import time
-from typing import Any
+from typing import Any, override
 
 from miio import ChuangmiIr, DeviceException
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.remote import (
@@ -43,24 +43,26 @@ CONF_COMMANDS = "commands"
 DEFAULT_TIMEOUT = 10
 DEFAULT_SLOT = 1
 
-COMMAND_SCHEMA = vol.Schema(
-    {vol.Required(CONF_COMMAND): vol.All(cv.ensure_list, [cv.string])}
+COMMAND_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_COMMAND): probatio.All(cv.ensure_list, [cv.string])}
 )
 
 PLATFORM_SCHEMA = REMOTE_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_SLOT, default=DEFAULT_SLOT): vol.All(
-            int, vol.Range(min=1, max=1000000)
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        probatio.Optional(CONF_SLOT, default=DEFAULT_SLOT): probatio.All(
+            int, probatio.Range(min=1, max=1000000)
         ),
-        vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
-        vol.Optional(CONF_COMMANDS, default={}): cv.schema_with_slug_keys(
+        probatio.Required(CONF_TOKEN): probatio.All(
+            str, probatio.Length(min=32, max=32)
+        ),
+        probatio.Optional(CONF_COMMANDS, default={}): cv.schema_with_slug_keys(
             COMMAND_SCHEMA
         ),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -159,9 +161,9 @@ async def async_setup_platform(
     platform.async_register_entity_service(
         SERVICE_LEARN,
         {
-            vol.Optional(CONF_TIMEOUT, default=10): cv.positive_int,
-            vol.Optional(CONF_SLOT, default=1): vol.All(
-                int, vol.Range(min=1, max=1000000)
+            probatio.Optional(CONF_TIMEOUT, default=10): cv.positive_int,
+            probatio.Optional(CONF_SLOT, default=1): probatio.All(
+                int, probatio.Range(min=1, max=1000000)
             ),
         },
         async_service_learn_handler,
@@ -209,6 +211,7 @@ class XiaomiMiioRemote(RemoteEntity):
         return self._timeout
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return False if device is unreachable, else True."""
         try:
@@ -217,6 +220,7 @@ class XiaomiMiioRemote(RemoteEntity):
             return False
         return True
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         _LOGGER.error(
@@ -224,6 +228,7 @@ class XiaomiMiioRemote(RemoteEntity):
             "please use 'remote.send_command' to send commands"
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         _LOGGER.error(
@@ -241,6 +246,7 @@ class XiaomiMiioRemote(RemoteEntity):
                 "Transmit of IR command failed, %s, exception: %s", payload, ex
             )
 
+    @override
     def send_command(self, command, **kwargs):
         """Send a command."""
         num_repeats = kwargs.get(ATTR_NUM_REPEATS)

@@ -2,9 +2,8 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from http import HTTPStatus
 import logging
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from httpx import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.provider.catalog.models import Image
@@ -125,6 +124,7 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
     _attr_translation_key = "xbox"
 
     @property
+    @override
     def state(self) -> MediaPlayerState | None:
         """State of the player."""
         status = self.data.status
@@ -133,6 +133,7 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
         return XBOX_STATE_MAP[status.power_state]
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self.state not in [MediaPlayerState.PLAYING, MediaPlayerState.PAUSED]:
@@ -144,6 +145,7 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
         return SUPPORT_XBOX
 
     @property
+    @override
     def media_content_type(self) -> MediaType:
         """Media content type."""
 
@@ -154,11 +156,13 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
         )
 
     @property
+    @override
     def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
         return self.data.app_details.product_id if self.data.app_details else None
 
     @property
+    @override
     def media_title(self) -> str | None:
         """Title of current playing media."""
         return (
@@ -171,6 +175,7 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
         )
 
     @property
+    @override
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
 
@@ -182,24 +187,28 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
         )
 
     @exception_handler
+    @override
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
-        try:
-            await self.client.smartglass.wake_up(self._console.id)
-        except HTTPStatusError as e:
-            if e.response.status_code == HTTPStatus.NOT_FOUND:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="turn_on_failed",
-                ) from e
-            raise
+        if (
+            err := await self.client.smartglass.wake_up(self._console.id)
+        ).status.error_code != "OK":
+            _LOGGER.debug(
+                "Xbox error: %s (%s)", err.status.error_message, err.status.error_code
+            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="turn_on_failed",
+            )
 
     @exception_handler
+    @override
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self.client.smartglass.turn_off(self._console.id)
 
     @exception_handler
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
 
@@ -212,41 +221,48 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
         self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
 
         await self.client.smartglass.volume(self._console.id, VolumeDirection.Up)
 
     @exception_handler
+    @override
     async def async_volume_down(self) -> None:
         """Turn volume down for media player."""
 
         await self.client.smartglass.volume(self._console.id, VolumeDirection.Down)
 
     @exception_handler
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
 
         await self.client.smartglass.play(self._console.id)
 
     @exception_handler
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
 
         await self.client.smartglass.pause(self._console.id)
 
     @exception_handler
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
 
         await self.client.smartglass.previous(self._console.id)
 
     @exception_handler
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
 
         await self.client.smartglass.next(self._console.id)
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -262,6 +278,7 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
         )
 
     @exception_handler
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:

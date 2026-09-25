@@ -1,7 +1,7 @@
 """Provides a binary sensor for Home Connect."""
 
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from aiohomeconnect.model import EventKey, StatusKey
 
@@ -180,6 +180,7 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
 
     entity_description: HomeConnectBinarySensorEntityDescription
 
+    @override
     def update_native_value(self) -> None:
         """Set the native value of the binary sensor."""
         status = self.appliance.status[cast(StatusKey, self.bsh_key)].value
@@ -196,11 +197,13 @@ class HomeConnectConnectivityBinarySensor(HomeConnectEntity, BinarySensorEntity)
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
+    @override
     def update_native_value(self) -> None:
         """Set the native value of the binary sensor."""
         self._attr_is_on = self.appliance.info.connected
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability."""
         return self.coordinator.last_update_success

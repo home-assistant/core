@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unsupported_model": "This printer model is not supported."
     },
     "error": {
@@ -24,14 +23,14 @@
         "sections": {
           "advanced_settings": {
             "data": {
-              "community": "SNMP Community",
+              "community": "[%key:component::brother::config::step::user::sections::advanced_settings::data::community%]",
               "port": "[%key:common::config_flow::data::port%]"
             },
             "data_description": {
-              "community": "A simple password for devices to communicate to each other.",
-              "port": "The SNMP port of the Brother printer."
+              "community": "[%key:component::brother::config::step::user::sections::advanced_settings::data_description::community%]",
+              "port": "[%key:component::brother::config::step::user::sections::advanced_settings::data_description::port%]"
             },
-            "name": "Advanced settings"
+            "name": "[%key:component::brother::config::step::user::sections::advanced_settings::name%]"
           }
         }
       },
@@ -54,7 +53,7 @@
               "community": "A simple password for devices to communicate to each other.",
               "port": "The SNMP port of the Brother printer."
             },
-            "name": "Advanced settings"
+            "name": "Additional settings"
           }
         }
       },
@@ -69,14 +68,14 @@
         "sections": {
           "advanced_settings": {
             "data": {
-              "community": "SNMP Community",
+              "community": "[%key:component::brother::config::step::user::sections::advanced_settings::data::community%]",
               "port": "[%key:common::config_flow::data::port%]"
             },
             "data_description": {
-              "community": "A simple password for devices to communicate to each other.",
-              "port": "The SNMP port of the Brother printer."
+              "community": "[%key:component::brother::config::step::user::sections::advanced_settings::data_description::community%]",
+              "port": "[%key:component::brother::config::step::user::sections::advanced_settings::data_description::port%]"
             },
-            "name": "Advanced settings"
+            "name": "[%key:component::brother::config::step::user::sections::advanced_settings::name%]"
           }
         },
         "title": "Discovered Brother Printer"
@@ -130,6 +129,15 @@
       "cyan_toner_remaining": {
         "name": "Cyan toner remaining"
       },
+      "device_status": {
+        "name": "Device status",
+        "state": {
+          "down": "Down",
+          "running": "Running",
+          "testing": "Testing",
+          "warning": "Warning"
+        }
+      },
       "drum_page_counter": {
         "name": "Drum page counter",
         "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
@@ -147,6 +155,9 @@
       },
       "fuser_remaining_life": {
         "name": "Fuser remaining lifetime"
+      },
+      "ink_capture_box_remaining_life": {
+        "name": "Ink capture box remaining lifetime"
       },
       "laser_remaining_life": {
         "name": "Laser remaining lifetime"
@@ -177,6 +188,15 @@
       },
       "pf_kit_mp_remaining_life": {
         "name": "PF Kit MP remaining lifetime"
+      },
+      "printer_status": {
+        "name": "Printer status",
+        "state": {
+          "idle": "Idle",
+          "other": "Other",
+          "printing": "Printing",
+          "warmup": "Warming up"
+        }
       },
       "status": {
         "name": "Status"

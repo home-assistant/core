@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 import logging
+from typing import override
 
 from aioautomower.model import SingleMessageData
 
@@ -97,6 +98,7 @@ class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the entity is available."""
         return self.websocket_alive and self.mower_id in self.coordinator.data
@@ -118,12 +120,14 @@ class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):
         )
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback when entity is added to hass."""
         await super().async_added_to_hass()
         self.coordinator.api.register_single_message_callback(self._handle)
         self.coordinator.websocket_callbacks.append(self._handle_websocket_update)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unregister WebSocket callback when entity is removed."""
         self.coordinator.api.unregister_single_message_callback(self._handle)

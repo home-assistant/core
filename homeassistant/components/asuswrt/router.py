@@ -16,7 +16,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -48,6 +52,12 @@ SCAN_INTERVAL = timedelta(seconds=30)
 SENSORS_TYPE_COUNT = "sensors_count"
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def get_device_identifier(entry: ConfigEntry) -> tuple[str, str]:
+    """Return the device registry identifier of the router."""
+    return (DOMAIN, entry.unique_id or "AsusWRT")
+
 
 _ENTITY_MIGRATION_ID = {
     "sensor_connected_device": "Devices Connected",
@@ -385,13 +395,15 @@ class AsusWrtRouter:
         """Return the device information."""
         info = DeviceInfo(
             configuration_url=self._api.configuration_url,
-            identifiers={(DOMAIN, self._entry.unique_id or "AsusWRT")},
+            identifiers={get_device_identifier(self._entry)},
             name=self.host,
             model=self._api.model or "Asus Router",
             model_id=self._api.model_id,
             serial_number=self._api.serial_number,
             manufacturer="Asus",
         )
+        if label_mac := self._api.label_mac:
+            info["connections"] = {(CONNECTION_NETWORK_MAC, label_mac)}
         if self._api.firmware:
             info["sw_version"] = self._api.firmware
 

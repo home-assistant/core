@@ -1,10 +1,10 @@
 """Config flow for Smappee."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pysmappee import helper, mqtt
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS
@@ -31,6 +31,7 @@ class SmappeeFlowHandler(
     ip_address: str  # Set by zeroconf step, used by zeroconf_confirm step
     serial_number: str  # Set by zeroconf step, used by zeroconf_confirm step
 
+    @override
     async def async_oauth_create_entry(self, data):
         """Create an entry for the flow."""
 
@@ -38,10 +39,12 @@ class SmappeeFlowHandler(
         return self.async_create_entry(title=f"{DOMAIN}Cloud", data=data)
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -107,6 +110,7 @@ class SmappeeFlowHandler(
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -125,11 +129,11 @@ class SmappeeFlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="environment",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required("environment", default=ENV_CLOUD): vol.In(
-                            [ENV_CLOUD, ENV_LOCAL]
-                        )
+                        probatio.Required(
+                            "environment", default=ENV_CLOUD
+                        ): probatio.In([ENV_CLOUD, ENV_LOCAL])
                     }
                 ),
                 errors={},
@@ -154,7 +158,7 @@ class SmappeeFlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="local",
-                data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+                data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
                 errors={},
             )
         # In a LOCAL setup we still need to resolve the host to serial number

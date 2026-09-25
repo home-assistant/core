@@ -1,5 +1,7 @@
 """The AirVisual component."""
 
+from typing import override
+
 from homeassistant.core import callback
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -21,6 +23,7 @@ class AirVisualEntity(CoordinatorEntity[AirVisualDataUpdateCoordinator]):
         self._attr_extra_state_attributes = {}
         self.entity_description = description
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()

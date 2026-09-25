@@ -53,8 +53,9 @@ async def test_async_setup_entry(
     status = mock_request_status.return_value
     entry = init_integration
 
-    identifiers = {(DOMAIN, entry.unique_id or entry.entry_id)}
-    device_entry = device_registry.async_get_device(identifiers=identifiers)
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.unique_id or entry.entry_id), entry.entry_id
+    )
     name = f"device_{device_entry.name}_{status.get('SERIALNO', '<no serial>')}"
     assert device_entry == snapshot(name=name)
 

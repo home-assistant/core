@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from jvcprojector import (
     JvcProjector,
@@ -14,9 +14,10 @@ from jvcprojector import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import NAME
+from .const import DOMAIN, NAME
 
 if TYPE_CHECKING:
     from jvcprojector import Command
@@ -32,6 +33,7 @@ CORE_COMMANDS: tuple[type[Command], ...] = (
     cmd.Signal,
     cmd.Input,
     cmd.LightTime,
+    cmd.Version,
 )
 
 TRANSLATIONS = str.maketrans({"+": "p", "%": "p", ":": "x"})
@@ -69,6 +71,20 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
 
         self.state: dict[type[Command], str] = {}
 
+    @property
+    def software_version(self) -> str | None:
+        """Return the formatted software version, if it has been cached."""
+        value = self.state.get(cmd.Version)
+        if not value:
+            return None
+
+        try:
+            value = value.removesuffix("PJ").zfill(4)
+            return f"{int(value[:2])}.{value[2:]}"
+        except ValueError, IndexError:
+            return value
+
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update state with the current value of a command."""
         commands: set[type[Command]] = set(self.async_contexts())
@@ -88,7 +104,7 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         else:
             raise UpdateFailed(str(last_timeout)) from last_timeout
 
-        # Clear state on signal loss
+        # Clear state on signal loss, but keep LightTime and Version
         if (
             new_state.get(cmd.Signal) == cmd.Signal.NONE
             and self.state.get(cmd.Signal) != cmd.Signal.NONE
@@ -104,7 +120,21 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         else:
             self.update_interval = INTERVAL_SLOW
 
+        self._update_device_registry()
+
         return {k.name: v for k, v in self.state.items()}
+
+    def _update_device_registry(self) -> None:
+        """Update the device registry with the cached software version."""
+        if (software_version := self.software_version) is None:
+            return
+
+        device_registry = dr.async_get(self.hass)
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, self.unique_id), self.config_entry.entry_id
+        )
+        if device is not None and device.sw_version != software_version:
+            device_registry.async_update_device(device.id, sw_version=software_version)
 
     async def _get_device_state(
         self, commands: set[type[Command]]
@@ -141,6 +171,14 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
 
         elif self.state.get(cmd.Signal) != cmd.Signal.NONE:
             new_state[cmd.Signal] = cmd.Signal.NONE
+
+        # Fetch software version once while the projector is on and use the
+        # cached value for device info. A timeout must not prevent setup.
+        if power == cmd.Power.ON and cmd.Version not in self.state:
+            try:
+                await self._update_command_state(cmd.Version, new_state)
+            except JvcProjectorTimeoutError:
+                _LOGGER.debug("Command %s timed out; will retry", cmd.Version.name)
 
         return new_state
 

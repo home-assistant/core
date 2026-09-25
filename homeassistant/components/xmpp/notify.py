@@ -7,8 +7,9 @@ import mimetypes
 import pathlib
 import random
 import string
-from typing import Any
+from typing import Any, override
 
+import probatio
 import requests
 import slixmpp
 from slixmpp.exceptions import IqError, IqTimeout, XMPPError
@@ -18,7 +19,6 @@ from slixmpp.plugins.xep_0363.http_upload import (
     UploadServiceNotFound,
 )
 from slixmpp.xmlstream.xmlstream import NotConnectedError
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -57,13 +57,13 @@ XEP_0363_TIMEOUT = 10
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_SENDER): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_RECIPIENT): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_RESOURCE, default=DEFAULT_RESOURCE): cv.string,
-        vol.Optional(CONF_ROOM, default=""): cv.string,
-        vol.Optional(CONF_TLS, default=True): cv.boolean,
-        vol.Optional(CONF_VERIFY, default=True): cv.boolean,
+        probatio.Required(CONF_SENDER): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_RECIPIENT): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(CONF_RESOURCE, default=DEFAULT_RESOURCE): cv.string,
+        probatio.Optional(CONF_ROOM, default=""): cv.string,
+        probatio.Optional(CONF_TLS, default=True): cv.boolean,
+        probatio.Optional(CONF_VERIFY, default=True): cv.boolean,
     }
 )
 
@@ -100,6 +100,7 @@ class XmppNotificationService(BaseNotificationService):
         self._verify = verify
         self._room = room
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)

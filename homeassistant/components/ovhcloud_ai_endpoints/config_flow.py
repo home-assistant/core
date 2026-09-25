@@ -2,10 +2,10 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from openai import AsyncOpenAI, AuthenticationError, OpenAIError, PermissionDeniedError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -31,7 +31,7 @@ from .const import CONF_PROMPT, DOMAIN, RECOMMENDED_CONVERSATION_OPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_API_KEY): str})
 
 
 class OVHcloudAIEndpointsConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -42,12 +42,14 @@ class OVHcloudAIEndpointsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {"conversation": ConversationFlowHandler}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -72,9 +74,9 @@ class OVHcloudAIEndpointsConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): str,
+                    probatio.Required(CONF_API_KEY): str,
                 }
             ),
             errors=errors,
@@ -113,6 +115,36 @@ class OVHcloudAIEndpointsConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure the API key on an existing entry."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            self._async_abort_entries_match(user_input)
+            client = _create_client(self.hass, user_input[CONF_API_KEY])
+            try:
+                await _validate_api_key(client)
+            except AuthenticationError, PermissionDeniedError:
+                errors["base"] = "invalid_auth"
+            except OpenAIError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    entry, data_updates=user_input
+                )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_REAUTH_DATA_SCHEMA, user_input or entry.data
+            ),
+            errors=errors,
+        )
+
 
 class ConversationFlowHandler(ConfigSubentryFlow):
     """Handle conversation subentry flow."""
@@ -136,15 +168,60 @@ class ConversationFlowHandler(ConfigSubentryFlow):
         self.options = RECOMMENDED_CONVERSATION_OPTIONS.copy()
         return await self.async_step_init(user_input)
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Reconfigure a conversation agent (prompt + LLM APIs; model is fixed)."""
+        subentry = self._get_reconfigure_subentry()
+        existing = subentry.data
+
+        if user_input is not None:
+            if user_input.get(CONF_LLM_HASS_API) is None:
+                user_input.pop(CONF_LLM_HASS_API, None)
+            user_input[CONF_MODEL] = existing[CONF_MODEL]
+            return self.async_update_and_abort(
+                self._get_entry(), subentry, data=user_input
+            )
+
+        hass_apis: list[SelectOptionDict] = [
+            SelectOptionDict(label=api.name, value=api.id)
+            for api in llm.async_get_apis(self.hass)
+        ]
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Optional(
+                        CONF_PROMPT,
+                        description={
+                            "suggested_value": existing.get(
+                                CONF_PROMPT,
+                                RECOMMENDED_CONVERSATION_OPTIONS[CONF_PROMPT],
+                            )
+                        },
+                    ): TemplateSelector(),
+                    probatio.Optional(
+                        CONF_LLM_HASS_API,
+                        default=existing.get(
+                            CONF_LLM_HASS_API,
+                            RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API],
+                        ),
+                    ): SelectSelector(
+                        SelectSelectorConfig(options=hass_apis, multiple=True)
+                    ),
+                }
+            ),
+        )
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Manage conversation agent configuration."""
-        if self._get_entry().state != ConfigEntryState.LOADED:
+        if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         if user_input is not None:
-            if not user_input.get(CONF_LLM_HASS_API):
+            if user_input.get(CONF_LLM_HASS_API) is None:
                 user_input.pop(CONF_LLM_HASS_API, None)
             return self.async_create_entry(
                 title=user_input[CONF_MODEL], data=user_input
@@ -172,16 +249,16 @@ class ConversationFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_MODEL): SelectSelector(
+                    probatio.Required(CONF_MODEL): SelectSelector(
                         SelectSelectorConfig(
                             options=options,
                             mode=SelectSelectorMode.DROPDOWN,
                             sort=True,
                         ),
                     ),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_PROMPT,
                         description={
                             "suggested_value": self.options.get(
@@ -190,7 +267,7 @@ class ConversationFlowHandler(ConfigSubentryFlow):
                             )
                         },
                     ): TemplateSelector(),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_LLM_HASS_API,
                         default=self.options.get(
                             CONF_LLM_HASS_API,

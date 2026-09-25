@@ -131,6 +131,8 @@ def mock_qube_client() -> Generator[MagicMock]:
         )
         client.write_switch = AsyncMock(return_value=True)
         client.write_setpoint = AsyncMock(return_value=True)
+        client.get_sg_ready_mode = AsyncMock(return_value="off")
+        client.set_sg_ready_mode = AsyncMock(return_value=True)
 
         yield client
 

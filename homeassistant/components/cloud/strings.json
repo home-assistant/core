@@ -7,8 +7,20 @@
     }
   },
   "exceptions": {
+    "auto_login_failed_cloud_error": {
+      "message": "Could not reach Home Assistant Cloud to finish signing you in. Please try signing in again."
+    },
+    "auto_login_failed_timeout": {
+      "message": "Your email was not confirmed in time, so we stopped waiting. Your account was created, so please confirm your email and sign in."
+    },
+    "auto_login_failed_unexpected_error": {
+      "message": "An unexpected error stopped us from signing you in. Please try signing in again."
+    },
     "backup_size_too_large": {
       "message": "The backup size of {size}GB is too large to be uploaded to Home Assistant Cloud."
+    },
+    "no_pending_auto_login": {
+      "message": "There is no registration waiting for an email confirmation."
     }
   },
   "issues": {
@@ -70,6 +82,14 @@
     "warn_bad_custom_domain_configuration": {
       "description": "The DNS configuration for your custom domain ({custom_domains}) is not correct. Please check the DNS configuration of your domain and make sure it points to the correct CNAME.",
       "title": "Detected wrong custom domain configuration"
+    }
+  },
+  "preview_features": {
+    "stt_v2": {
+      "description": "We're testing a new speech-to-text engine for Home Assistant Cloud, the part of voice control that turns what you say into words. In our testing it copes better with accents, background noise, and languages other than English.\n\nWhile this is enabled, any audio from your voice commands is processed by [Soniox](https://soniox.com/) rather than our current provider. This is relevant only to Assistants configured to use Home Assistant Cloud as an STT engine. It travels through a Nabu Casa proxy, which handles authentication and forwards it to the processing region closest to you. Nabu Casa doesn't process, store or log your audio at any point. Everything else about your voice pipeline stays the same, and you can turn this off again at any time.",
+      "disable_confirmation": "Any Assistant currently using the new engine will go back to being transcribed by our current speech-to-text provider.",
+      "enable_confirmation": "This feature is still in development and may change. While it's enabled, audio from your voice commands in supported languages is transcribed by Soniox instead of our current provider.",
+      "name": "New speech-to-text engine"
     }
   },
   "services": {

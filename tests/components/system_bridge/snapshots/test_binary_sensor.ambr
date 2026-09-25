@@ -32,14 +32,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'camera_in_use',
-    'unique_id': 'hostname_camera_in_use',
+    'unique_id': 'uuid_camera_in_use',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_binary_sensor_platform[binary_sensor.hostname_camera_in_use-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'hostname Camera in use',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Camera in use',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hostname_camera_in_use',
@@ -82,15 +82,15 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'hostname_battery_is_charging',
+    'unique_id': 'uuid_battery_is_charging',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_binary_sensor_platform[binary_sensor.hostname_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'hostname Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hostname_charging',
@@ -133,14 +133,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pending_reboot',
-    'unique_id': 'hostname_pending_reboot',
+    'unique_id': 'uuid_pending_reboot',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_binary_sensor_platform[binary_sensor.hostname_pending_reboot-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'hostname Pending reboot',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Pending reboot',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hostname_pending_reboot',
@@ -183,15 +183,15 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'hostname_version_available',
+    'unique_id': 'uuid_version_available',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_binary_sensor_platform[binary_sensor.hostname_update-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'update',
-      'friendly_name': 'hostname Update',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'update',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Update',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hostname_update',

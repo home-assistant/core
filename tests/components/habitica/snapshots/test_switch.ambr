@@ -39,8 +39,8 @@
 # name: test_switch[switch.test_user_rest_in_the_inn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'test-user Rest in the inn',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Rest in the inn',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_user_rest_in_the_inn',

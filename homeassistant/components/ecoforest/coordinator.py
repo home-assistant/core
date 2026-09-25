@@ -1,6 +1,7 @@
 """The ecoforest coordinator."""
 
 import logging
+from typing import override
 
 from pyecoforest.api import EcoforestApi
 from pyecoforest.exceptions import EcoforestError
@@ -34,6 +35,7 @@ class EcoforestCoordinator(DataUpdateCoordinator[Device]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> Device:
         """Fetch all device and sensor data from api."""
         try:

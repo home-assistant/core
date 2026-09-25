@@ -2,10 +2,10 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from google_weather_api import GoogleWeatherApi, GoogleWeatherApiError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -34,11 +34,12 @@ from .const import CONF_REFERRER, DOMAIN, SECTION_API_KEY_OPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
-        vol.Optional(SECTION_API_KEY_OPTIONS): section(
-            vol.Schema({vol.Optional(CONF_REFERRER): str}), {"collapsed": True}
+        probatio.Required(CONF_API_KEY): str,
+        probatio.Optional(SECTION_API_KEY_OPTIONS): section(
+            probatio.Schema({probatio.Optional(CONF_REFERRER): str}),
+            {"collapsed": True},
         ),
     }
 )
@@ -66,14 +67,14 @@ async def _validate_input(
     return False
 
 
-def _get_location_schema(hass: HomeAssistant) -> vol.Schema:
+def _get_location_schema(hass: HomeAssistant) -> probatio.Schema:
     """Return the schema for a location with default values from the hass config."""
-    return vol.Schema(
+    return probatio.Schema(
         {
             # Name field is no longer allowed in config flow schemas
             # pylint: disable-next=home-assistant-config-flow-name-field
-            vol.Required(CONF_NAME, default=hass.config.location_name): str,
-            vol.Required(
+            probatio.Required(CONF_NAME, default=hass.config.location_name): str,
+            probatio.Required(
                 CONF_LOCATION,
                 default={
                     CONF_LATITUDE: hass.config.latitude,
@@ -113,6 +114,7 @@ class GoogleWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -194,7 +196,7 @@ class GoogleWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input = {}
             schema_dict = STEP_USER_DATA_SCHEMA.schema.copy()
             schema_dict.update(_get_location_schema(self.hass).schema)
-            schema = vol.Schema(schema_dict)
+            schema = probatio.Schema(schema_dict)
 
         return self.async_show_form(
             step_id="user",
@@ -217,6 +219,7 @@ class GoogleWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:

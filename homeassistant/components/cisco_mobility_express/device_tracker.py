@@ -1,9 +1,10 @@
 """Support for Cisco Mobility Express."""
 
 import logging
+from typing import override
 
 from ciscomobilityexpress.ciscome import CiscoMobilityExpress
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -28,11 +29,11 @@ DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
 )
 
@@ -62,12 +63,14 @@ class CiscoMEDeviceScanner(DeviceScanner):
         self.controller = controller
         self.last_results = {}
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
 
         return [device.macaddr for device in self.last_results]
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         return next(
@@ -75,6 +78,7 @@ class CiscoMEDeviceScanner(DeviceScanner):
             None,
         )
 
+    @override
     def get_extra_attributes(self, device):
         """Get extra attributes of a device.
 

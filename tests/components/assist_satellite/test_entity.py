@@ -5,8 +5,8 @@ from collections.abc import Generator
 from dataclasses import asdict
 from unittest.mock import Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import stt
 from homeassistant.components.assist_pipeline import (
@@ -71,12 +71,10 @@ async def test_entity_state(
     context = Context()
     audio_stream = object()
 
-    entity.async_set_context(context)
-
     with patch(
         "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream"
     ) as mock_start_pipeline:
-        await entity.async_accept_pipeline_from_satellite(audio_stream)
+        await entity.async_accept_pipeline_from_satellite(audio_stream, context=context)
 
     assert mock_start_pipeline.called
     kwargs = mock_start_pipeline.call_args[1]
@@ -201,7 +199,7 @@ async def test_pipeline_validation_error_ends_pipeline(
     )
 
     with patch(
-        "homeassistant.components.assist_pipeline.pipeline.PipelineRun.prepare_speech_to_text"
+        "homeassistant.components.assist_pipeline.default_pipeline._DefaultPipelineProcessor.prepare_speech_to_text"
     ):
         await entity.async_accept_pipeline_from_satellite(
             object(),  # type: ignore[arg-type]
@@ -466,22 +464,28 @@ async def test_announce_default_preannounce(
         )
 
 
-async def test_context_refresh(
+async def test_context_not_inherited(
     hass: HomeAssistant, init_components: ConfigEntry, entity: MockAssistSatellite
 ) -> None:
-    """Test that the context will be automatically refreshed."""
+    """Test that audio from the satellite does not inherit an existing context."""
     audio_stream = object()
 
-    # Remove context
-    entity._context = None
+    # A previous action targeting the entity, such as an announce service call
+    previous_context = Context(user_id="12345")
+    entity.async_set_context(previous_context)
 
     with patch(
         "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream"
-    ):
+    ) as mock_start_pipeline:
         await entity.async_accept_pipeline_from_satellite(audio_stream)
 
-    # Context should have been refreshed
-    assert entity._context is not None
+    # The speaker is unknown, so the pipeline must not run as the previous user
+    context = mock_start_pipeline.call_args[1]["context"]
+    assert context is not previous_context
+    assert context.user_id is None
+
+    # The pipeline drives the entity state from here, so it owns the context
+    assert entity._context is context
 
 
 async def test_pipeline_entity(
@@ -884,6 +888,24 @@ async def test_start_conversation_default_preannounce(
             ),
             True,
         ),
+        (
+            {
+                "answers": [
+                    {
+                        "id": "jazz_with_volume",
+                        "sentences": ["jazz at {1..100:volume} percent volume"],
+                    },
+                ],
+                "preannounce": False,
+            },
+            "jazz at forty two percent volume",
+            AssistSatelliteAnswer(
+                id="jazz_with_volume",
+                sentence="jazz at forty two percent volume",
+                slots={"volume": 42},
+            ),
+            False,
+        ),
     ],
 )
 async def test_ask_question(
@@ -898,13 +920,14 @@ async def test_ask_question(
     """Test asking a question on a device and matching an answer."""
     entity_id = "assist_satellite.test_entity"
     question_text = "What kind of music would you like to listen to?"
+    context = Context()
 
     await async_update_pipeline(
         hass, async_get_pipeline(hass), stt_engine="test-stt-engine", stt_language="en"
     )
 
     async def speech_to_text(self, *args, **kwargs):
-        self.process_event(
+        self.host.process_event(
             PipelineEvent(
                 PipelineEventType.STT_END, {"stt_output": {"text": response_text}}
             )
@@ -917,6 +940,8 @@ async def test_ask_question(
     async def async_start_conversation(start_announcement):
         # Verify state change
         assert entity.state == AssistSatelliteState.RESPONDING
+        # The question is asked on behalf of the caller
+        assert hass.states.get(entity_id).context is context
         assert (
             start_announcement.preannounce_media_id is not None
         ) is should_preannounce
@@ -925,10 +950,10 @@ async def test_ask_question(
         audio_stream = object()
         with (
             patch(
-                "homeassistant.components.assist_pipeline.pipeline.PipelineRun.prepare_speech_to_text"
+                "homeassistant.components.assist_pipeline.default_pipeline._DefaultPipelineProcessor.prepare_speech_to_text"
             ),
             patch(
-                "homeassistant.components.assist_pipeline.pipeline.PipelineRun.speech_to_text",
+                "homeassistant.components.assist_pipeline.default_pipeline._DefaultPipelineProcessor.speech_to_text",
                 speech_to_text,
             ),
         ):
@@ -964,6 +989,7 @@ async def test_ask_question(
             {"entity_id": entity_id, "question": question_text, **service_data},
             blocking=True,
             return_response=True,
+            context=context,
         )
         assert entity.state == AssistSatelliteState.IDLE
         assert response == asdict(expected_answer)
@@ -995,7 +1021,7 @@ async def test_ask_question_invalid_sentences(
     sentence: str,
 ) -> None:
     """Test that invalid sentences raise an exception."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "ask_question",

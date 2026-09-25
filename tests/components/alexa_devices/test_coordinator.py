@@ -95,11 +95,6 @@ async def test_coordinator_load_previous_devices_from_registry(
     ("side_effect", "expected_state"),
     [
         pytest.param(
-            CannotAuthenticate,
-            ConfigEntryState.SETUP_ERROR,
-            id="cannot_authenticate",
-        ),
-        pytest.param(
             CannotConnect,
             ConfigEntryState.SETUP_RETRY,
             id="cannot_connect",
@@ -107,6 +102,53 @@ async def test_coordinator_load_previous_devices_from_registry(
         pytest.param(
             CannotRetrieveData,
             ConfigEntryState.SETUP_RETRY,
+            id="cannot_retrieve_data",
+        ),
+        pytest.param(
+            CannotAuthenticate,
+            ConfigEntryState.SETUP_ERROR,
+            id="cannot_authenticate",
+        ),
+        pytest.param(
+            ValueError,
+            ConfigEntryState.SETUP_RETRY,
+            id="value_error",
+        ),
+    ],
+)
+async def test_async_update_data_errors(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception],
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test _async_update_data error handling."""
+    mock_amazon_devices_client.get_devices_data.side_effect = side_effect
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is expected_state
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        pytest.param(
+            CannotAuthenticate,
+            ConfigEntryState.SETUP_ERROR,
+            id="cannot_authenticate",
+        ),
+        pytest.param(
+            CannotConnect,
+            ConfigEntryState.LOADED,
+            id="cannot_connect",
+        ),
+        pytest.param(
+            CannotRetrieveData,
+            ConfigEntryState.LOADED,
             id="cannot_retrieve_data",
         ),
     ],
@@ -118,7 +160,7 @@ async def test_sync_history_state_error(
     side_effect: type[Exception],
     expected_state: ConfigEntryState,
 ) -> None:
-    """Test sync_history_state error handling."""
+    """Test sync_history_state error handling does not block setup."""
     mock_amazon_devices_client.sync_history_state.side_effect = side_effect
 
     mock_config_entry.add_to_hass(hass)
@@ -138,22 +180,22 @@ async def test_sync_history_state_error(
         ),
         pytest.param(
             CannotConnect,
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.LOADED,
             id="cannot_connect",
         ),
         pytest.param(
             TimeoutError,
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.LOADED,
             id="timeout_error",
         ),
         pytest.param(
             CannotRetrieveData,
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.LOADED,
             id="cannot_retrieve_data",
         ),
         pytest.param(
             ValueError,
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.LOADED,
             id="value_error",
         ),
     ],

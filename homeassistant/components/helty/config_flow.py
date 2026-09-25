@@ -1,21 +1,22 @@
 """Config flow for the Helty Flow integration."""
 
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pyhelty import HeltyClient, HeltyConnectionError, HeltyError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 
 from .const import DOMAIN
 
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+STEP_USER_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 
 
 class HeltyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Helty Flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

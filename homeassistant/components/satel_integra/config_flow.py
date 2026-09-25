@@ -2,15 +2,15 @@
 # pylint: disable=home-assistant-config-flow-name-field  # Name field is no longer allowed in config flow schemas
 
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from satel_integra import AsyncSatel
 from satel_integra.exceptions import (
     SatelConnectFailedError,
     SatelConnectionInitializationError,
     SatelPanelBusyError,
 )
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.config_entries import (
@@ -22,7 +22,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT, Platform
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, selector
 
@@ -47,57 +47,64 @@ from .coordinator import SatelConfigEntry
 
 _LOGGER = logging.getLogger(__package__)
 
-CONNECTION_SCHEMA = vol.Schema(
+CONNECTION_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_ENCRYPTION_KEY): selector.TextSelector(
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_ENCRYPTION_KEY): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
     }
 )
 
-CODE_SCHEMA = vol.Schema(
+CODE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_CODE): cv.string,
+        probatio.Optional(CONF_CODE): cv.string,
     }
 )
 
-PARTITION_SCHEMA = vol.Schema(
+ARM_HOME_MODE_OPTIONS = ["1", "2", "3"]
+
+PARTITION_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_ARM_HOME_MODE, default=DEFAULT_CONF_ARM_HOME_MODE): vol.In(
-            [1, 2, 3]
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Required(
+            CONF_ARM_HOME_MODE, default=DEFAULT_CONF_ARM_HOME_MODE
+        ): probatio.All(
+            probatio.Coerce(str),
+            selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=ARM_HOME_MODE_OPTIONS,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    translation_key="arm_home_mode",
+                )
+            ),
+            probatio.Coerce(int),
         ),
     }
 )
 
-ZONE_AND_OUTPUT_SCHEMA = vol.Schema(
+ZONE_AND_OUTPUT_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Required(
             CONF_ZONE_TYPE, default=BinarySensorDeviceClass.MOTION
-        ): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=[cls.value for cls in BinarySensorDeviceClass],
-                mode=selector.SelectSelectorMode.DROPDOWN,
-                translation_key="binary_sensor_device_class",
-                sort=True,
-            ),
+        ): selector.DeviceClassSelector(
+            selector.DeviceClassSelectorConfig(domain=Platform.BINARY_SENSOR),
         ),
     }
 )
 
 ZONE_SCHEMA = ZONE_AND_OUTPUT_SCHEMA.extend(
     {
-        vol.Required(CONF_ENABLE_TEMPERATURE_SENSOR, default=False): (
+        probatio.Required(CONF_ENABLE_TEMPERATURE_SENSOR, default=False): (
             selector.BooleanSelector()
         ),
     }
 )
 
 
-SWITCHABLE_OUTPUT_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
+SWITCHABLE_OUTPUT_SCHEMA = probatio.Schema({probatio.Required(CONF_NAME): cv.string})
 
 
 async def _async_validate_zone_temperature_sensor(
@@ -137,6 +144,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: SatelConfigEntry,
     ) -> SatelOptionsFlow:
@@ -145,6 +153,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -156,6 +165,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
             SUBENTRY_TYPE_SWITCHABLE_OUTPUT: SwitchableOutputSubentryFlowHandler,
         }
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -322,10 +332,10 @@ class PartitionSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             errors=errors,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PARTITION_NUMBER): vol.All(
-                        vol.Coerce(int), vol.Range(min=1)
+                    probatio.Required(CONF_PARTITION_NUMBER): probatio.All(
+                        probatio.Coerce(int), probatio.Range(min=1)
                     ),
                 }
             ).extend(PARTITION_SCHEMA.schema),
@@ -396,10 +406,10 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
             step_id="user",
             errors=errors,
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_ZONE_NUMBER): vol.All(
-                            vol.Coerce(int), vol.Range(min=1)
+                        probatio.Required(CONF_ZONE_NUMBER): probatio.All(
+                            probatio.Coerce(int), probatio.Range(min=1)
                         ),
                     }
                 ).extend(ZONE_SCHEMA.schema),
@@ -480,10 +490,10 @@ class OutputSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             errors=errors,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_OUTPUT_NUMBER): vol.All(
-                        vol.Coerce(int), vol.Range(min=1)
+                    probatio.Required(CONF_OUTPUT_NUMBER): probatio.All(
+                        probatio.Coerce(int), probatio.Range(min=1)
                     ),
                 }
             ).extend(ZONE_AND_OUTPUT_SCHEMA.schema),
@@ -549,10 +559,10 @@ class SwitchableOutputSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             errors=errors,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_SWITCHABLE_OUTPUT_NUMBER): vol.All(
-                        vol.Coerce(int), vol.Range(min=1)
+                    probatio.Required(CONF_SWITCHABLE_OUTPUT_NUMBER): probatio.All(
+                        probatio.Coerce(int), probatio.Range(min=1)
                     ),
                 }
             ).extend(SWITCHABLE_OUTPUT_SCHEMA.schema),

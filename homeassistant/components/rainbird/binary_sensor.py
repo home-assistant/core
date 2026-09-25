@@ -1,6 +1,7 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
 
 import logging
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -52,6 +53,7 @@ class RainBirdSensor(CoordinatorEntity[RainbirdUpdateCoordinator], BinarySensorE
             self._attr_name = f"{coordinator.device_name} Rainsensor"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self.coordinator.data.rain

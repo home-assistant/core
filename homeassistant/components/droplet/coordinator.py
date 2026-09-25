@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import time
+from typing import override
 
 from pydroplet.droplet import Droplet
 
@@ -44,6 +45,7 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
         assert entry.unique_id is not None
         self.unique_id = entry.unique_id
 
+    @override
     async def _async_setup(self) -> None:
         if not await self.setup():
             raise ConfigEntryNotReady("Device is offline")
@@ -56,6 +58,7 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
                 _LOGGER.warning("Failed to get version info from Droplet")
                 return
 
+    @override
     async def _async_update_data(self) -> None:
         if not self.droplet.connected:
             raise UpdateFailed(

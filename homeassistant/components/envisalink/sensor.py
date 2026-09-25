@@ -1,7 +1,7 @@
 """Support for Envisalink sensors (shows panel info)."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyenvisalink import EnvisalinkAlarmPanel
 
@@ -68,6 +68,7 @@ class EnvisalinkSensor(EnvisalinkEntity, SensorEntity):
         _LOGGER.debug("Setting up sensor for partition: %s", partition_name)
         super().__init__(f"{partition_name} Keypad", info, controller)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
@@ -82,11 +83,13 @@ class EnvisalinkSensor(EnvisalinkEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self):
         """Return the overall state."""
         return self._info["status"]["alpha"]
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self._info["status"]

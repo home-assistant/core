@@ -2,10 +2,10 @@
 
 from collections.abc import Callable
 import logging
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
+import probatio
 import sharp_aquos_rc
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
@@ -37,14 +37,14 @@ DEFAULT_RETRIES = 2
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.string,
-        vol.Optional("retries", default=DEFAULT_RETRIES): cv.string,
-        vol.Optional("power_on_enabled", default=False): cv.boolean,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        probatio.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+        probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.string,
+        probatio.Optional("retries", default=DEFAULT_RETRIES): cv.string,
+        probatio.Optional("power_on_enabled", default=False): cv.boolean,
     }
 )
 
@@ -156,21 +156,25 @@ class SharpAquosTVDevice(MediaPlayerEntity):
         self._attr_volume_level = self._remote.volume() / 60
 
     @_retry
+    @override
     def turn_off(self) -> None:
         """Turn off tvplayer."""
         self._remote.power(0)
 
     @_retry
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Set Volume media player."""
         self._remote.volume(int(volume * 60))
 
     @_retry
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         self._remote.mute(0)
 
     @_retry
+    @override
     def turn_on(self) -> None:
         """Turn the media player on."""
         self._remote.power(1)
@@ -181,25 +185,30 @@ class SharpAquosTVDevice(MediaPlayerEntity):
         self._remote.remote_button(40)
 
     @_retry
+    @override
     def media_play(self) -> None:
         """Send play command."""
         self._remote.remote_button(16)
 
     @_retry
+    @override
     def media_pause(self) -> None:
         """Send pause command."""
         self._remote.remote_button(16)
 
     @_retry
+    @override
     def media_next_track(self) -> None:
         """Send next track command."""
         self._remote.remote_button(21)
 
     @_retry
+    @override
     def media_previous_track(self) -> None:
         """Send the previous track command."""
         self._remote.remote_button(19)
 
+    @override
     def select_source(self, source: str) -> None:
         """Set the input source."""
         for key, value in SOURCES.items():

@@ -2,6 +2,8 @@
 
 from asyncio import Event
 from datetime import datetime
+from itertools import chain
+from typing import Any
 from unittest.mock import ANY, patch
 
 import pytest
@@ -9,6 +11,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.bootstrap import async_from_config_dict
 from homeassistant.components import sensor, template
+from homeassistant.components.sensor import (
+    SensorEntityCapabilityAttribute,
+    SensorEntityStateAttribute,
+)
 from homeassistant.components.template import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
@@ -21,7 +27,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Context, CoreState, HomeAssistant, State, callback
+from homeassistant.core import Context, CoreState, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -31,31 +37,35 @@ from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
+    RESTORE_STATE_SAVED_ATTRIBUTES,
+    RESTORE_STATE_UPDATED_ATTRIBUTES,
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_attributes_template,
+    assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
     make_test_trigger,
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
     setup_entity,
+    setup_mock_template_entity_restore_state,
+    setup_restore_template_entity,
 )
 
-from tests.common import (
-    MockConfigEntry,
-    assert_setup_component,
-    async_capture_events,
-    mock_restore_cache_with_extra_data,
-)
+from tests.common import MockConfigEntry, assert_setup_component, async_capture_events
 from tests.conftest import WebSocketGenerator
 
 TEST_STATE_SENSOR = "sensor.test_state"
+TEST_ATTRIBUTE_ENTITY_ID = "sensor.test_attribute"
 TEST_AVAILABILITY_SENSOR = "sensor.availability_sensor"
 
 TEST_SENSOR = TemplatePlatformSetup(
     sensor.DOMAIN,
     "test_template_sensor",
-    make_test_trigger(TEST_STATE_SENSOR, TEST_AVAILABILITY_SENSOR),
+    make_test_trigger(
+        TEST_STATE_SENSOR, TEST_AVAILABILITY_SENSOR, TEST_ATTRIBUTE_ENTITY_ID
+    ),
 )
 
 
@@ -1505,93 +1515,141 @@ async def test_sensor_date_device_class(
     assert state.state == expected_state
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
+@pytest.mark.parametrize("bad_state", [STATE_UNKNOWN, STATE_UNAVAILABLE])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 @pytest.mark.parametrize(
     "config",
     [
         {
-            "template": {
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "sensor": {
-                    "name": "test",
-                    "state": "{{ trigger.event.data.beer }}",
-                    "picture": "{{ '/local/dogs.png' }}",
-                    "icon": "{{ 'mdi:pirate' }}",
-                    "attributes": {
-                        "plus_one": "{{ trigger.event.data.beer + 1 }}",
-                        "another": "{{ trigger.event.data.uno_mas or 1 }}",
-                    },
-                },
+            "state": "{{ states('sensor.test_state') }}",
+            "device_class": "humidity",
+            "unit_of_measurement": "%",
+            "attributes": {
+                "plus_one": "{{ states('sensor.test_attribute') | int(0) + 1 }}",
+                "plus_two": "{{ states('sensor.test_attribute') | int(0) + 2 }}",
             },
         },
     ],
 )
-@pytest.mark.parametrize(
-    ("restored_state", "restored_native_value", "initial_state", "initial_attributes"),
-    [
-        # the native value should be used, not the state
-        ("dog", 10, "10", ["entity_picture", "icon", "plus_one"]),
-        (STATE_UNAVAILABLE, 10, STATE_UNKNOWN, []),
-        (STATE_UNKNOWN, 10, STATE_UNKNOWN, []),
-    ],
-)
-async def test_trigger_entity_restore_state(
-    hass: HomeAssistant,
-    count,
-    domain,
-    config,
-    restored_state,
-    restored_native_value,
-    initial_state,
-    initial_attributes,
+async def test_entity_restore_bad_states(
+    hass: HomeAssistant, style: ConfigurationStyle, config: ConfigType, bad_state: str
 ) -> None:
-    """Test restoring trigger template binary sensor."""
+    """Test restoring template sensor with bad states."""
+    # Ensure the initial state is None so that restore data is honored
+    await async_trigger(hass, TEST_STATE_SENSOR, None)
 
     restored_attributes = {
-        "entity_picture": "/local/cats.png",
-        "icon": "mdi:ship",
         "plus_one": 55,
     }
-
-    fake_state = State(
-        "sensor.test",
-        restored_state,
-        restored_attributes,
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_SENSOR,
+        bad_state,
+        saved_extra_data={
+            "native_value": 44,
+            "native_unit_of_measurement": None,
+        },
+        saved_attributes=restored_attributes,
     )
-    fake_extra_data = {
-        "native_value": restored_native_value,
-        "native_unit_of_measurement": None,
+    await setup_restore_template_entity(
+        hass,
+        TEST_SENSOR,
+        style,
+        config,
+        "is_state('sensor.test_attribute', '2')",
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_SENSOR,
+        STATE_UNKNOWN,
+    )
+
+    next_state = "2"
+    await async_trigger(hass, TEST_STATE_SENSOR, next_state)
+    await async_trigger(hass, TEST_ATTRIBUTE_ENTITY_ID, next_state)
+
+    assert_state_and_attributes(
+        hass,
+        TEST_SENSOR,
+        next_state,
+        expected_attributes={
+            "plus_one": 3,
+            "plus_two": 4,
+            **RESTORE_STATE_UPDATED_ATTRIBUTES,
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "state": "{{ states('sensor.test_state') }}",
+            "device_class": "humidity",
+            "unit_of_measurement": "%",
+            "attributes": {
+                "plus_one": "{{ states('sensor.test_attribute') | int(0) + 1 }}",
+                "plus_two": "{{ states('sensor.test_attribute') | int(0) + 2 }}",
+            },
+        },
+    ],
+)
+async def test_restore_state(
+    hass: HomeAssistant, style: ConfigurationStyle, config: ConfigType
+) -> None:
+    """Test restoring template sensors."""
+    # Ensure the initial state is None so that restore data is honored
+    await async_trigger(hass, TEST_STATE_SENSOR, None)
+
+    restored_attributes = {
+        "plus_one": 55,
     }
-    mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
-    with assert_setup_component(count, domain):
-        assert await async_setup_component(
-            hass,
-            domain,
-            config,
-        )
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_SENSOR,
+        "not 44",
+        saved_extra_data={
+            "native_value": 44,
+            "native_unit_of_measurement": None,
+        },
+        saved_attributes=restored_attributes,
+    )
+    await setup_restore_template_entity(
+        hass,
+        TEST_SENSOR,
+        style,
+        config,
+        "is_state('sensor.test_attribute', '2')",
+    )
 
-        await hass.async_block_till_done()
-        await hass.async_start()
-        await hass.async_block_till_done()
+    state = assert_state_and_attributes(
+        hass,
+        TEST_SENSOR,
+        "44",
+        {**restored_attributes, **RESTORE_STATE_SAVED_ATTRIBUTES},
+    )
+    assert "plus_two" not in state.attributes
 
-    state = hass.states.get("sensor.test")
-    assert state.state == initial_state
-    for attr, value in restored_attributes.items():
-        if attr in initial_attributes:
-            assert state.attributes[attr] == value
-        else:
-            assert attr not in state.attributes
-    assert "another" not in state.attributes
+    next_state = "2"
+    await async_trigger(hass, TEST_STATE_SENSOR, next_state)
+    await async_trigger(hass, TEST_ATTRIBUTE_ENTITY_ID, next_state)
 
-    hass.bus.async_fire("test_event", {"beer": 2})
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.test")
-    assert state.state == "2"
-    assert state.attributes["icon"] == "mdi:pirate"
-    assert state.attributes["entity_picture"] == "/local/dogs.png"
-    assert state.attributes["plus_one"] == 3
-    assert state.attributes["another"] == 1
+    assert_state_and_attributes(
+        hass,
+        TEST_SENSOR,
+        next_state,
+        expected_attributes={
+            "plus_one": 3,
+            "plus_two": 4,
+            **RESTORE_STATE_UPDATED_ATTRIBUTES,
+        },
+    )
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "template")])
@@ -1785,7 +1843,7 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(template_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    template_entity = entity_registry.async_get("sensor.my_template")
+    template_entity = entity_registry.async_get("sensor.mock_title_my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
 
@@ -1885,3 +1943,96 @@ async def test_numeric_sensor_int_float(
     """Test sensor properly stores int or float for state."""
     await async_trigger(hass, TEST_STATE_SENSOR, "anything")
     assert hass.states.get(TEST_SENSOR.entity_id).state == expected_state
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass, TEST_SENSOR, style, {"state": "{{ 'x' }}"}, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    [
+        *list(
+            chain(
+                set(SensorEntityCapabilityAttribute)
+                - {SensorEntityCapabilityAttribute.OPTIONS},
+                SensorEntityStateAttribute,
+            )
+        ),
+        "device_class",
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_SENSOR,
+        style,
+        1,
+        {
+            "state": "{{ 'x' }}",
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_SENSOR.entity_id}: {attribute}"
+    assert error in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("attribute", "set_state", "expected"),
+    [(SensorEntityCapabilityAttribute.OPTIONS, ["a"], ["a"])],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_allowed_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: str,
+    set_state: Any,
+    expected: Any,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_SENSOR,
+        style,
+        1,
+        {
+            "state": "{{ 'x' }}",
+            "attributes": f"{{{{ dict({attribute}=state_attr('{TEST_ATTRIBUTE_ENTITY_ID}', '{attribute}')) }}}}",
+        },
+    )
+
+    await async_trigger(
+        hass, TEST_ATTRIBUTE_ENTITY_ID, "anything", {attribute: set_state}
+    )
+
+    state = hass.states.get(TEST_SENSOR.entity_id)
+    assert state.state == "x"
+    assert state.attributes[attribute] == expected
+
+    error = f"Unsupported attribute(s) found for {TEST_SENSOR.entity_id}: {attribute}"
+    assert error not in caplog.text

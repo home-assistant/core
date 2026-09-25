@@ -1,10 +1,10 @@
 """Config flow to configure the EcoNet component."""
 
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pyeconet import EcoNetApiInterface
 from pyeconet.errors import InvalidCredentialsError, PyeconetError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -19,13 +19,14 @@ class EcoNetFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.data_schema = vol.Schema(
+        self.data_schema = probatio.Schema(
             {
-                vol.Required(CONF_EMAIL): str,
-                vol.Required(CONF_PASSWORD): str,
+                probatio.Required(CONF_EMAIL): str,
+                probatio.Required(CONF_PASSWORD): str,
             }
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

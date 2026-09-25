@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 from typing import Any, cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import config as conf_util
 from homeassistant.components import websocket_api
@@ -30,7 +30,7 @@ from homeassistant.helpers import (
     event as ev,
     issue_registry as ir,
 )
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -87,7 +87,6 @@ from .const import (
     DEFAULT_RETAIN,
     DOMAIN,
     ENTITY_PLATFORMS,
-    ENTRY_OPTION_FIELDS,
     MQTT_CONNECTION_STATE,
     PROTOCOL_5,
     PROTOCOL_311,
@@ -154,7 +153,6 @@ __all__ = [
     "DEFAULT_RETAIN",
     "DOMAIN",
     "ENTITY_PLATFORMS",
-    "ENTRY_OPTION_FIELDS",
     "MQTT",
     "MQTT_BASE_SCHEMA",
     "MQTT_CONNECTION_STATE",
@@ -231,26 +229,26 @@ CONNECTION_FAILED_RECOVERABLE = "connection_failed_recoverable"
 #       ...
 #     - name: ""
 #       ...
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             cv.ensure_list,
             cv.remove_falsy,
             [CONFIG_SCHEMA_BASE],
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 # Publish action call validation schema
-MQTT_PUBLISH_SCHEMA = vol.Schema(
+MQTT_PUBLISH_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_TOPIC): valid_publish_topic,
-        vol.Required(ATTR_PAYLOAD, default=None): vol.Any(cv.string, None),
-        vol.Optional(ATTR_EVALUATE_PAYLOAD): cv.boolean,
-        vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
-        vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(ATTR_MESSAGE_EXPIRY_INTERVAL): cv.positive_time_period_dict,
+        probatio.Required(ATTR_TOPIC): valid_publish_topic,
+        probatio.Required(ATTR_PAYLOAD, default=None): probatio.Any(cv.string, None),
+        probatio.Optional(ATTR_EVALUATE_PAYLOAD): cv.boolean,
+        probatio.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
+        probatio.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        probatio.Optional(ATTR_MESSAGE_EXPIRY_INTERVAL): cv.positive_time_period_dict,
     },
     required=True,
 )
@@ -289,12 +287,11 @@ async def async_check_config_schema(
             for config in config_items:
                 try:
                     schema(config)
-                except vol.Invalid as exc:
+                except probatio.Invalid as exc:
                     integration = await async_get_integration(hass, DOMAIN)
                     message = conf_util.format_schema_error(
                         hass, exc, domain, config, integration.documentation
                     )
-                    # pylint: disable-next=home-assistant-exception-message-with-translation
                     raise ServiceValidationError(
                         translation_domain=DOMAIN,
                         translation_key="invalid_platform_config_message",
@@ -373,8 +370,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             message_expiry_interval=message_expiry_interval,
         )
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_PUBLISH, async_publish_service, schema=MQTT_PUBLISH_SCHEMA
+    async_register_admin_service(
+        hass, DOMAIN, SERVICE_PUBLISH, async_publish_service, MQTT_PUBLISH_SCHEMA
     )
 
     async def async_dump_service(call: ServiceCall) -> None:
@@ -398,20 +395,27 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         ev.async_call_later(hass, call.data["duration"], finish_dump)
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_DUMP,
         async_dump_service,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required("topic"): valid_subscribe_topic,
-                vol.Optional("duration", default=5): int,
+                probatio.Required("topic"): valid_subscribe_topic,
+                probatio.Optional("duration", default=5): int,
             }
         ),
     )
 
     async def _reload_config(call: ServiceCall) -> None:
         """Reload the platforms."""
+        if not mqtt_config_entry_enabled(hass):
+            _LOGGER.debug(
+                "Skipped reloading MQTT integration, "
+                "the MQTT config entry is not enabled"
+            )
+            return
         entry: ConfigEntry = next(iter(hass.config_entries.async_entries(DOMAIN)))
         mqtt_data = hass.data[DATA_MQTT]
 
@@ -463,31 +467,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Migrate the options from config entry data."""
+    """Migrate the config entry to the latest version."""
     _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
     data: dict[str, Any] = dict(entry.data)
     options: dict[str, Any] = dict(entry.options)
-    if entry.version > 2 or (entry.version == 2 and entry.minor_version > 1):
-        # This means the user has downgraded from a future version
-        # We allow read support for version 2.1
-        return False
 
     if entry.version == 1 and entry.minor_version < 2:
-        # Can be removed when the config entry is bumped to version 2.1
-        # with HA Core 2026.7.0. Read support for version 2.1 is expected with 2026.1
-        # From 2026.7 we will write version 2.1
-        for key in ENTRY_OPTION_FIELDS:
+        for key in (
+            CONF_DISCOVERY,
+            CONF_DISCOVERY_PREFIX,
+            "birth_message",
+            "will_message",
+        ):
             if key not in data:
                 continue
             options[key] = data.pop(key)
-        # Write version 1.2 for backwards compatibility
-        hass.config_entries.async_update_entry(
-            entry,
-            data=data,
-            options=options,
-            version=1,
-            minor_version=2,
-        )
+
+    # Bump config entry to version 2.1
+    hass.config_entries.async_update_entry(
+        entry,
+        data=data,
+        options=options,
+        version=2,
+        minor_version=1,
+    )
 
     _LOGGER.debug(
         "Migration to version %s.%s successful", entry.version, entry.minor_version
@@ -607,7 +610,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "mqtt/device/debug_info", vol.Required("device_id"): str}
+    {
+        probatio.Required("type"): "mqtt/device/debug_info",
+        probatio.Required("device_id"): str,
+    }
 )
 @callback
 def websocket_mqtt_info(
@@ -622,9 +628,9 @@ def websocket_mqtt_info(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "mqtt/subscribe",
-        vol.Required("topic"): valid_subscribe_topic,
-        vol.Optional("qos"): valid_qos_schema,
+        probatio.Required("type"): "mqtt/subscribe",
+        probatio.Required("topic"): valid_subscribe_topic,
+        probatio.Optional("qos"): valid_qos_schema,
     }
 )
 @websocket_api.async_response
@@ -687,7 +693,7 @@ def is_connected(hass: HomeAssistant) -> bool:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Remove MQTT config entry from a device."""
     from . import device_automation  # noqa: PLC0415

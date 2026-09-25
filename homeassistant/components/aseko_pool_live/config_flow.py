@@ -2,10 +2,10 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioaseko import Aseko, AsekoAPIError, AsekoInvalidCredentials
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID
@@ -20,10 +20,10 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
-    data_schema = vol.Schema(
+    data_schema = probatio.Schema(
         {
-            vol.Required(CONF_EMAIL): str,
-            vol.Required(CONF_PASSWORD): str,
+            probatio.Required(CONF_EMAIL): str,
+            probatio.Required(CONF_PASSWORD): str,
         }
     )
 
@@ -37,6 +37,7 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_UNIQUE_ID: user.user_id,
         }
 
+    @override
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
     ) -> ConfigFlowResult:

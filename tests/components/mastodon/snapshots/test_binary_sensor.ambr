@@ -39,7 +39,7 @@
 # name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_bot-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mastodon @trwnh@mastodon.social Bot',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mastodon @trwnh@mastodon.social Bot',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_bot',
@@ -89,7 +89,7 @@
 # name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_discoverable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mastodon @trwnh@mastodon.social Discoverable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mastodon @trwnh@mastodon.social Discoverable',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_discoverable',
@@ -139,7 +139,7 @@
 # name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_indexable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mastodon @trwnh@mastodon.social Indexable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mastodon @trwnh@mastodon.social Indexable',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_indexable',
@@ -189,7 +189,7 @@
 # name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_limited-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mastodon @trwnh@mastodon.social Limited',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mastodon @trwnh@mastodon.social Limited',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_limited',
@@ -239,7 +239,7 @@
 # name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_locked-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mastodon @trwnh@mastodon.social Locked',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mastodon @trwnh@mastodon.social Locked',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_locked',
@@ -289,7 +289,7 @@
 # name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_memorial-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mastodon @trwnh@mastodon.social Memorial',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mastodon @trwnh@mastodon.social Memorial',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_memorial',
@@ -339,7 +339,7 @@
 # name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_moved-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mastodon @trwnh@mastodon.social Moved',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mastodon @trwnh@mastodon.social Moved',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_moved',
@@ -389,7 +389,7 @@
 # name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_suspended-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mastodon @trwnh@mastodon.social Suspended',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mastodon @trwnh@mastodon.social Suspended',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_suspended',

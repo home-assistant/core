@@ -4,10 +4,10 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
-from homeassistant.components.lovelace import _validate_url_slug
+from homeassistant.components.lovelace import DOMAIN, _validate_url_slug
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -52,7 +52,7 @@ async def test_create_dashboards_when_onboarded(
     """Test we don't create dashboards when onboarded."""
     client = await hass_ws_client(hass)
 
-    assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     # List dashboards
     await client.send_json_auto_id({"type": "lovelace/dashboards/list"})
@@ -71,7 +71,7 @@ async def test_create_dashboards_when_not_onboarded(
     """Test we automatically create dashboards when not onboarded."""
     client = await hass_ws_client(hass)
 
-    assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     # Call onboarding listener
     mock_add_onboarding_listener.mock_calls[0][1][1]()
@@ -123,5 +123,5 @@ def test_validate_url_slug_valid(value: str, expected: str) -> None:
 )
 def test_validate_url_slug_invalid(value: Any, error_message: str) -> None:
     """Test _validate_url_slug with invalid values."""
-    with pytest.raises(vol.Invalid, match=error_message):
+    with pytest.raises(probatio.Invalid, match=error_message):
         _validate_url_slug(value)

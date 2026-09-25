@@ -1,12 +1,12 @@
 """Config flow for PTDevices integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import aioptdevices
 from aioptdevices.configuration import Configuration
 from aioptdevices.interface import Interface
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
@@ -18,9 +18,9 @@ from .const import DEFAULT_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-_CONF_SCHEMA = vol.Schema(
+_CONF_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_TOKEN): str,
+        probatio.Required(CONF_API_TOKEN): str,
     }
 )
 
@@ -73,6 +73,7 @@ class PTDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -27,7 +27,7 @@
       "user": {
         "menu_options": {
           "cloud": "Risco Cloud (recommended)",
-          "local": "Local Risco Panel (advanced)"
+          "local": "Local Risco Panel"
         }
       }
     }

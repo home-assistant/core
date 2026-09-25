@@ -2,15 +2,15 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pytrafikverket.exceptions import (
     InvalidAuthentication,
     MultipleWeatherStationsFound,
     NoWeatherStationFound,
 )
 from pytrafikverket.trafikverket_weather import TrafikverketWeather
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
@@ -38,6 +38,7 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
         weather_api = TrafikverketWeather(web_session, sensor_api)
         await weather_api.async_get_weather(station)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -71,10 +72,10 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): cv.string,
-                    vol.Required(CONF_STATION): cv.string,
+                    probatio.Required(CONF_API_KEY): cv.string,
+                    probatio.Required(CONF_STATION): cv.string,
                 }
             ),
             errors=errors,
@@ -114,7 +115,7 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): cv.string}),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): cv.string}),
             errors=errors,
         )
 
@@ -146,12 +147,12 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         schema = self.add_suggested_values_to_schema(
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): TextSelector(
+                    probatio.Required(CONF_API_KEY): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
-                    vol.Required(CONF_STATION): TextSelector(),
+                    probatio.Required(CONF_STATION): TextSelector(),
                 }
             ),
             {**self._get_reconfigure_entry().data, **(user_input or {})},

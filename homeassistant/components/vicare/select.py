@@ -2,6 +2,7 @@
 
 from contextlib import suppress
 import logging
+from typing import override
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
@@ -19,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ViCareEntity
 from .types import ViCareConfigEntry, ViCareDevice
-from .utils import get_device_serial, is_supported
+from .utils import is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ def _build_entities(
     """Create ViCare select entities for a device."""
     return [
         ViCareDHWOperatingModeSelect(
-            get_device_serial(device.api),
+            device.serial,
             device.config,
             device.api,
         )
@@ -107,6 +108,7 @@ class ViCareDHWOperatingModeSelect(ViCareEntity, SelectEntity):
         except PyViCareInvalidDataError as invalid_data_exception:
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
 
+    @override
     def select_option(self, option: str) -> None:
         """Set the DHW operating mode."""
         api_mode = DHW_MODE_HA_TO_API.get(option, option)

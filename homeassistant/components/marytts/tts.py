@@ -1,9 +1,9 @@
 """Support for the MaryTTS service."""
 
-from typing import Any
+from typing import Any, override
 
+import probatio
 from speak2mary import MaryTTS
-import voluptuous as vol
 
 from homeassistant.components.tts import (
     CONF_LANG,
@@ -33,13 +33,17 @@ MAP_MARYTTS_CODEC = {"WAVE_FILE": "wav", "AIFF_FILE": "aiff", "AU_FILE": "au"}
 
 PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
-        vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): cv.string,
-        vol.Optional(CONF_CODEC, default=DEFAULT_CODEC): vol.In(SUPPORT_CODEC),
-        vol.Optional(CONF_EFFECT, default=DEFAULT_EFFECTS): {
-            vol.All(cv.string, vol.In(SUPPORT_EFFECTS)): cv.string
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_LANG, default=DEFAULT_LANG): probatio.In(
+            SUPPORT_LANGUAGES
+        ),
+        probatio.Optional(CONF_VOICE, default=DEFAULT_VOICE): cv.string,
+        probatio.Optional(CONF_CODEC, default=DEFAULT_CODEC): probatio.In(
+            SUPPORT_CODEC
+        ),
+        probatio.Optional(CONF_EFFECT, default=DEFAULT_EFFECTS): {
+            probatio.All(cv.string, probatio.In(SUPPORT_EFFECTS)): cv.string
         },
     }
 )
@@ -67,25 +71,30 @@ class MaryTTSProvider(Provider):
         self.name = "MaryTTS"
 
     @property
+    @override
     def default_language(self) -> str:
         """Return the default language."""
         return self._mary.locale
 
     @property
+    @override
     def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
     @property
+    @override
     def default_options(self) -> dict[str, Any]:
         """Return dict include default options."""
         return {CONF_EFFECT: self._effects}
 
     @property
+    @override
     def supported_options(self) -> list[str]:
         """Return a list of supported options."""
         return SUPPORT_OPTIONS
 
+    @override
     def get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:

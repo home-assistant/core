@@ -1,6 +1,8 @@
 """Device tracker for the Swisscom Internet-Box."""
 
-import voluptuous as vol
+from typing import override
+
+import probatio
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
@@ -18,7 +20,7 @@ from .const import DEFAULT_HOST, DOMAIN
 from .coordinator import SwisscomConfigEntry, SwisscomDataUpdateCoordinator
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string}
+    {probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string}
 )
 
 
@@ -86,30 +88,35 @@ class SwisscomScannerEntity(
         return self.coordinator.data.get(self._key)
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return whether the device is currently connected to the LAN."""
         device = self._device
         return bool(device and device.active)
 
     @property
+    @override
     def mac_address(self) -> str:
         """Return the MAC address of the device."""
         device = self._device
         return device.phys_address if device else self._key
 
     @property
+    @override
     def hostname(self) -> str | None:
         """Return the hostname of the device."""
         device = self._device
         return device.name if device else None
 
     @property
+    @override
     def ip_address(self) -> str | None:
         """Return the IP address of the device."""
         device = self._device
         return device.ip_address if device else None
 
     @property
+    @override
     def name(self) -> str | None:
         """Return the friendly name of the device."""
         return self.hostname

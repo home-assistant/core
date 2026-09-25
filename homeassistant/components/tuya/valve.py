@@ -1,5 +1,8 @@
 """Support for Tuya valves."""
 
+from dataclasses import dataclass
+from typing import override
+
 from tuya_device_handlers.definition.valve import (
     ValveDefinition,
     get_default_definition,
@@ -18,58 +21,64 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 
-VALVES: dict[DeviceCategory, tuple[ValveEntityDescription, ...]] = {
+
+@dataclass(frozen=True)
+class TuyaValveEntityDescription(TuyaEntityDescription, ValveEntityDescription):
+    """Describes a Tuya valve entity."""
+
+
+VALVES: dict[DeviceCategory, tuple[TuyaValveEntityDescription, ...]] = {
     DeviceCategory.SFKZQ: (
-        ValveEntityDescription(
+        TuyaValveEntityDescription(
             key=DPCode.SWITCH,
             translation_key="valve",
             device_class=ValveDeviceClass.WATER,
         ),
-        ValveEntityDescription(
+        TuyaValveEntityDescription(
             key=DPCode.SWITCH_1,
             translation_key="indexed_valve",
             translation_placeholders={"index": "1"},
             device_class=ValveDeviceClass.WATER,
         ),
-        ValveEntityDescription(
+        TuyaValveEntityDescription(
             key=DPCode.SWITCH_2,
             translation_key="indexed_valve",
             translation_placeholders={"index": "2"},
             device_class=ValveDeviceClass.WATER,
         ),
-        ValveEntityDescription(
+        TuyaValveEntityDescription(
             key=DPCode.SWITCH_3,
             translation_key="indexed_valve",
             translation_placeholders={"index": "3"},
             device_class=ValveDeviceClass.WATER,
         ),
-        ValveEntityDescription(
+        TuyaValveEntityDescription(
             key=DPCode.SWITCH_4,
             translation_key="indexed_valve",
             translation_placeholders={"index": "4"},
             device_class=ValveDeviceClass.WATER,
         ),
-        ValveEntityDescription(
+        TuyaValveEntityDescription(
             key=DPCode.SWITCH_5,
             translation_key="indexed_valve",
             translation_placeholders={"index": "5"},
             device_class=ValveDeviceClass.WATER,
         ),
-        ValveEntityDescription(
+        TuyaValveEntityDescription(
             key=DPCode.SWITCH_6,
             translation_key="indexed_valve",
             translation_placeholders={"index": "6"},
             device_class=ValveDeviceClass.WATER,
         ),
-        ValveEntityDescription(
+        TuyaValveEntityDescription(
             key=DPCode.SWITCH_7,
             translation_key="indexed_valve",
             translation_placeholders={"index": "7"},
             device_class=ValveDeviceClass.WATER,
         ),
-        ValveEntityDescription(
+        TuyaValveEntityDescription(
             key=DPCode.SWITCH_8,
             translation_key="indexed_valve",
             translation_placeholders={"index": "8"},
@@ -118,7 +127,7 @@ class TuyaValveEntity(TuyaEntity, ValveEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: ValveEntityDescription,
+        description: TuyaValveEntityDescription,
         definition: ValveDefinition,
     ) -> None:
         """Init TuyaValveEntity."""
@@ -126,12 +135,14 @@ class TuyaValveEntity(TuyaEntity, ValveEntity):
         self._dpcode_wrapper = definition.control_wrapper
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the valve is closed."""
         if (is_open := self._read_wrapper(self._dpcode_wrapper)) is None:
             return None
         return not is_open
 
+    @override
     async def _process_device_update(
         self,
         updated_status_properties: list[str],
@@ -146,10 +157,12 @@ class TuyaValveEntity(TuyaEntity, ValveEntity):
             self.device, updated_status_properties, dp_timestamps
         )
 
+    @override
     async def async_open_valve(self) -> None:
         """Open the valve."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, True)
 
+    @override
     async def async_close_valve(self) -> None:
         """Close the valve."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, False)

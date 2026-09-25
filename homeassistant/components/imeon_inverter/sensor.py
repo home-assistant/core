@@ -1,6 +1,7 @@
 """Imeon inverter sensor support."""
 
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -455,6 +456,7 @@ class InverterSensor(InverterEntity, SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
+    @override
     def native_value(self) -> StateType | None:
         """Return the state of the entity."""
         return self.coordinator.data.get(self.data_key)

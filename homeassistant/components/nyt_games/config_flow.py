@@ -1,9 +1,9 @@
 """Config flow for NYT Games."""
 
-from typing import Any
+from typing import Any, override
 
 from nyt_games import NYTGamesAuthenticationError, NYTGamesClient, NYTGamesError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
@@ -15,6 +15,7 @@ from .const import DOMAIN, LOGGER
 class NYTGamesConfigFlow(ConfigFlow, domain=DOMAIN):
     """NYT Games config flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -41,6 +42,6 @@ class NYTGamesConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_TOKEN): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_TOKEN): str}),
             errors=errors,
         )

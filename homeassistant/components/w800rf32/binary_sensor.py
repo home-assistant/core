@@ -2,8 +2,9 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
-import voluptuous as vol
+import probatio
 import W800rf32 as w800
 
 from homeassistant.components.binary_sensor import (
@@ -27,19 +28,19 @@ CONF_OFF_DELAY = "off_delay"
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_DEVICES): {
-            cv.string: vol.Schema(
+        probatio.Required(CONF_DEVICES): {
+            cv.string: probatio.Schema(
                 {
-                    vol.Required(CONF_NAME): cv.string,
-                    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-                    vol.Optional(CONF_OFF_DELAY): vol.All(
+                    probatio.Required(CONF_NAME): cv.string,
+                    probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+                    probatio.Optional(CONF_OFF_DELAY): probatio.All(
                         cv.time_period, cv.positive_timedelta
                     ),
                 }
             )
         }
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -130,6 +131,7 @@ class W800rf32BinarySensor(BinarySensorEntity):
         self._attr_is_on = state
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
         async_dispatcher_connect(self.hass, self._signal, self.binary_sensor_update)

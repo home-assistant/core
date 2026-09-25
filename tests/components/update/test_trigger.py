@@ -5,16 +5,18 @@ from typing import Any
 import pytest
 
 from homeassistant.components.update import DOMAIN
+from homeassistant.components.update.trigger import TRIGGERS
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_target_entities,
     parametrize_trigger_states,
     target_entities,
@@ -27,24 +29,15 @@ async def target_updates(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, DOMAIN)
 
 
-@pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "update.update_became_available",
-    ],
-)
-async def test_update_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the update triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "became_available": TargetSupport.STANDARD,
+}
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("update.update_became_available", {}, True, True),
+        ("update.became_available", {}, True, True),
     ],
 )
 async def test_update_trigger_options_validation(
@@ -64,7 +57,11 @@ async def test_update_trigger_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities(DOMAIN),
@@ -73,7 +70,7 @@ async def test_update_trigger_options_validation(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="update.update_became_available",
+            trigger="update.became_available",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
         ),
@@ -102,7 +99,6 @@ async def test_update_state_trigger_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities(DOMAIN),
@@ -111,7 +107,7 @@ async def test_update_state_trigger_behavior_each(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="update.update_became_available",
+            trigger="update.became_available",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
         ),
@@ -140,7 +136,6 @@ async def test_update_state_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities(DOMAIN),
@@ -149,7 +144,7 @@ async def test_update_state_trigger_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="update.update_became_available",
+            trigger="update.became_available",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
         ),

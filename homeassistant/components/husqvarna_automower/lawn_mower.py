@@ -1,7 +1,7 @@
 """Husqvarna Automower lawn mower entity."""
 
 from datetime import timedelta
-from typing import TYPE_CHECKING
+from typing import override
 
 from aioautomower.model import MowerActivities, MowerStates, WorkArea
 
@@ -72,6 +72,7 @@ class AutomowerLawnMowerEntity(AutomowerBaseEntity, LawnMowerEntity):
         self._attr_unique_id = mower_id
 
     @property
+    @override
     def activity(self) -> LawnMowerActivity:
         """Return the state of the mower."""
         mower_attributes = self.mower_attributes
@@ -91,6 +92,7 @@ class AutomowerLawnMowerEntity(AutomowerBaseEntity, LawnMowerEntity):
         return LawnMowerActivity.ERROR
 
     @property
+    @override
     def available(self) -> bool:
         """Return the available attribute of the entity."""
         return (
@@ -103,16 +105,19 @@ class AutomowerLawnMowerEntity(AutomowerBaseEntity, LawnMowerEntity):
         return self.mower_attributes.work_areas
 
     @handle_sending_exception
+    @override
     async def async_start_mowing(self) -> None:
         """Resume schedule."""
         await self.coordinator.api.commands.resume_schedule(self.mower_id)
 
     @handle_sending_exception
+    @override
     async def async_pause(self) -> None:
         """Pauses the mower."""
         await self.coordinator.api.commands.pause_mowing(self.mower_id)
 
     @handle_sending_exception
+    @override
     async def async_dock(self) -> None:
         """Parks the mower until next schedule."""
         await self.coordinator.api.commands.park_until_next_schedule(self.mower_id)
@@ -136,9 +141,7 @@ class AutomowerLawnMowerEntity(AutomowerBaseEntity, LawnMowerEntity):
             raise ServiceValidationError(
                 translation_domain=DOMAIN, translation_key="work_areas_not_supported"
             )
-        if TYPE_CHECKING:
-            assert self.work_areas is not None
-        if work_area_id not in self.work_areas:
+        if (work_areas := self.work_areas) is None or work_area_id not in work_areas:
             raise ServiceValidationError(
                 translation_domain=DOMAIN, translation_key="work_area_not_existing"
             )

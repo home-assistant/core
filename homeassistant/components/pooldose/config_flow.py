@@ -1,12 +1,12 @@
 """Config flow for the Seko PoolDose integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pooldose.client import PooldoseClient
 from pooldose.request_status import RequestStatus
 from pooldose.type_definitions import APIVersionResponse
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC
@@ -18,9 +18,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SCHEMA_DEVICE = vol.Schema(
+SCHEMA_DEVICE = probatio.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
     }
 )
 
@@ -65,6 +65,7 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return serial_number, None, None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -108,6 +109,7 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

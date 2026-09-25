@@ -52,6 +52,15 @@ async def mock_opensensemap_api(
         }
         instance.pm2_5 = sensor_values.get("PM2.5")
         instance.pm10 = sensor_values.get("PM10")
+        instance.pm1_0 = sensor_values.get("PM1.0")
+        instance.temperature = sensor_values.get("Temperature")
+        instance.humidity = sensor_values.get("Humidity")
+        instance.air_pressure = sensor_values.get("Air Pressure")
+        instance.illuminance = sensor_values.get("Illuminance")
+        instance.uv = sensor_values.get("UV")
+        instance.wind_speed = sensor_values.get("Wind Speed")
+        instance.wind_direction = sensor_values.get("Wind Direction")
+        instance.precipitation = sensor_values.get("Precipitation")
         yield instance
 
 

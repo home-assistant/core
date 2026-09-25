@@ -5,12 +5,12 @@ import logging
 import pathlib
 import secrets
 import shutil
-from typing import Any
+from typing import Any, override
 
 from aiohttp import hdrs, web
 from aiohttp.web_request import FileField
 from PIL import Image, ImageOps, UnidentifiedImageError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
@@ -31,11 +31,11 @@ VALID_SIZES = {256, 512}
 MAX_SIZE = 1024 * 1024 * 10
 
 CREATE_FIELDS: VolDictType = {
-    vol.Required("file"): FileField,
+    probatio.Required("file"): FileField,
 }
 
 UPDATE_FIELDS: VolDictType = {
-    vol.Optional("name"): vol.All(str, vol.Length(min=1)),
+    probatio.Optional("name"): probatio.All(str, probatio.Length(min=1)),
 }
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -62,8 +62,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class ImageStorageCollection(collection.DictStorageCollection):
     """Image collection stored in storage."""
 
-    CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
-    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+    CREATE_SCHEMA = probatio.Schema(CREATE_FIELDS)
+    UPDATE_SCHEMA = probatio.Schema(UPDATE_FIELDS)
 
     def __init__(self, hass: HomeAssistant, image_dir: pathlib.Path) -> None:
         """Initialize media storage collection."""
@@ -73,6 +73,7 @@ class ImageStorageCollection(collection.DictStorageCollection):
         self.async_add_listener(self._change_listener)
         self.image_dir = image_dir
 
+    @override
     async def _process_create_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(dict(data))
@@ -83,7 +84,7 @@ class ImageStorageCollection(collection.DictStorageCollection):
             "image/jpeg",
             "image/png",
         ):
-            raise vol.Invalid("Only jpeg, png, and gif images are allowed")
+            raise probatio.Invalid("Only jpeg, png, and gif images are allowed")
 
         data[CONF_ID] = secrets.token_hex(16)
         data["filesize"] = await self.hass.async_add_executor_job(self._move_data, data)
@@ -102,7 +103,7 @@ class ImageStorageCollection(collection.DictStorageCollection):
         try:
             image = Image.open(uploaded_file.file)
         except UnidentifiedImageError as err:
-            raise vol.Invalid("Unable to identify image file") from err
+            raise probatio.Invalid("Unable to identify image file") from err
 
         # Reset content
         uploaded_file.file.seek(0)
@@ -125,10 +126,12 @@ class ImageStorageCollection(collection.DictStorageCollection):
         return media_file.stat().st_size
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict[str, Any]) -> str:
         """Suggest an ID based on the config."""
         return str(info[CONF_ID])
 
+    @override
     async def _update_data(
         self,
         item: dict[str, Any],
@@ -153,6 +156,7 @@ class ImageStorageCollection(collection.DictStorageCollection):
 class ImageUploadStorageCollectionWebsocket(collection.DictStorageCollectionWebsocket):
     """Class to expose storage collection management over websocket."""
 
+    @override
     async def ws_create_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
@@ -248,7 +252,10 @@ def _generate_thumbnail_if_file_does_not_exist(
     if not target_file.is_file():
         image = ImageOps.exif_transpose(Image.open(original_path))
         image.thumbnail(target_size)
-        image.save(target_path, format=content_type.partition("/")[-1])
+        save_format = content_type.partition("/")[-1]
+        if save_format == "jpeg" and image.mode not in ("RGB", "L", "CMYK"):
+            image = image.convert("RGB")
+        image.save(target_path, format=save_format)
 
 
 def _validate_size_from_filename(filename: str) -> tuple[int, int]:

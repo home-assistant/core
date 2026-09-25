@@ -1,8 +1,8 @@
 """Support for sensors."""
 
-from typing import TYPE_CHECKING, Final, cast
+from typing import TYPE_CHECKING, Final, cast, override
 
-from aiocomelit.api import ComelitSerialBridgeObject, ComelitVedoZoneObject
+from aiocomelit.api import ComelitDeviceObject, ComelitVedoZoneObject
 from aiocomelit.const import ALARM_ZONE, OTHER, AlarmZoneState
 
 from homeassistant.components.sensor import (
@@ -111,7 +111,7 @@ class ComelitBridgeSensorEntity(ComelitBridgeBaseEntity, SensorEntity):
     def __init__(
         self,
         coordinator: ComelitSerialBridge,
-        device: ComelitSerialBridgeObject,
+        device: ComelitDeviceObject,
         config_entry_entry_id: str,
         description: SensorEntityDescription,
     ) -> None:
@@ -121,6 +121,7 @@ class ComelitBridgeSensorEntity(ComelitBridgeBaseEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Sensor value."""
         return cast(
@@ -164,11 +165,13 @@ class ComelitVedoSensorEntity(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Sensor availability."""
         return self._zone_object.human_status is not AlarmZoneState.UNAVAILABLE
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Sensor value."""
         if (status := self._zone_object.human_status) is AlarmZoneState.UNKNOWN:

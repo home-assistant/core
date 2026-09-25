@@ -1,9 +1,9 @@
 """Config flow for govee ble integration."""
 
-from typing import Any
+from typing import Any, override
 
 from govee_ble import GoveeBluetoothDeviceData as DeviceData
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -29,6 +29,7 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
             str, tuple[DeviceData, BluetoothServiceInfoBleak]
         ] = {}
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -63,6 +64,7 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="bluetooth_confirm", description_placeholders=placeholders
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -92,9 +94,9 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(
+                    probatio.Required(CONF_ADDRESS): probatio.In(
                         {
                             address: (
                                 f"{device.get_device_name(None) or discovery_info.name}"

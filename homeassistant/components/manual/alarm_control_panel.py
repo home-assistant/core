@@ -1,9 +1,9 @@
 """Support for manual alarms."""
 
 import datetime
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
@@ -110,66 +110,66 @@ def _state_validator(
     return config
 
 
-def _state_schema(state: str) -> vol.Schema:
+def _state_schema(state: str) -> probatio.Schema:
     """Validate the state."""
     schema = {}
     if state in SUPPORTED_PRETRIGGER_STATES:
-        schema[vol.Optional(CONF_DELAY_TIME)] = vol.All(
+        schema[probatio.Optional(CONF_DELAY_TIME)] = probatio.All(
             cv.time_period, cv.positive_timedelta
         )
-        schema[vol.Optional(CONF_TRIGGER_TIME)] = vol.All(
+        schema[probatio.Optional(CONF_TRIGGER_TIME)] = probatio.All(
             cv.time_period, cv.positive_timedelta
         )
     if state in SUPPORTED_ARMING_STATES:
-        schema[vol.Optional(CONF_ARMING_TIME)] = vol.All(
+        schema[probatio.Optional(CONF_ARMING_TIME)] = probatio.All(
             cv.time_period, cv.positive_timedelta
         )
-    return vol.Schema(schema)
+    return probatio.Schema(schema)
 
 
-PLATFORM_SCHEMA = vol.Schema(
-    vol.All(
+PLATFORM_SCHEMA = probatio.Schema(
+    probatio.All(
         ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
             {
-                vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
-                vol.Optional(CONF_UNIQUE_ID): cv.string,
-                vol.Exclusive(CONF_CODE, "code validation"): cv.string,
-                vol.Exclusive(CONF_CODE_TEMPLATE, "code validation"): cv.template,
-                vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
-                vol.Optional(CONF_DELAY_TIME, default=DEFAULT_DELAY_TIME): vol.All(
-                    cv.time_period, cv.positive_timedelta
-                ),
-                vol.Optional(CONF_ARMING_TIME, default=DEFAULT_ARMING_TIME): vol.All(
-                    cv.time_period, cv.positive_timedelta
-                ),
-                vol.Optional(CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME): vol.All(
-                    cv.time_period, cv.positive_timedelta
-                ),
-                vol.Optional(
+                probatio.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
+                probatio.Optional(CONF_UNIQUE_ID): cv.string,
+                probatio.Exclusive(CONF_CODE, "code validation"): cv.string,
+                probatio.Exclusive(CONF_CODE_TEMPLATE, "code validation"): cv.template,
+                probatio.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
+                probatio.Optional(
+                    CONF_DELAY_TIME, default=DEFAULT_DELAY_TIME
+                ): probatio.All(cv.time_period, cv.positive_timedelta),
+                probatio.Optional(
+                    CONF_ARMING_TIME, default=DEFAULT_ARMING_TIME
+                ): probatio.All(cv.time_period, cv.positive_timedelta),
+                probatio.Optional(
+                    CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME
+                ): probatio.All(cv.time_period, cv.positive_timedelta),
+                probatio.Optional(
                     CONF_DISARM_AFTER_TRIGGER, default=DEFAULT_DISARM_AFTER_TRIGGER
                 ): cv.boolean,
-                vol.Optional(
+                probatio.Optional(
                     CONF_ARMING_STATES, default=SUPPORTED_ARMING_STATES
-                ): vol.All(cv.ensure_list, [vol.In(SUPPORTED_ARMING_STATES)]),
-                vol.Optional(CONF_ALARM_ARMED_AWAY, default={}): _state_schema(
+                ): probatio.All(cv.ensure_list, [probatio.In(SUPPORTED_ARMING_STATES)]),
+                probatio.Optional(CONF_ALARM_ARMED_AWAY, default={}): _state_schema(
                     AlarmControlPanelState.ARMED_AWAY
                 ),
-                vol.Optional(CONF_ALARM_ARMED_HOME, default={}): _state_schema(
+                probatio.Optional(CONF_ALARM_ARMED_HOME, default={}): _state_schema(
                     AlarmControlPanelState.ARMED_HOME
                 ),
-                vol.Optional(CONF_ALARM_ARMED_NIGHT, default={}): _state_schema(
+                probatio.Optional(CONF_ALARM_ARMED_NIGHT, default={}): _state_schema(
                     AlarmControlPanelState.ARMED_NIGHT
                 ),
-                vol.Optional(CONF_ALARM_ARMED_VACATION, default={}): _state_schema(
+                probatio.Optional(CONF_ALARM_ARMED_VACATION, default={}): _state_schema(
                     AlarmControlPanelState.ARMED_VACATION
                 ),
-                vol.Optional(CONF_ALARM_ARMED_CUSTOM_BYPASS, default={}): _state_schema(
-                    AlarmControlPanelState.ARMED_CUSTOM_BYPASS
-                ),
-                vol.Optional(CONF_ALARM_DISARMED, default={}): _state_schema(
+                probatio.Optional(
+                    CONF_ALARM_ARMED_CUSTOM_BYPASS, default={}
+                ): _state_schema(AlarmControlPanelState.ARMED_CUSTOM_BYPASS),
+                probatio.Optional(CONF_ALARM_DISARMED, default={}): _state_schema(
                     AlarmControlPanelState.DISARMED
                 ),
-                vol.Optional(CONF_ALARM_TRIGGERED, default={}): _state_schema(
+                probatio.Optional(CONF_ALARM_TRIGGERED, default={}): _state_schema(
                     AlarmControlPanelState.TRIGGERED
                 ),
             },
@@ -255,6 +255,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
             ]
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState:
         """Return the state of the device."""
         if self._state == AlarmControlPanelState.TRIGGERED:
@@ -307,6 +308,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         return self._state_ts + self._pending_time(state) > dt_util.utcnow()
 
     @property
+    @override
     def code_format(self) -> CodeFormat | None:
         """Return one or more digits/characters."""
         if self._code is None:
@@ -315,6 +317,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
             return CodeFormat.NUMBER
         return CodeFormat.TEXT
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self._async_validate_code(code, AlarmControlPanelState.DISARMED)
@@ -322,31 +325,37 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         self._state_ts = dt_util.utcnow()
         self.async_write_ha_state()
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._async_validate_code(code, AlarmControlPanelState.ARMED_HOME)
         self._async_update_state(AlarmControlPanelState.ARMED_HOME)
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._async_validate_code(code, AlarmControlPanelState.ARMED_AWAY)
         self._async_update_state(AlarmControlPanelState.ARMED_AWAY)
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         self._async_validate_code(code, AlarmControlPanelState.ARMED_NIGHT)
         self._async_update_state(AlarmControlPanelState.ARMED_NIGHT)
 
+    @override
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm vacation command."""
         self._async_validate_code(code, AlarmControlPanelState.ARMED_VACATION)
         self._async_update_state(AlarmControlPanelState.ARMED_VACATION)
 
+    @override
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command."""
         self._async_validate_code(code, AlarmControlPanelState.ARMED_CUSTOM_BYPASS)
         self._async_update_state(AlarmControlPanelState.ARMED_CUSTOM_BYPASS)
 
+    @override
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command.
 
@@ -422,14 +431,13 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
             },
         )
 
-        # pylint: disable-next=home-assistant-exception-message-with-translation
         raise ServiceValidationError(
-            "Invalid alarm code provided",
             translation_domain=DOMAIN,
             translation_key="invalid_code",
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if self.state in (
@@ -451,6 +459,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         """Update state at a scheduled point in time."""
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()

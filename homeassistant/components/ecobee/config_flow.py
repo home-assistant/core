@@ -1,8 +1,9 @@
 """Config flow to configure ecobee."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pyecobee import (
     ECOBEE_API_KEY,
     ECOBEE_PASSWORD,
@@ -13,23 +14,22 @@ from pyecobee import (
     EcobeeAuthUnknownError,
     MfaChallenge,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 
 from .const import CONF_REFRESH_TOKEN, DOMAIN
 
-_USER_SCHEMA = vol.Schema(
+_USER_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_API_KEY): str,
-        vol.Optional(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD): str,
+        probatio.Optional(CONF_API_KEY): str,
+        probatio.Optional(CONF_USERNAME): str,
+        probatio.Optional(CONF_PASSWORD): str,
     }
 )
 
-_MFA_SCHEMA = vol.Schema({vol.Required(CONF_CODE): str})
-_REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+_MFA_SCHEMA = probatio.Schema({probatio.Required(CONF_CODE): str})
+_REAUTH_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
 
 
 class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -42,6 +42,7 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
     _pending_username: str | None = None
     _pending_password: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

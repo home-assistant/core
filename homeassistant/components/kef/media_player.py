@@ -4,12 +4,12 @@ from datetime import timedelta
 from functools import partial
 import ipaddress
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiokef import AsyncKefSpeaker
 from aiokef.aiokef import DSP_OPTION_MAPPING
 from getmac import get_mac_address
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
@@ -60,17 +60,19 @@ DSP_SCAN_INTERVAL = timedelta(seconds=3600)
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TYPE): vol.In(["LS50", "LSX"]),
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MAX_VOLUME, default=DEFAULT_MAX_VOLUME): cv.small_float,
-        vol.Optional(CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP): cv.small_float,
-        vol.Optional(
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_TYPE): probatio.In(["LS50", "LSX"]),
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_MAX_VOLUME, default=DEFAULT_MAX_VOLUME): cv.small_float,
+        probatio.Optional(
+            CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP
+        ): cv.small_float,
+        probatio.Optional(
             CONF_INVERSE_SPEAKER_MODE, default=DEFAULT_INVERSE_SPEAKER_MODE
         ): cv.boolean,
-        vol.Optional(CONF_SUPPORTS_ON, default=DEFAULT_SUPPORTS_ON): cv.boolean,
-        vol.Optional(CONF_STANDBY_TIME): vol.In([20, 60]),
+        probatio.Optional(CONF_SUPPORTS_ON, default=DEFAULT_SUPPORTS_ON): cv.boolean,
+        probatio.Optional(CONF_STANDBY_TIME): probatio.In([20, 60]),
     }
 )
 
@@ -151,12 +153,14 @@ async def async_setup_platform(
     platform.async_register_entity_service(
         SERVICE_MODE,
         {
-            vol.Optional("desk_mode"): cv.boolean,
-            vol.Optional("wall_mode"): cv.boolean,
-            vol.Optional("phase_correction"): cv.boolean,
-            vol.Optional("high_pass"): cv.boolean,
-            vol.Optional("sub_polarity"): vol.In(["-", "+"]),
-            vol.Optional("bass_extension"): vol.In(["Less", "Standard", "Extra"]),
+            probatio.Optional("desk_mode"): cv.boolean,
+            probatio.Optional("wall_mode"): cv.boolean,
+            probatio.Optional("phase_correction"): cv.boolean,
+            probatio.Optional("high_pass"): cv.boolean,
+            probatio.Optional("sub_polarity"): probatio.In(["-", "+"]),
+            probatio.Optional("bass_extension"): probatio.In(
+                ["Less", "Standard", "Extra"]
+            ),
         },
         "set_mode",
     )
@@ -168,8 +172,8 @@ async def async_setup_platform(
         platform.async_register_entity_service(
             name,
             {
-                vol.Required(option): vol.All(
-                    vol.Coerce(float), vol.Coerce(dtype), vol.In(options)
+                probatio.Required(option): probatio.All(
+                    probatio.Coerce(float), probatio.Coerce(dtype), probatio.In(options)
                 )
             },
             f"set_{which}",
@@ -264,28 +268,34 @@ class KefMediaPlayer(MediaPlayerEntity):
             _LOGGER.debug("Error in `update`: %s", err)
             self._attr_state = None
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self._speaker.turn_off()
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         if not self._supports_on:
             raise NotImplementedError
         await self._speaker.turn_on()
 
+    @override
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
         await self._speaker.increase_volume()
 
+    @override
     async def async_volume_down(self) -> None:
         """Volume down the media player."""
         await self._speaker.decrease_volume()
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._speaker.set_volume(volume)
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute (True) or unmute (False) media player."""
         if mute:
@@ -293,6 +303,7 @@ class KefMediaPlayer(MediaPlayerEntity):
         else:
             await self._speaker.unmute()
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if self.source_list is not None and source in self.source_list:
@@ -300,18 +311,22 @@ class KefMediaPlayer(MediaPlayerEntity):
         else:
             raise ValueError(f"Unknown input source: {source}.")
 
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         await self._speaker.set_play_pause()
 
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._speaker.set_play_pause()
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._speaker.prev_track()
 
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._speaker.next_track()
@@ -333,18 +348,21 @@ class KefMediaPlayer(MediaPlayerEntity):
             **mode._asdict(),
         }
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to DSP updates."""
         self._update_dsp_task_remover = async_track_time_interval(
             self.hass, self.update_dsp, DSP_SCAN_INTERVAL
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe to DSP updates."""
         self._update_dsp_task_remover()
         self._update_dsp_task_remover = None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the DSP settings of the KEF device."""
         return self._dsp or {}

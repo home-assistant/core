@@ -8,7 +8,7 @@ import logging
 from types import MappingProxyType
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.rest import RESOURCE_SCHEMA, create_rest_data_from_config
 from homeassistant.components.sensor import CONF_STATE_CLASS, DOMAIN as SENSOR_DOMAIN
@@ -44,7 +44,7 @@ from homeassistant.helpers.trigger_template_entity import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_ADVANCED,
+    CONF_ADDITIONAL,
     CONF_AUTH,
     CONF_ENCODING,
     CONF_INDEX,
@@ -59,32 +59,32 @@ type ScrapeConfigEntry = ConfigEntry[ScrapeCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_SCHEMA = vol.Schema(
+SENSOR_SCHEMA = probatio.Schema(
     {
         **TEMPLATE_SENSOR_BASE_SCHEMA.schema,
-        vol.Optional(CONF_AVAILABILITY): cv.template,
-        vol.Optional(CONF_ATTRIBUTE): cv.string,
-        vol.Optional(CONF_INDEX, default=0): cv.positive_int,
-        vol.Required(CONF_SELECT): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
+        probatio.Optional(CONF_AVAILABILITY): cv.template,
+        probatio.Optional(CONF_ATTRIBUTE): cv.string,
+        probatio.Optional(CONF_INDEX, default=0): cv.positive_int,
+        probatio.Required(CONF_SELECT): cv.string,
+        probatio.Optional(CONF_VALUE_TEMPLATE): probatio.All(
             cv.template, ValueTemplate.from_template
         ),
     }
 )
 
-COMBINED_SCHEMA = vol.Schema(
+COMBINED_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
+        probatio.Optional(CONF_SCAN_INTERVAL): cv.time_period,
         **RESOURCE_SCHEMA,
-        vol.Optional(SENSOR_DOMAIN): vol.All(
-            cv.ensure_list, [vol.Schema(SENSOR_SCHEMA)]
+        probatio.Optional(SENSOR_DOMAIN): probatio.All(
+            cv.ensure_list, [probatio.Schema(SENSOR_SCHEMA)]
         ),
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {vol.Optional(DOMAIN): vol.All(cv.ensure_list, [COMBINED_SCHEMA])},
-    extra=vol.ALLOW_EXTRA,
+CONFIG_SCHEMA = probatio.Schema(
+    {probatio.Optional(DOMAIN): probatio.All(cv.ensure_list, [COMBINED_SCHEMA])},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -128,7 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> bo
     config: dict[str, Any] = dict(entry.options)
     # Config flow uses sections but the COMBINED SCHEMA does not
     # so we need to flatten the config here
-    config.update(config.pop(CONF_ADVANCED, {}))
+    config.update(config.pop(CONF_ADDITIONAL, {}))
     config.update(config.pop(CONF_AUTH, {}))
 
     rest_config: dict[str, Any] = COMBINED_SCHEMA(dict(config))
@@ -153,10 +153,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> bo
 async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> bool:
     """Migrate old entry."""
 
-    if entry.version > 2:
-        # Don't migrate from future version
-        return False
-
     if entry.version == 1:
         old_to_new_sensor_id = {}
         for sensor_config in entry.options[SENSOR_DOMAIN]:
@@ -166,7 +162,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
             subentry_config = {
                 CONF_INDEX: sensor_config[CONF_INDEX],
                 CONF_SELECT: sensor_config[CONF_SELECT],
-                CONF_ADVANCED: {},
+                CONF_ADDITIONAL: {},
             }
 
             for sensor_advanced_key in (
@@ -179,7 +175,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
             ):
                 if sensor_advanced_key not in sensor_config:
                     continue
-                subentry_config[CONF_ADVANCED][sensor_advanced_key] = sensor_config[
+                subentry_config[CONF_ADDITIONAL][sensor_advanced_key] = sensor_config[
                     sensor_advanced_key
                 ]
 
@@ -240,24 +236,15 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
                 )
                 device_reg.async_update_device(
                     device.id,
-                    add_config_entry_id=entry.entry_id,
-                    add_config_subentry_id=subentry_id,
+                    new_config_entry_id=entry.entry_id,
+                    new_config_subentry_id=subentry_id,
                     new_identifiers=new_identifiers,
-                )
-
-                # Removing None from the list of subentries if existing
-                # as the device should only belong to the subentry
-                # and not the main config entry
-                device_reg.async_update_device(
-                    device.id,
-                    remove_config_entry_id=entry.entry_id,
-                    remove_config_subentry_id=None,
                 )
 
         # Update the resource config
         new_config_entry_data = dict(entry.options)
         new_config_entry_data[CONF_AUTH] = {}
-        new_config_entry_data[CONF_ADVANCED] = {}
+        new_config_entry_data[CONF_ADDITIONAL] = {}
         new_config_entry_data.pop(SENSOR_DOMAIN, None)
         for resource_advanced_key in (
             CONF_HEADERS,
@@ -266,7 +253,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
             CONF_ENCODING,
         ):
             if resource_advanced_key in new_config_entry_data:
-                new_config_entry_data[CONF_ADVANCED][resource_advanced_key] = (
+                new_config_entry_data[CONF_ADDITIONAL][resource_advanced_key] = (
                     new_config_entry_data.pop(resource_advanced_key)
                 )
         for resource_auth_key in (CONF_AUTHENTICATION, CONF_USERNAME, CONF_PASSWORD):
@@ -284,6 +271,20 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
             entry, version=2, options=new_config_entry_data
         )
 
+    if entry.version == 2:
+        # The "advanced" section was renamed to "additional"
+        new_options = {**entry.options}
+        if (additional := new_options.pop("advanced", None)) is not None:
+            new_options[CONF_ADDITIONAL] = additional
+        for subentry in entry.subentries.values():
+            if "advanced" in subentry.data:
+                new_data = {**subentry.data}
+                new_data[CONF_ADDITIONAL] = new_data.pop("advanced")
+                hass.config_entries.async_update_subentry(
+                    entry, subentry, data=new_data
+                )
+        hass.config_entries.async_update_entry(entry, options=new_options, version=3)
+
     return True
 
 
@@ -298,7 +299,7 @@ async def update_listener(hass: HomeAssistant, entry: ScrapeConfigEntry) -> None
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: ConfigEntry, device: dr.DeviceEntry
+    hass: HomeAssistant, entry: ConfigEntry, device: dr.AnyDeviceEntry
 ) -> bool:
     """Remove Scrape config entry from a device."""
     entity_registry = er.async_get(hass)

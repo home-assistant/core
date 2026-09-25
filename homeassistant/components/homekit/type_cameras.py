@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from haffmpeg.core import FFMPEG_STDERR, HAFFmpeg
 from homekit_audio_proxy import AudioProxy
@@ -232,6 +232,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
 
     @pyhap_callback  # type: ignore[untyped-decorator]
     @callback
+    @override
     def run(self) -> None:
         """Handle accessory driver started event.
 
@@ -297,6 +298,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         )
 
     @callback
+    @override
     def async_update_state(self, new_state: State | None) -> None:
         """Handle state change to update HomeKit value."""
 
@@ -461,6 +463,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         self.sessions[session_id].pop(FFMPEG_LOGGER).cancel()
 
     @callback
+    @override
     def async_stop(self) -> None:
         """Stop any streams when the accessory is stopped."""
         for session_info in self.sessions.values():

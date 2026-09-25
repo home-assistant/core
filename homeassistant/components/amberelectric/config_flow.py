@@ -1,9 +1,11 @@
 """Config flow for the Amber Electric integration."""
 
+from typing import override
+
 import amberelectric
 from amberelectric.models.site import Site
 from amberelectric.models.site_status import SiteStatus
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
@@ -34,11 +36,13 @@ def generate_site_selector_name(site: Site) -> str:
 
 
 def filter_sites(sites: list[Site]) -> list[Site]:
-    """Deduplicates the list of sites."""
+    """Filter out closed sites and deduplicate the list of sites."""
     filtered: list[Site] = []
     filtered_nmi: set[str] = set()
 
     for site in sorted(sites, key=lambda site: site.status):
+        if site.status == SiteStatus.CLOSED:
+            continue
         if site.status == SiteStatus.ACTIVE or site.nmi not in filtered_nmi:
             filtered.append(site)
             filtered_nmi.add(site.nmi)
@@ -78,6 +82,7 @@ class AmberElectricConfigFlow(ConfigFlow, domain=DOMAIN):
             return None
         return sites
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -102,9 +107,9 @@ class AmberElectricConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             description_placeholders={"api_url": API_URL},
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_API_TOKEN, default=user_input[CONF_API_TOKEN]
                     ): str,
                 }
@@ -131,9 +136,9 @@ class AmberElectricConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="site",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_SITE_ID): SelectSelector(
+                    probatio.Required(CONF_SITE_ID): SelectSelector(
                         SelectSelectorConfig(
                             options=[
                                 SelectOptionDict(
@@ -145,7 +150,7 @@ class AmberElectricConfigFlow(ConfigFlow, domain=DOMAIN):
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
-                    vol.Optional(CONF_SITE_NAME): str,
+                    probatio.Optional(CONF_SITE_NAME): str,
                 }
             ),
             errors=self._errors,

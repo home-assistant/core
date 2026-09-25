@@ -2,10 +2,10 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from ttn_client import TTNAuthError, TTNClient
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_HOST
@@ -25,6 +25,7 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -69,11 +70,11 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input = {CONF_HOST: TTN_API_HOST}
 
         schema = self.add_suggested_values_to_schema(
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_APP_ID): str,
-                    vol.Required(CONF_API_KEY): TextSelector(
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Required(CONF_APP_ID): str,
+                    probatio.Required(CONF_API_KEY): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD, autocomplete="api_key"
                         )

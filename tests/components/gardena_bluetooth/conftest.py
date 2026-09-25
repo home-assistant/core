@@ -14,7 +14,7 @@ from gardena_bluetooth.parse import Characteristic, Service
 import pytest
 
 from homeassistant.components import bluetooth
-from homeassistant.components.gardena_bluetooth import async_get_product_type
+from homeassistant.components.gardena_bluetooth import async_get_product
 from homeassistant.components.gardena_bluetooth.const import DOMAIN
 from homeassistant.components.gardena_bluetooth.coordinator import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
@@ -75,8 +75,8 @@ def mock_setup_entry(mock_unload_entry) -> Generator[AsyncMock]:
 def mock_read_char_raw():
     """Mock data on device."""
     return {
-        DeviceInformation.firmware_version.uuid: b"1.2.3",
-        DeviceInformation.model_number.uuid: b"Mock Model",
+        DeviceInformation.firmware_version.unique_id: b"1.2.3",
+        DeviceInformation.model_number.unique_id: b"Mock Model",
     }
 
 
@@ -122,13 +122,24 @@ def mock_client(
 
     SENTINEL = object()
 
+    def _chars() -> list[Characteristic]:
+        product_type = client_class.call_args.args[1]
+        return [
+            char
+            for service in Service.services_for_product_type(product_type)
+            for char in service.characteristics.values()
+        ]
+
     def _read_char(char: Characteristic, default: Any = SENTINEL):
         try:
-            return char.decode(mock_read_char_raw[char.uuid])
+            val = mock_read_char_raw[char.unique_id]
         except KeyError:
             if default is SENTINEL:
                 raise CharacteristicNotFound from KeyError
             return default
+        if isinstance(val, Exception):
+            raise val
+        return char.decode(val)
 
     def _read_char_raw(uuid: str, default: Any = SENTINEL):
         try:
@@ -142,17 +153,13 @@ def mock_client(
         return val
 
     def _all_char_uuid():
-        return set(mock_read_char_raw.keys())
+        """Physical uuids the device exposes."""
+        return {char.uuid for char in _chars() if char.unique_id in mock_read_char_raw}
 
     def _all_char():
-        product_type = client_class.call_args.args[1]
-        services = Service.services_for_product_type(product_type)
-        return {
-            char.unique_id: char
-            for service in services
-            for char in service.characteristics.values()
-            if char.uuid in mock_read_char_raw
-        }
+        """Every characteristic on an exposed uuid, virtual ones included."""
+        uuids = _all_char_uuid()
+        return {char.unique_id: char for char in _chars() if char.uuid in uuids}
 
     client = Mock(spec_set=Client)
     client.read_char.side_effect = _read_char
@@ -177,24 +184,18 @@ def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
 
 
 @pytest.fixture
-def get_product_type_event() -> Generator[asyncio.Event]:
-    """Track product type data requests with an event."""
+def get_product_event() -> Generator[asyncio.Event]:
+    """Track product data requests with an event."""
 
     event = asyncio.Event()
 
     async def _get(*args, **kwargs):
         event.set()
-        return await async_get_product_type(*args, **kwargs)
+        return await async_get_product(*args, **kwargs)
 
-    with (
-        patch(
-            "homeassistant.components.gardena_bluetooth.async_get_product_type",
-            wraps=_get,
-        ),
-        patch(
-            "homeassistant.components.gardena_bluetooth.config_flow.async_get_product_type",
-            wraps=_get,
-        ),
+    with patch(
+        "homeassistant.components.gardena_bluetooth.async_get_product",
+        wraps=_get,
     ):
         yield event
 

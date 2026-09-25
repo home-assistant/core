@@ -2,11 +2,11 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp.client_exceptions import ClientConnectorError
 import nextcord
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_NAME
@@ -15,7 +15,7 @@ from .const import DOMAIN, URL_PLACEHOLDER
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema({vol.Required(CONF_API_TOKEN): str})
+CONFIG_SCHEMA = probatio.Schema({probatio.Required(CONF_API_TOKEN): str})
 
 
 class DiscordFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -50,6 +50,7 @@ class DiscordFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

@@ -1,6 +1,7 @@
 """Tests for the mfa setup flow."""
 
 from homeassistant.auth import auth_manager_from_config
+from homeassistant.components.auth import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
@@ -36,7 +37,7 @@ async def test_ws_setup_depose_mfa(
         ],
     )
     ensure_auth_manager_loaded(hass.auth)
-    await async_setup_component(hass, "auth", {"http": {}})
+    await async_setup_component(hass, DOMAIN, {"http": {}})
 
     user = MockUser(id="mock-user").add_to_hass(hass)
     cred = await hass.auth.auth_providers[0].async_get_or_create_credentials(

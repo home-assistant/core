@@ -1,6 +1,8 @@
 """Support for ADS sensors."""
 
-import voluptuous as vol
+from typing import override
+
+import probatio
 
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
@@ -26,11 +28,11 @@ DEFAULT_NAME = "ADS sensor"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ADS_VAR): cv.string,
-        vol.Optional(CONF_ADS_FACTOR): cv.positive_int,
-        vol.Optional(CONF_ADS_TYPE, default=AdsType.INT): vol.All(
-            vol.Coerce(AdsType),
-            vol.In(
+        probatio.Required(CONF_ADS_VAR): cv.string,
+        probatio.Optional(CONF_ADS_FACTOR): cv.positive_int,
+        probatio.Optional(CONF_ADS_TYPE, default=AdsType.INT): probatio.All(
+            probatio.Coerce(AdsType),
+            probatio.In(
                 [
                     AdsType.BOOL,
                     AdsType.BYTE,
@@ -47,10 +49,10 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
                 ]
             ),
         ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 )
 
@@ -108,6 +110,7 @@ class AdsSensor(AdsEntity, SensorEntity):
         self._attr_state_class = state_class
         self._attr_native_unit_of_measurement = unit_of_measurement
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
         await self.async_initialize_device(
@@ -118,6 +121,7 @@ class AdsSensor(AdsEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the device."""
         return self._state_dict[STATE_KEY_STATE]

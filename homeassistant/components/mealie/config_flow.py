@@ -1,10 +1,10 @@
 """Config flow for Mealie."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from aiomealie import MealieAuthenticationError, MealieClient, MealieConnectionError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
@@ -14,21 +14,21 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from .const import DOMAIN, LOGGER, MIN_REQUIRED_MEALIE_VERSION
 from .utils import create_version
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_API_TOKEN): str,
-        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_API_TOKEN): str,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
 )
-REAUTH_SCHEMA = vol.Schema(
+REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_TOKEN): str,
+        probatio.Required(CONF_API_TOKEN): str,
     }
 )
-DISCOVERY_SCHEMA = vol.Schema(
+DISCOVERY_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_TOKEN): str,
+        probatio.Required(CONF_API_TOKEN): str,
     }
 )
 
@@ -73,6 +73,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "mealie_version"}, None
         return {}, info.user_id
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -158,6 +159,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"example_url": EXAMPLE_URL},
         )
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:

@@ -2,12 +2,12 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import growattServer
 from growattServer import GrowattV1ApiErrorCode
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -55,6 +55,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         self.auth_type: str | None = None
         self.plants: list[dict[str, Any]] = []
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -182,14 +183,16 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         auth_type = entry.data.get(CONF_AUTH_TYPE)
         if auth_type == AUTH_PASSWORD:
-            data_schema = vol.Schema(
+            data_schema = probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_USERNAME,
                         default=entry.data.get(CONF_USERNAME),
                     ): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Required(CONF_REGION, default=current_region): SelectSelector(
+                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(
+                        CONF_REGION, default=current_region
+                    ): SelectSelector(
                         SelectSelectorConfig(
                             options=list(SERVER_URLS_NAMES.keys()),
                             translation_key="region",
@@ -198,10 +201,12 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             )
         elif auth_type == AUTH_API_TOKEN:
-            data_schema = vol.Schema(
+            data_schema = probatio.Schema(
                 {
-                    vol.Required(CONF_TOKEN): str,
-                    vol.Required(CONF_REGION, default=current_region): SelectSelector(
+                    probatio.Required(CONF_TOKEN): str,
+                    probatio.Required(
+                        CONF_REGION, default=current_region
+                    ): SelectSelector(
                         SelectSelectorConfig(
                             options=list(SERVER_URLS_NAMES.keys()),
                             translation_key="region",
@@ -238,7 +243,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         self.auth_type = AUTH_PASSWORD
 
         # Traditional username/password authentication
-        # Convert region name to URL - guaranteed to exist since vol.In validates it
+        # Convert region name to URL - guaranteed to exist since probatio.In validates it
         server_url = SERVER_URLS_NAMES[user_input[CONF_REGION]]
 
         self.api = growattServer.GrowattApi(
@@ -282,7 +287,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         self.auth_type = AUTH_API_TOKEN
 
         # Using token authentication
-        # Convert region name to URL - guaranteed to exist since vol.In validates it
+        # Convert region name to URL - guaranteed to exist since probatio.In validates it
         server_url = SERVER_URLS_NAMES[user_input[CONF_REGION]]
 
         self.api = growattServer.OpenApiV1(token=user_input[CONF_TOKEN])
@@ -320,11 +325,11 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         self, errors: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show the username/password form to the user."""
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Required(CONF_REGION, default=DEFAULT_URL): SelectSelector(
+                probatio.Required(CONF_USERNAME): str,
+                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(CONF_REGION, default=DEFAULT_URL): SelectSelector(
                     SelectSelectorConfig(
                         options=list(SERVER_URLS_NAMES.keys()),
                         translation_key="region",
@@ -342,10 +347,10 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         self, errors: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show the API token form to the user."""
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_TOKEN): str,
-                vol.Required(CONF_REGION, default=DEFAULT_URL): SelectSelector(
+                probatio.Required(CONF_TOKEN): str,
+                probatio.Required(CONF_REGION, default=DEFAULT_URL): SelectSelector(
                     SelectSelectorConfig(
                         options=list(SERVER_URLS_NAMES.keys()),
                         translation_key="region",
@@ -376,8 +381,8 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
             }
 
             if user_input is None and len(plant_dict) > 1:
-                data_schema = vol.Schema(
-                    {vol.Required(CONF_PLANT_ID): vol.In(plant_dict)}
+                data_schema = probatio.Schema(
+                    {probatio.Required(CONF_PLANT_ID): probatio.In(plant_dict)}
                 )
                 return self.async_show_form(step_id="plant", data_schema=data_schema)
 
@@ -389,6 +394,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         else:
             # Traditional API
+            assert self.user_id is not None
             try:
                 plant_info = await self.hass.async_add_executor_job(
                     self.api.plant_list, self.user_id
@@ -412,7 +418,9 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
             plants = {plant["plantId"]: plant["plantName"] for plant in plant_data}
 
             if user_input is None and len(plant_data) > 1:
-                data_schema = vol.Schema({vol.Required(CONF_PLANT_ID): vol.In(plants)})
+                data_schema = probatio.Schema(
+                    {probatio.Required(CONF_PLANT_ID): probatio.In(plants)}
+                )
                 return self.async_show_form(step_id="plant", data_schema=data_schema)
 
             if user_input is None:

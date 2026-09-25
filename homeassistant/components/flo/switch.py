@@ -1,9 +1,9 @@
 """Switch representing the shutoff valve for the Flo by Moen integration."""
 
-from typing import Any
+from typing import Any, override
 
 from aioflo.location import SLEEP_MINUTE_OPTIONS, SYSTEM_MODE_HOME, SYSTEM_REVERT_MODES
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant, callback
@@ -47,13 +47,13 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_SLEEP_MODE,
         {
-            vol.Required(ATTR_SLEEP_MINUTES, default=120): vol.All(
-                vol.Coerce(int),
-                vol.In(SLEEP_MINUTE_OPTIONS),
+            probatio.Required(ATTR_SLEEP_MINUTES, default=120): probatio.All(
+                probatio.Coerce(int),
+                probatio.In(SLEEP_MINUTE_OPTIONS),
             ),
-            vol.Required(ATTR_REVERT_TO_MODE, default=SYSTEM_MODE_HOME): vol.In(
-                SYSTEM_REVERT_MODES
-            ),
+            probatio.Required(
+                ATTR_REVERT_TO_MODE, default=SYSTEM_MODE_HOME
+            ): probatio.In(SYSTEM_REVERT_MODES),
         },
         "async_set_mode_sleep",
     )
@@ -69,12 +69,14 @@ class FloSwitch(FloEntity, SwitchEntity):
         super().__init__("shutoff_valve", device)
         self._attr_is_on = device.last_known_valve_state == "open"
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Open the valve."""
         await self._device.api_client.device.open_valve(self._device.id)
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Close the valve."""
         await self._device.api_client.device.close_valve(self._device.id)
@@ -87,6 +89,7 @@ class FloSwitch(FloEntity, SwitchEntity):
         self._attr_is_on = self._device.last_known_valve_state == "open"
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()

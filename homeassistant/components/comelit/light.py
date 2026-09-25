@@ -1,6 +1,6 @@
 """Support for lights."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiocomelit.const import LIGHT, STATE_OFF, STATE_ON
 
@@ -55,15 +55,18 @@ class ComelitLightEntity(ComelitBridgeBaseEntity, LightEntity):
         self.coordinator.data[LIGHT][self._device.index].status = state
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         await self._light_set_state(STATE_ON)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._light_set_state(STATE_OFF)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if light is on."""
         return bool(self.coordinator.data[LIGHT][self._device.index].status == STATE_ON)

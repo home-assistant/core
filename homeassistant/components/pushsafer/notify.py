@@ -4,11 +4,11 @@ import base64
 from http import HTTPStatus
 import logging
 import mimetypes
-from typing import Any
+from typing import Any, override
 
+import probatio
 import requests
 from requests.auth import HTTPBasicAuth
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -54,7 +54,7 @@ ATTR_PICTURE1_PASSWORD = "password"
 ATTR_PICTURE1_AUTH = "auth"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_DEVICE_KEY): cv.string}
+    {probatio.Required(CONF_DEVICE_KEY): cv.string}
 )
 
 
@@ -74,6 +74,7 @@ class PushsaferNotificationService(BaseNotificationService):
         """Initialize the service."""
         self._private_key = private_key
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to specified target."""
         targets: list[str] | None

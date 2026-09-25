@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from python_snoo.containers import SnooDevice
 from python_snoo.exceptions import SnooCommandException
@@ -54,6 +55,7 @@ class SnooButton(SnooDescriptionEntity, ButtonEntity):
 
     entity_description: SnooButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         try:

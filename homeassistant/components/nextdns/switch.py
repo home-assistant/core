@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
@@ -113,6 +113,36 @@ SWITCHES = (
         translation_key="block_parked_domains",
         entity_category=EntityCategory.CONFIG,
         state=lambda data: data.block_parked_domains,
+    ),
+    NextDnsSwitchEntityDescription(
+        key="block_data_drop_services",
+        translation_key="block_data_drop_services",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_data_drop_services,
+    ),
+    NextDnsSwitchEntityDescription(
+        key="block_decentralized_web_gateways",
+        translation_key="block_decentralized_web_gateways",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_decentralized_web_gateways,
+    ),
+    NextDnsSwitchEntityDescription(
+        key="block_free_hosting_domains",
+        translation_key="block_free_hosting_domains",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_free_hosting_domains,
+    ),
+    NextDnsSwitchEntityDescription(
+        key="block_residential_hosting",
+        translation_key="block_residential_hosting",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_residential_hosting,
+    ),
+    NextDnsSwitchEntityDescription(
+        key="block_tunneling_endpoints",
+        translation_key="block_tunneling_endpoints",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_tunneling_endpoints,
     ),
     NextDnsSwitchEntityDescription(
         key="cryptojacking_protection",
@@ -267,7 +297,7 @@ SWITCHES = (
     ),
     NextDnsSwitchEntityDescription(
         key="block_hulu",
-        name="Block Hulu",
+        translation_key="block_hulu",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         state=lambda data: data.block_hulu,
@@ -533,11 +563,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add NextDNS entities from a config_entry."""
-    coordinator = entry.runtime_data.settings
-
-    async_add_entities(
-        NextDnsSwitch(coordinator, description) for description in SWITCHES
-    )
+    for subentry_id, profile_data in entry.runtime_data.profiles.items():
+        coordinator = profile_data.settings
+        async_add_entities(
+            (NextDnsSwitch(coordinator, description) for description in SWITCHES),
+            config_subentry_id=subentry_id,
+        )
 
 
 class NextDnsSwitch(NextDnsEntity, SwitchEntity):
@@ -555,15 +586,18 @@ class NextDnsSwitch(NextDnsEntity, SwitchEntity):
         self._attr_is_on = description.state(coordinator.data)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_is_on = self.entity_description.state(self.coordinator.data)
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         await self.async_set_setting(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         await self.async_set_setting(False)

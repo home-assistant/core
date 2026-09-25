@@ -2,6 +2,8 @@
 
 import logging
 
+from satel_integra import SatelIntegraError
+
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -67,8 +69,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
     )
     await coordinator_temperatures.async_config_entry_first_refresh()
 
+    try:
+        panel_info = await client.controller.read_panel_info()
+    except SatelIntegraError:
+        _LOGGER.warning("Unable to read Satel panel information", exc_info=True)
+        panel_info = None
+
     entry.runtime_data = SatelIntegraData(
         client=client,
+        panel_info=panel_info,
         coordinator_zones=coordinator_zones,
         coordinator_outputs=coordinator_outputs,
         coordinator_partitions=coordinator_partitions,
@@ -89,6 +98,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id)},
         manufacturer="Satel",
+        model=panel_info.model.name if panel_info and panel_info.model else None,
+        sw_version=str(panel_info.firmware) if panel_info else None,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -120,10 +131,6 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-
-    if config_entry.version > 2:
-        # This means the user has downgraded from a future version
-        return False
 
     # 1.2 Migrate subentries to include configured numbers to title
     if config_entry.version == 1 and config_entry.minor_version == 1:

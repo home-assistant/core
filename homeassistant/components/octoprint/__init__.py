@@ -1,38 +1,35 @@
 """Support for monitoring OctoPrint 3D printers."""
 
 import logging
-from typing import cast
 
 import aiohttp
+import probatio
 from pyoctoprintapi import OctoprintClient
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_BINARY_SENSORS,
-    CONF_DEVICE_ID,
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PATH,
     CONF_PORT,
-    CONF_PROFILE_NAME,
     CONF_SENSORS,
     CONF_SSL,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify as util_slugify
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
-from .const import CONF_BAUDRATE, DOMAIN, SERVICE_CONNECT
+from .const import DOMAIN
 from .coordinator import OctoprintConfigEntry, OctoprintDataUpdateCoordinator
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,13 +37,13 @@ _LOGGER = logging.getLogger(__name__)
 def has_all_unique_names(value):
     """Validate that printers have an unique name."""
     names = [util_slugify(printer["name"]) for printer in value]
-    vol.Schema(vol.Unique())(names)
+    probatio.Schema(probatio.Unique())(names)
     return value
 
 
 def ensure_valid_path(value):
     """Validate the path, ensuring it starts and ends with a /."""
-    vol.Schema(cv.string)(value)
+    probatio.Schema(cv.string)(value)
     if value[0] != "/":
         value = f"/{value}"
     if value[-1] != "/":
@@ -70,12 +67,12 @@ BINARY_SENSOR_TYPES = [
     "Printing Error",
 ]
 
-BINARY_SENSOR_SCHEMA = vol.Schema(
+BINARY_SENSOR_SCHEMA = probatio.Schema(
     {
-        vol.Optional(
+        probatio.Optional(
             CONF_MONITORED_CONDITIONS, default=list(BINARY_SENSOR_TYPES)
-        ): vol.All(cv.ensure_list, [vol.In(BINARY_SENSOR_TYPES)]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        ): probatio.All(cv.ensure_list, [probatio.In(BINARY_SENSOR_TYPES)]),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -87,38 +84,42 @@ SENSOR_TYPES = [
     "Time Elapsed",
 ]
 
-SENSOR_SCHEMA = vol.Schema(
+SENSOR_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(
+            CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
+        ): probatio.All(cv.ensure_list, [probatio.In(SENSOR_TYPES)]),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
+CONFIG_SCHEMA = probatio.Schema(
+    probatio.All(
         cv.deprecated(DOMAIN),
         {
-            DOMAIN: vol.All(
+            DOMAIN: probatio.All(
                 cv.ensure_list,
                 [
-                    vol.Schema(
+                    probatio.Schema(
                         {
-                            vol.Required(CONF_API_KEY): cv.string,
-                            vol.Required(CONF_HOST): cv.string,
-                            vol.Optional(CONF_SSL, default=False): cv.boolean,
-                            vol.Optional(CONF_PORT, default=80): cv.port,
-                            vol.Optional(CONF_PATH, default="/"): ensure_valid_path,
+                            probatio.Required(CONF_API_KEY): cv.string,
+                            probatio.Required(CONF_HOST): cv.string,
+                            probatio.Optional(CONF_SSL, default=False): cv.boolean,
+                            probatio.Optional(CONF_PORT, default=80): cv.port,
+                            probatio.Optional(
+                                CONF_PATH, default="/"
+                            ): ensure_valid_path,
                             # Following values are not longer used in the configuration
                             # of the integration and are here for historical purposes
-                            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                            vol.Optional(
+                            probatio.Optional(
+                                CONF_NAME, default=DEFAULT_NAME
+                            ): cv.string,
+                            probatio.Optional(
                                 CONF_NUMBER_OF_TOOLS, default=0
                             ): cv.positive_int,
-                            vol.Optional(CONF_BED, default=False): cv.boolean,
-                            vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-                            vol.Optional(
+                            probatio.Optional(CONF_BED, default=False): cv.boolean,
+                            probatio.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+                            probatio.Optional(
                                 CONF_BINARY_SENSORS, default={}
                             ): BINARY_SENSOR_SCHEMA,
                         }
@@ -128,21 +129,13 @@ CONFIG_SCHEMA = vol.Schema(
             )
         },
     ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-SERVICE_CONNECT_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_DEVICE_ID): cv.string,
-        vol.Optional(CONF_PROFILE_NAME): cv.string,
-        vol.Optional(CONF_PORT): cv.string,
-        vol.Optional(CONF_BAUDRATE): cv.positive_int,
-    }
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the OctoPrint component."""
+    async_setup_services(hass)
     if DOMAIN not in config:
         return True
 
@@ -208,49 +201,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OctoprintConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async def async_printer_connect(call: ServiceCall) -> None:
-        """Connect to a printer."""
-        client = async_get_client_for_service_call(hass, call)
-        await client.connect(
-            printer_profile=call.data.get(CONF_PROFILE_NAME),
-            port=call.data.get(CONF_PORT),
-            baud_rate=call.data.get(CONF_BAUDRATE),
-        )
-
-    if not hass.services.has_service(DOMAIN, SERVICE_CONNECT):
-        # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-        hass.services.async_register(
-            DOMAIN,
-            SERVICE_CONNECT,
-            async_printer_connect,
-            schema=SERVICE_CONNECT_SCHEMA,
-        )
-
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: OctoprintConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-def async_get_client_for_service_call(
-    hass: HomeAssistant, call: ServiceCall
-) -> OctoprintClient:
-    """Get the client related to a service call (by device ID)."""
-    device_id = call.data[CONF_DEVICE_ID]
-    device_registry = dr.async_get(hass)
-
-    if device_entry := device_registry.async_get(device_id):
-        for entry_id in device_entry.config_entries:
-            if entry := hass.config_entries.async_get_entry(entry_id):
-                if entry.domain == DOMAIN and entry.state is ConfigEntryState.LOADED:
-                    return cast(OctoprintConfigEntry, entry).runtime_data.octoprint
-
-    raise ServiceValidationError(
-        translation_domain=DOMAIN,
-        translation_key="missing_client",
-        translation_placeholders={
-            "device_id": device_id,
-        },
-    )

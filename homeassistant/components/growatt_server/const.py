@@ -1,4 +1,4 @@
-"""Define constants for the Growatt Server component."""
+"""Define constants for the Growatt Server integration."""
 
 from datetime import timedelta
 
@@ -54,11 +54,6 @@ ABORT_NO_PLANTS = "no_plants"
 BATT_MODE_LOAD_FIRST = 0
 BATT_MODE_BATTERY_FIRST = 1
 BATT_MODE_GRID_FIRST = 2
-
-# Internal key prefix for caching authenticated API instance
-# Used to pass logged-in session from async_migrate_entry to async_setup_entry
-# to avoid double login() calls that trigger API rate limiting
-CACHED_API_KEY = "_cached_api_"
 
 # Supported device types for coordinator creation
 SUPPORTED_DEVICE_TYPES = ["inverter", "tlx", "storage", "mix", "min", "sph"]

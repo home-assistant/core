@@ -1,11 +1,11 @@
-"""Generic entity for the HomematicIP Cloud component."""
+"""Generic entity for the HomematicIP Cloud integration."""
 
 import contextlib
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 
 from homematicip.base.functionalChannels import FunctionalChannel
-from homematicip.device import Device
+from homematicip.device import BaseDevice
 from homematicip.group import Group
 
 from homeassistant.const import ATTR_ID
@@ -129,10 +129,11 @@ class HomematicipGenericEntity(Entity):
             self._setup_entity_name()
 
     @property
+    @override
     def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
         # Only physical devices should be HA devices.
-        if isinstance(self._device, Device):
+        if isinstance(self._device, BaseDevice):
             device_id = str(self._device.id)
             home_id = str(self._device.homeId)
 
@@ -144,20 +145,27 @@ class HomematicipGenericEntity(Entity):
             if device_name and home_name:
                 device_name = f"{home_name} {device_name}"
 
+            if TYPE_CHECKING:
+                assert self.platform.config_entry is not None
             return DeviceInfo(
                 identifiers={
                     # Serial numbers of Homematic IP device
                     (DOMAIN, device_id)
                 },
-                manufacturer=self._device.oem,
+                manufacturer=getattr(self._device, "oem", None),
                 model=self._device.modelType,
                 name=device_name,
                 sw_version=self._device.firmwareVersion,
                 # Link to the homematic ip access point.
-                via_device=(DOMAIN, home_id),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    self.hass,
+                    (DOMAIN, home_id),
+                    config_entry_id=self.platform.config_entry.entry_id,
+                ),
             )
         return None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._hap.hmip_device_by_entity_id[self.entity_id] = self._device
@@ -178,6 +186,7 @@ class HomematicipGenericEntity(Entity):
                 self._device.modelType,
             )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when hmip device will be removed from hass."""
 
@@ -204,8 +213,9 @@ class HomematicipGenericEntity(Entity):
         if device_id := self.registry_entry.device_id:
             # Remove from device registry.
             device_registry = dr.async_get(self.hass)
-            if device_id in device_registry.devices:
-                # This will also remove associated entities from entity registry.
+            # This will also remove associated entities from entity registry,
+            # ignore an already removed device.
+            with contextlib.suppress(KeyError):
                 device_registry.async_remove_device(device_id)
         else:  # noqa: PLR5501
             # Remove from entity registry.
@@ -312,19 +322,23 @@ class HomematicipGenericEntity(Entity):
         # device_class or translation_key.
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
-        return not self._device.unreach
+        # BaseDevice, the fallback for an unknown device type, has no unreach.
+        return not getattr(self._device, "unreach", False)
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
-        if not isinstance(self._device, Device):
+        if not isinstance(self._device, BaseDevice):
             return f"{self._device.id}_{self._feature_id}"
         channel_index = self.get_channel_index()
         return f"{self._device.id}_{channel_index}_{self._feature_id}"
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return the icon."""
         for attr, icon in DEVICE_ATTRIBUTE_ICONS.items():
@@ -334,11 +348,12 @@ class HomematicipGenericEntity(Entity):
         return None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the generic entity."""
         state_attr = {}
 
-        if isinstance(self._device, Device):
+        if isinstance(self._device, BaseDevice):
             for attr, attr_key in DEVICE_ATTRIBUTES.items():
                 if attr_value := getattr(self._device, attr, None):
                     state_attr[attr_key] = attr_value
@@ -358,8 +373,7 @@ class HomematicipGenericEntity(Entity):
         """Return the FunctionalChannel for the device.
 
         Resolution priority:
-        1. For multi-channel entities with a real index, find
-           channel by index match.
+        1. With a real index, find channel by index match.
         2. For multi-channel entities without a real index, use
            the provided channel position.
         3. For non multi-channel entities with >1 channels, use
@@ -374,20 +388,20 @@ class HomematicipGenericEntity(Entity):
                 " has no functionalChannels"
             )
 
+        # Prefer real index mapping when provided to avoid ordering issues.
+        if self._channel_real_index is not None:
+            for channel in functional_channels:
+                if channel.index == self._channel_real_index:
+                    return channel
+            raise ValueError(
+                f"Real channel index"
+                f" {self._channel_real_index}"
+                " not found for device"
+                f" {getattr(self._device, 'id', 'unknown')}"
+            )
+
         # Multi-channel handling
         if self._is_multi_channel:
-            # Prefer real index mapping when provided to avoid
-            # ordering issues.
-            if self._channel_real_index is not None:
-                for channel in functional_channels:
-                    if channel.index == self._channel_real_index:
-                        return channel
-                raise ValueError(
-                    f"Real channel index"
-                    f" {self._channel_real_index}"
-                    " not found for device"
-                    f" {getattr(self._device, 'id', 'unknown')}"
-                )
             # Fallback: positional channel (already sorted as strings upstream).
             if self._channel is not None and 0 <= self._channel < len(
                 functional_channels

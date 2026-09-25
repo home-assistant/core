@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import platform
-from typing import Any
+from typing import Any, override
 
 from haphilipsjs import (
     DEFAULT_API_VERSION,
@@ -11,7 +11,7 @@ from haphilipsjs import (
     PairingFailure,
     PhilipsTV,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -38,21 +38,21 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from . import LOGGER
 from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, CONST_APP_ID, CONST_APP_NAME, DOMAIN
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(
+        probatio.Required(
             CONF_HOST,
         ): str,
-        vol.Required(
+        probatio.Required(
             CONF_API_VERSION,
-            default=1,
-        ): vol.In([1, 5, 6]),
+            default="1",
+        ): probatio.In(["1", "5", "6"]),
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_ALLOW_NOTIFY, default=False): selector.BooleanSelector(),
+        probatio.Optional(CONF_ALLOW_NOTIFY, default=False): selector.BooleanSelector(),
     }
 )
 OPTIONS_FLOW = {
@@ -123,9 +123,9 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._hub
 
         errors: dict[str, str] = {}
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_PIN): str,
+                probatio.Required(CONF_PIN): str,
             }
         )
 
@@ -177,6 +177,7 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._current[CONF_API_VERSION] = entry_data[CONF_API_VERSION]
         return await self.async_step_user()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -214,6 +215,7 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_NAME: name},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -223,7 +225,7 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
             self._current = user_input
             try:
                 await self._async_attempt_prepare(
-                    user_input[CONF_HOST], user_input[CONF_API_VERSION], False
+                    user_input[CONF_HOST], int(user_input[CONF_API_VERSION]), False
                 )
             except GeneralFailure as exc:
                 LOGGER.error(exc)
@@ -236,6 +238,7 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> SchemaOptionsFlowHandler:

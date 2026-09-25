@@ -1,9 +1,9 @@
 """Config flow for iBeacon Tracker integration."""
 
-from typing import Any
+from typing import Any, override
 from uuid import UUID
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import (
@@ -24,6 +24,7 @@ class IBeaconConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -38,6 +39,7 @@ class IBeaconConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
@@ -74,18 +76,18 @@ class IBeaconOptionsFlow(OptionsFlow):
                 return self.async_create_entry(title="", data=data)
 
         schema: VolDictType = {
-            vol.Optional(
+            probatio.Optional(
                 "new_uuid",
                 description={"suggested_value": new_uuid},
             ): str,
         }
         if current_uuids:
             schema |= {
-                vol.Optional(
+                probatio.Optional(
                     "allow_nameless_uuids",
                     default=current_uuids,
                 ): cv.multi_select(sorted(current_uuids))
             }
         return self.async_show_form(
-            step_id="init", errors=errors, data_schema=vol.Schema(schema)
+            step_id="init", errors=errors, data_schema=probatio.Schema(schema)
         )

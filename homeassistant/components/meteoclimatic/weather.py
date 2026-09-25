@@ -1,6 +1,6 @@
 """Support for Meteoclimatic weather service."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from meteoclimatic import Condition
 
@@ -61,31 +61,37 @@ class MeteoclimaticWeather(
         )
 
     @property
+    @override
     def condition(self) -> str | None:
         """Return the current condition."""
         return format_condition(self.coordinator.data.weather.condition)
 
     @property
+    @override
     def native_temperature(self) -> float | None:
         """Return the temperature."""
         return self.coordinator.data.weather.temp_current
 
     @property
+    @override
     def humidity(self) -> float | None:
         """Return the humidity."""
         return self.coordinator.data.weather.humidity_current
 
     @property
+    @override
     def native_pressure(self) -> float | None:
         """Return the pressure."""
         return self.coordinator.data.weather.pressure_current
 
     @property
+    @override
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         return self.coordinator.data.weather.wind_current
 
     @property
+    @override
     def wind_bearing(self) -> float | None:
         """Return the wind bearing."""
         return self.coordinator.data.weather.wind_bearing

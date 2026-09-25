@@ -2,8 +2,9 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from psnawp_api.core.psnawp_exceptions import (
     PSNAWPAuthenticationError,
     PSNAWPError,
@@ -11,7 +12,6 @@ from psnawp_api.core.psnawp_exceptions import (
     PSNAWPNotFoundError,
 )
 from psnawp_api.utils.misc import parse_npsso_token
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -36,7 +36,7 @@ from .helpers import PlaystationNetwork
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_NPSSO): str})
+STEP_USER_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_NPSSO): str})
 
 
 class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -44,12 +44,14 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {"friend": FriendSubentryFlowHandler}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -210,9 +212,9 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_ACCOUNT_ID): SelectSelector(
+                        probatio.Required(CONF_ACCOUNT_ID): SelectSelector(
                             SelectSelectorConfig(options=options)
                         )
                     }

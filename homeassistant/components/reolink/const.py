@@ -10,6 +10,7 @@ CONF_BC_ONLY = "baichuan_only"
 CONF_BC_CONNECT = "baichuan_connection"
 CONF_SUPPORTS_PRIVACY_MODE = "privacy_mode_supported"
 CONF_FIRMWARE_CHECK_TIME = "firmware_check_time"
+CONF_UID = "uid"
 
 # Conserve battery by not waking the battery cameras each minute during normal update
 # Most props are cached in the Home Hub and updated, but some are skipped

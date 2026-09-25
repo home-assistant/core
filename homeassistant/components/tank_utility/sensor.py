@@ -3,9 +3,9 @@
 import datetime
 import logging
 
+import probatio
 import requests
 from tank_utility import auth, device as tank_monitor
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -23,9 +23,11 @@ SCAN_INTERVAL = datetime.timedelta(hours=1)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_EMAIL): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, vol.Length(min=1)),
+        probatio.Required(CONF_EMAIL): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_DEVICES): probatio.All(
+            cv.ensure_list, probatio.Length(min=1)
+        ),
     }
 )
 
@@ -61,6 +63,7 @@ def setup_platform(
         if http_error.response.status_code == requests.codes.unauthorized:
             _LOGGER.error("Invalid credentials")
             return
+        raise
 
     all_sensors = []
     for device in devices:

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import logging
 
 from cronsim import CronSim, CronSimError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -19,7 +19,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device import async_entity_id_to_device_id
 from homeassistant.helpers.helper_integration import (
     async_handle_source_entity_changes,
-    async_remove_helper_config_entry_from_source_device,
+    async_remove_helper_devices,
 )
 from homeassistant.helpers.typing import ConfigType
 
@@ -55,20 +55,20 @@ def validate_cron_pattern(pattern: str) -> str:
         CronSim(pattern, datetime(2020, 1, 1))  # any date will do
     except CronSimError as err:
         _LOGGER.error("Invalid cron pattern %s: %s", pattern, err)
-        raise vol.Invalid("Invalid pattern") from err
+        raise probatio.Invalid("Invalid pattern") from err
     return pattern
 
 
 def period_or_cron(config: ConfigType) -> ConfigType:
     """Check cron pattern excludes meter type and offset."""
     if CONF_CRON_PATTERN in config and CONF_METER_TYPE in config:
-        raise vol.Invalid(f"Use <{CONF_CRON_PATTERN}> or <{CONF_METER_TYPE}>")
+        raise probatio.Invalid(f"Use <{CONF_CRON_PATTERN}> or <{CONF_METER_TYPE}>")
     if (
         CONF_CRON_PATTERN in config
         and CONF_METER_OFFSET in config
         and config[CONF_METER_OFFSET] != DEFAULT_OFFSET
     ):
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"When <{CONF_CRON_PATTERN}> is used <{CONF_METER_OFFSET}> has no meaning"
         )
     return config
@@ -77,38 +77,41 @@ def period_or_cron(config: ConfigType) -> ConfigType:
 def max_28_days(config: timedelta) -> timedelta:
     """Check that time period does not include more than 28 days."""
     if config.days >= 28:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             "Unsupported offset of more than 28 days, please use a cron pattern."
         )
 
     return config
 
 
-METER_CONFIG_SCHEMA = vol.Schema(
-    vol.All(
+METER_CONFIG_SCHEMA = probatio.Schema(
+    probatio.All(
         {
-            vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Optional(CONF_METER_TYPE): vol.In(METER_TYPES),
-            vol.Optional(CONF_METER_OFFSET, default=DEFAULT_OFFSET): vol.All(
+            probatio.Required(CONF_SOURCE_SENSOR): cv.entity_id,
+            probatio.Optional(CONF_NAME): cv.string,
+            probatio.Optional(CONF_UNIQUE_ID): cv.string,
+            probatio.Optional(CONF_METER_TYPE): probatio.In(METER_TYPES),
+            probatio.Optional(CONF_METER_OFFSET, default=DEFAULT_OFFSET): probatio.All(
                 cv.time_period, cv.positive_timedelta, max_28_days
             ),
-            vol.Optional(CONF_METER_DELTA_VALUES, default=False): cv.boolean,
-            vol.Optional(CONF_METER_NET_CONSUMPTION, default=False): cv.boolean,
-            vol.Optional(CONF_METER_PERIODICALLY_RESETTING, default=True): cv.boolean,
-            vol.Optional(CONF_TARIFFS, default=[]): vol.All(
-                cv.ensure_list, vol.Unique(), [cv.string]
+            probatio.Optional(CONF_METER_DELTA_VALUES, default=False): cv.boolean,
+            probatio.Optional(CONF_METER_NET_CONSUMPTION, default=False): cv.boolean,
+            probatio.Optional(
+                CONF_METER_PERIODICALLY_RESETTING, default=True
+            ): cv.boolean,
+            probatio.Optional(CONF_TARIFFS, default=[]): probatio.All(
+                cv.ensure_list, probatio.Unique(), [cv.string]
             ),
-            vol.Optional(CONF_CRON_PATTERN): validate_cron_pattern,
-            vol.Optional(CONF_SENSOR_ALWAYS_AVAILABLE, default=False): cv.boolean,
+            probatio.Optional(CONF_CRON_PATTERN): validate_cron_pattern,
+            probatio.Optional(CONF_SENSOR_ALWAYS_AVAILABLE, default=False): cv.boolean,
         },
         period_or_cron,
     )
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({cv.slug: METER_CONFIG_SCHEMA})}, extra=vol.ALLOW_EXTRA
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.Schema({cv.slug: METER_CONFIG_SCHEMA})},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -187,7 +190,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         er.async_validate_entity_id(entity_registry, entry.options[CONF_SOURCE_SENSOR])
-    except vol.Invalid:
+    except probatio.Invalid:
         # The entity is identified by an unknown entity registry ID
         _LOGGER.error(
             "Failed to setup utility_meter for unknown entity %s",
@@ -205,7 +208,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         async_handle_source_entity_changes(
             hass,
-            add_helper_config_entry_to_device=False,
             helper_config_entry_id=entry.entry_id,
             set_source_entity_id_or_uuid=set_source_entity_id_or_uuid,
             source_device_id=async_entity_id_to_device_id(
@@ -253,10 +255,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
     )
 
-    if config_entry.version > 2:
-        # This means the user has downgraded from a future version
-        return False
-
     if config_entry.version == 1:
         new = {**config_entry.options}
         new[CONF_METER_PERIODICALLY_RESETTING] = True
@@ -269,7 +267,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             if source_device_id := async_entity_id_to_device_id(
                 hass, options[CONF_SOURCE_SENSOR]
             ):
-                async_remove_helper_config_entry_from_source_device(
+                async_remove_helper_devices(
                     hass,
                     helper_config_entry_id=config_entry.entry_id,
                     source_device_id=source_device_id,

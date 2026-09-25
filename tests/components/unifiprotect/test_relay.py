@@ -1,19 +1,23 @@
 """Tests for the UniFi Protect relay (Public API) switch entities."""
 
+from collections.abc import Callable, Coroutine
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import pytest
 from uiprotect.data import (
+    DeviceState,
     ModelType,
-    PublicBootstrap,
     PublicRelayOutput,
     Relay,
     RelayOutputState,
+    WSAction,
 )
 from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -25,9 +29,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .utils import MockUFPFixture, init_entry
+from .utils import (
+    MockUFPFixture,
+    init_entry,
+    make_public_bootstrap,
+    public_device_ws_message,
+)
 
 RELAY_ID = "relay-id-1"
 RELAY_MAC = "AA:BB:CC:DD:EE:01"
@@ -54,6 +63,7 @@ def _make_output(
 def _make_relay(
     *,
     outputs: list[Mock] | None = None,
+    state: DeviceState = DeviceState.CONNECTED,
 ) -> Mock:
     """Build a mock :class:`Relay` whose ``activate_output`` is awaitable."""
     relay = Mock(spec=Relay)
@@ -61,6 +71,7 @@ def _make_relay(
     relay.mac = RELAY_MAC
     relay.name = RELAY_NAME
     relay.model = ModelType.RELAY
+    relay.state = state
     relay.outputs = outputs if outputs is not None else [_make_output()]
 
     def get_output(output_id: int) -> Mock | None:
@@ -73,12 +84,7 @@ def _make_relay(
 
 def _make_public_bootstrap(relay: Mock | None) -> Mock:
     """Build a public bootstrap mock holding the given relay."""
-    pb = Mock(spec=PublicBootstrap)
-    pb.relays = {relay.id: relay} if relay is not None else {}
-    pb.arm_mode = None
-    pb.arm_profiles = {}
-    pb.sirens = {}
-    return pb
+    return make_public_bootstrap(relays={relay.id: relay} if relay is not None else {})
 
 
 @pytest.fixture(name="ufp_with_relay")
@@ -123,6 +129,28 @@ async def test_relay_switch_created_with_state(
     state = hass.states.get(SWITCH_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_ON
+
+
+async def test_relay_switch_device_links_to_nvr_via_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp_with_relay: tuple[MockUFPFixture, Mock],
+) -> None:
+    """Relay device's via_device_id points at the NVR device."""
+    ufp, _relay = ufp_with_relay
+    await init_entry(hass, ufp, [])
+
+    nvr = ufp.api.bootstrap.nvr
+    nvr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, nvr.mac), ufp.entry.entry_id
+    )
+    assert nvr_device is not None
+
+    relay_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, RELAY_MAC), ufp.entry.entry_id
+    )
+    assert relay_device is not None
+    assert relay_device.via_device_id == nvr_device.id
 
 
 async def test_relay_switch_off_otp_is_off(
@@ -364,6 +392,47 @@ async def test_relay_switch_becomes_unavailable_when_relay_removed(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    "state",
+    [DeviceState.DISCONNECTED, DeviceState.CONNECTING, DeviceState.UNKNOWN],
+)
+async def test_relay_switch_unavailable_when_not_connected_at_setup(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    state: DeviceState,
+) -> None:
+    """A relay that is not connected at setup starts out unavailable."""
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = _make_public_bootstrap(_make_relay(state=state))
+
+    await init_entry(hass, ufp, [])
+
+    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+async def test_relay_switch_unavailable_when_disconnected(
+    hass: HomeAssistant,
+    ufp_with_relay: tuple[MockUFPFixture, Mock],
+) -> None:
+    """A relay that drops off the console is unavailable, and recovers."""
+    ufp, relay = ufp_with_relay
+    relay.outputs[0].state = RelayOutputState.ON
+    await init_entry(hass, ufp, [])
+    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_ON
+
+    relay.state = DeviceState.DISCONNECTED
+    ufp.devices_ws_subscription(public_device_ws_message(relay))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    relay.state = DeviceState.CONNECTED
+    ufp.devices_ws_subscription(public_device_ws_message(relay))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_ON
+
+
 async def test_relay_switch_availability_follows_websocket_state(
     hass: HomeAssistant,
     ufp_with_relay: tuple[MockUFPFixture, Mock],
@@ -375,15 +444,15 @@ async def test_relay_switch_availability_follows_websocket_state(
 
     assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_ON  # type: ignore[union-attr]
 
-    assert ufp.ws_state_subscription is not None
-    ufp.ws_state_subscription(WebsocketState.DISCONNECTED)
+    assert ufp.devices_ws_state_subscription is not None
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
     await hass.async_block_till_done()
 
     state = hass.states.get(SWITCH_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
-    ufp.ws_state_subscription(WebsocketState.CONNECTED)
+    ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
     await hass.async_block_till_done()
 
     state = hass.states.get(SWITCH_ENTITY_ID)
@@ -391,11 +460,95 @@ async def test_relay_switch_availability_follows_websocket_state(
     assert state.state == STATE_ON
 
 
-async def test_relay_public_ws_message_with_none_new_obj(
+async def test_relay_switch_availability_decoupled_from_private_websocket(
     hass: HomeAssistant,
     ufp_with_relay: tuple[MockUFPFixture, Mock],
 ) -> None:
-    """Public WS message with new_obj=None is silently ignored."""
+    """Relay availability follows the public WS only: private loss is a no-op."""
+    ufp, relay = ufp_with_relay
+    relay.outputs[0].state = RelayOutputState.ON
+    await init_entry(hass, ufp, [])
+    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_ON  # type: ignore[union-attr]
+
+    # A private WS loss does not affect the relay.
+    assert ufp.ws_state_subscription is not None
+    ufp.ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    state = hass.states.get(SWITCH_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    # The public WS loss does flip it unavailable.
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    state = hass.states.get(SWITCH_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_relay_ws_update_without_subscription_is_ignored(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+) -> None:
+    """A public relay WS update for an unsubscribed relay is a no-op."""
+    await init_entry(hass, ufp, [])
+    assert ufp.devices_ws_subscription is not None
+
+    mock_msg = Mock()
+    mock_msg.new_obj = _make_relay()
+    ufp.devices_ws_subscription(mock_msg)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(SWITCH_ENTITY_ID) is None
+
+
+async def test_public_ws_state_change_without_public_bootstrap(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+) -> None:
+    """Public WS state changes flip the flag but no-op without a bootstrap."""
+    await init_entry(hass, ufp, [])
+    data = ufp.entry.runtime_data
+    assert data.last_public_update_success is True
+    assert ufp.devices_ws_state_subscription is not None
+
+    # No public bootstrap -> re-signal step returns early.
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert data.last_public_update_success is False
+
+    # Same state again -> handler early-returns.
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert data.last_public_update_success is False
+
+
+async def test_events_ws_state_change_without_public_bootstrap(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+) -> None:
+    """Events WS state changes flip the flag but no-op without a bootstrap."""
+    await init_entry(hass, ufp, [])
+    data = ufp.entry.runtime_data
+    assert data.last_events_update_success is True
+    assert ufp.events_ws_state_subscription is not None
+
+    # No public bootstrap -> re-signal step returns early.
+    ufp.events_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert data.last_events_update_success is False
+
+    # Same state again -> handler early-returns.
+    ufp.events_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert data.last_events_update_success is False
+
+
+async def test_relay_public_ws_message_without_public_old_obj(
+    hass: HomeAssistant,
+    ufp_with_relay: tuple[MockUFPFixture, Mock],
+) -> None:
+    """A new_obj=None message without a PublicDeviceModel old_obj is ignored."""
     ufp, _ = ufp_with_relay
     await init_entry(hass, ufp, [])
 
@@ -404,6 +557,7 @@ async def test_relay_public_ws_message_with_none_new_obj(
 
     mock_msg = Mock()
     mock_msg.new_obj = None
+    mock_msg.old_obj = None
 
     assert ufp.devices_ws_subscription is not None
     ufp.devices_ws_subscription(mock_msg)
@@ -413,26 +567,57 @@ async def test_relay_public_ws_message_with_none_new_obj(
     assert hass.states.get(SWITCH_ENTITY_ID) == state_before
 
 
-async def test_relay_switch_output_removed_from_relay_update(
+def _outputs_removed_ws_message(ufp: MockUFPFixture, relay: Mock) -> Mock:
+    """Build an update whose merged relay no longer contains any outputs.
+
+    The library merges the update into the public bootstrap before
+    dispatching, so mirror that here: entities re-read the bootstrap on
+    dispatch.
+    """
+    relay_no_outputs = _make_relay(outputs=[])
+    relay_no_outputs.id = relay.id
+    relay_no_outputs.mac = relay.mac
+    ufp.api.public_bootstrap.relays[relay.id] = relay_no_outputs
+
+    mock_msg = Mock()
+    mock_msg.new_obj = relay_no_outputs
+    return mock_msg
+
+
+def _relay_deleted_ws_message(ufp: MockUFPFixture, relay: Mock) -> Mock:
+    """Build a delete event (new_obj=None) for the relay.
+
+    The library removes the object from the bootstrap before dispatching;
+    data.py dispatches None and the entity re-reads the relay as missing.
+    """
+    del ufp.api.public_bootstrap.relays[relay.id]
+
+    mock_msg = Mock()
+    mock_msg.old_obj = relay
+    mock_msg.new_obj = None
+    return mock_msg
+
+
+@pytest.mark.parametrize(
+    "make_ws_message",
+    [
+        pytest.param(_outputs_removed_ws_message, id="outputs_removed"),
+        pytest.param(_relay_deleted_ws_message, id="relay_deleted"),
+    ],
+)
+async def test_relay_switch_unavailable_after_ws_message(
     hass: HomeAssistant,
     ufp_with_relay: tuple[MockUFPFixture, Mock],
+    make_ws_message: Callable[[MockUFPFixture, Mock], Mock],
 ) -> None:
-    """WS update where the output is no longer present marks the entity unavailable."""
+    """WS messages that leave no usable relay output mark the entity unavailable."""
     ufp, relay = ufp_with_relay
     relay.outputs[0].state = RelayOutputState.ON
     await init_entry(hass, ufp, [])
 
     assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_ON  # type: ignore[union-attr]
 
-    # Build a relay WS update that no longer contains any outputs.
-    relay_no_outputs = _make_relay(outputs=[])
-    relay_no_outputs.id = relay.id
-    relay_no_outputs.mac = relay.mac
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.old_obj = relay_no_outputs
-    mock_msg.new_obj = relay_no_outputs
+    mock_msg = make_ws_message(ufp, relay)
 
     assert ufp.devices_ws_subscription is not None
     ufp.devices_ws_subscription(mock_msg)
@@ -461,3 +646,113 @@ async def test_relay_switch_command_when_output_gone(
             {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
             blocking=True,
         )
+
+
+async def test_relay_switch_public_only(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Relay output switches are public-API entities and work in API-key-only mode."""
+    relay = _make_relay()
+    relay.outputs[0].state = RelayOutputState.ON
+    ufp_public_only.api.public_bootstrap.relays = {relay.id: relay}
+
+    await setup_public_only()
+
+    assert entity_registry.async_get(SWITCH_ENTITY_ID) is not None
+    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_ON
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+        blocking=True,
+    )
+    relay.activate_output.assert_awaited_once_with(OUTPUT_ID, state="off")
+
+
+@pytest.fixture(name="setup_hybrid")
+def setup_hybrid_fixture(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> Callable[[], Coroutine[Any, Any, None]]:
+    """Return a callable setting up the hybrid entry with an empty public bootstrap."""
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = _make_public_bootstrap(None)
+
+    async def _setup() -> None:
+        await init_entry(hass, ufp, [])
+
+    return _setup
+
+
+def _add_relay_frame(ufp: MockUFPFixture, relay: Mock) -> None:
+    """Deliver a public devices websocket add frame for ``relay``."""
+    ufp.api.public_bootstrap.relays[relay.id] = relay
+    msg = public_device_ws_message(relay)
+    msg.action = WSAction.ADD
+    ufp.devices_ws_subscription(msg)
+
+
+@pytest.mark.parametrize(
+    ("ufp_fixture", "setup_fixture"),
+    [
+        pytest.param("ufp_public_only", "setup_public_only", id="public_only"),
+        pytest.param("ufp", "setup_hybrid", id="hybrid"),
+    ],
+)
+async def test_relay_switch_added_after_setup(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    ufp_fixture: str,
+    setup_fixture: str,
+) -> None:
+    """A relay adopted after setup gets its switches from its add frame in both modes.
+
+    A relay has no private counterpart, so hybrid cannot discover it through
+    the adopt path either. A re-delivered frame must not add a second time.
+    """
+    ufp: MockUFPFixture = request.getfixturevalue(ufp_fixture)
+    setup: Callable[[], Coroutine[Any, Any, None]] = request.getfixturevalue(
+        setup_fixture
+    )
+    await setup()
+    assert entity_registry.async_get(SWITCH_ENTITY_ID) is None
+
+    relay = _make_relay()
+    _add_relay_frame(ufp, relay)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(SWITCH_ENTITY_ID) is not None
+    count = len(hass.states.async_entity_ids(SWITCH_DOMAIN))
+
+    _add_relay_frame(ufp, relay)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == count
+    assert "already exists" not in caplog.text
+
+
+async def test_relay_switch_hybrid_startup_relay_not_added_twice(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    ufp_with_relay: tuple[MockUFPFixture, Mock],
+) -> None:
+    """A relay enumerated at hybrid setup is in the add baseline.
+
+    Its add frame (or the re-offer after a reconnect) must not create the
+    switches a second time.
+    """
+    ufp, relay = ufp_with_relay
+    await init_entry(hass, ufp, [])
+    count = len(hass.states.async_entity_ids(SWITCH_DOMAIN))
+    assert count
+
+    _add_relay_frame(ufp, relay)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == count
+    assert "already exists" not in caplog.text

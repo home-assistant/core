@@ -1,10 +1,10 @@
 """Config flow for the Zinvolt integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import jwt
-import voluptuous as vol
+import probatio
 from zinvolt import ZinvoltClient
 from zinvolt.exceptions import ZinvoltAuthenticationError, ZinvoltError
 
@@ -20,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 class ZinvoltConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Zinvolt."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -51,10 +52,10 @@ class ZinvoltConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_EMAIL): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_EMAIL): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,

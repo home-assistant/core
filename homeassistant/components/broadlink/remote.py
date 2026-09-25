@@ -7,7 +7,7 @@ from collections.abc import Iterable
 from datetime import timedelta
 from itertools import product
 import logging
-from typing import Any
+from typing import Any, override
 
 from broadlink.exceptions import (
     AuthorizationError,
@@ -16,7 +16,7 @@ from broadlink.exceptions import (
     ReadError,
     StorageError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.remote import (
@@ -60,32 +60,38 @@ FLAG_STORAGE_VERSION = 1
 CODE_SAVE_DELAY = 15
 FLAG_SAVE_DELAY = 15
 
-COMMAND_SCHEMA = vol.Schema(
+COMMAND_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_COMMAND): vol.All(
-            cv.ensure_list, [vol.All(cv.string, vol.Length(min=1))], vol.Length(min=1)
+        probatio.Required(ATTR_COMMAND): probatio.All(
+            cv.ensure_list,
+            [probatio.All(cv.string, probatio.Length(min=1))],
+            probatio.Length(min=1),
         ),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 SERVICE_SEND_SCHEMA = COMMAND_SCHEMA.extend(
     {
-        vol.Optional(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1)),
-        vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): vol.Coerce(float),
+        probatio.Optional(ATTR_DEVICE): probatio.All(cv.string, probatio.Length(min=1)),
+        probatio.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): probatio.Coerce(
+            float
+        ),
     }
 )
 
 SERVICE_LEARN_SCHEMA = COMMAND_SCHEMA.extend(
     {
-        vol.Required(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1)),
-        vol.Optional(ATTR_COMMAND_TYPE, default=COMMAND_TYPE_IR): vol.In(COMMAND_TYPES),
-        vol.Optional(ATTR_ALTERNATIVE, default=False): cv.boolean,
+        probatio.Required(ATTR_DEVICE): probatio.All(cv.string, probatio.Length(min=1)),
+        probatio.Optional(ATTR_COMMAND_TYPE, default=COMMAND_TYPE_IR): probatio.In(
+            COMMAND_TYPES
+        ),
+        probatio.Optional(ATTR_ALTERNATIVE, default=False): cv.boolean,
     }
 )
 
 SERVICE_DELETE_SCHEMA = COMMAND_SCHEMA.extend(
-    {vol.Required(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1))}
+    {probatio.Required(ATTR_DEVICE): probatio.All(cv.string, probatio.Length(min=1))}
 )
 
 
@@ -181,17 +187,20 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         """
         return self._flags
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when the remote is added to hass."""
         state = await self.async_get_last_state()
         self._attr_is_on = state is None or state.state != STATE_OFF
         await super().async_added_to_hass()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the remote."""
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the remote."""
         self._attr_is_on = False
@@ -205,6 +214,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         self._flags.update(await self._flag_storage.async_load() or {})
         self._storage_loaded = True
 
+    @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a list of commands to a device."""
         kwargs[ATTR_COMMAND] = command
@@ -263,6 +273,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         if at_least_one_sent:
             self._flag_storage.async_delay_save(self._get_flags, FLAG_SAVE_DELAY)
 
+    @override
     async def async_learn_command(self, **kwargs: Any) -> None:
         """Learn a list of commands from a remote."""
         kwargs = SERVICE_LEARN_SCHEMA(kwargs)
@@ -431,6 +442,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 self.hass, notification_id="learn_command"
             )
 
+    @override
     async def async_delete_command(self, **kwargs: Any) -> None:
         """Delete a list of commands from a remote."""
         kwargs = SERVICE_DELETE_SCHEMA(kwargs)

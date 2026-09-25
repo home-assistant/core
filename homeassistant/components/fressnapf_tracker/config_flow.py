@@ -2,14 +2,14 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from fressnapftracker import (
     AuthClient,
     FressnapfTrackerInvalidPhoneNumberError,
     FressnapfTrackerInvalidTokenError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -24,14 +24,14 @@ from .const import CONF_PHONE_NUMBER, CONF_SMS_CODE, CONF_USER_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PHONE_NUMBER): str,
+        probatio.Required(CONF_PHONE_NUMBER): str,
     }
 )
-STEP_SMS_CODE_DATA_SCHEMA = vol.Schema(
+STEP_SMS_CODE_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_SMS_CODE): str,
+        probatio.Required(CONF_SMS_CODE): str,
     }
 )
 
@@ -96,6 +96,7 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
             return errors, verification_response.user_token.access_token
         return errors, None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

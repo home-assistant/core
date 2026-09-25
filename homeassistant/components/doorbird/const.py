@@ -3,7 +3,7 @@
 from homeassistant.const import Platform
 
 DOMAIN = "doorbird"
-PLATFORMS = [Platform.BUTTON, Platform.CAMERA, Platform.EVENT]
+PLATFORMS = [Platform.BUTTON, Platform.CAMERA, Platform.EVENT, Platform.IMAGE]
 
 CONF_EVENTS = "events"
 MANUFACTURER = "Bird Home Automation Group"

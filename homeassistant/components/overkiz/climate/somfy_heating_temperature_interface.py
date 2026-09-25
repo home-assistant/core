@@ -1,6 +1,6 @@
 """Support for Somfy Heating Temperature Interface."""
 
-from typing import Any
+from typing import Any, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -97,21 +97,23 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
         )
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation i.e. heat, cool mode."""
-        state = self.device.states[OverkizState.CORE_ON_OFF]
+        state = self.device.states.get(OverkizState.CORE_ON_OFF)
         if state and state.value_as_str == OverkizCommandParam.OFF:
             return HVACMode.OFF
 
         if (
-            state := self.device.states[
+            state := self.device.states.get(
                 OverkizState.OVP_HEATING_TEMPERATURE_INTERFACE_ACTIVE_MODE
-            ]
+            )
         ) and state.value_as_str:
             return OVERKIZ_TO_HVAC_MODES[state.value_as_str]
 
         return HVACMode.OFF
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode is HVACMode.OFF:
@@ -124,16 +126,18 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
             )
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         if (
-            state := self.device.states[
+            state := self.device.states.get(
                 OverkizState.OVP_HEATING_TEMPERATURE_INTERFACE_SETPOINT_MODE
-            ]
+            )
         ) and state.value_as_str:
             return OVERKIZ_TO_PRESET_MODES[state.value_as_str]
         return None
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self.executor.async_execute_command(
@@ -142,18 +146,20 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
         )
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
         if (
-            current_operation := self.device.states[
+            current_operation := self.device.states.get(
                 OverkizState.OVP_HEATING_TEMPERATURE_INTERFACE_OPERATING_MODE
-            ]
+            )
         ) and current_operation.value_as_str:
             return OVERKIZ_TO_HVAC_ACTION[current_operation.value_as_str]
 
         return None
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
 
@@ -167,27 +173,31 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
         if mode not in MAP_PRESET_TEMPERATURES:
             return None
 
-        if state := self.device.states[MAP_PRESET_TEMPERATURES[mode]]:
+        if state := self.device.states.get(MAP_PRESET_TEMPERATURES[mode]):
             return state.value_as_float
         return None
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
-            temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]
+            temperature := self.temperature_device.states.get(
+                OverkizState.CORE_TEMPERATURE
+            )
         ):
             return temperature.value_as_float
         return None
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
 
         if (
-            mode := self.device.states[
+            mode := self.device.states.get(
                 OverkizState.OVP_HEATING_TEMPERATURE_INTERFACE_SETPOINT_MODE
-            ]
+            )
         ) and mode.value_as_str:
             await self.executor.async_execute_command(
                 SETPOINT_MODE_TO_OVERKIZ_COMMAND[mode.value_as_str], temperature

@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, override
 
 from pynintendoparental.enum import DeviceTimerMode
 
@@ -76,16 +76,19 @@ class NintendoParentalSelectEntity(NintendoDevice, SelectEntity):
         self.entity_description = description
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current selected option."""
         option = self.entity_description.get_option(self._device)
         return option.name.lower() if option else None
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return a list of available options."""
         return [option.name.lower() for option in self.entity_description.options_enum]
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         enum_option = self.entity_description.options_enum[option.upper()]

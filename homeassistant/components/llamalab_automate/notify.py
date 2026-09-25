@@ -2,10 +2,10 @@
 
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -26,9 +26,9 @@ CONF_TO = "to"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_TO): cv.string,
-        vol.Optional(CONF_DEVICE): cv.string,
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_TO): cv.string,
+        probatio.Optional(CONF_DEVICE): cv.string,
     }
 )
 
@@ -55,6 +55,7 @@ class AutomateNotificationService(BaseNotificationService):
         self._recipient = recipient
         self._device = device
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
 

@@ -2,12 +2,12 @@
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
+import probatio
 from pynintendoauth.exceptions import HttpException, InvalidSessionTokenException
 from pynintendoparental import Authenticator
 from pynintendoparental.api import Api
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
@@ -25,6 +25,7 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize a new config flow instance."""
         self.auth: Authenticator | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -67,7 +68,7 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             description_placeholders={"link": self.auth.login_url},
-            data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_TOKEN): str}),
             errors=errors,
         )
 
@@ -101,6 +102,6 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             description_placeholders={"link": self.auth.login_url},
-            data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_TOKEN): str}),
             errors=errors,
         )

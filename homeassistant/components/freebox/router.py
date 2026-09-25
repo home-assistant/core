@@ -8,6 +8,7 @@ import logging
 import os
 from pathlib import Path
 import re
+import time
 from typing import Any
 
 from freebox_api import Freepybox
@@ -53,6 +54,17 @@ def is_json(json_str: str) -> bool:
     return True
 
 
+def _get_token_file(hass: HomeAssistant, host: str) -> Path:
+    """Return the path of the stored application token file for a host."""
+    freebox_path = Store(hass, STORAGE_VERSION, STORAGE_KEY).path
+    return Path(f"{freebox_path}/{slugify(host)}.conf")
+
+
+def _unlink_if_exists(path: Path) -> None:
+    """Remove a file if it exists."""
+    path.unlink(missing_ok=True)
+
+
 async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
     """Get the Freebox API."""
     freebox_path = Store(hass, STORAGE_VERSION, STORAGE_KEY).path
@@ -60,9 +72,33 @@ async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
     if not os.path.exists(freebox_path):
         await hass.async_add_executor_job(os.makedirs, freebox_path)
 
-    token_file = Path(f"{freebox_path}/{slugify(host)}.conf")
+    token_file = _get_token_file(hass, host)
 
     return Freepybox(APP_DESC, token_file, API_VERSION)
+
+
+def is_invalid_token_error(error: Exception) -> bool:
+    """Return whether an authorization error reports a rejected app token."""
+    return bool(
+        (matcher := re.search(r"\(APIResponse: (.+)\)$", str(error)))
+        and is_json(json_str := matcher.group(1))
+        and json.loads(json_str).get("error_code") == "invalid_token"
+    )
+
+
+async def async_forget_registration(hass: HomeAssistant, host: str) -> None:
+    """Remove a stored application token for a host, if any.
+
+    The Freebox can reject an application token that Home Assistant still
+    considers valid, for example after the router was replaced, factory
+    reset, or the application authorization was revoked from the Freebox
+    OS settings. When that happens, Home Assistant keeps retrying with the
+    same rejected token forever. Removing the stored token forces a fresh
+    pairing (and a new "please confirm on your Freebox" prompt) on the
+    next attempt.
+    """
+    token_file = _get_token_file(hass, host)
+    await hass.async_add_executor_job(_unlink_if_exists, token_file)
 
 
 async def get_hosts_list_if_supported(
@@ -108,6 +144,7 @@ class FreeboxRouter:
     ) -> None:
         """Initialize a Freebox router."""
         self.hass = hass
+        self.config_entry = entry
         self._host = entry.data[CONF_HOST]
         self._port = entry.data[CONF_PORT]
 
@@ -126,6 +163,8 @@ class FreeboxRouter:
         self.raids: dict[int, dict[str, Any]] = {}
         self.sensors_temperature: dict[str, int] = {}
         self.sensors_temperature_names: dict[str, str] = {}
+        self.sensors_fan: dict[str, int] = {}
+        self.sensors_fan_names: dict[str, str] = {}
         self.sensors_connection: dict[str, float] = {}
         self.call_list: list[dict[str, Any]] = []
         self.home_granted = True
@@ -190,6 +229,12 @@ class FreeboxRouter:
             self.sensors_temperature[sensor_id] = sensor.get("value")
             self.sensors_temperature_names[sensor_id] = sensor["name"]
 
+        # Fan speed sensors (rpm). Name and id may vary under Freebox devices.
+        for fan in syst_datas.get("fans", []):
+            fan_id = fan["id"]
+            self.sensors_fan[fan_id] = fan.get("value")
+            self.sensors_fan_names[fan_id] = fan["name"]
+
         # Connection sensors
         connection_datas: dict[str, Any] = await self._api.connection.get_status()
         for sensor_key in CONNECTION_SENSORS_KEYS:
@@ -200,7 +245,7 @@ class FreeboxRouter:
             "IPv6": connection_datas.get("ipv6"),
             "connection_type": connection_datas["media"],
             "uptime": datetime.fromtimestamp(
-                round(datetime.now().timestamp()) - syst_datas["uptime_val"]
+                round(time.time()) - syst_datas["uptime_val"]
             ),
             "firmware_version": self._sw_v,
             "serial": syst_datas["serial"],
@@ -321,7 +366,11 @@ class FreeboxRouter:
     @property
     def sensors(self) -> dict[str, Any]:
         """Return sensors."""
-        return {**self.sensors_temperature, **self.sensors_connection}
+        return {
+            **self.sensors_temperature,
+            **self.sensors_fan,
+            **self.sensors_connection,
+        }
 
     @property
     def call(self) -> Call:

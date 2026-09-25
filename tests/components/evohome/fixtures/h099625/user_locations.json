@@ -3,6 +3,11 @@
     "locationInfo": {
       "locationId": "111111",
       "name": "My Home",
+      "streetAddress": "1 Main Street",
+      "city": "Helsinki",
+      "country": "Finland",
+      "postcode": "E1 1AA",
+      "locationType": "Residential",
       "useDaylightSaveSwitching": true,
       "timeZone": {
         "timeZoneId": "FLEStandardTime",
@@ -10,6 +15,12 @@
         "offsetMinutes": 120,
         "currentOffsetMinutes": 180,
         "supportsDaylightSaving": true
+      },
+      "locationOwner": {
+        "userId": "2263181",
+        "username": "user_2263181@gmail.com",
+        "firstname": "John",
+        "lastname": "Smith"
       }
     },
     "gateways": [

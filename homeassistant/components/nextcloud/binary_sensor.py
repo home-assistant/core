@@ -1,6 +1,6 @@
 """Summary binary data from Nextcoud."""
 
-from typing import Final
+from typing import Final, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -67,6 +67,7 @@ class NextcloudBinarySensor(NextcloudEntity, BinarySensorEntity):
     """Represents a Nextcloud binary sensor."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         val = self.coordinator.data.get(self.entity_description.key)

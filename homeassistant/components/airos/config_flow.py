@@ -3,8 +3,9 @@
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+from aiohttp import ClientSession, TCPConnector
 from airos.airos6 import AirOS6
 from airos.airos8 import AirOS8
 from airos.discovery import airos_discover_devices
@@ -16,9 +17,10 @@ from airos.exceptions import (
     AirOSEndpointError,
     AirOSKeyDataMissingError,
     AirOSListenerError,
+    AirOSTLSCompatibilityError,
 )
 from airos.helpers import DetectDeviceData, async_get_firmware_data
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -44,6 +46,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
+    CONF_LEGACY_SSL,
     DEFAULT_SSL,
     DEFAULT_USERNAME,
     DEFAULT_VERIFY_SSL,
@@ -52,8 +55,9 @@ from .const import (
     HOSTNAME,
     IP_ADDRESS,
     MAC_ADDRESS,
-    SECTION_ADVANCED_SETTINGS,
+    SECTION_ADDITIONAL_SETTINGS,
 )
+from .helpers import build_legacy_context
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,15 +66,17 @@ AirOSDeviceDetect = AirOS8 | AirOS6
 # Discovery duration in seconds, airOS announces every 20 seconds
 DISCOVER_INTERVAL: int = 30
 
-STEP_DISCOVERY_DATA_SCHEMA = vol.Schema(
+STEP_DISCOVERY_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(SECTION_ADVANCED_SETTINGS): section(
-            vol.Schema(
+        probatio.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(SECTION_ADDITIONAL_SETTINGS): section(
+            probatio.Schema(
                 {
-                    vol.Required(CONF_SSL, default=DEFAULT_SSL): bool,
-                    vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+                    probatio.Required(CONF_SSL, default=DEFAULT_SSL): bool,
+                    probatio.Required(
+                        CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
+                    ): bool,
                 }
             ),
             {"collapsed": True},
@@ -79,14 +85,14 @@ STEP_DISCOVERY_DATA_SCHEMA = vol.Schema(
 )
 
 STEP_MANUAL_DATA_SCHEMA = STEP_DISCOVERY_DATA_SCHEMA.extend(
-    {vol.Required(CONF_HOST): str}
+    {probatio.Required(CONF_HOST): str}
 )
 
 
 class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ubiquiti airOS."""
 
-    VERSION = 2
+    VERSION = 3
     MINOR_VERSION = 1
 
     _discovery_task: asyncio.Task | None = None
@@ -100,6 +106,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovery_abort_reason: str | None = None
         self.selected_device_info: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -127,15 +134,24 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _validate_and_get_device_info(
-        self, config_data: dict[str, Any]
+        self,
+        config_data: dict[str, Any],
+        legacy: bool = False,
     ) -> dict[str, Any] | None:
         """Validate user input with the device API."""
         # By default airOS 8 comes with self-signed SSL certificates,
         # with no option in the web UI to change or upload a custom certificate.
-        session = async_get_clientsession(
-            self.hass,
-            verify_ssl=config_data[SECTION_ADVANCED_SETTINGS][CONF_VERIFY_SSL],
-        )
+        # Older airOS 6 devices may still lack proper levels
+
+        close_session = False
+        verify_ssl = config_data[SECTION_ADDITIONAL_SETTINGS][CONF_VERIFY_SSL]
+
+        session = async_get_clientsession(self.hass, verify_ssl=verify_ssl)
+        if legacy:
+            session = ClientSession(
+                connector=TCPConnector(ssl=build_legacy_context(verify_ssl=verify_ssl))
+            )
+            close_session = True
 
         try:
             device_data: DetectDeviceData = await async_get_firmware_data(
@@ -143,8 +159,19 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
                 username=config_data[CONF_USERNAME],
                 password=config_data[CONF_PASSWORD],
                 session=session,
-                use_ssl=config_data[SECTION_ADVANCED_SETTINGS][CONF_SSL],
+                use_ssl=config_data[SECTION_ADDITIONAL_SETTINGS][CONF_SSL],
             )
+
+        except AirOSTLSCompatibilityError:
+            # If already in legacy, stop iteration
+            if legacy:
+                self.errors["base"] = "cannot_connect"
+            else:
+                retry_config = dict(config_data)
+                retry_config[CONF_LEGACY_SSL] = True
+                return await self._validate_and_get_device_info(
+                    config_data=retry_config, legacy=True
+                )
 
         except (
             AirOSConnectionSetupError,
@@ -167,6 +194,10 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
             return {"title": device_data["hostname"], "data": config_data}
+
+        finally:
+            if close_session:
+                await session.close()
 
         return None
 
@@ -194,9 +225,9 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(CONF_PASSWORD): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -226,26 +257,26 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(CONF_PASSWORD): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
                         )
                     ),
-                    vol.Required(SECTION_ADVANCED_SETTINGS): section(
-                        vol.Schema(
+                    probatio.Required(SECTION_ADDITIONAL_SETTINGS): section(
+                        probatio.Schema(
                             {
-                                vol.Required(
+                                probatio.Required(
                                     CONF_SSL,
-                                    default=current_data[SECTION_ADVANCED_SETTINGS][
+                                    default=current_data[SECTION_ADDITIONAL_SETTINGS][
                                         CONF_SSL
                                     ],
                                 ): bool,
-                                vol.Required(
+                                probatio.Required(
                                     CONF_VERIFY_SSL,
-                                    default=current_data[SECTION_ADVANCED_SETTINGS][
+                                    default=current_data[SECTION_ADDITIONAL_SETTINGS][
                                         CONF_VERIFY_SSL
                                     ],
                                 ): bool,
@@ -258,6 +289,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=self.errors,
         )
 
+    @override
     async def async_step_discovery(
         self,
         discovery_info: dict[str, Any] | None = None,
@@ -319,7 +351,9 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="select_device",
-            data_schema=vol.Schema({vol.Required(MAC_ADDRESS): vol.In(list_options)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(MAC_ADDRESS): probatio.In(list_options)}
+            ),
         )
 
     async def async_step_configure_device(
@@ -394,6 +428,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
         except asyncio.CancelledError:
             pass
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

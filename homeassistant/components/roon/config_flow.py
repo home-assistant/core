@@ -2,10 +2,10 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from roonapi import RoonApi, RoonDiscovery
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
@@ -24,10 +24,10 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required("host"): cv.string,
-        vol.Required("port", default=9330): cv.port,
+        probatio.Required("host"): cv.string,
+        probatio.Required("port", default=9330): cv.port,
     }
 )
 
@@ -131,6 +131,7 @@ class RoonConfigFlow(ConfigFlow, domain=DOMAIN):
         self._port = None
         self._servers: list[tuple[str, int]] = []
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
