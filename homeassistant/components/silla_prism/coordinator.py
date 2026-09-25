@@ -85,7 +85,10 @@ class PrismCoordinator(DataUpdateCoordinator[PrismStatus]):
         self._schedule_offline()
         if not was_online:
             _LOGGER.info("Prism on %s is back online", self.base_topic)
-            self.async_set_updated_data(self.device.status)
+            # A status update has already notified the entities; other
+            # messages (hello, command results) have not.
+            if not self.last_update_success:
+                self.async_set_updated_data(self.device.status)
 
     @callback
     def _schedule_offline(self) -> None:

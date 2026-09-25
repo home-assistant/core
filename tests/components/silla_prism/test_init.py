@@ -115,6 +115,36 @@ async def test_offline_and_back_online(
     assert "Prism on prism is back online" in caplog.text
 
 
+async def test_back_online_with_status_update(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a status message brings Prism back online with a single update."""
+    await setup_integration(hass, mock_config_entry, [Platform.SENSOR])
+    await fire_burst(hass)
+
+    freezer.tick(OFFLINE_TIMEOUT)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(POWER_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    coordinator = mock_config_entry.runtime_data
+    with patch.object(
+        coordinator,
+        "async_set_updated_data",
+        wraps=coordinator.async_set_updated_data,
+    ) as mock_set_updated_data:
+        async_fire_mqtt_message(hass, "prism/1/w", "2000.0")
+        await hass.async_block_till_done()
+
+    mock_set_updated_data.assert_called_once()
+    assert hass.states.get(POWER_ENTITY_ID).state == "2000.0"
+    assert caplog.text.count("Prism on prism is back online") == 1
+
+
 async def test_command_echo_is_not_a_sign_of_life(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
