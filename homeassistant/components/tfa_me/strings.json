@@ -25,12 +25,6 @@
   },
   "entity": {
     "sensor": {
-      "barometric_pressure": {
-        "name": "Barometric pressure"
-      },
-      "co2": {
-        "name": "CO2, Air quality"
-      },
       "humidity": {
         "name": "Humidity"
       },
@@ -45,6 +39,9 @@
       },
       "rssi": {
         "name": "RSSI"
+      },
+      "temperature": {
+        "name": "Temperature"
       },
       "temperature_probe": {
         "name": "Temperature probe"
@@ -76,9 +73,6 @@
 
       "wind_gust": {
         "name": "Wind gust"
-      },
-      "wind_speed": {
-        "name": "Wind speed"
       }
     }
   },

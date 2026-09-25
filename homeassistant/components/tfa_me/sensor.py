@@ -33,14 +33,16 @@ class TFAmeSensorEntityDescription(SensorEntityDescription):
 
 
 TFA_ME_ENTITY_DESCRIPTIONS: dict[str, TFAmeSensorEntityDescription] = {
+    # Temperature, icon depends on the measured value.
     "temperature": TFAmeSensorEntityDescription(
         key="temperature",
+        translation_key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda entity, data: float(data["value"]),
     ),
-    # Temperature probe
+    # Temperature probe, icon depends on the measured value.
     "temperature_probe": TFAmeSensorEntityDescription(
         key="temperature_probe",
         translation_key="temperature_probe",
@@ -49,9 +51,10 @@ TFA_ME_ENTITY_DESCRIPTIONS: dict[str, TFAmeSensorEntityDescription] = {
         suggested_display_precision=1,
         value_fn=lambda entity, data: float(data["value"]),
     ),
-    # Relative humidity
+    # Relative humidity, icon depends on the measured value.
     "humidity": TFAmeSensorEntityDescription(
         key="humidity",
+        translation_key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
@@ -74,6 +77,7 @@ TFA_ME_ENTITY_DESCRIPTIONS: dict[str, TFAmeSensorEntityDescription] = {
         value_fn=lambda entity, data: float(data["value"]),
     ),
     # RSSI, 868 MHz signal strength, (not dB/dBm, value range: 0..255)
+    # Icon depends on the measured value.
     "rssi": TFAmeSensorEntityDescription(
         key="rssi",
         translation_key="rssi",
@@ -84,6 +88,7 @@ TFA_ME_ENTITY_DESCRIPTIONS: dict[str, TFAmeSensorEntityDescription] = {
     ),
     # Low battery warning states: 0 = OK, 1 = low (warning), 2 = critical low (urgent warning)
     # 3 = battery missing/removed (Remark: some sensors have more than one power supply)
+    # Icon depends on the measured value.
     "lowbatt": TFAmeSensorEntityDescription(
         key="lowbatt",
         translation_key="lowbatt",
@@ -91,7 +96,7 @@ TFA_ME_ENTITY_DESCRIPTIONS: dict[str, TFAmeSensorEntityDescription] = {
         options=list(TFAmeBatteryState),
         value_fn=lambda entity, data: battery_state(data["value"]),
     ),
-    # Wind direction (Index 0..15 -> to string N, NNE, ...)
+    # Wind direction (Index 0..15 -> to string N, NNE, ...), icon depends on the measured value.
     "wind_direction": TFAmeSensorEntityDescription(
         key="wind_direction",
         translation_key="wind_direction",
@@ -99,7 +104,7 @@ TFA_ME_ENTITY_DESCRIPTIONS: dict[str, TFAmeSensorEntityDescription] = {
         options=list(TFAmeWindDirection),
         value_fn=lambda entity, data: wind_direction(data["value"]),
     ),
-    # Wind direction in degrees: calculated from the 16-level index
+    # Wind direction in degrees: calculated from the 16-level index, icon depends on the measured value.
     "wind_direction_deg": TFAmeSensorEntityDescription(
         key="wind_direction_deg",
         translation_key="wind_direction_deg",
