@@ -169,7 +169,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '96.8611111111111',
+    'state': '97',
   })
 # ---
 # name: test_all_entities[sensor.st_00000001_battery_voltage-entry]
