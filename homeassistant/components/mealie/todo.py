@@ -206,7 +206,6 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
                 quantity=0.0,
             )
 
-        # Update the shopping item with common attributes for parsed or non-parsed items.
         new_shopping_item.list_id = self._shopping_list_id
         new_shopping_item.position = position
 
@@ -236,7 +235,11 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
 
         update_shopping_item: MutateShoppingItem | None = None
 
-        if item.summary and self.parse_todo_edit:
+        if (
+            item.summary
+            and self.parse_todo_edit
+            and list_item.display.strip() != item.summary.strip()
+        ):
             update_shopping_item = await self.async_parse_todo_item(item.summary)
 
         # If parsing fails or is not performed, create a fallback shopping item
@@ -265,7 +268,6 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
                 update_shopping_item.quantity = 0.0
                 update_shopping_item.checked = item.status == TodoItemStatus.COMPLETED
 
-        # Update the shopping item with common attributes for parsed or non-parsed items.
         update_shopping_item.item_id = list_item.item_id
         update_shopping_item.list_id = list_item.list_id
         update_shopping_item.checked = item.status == TodoItemStatus.COMPLETED
