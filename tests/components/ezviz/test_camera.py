@@ -19,7 +19,7 @@ from homeassistant.components.camera import (
     async_get_image,
     async_get_stream_source,
 )
-from homeassistant.components.ezviz.vtm import DATA_VTM
+from homeassistant.components.ezviz.vtm import DATA_VTM, _async_stop_process
 from homeassistant.components.ffmpeg import DATA_FFMPEG, FFmpegManager
 from homeassistant.components.stream import redact_credentials
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
@@ -587,3 +587,14 @@ async def test_vtm_unload_while_ffmpeg_starts(
 
     assert not camera.streams
     mock_open.assert_not_called()
+
+
+async def test_stop_process_tolerates_ffmpeg_exiting_before_kill() -> None:
+    """Test FFmpeg exiting between the returncode check and the kill."""
+    process = MagicMock(returncode=None, wait=AsyncMock(return_value=0))
+    process.kill.side_effect = ProcessLookupError
+
+    await _async_stop_process(process)
+
+    process.kill.assert_called_once()
+    process.wait.assert_awaited_once()
