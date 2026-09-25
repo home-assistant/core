@@ -13,6 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.trigger import PluggableAction
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -21,7 +22,9 @@ from .coordinator import SamsungTVDataUpdateCoordinator
 from .triggers.turn_on import async_get_turn_on_trigger
 
 
-class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity):
+class SamsungTVEntity(
+    CoordinatorEntity[SamsungTVDataUpdateCoordinator], RestoreEntity, Entity
+):
     """Defines a base SamsungTV entity."""
 
     _attr_has_entity_name = True
