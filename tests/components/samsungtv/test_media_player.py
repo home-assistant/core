@@ -612,6 +612,44 @@ async def test_send_key_unhandled_response(
     assert state.state == STATE_ON
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "expected_translation_key"),
+    [
+        pytest.param(
+            RuntimeError("Unexpected error"),
+            "command_error",
+            id="unexpected_error",
+        ),
+        pytest.param(
+            HomeAssistantError(
+                "Already handled",
+                translation_domain=DOMAIN,
+                translation_key="error_sending_command",
+                translation_placeholders={"error": "test", "host": "127.0.0.1"},
+            ),
+            "error_sending_command",
+            id="passthrough_homeassistant_error",
+        ),
+    ],
+)
+async def test_cmd_decorator_error_handling(
+    hass: HomeAssistant,
+    remote_legacy: Mock,
+    side_effect: RuntimeError | HomeAssistantError,
+    expected_translation_key: str,
+) -> None:
+    """Test @cmd decorator error handling paths."""
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
+    remote_legacy.control = Mock(side_effect=side_effect)
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+    assert err.value.translation_key == expected_translation_key
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+
+
 @pytest.mark.usefixtures("rest_api")
 async def test_send_key_websocketexception(
     hass: HomeAssistant, remote_websocket: Mock
