@@ -4,10 +4,10 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_serial": "Device did not provide a serial number during discovery. It will be retried automatically.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "unique_id_mismatch": "The serial number of the device does not match the previous serial number"
+      "unique_id_mismatch": "The serial number of the device does not match the previous serial number."
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "Cannot connect to the EcoTracker. Please check whether the local webserver option is enabled on the EcoTracker."
     },
     "step": {
       "reconfigure": {
