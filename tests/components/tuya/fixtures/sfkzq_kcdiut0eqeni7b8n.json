@@ -10,9 +10,9 @@
   "online": true,
   "sub": false,
   "time_zone": "+01:00",
-  "active_time": "2025-03-23T16:37:28+00:00",
-  "create_time": "2025-03-23T16:37:28+00:00",
-  "update_time": "2025-03-23T16:37:28+00:00",
+  "active_time": "2025-11-10T18:11:10+00:00",
+  "create_time": "2025-11-10T18:11:10+00:00",
+  "update_time": "2025-11-10T18:11:10+00:00",
   "function": {
     "switch": {
       "type": "Boolean",
@@ -119,13 +119,13 @@
   },
   "status": {
     "switch": true,
-    "percent_control": 20,
-    "percent_state": 20,
-    "water_once": 10000,
-    "water_total": 78841,
+    "percent_control": 100,
+    "percent_state": 100,
+    "water_once": 0,
+    "water_total": 0,
     "weather_delay": "cancel",
     "countdown": 0,
-    "sensor_temperature": 25
+    "sensor_temperature": 22
   },
   "set_up": true,
   "support_local": true
