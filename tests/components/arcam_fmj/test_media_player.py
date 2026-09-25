@@ -72,9 +72,7 @@ async def test_browse_media_without_presets(
 ) -> None:
     """Test browsing when the receiver has no preset details."""
     state_1.get_preset_details.return_value = None
-    player = hass.data[DATA_INSTANCES][MEDIA_PLAYER_DOMAIN].get_entity(
-        MOCK_ENTITY_ID
-    )
+    player = hass.data[DATA_INSTANCES][MEDIA_PLAYER_DOMAIN].get_entity(MOCK_ENTITY_ID)
     assert isinstance(player, ArcamFmj)
 
     media = await player.async_browse_media()
