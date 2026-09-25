@@ -4,9 +4,7 @@ rules:
     status: exempt
     comment: Integration has no custom actions.
   appropriate-polling: done
-  brands:
-    status: exempt
-    comment: Must have at least two integrations or non-null iot_standards value.
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
