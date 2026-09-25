@@ -8,7 +8,7 @@
   "integration_type": "hub",
   "iot_class": "assumed_state",
   "loggers": ["pyneosol"],
-  "quality_scale": "silver",
+  "quality_scale": "bronze",
   "requirements": ["pyneosol==1.1.0"],
   "single_config_entry": true,
   "usb": [
