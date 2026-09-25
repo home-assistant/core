@@ -14,6 +14,9 @@ from zwave_js_server.exceptions import (
     InvalidServerVersion,
     NotConnected,
 )
+from zwave_js_server.model.controller.inclusion_and_provisioning import (
+    ProvisioningEntry,
+)
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.notification import (
@@ -368,14 +371,28 @@ class DriverEvents:
             self.hass.bus.async_listen(EVENT_LOGGING_CHANGED, handle_logging_changed)
         )
 
+        # Fetch the provisioning list once instead of querying an entry per node.
+        # It is also used further down to protect pre-provisioned devices from removal.
+        provisioning_entries = await controller.async_get_provisioning_entries()
+        provisioning_entries_by_node_id = {
+            node_id: entry
+            for entry in provisioning_entries
+            if entry.additional_properties
+            and (node_id := entry.additional_properties.get("nodeId")) is not None
+        }
+
         # run discovery on controller node
         if controller.own_node:
-            await self.controller_events.async_on_node_added(controller.own_node)
+            await self.controller_events.async_on_node_added(
+                controller.own_node, provisioning_entries_by_node_id
+            )
 
         # run discovery on all other ready nodes
         await asyncio.gather(
             *(
-                self.controller_events.async_on_node_added(node)
+                self.controller_events.async_on_node_added(
+                    node, provisioning_entries_by_node_id
+                )
                 for node in controller.nodes.values()
                 if node != controller.own_node
             )
@@ -465,7 +482,7 @@ class DriverEvents:
         ]
         provisioned_devices = [
             self.dev_reg.async_get(entry.additional_properties["device_id"])
-            for entry in await controller.async_get_provisioning_entries()
+            for entry in provisioning_entries
             if entry.additional_properties
             and "device_id" in entry.additional_properties
         ]
@@ -506,7 +523,11 @@ class ControllerEvents:
         self.registered_unique_ids.pop(device.id, None)
         self.discovered_value_ids.pop(device.id, None)
 
-    async def async_on_node_added(self, node: ZwaveNode) -> None:
+    async def async_on_node_added(
+        self,
+        node: ZwaveNode,
+        provisioning_entries: dict[int, ProvisioningEntry] | None = None,
+    ) -> None:
         """Handle node added event."""
         # Remove stale entities that may exist from a previous interview when an
         # interview is started.
@@ -521,7 +542,7 @@ class ControllerEvents:
             )
         )
 
-        await self.async_check_pre_provisioned_device(node)
+        await self.async_check_pre_provisioned_device(node, provisioning_entries)
 
         if node.is_controller_node:
             # Create a controller status sensor for each device
@@ -654,13 +675,20 @@ class ControllerEvents:
             f"{DOMAIN}.identify_controller.{dev_id[1]}",
         )
 
-    async def async_check_pre_provisioned_device(self, node: ZwaveNode) -> None:
+    async def async_check_pre_provisioned_device(
+        self,
+        node: ZwaveNode,
+        provisioning_entries: dict[int, ProvisioningEntry] | None,
+    ) -> None:
         """Check if the node was pre-provisioned and update the device registry."""
-        provisioning_entry = (
-            await self.driver_events.driver.controller.async_get_provisioning_entry(
-                node.node_id
+        if provisioning_entries is None:
+            provisioning_entry = (
+                await self.driver_events.driver.controller.async_get_provisioning_entry(
+                    node.node_id
+                )
             )
-        )
+        else:
+            provisioning_entry = provisioning_entries.get(node.node_id)
         if (
             provisioning_entry
             and provisioning_entry.additional_properties
