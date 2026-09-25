@@ -111,7 +111,7 @@ async def test_sensor_subentry_flow(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     get_config_entry_data: dict[str, Any],
-    get_subentry_data: dict[str, Any],
+    get_subentry_data: list[config_entries.ConfigSubentryData],
 ) -> None:
     """Test sensor subentry config flow."""
     aioclient_mock.get(
@@ -131,10 +131,12 @@ async def test_sensor_subentry_flow(
     assert result["step_id"] == config_entries.SOURCE_USER
 
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], get_subentry_data[1]["data"]
+        result["flow_id"], get_subentry_data[SENSOR_DATA]["data"]
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
+
+    await hass.async_block_till_done()
 
     assert len(entry.subentries) == 1
 
@@ -150,7 +152,7 @@ async def test_sensor_subentry_flow_no_data(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     get_config_entry_data: dict[str, Any],
-    get_subentry_data: dict[str, Any],
+    get_subentry_data: list[config_entries.ConfigSubentryData],
 ) -> None:
     """Test a subentry flow with no data."""
     aioclient_mock.get(
@@ -178,7 +180,7 @@ async def test_sensor_subentry_flow_invalid_json_attrs_path(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     get_config_entry_data: dict[str, Any],
-    get_subentry_data: dict[str, Any],
+    get_subentry_data: list[config_entries.ConfigSubentryData],
 ) -> None:
     """Test a subentry flow wrong json_attrs_path."""
     aioclient_mock.get(
@@ -207,7 +209,7 @@ async def test_sensor_subentry_flow_invalid_json_attrs(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     get_config_entry_data: dict[str, Any],
-    get_subentry_data: dict[str, Any],
+    get_subentry_data: list[config_entries.ConfigSubentryData],
 ) -> None:
     """Test a subentry flow with json_attrs not in response."""
     aioclient_mock.get(
@@ -237,7 +239,7 @@ async def test_sensor_subentry_flow_invalid_unit_state_class(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     get_config_entry_data: dict[str, Any],
-    get_subentry_data: dict[str, Any],
+    get_subentry_data: list[config_entries.ConfigSubentryData],
 ) -> None:
     """Test a subentry flow with wrong unit/state class."""
 
@@ -270,6 +272,38 @@ async def test_sensor_subentry_flow_invalid_unit_state_class(
     assert (
         "'measurement' is not a valid state class" in result["errors"][CONF_STATE_CLASS]
     )
+
+
+async def test_subentry_flow_entry_not_loaded(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    get_config_entry_data: dict[str, Any],
+    get_subentry_data: list[config_entries.ConfigSubentryData],
+) -> None:
+    """Test to ensure that a config entry entering any state other than LOADED is caught."""
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
+        json={"items": [{"key": "on", "location": "fake area", "area": 15}]},
+    )
+
+    entry = await async_setup_entry(hass, get_config_entry_data)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, Platform.SENSOR),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+    assert entry.state != config_entries.ConfigEntryState.LOADED
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], get_subentry_data[SENSOR_DATA]["data"]
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "config_entry_not_loaded"
 
 
 async def test_invalid_rest_resource(

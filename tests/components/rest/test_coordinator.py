@@ -2,11 +2,12 @@
 
 from datetime import timedelta
 from http import HTTPStatus
+from typing import Any
 
 from aiohttp import ClientError
 
 from homeassistant.components.rest import RestConfigEntry, RestData
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
@@ -19,8 +20,8 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def test_coordinator_update_failed(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    get_config_entry_data,
-    get_subentry_data,
+    get_config_entry_data: dict[str, Any],
+    get_subentry_data: list[ConfigSubentryData],
 ) -> None:
     """Test the coordinator when an update fails."""
 

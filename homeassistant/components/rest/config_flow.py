@@ -46,7 +46,7 @@ from .const import (
     CONF_JSON_ATTRS_PATH,
     DEFAULT_BINARY_SENSOR_NAME,
     DEFAULT_SENSOR_NAME,
-    DOCS_URL_AVAILABILTY,
+    DOCS_URL_AVAILABILITY,
     DOCS_URL_JSONPATH,
     DOCS_URL_RESTFUL_SENSOR_FORCE_UPDATE,
     DOCS_URL_TEMPLATE_DATA_PROCESSING,
@@ -93,11 +93,13 @@ def _validate_sensor_input(
     try:
         _validate_unit(input)
     except Invalid as ex:
-        errors[CONF_UNIT_OF_MEASUREMENT] = str(ex)
+        errors[CONF_UNIT_OF_MEASUREMENT] = "validation_error"
+        placeholders["validation_error_message"] = str(ex)
     try:
         _validate_state_class(input)
     except Invalid as ex:
-        errors[CONF_STATE_CLASS] = str(ex)
+        errors[CONF_STATE_CLASS] = "validation_error"
+        placeholders["validation_error_message"] = str(ex)
 
     return errors, placeholders
 
@@ -258,7 +260,7 @@ class RestSubentryFlow(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             description_placeholders={
-                "docs_url_availability": DOCS_URL_AVAILABILTY,
+                "docs_url_availability": DOCS_URL_AVAILABILITY,
                 "docs_url_restful_sensor_force_update": DOCS_URL_RESTFUL_SENSOR_FORCE_UPDATE,
                 "docs_url_template_data_processing": DOCS_URL_TEMPLATE_DATA_PROCESSING,
                 "docs_url_jsonpath": DOCS_URL_JSONPATH,

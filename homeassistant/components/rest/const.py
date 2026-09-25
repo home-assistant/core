@@ -14,7 +14,7 @@ DEFAULT_BINARY_SENSOR_NAME = "REST Binary Sensor"
 DEFAULT_SENSOR_NAME = "REST Sensor"
 
 DOCS_URL_TEMPLATE_DATA_PROCESSING = "https://www.home-assistant.io/docs/templating/where-to-use/#processing-incoming-data"
-DOCS_URL_AVAILABILTY = (
+DOCS_URL_AVAILABILITY = (
     "https://www.home-assistant.io/integrations/template/#availability"
 )
 DOCS_URL_XML_CONVERT_SPEC = (

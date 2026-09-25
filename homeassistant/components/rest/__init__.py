@@ -4,7 +4,6 @@ import asyncio
 from collections.abc import Coroutine
 import contextlib
 from datetime import timedelta
-import logging
 from types import MappingProxyType
 from typing import Any
 
@@ -56,8 +55,6 @@ from .const import (
 from .coordinator import RestConfigEntry, RestCoordinator
 from .data import RestData
 from .schema import CONFIG_SCHEMA, RESOURCE_SCHEMA  # noqa: F401
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,

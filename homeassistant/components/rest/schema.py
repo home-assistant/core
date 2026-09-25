@@ -191,12 +191,12 @@ class _auth_section(section):
     @override
     def __call__(self, data: Any) -> Any:
         try:
-            return self.schema(data)
+            result = self.schema(data)
         except probatio.MultipleInvalid as ex:
             for error in ex.errors:
                 if isinstance(error, probatio.InclusiveInvalid):
                     raise probatio.Invalid("credentials_missing") from error
-            raise
+        return result
 
 
 def RESOURCE_FLOW_SCHEMA(collapse_auth: bool = True) -> probatio.Schema:
@@ -333,12 +333,14 @@ SENSOR_SUBENTRY_FLOW_SCHEMA = SUBENTRY_FLOW_SCHEMA.extend(
         ),
         probatio.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
             selector.SelectSelectorConfig(
-                options=[
-                    str(unit)
-                    for units in DEVICE_CLASS_UNITS.values()
-                    for unit in units
-                    if unit is not None
-                ],
+                options=list(
+                    {  # inner set removes duplicates
+                        str(unit)
+                        for units in DEVICE_CLASS_UNITS.values()
+                        for unit in units
+                        if unit is not None
+                    }
+                ),
                 mode=selector.SelectSelectorMode.DROPDOWN,
                 custom_value=True,
                 sort=True,

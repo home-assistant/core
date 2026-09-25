@@ -126,7 +126,8 @@
         "attrs_not_found": "[%key:component::rest::exceptions::attrs_not_found::message%]",
         "invalid_result": "[%key:component::rest::exceptions::invalid_result::message%]",
         "no_json": "[%key:component::rest::exceptions::no_json::message%]",
-        "parse_error": "[%key:component::rest::exceptions::parse_error::message%]"
+        "parse_error": "[%key:component::rest::exceptions::parse_error::message%]",
+        "validation_error": "{validation_error_message}"
       },
       "initiate_flow": {
         "user": "Add sensor"
