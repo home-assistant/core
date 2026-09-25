@@ -275,6 +275,7 @@ async def test_subentry_unsupported_model(
         ("gpt-5.5", ["none", "low", "medium", "high", "xhigh"]),
         ("gpt-5.5-pro", ["medium", "high", "xhigh"]),
         ("gpt-5.6", ["none", "low", "medium", "high", "xhigh", "max"]),
+        ("gpt-6-astra", ["low", "medium", "high", "xhigh", "max"]),
     ],
 )
 async def test_subentry_reasoning_effort_list(
@@ -327,6 +328,7 @@ async def test_subentry_reasoning_effort_list(
         ("gpt-5", True),
         ("gpt-5-mini", True),
         ("gpt-5-pro", True),
+        ("gpt-6-astra", True),
         ("gpt-4o", False),
         ("gpt-4.1", False),
     ],
@@ -379,6 +381,7 @@ async def test_subentry_reasoning_summary_visibility(
         ("o4-mini", ["off", "auto", "detailed"]),
         ("gpt-5", ["off", "auto", "concise", "detailed"]),
         ("gpt-5-mini", ["off", "auto", "concise", "detailed"]),
+        ("gpt-6-astra", ["off", "auto", "concise", "detailed"]),
     ],
 )
 async def test_subentry_reasoning_summary_options(
@@ -1090,15 +1093,46 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH_INLINE_CITATIONS: True,
             },
         ),
+        (
+            {},
+            (
+                {CONF_RECOMMENDED: False},
+                {CONF_CHAT_MODEL: "gpt-6-astra"},
+                {
+                    CONF_REASONING_EFFORT: "max",
+                    CONF_REASONING_SUMMARY: "detailed",
+                    CONF_PRO_MODE: True,
+                    CONF_VERBOSITY: "low",
+                },
+            ),
+            {
+                CONF_RECOMMENDED: False,
+                CONF_CHAT_MODEL: "gpt-6-astra",
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_TOP_P: RECOMMENDED_TOP_P,
+                CONF_TEMPERATURE: 1.0,
+                CONF_STORE_RESPONSES: False,
+                CONF_CODE_INTERPRETER: False,
+                CONF_REASONING_EFFORT: "max",
+                CONF_REASONING_SUMMARY: "detailed",
+                CONF_PRO_MODE: True,
+                CONF_VERBOSITY: "low",
+                CONF_SERVICE_TIER: "auto",
+                CONF_WEB_SEARCH: False,
+                CONF_WEB_SEARCH_CONTEXT_SIZE: "medium",
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_WEB_SEARCH_INLINE_CITATIONS: False,
+            },
+        ),
     ],
 )
+@pytest.mark.usefixtures("mock_init_component")
 async def test_subentry_switching(
     hass: HomeAssistant,
-    mock_config_entry,
-    mock_init_component,
-    current_options,
-    new_options,
-    expected_options,
+    mock_config_entry: MockConfigEntry,
+    current_options: dict[str, str | float | bool | list[str]],
+    new_options: tuple[dict[str, str | float | bool | list[str]], ...],
+    expected_options: dict[str, str | float | bool | list[str]],
 ) -> None:
     """Test the subentry form."""
     subentry = next(
@@ -1318,10 +1352,27 @@ async def test_ai_task_subentry_not_loaded(
     assert result.get("reason") == "entry_not_loaded"
 
 
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    ("image_options", "image_model"),
+    [
+        ({}, "gpt-image-2.5-flare"),
+        (
+            {CONF_IMAGE_MODEL: "gpt-image-2.5-sunburst"},
+            "gpt-image-2.5-sunburst",
+        ),
+        (
+            {CONF_IMAGE_MODEL: "gpt-image-2.5-flare"},
+            "gpt-image-2.5-flare",
+        ),
+        ({CONF_IMAGE_MODEL: "gpt-image-2"}, "gpt-image-2"),
+    ],
+)
 async def test_creating_ai_task_subentry_additional(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
+    image_options: dict[str, str],
+    image_model: str,
 ) -> None:
     """Test creating an AI task subentry with additional settings."""
     result = await hass.config_entries.subentries.async_init(
@@ -1364,6 +1415,7 @@ async def test_creating_ai_task_subentry_additional(
         result["flow_id"],
         {
             CONF_CODE_INTERPRETER: False,
+            **image_options,
         },
     )
 
@@ -1372,7 +1424,7 @@ async def test_creating_ai_task_subentry_additional(
     assert result4.get("data") == {
         CONF_RECOMMENDED: False,
         CONF_CHAT_MODEL: "gpt-4o",
-        CONF_IMAGE_MODEL: "gpt-image-2",
+        CONF_IMAGE_MODEL: image_model,
         CONF_MAX_TOKENS: 200,
         CONF_STORE_RESPONSES: True,
         CONF_TEMPERATURE: 0.5,
@@ -1592,6 +1644,61 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_reconfigure(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the API key can be reconfigured."""
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with (
+        patch(
+            "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_reload"
+        ) as mock_async_reload,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "new_api_key"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
+    assert mock_async_reload.call_count == 1
+
+
+async def test_reconfigure_invalid_auth(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test an invalid API key is rejected during reconfiguration."""
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
+        side_effect=AuthenticationError(
+            response=httpx.Response(status_code=None, request=""),
+            body=None,
+            message=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "invalid_api_key"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "invalid_auth"}
+    assert mock_config_entry.data[CONF_API_KEY] == "bla"
 
 
 @pytest.mark.parametrize(

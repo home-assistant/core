@@ -10,6 +10,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import aiohue.v1 as aiohue_v1
 import aiohue.v2 as aiohue_v2
 from aiohue.v2.controllers.events import EventType
+from aiohue.v2.scene_activity import SceneActivityTracker
 import pytest
 
 from homeassistant.components import hue
@@ -62,6 +63,8 @@ def create_mock_bridge(hass: HomeAssistant, api_version: int = 1) -> Mock:
             bridge.config_entry.runtime_data = bridge
         if bridge.api_version == 2:
             await async_setup_devices(bridge)
+            bridge.scene_activity_tracker = SceneActivityTracker(bridge.api.scenes)
+            bridge.scene_activity_tracker.start()
         return True
 
     bridge.async_initialize_bridge = async_initialize_bridge
@@ -142,6 +145,16 @@ def create_mock_api_v1() -> Mock:
 def v2_resources_test_data() -> JsonArrayType:
     """Load V2 resources mock data."""
     return load_json_array_fixture("hue/v2_resources.json")
+
+
+def replace_resources(
+    data: JsonArrayType, resources: list[dict[str, Any]]
+) -> JsonArrayType:
+    """Return the test data with each resource of the same id replaced."""
+    replacements = {resource["id"]: resource for resource in resources}
+    missing = replacements.keys() - {resource["id"] for resource in data}
+    assert not missing, f"resource id(s) not present in the test data: {missing}"
+    return [replacements.get(resource["id"], resource) for resource in data]
 
 
 def create_mock_api_v2() -> Mock:

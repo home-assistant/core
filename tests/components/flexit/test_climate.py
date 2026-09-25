@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.flexit.climate import async_setup_platform
 from homeassistant.components.flexit.const import DOMAIN
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.const import ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -90,7 +90,10 @@ async def test_climate_entity(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test climate entity setup and state."""
-    await _setup_integration(hass, mock_config_entry)
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.flexit._PLATFORMS", [Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 

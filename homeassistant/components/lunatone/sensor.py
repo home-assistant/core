@@ -205,8 +205,10 @@ class LunatoneDALILineStatusSensor(
         self._line_id = line_id
 
         line_unique_id = f"{config_entry_unique_id}-line{line_id}"
+        # Name must match the light platform, either of them may create the device
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, line_unique_id)},
+            name=f"DALI Line {line_id}",
         )
         self._attr_unique_id = f"{line_unique_id}-status"
 
