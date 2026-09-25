@@ -7,7 +7,7 @@ import logging
 import struct
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import config as conf_util, core_config
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
@@ -81,17 +81,19 @@ SERVICE_CHECK_CONFIG = "check_config"
 SERVICE_UPDATE_ENTITY = "update_entity"
 SERVICE_SET_LOCATION = "set_location"
 SERVICE_RELOAD_ALL = "reload_all"
-SCHEMA_UPDATE_ENTITY = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
-SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
-    vol.Schema(
+SCHEMA_UPDATE_ENTITY = probatio.Schema({ATTR_ENTITY_ID: cv.entity_ids})
+SCHEMA_RELOAD_CONFIG_ENTRY = probatio.All(
+    probatio.Schema(
         {
-            vol.Optional(ATTR_ENTRY_ID): str,
+            probatio.Optional(ATTR_ENTRY_ID): str,
             **cv.ENTITY_SERVICE_FIELDS,
         },
     ),
     cv.has_at_least_one_key(ATTR_ENTRY_ID, *cv.ENTITY_SERVICE_FIELDS),
 )
-SCHEMA_RESTART = vol.Schema({vol.Optional(ATTR_SAFE_MODE, default=False): bool})
+SCHEMA_RESTART = probatio.Schema(
+    {probatio.Optional(ATTR_SAFE_MODE, default=False): bool}
+)
 
 SHUTDOWN_SERVICES = (SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART)
 
@@ -180,7 +182,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         DOMAIN, SERVICE_SAVE_PERSISTENT_STATES, async_save_persistent_states
     )
 
-    service_schema = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids}, extra=vol.ALLOW_EXTRA)
+    service_schema = probatio.Schema(
+        {ATTR_ENTITY_ID: cv.entity_ids}, extra=probatio.ALLOW_EXTRA
+    )
 
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_OFF, async_handle_turn_service, schema=service_schema
@@ -321,11 +325,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         DOMAIN,
         SERVICE_SET_LOCATION,
         async_set_location,
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required(ATTR_LATITUDE): cv.latitude,
-                vol.Required(ATTR_LONGITUDE): cv.longitude,
-                vol.Optional(ATTR_ELEVATION): vol.Coerce(int),
+                probatio.Required(ATTR_LATITUDE): cv.latitude,
+                probatio.Required(ATTR_LONGITUDE): cv.longitude,
+                probatio.Optional(ATTR_ELEVATION): probatio.Coerce(int),
             }
         ),
     )

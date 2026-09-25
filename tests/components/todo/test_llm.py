@@ -57,6 +57,11 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
     tool = next((tool for tool in result.tools if tool.name == "todo__get_items"), None)
     assert tool is not None
     assert tool.parameters.schema["todo_list"].container == ["Mock Todo List Name"]
+    assert tool.title == "Get to-do list items"
+    assert tool.integration == todo.DOMAIN
+    assert tool.annotations == llm.ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
 
     calls = async_mock_service(
         hass,
@@ -80,10 +85,11 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
 
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": [ENTITY_ID], "status": ["needs_action"]}
-    assert result == {
-        "success": True,
-        "result": [{"uid": "1234", "status": "needs_action", "summary": "Buy milk"}],
-    }
+    assert result == llm.ToolResult(
+        data={
+            "items": [{"uid": "1234", "status": "needs_action", "summary": "Buy milk"}]
+        }
+    )
 
 
 @pytest.mark.parametrize(
@@ -123,7 +129,31 @@ async def test_todo_get_items_status_filter(
 async def test_todo_list_intents_exposed(hass: HomeAssistant) -> None:
     """Test the todo list intents are exposed as tools when a list is exposed."""
     result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
-    names = {tool.name for tool in result.tools}
-    assert "todo__HassListAddItem" in names
-    assert "todo__HassListCompleteItem" in names
-    assert "todo__HassListRemoveItem" in names
+    tools = {tool.name: tool for tool in result.tools}
+    assert "todo__HassListAddItem" in tools
+    assert "todo__HassListCompleteItem" in tools
+    assert "todo__HassListRemoveItem" in tools
+
+    # Completing or removing an item raises on a repeat, so neither is
+    # idempotent. Adding an item takes nothing away.
+    assert {
+        name: (tool.title, tool.integration, tool.annotations)
+        for name, tool in tools.items()
+        if name.startswith("todo__HassList")
+    } == {
+        "todo__HassListAddItem": (
+            "Add to-do list item",
+            todo.DOMAIN,
+            llm.ToolAnnotations(destructive=False, open_world=False),
+        ),
+        "todo__HassListCompleteItem": (
+            "Complete to-do list item",
+            todo.DOMAIN,
+            llm.ToolAnnotations(open_world=False),
+        ),
+        "todo__HassListRemoveItem": (
+            "Remove to-do list item",
+            todo.DOMAIN,
+            llm.ToolAnnotations(open_world=False),
+        ),
+    }

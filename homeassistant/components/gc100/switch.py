@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -16,10 +16,10 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_PORTS, DATA_GC100, GC100Device
 
-_SWITCH_SCHEMA = vol.Schema({cv.string: cv.string})
+_SWITCH_SCHEMA = probatio.Schema({cv.string: cv.string})
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_PORTS): vol.All(cv.ensure_list, [_SWITCH_SCHEMA])}
+    {probatio.Required(CONF_PORTS): probatio.All(cv.ensure_list, [_SWITCH_SCHEMA])}
 )
 
 

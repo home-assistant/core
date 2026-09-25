@@ -5,7 +5,7 @@ from typing import Any, override
 
 from mitsubishi_comfort import MitsubishiCloudAccount
 from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -18,10 +18,10 @@ from .helpers import build_credentials, is_fully_credentialed
 
 _LOGGER = logging.getLogger(__name__)
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
