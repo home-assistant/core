@@ -331,7 +331,7 @@ ENTITY_DETAILS_MAPPING: dict[FieldName, DetailsMapping] = {
         state_class=None,
     ),
     FieldName.D_TIME_REMAINING: DetailsMapping(
-        unit=None,
+        unit="s",
         category=None,
         device_class=SensorDeviceClass.DURATION,
         state_class=None,
