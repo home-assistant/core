@@ -38,6 +38,12 @@ class CachingStaticResource(StaticResource):
                 # Must be directory index; ignore caching
                 return response
             file_path = response._path  # noqa: SLF001
+            if not file_path.is_file():
+                # The file does not exist; FileResponse.prepare() will answer
+                # with a 404. Don't learn the miss and don't set a cache
+                # header, otherwise clients cache the 404 (browsers honor
+                # max-age on error responses too).
+                return response
             response.content_type = _GUESSER(file_path)[0] or FALLBACK_CONTENT_TYPE
             # Cache actual header after setter construction.
             content_type = response.headers[CONTENT_TYPE]
