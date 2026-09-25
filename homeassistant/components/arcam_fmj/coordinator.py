@@ -56,12 +56,8 @@ class ArcamFmjCoordinator(DataUpdateCoordinator[None]):
 
         device_name = config_entry.title
         unique_id = config_entry.unique_id or config_entry.entry_id
-        unique_id_device = unique_id
-        if zone != 1:
-            unique_id_device += f"-{zone}"
-            device_name += f" Zone {zone}"
 
-        self._device_identifier = (DOMAIN, unique_id_device)
+        self._device_identifier = (DOMAIN, unique_id)
         self.device_name = device_name
         self.device_info = DeviceInfo(
             identifiers={self._device_identifier},
