@@ -147,5 +147,13 @@
         }
       }
     }
+  },
+  "services": {
+    "get_device_time": {
+      "service": "mdi:clock-check-outline"
+    },
+    "set_device_time": {
+      "service": "mdi:clock-edit-outline"
+    }
   }
 }
