@@ -28,6 +28,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: NeoPoolConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # The first refresh ran before any entity registered its context, so
+    # context-gated timer blocks were skipped; seed one more read now that
+    # every context exists instead of waiting for the next scheduled poll.
+    await coordinator.async_refresh()
+
     return True
 
 
