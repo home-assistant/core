@@ -16,7 +16,7 @@
           "ip_address": "IP address or station ID"
         },
         "data_description": {
-          "ip_address": "Enter the IP address or mDNS hostname of your TFA.me station"
+          "ip_address": "Enter the IP address or station ID of your TFA.me station"
         },
         "description": "Please enter the IP address or station ID of your TFA.me station.\n- 9-character hexadecimal station ID: 'XXX-XXX-XXX'\n- mDNS name: 'tfa-me-XXX-XXX-XXX.local'\n- To get the IP address: Press and hold the '+' button on your device for 5 seconds.",
         "title": "Setup TFA.me station"

@@ -16,7 +16,6 @@ def resolve_tfa_host(address: str) -> str:
     address = address.strip()
     # Station ID ?
     if _STATION_ID_RE.fullmatch(address):
-        # Yes: "XXX-XXX-XXX" -> "tfa-me-xxx-xxx-xxx.local"
         return f"tfa-me-{address.lower()}.local"
 
     return address

@@ -158,7 +158,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'humidity',
     'unique_id': '05b3e4e44_05b3e4e44_humidity',
     'unit_of_measurement': '%',
   })
@@ -273,7 +273,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'temperature',
     'unique_id': '05b3e4e44_05b3e4e44_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -1409,7 +1409,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'temperature',
     'unique_id': '05b3e4e44_a364f3d67_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -1531,7 +1531,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'humidity',
     'unique_id': '05b3e4e44_a4481290f_humidity',
     'unit_of_measurement': '%',
   })
@@ -1646,7 +1646,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'temperature',
     'unique_id': '05b3e4e44_a4481290f_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -1826,7 +1826,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'humidity',
     'unique_id': '05b3e4e44_a6f169ad1_humidity',
     'unit_of_measurement': '%',
   })
@@ -1941,7 +1941,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'temperature',
     'unique_id': '05b3e4e44_a6f169ad1_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
