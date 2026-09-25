@@ -491,6 +491,7 @@ def motion_detector2_device(
     tamper_protection_enabled: bool = False,
     supports_smart_sensitivity: bool = False,
     smart_sensitivity_enabled: bool = False,
+    latestmotion: str = "",
 ) -> SHCMotionDetector2:
     """Build a minimal device double for the motion_detectors2 bucket."""
     device = create_autospec(SHCMotionDetector2, instance=True, spec_set=True)
@@ -500,13 +501,14 @@ def motion_detector2_device(
     device.serial = f"serial-{device_id}"
     device.manufacturer = "Bosch"
     device.device_model = "MD2"
-    device.device_services = []
+    device.device_services = [FakeLatestMotionService()]
     device.deleted = False
     device.status = "AVAILABLE"
     device.pet_immunity_enabled = pet_immunity_enabled
     device.tamper_protection_enabled = tamper_protection_enabled
     device.supports_smart_sensitivity = supports_smart_sensitivity
     device.smart_sensitivity_enabled = smart_sensitivity_enabled
+    device.latestmotion = latestmotion
     return device
 
 
