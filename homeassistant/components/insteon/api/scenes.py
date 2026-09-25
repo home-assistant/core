@@ -1,5 +1,6 @@
 """Web socket API for Insteon scenes."""
 
+import probatio
 from pyinsteon import devices
 from pyinsteon.constants import ResponseStatus
 from pyinsteon.managers.scene_manager import (
@@ -9,7 +10,6 @@ from pyinsteon.managers.scene_manager import (
     async_get_scene,
     async_get_scenes,
 )
-import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant
@@ -36,7 +36,7 @@ def _scene_to_dict(scene):
     return {"name": scene["name"], "group": scene["group"], "devices": device_dict}
 
 
-@websocket_api.websocket_command({vol.Required(TYPE): "insteon/scenes/get"})
+@websocket_api.websocket_command({probatio.Required(TYPE): "insteon/scenes/get"})
 @websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_get_scenes(
@@ -53,7 +53,7 @@ async def websocket_get_scenes(
 
 
 @websocket_api.websocket_command(
-    {vol.Required(TYPE): "insteon/scene/get", vol.Required("scene_id"): int}
+    {probatio.Required(TYPE): "insteon/scene/get", probatio.Required("scene_id"): int}
 )
 @websocket_api.require_admin
 @websocket_api.async_response
@@ -70,10 +70,10 @@ async def websocket_get_scene(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "insteon/scene/save",
-        vol.Required("name"): str,
-        vol.Required("scene_id"): int,
-        vol.Required("links"): DeviceLinkSchema,
+        probatio.Required(TYPE): "insteon/scene/save",
+        probatio.Required("name"): str,
+        probatio.Required("scene_id"): int,
+        probatio.Required("links"): DeviceLinkSchema,
     }
 )
 @websocket_api.require_admin
@@ -99,8 +99,8 @@ async def websocket_save_scene(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "insteon/scene/delete",
-        vol.Required("scene_id"): int,
+        probatio.Required(TYPE): "insteon/scene/delete",
+        probatio.Required("scene_id"): int,
     }
 )
 @websocket_api.require_admin

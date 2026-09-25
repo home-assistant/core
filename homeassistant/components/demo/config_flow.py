@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -64,14 +64,14 @@ class OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="options_1",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required("constant"): "Constant Value",
-                    vol.Optional(
+                    probatio.Required("constant"): "Constant Value",
+                    probatio.Optional(
                         CONF_BOOLEAN,
                         default=self.config_entry.options.get(CONF_BOOLEAN, False),
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_INT,
                         default=self.config_entry.options.get(CONF_INT, 10),
                     ): int,
@@ -89,20 +89,20 @@ class OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="options_2",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_STRING,
                         default=self.config_entry.options.get(
                             CONF_STRING,
                             "Default",
                         ),
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_SELECT,
                         default=self.config_entry.options.get(CONF_SELECT, "default"),
-                    ): vol.In(["default", "other"]),
-                    vol.Optional(
+                    ): probatio.In(["default", "other"]),
+                    probatio.Optional(
                         CONF_MULTISELECT,
                         default=self.config_entry.options.get(
                             CONF_MULTISELECT, ["default"]
