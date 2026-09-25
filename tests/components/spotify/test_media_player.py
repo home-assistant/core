@@ -2,12 +2,15 @@
 
 from dataclasses import replace
 from datetime import timedelta
+import json
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from mashumaro.exceptions import MissingField
 import pytest
 from spotifyaio import (
     PlaybackState,
+    Playlist,
     RepeatMode as SpotifyRepeatMode,
     SpotifyConnectionError,
     SpotifyNotFoundError,
@@ -35,6 +38,7 @@ from homeassistant.components.media_player import (
     RepeatMode,
 )
 from homeassistant.components.spotify import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
@@ -197,14 +201,22 @@ async def test_normal_playlist(
 
 
 @pytest.mark.usefixtures("setup_credentials")
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(SpotifyConnectionError(), id="connection"),
+        pytest.param(MissingField("name", str, Playlist), id="missing-playlist-name"),
+    ],
+)
 async def test_fetching_playlist_does_not_fail(
     hass: HomeAssistant,
     mock_spotify: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    error: SpotifyConnectionError | MissingField,
 ) -> None:
     """Test failing fetching playlist does not fail update."""
-    mock_spotify.return_value.get_playlist.side_effect = SpotifyConnectionError
+    mock_spotify.return_value.get_playlist.side_effect = error
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get("media_player.spotify_spotify_1")
     assert state
@@ -217,6 +229,61 @@ async def test_fetching_playlist_does_not_fail(
     await hass.async_block_till_done()
 
     assert mock_spotify.return_value.get_playlist.call_count == 2
+
+
+@pytest.mark.usefixtures("setup_credentials")
+@pytest.mark.parametrize("items_key", ["tracks", "items"])
+async def test_playlist_item_schema_error_does_not_block_setup(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    items_key: str,
+) -> None:
+    """Test playlist deserialization failures do not block setup or playback."""
+    playlist_data = json.loads(await async_load_fixture(hass, "playlist.json", DOMAIN))
+    playlist_items = playlist_data.pop("tracks")
+    for playlist_item in playlist_items["items"]:
+        playlist_item["item"] = playlist_item.pop("track")
+    playlist_data[items_key] = playlist_items
+    playlist_json = json.dumps(playlist_data)
+
+    def parse_playlist(_playlist_id: str) -> Playlist:
+        """Deserialize the response during the coordinator's playlist lookup."""
+        return Playlist.from_json(playlist_json)
+
+    client = mock_spotify.return_value
+    client.get_playlist.side_effect = parse_playlist
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (state := hass.states.get("media_player.spotify_spotify_1"))
+    assert state.state == MediaPlayerState.PLAYING
+    assert state.attributes["media_title"] == client.get_playback.return_value.item.name
+    assert "media_playlist" not in state.attributes
+    client.get_playlist.assert_called_once()
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("media_player.spotify_spotify_1"))
+    assert state.state == MediaPlayerState.PLAYING
+    assert "media_playlist" not in state.attributes
+    assert client.get_playlist.call_count == 2
+    # Deserialization exceptions contain the entire playlist and must not be logged.
+    assert "has invalid value" not in caplog.text
+
+    client.get_playlist.side_effect = None
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("media_player.spotify_spotify_1"))
+    assert state.state == MediaPlayerState.PLAYING
+    assert state.attributes["media_playlist"] == "Spotify Web API Testing playlist"
+    assert client.get_playlist.call_count == 3
 
 
 @pytest.mark.usefixtures("setup_credentials")
