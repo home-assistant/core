@@ -100,9 +100,6 @@
       "ac_ups_mode": {
         "name": "AC UPS Mode"
       },
-      "b_soc": {
-        "name": "Battery SOC"
-      },
       "b_soc_high": {
         "name": "Battery SOC High"
       },
@@ -114,9 +111,6 @@
       },
       "b_type": {
         "name": "Battery Type"
-      },
-      "b_v": {
-        "name": "Battery Voltage"
       },
       "b_ver_bms": {
         "name": "Battery BMS Version"
