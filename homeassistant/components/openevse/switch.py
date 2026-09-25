@@ -86,8 +86,7 @@ class OpenEVSESwitch(OpenEVSEEntity, SwitchEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(coordinator, identifier, unique_id, description.key)
-        self.entity_description = description
+        super().__init__(coordinator, description, identifier, unique_id)
 
     @property
     @override

@@ -2,6 +2,7 @@
 
 from homeassistant.const import ATTR_CONNECTIONS, ATTR_SERIAL_NUMBER
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -16,13 +17,14 @@ class OpenEVSEEntity(CoordinatorEntity[OpenEVSEDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: OpenEVSEDataUpdateCoordinator,
+        description: EntityDescription,
         identifier: str,
         unique_id: str | None,
-        key: str,
     ) -> None:
         """Initialize the OpenEVSE entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{identifier}-{key}"
+        self.entity_description = description
+        self._attr_unique_id = f"{identifier}-{description.key}"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, identifier)},

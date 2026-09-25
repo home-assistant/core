@@ -74,8 +74,7 @@ class OpenEVSEButton(OpenEVSEEntity, ButtonEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the button."""
-        super().__init__(coordinator, identifier, unique_id, description.key)
-        self.entity_description = description
+        super().__init__(coordinator, description, identifier, unique_id)
 
     @override
     async def async_press(self) -> None:
