@@ -2,7 +2,7 @@
 
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_SHOW_ON_MAP
@@ -49,9 +49,9 @@ class OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_SHOW_ON_MAP,
                         default=self.config_entry.options.get(CONF_SHOW_ON_MAP, False),
                     ): bool,

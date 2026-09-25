@@ -41,7 +41,6 @@ async def async_setup_entry(
         for location in coordinator.data.locations
         for device in location.devices
         if device.device_class == "Thermostat"
-        and device.device_id.startswith("LCC")
         and coordinator.data.rooms_dict.get(device.mac_id)
     )
 

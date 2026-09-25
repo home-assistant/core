@@ -20,8 +20,6 @@ if TYPE_CHECKING:
         SupervisorInfo,
     )
 
-    from homeassistant.auth.models import User
-
     from .coordinator import (
         HassioAddOnDataUpdateCoordinator,
         HassioMainDataUpdateCoordinator,
@@ -153,7 +151,6 @@ DATA_KEY_SUPERVISOR_ISSUES: HassKey[SupervisorIssuesCoordinator] = HassKey(
 )
 DATA_KEY_MOUNTS = "mounts"
 DATA_HASSIO_HOST: HassKey[str] = HassKey("hassio_host")
-DATA_HASSIO_SUPERVISOR_USER: HassKey[User] = HassKey("hassio_supervisor_user")
 
 ENTRY_DATA_USER = "user"
 
@@ -196,16 +193,18 @@ SUPERVISOR_CONTAINER = "hassio_supervisor"
 CONTAINER_STATS = "stats"
 REQUEST_REFRESH_DELAY = 10
 
-HELP_URLS = {
+# Issues offering to uninstall an app, which deletes the app data as well
+APP_REMOVE_URLS = {
     "help_url": "https://www.home-assistant.io/help/",
     "community_url": "https://community.home-assistant.io/",
+    "backup_url": "/config/backup",
 }
 
 EXTRA_PLACEHOLDERS = {
     "issue_mount_mount_failed": {
         "storage_url": "/config/storage",
     },
-    ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED: HELP_URLS,
+    ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED: APP_REMOVE_URLS,
     ISSUE_KEY_SYSTEM_FREE_SPACE: {
         "more_info_free_space": "https://www.home-assistant.io/more-info/free-space",
         "storage_url": "/config/storage",
@@ -213,8 +212,8 @@ EXTRA_PLACEHOLDERS = {
     ISSUE_KEY_ADDON_PWNED: {
         "more_info_pwned": "https://www.home-assistant.io/more-info/pwned-passwords",
     },
-    ISSUE_KEY_ADDON_DEPRECATED: HELP_URLS,
-    ISSUE_KEY_ADDON_DEPRECATED_ARCH: HELP_URLS,
+    ISSUE_KEY_ADDON_DEPRECATED: APP_REMOVE_URLS,
+    ISSUE_KEY_ADDON_DEPRECATED_ARCH: APP_REMOVE_URLS,
 }
 
 

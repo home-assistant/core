@@ -8,6 +8,7 @@ from aiohttp import ContentTypeError, ServerTimeoutError
 from openevsehttp.exceptions import (
     AuthenticationError,
     ParseJSONError,
+    UnknownError,
     UnsupportedFeature,
 )
 
@@ -46,6 +47,8 @@ def openevse_exception_handler(value: Any = None) -> Iterator[None]:
         ServerTimeoutError,
         ContentTypeError,
         ParseJSONError,
+        UnknownError,
+        RuntimeError,
     ) as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,

@@ -5,6 +5,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pyweatherflowudp.aioudp import LocalEndpoint
 from pyweatherflowudp.client import EVENT_DEVICE_DISCOVERED
 from pyweatherflowudp.device import WeatherFlowDevice
 
@@ -26,6 +27,14 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(domain=DOMAIN, data={})
+
+
+@pytest.fixture
+def mock_udp_endpoint() -> Generator[LocalEndpoint]:
+    """Replace the UDP socket with an endpoint the tests feed packets into."""
+    endpoint = LocalEndpoint()
+    with patch("pyweatherflowudp.client.open_local_endpoint", return_value=endpoint):
+        yield endpoint
 
 
 @pytest.fixture

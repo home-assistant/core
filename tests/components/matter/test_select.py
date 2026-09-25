@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
+from matter_server.common import custom_clusters
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -403,4 +404,90 @@ async def test_chime_select(
             attribute=clusters.Chime.Attributes.SelectedChime,
         ),
         value=1,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["wago_home_relay_16a"])
+async def test_wago_switch_type_select(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test select entity for the WAGO custom cluster SwitchType attribute."""
+    entity_id = "select.home_relay_16a_thread_switch_type"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "switch"
+    assert state.attributes["options"] == ["switch", "button"]
+
+    set_node_attribute(matter_node, 0, 355793920, 1, 0)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.state == "button"
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "switch"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=0,
+            attribute=custom_clusters.WagoCluster.Attributes.SwitchType,
+        ),
+        value=1,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["wago_home_relay_16a"])
+async def test_wago_connection_mode_select(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test select entity for the WAGO custom cluster DirectlyConnected attribute."""
+    entity_id = "select.home_relay_16a_thread_connection_mode"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "directly_connected"
+    assert state.attributes["options"] == ["directly_connected", "matter_only"]
+
+    set_node_attribute(matter_node, 0, 355793920, 0, False)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.state == "matter_only"
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "matter_only"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=0,
+            attribute=custom_clusters.WagoCluster.Attributes.DirectlyConnected,
+        ),
+        value=False,
+    )
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "directly_connected"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 2
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=0,
+            attribute=custom_clusters.WagoCluster.Attributes.DirectlyConnected,
+        ),
+        value=True,
     )

@@ -17,13 +17,14 @@ from tplink_omada_client.devices import (
     OmadaSwitch,
     OmadaSwitchPortDetails,
 )
-from tplink_omada_client.exceptions import InvalidDevice
+from tplink_omada_client.exceptions import InvalidDevice, OmadaClientException
 
 from homeassistant.components import switch
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import POLL_GATEWAY
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceResponse
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
@@ -214,6 +215,38 @@ async def test_gateway_port_poe_switch(
 
     entity = hass.states.get(entity_id)
     assert entity and entity.state == "on"
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "service", "api_method"),
+    [
+        ("switch.test_poe_switch_port_1_poe", "turn_off", "update_switch_port"),
+        (
+            "switch.test_router_port_4_internet_connected",
+            "turn_on",
+            "set_gateway_wan_port_connect_state",
+        ),
+        ("switch.test_router_port_5_poe", "turn_off", "set_gateway_port_settings"),
+    ],
+)
+async def test_switch_action_failure_is_translated(
+    hass: HomeAssistant,
+    mock_omada_site_client: MagicMock,
+    init_integration: MockConfigEntry,
+    entity_id: str,
+    service: str,
+    api_method: str,
+) -> None:
+    """Test switch action failures raise a translated HomeAssistantError."""
+    getattr(mock_omada_site_client, api_method).side_effect = OmadaClientException(
+        "mock failure"
+    )
+
+    with pytest.raises(HomeAssistantError) as err:
+        await call_service(hass, service, entity_id)
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "switch_action_failed"
 
 
 async def test_gateway_wan_port_has_no_poe_switch(

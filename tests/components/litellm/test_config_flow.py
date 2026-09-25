@@ -242,6 +242,7 @@ async def test_create_conversation_agent_no_control(
     assert result["data"] == {
         CONF_MODEL: "gpt-3.5-turbo",
         CONF_PROMPT: "you are an assistant",
+        CONF_LLM_HASS_API: [],
     }
 
 
@@ -360,7 +361,7 @@ async def test_reconfigure_conversation_agent_disable_llm_api(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert CONF_LLM_HASS_API not in mock_config_entry.subentries[subentry_id].data
+    assert mock_config_entry.subentries[subentry_id].data[CONF_LLM_HASS_API] == []
 
     result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
     schema = result["data_schema"].schema

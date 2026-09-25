@@ -12,7 +12,7 @@ from typing import Any, override
 import aiohttp
 from amcrest import AmcrestError, ApiWrapper, LoginError
 import httpx
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_AUTHENTICATION,
@@ -75,47 +75,47 @@ AUTHENTICATION_LIST = {"basic": "basic"}
 
 def _has_unique_names(devices: list[dict[str, Any]]) -> list[dict[str, Any]]:
     names = [device[CONF_NAME] for device in devices]
-    vol.Schema(vol.Unique())(names)
+    probatio.Schema(probatio.Unique())(names)
     return devices
 
 
-AMCREST_SCHEMA = vol.Schema(
+AMCREST_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.All(
-            vol.In(AUTHENTICATION_LIST)
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(
+            CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION
+        ): probatio.All(probatio.In(AUTHENTICATION_LIST)),
+        probatio.Optional(CONF_RESOLUTION, default=DEFAULT_RESOLUTION): probatio.All(
+            probatio.In(RESOLUTION_LIST)
         ),
-        vol.Optional(CONF_RESOLUTION, default=DEFAULT_RESOLUTION): vol.All(
-            vol.In(RESOLUTION_LIST)
-        ),
-        vol.Optional(CONF_STREAM_SOURCE, default=STREAM_SOURCE_LIST[0]): vol.All(
-            vol.In(STREAM_SOURCE_LIST)
-        ),
-        vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
-        vol.Optional(CONF_BINARY_SENSORS): vol.All(
+        probatio.Optional(
+            CONF_STREAM_SOURCE, default=STREAM_SOURCE_LIST[0]
+        ): probatio.All(probatio.In(STREAM_SOURCE_LIST)),
+        probatio.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
+        probatio.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
+        probatio.Optional(CONF_BINARY_SENSORS): probatio.All(
             cv.ensure_list,
-            [vol.In(BINARY_SENSOR_KEYS)],
-            vol.Unique(),
+            [probatio.In(BINARY_SENSOR_KEYS)],
+            probatio.Unique(),
             check_binary_sensors,
         ),
-        vol.Optional(CONF_SWITCHES): vol.All(
-            cv.ensure_list, [vol.In(SWITCH_KEYS)], vol.Unique()
+        probatio.Optional(CONF_SWITCHES): probatio.All(
+            cv.ensure_list, [probatio.In(SWITCH_KEYS)], probatio.Unique()
         ),
-        vol.Optional(CONF_SENSORS): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)], vol.Unique()
+        probatio.Optional(CONF_SENSORS): probatio.All(
+            cv.ensure_list, [probatio.In(SENSOR_KEYS)], probatio.Unique()
         ),
-        vol.Optional(CONF_CONTROL_LIGHT, default=True): cv.boolean,
+        probatio.Optional(CONF_CONTROL_LIGHT, default=True): cv.boolean,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [AMCREST_SCHEMA], _has_unique_names)},
-    extra=vol.ALLOW_EXTRA,
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.All(cv.ensure_list, [AMCREST_SCHEMA], _has_unique_names)},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

@@ -15,7 +15,7 @@ from aioshelly.exceptions import (
     RpcCallError,
 )
 from aioshelly.rpc_device import RpcDevice, bluetooth_mac_from_primary_mac
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.bluetooth import async_remove_scanner
 from homeassistant.const import (
@@ -64,6 +64,7 @@ from .repairs import (
     async_manage_deprecated_firmware_issue,
     async_manage_open_wifi_ap_issue,
     async_manage_outbound_websocket_incorrectly_enabled_issue,
+    async_manage_rtsp_disabled_issue,
 )
 from .services import async_setup_services
 from .utils import (
@@ -111,12 +112,14 @@ RPC_SLEEPING_PLATFORMS: Final = [
     Platform.UPDATE,
 ]
 
-COAP_SCHEMA: Final = vol.Schema(
+COAP_SCHEMA: Final = probatio.Schema(
     {
-        vol.Optional(CONF_COAP_PORT, default=DEFAULT_COAP_PORT): cv.port,
+        probatio.Optional(CONF_COAP_PORT, default=DEFAULT_COAP_PORT): cv.port,
     }
 )
-CONFIG_SCHEMA: Final = vol.Schema({DOMAIN: COAP_SCHEMA}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA: Final = probatio.Schema(
+    {DOMAIN: COAP_SCHEMA}, extra=probatio.ALLOW_EXTRA
+)
 
 # Max time to wait at startup for a BLE proxy to register its scanner.
 STARTUP_SCANNER_WAIT: Final = 3.0
@@ -393,6 +396,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
             entry,
         )
         async_manage_open_wifi_ap_issue(hass, entry)
+        async_manage_rtsp_disabled_issue(hass, entry)
         remove_empty_sub_devices(hass, entry)
     elif (
         sleep_period is None

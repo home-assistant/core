@@ -191,6 +191,33 @@ async def test_hub_wifi(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_device_registry_devices")
+async def test_hub_wireless_and_wifi(hass: HomeAssistant) -> None:
+    """Test a hub exposing both the legacy wireless package and the wifi driver.
+
+    The legacy ``wireless`` package can linger on a hub acting as a CAPsMAN for
+    ``wifi`` access points, leaving its registration table empty while the
+    connected clients are only listed on the ``wifi`` interface.
+    """
+    device_2_without_active_address = {
+        key: value for key, value in DEVICE_2_DHCP.items() if key != "active-address"
+    }
+
+    await setup_mikrotik_entry(
+        hass,
+        dhcp_data=[DEVICE_1_DHCP, device_2_without_active_address],
+        support_wireless=True,
+        wireless_data=[],
+        support_wifi=True,
+        wifi_data=[DEVICE_2_WIRELESS],
+    )
+
+    # device_2 is only present on the wifi interface, not in the wireless list
+    device_2 = hass.states.get("device_tracker.device_2")
+    assert device_2
+    assert device_2.state == "home"
+
+
+@pytest.mark.usefixtures("mock_device_registry_devices")
 async def test_wired_device_without_active_address_is_not_home(
     hass: HomeAssistant,
 ) -> None:

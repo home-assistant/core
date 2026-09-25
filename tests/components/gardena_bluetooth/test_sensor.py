@@ -114,10 +114,10 @@ async def test_setup(
                 AquaContourWatering.remaining_watering_time.unique_id: (
                     AquaContourWatering.remaining_watering_time.encode(100)
                 ),
-                AquaContourWatering.activation_reason.uuid: AquaContourWatering.activation_reason.encode(
+                AquaContourWatering.activation_reason.unique_id: AquaContourWatering.activation_reason.encode(
                     ActivationReason.SCHEDULE
                 ),
-                AquaContourWatering.skipped_reason.uuid: AquaContourWatering.skipped_reason.encode(
+                AquaContourWatering.skipped_reason.unique_id: AquaContourWatering.skipped_reason.encode(
                     SkipReason.RAIN_SENSOR
                 ),
             },
