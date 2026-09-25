@@ -202,7 +202,7 @@ async def test_sensor_subentry_flow_invalid_json_attrs_path(
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {CONF_JSON_ATTRS_PATH: "invalid_result"}
+    assert result["errors"] == {"base": "invalid_result"}
     assert "json_path" in result["description_placeholders"]
 
 

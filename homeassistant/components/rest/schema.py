@@ -193,9 +193,8 @@ class KeyedTemplateSelector(selector.ObjectSelector):
         they are supported for query params and headers in the http specifications.
         """
         super().__call__(data)
-        test_data = data if isinstance(data, list) else [data]
         keys: set[str] = set()
-        for field in test_data:
+        for field in data:
             if field["key"] not in keys:
                 keys.add(field["key"])
             else:

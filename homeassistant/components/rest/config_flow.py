@@ -132,15 +132,8 @@ def _validate_sensor_input(
             )
         except HomeAssistantError as ex:
             if ex.translation_key is not None:
-                if ex.translation_key == "no_json":
-                    errors["base"] = ex.translation_key
-                else:
-                    errors[
-                        CONF_JSON_ATTRS_PATH
-                        if ex.translation_key != "attrs_not_found"
-                        else CONF_JSON_ATTRS
-                    ] = ex.translation_key
-                    placeholders = ex.translation_placeholders or {}
+                errors["base"] = ex.translation_key
+                placeholders = ex.translation_placeholders or {}
         except ExpatError as ex:
             errors["base"] = "xml_parse_error"
             placeholders["xml_parse_error_message"] = str(ex)
