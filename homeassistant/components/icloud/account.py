@@ -222,7 +222,12 @@ class IcloudAccount:
                 new_device = True
 
         if (
-            DEVICE_STATUS_CODES.get(list(api_devices)[0][DEVICE_STATUS]) == "pending"
+            # A locate that did not go through leaves whatever iCloud had,
+            # which can be nothing at all, and indexing that would end the
+            # poll here without arming the next one.
+            api_devices
+            and DEVICE_STATUS_CODES.get(list(api_devices)[0][DEVICE_STATUS])
+            == "pending"
             and not self._retried_fetch
         ):
             _LOGGER.debug("Pending devices, trying again in 15s")
