@@ -182,6 +182,26 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             return api, True
         return api, False
 
+    def _code_can_be_delivered(self) -> bool:
+        """Return whether iCloud has a route to send a verification code."""
+        return self.api is not None and self.api.two_factor_delivery_method != "unknown"
+
+    def _report_undeliverable_code(self, user_input, step_id):
+        """Send the flow back to the password when no code can be sent.
+
+        iCloud can report a challenge whose delivery route was never
+        established, and the code entry form is then a dead end. Dropping the
+        session sends the next attempt through a fresh login, which raises the
+        challenge again with a route behind it.
+        """
+        _LOGGER.error(
+            "iCloud has no way to send a verification code for %s", self._username
+        )
+        self.api = None
+        return self._show_setup_form(
+            user_input, {"base": "send_verification_code"}, step_id
+        )
+
     async def _request_2fa_code(self, errors: dict[str, str]) -> dict[str, str]:
         """Request an Apple 2FA code."""
         if TYPE_CHECKING:
@@ -275,6 +295,8 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                     return result
 
         if self._requires_2fa:
+            if not self._code_can_be_delivered():
+                return self._report_undeliverable_code(user_input, step_id)
             return await self.async_step_verification_code()
 
         if self.api.requires_2sa:
@@ -294,6 +316,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             PyiCloud2FARequiredException,
             PyiCloudAuthRequiredException,
             PyiCloudAPIResponseException,
+            PyiCloudFailedLoginException,
         ) as error:
             # Reading the devices is where iCloud turns down a session that
             # logging in accepted, so a rejection here is the same one the
@@ -302,6 +325,8 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             if isinstance(error, PyiCloud2FARequiredException) or (
                 isinstance(error, PyiCloudAPIResponseException) and is_2fa_status(error)
             ):
+                if not self._code_can_be_delivered():
+                    return self._report_undeliverable_code(user_input, step_id)
                 # The session that was challenged is the one the code has to
                 # go through, so it is kept.
                 self._forced_2fa = True

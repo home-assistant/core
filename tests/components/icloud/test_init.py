@@ -897,3 +897,97 @@ async def test_a_challenge_that_cannot_send_a_code_is_retried(
         for flow in hass.config_entries.flow.async_progress()
         if flow["context"]["source"] == "reauth"
     ]
+
+
+async def test_reauth_challenge_without_a_delivery_route_asks_for_the_password(
+    hass: HomeAssistant, service_auth_required: Mock
+) -> None:
+    """Test that a challenge that can send no code does not open code entry.
+
+    The options fetch that establishes a delivery route can be refused on its
+    own. iCloud still reports the challenge, but the code entry form is then a
+    dead end. Going back to the password is what recovers it: a fresh login
+    raises the challenge again with a route behind it.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    flows = [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+
+    challenged_api = MagicMock()
+    challenged_api.requires_2fa = False
+    challenged_api.requires_2sa = False
+    challenged_api.two_factor_delivery_method = "unknown"
+    challenged_api.authenticate.side_effect = PyiCloud2FARequiredException(
+        USERNAME, Mock(spec=Response)
+    )
+
+    def build_service(*args, **kwargs):
+        """Reject the stored session, challenge the fresh login."""
+        if kwargs.get("authenticate", True):
+            raise PyiCloudAuthRequiredException(USERNAME, Mock(spec=Response))
+        return challenged_api
+
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        side_effect=build_service,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flows[0]["flow_id"], {CONF_PASSWORD: "new-password"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "send_verification_code"}
+
+
+async def test_reauth_device_fetch_rejected_as_a_failed_login_is_reported(
+    hass: HomeAssistant, service_auth_required: Mock
+) -> None:
+    """Test that a rejected token from the device fetch is handled.
+
+    Reading the devices refreshes the session, and a stored token iCloud has
+    since invalidated is rejected there as PyiCloudFailedLoginException.
+    Without it in the handled set the step ends on an unhandled exception,
+    leaving the user with no way back to the password.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    flows = [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+
+    rejected_api = MagicMock()
+    rejected_api.requires_2fa = False
+    rejected_api.requires_2sa = False
+    rejected_api.two_factor_delivery_method = "trusted_device"
+    type(rejected_api).devices = PropertyMock(
+        side_effect=PyiCloudFailedLoginException("Invalid authentication token.")
+    )
+
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        return_value=rejected_api,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flows[0]["flow_id"], {CONF_PASSWORD: "new-password"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
