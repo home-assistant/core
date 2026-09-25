@@ -27,6 +27,7 @@ from boschshcpy import (
     SHCTwinguard,
     ShutterContactService,
     ShutterControlService,
+    SilentModeService,
     ThermostatService,
 )
 from boschshcpy.services_impl import (
@@ -260,6 +261,8 @@ def thermostat_device(
     child_lock: ThermostatService.State = ThermostatService.State.OFF,
     position: int = 50,
     valvestate: ValveTappetService.State = ValveTappetService.State.VALVE_ADAPTION_SUCCESSFUL,
+    supports_silentmode: bool = False,
+    silentmode: SilentModeService.State = SilentModeService.State.MODE_NORMAL,
 ) -> SHCThermostat:
     """Build a minimal device double for the thermostats/roomthermostats/wallthermostats buckets."""
     device = create_autospec(SHCThermostat, instance=True, spec_set=True)
@@ -275,6 +278,8 @@ def thermostat_device(
     device.child_lock = child_lock
     device.position = position
     device.valvestate = valvestate
+    device.supports_silentmode = supports_silentmode
+    device.silentmode = silentmode
     return device
 
 

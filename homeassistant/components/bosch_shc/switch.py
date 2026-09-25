@@ -11,6 +11,7 @@ from boschshcpy import (
     PrivacyModeService,
     SHCShutterContact2,
     SHCSmartPlug,
+    SilentModeService,
     ThermostatService,
 )
 from boschshcpy.device import SHCDevice
@@ -159,6 +160,15 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         entity_category=EntityCategory.CONFIG,
         on_key="tamper_protection_enabled",
         on_value=True,
+        should_poll=False,
+    ),
+    "silent_mode": SHCSwitchEntityDescription(
+        key="silent_mode",
+        translation_key="silent_mode",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="silentmode",
+        on_value=SilentModeService.State.MODE_SILENT,
         should_poll=False,
     ),
     "smart_sensitivity_enabled": SHCSwitchEntityDescription(
@@ -353,6 +363,19 @@ async def async_setup_entry(
         )
         for switch in session.device_helper.smoke_detectors
         if switch.supports_intrusion_alarm
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["silent_mode"],
+            unique_id_suffix="silent_mode",
+        )
+        for switch in session.device_helper.thermostats
+        if switch.supports_silentmode
     )
 
     entities.extend(

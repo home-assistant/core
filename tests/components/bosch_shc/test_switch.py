@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
-from boschshcpy import BypassService, ThermostatService
+from boschshcpy import BypassService, SilentModeService, ThermostatService
 import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -75,6 +75,67 @@ async def test_thermostat_child_lock(
         blocking=True,
     )
     assert device.child_lock is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "thermostats": [
+                thermostat_device(
+                    supports_silentmode=True,
+                    silentmode=SilentModeService.State.MODE_NORMAL,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_silent_mode(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A thermostat's silent mode is exposed and controllable as a switch."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.thermostats[0]
+
+    state = hass.states.get("switch.thermostat_whisper_mode")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.thermostat_whisper_mode"},
+        blocking=True,
+    )
+    assert device.silentmode is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.thermostat_whisper_mode"},
+        blocking=True,
+    )
+    assert device.silentmode is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"thermostats": [thermostat_device(supports_silentmode=False)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_no_silent_mode_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No switch is created for a thermostat without silent-mode support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.thermostat_whisper_mode") is None
 
 
 @pytest.mark.parametrize(
