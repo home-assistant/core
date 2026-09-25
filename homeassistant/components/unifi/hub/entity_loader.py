@@ -222,16 +222,21 @@ class UnifiEntityLoader:
 
     @callback
     def _remove_clients(self, macs: list[str]) -> None:
-        """Remove the tracker entities and devices of clients no longer kept."""
+        """Remove the tracker entities and devices of clients no longer kept.
+
+        The device goes even when the tracker entity is already gone, as
+        after a change of the tracked clients, so no device with its uptime
+        sensor is left behind.
+        """
         if not macs:
             return
         entity_registry = er.async_get(self.hub.hass)
         device_registry = dr.async_get(self.hub.hass)
         for mac in macs:
-            if entity_id := entity_registry.async_get_entity_id(
+            entity_id = entity_registry.async_get_entity_id(
                 Platform.DEVICE_TRACKER, DOMAIN, f"{self.hub.site}-{mac}"
-            ):
-                self._remove_client(entity_registry, device_registry, entity_id, mac)
+            )
+            self._remove_client(entity_registry, device_registry, entity_id, mac)
         LOGGER.debug("Pruned %s stale UniFi client device(s)", len(macs))
 
     @callback
@@ -245,11 +250,12 @@ class UnifiEntityLoader:
         self,
         entity_registry: er.EntityRegistry,
         device_registry: dr.DeviceRegistry,
-        entity_id: str,
+        entity_id: str | None,
         mac: str,
     ) -> None:
-        """Remove a stale client's tracker entity and its device."""
-        entity_registry.async_remove(entity_id)
+        """Remove a stale client's tracker entity, if any, and its device."""
+        if entity_id is not None:
+            entity_registry.async_remove(entity_id)
         if device := device_registry.async_get_device_by_connection(
             (dr.CONNECTION_NETWORK_MAC, mac), self.hub.config.entry.entry_id
         ):

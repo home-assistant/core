@@ -1079,3 +1079,54 @@ async def test_network_api_stale_client_pruned(
 
     stored = hass_storage[storage_key(network_api_config_entry)]["data"]
     assert set(stored) == {"00:00:00:00:00:01"}, "the stale client is gone from storage"
+
+
+async def test_network_api_stale_client_device_pruned_without_tracker(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    network_api_config_entry: MockConfigEntry,
+    mock_network_api_requests: None,
+) -> None:
+    """Test a stale client's device goes even when its tracker entity is gone.
+
+    A change of the tracked clients removes the tracker entity but leaves the
+    device, with its uptime sensor, behind. Pruning must still remove those.
+    """
+    now = dt_util.utcnow()
+    stale_mac = "00:00:00:00:00:02"
+    hass_storage[storage_key(network_api_config_entry)] = {
+        "version": 1,
+        "data": {
+            stale_mac: {
+                "raw": {**NETWORK_CLIENT, "name": "stale", "macAddress": stale_mac},
+                "last_seen": (
+                    now - CLIENT_RESTORE_MAX_AGE - timedelta(days=1)
+                ).isoformat(),
+            },
+        },
+    }
+    device = device_registry.async_get_or_create(
+        config_entry_id=network_api_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, stale_mac)},
+        name="stale",
+    )
+    uptime_entity_id = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"uptime-{stale_mac}",
+        config_entry=network_api_config_entry,
+        device_id=device.id,
+    ).entity_id
+
+    await hass.config_entries.async_setup(network_api_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, stale_mac), network_api_config_entry.entry_id
+        )
+        is None
+    ), "the device is gone although no tracker entity pointed at it"
+    assert entity_registry.async_get(uptime_entity_id) is None
