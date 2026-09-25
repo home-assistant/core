@@ -25,8 +25,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
-from .const import HumidifierEntityStateAttribute
+from .const import DOMAIN, HumidifierEntityStateAttribute
 
 # mypy: disallow-any-generics
 

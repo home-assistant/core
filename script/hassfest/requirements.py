@@ -79,10 +79,6 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # Current has an upper bound on major >=3.11.0,<4.0.0
         "pysmarty2": {"pymodbus"}
     },
-    "stiebel_eltron": {
-        # Current has an upper bound on major >=3.10.0,<4.0.0
-        "pystiebeleltron": {"pymodbus"}
-    },
     "telegram_bot": {"python-telegram-bot": {"httpx"}},
     "xiaomi_miio": {
         "python-miio": {"zeroconf"},
@@ -199,7 +195,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "ld2410_ble": {"ld2410-ble": {"async-timeout"}},
     "led_ble": {"flux-led": {"async-timeout"}},
     "lektrico": {"lektricowifi": {"async-timeout"}},
-    "lifx": {"aiolifx": {"async-timeout"}},
     "linkplay": {
         "python-linkplay": {"async-timeout"},
     },
