@@ -7,14 +7,12 @@ from types import MethodType
 from typing import Any, override
 from xml.parsers.expat import ExpatError
 
-from probatio import Invalid
+import probatio
 
-from homeassistant.components.sensor import CONF_STATE_CLASS
-
-# pylint: disable=home-assistant-component-root-import
-from homeassistant.components.template.config_flow import (
-    _validate_state_class,
-    _validate_unit,
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    DEVICE_CLASS_STATE_CLASSES,
+    DEVICE_CLASS_UNITS,
 )
 from homeassistant.config_entries import (
     SOURCE_USER,
@@ -29,6 +27,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_AUTHENTICATION,
+    CONF_DEVICE_CLASS,
     CONF_METHOD,
     CONF_NAME,
     CONF_PLATFORM,
@@ -68,6 +67,57 @@ VALIDATOR = "validator"
 NO_PLATFORM = "none"
 
 
+def _validate_unit(options: dict[str, Any]) -> None:
+    """Validate unit of measurement, from template config_flow.py."""
+    if (
+        (device_class := options.get(CONF_DEVICE_CLASS))
+        and (units := DEVICE_CLASS_UNITS.get(device_class)) is not None
+        and (unit := options.get(CONF_UNIT_OF_MEASUREMENT)) not in units
+    ):
+        # Sort twice to make sure strings with same case-insensitive order of
+        # letters are sorted consistently still.
+        sorted_units = sorted(
+            sorted(
+                [f"'{unit!s}'" if unit else "no unit of measurement" for unit in units],
+            ),
+            key=str.casefold,
+        )
+        if len(sorted_units) == 1:
+            units_string = sorted_units[0]
+        else:
+            units_string = f"one of {', '.join(sorted_units)}"
+
+        raise probatio.Invalid(
+            f"'{unit}' is not a valid unit for device class '{device_class}'; "
+            f"expected {units_string}"
+        )
+
+
+def _validate_state_class(options: dict[str, Any]) -> None:
+    """Validate state class. From template config_flow.py."""
+    if (
+        (state_class := options.get(CONF_STATE_CLASS))
+        and (device_class := options.get(CONF_DEVICE_CLASS))
+        and (state_classes := DEVICE_CLASS_STATE_CLASSES.get(device_class)) is not None
+        and state_class not in state_classes
+    ):
+        sorted_state_classes = sorted(
+            [f"'{state_class!s}'" for state_class in state_classes],
+            key=str.casefold,
+        )
+        if len(sorted_state_classes) == 0:
+            state_classes_string = "no state class"
+        elif len(sorted_state_classes) == 1:
+            state_classes_string = sorted_state_classes[0]
+        else:
+            state_classes_string = f"one of {', '.join(sorted_state_classes)}"
+
+        raise probatio.Invalid(
+            f"'{state_class}' is not a valid state class for device class "
+            f"'{device_class}'; expected {state_classes_string}"
+        )
+
+
 def _validate_sensor_input(
     input: dict[str, Any], rest: RestData
 ) -> tuple[dict[str, str], dict[str, str]]:
@@ -96,12 +146,12 @@ def _validate_sensor_input(
             placeholders["xml_parse_error_message"] = str(ex)
     try:
         _validate_unit(input)
-    except Invalid as ex:
+    except probatio.Invalid as ex:
         errors[CONF_UNIT_OF_MEASUREMENT] = "unit_validation_error"
         placeholders["unit_validation_error_message"] = str(ex)
     try:
         _validate_state_class(input)
-    except Invalid as ex:
+    except probatio.Invalid as ex:
         errors[CONF_STATE_CLASS] = "state_class_validation_error"
         placeholders["state_class_validation_error_message"] = str(ex)
 
