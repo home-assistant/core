@@ -334,16 +334,17 @@ async def on_execution_state_changed(
     # The only place an unreachable device is reported. The server keeps
     # answering for it and DeviceUnavailableEvent never fires, so without this
     # the entity stays available and every command is silently dropped.
+    # The action queue merges concurrent action groups into one execution, and
+    # the failure it reports is execution-wide: nothing says which of the
+    # devices answered and which did not. Only a completion speaks for all of
+    # them, so leave a merged failure alone in either direction.
+    if event.new_state is ExecutionState.FAILED and len(device_urls) > 1:
+        return
+
     unreachable = (
         event.new_state is ExecutionState.FAILED
         and event.failure_type_code in UNREACHABLE_FAILURE_TYPES
     )
-
-    # The action queue merges concurrent action groups into one execution, and
-    # the failure it reports is execution-wide: nothing says which of the
-    # devices went unanswered. Leave every one of them as it was.
-    if unreachable and len(device_urls) > 1:
-        return
 
     for device_url in device_urls:
         if not unreachable:

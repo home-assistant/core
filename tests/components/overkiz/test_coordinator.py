@@ -14,7 +14,7 @@ from pyoverkiz.exceptions import (
     TooManyConcurrentRequestsError,
     TooManyRequestsError,
 )
-from pyoverkiz.models import Command
+from pyoverkiz.models import Command, Setup
 import pytest
 
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, SERVICE_OPEN_COVER
@@ -591,6 +591,23 @@ async def test_state_from_device_clears_its_gateway(
     assert hass.states.get(POOL_PUMP.entity_id).state != STATE_UNAVAILABLE
 
 
+async def test_gateway_already_down_at_setup_marks_its_entities_unavailable(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """A gateway down before setup has no event left to announce it."""
+
+    def mark_gateways_down(setup: Setup) -> None:
+        for gateway in setup.gateways:
+            gateway.alive = False
+
+    await setup_overkiz_integration(
+        fixture=POOL_PUMP.fixture, mutate=mark_gateways_down
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state == STATE_UNAVAILABLE
+
+
 async def test_gateway_down_leaves_other_gateways_alone(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -753,6 +770,73 @@ async def test_undelivered_merged_command_keeps_devices_available(
 
     assert hass.states.get(POOL_PUMP.entity_id).state != STATE_UNAVAILABLE
     assert hass.states.get(POOL_HOUSE.entity_id).state != STATE_UNAVAILABLE
+
+
+async def test_refused_merged_command_keeps_an_unreachable_device_unavailable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """A refusal on a merged execution does not speak for the other devices.
+
+    It proves one of them answered, not which, so it cannot be read as evidence
+    that a device already known to be unreachable is back.
+    """
+    await setup_overkiz_integration(fixture=POOL_PUMP.fixture)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: POOL_HOUSE.entity_id},
+        blocking=True,
+    )
+
+    # A second round of commands, this time merged into one execution.
+    mock_client.execute_action_group.side_effect = None
+    mock_client.execute_action_group.return_value = "merged-exec"
+
+    for device in (POOL_PUMP, POOL_HOUSE):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: device.entity_id},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                exec_id="exec-1",
+                new_state=ExecutionState.FAILED,
+                old_state=ExecutionState.IN_PROGRESS,
+                failure_type_code=FailureType.PEER_DOWN,
+            )
+        ],
+    )
+
+    assert hass.states.get(POOL_HOUSE.entity_id).state == STATE_UNAVAILABLE
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                exec_id="merged-exec",
+                new_state=ExecutionState.FAILED,
+                old_state=ExecutionState.IN_PROGRESS,
+                failure_type_code=FailureType.PRIORITY_LOCK__USER,
+            )
+        ],
+    )
+
+    assert hass.states.get(POOL_HOUSE.entity_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(POOL_PUMP.entity_id).state != STATE_UNAVAILABLE
 
 
 async def test_state_from_device_clears_unreachable(
