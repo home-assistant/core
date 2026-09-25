@@ -38,9 +38,12 @@ async def _async_get_currencies(hass: HomeAssistant) -> list[str] | None:
 
 def _currency_schema(currencies: list[str]) -> probatio.Schema:
     """Build a schema offering the currencies blockchain.com quotes."""
+    # The default has to be one of the offered options, and USD is not always
+    # quoted. The list is never empty, an empty one is a connection failure.
+    default = DEFAULT_CURRENCY if DEFAULT_CURRENCY in currencies else currencies[0]
     return probatio.Schema(
         {
-            probatio.Required(CONF_CURRENCY, default=DEFAULT_CURRENCY): SelectSelector(
+            probatio.Required(CONF_CURRENCY, default=default): SelectSelector(
                 SelectSelectorConfig(
                     options=currencies, mode=SelectSelectorMode.DROPDOWN
                 )

@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
+from blockchain.exchangerates import Currency
 import pytest
 
 from homeassistant.components.bitcoin.const import DOMAIN
@@ -124,3 +125,23 @@ async def test_import_flow_unknown_currency(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown_currency"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_without_usd_quoted(
+    hass: HomeAssistant, mock_exchangerates: MagicMock
+) -> None:
+    """Test the offered default is valid when USD is not quoted."""
+    mock_exchangerates.return_value = {
+        "EUR": Currency(68512.4, 68515.9, 68508.9, "€", 68510.2)
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    # Accepting the default the form offers has to work.
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_CURRENCY: "EUR"}

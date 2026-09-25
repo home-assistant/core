@@ -93,7 +93,8 @@ async def test_one_fetch_per_cycle(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    # The interval poll runs as a background task, so waiting for it is needed.
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_statistics.call_count == 2
 
