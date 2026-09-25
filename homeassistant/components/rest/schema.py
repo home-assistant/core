@@ -315,6 +315,9 @@ SUBENTRY_FLOW_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_ICON): selector.TemplateSelector(),
         probatio.Optional(CONF_PICTURE): selector.TemplateSelector(),
         probatio.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
+        probatio.Required(
+            CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE
+        ): selector.BooleanSelector(),
     }
 )
 
@@ -332,9 +335,6 @@ BINARY_SENSOR_SUBENTRY_FLOW_SCHEMA = SUBENTRY_FLOW_SCHEMA.extend(
 
 SENSOR_SUBENTRY_FLOW_SCHEMA = SUBENTRY_FLOW_SCHEMA.extend(
     {
-        probatio.Required(
-            CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE
-        ): selector.BooleanSelector(),
         probatio.Optional(CONF_JSON_ATTRS_PATH): selector.TextSelector(),
         probatio.Optional(CONF_JSON_ATTRS, default=[]): selector.ObjectSelector(
             selector.ObjectSelectorConfig(

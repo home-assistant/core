@@ -3,6 +3,8 @@
     "availability_description": "Defines a template to get the `available` state of the entity, see [Template integration documentation]({docs_url_availability}). If omitted will default to `available` if the last resource update was successful.",
     "availability_section": "Availability Options",
     "config_entry_not_loaded": "The configuration entry for this resource is not loaded, unable to create an entity until the entry is loaded.",
+    "force_update": "Force Update",
+    "force_update_description": "If enabled, state changes will be reported even if the value is the same as the previous value. See RESTful Sensor [Force update]({docs_url_restful_sensor_force_update}).",
     "icon": "Icon",
     "icon_description": "Defines a template for the icon of the entity.",
     "picture": "Picture",
@@ -91,6 +93,7 @@
           "data": {
             "availability": "[%key:component::template::common::availability%]",
             "device_class": "[%key:component::template::common::device_class%]",
+            "force_update": "[%key:component::rest::common::force_update%]",
             "icon": "[%key:component::rest::common::icon%]",
             "name": "[%key:common::config_flow::data::name%]",
             "picture": "[%key:component::rest::common::picture%]",
@@ -98,6 +101,7 @@
           },
           "data_description": {
             "availability": "[%key:component::rest::common::availability_description%]",
+            "force_update": "[%key:component::rest::common::force_update_description%]",
             "icon": "[%key:component::rest::common::icon_description%]",
             "name": "Name of the RESTful binary sensor, supports templates.",
             "picture": "[%key:component::rest::common::picture_description%]",
@@ -141,7 +145,7 @@
           "data": {
             "availability": "[%key:component::template::common::availability%]",
             "device_class": "[%key:component::template::common::device_class%]",
-            "force_update": "Force Update",
+            "force_update": "[%key:component::rest::common::force_update%]",
             "icon": "[%key:component::rest::common::icon%]",
             "json_attributes": "JSON Attributes",
             "json_attributes_path": "JSON Attributes Path",
@@ -153,7 +157,7 @@
           },
           "data_description": {
             "availability": "[%key:component::rest::common::availability_description%]",
-            "force_update": "If enabled, state changes will be reported even if the value is the same as the previous value. See RESTful Sensor [Force update]({docs_url_restful_sensor_force_update}).",
+            "force_update": "[%key:component::rest::common::force_update_description%]",
             "icon": "[%key:component::rest::common::icon_description%]",
             "json_attributes_path": "A [JSONPath]({docs_url_jsonpath}) that references the location of the JSON attributes in the JSON content.",
             "name": "Name of the RESTful sensor, supports templates.",
