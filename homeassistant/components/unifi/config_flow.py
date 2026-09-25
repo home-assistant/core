@@ -194,6 +194,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
 
             await self.async_set_unique_id(site.site_id)
             self._abort_if_unique_id_configured()
+            self._abort_if_site_configured()
 
             return self.async_create_entry(title=site.name, data=self.config)
 
@@ -220,6 +221,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
 
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
+            self._abort_if_site_configured()
 
             site_nice_name = self.sites[unique_id].description
             return self.async_create_entry(title=site_nice_name, data=self.config)
@@ -233,6 +235,19 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {probatio.Required(CONF_SITE_ID): probatio.In(site_names)}
             ),
+        )
+
+    @callback
+    def _abort_if_site_configured(self) -> None:
+        """Abort if the site is already set up in the other connection mode.
+
+        A site has one unique ID per mode: the classic API's site `_id` and
+        the Integration API's site UUID. Entities of both modes share their
+        unique IDs, so a second entry for the same site would only produce
+        duplicates. Host and short site name are the same in both modes.
+        """
+        self._async_abort_entries_match(
+            {CONF_HOST: self.config[CONF_HOST], CONF_SITE_ID: self.config[CONF_SITE_ID]}
         )
 
     async def async_step_reauth(

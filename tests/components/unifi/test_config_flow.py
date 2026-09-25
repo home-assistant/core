@@ -935,6 +935,59 @@ async def test_api_key_flow_works(hass: HomeAssistant, mock_discovery) -> None:
     assert result["result"].unique_id == NETWORK_SITE_ID
 
 
+@pytest.mark.usefixtures("config_entry", "mock_network_api_requests")
+async def test_api_key_flow_aborts_for_site_with_local_user(
+    hass: HomeAssistant,
+) -> None:
+    """Test the API-key flow aborts for a site already set up with a local user.
+
+    The two modes give a site different unique IDs, so the entry data has to
+    catch this: the entities of both modes would share their unique IDs.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "api_key"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: DEFAULT_HOST,
+            CONF_API_KEY: "api-key",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("network_api_config_entry", "mock_default_requests")
+async def test_flow_aborts_for_site_with_api_key(hass: HomeAssistant) -> None:
+    """Test the local-user flow aborts for a site already set up with a key."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "local_user"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: DEFAULT_HOST,
+            CONF_USERNAME: "username",
+            CONF_PASSWORD: "password",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 @pytest.mark.parametrize(
     "network_site_payload",
     [
