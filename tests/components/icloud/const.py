@@ -92,13 +92,29 @@ DEVICE_WITHOUT_BATTERY = {
     "location": LOCATION,
 }
 
-# An account that is not sharing its location reports no location at all.
+# An account that is not sharing its location reports no location at all,
+# but a device of the account itself still reports its battery.
 DEVICE_WITHOUT_LOCATION = {
     "id": "device3",
     "name": "iPad",
     "deviceStatus": "200",
     "batteryStatus": "NotCharging",
     "batteryLevel": 0.5,
+    "rawDeviceModel": "iPad13,1",
+    "deviceClass": "iPad",
+    "deviceDisplayName": "iPad",
+    "prsId": None,
+    "lowPowerMode": False,
+    "location": None,
+}
+
+# Neither signal: nothing for the tracker or the battery sensor to use.
+DEVICE_WITHOUT_LOCATION_OR_BATTERY = {
+    "id": "device4",
+    "name": "iPad (family)",
+    "deviceStatus": "200",
+    "batteryStatus": "Unknown",
+    "batteryLevel": None,
     "rawDeviceModel": "iPad13,1",
     "deviceClass": "iPad",
     "deviceDisplayName": "iPad",

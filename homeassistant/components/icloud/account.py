@@ -194,14 +194,22 @@ class IcloudAccount:
             device_id = status[DEVICE_ID]
             device_name = status[DEVICE_NAME]
 
-            # Whether a device can be located is what decides if it is worth
-            # tracking. iCloud reports no battery for a device that is asleep
-            # or has none to report, and those still have a location.
+            # Being locatable is what makes a device worth tracking, and
+            # iCloud reports no battery for one that is asleep or has none to
+            # report. Either on its own is worth keeping: the account feeds
+            # the tracker platform and the battery sensors, and each skips
+            # what it cannot use. Only a device reporting neither is of no
+            # use to either.
             device_location = status[DEVICE_LOCATION]
-            if (
-                not device_location
-                or device_location.get(DEVICE_LOCATION_LATITUDE) is None
-            ):
+            has_location = (
+                bool(device_location)
+                and device_location.get(DEVICE_LOCATION_LATITUDE) is not None
+            )
+            has_battery = (
+                status[DEVICE_BATTERY_STATUS] != "Unknown"
+                and status.get(DEVICE_BATTERY_LEVEL) is not None
+            )
+            if not has_location and not has_battery:
                 continue
 
             if self._devices.get(device_id) is not None:
@@ -441,7 +449,7 @@ class IcloudDevice:
         # iCloud reports no battery for still has a location worth reading.
         if (
             self._status[DEVICE_LOCATION]
-            and self._status[DEVICE_LOCATION][DEVICE_LOCATION_LATITUDE]
+            and self._status[DEVICE_LOCATION][DEVICE_LOCATION_LATITUDE] is not None
         ):
             location = self._status[DEVICE_LOCATION]
             if self._location is None:

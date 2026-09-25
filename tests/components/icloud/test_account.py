@@ -21,6 +21,7 @@ from .const import (
     DEVICE,
     DEVICE_WITHOUT_BATTERY,
     DEVICE_WITHOUT_LOCATION,
+    DEVICE_WITHOUT_LOCATION_OR_BATTERY,
     LOCATION,
     MOCK_CONFIG,
     USER_INFO,
@@ -225,28 +226,31 @@ async def _set_up_with(
 
 
 @pytest.mark.parametrize(
-    ("device", "is_tracked"),
+    ("device", "is_kept"),
     [
         pytest.param(DEVICE, True, id="battery_and_location"),
         pytest.param(DEVICE_WITHOUT_BATTERY, True, id="location_but_no_battery"),
-        pytest.param(DEVICE_WITHOUT_LOCATION, False, id="battery_but_no_location"),
+        pytest.param(DEVICE_WITHOUT_LOCATION, True, id="battery_but_no_location"),
+        pytest.param(DEVICE_WITHOUT_LOCATION_OR_BATTERY, False, id="neither"),
     ],
 )
-async def test_a_device_is_tracked_when_it_can_be_located(
+async def test_a_device_is_kept_when_either_signal_is_usable(
     hass: HomeAssistant,
     mock_store: Mock,
     device: dict[str, Any],
-    is_tracked: bool,
+    is_kept: bool,
 ) -> None:
-    """Test that being locatable decides tracking, not having a battery.
+    """Test that a device is dropped only when it reports neither signal.
 
-    iCloud reports no battery for a device that is asleep or has none of its
-    own, and no location at all for an account that is not sharing one. Only
-    the second has nothing to track.
+    The account feeds both the tracker platform and the battery sensors, and
+    each skips what it cannot use, so a device with only one of the two is
+    still worth keeping. Filtering on the battery alone dropped a located
+    device that reports none; filtering on the location alone would take the
+    battery sensor away from a device that is not sharing one.
     """
     account = await _set_up_with(hass, mock_store, device)
 
-    assert (device["id"] in account.devices) is is_tracked
+    assert (device["id"] in account.devices) is is_kept
 
 
 async def test_a_device_without_battery_still_reports_its_location(
