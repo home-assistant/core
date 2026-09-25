@@ -1,0 +1,46 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_compatible_transmitters": "No compatible radio frequency transmitter is available for this integration.",
+      "no_transmitters": "[%key:common::config_flow::abort::no_radio_frequency_transmitters%]"
+    },
+    "error": {
+      "invalid_channel": "Channel must be between 1 and 4.",
+      "invalid_group": "Group must be between 1 and 4.",
+      "invalid_housecode": "Housecode must be a letter from A to P.",
+      "no_response": "No response detected. Put the device in pairing mode again and retry."
+    },
+    "step": {
+      "pairing_mode": {
+        "description": "Bring device into learn mode, then press Ok.",
+        "title": "Pair device"
+      },
+      "pairing_result": {
+        "data": {
+          "device_responded": "Did the device respond?"
+        },
+        "data_description": {
+          "device_responded": "Select Yes if the target device reacted to the learn command."
+        },
+        "description": "Select Yes to continue setup. Select No to return to learn mode and resend the learn command.",
+        "title": "Confirm pairing"
+      },
+      "user": {
+        "data": {
+          "channel": "Channel",
+          "group": "Group",
+          "housecode": "Housecode",
+          "transmitter": "[%key:common::config_flow::data::radio_frequency_transmitter%]"
+        },
+        "data_description": {
+          "channel": "The target channel (1-4).",
+          "group": "The group number (1-4).",
+          "housecode": "The housecode letter from A to P.",
+          "transmitter": "[%key:common::config_flow::data_description::radio_frequency_transmitter%]"
+        },
+        "description": "Choose the transmitter and configure your device settings."
+      }
+    }
+  }
+}
