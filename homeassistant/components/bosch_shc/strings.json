@@ -107,6 +107,9 @@
       "humidity_warning_enabled": {
         "name": "Humidity warning"
       },
+      "intrusion_alarm": {
+        "name": "Intrusion alarm"
+      },
       "nightly_promise_enabled": {
         "name": "Heartbeat"
       },
