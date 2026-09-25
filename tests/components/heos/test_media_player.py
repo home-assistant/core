@@ -1,5 +1,6 @@
 """Tests for the Heos Media Player platform."""
 
+from collections.abc import Callable
 from datetime import timedelta
 import re
 from typing import Any
@@ -10,6 +11,7 @@ from pyheos import (
     BrowseResult,
     CommandFailedError,
     HeosError,
+    HeosPlayer,
     MediaItem,
     MediaMusicSource,
     MediaType as HeosMediaType,
@@ -1566,7 +1568,7 @@ async def test_browse_media_invalid_content_id(
     [
         (["media_player.test_player_2"], [1, 2]),
         (["media_player.test_player_2", "media_player.test_player"], [1, 2]),
-        (["media_player.test_player"], [1]),
+        (["media_player.test_player"], [1, 2]),
     ],
 )
 async def test_media_player_join_group(
@@ -1589,6 +1591,30 @@ async def test_media_player_join_group(
         blocking=True,
     )
     controller.set_group.assert_called_once_with(expected)
+
+
+async def test_media_player_join_group_keeps_existing_members(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+    players: dict[int, HeosPlayer],
+    player_factory: Callable[[int, str, str], HeosPlayer],
+) -> None:
+    """Test joining a player to a group retains the current members."""
+    players[3] = player_factory(3, "Test Player 3", "Speaker")
+    controller.mock_set_players(players)
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_GROUP_MEMBERS: ["media_player.test_player_3"],
+        },
+        blocking=True,
+    )
+    controller.set_group.assert_called_once_with([1, 2, 3])
 
 
 async def test_media_player_join_group_error(

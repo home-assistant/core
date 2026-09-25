@@ -8,10 +8,10 @@ from urllib.parse import urlparse, urlunparse
 
 import aiohttp
 from aiohttp import CookieJar
+import probatio
 from pyisy import ISYConnectionError, ISYInvalidAuthError, ISYResponseParseError
 from pyisy.configuration import Configuration
 from pyisy.connection import Connection
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
@@ -62,16 +62,16 @@ from .models import IsyConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 
-def _data_schema(schema_input: dict[str, str]) -> vol.Schema:
+def _data_schema(schema_input: dict[str, str]) -> probatio.Schema:
     """Generate schema with defaults."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_HOST, default=schema_input.get(CONF_HOST, "")): str,
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
-            vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+            probatio.Required(CONF_HOST, default=schema_input.get(CONF_HOST, "")): str,
+            probatio.Required(CONF_USERNAME): str,
+            probatio.Required(CONF_PASSWORD): str,
+            probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
         },
-        extra=vol.ALLOW_EXTRA,
+        extra=probatio.ALLOW_EXTRA,
     )
 
 
@@ -327,12 +327,12 @@ class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
                 "sample_ip": "http://192.168.10.100:80",
             },
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_USERNAME, default=existing_data[CONF_USERNAME]
                     ): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
@@ -359,12 +359,14 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             CONF_VAR_SENSOR_STRING, DEFAULT_VAR_SENSOR_STRING
         )
 
-        options_schema = vol.Schema(
+        options_schema = probatio.Schema(
             {
-                vol.Optional(CONF_IGNORE_STRING, default=ignore_string): str,
-                vol.Optional(CONF_SENSOR_STRING, default=sensor_string): str,
-                vol.Optional(CONF_VAR_SENSOR_STRING, default=var_sensor_string): str,
-                vol.Required(
+                probatio.Optional(CONF_IGNORE_STRING, default=ignore_string): str,
+                probatio.Optional(CONF_SENSOR_STRING, default=sensor_string): str,
+                probatio.Optional(
+                    CONF_VAR_SENSOR_STRING, default=var_sensor_string
+                ): str,
+                probatio.Required(
                     CONF_RESTORE_LIGHT_STATE, default=restore_light_state
                 ): bool,
             }

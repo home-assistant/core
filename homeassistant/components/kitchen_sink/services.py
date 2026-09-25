@@ -1,6 +1,6 @@
 """Services for the Everything but the Kitchen Sink integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
@@ -9,12 +9,12 @@ from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN
 
-SCHEMA_SERVICE_TEST_SERVICE_1 = vol.Schema(
+SCHEMA_SERVICE_TEST_SERVICE_1 = probatio.Schema(
     {
-        vol.Required("field_1"): vol.Coerce(int),
-        vol.Required("field_2"): vol.In(["off", "auto", "cool"]),
-        vol.Optional("field_3"): vol.Coerce(int),
-        vol.Optional("field_4"): vol.In(["forward", "reverse"]),
+        probatio.Required("field_1"): probatio.Coerce(int),
+        probatio.Required("field_2"): probatio.In(["off", "auto", "cool"]),
+        probatio.Optional("field_3"): probatio.Coerce(int),
+        probatio.Optional("field_4"): probatio.In(["forward", "reverse"]),
     }
 )
 
@@ -55,9 +55,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SET_TRACKER_LOCATION,
         entity_domain=DEVICE_TRACKER_DOMAIN,
         schema={
-            vol.Required(ATTR_LATITUDE): cv.latitude,
-            vol.Required(ATTR_LONGITUDE): cv.longitude,
-            vol.Required(ATTR_ACCURACY): vol.All(vol.Coerce(float), vol.Range(min=0)),
+            probatio.Required(ATTR_LATITUDE): cv.latitude,
+            probatio.Required(ATTR_LONGITUDE): cv.longitude,
+            probatio.Required(ATTR_ACCURACY): probatio.All(
+                probatio.Coerce(float), probatio.Range(min=0)
+            ),
         },
         func="async_set_tracker_location",
     )
@@ -67,6 +69,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SET_SCANNER_CONNECTED,
         entity_domain=DEVICE_TRACKER_DOMAIN,
-        schema={vol.Required(ATTR_CONNECTED): cv.boolean},
+        schema={probatio.Required(ATTR_CONNECTED): cv.boolean},
         func="async_set_scanner_connected",
     )

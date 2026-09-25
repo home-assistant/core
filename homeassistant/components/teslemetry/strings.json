@@ -51,17 +51,20 @@
         "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "The Teslemetry account must be loaded before setting up local control. Try again once it has finished loading.",
-        "no_powerwall": "Local control requires a Powerwall, and no energy site with one is currently accessible on your Teslemetry account."
+        "no_powerwall": "Local control requires a Powerwall, and no energy site with one is currently accessible on your Teslemetry account.",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
       "entry_type": "Energy site",
       "error": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "invalid_password": "[%key:common::config_flow::error::invalid_auth%]",
+        "key_expired": "The approval window on your Powerwall closed before the key was approved. Submit to open a new window, flick the On/Off switch on your primary Powerwall off and back on to approve it, then submit again.",
         "key_not_approved": "Your Powerwall system rejected Home Assistant's key because it has not been approved. Flick the On/Off switch on your primary Powerwall off and back on to approve it, then submit again.",
         "key_not_registered": "Home Assistant's key is no longer registered on your Powerwall system. Restart setup to register it again.",
         "key_pending": "Home Assistant's key has not been approved yet. Flick the On/Off switch on your primary Powerwall off and back on to approve it, then submit again."
       },
       "initiate_flow": {
+        "reconfigure": "Reconfigure energy site",
         "user": "Add local energy site"
       },
       "step": {
@@ -89,8 +92,9 @@
     "vehicle": {
       "abort": {
         "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+        "bluetooth_not_available": "At least one Bluetooth adapter or remote Bluetooth proxy must be configured to add a vehicle over Bluetooth.",
         "entry_not_loaded": "The Teslemetry configuration entry is not loaded. Please ensure it is set up correctly before adding a vehicle.",
-        "no_vehicles": "Every vehicle in your Teslemetry account has already been added over Bluetooth."
+        "no_vehicles": "Every eligible vehicle in your Teslemetry account has already been added over Bluetooth."
       },
       "entry_type": "Bluetooth vehicle",
       "error": {
@@ -100,7 +104,7 @@
         "timeout": "Timed out waiting for the vehicle to accept the key. Try again after approving the key on the vehicle's touchscreen."
       },
       "initiate_flow": {
-        "user": "Add Bluetooth vehicle"
+        "user": "Add local vehicle"
       },
       "progress": {
         "pair": "Approve Home Assistant's virtual key on the vehicle's touchscreen. Waiting for the vehicle to accept the key."
@@ -111,7 +115,7 @@
           "title": "Approve the virtual key"
         },
         "scan": {
-          "description": "Home Assistant will look for vehicle {vin} over Bluetooth to enable local command control. Make sure the vehicle is awake and within Bluetooth range of a Home Assistant Bluetooth adapter, then continue.",
+          "description": "Home Assistant will look for vehicle {vin} over Bluetooth. Make sure the vehicle is within Bluetooth range of a Home Assistant Bluetooth adapter and has fewer than three phone keys in range, then continue.",
           "title": "Set up Bluetooth control"
         },
         "user": {
@@ -121,8 +125,8 @@
           "data_description": {
             "vin": "The account vehicle to enable local Bluetooth control for."
           },
-          "description": "Select which of your Teslemetry account vehicles to add over Bluetooth for local command control.",
-          "title": "Add Bluetooth vehicle"
+          "description": "Select which of your eligible vehicles to configure the local Bluetooth connection.",
+          "title": "Add local vehicle"
         }
       }
     }
@@ -1284,9 +1288,6 @@
     },
     "update_failed_insufficient_credits": {
       "message": "Teslemetry account has insufficient command credits, pausing updates until credits are added"
-    },
-    "update_failed_invalid_data": {
-      "message": "Received invalid data from API"
     },
     "wake_up_failed": {
       "message": "Failed to wake up vehicle: {message}"

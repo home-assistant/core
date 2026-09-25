@@ -1,5 +1,6 @@
 """Support for Tuya switches."""
 
+from dataclasses import dataclass
 from typing import Any, override
 
 from tuya_device_handlers.definition.switch import (
@@ -20,41 +21,47 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
+
 
 # All descriptions can be found here. Mostly the Boolean data types in the
 # default instruction set of each category end up being a Switch.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
-SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
+@dataclass(frozen=True)
+class TuyaSwitchEntityDescription(TuyaEntityDescription, SwitchEntityDescription):
+    """Describes a Tuya switch entity."""
+
+
+SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
     DeviceCategory.BH: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.START,
             translation_key="start",
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.WARM,
             translation_key="heat_preservation",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.BZYD: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH,
             name=None,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
             translation_key="child_lock",
             icon="mdi:account-lock",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_MUSIC,
             translation_key="music",
             icon="mdi:music",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SNOOZE,
             translation_key="snooze",
             icon="mdi:alarm-snooze",
@@ -62,63 +69,63 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
         ),
     ),
     DeviceCategory.CJKG: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_1,
             translation_key="indexed_switch",
             translation_placeholders={"index": "1"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_2,
             translation_key="indexed_switch",
             translation_placeholders={"index": "2"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_3,
             translation_key="indexed_switch",
             translation_placeholders={"index": "3"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_4,
             translation_key="indexed_switch",
             translation_placeholders={"index": "4"},
         ),
     ),
     DeviceCategory.CL: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.CONTROL_BACK,
             translation_key="reverse",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.OPPOSITE,
             translation_key="reverse",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.CN: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.DISINFECTION,
             translation_key="disinfection",
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.WATER,
             translation_key="water",
         ),
     ),
     DeviceCategory.CS: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.ANION,
             translation_key="ionizer",
             icon="mdi:atom",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
             translation_key="child_lock",
             icon="mdi:account-lock",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.FILTER_RESET,
             translation_key="filter_reset",
             icon="mdi:filter",
@@ -126,39 +133,39 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
         ),
     ),
     DeviceCategory.CWJWQ: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",
         ),
     ),
     DeviceCategory.CWWSQ: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SLOW_FEED,
             translation_key="slow_feed",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.CWYSJ: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.FILTER_RESET,
             translation_key="filter_reset",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.PUMP_RESET,
             translation_key="water_pump_reset",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="power",
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.WATER_RESET,
             translation_key="reset_of_water_usage_days",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.UV,
             translation_key="uv_sterilization",
             entity_category=EntityCategory.CONFIG,
@@ -168,54 +175,54 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
         # There are sockets available with an RGB light
         # that advertise as `dj`, but provide an additional
         # switch to control the plug.
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="plug",
         ),
     ),
     DeviceCategory.DLQ: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
             translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",
         ),
     ),
     DeviceCategory.DR: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH,
             name="Power",
             icon="mdi:power",
             device_class=SwitchDeviceClass.SWITCH,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_1,
             name="Side A Power",
             icon="mdi:alpha-a",
             device_class=SwitchDeviceClass.SWITCH,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_2,
             name="Side B Power",
             icon="mdi:alpha-b",
             device_class=SwitchDeviceClass.SWITCH,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.PREHEAT,
             name="Preheat",
             icon="mdi:radiator",
             device_class=SwitchDeviceClass.SWITCH,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.PREHEAT_1,
             name="Side A Preheat",
             icon="mdi:radiator",
             device_class=SwitchDeviceClass.SWITCH,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.PREHEAT_2,
             name="Side B Preheat",
             icon="mdi:radiator",
@@ -223,284 +230,284 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
         ),
     ),
     DeviceCategory.FS: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.ANION,
             translation_key="anion",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.HUMIDIFIER,
             translation_key="humidification",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.OXYGEN,
             translation_key="oxygen_bar",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.FAN_COOL,
             translation_key="natural_wind",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.FAN_BEEP,
             translation_key="sound",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
             translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.FSD: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.FAN_BEEP,
             translation_key="sound",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.GGQ: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_1,
             translation_key="indexed_switch",
             translation_placeholders={"index": "1"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_2,
             translation_key="indexed_switch",
             translation_placeholders={"index": "2"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_3,
             translation_key="indexed_switch",
             translation_placeholders={"index": "3"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_4,
             translation_key="indexed_switch",
             translation_placeholders={"index": "4"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_5,
             translation_key="indexed_switch",
             translation_placeholders={"index": "5"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_6,
             translation_key="indexed_switch",
             translation_placeholders={"index": "6"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_7,
             translation_key="indexed_switch",
             translation_placeholders={"index": "7"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_8,
             translation_key="indexed_switch",
             translation_placeholders={"index": "8"},
         ),
     ),
     DeviceCategory.HXD: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_1,
             translation_key="radio",
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_2,
             translation_key="indexed_alarm",
             translation_placeholders={"index": "1"},
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_3,
             translation_key="indexed_alarm",
             translation_placeholders={"index": "2"},
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_4,
             translation_key="indexed_alarm",
             translation_placeholders={"index": "3"},
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_5,
             translation_key="indexed_alarm",
             translation_placeholders={"index": "4"},
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_6,
             translation_key="sleep_aid",
         ),
     ),
     DeviceCategory.JSQ: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_SOUND,
             translation_key="voice",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SLEEP,
             translation_key="sleep",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.STERILIZATION,
             translation_key="sterilization",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.KG: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
             translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_1,
             translation_key="indexed_switch",
             translation_placeholders={"index": "1"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_2,
             translation_key="indexed_switch",
             translation_placeholders={"index": "2"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_3,
             translation_key="indexed_switch",
             translation_placeholders={"index": "3"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_4,
             translation_key="indexed_switch",
             translation_placeholders={"index": "4"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_5,
             translation_key="indexed_switch",
             translation_placeholders={"index": "5"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_6,
             translation_key="indexed_switch",
             translation_placeholders={"index": "6"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_7,
             translation_key="indexed_switch",
             translation_placeholders={"index": "7"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_8,
             translation_key="indexed_switch",
             translation_placeholders={"index": "8"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_USB1,
             translation_key="indexed_usb",
             translation_placeholders={"index": "1"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_USB2,
             translation_key="indexed_usb",
             translation_placeholders={"index": "2"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_USB3,
             translation_key="indexed_usb",
             translation_placeholders={"index": "3"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_USB4,
             translation_key="indexed_usb",
             translation_placeholders={"index": "4"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_USB5,
             translation_key="indexed_usb",
             translation_placeholders={"index": "5"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_USB6,
             translation_key="indexed_usb",
             translation_placeholders={"index": "6"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",
             device_class=SwitchDeviceClass.OUTLET,
         ),
     ),
     DeviceCategory.KJ: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.ANION,
             translation_key="ionizer",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.FILTER_RESET,
             translation_key="filter_cartridge_reset",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.LOCK,
             translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="power",
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.WET,
             translation_key="humidification",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.UV,
             translation_key="uv_sterilization",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.KT: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.ANION,
             translation_key="ionizer",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.LOCK,
             translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.KS: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.ANION,
             translation_key="ionizer",
         ),
     ),
     DeviceCategory.MAL: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_ALARM_SOUND,
             # This switch is called "Arm Beep" in the official Tuya app
             translation_key="arm_beep",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_ALARM_LIGHT,
             # This switch is called "Siren" in the official Tuya app
             translation_key="siren",
@@ -508,319 +515,331 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
         ),
     ),
     DeviceCategory.MSP: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.AUTO_CLEAN,
             translation_key="auto_clean",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.MZJ: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.START,
             translation_key="start",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.PC: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
             translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_1,
             translation_key="indexed_socket",
             translation_placeholders={"index": "1"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_2,
             translation_key="indexed_socket",
             translation_placeholders={"index": "2"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_3,
             translation_key="indexed_socket",
             translation_placeholders={"index": "3"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_4,
             translation_key="indexed_socket",
             translation_placeholders={"index": "4"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_5,
             translation_key="indexed_socket",
             translation_placeholders={"index": "5"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_6,
             translation_key="indexed_socket",
             translation_placeholders={"index": "6"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_USB1,
             translation_key="indexed_usb",
             translation_placeholders={"index": "1"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_USB2,
             translation_key="indexed_usb",
             translation_placeholders={"index": "2"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_USB3,
             translation_key="indexed_usb",
             translation_placeholders={"index": "3"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_USB4,
             translation_key="indexed_usb",
             translation_placeholders={"index": "4"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_USB5,
             translation_key="indexed_usb",
             translation_placeholders={"index": "5"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_USB6,
             translation_key="indexed_usb",
             translation_placeholders={"index": "6"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="socket",
             device_class=SwitchDeviceClass.OUTLET,
         ),
     ),
     DeviceCategory.QCCDZ: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",
         ),
     ),
     DeviceCategory.QJDCZ: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_1,
             translation_key="switch",
         ),
     ),
     DeviceCategory.QN: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.ANION,
             translation_key="ionizer",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.LOCK,
             translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.QXJ: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",
             device_class=SwitchDeviceClass.OUTLET,
         ),
     ),
     DeviceCategory.SD: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_DISTURB,
             translation_key="do_not_disturb",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.VOICE_SWITCH,
             translation_key="mute_voice",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.SGBJ: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.MUFFLING,
             translation_key="mute",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.SJZ: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
             translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.SP: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.WIRELESS_BATTERYLOCK,
             translation_key="battery_lock",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.CRY_DETECTION_SWITCH,
             translation_key="cry_detection",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.DECIBEL_SWITCH,
             translation_key="sound_detection",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.RECORD_SWITCH,
             translation_key="video_recording",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.MOTION_RECORD,
             translation_key="motion_recording",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.BASIC_PRIVATE,
             translation_key="privacy_mode",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.BASIC_FLIP,
             translation_key="flip",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.BASIC_OSD,
             translation_key="time_watermark",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.BASIC_WDR,
             translation_key="wide_dynamic_range",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.MOTION_TRACKING,
             translation_key="motion_tracking",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.MOTION_SWITCH,
             translation_key="motion_alarm",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.MOTION_AREA_SWITCH,
             translation_key="motion_detection_zone",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.IPC_AUTO_SIREN,
             translation_key="auto_siren",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.SZ: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="power",
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.PUMP,
             translation_key="pump",
         ),
     ),
     DeviceCategory.SZJQR: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",
         ),
     ),
     DeviceCategory.TDQ: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_1,
             translation_key="indexed_switch",
             translation_placeholders={"index": "1"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_2,
             translation_key="indexed_switch",
             translation_placeholders={"index": "2"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_3,
             translation_key="indexed_switch",
             translation_placeholders={"index": "3"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_4,
             translation_key="indexed_switch",
             translation_placeholders={"index": "4"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_5,
             translation_key="indexed_switch",
             translation_placeholders={"index": "5"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_6,
             translation_key="indexed_switch",
             translation_placeholders={"index": "6"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
             translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.TYNDJ: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_SAVE_ENERGY,
             translation_key="energy_saving",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.WG2: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.MUFFLING,
             translation_key="mute",
             entity_category=EntityCategory.CONFIG,
         ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH_KB_SOUND,
+            # Poorly translated as "Key tone switch of host" in the official Tuya app
+            translation_key="keypad_sound",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH_ALARM_PROPEL,
+            # Poorly translated as "alarm push switch" in the official Tuya app
+            translation_key="alarm_push_notifications",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     DeviceCategory.WK: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
             translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.FROST,
             translation_key="frost_protection",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.WKCZ: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_1,
             translation_key="indexed_switch",
             translation_placeholders={"index": "1"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_2,
             translation_key="indexed_switch",
             translation_placeholders={"index": "2"},
@@ -828,79 +847,79 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
         ),
     ),
     DeviceCategory.WKF: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
             translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.WINDOW_CHECK,
             translation_key="open_window_detection",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.WNYKQ: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH,
             name=None,
         ),
     ),
     DeviceCategory.WSDCG: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",
             device_class=SwitchDeviceClass.OUTLET,
         ),
     ),
     DeviceCategory.XDD: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.DO_NOT_DISTURB,
             translation_key="do_not_disturb",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.XNYJCN: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.FEEDIN_POWER_LIMIT_ENABLE,
             translation_key="output_power_limit",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.XXJ: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="power",
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_SPRAY,
             translation_key="spray",
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_VOICE,
             translation_key="voice",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.YWBJ: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.MUFFLING,
             translation_key="mute",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.ZNDB: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",
         ),
     ),
     DeviceCategory.ZNJDQ: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_1,
             translation_key="indexed_switch",
             translation_placeholders={"index": "1"},
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
             translation_key="child_lock",
             icon="mdi:account-lock",
@@ -908,19 +927,19 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
         ),
     ),
     DeviceCategory.ZNJXS: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",
         ),
     ),
     DeviceCategory.ZNRB: (
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
             translation_key="child_lock",
             icon="mdi:account-lock",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",
         ),
@@ -971,7 +990,7 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: SwitchEntityDescription,
+        description: TuyaSwitchEntityDescription,
         definition: SwitchDefinition,
     ) -> None:
         """Init TuyaHaSwitch."""
