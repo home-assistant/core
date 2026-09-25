@@ -43,7 +43,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_ENTITY_ID
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, get_entity, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -67,11 +67,12 @@ async def test_setup(
 
 @pytest.mark.usefixtures("player_setup")
 async def test_browse_media_without_presets(
-    mock_config_entry: MockConfigEntry, state_1: State
+    hass: HomeAssistant, state_1: State
 ) -> None:
     """Test browsing when the receiver has no preset details."""
     state_1.get_preset_details.return_value = None
-    player = ArcamFmj(mock_config_entry.runtime_data.coordinators[1])
+    player = get_entity(hass, MOCK_ENTITY_ID)
+    assert isinstance(player, ArcamFmj)
 
     media = await player.async_browse_media()
 
