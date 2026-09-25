@@ -1258,14 +1258,12 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.WATER_ONCE,
             translation_key="water_once",
             device_class=SensorDeviceClass.WATER,
-            native_unit_of_measurement=UnitOfVolume.LITERS,
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.WATER_TOTAL,
             translation_key="water_total",
             device_class=SensorDeviceClass.WATER,
-            native_unit_of_measurement=UnitOfVolume.LITERS,
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         TuyaSensorEntityDescription(
