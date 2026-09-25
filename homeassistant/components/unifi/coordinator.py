@@ -3,11 +3,12 @@
 from datetime import timedelta
 from typing import TYPE_CHECKING, override
 
-from aiounifi import EndpointNotFound
+from aiounifi import EndpointNotFound, Unauthorized
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.network.v1.api_handlers import APIHandler as NetworkAPIHandler
 
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
@@ -64,6 +65,10 @@ class UnifiDataUpdateCoordinator[HandlerT: UnifiApiHandler](
         """Update data from the API handler."""
         try:
             await self._handler.update()
+        except Unauthorized as err:
+            # The Integration API answers 401 to every request once its key
+            # is revoked. The classic API logs in again by itself instead.
+            raise ConfigEntryAuthFailed from err
         except EndpointNotFound as err:
             if (
                 self._disable_polling_on_endpoint_not_found

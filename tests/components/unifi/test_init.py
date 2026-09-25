@@ -27,8 +27,10 @@ from homeassistant.setup import async_setup_component
 from .conftest import (
     DEFAULT_CONFIG_ENTRY_ID,
     NETWORK_API_URL,
+    NETWORK_SITE_ID,
     ConfigEntryFactoryType,
     WebsocketMessageMock,
+    mock_network_api_lists,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed, flush_store
@@ -285,6 +287,34 @@ async def test_setup_entry_with_rejected_api_key_triggers_reauth(
     await hass.async_block_till_done()
 
     assert network_api_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
+    assert flows[0]["step_id"] == "reauth_api_key"
+
+
+async def test_revoked_api_key_triggers_reauth_while_polling(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    network_api_config_entry_setup: MockConfigEntry,
+) -> None:
+    """Test a key revoked after setup starts a reauthentication flow from a poll."""
+    config_entry = network_api_config_entry_setup
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        f"{NETWORK_API_URL}/v1/sites/{NETWORK_SITE_ID}/clients",
+        status=401,
+        json={"error": {"code": 401, "message": "Unauthorized"}},
+    )
+    mock_network_api_lists(aioclient_mock)
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == "reauth"

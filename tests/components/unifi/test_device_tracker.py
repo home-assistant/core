@@ -28,7 +28,11 @@ from homeassistant.components.unifi.const import (
 )
 from homeassistant.components.unifi.coordinator import POLL_INTERVAL
 from homeassistant.components.unifi.device_tracker import NETWORK_DEVICE_HEARTBEAT
-from homeassistant.components.unifi.hub.client_store import SAVE_DELAY, storage_key
+from homeassistant.components.unifi.hub.client_store import (
+    LAST_SEEN_SAVE_DELAY,
+    SAVE_DELAY,
+    storage_key,
+)
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -971,6 +975,57 @@ async def test_network_api_client_kept_across_restart(
     phone = hass.states.get("device_tracker.phone")
     assert phone is not None, "restored from storage"
     assert phone.state == STATE_NOT_HOME
+
+
+@pytest.mark.parametrize("network_client_payload", [[NETWORK_CLIENT]])
+@pytest.mark.usefixtures("mock_device_registry")
+async def test_network_api_client_store_saves_sparingly(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    hass_storage: dict[str, Any],
+    network_api_config_entry_setup: MockConfigEntry,
+) -> None:
+    """Test polls do not write the store; membership changes and an hourly checkpoint do."""
+    config_entry = network_api_config_entry_setup
+    hub = config_entry.runtime_data
+    assert hub.network_clients is not None
+    await flush_store(hub.network_clients._store)
+    key = storage_key(config_entry)
+    first_seen = hass_storage[key]["data"]["00:00:00:00:00:01"]["last_seen"]
+
+    # Three polls list the same client; each moves last_seen in the cache
+    for _ in range(3):
+        freezer.tick(POLL_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert hass_storage[key]["data"]["00:00:00:00:00:01"]["last_seen"] == first_seen, (
+        "a poll alone does not write the store"
+    )
+
+    freezer.tick(timedelta(seconds=LAST_SEEN_SAVE_DELAY + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass_storage[key]["data"]["00:00:00:00:00:01"]["last_seen"] > first_seen, (
+        "the checkpoint wrote a newer last_seen"
+    )
+
+    # A new client is written within the short delay
+    aioclient_mock.clear_requests()
+    mock_network_api_lists(
+        aioclient_mock,
+        clients=[NETWORK_CLIENT, {**NETWORK_CLIENT, "macAddress": "00:00:00:00:00:02"}],
+    )
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=SAVE_DELAY + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert set(hass_storage[key]["data"]) == {"00:00:00:00:00:01", "00:00:00:00:00:02"}
 
 
 @pytest.mark.usefixtures("mock_device_registry")
