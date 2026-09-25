@@ -557,7 +557,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'abcdef123456_rssi',
-    'unit_of_measurement': 'dB',
+    'unit_of_measurement': 'dBm',
   })
 # ---
 # name: test_sensors[sensor.everhome_abcdef123456_signal_strength-state]
@@ -566,7 +566,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'everHome-abcdef123456 Signal strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.everhome_abcdef123456_signal_strength',
