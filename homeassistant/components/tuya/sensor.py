@@ -45,7 +45,6 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfRatio,
     UnitOfTime,
-    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
