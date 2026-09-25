@@ -6,14 +6,16 @@ import logging
 from typing import Any
 from urllib.error import HTTPError, URLError
 
+import getmac
 from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
 import probatio
 
 from homeassistant.components.media_player import MediaPlayerState, MediaType
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, Platform
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType
 
@@ -31,6 +33,8 @@ from .const import (
 type PanasonicVieraConfigEntry = ConfigEntry[Remote]
 
 _LOGGER = logging.getLogger(__name__)
+
+NULL_MAC = "00:00:00:00:00:00"
 
 CONFIG_SCHEMA = probatio.Schema(
     {
@@ -107,6 +111,20 @@ async def async_setup_entry(
             unique_id=unique_id,
             data={**config, ATTR_DEVICE_INFO: device_info},
         )
+
+    # Learn the MAC address and expose it as a device connection.
+    if config_entry.data.get(CONF_MAC) in (None, NULL_MAC):
+        mac = await hass.async_add_executor_job(
+            partial(getmac.get_mac_address, ip=host)
+        )
+        # getmac returns a null address when the host is not in the ARP table
+        if mac and (mac := format_mac(mac)) != NULL_MAC:
+            hass.config_entries.async_update_entry(
+                config_entry,
+                data={**config_entry.data, CONF_MAC: mac},
+            )
+        else:
+            _LOGGER.debug("Could not determine the MAC address of %s", host)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
