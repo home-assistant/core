@@ -42,7 +42,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import WeatherFlowConfigEntry
 from .const import DOMAIN, LOGGER, format_dispatch_call
@@ -63,7 +62,6 @@ class WeatherFlowSensorEntityDescription(SensorEntityDescription):
 
     device_attr: str | None = None
     event_subscriptions: list[str] = field(default_factory=lambda: [EVENT_OBSERVATION])
-    imperial_suggested_unit: str | None = None
 
     def get_native_value(self, device: WeatherFlowDevice) -> datetime | StateType:
         """Return the parsed sensor value."""
@@ -256,10 +254,9 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         key="vapor_pressure",
         translation_key="vapor_pressure",
         native_unit_of_measurement=UnitOfPressure.MBAR,
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
-        imperial_suggested_unit=UnitOfPressure.INHG,
-        suggested_display_precision=5,
+        suggested_display_precision=1,
         raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     ## Wind Sensors
@@ -331,11 +328,7 @@ async def async_setup_entry(
         LOGGER.debug("Adding sensors for %s", device)
 
         sensors: list[WeatherFlowSensorEntity] = [
-            WeatherFlowSensorEntity(
-                device=device,
-                description=description,
-                is_metric=(hass.config.units == METRIC_SYSTEM),
-            )
+            WeatherFlowSensorEntity(device=device, description=description)
             for description in SENSORS
             if hasattr(device, description.device_attr or description.key)
         ]
@@ -362,7 +355,6 @@ class WeatherFlowSensorEntity(SensorEntity):
         self,
         device: WeatherFlowSensorDevice,
         description: WeatherFlowSensorEntityDescription,
-        is_metric: bool = True,
     ) -> None:
         """Initialize a WeatherFlow sensor entity."""
         self.device = device
@@ -378,14 +370,6 @@ class WeatherFlowSensorEntity(SensorEntity):
         )
 
         self._attr_unique_id = f"{device.serial_number}_{description.key}"
-
-        # In the case of the USA - we may want to have a
-        # suggested US unit which differs from the internal
-        # suggested units
-        if description.imperial_suggested_unit is not None and not is_metric:
-            self._attr_suggested_unit_of_measurement = (
-                description.imperial_suggested_unit
-            )
 
     @property
     @override
