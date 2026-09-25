@@ -190,7 +190,7 @@ async def test_authentication_error_triggers_reauth(
             "Call https://host:443/v2/api/site/default/trafficrules received 401 Unauthorized"
         ),
     ) as mock_update:
-        freezer.tick(POLL_INTERVAL)
+        freezer.tick(IDLE_POLL_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
@@ -198,7 +198,7 @@ async def test_authentication_error_triggers_reauth(
 
         # An authentication failure must stop the polling loop, otherwise the
         # retries keep hitting the controller and can trip its login rate limit.
-        freezer.tick(POLL_INTERVAL)
+        freezer.tick(IDLE_POLL_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
