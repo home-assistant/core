@@ -72,12 +72,15 @@ class MotionDetectorEvent(SHCEntity, EventEntity):
         )
         # Dedup guard: LatestMotion replays the last timestamp on unrelated
         # long-poll updates for the same device (e.g. a battery-level change).
+        # Seeded from the device's current value in async_added_to_hass so a
+        # pre-existing timestamp isn't replayed as a new event on startup.
         self._last_fired_timestamp = ""
 
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to SHC events."""
         await super().async_added_to_hass()
+        self._last_fired_timestamp = self._device.latestmotion or ""
         for service in self._device.device_services:
             if service.id == "LatestMotion":
                 service.register_event(self._device.id, self._event_callback)
@@ -92,15 +95,16 @@ class MotionDetectorEvent(SHCEntity, EventEntity):
                 service._event_callbacks.pop(self._device.id, None)  # noqa: SLF001
 
     def _event_callback(self) -> None:
+        """Handle a LatestMotion update from the SHC polling thread."""
         timestamp = self._device.latestmotion or ""
         if timestamp == self._last_fired_timestamp:
             return
         self._last_fired_timestamp = timestamp
-        self._dispatch_event(timestamp)
+        self.hass.loop.call_soon_threadsafe(self._dispatch_event, timestamp)
 
     @callback
     def _dispatch_event(self, timestamp: str) -> None:
-        """Dispatch the event on the event loop (thread-safe)."""
+        """Trigger the event and write state on the event loop."""
         event_attributes: dict[str, Any] = {
             ATTR_DEVICE_ID: self.device_id,
             ATTR_ID: self._device.id,
@@ -108,4 +112,4 @@ class MotionDetectorEvent(SHCEntity, EventEntity):
             ATTR_LAST_TIME_TRIGGERED: timestamp,
         }
         self._trigger_event("motion", event_attributes)
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
