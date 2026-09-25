@@ -127,7 +127,7 @@ FAKE_JSON = {
             },
         },
         {
-            "sensor_id": "bb1234567",  # invalid sensor type, sensor types 'bb' does not exist
+            "sensor_id": "bb1234567",  # invalid sensor type 'bb'
             "name": "BB1234567",
             "timestamp": "2025-11-26T15:01:57Z",
             "ts": "1764169317",

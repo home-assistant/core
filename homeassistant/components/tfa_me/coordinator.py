@@ -93,7 +93,6 @@ class TFAmeUpdateCoordinator(DataUpdateCoordinator[TFAmeCoordinatorData]):
             for unique_id, data in filtered_list.items()
         }
 
-        # values are available at self.coordinator.data.entities[self.entity_id]["keyword"]
         return TFAmeCoordinatorData(
             entities=filtered_entities,
             gateway_id=gateway_id,
