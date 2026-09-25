@@ -13,5 +13,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["bluetti-bt-lib==0.2.0b3"]
+  "requirements": ["bluetti-bt-lib==0.2.0b5"]
 }

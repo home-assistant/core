@@ -718,7 +718,7 @@ bluetooth-auto-recovery==1.6.4
 bluetooth-data-tools==1.29.24
 
 # homeassistant.components.bluetti_bt
-bluetti-bt-lib==0.2.0b3
+bluetti-bt-lib==0.2.0b5
 
 # homeassistant.components.bond
 bond-async==0.2.1
