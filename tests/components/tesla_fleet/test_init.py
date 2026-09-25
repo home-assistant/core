@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 from datetime import timedelta
+from functools import partial
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -21,6 +22,8 @@ from tesla_fleet_api.exceptions import (
     VehicleOffline,
 )
 
+from homeassistant.components.recorder import get_instance
+from homeassistant.components.recorder.statistics import get_metadata
 from homeassistant.components.tesla_fleet.const import (
     DOMAIN,
     ENERGY_HISTORY_FIELDS,
@@ -54,6 +57,7 @@ from .conftest import create_config_entry
 from .const import LIVE_STATUS, SITE_INFO, VEHICLE_ASLEEP, VEHICLE_DATA_ALT
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.components.recorder.common import async_wait_recording_done
 
 SETUP_ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),
@@ -86,13 +90,29 @@ async def test_load_unload(
     assert not hasattr(normal_config_entry, "runtime_data")
 
 
+async def _get_statistic_ids(hass: HomeAssistant) -> set[str]:
+    """Return the statistic IDs imported by this integration."""
+    await async_wait_recording_done(hass)
+    return set(
+        await get_instance(hass).async_add_executor_job(
+            partial(get_metadata, hass, statistic_source=DOMAIN)
+        )
+    )
+
+
 async def test_remove_entry_clears_statistics_after_last_owner(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Clear shared statistics only after removing the last site owner."""
     await setup_platform(hass, normal_config_entry)
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    statistic_ids = await _get_statistic_ids(hass)
+    assert f"{DOMAIN}:{ENERGY_SITE_ID}_grid_energy_imported" in statistic_ids
 
     site_device = device_registry.async_get_device_by_identifier(
         (DOMAIN, ENERGY_SITE_ID), normal_config_entry.entry_id
@@ -110,17 +130,12 @@ async def test_remove_entry_clears_statistics_after_last_owner(
     )
     assert site_device.id != shared_site_device.id
 
-    with patch(
-        "homeassistant.components.tesla_fleet.get_recorder_instance"
-    ) as mock_get_recorder:
-        await hass.config_entries.async_remove(shared_config_entry.entry_id)
-        mock_get_recorder.return_value.async_clear_statistics.assert_not_called()
+    await hass.config_entries.async_remove(shared_config_entry.entry_id)
+    assert await _get_statistic_ids(hass) == statistic_ids
 
-        assert normal_config_entry.state is ConfigEntryState.LOADED
-        await hass.config_entries.async_remove(normal_config_entry.entry_id)
-        mock_get_recorder.return_value.async_clear_statistics.assert_called_once_with(
-            [f"{DOMAIN}:{ENERGY_SITE_ID}_{key}" for key in ENERGY_HISTORY_FIELDS]
-        )
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+    await hass.config_entries.async_remove(normal_config_entry.entry_id)
+    assert await _get_statistic_ids(hass) == set()
 
 
 @pytest.mark.parametrize(("side_effect", "state"), SETUP_ERRORS)

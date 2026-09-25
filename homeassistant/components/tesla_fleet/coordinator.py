@@ -505,8 +505,9 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         first_run_start = dt_util.as_utc(today).replace(
             minute=0, second=0, microsecond=0
         )
-        # The newest hour proves every field was offered each earlier day, so a
-        # field that stops reporting cannot hold the replay boundary back.
+        # Resume from the newest field so one that stops reporting can't hold
+        # imports back. Fields commit separately, so a crash between commits
+        # can leave a gap in a field that fell behind.
         start = max(
             (stat["start"] for stat in last_stats.values()),
             default=dt_util.as_utc(today),

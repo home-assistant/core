@@ -27,6 +27,7 @@ from homeassistant.components.tesla_fleet.coordinator import (
     ENERGY_HISTORY_INTERVAL,
     TeslaFleetEnergySiteHistoryCoordinator,
 )
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -125,7 +126,6 @@ def mock_energy_site() -> AsyncMock:
 
 @pytest.fixture
 def coordinator(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_energy_site: AsyncMock,
@@ -251,7 +251,6 @@ async def test_hourly_aggregation_and_repeated_refresh(
 async def test_backfill_after_midnight(
     coordinator: TeslaFleetEnergySiteHistoryCoordinator,
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_energy_site: AsyncMock,
     history_responses: dict[str | None, dict[str, Any]],
     time_zone: str,
@@ -262,9 +261,6 @@ async def test_backfill_after_midnight(
     """Recover the actual UTC hours across midnight and daylight-saving changes."""
     history_responses[None] = _history((before, {GRID: 100}), time_zone=time_zone)
     await _refresh(hass, coordinator)
-    coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-        hass, mock_config_entry, mock_energy_site, SITE_NAME
-    )
     end_date = (
         datetime.fromisoformat(missing)
         .replace(hour=23, minute=59, second=59)
@@ -317,7 +313,6 @@ async def test_backfill_after_midnight(
     ],
 )
 async def test_multi_day_recovery(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_energy_history: AsyncMock,
@@ -392,8 +387,6 @@ async def test_repeated_import_with_delayed_recorder(
     coordinator: TeslaFleetEnergySiteHistoryCoordinator,
     recorder_mock: Recorder,
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_energy_site: AsyncMock,
     history_responses: dict[str | None, dict[str, Any]],
     first_values: dict[str, float],
 ) -> None:
@@ -406,9 +399,6 @@ async def test_repeated_import_with_delayed_recorder(
         await coordinator._async_update_data()
         await hass.async_block_till_done(wait_background_tasks=True)
         history_responses[None] = _history((AFTER, {GRID: 20}))
-        coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-            hass, mock_config_entry, mock_energy_site, SITE_NAME
-        )
         await coordinator._async_update_data()
         await hass.async_block_till_done(wait_background_tasks=True)
     for queued in queue.call_args_list:
@@ -442,10 +432,9 @@ async def test_repeated_import_with_delayed_recorder(
         ),
     ],
 )
-async def test_source_progress_survives_absent_fields_and_restart(
+async def test_inactive_field_does_not_block_progress(
     coordinator: TeslaFleetEnergySiteHistoryCoordinator,
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_energy_site: AsyncMock,
     history_responses: dict[str | None, dict[str, Any]],
     past_values: dict[str, float],
@@ -460,9 +449,6 @@ async def test_source_progress_survives_absent_fields_and_restart(
     history_responses[None] = _history((AFTER, {GRID: 20}))
     await _refresh(hass, coordinator)
 
-    coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-        hass, mock_config_entry, mock_energy_site, SITE_NAME
-    )
     history_responses[END_DATE] = _history()
     history_responses[None] = _history(
         (AFTER, {GRID: 20}),
@@ -588,6 +574,7 @@ async def test_history_errors_preserve_sensors_and_retry(
 async def test_history_login_required(
     coordinator: TeslaFleetEnergySiteHistoryCoordinator,
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_energy_site: AsyncMock,
 ) -> None:
     """A background import can request reauthentication."""
@@ -596,15 +583,13 @@ async def test_history_login_required(
         _history((AFTER, {GRID: 20})),
         LoginRequired(),
     ]
-    with patch("homeassistant.config_entries.ConfigEntry.async_start_reauth") as reauth:
-        assert (await _refresh(hass, coordinator))[GRID] == 20
-    reauth.assert_called_once_with(hass)
+    assert (await _refresh(hass, coordinator))[GRID] == 20
+    assert any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 async def test_resume_valid_prefix_after_failure(
     coordinator: TeslaFleetEnergySiteHistoryCoordinator,
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_energy_site: AsyncMock,
 ) -> None:
     """Resume from recorder's committed prefix after a failed historical day."""
@@ -623,9 +608,6 @@ async def test_resume_valid_prefix_after_failure(
         ("2023-06-01T23:00:00+00:00", 10, 10)
     ]
 
-    coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-        hass, mock_config_entry, mock_energy_site, SITE_NAME
-    )
     mock_energy_site.energy_history.side_effect = [
         current,
         day_one,
@@ -667,7 +649,6 @@ async def test_invalid_site_timezone(
     ],
 )
 async def test_one_import_job_and_unload(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_energy_history: AsyncMock,
