@@ -51,3 +51,4 @@ DATA_RFXOBJECT = "rfxobject"
 DOMAIN = "rfxtrx"
 
 SIGNAL_EVENT = f"{DOMAIN}_event"
+SIGNAL_DEVICE_ADDED = f"{DOMAIN}_device_added"

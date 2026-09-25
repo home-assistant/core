@@ -25,7 +25,7 @@ from homeassistant.setup import async_setup_component
 from . import ENTRY_VERSION
 from .conftest import get_device_identifier, setup_rfx_test_cfg
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 SOME_PROTOCOLS = ["ac", "arc"]
@@ -176,14 +176,21 @@ async def test_rediscover_removed_device(
         (DOMAIN, subentry.subentry_id), mock_entry.entry_id
     )
     assert device_entry
-    device_registry.async_remove_device(device_entry.id)
-    await hass.async_block_till_done()
-    assert mock_entry.subentries == {}
+    with patch.object(hass.config_entries, "async_reload") as mock_reload:
+        device_registry.async_remove_device(device_entry.id)
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
-    # Fire the event again, the device should be rediscovered
-    await rfxtrx.signal("0b1100100118cdea02010f70")
-    assert len(mock_entry.subentries) == 1
-    assert hass.states.get("binary_sensor.ac_118cdea_2")
+        assert mock_entry.subentries == {}
+        assert hass.states.get("binary_sensor.ac_118cdea_2") is None
+
+        # Fire the event again, the device should be rediscovered
+        await rfxtrx.signal("0b1100100118cdea02010f70")
+        assert len(mock_entry.subentries) == 1
+        assert hass.states.get("binary_sensor.ac_118cdea_2")
+
+    mock_reload.assert_not_called()
 
 
 async def test_connect(

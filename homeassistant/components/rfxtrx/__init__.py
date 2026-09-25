@@ -46,6 +46,7 @@ from .const import (
     DEVICE_PACKET_TYPE_LIGHTING4,
     DOMAIN,
     EVENT_RFXTRX_EVENT,
+    SIGNAL_DEVICE_ADDED,
     SIGNAL_EVENT,
     SUBENTRY_TYPE_DEVICE,
 )
@@ -280,14 +281,17 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
         pending_internal_updates += 1
         hass.config_entries.async_add_subentry(entry, subentry)
         devices[device_id] = subentry
+        async_dispatcher_send(hass, SIGNAL_DEVICE_ADDED, event, subentry)
 
     @callback
     def _remove_device(subentry_id: str) -> None:
+        nonlocal pending_internal_updates
         device_id = next(
             (d for d, s in devices.items() if s.subentry_id == subentry_id), None
         )
         if device_id is not None:
             devices.pop(device_id)
+        pending_internal_updates += 1
         hass.config_entries.async_remove_subentry(entry, subentry_id)
 
     @callback
@@ -364,31 +368,19 @@ async def async_setup_platform_entry(
     if config_entry.data[CONF_AUTOMATIC_ADD]:
 
         @callback
-        def _update(event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple) -> None:
-            """Handle light updates from the RFXtrx gateway."""
+        def _device_added(
+            event: rfxtrxmod.RFXtrxEvent, subentry: ConfigSubentry
+        ) -> None:
+            """Add entities for an automatically discovered device."""
             if not supported(event):
                 return
-
-            if device_id in device_ids:
-                return
-            device_ids.add(device_id)
-            subentry = next(
-                (
-                    s
-                    for s in config_entry.subentries.values()
-                    if s.unique_id == device_id.unique_id
-                ),
-                None,
-            )
-            # The subentry is always created before this signal is dispatched.
-            assert subentry
             async_add_entities(
                 constructor(event, event, subentry),
                 config_subentry_id=subentry.subentry_id,
             )
 
         config_entry.async_on_unload(
-            async_dispatcher_connect(hass, SIGNAL_EVENT, _update)
+            async_dispatcher_connect(hass, SIGNAL_DEVICE_ADDED, _device_added)
         )
 
 
