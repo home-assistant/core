@@ -11,7 +11,7 @@ from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_API_VERSION
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_ENCRYPTION, DOMAIN
@@ -28,20 +28,22 @@ class PollingCoordinator(DataUpdateCoordinator):
         """Initialize coordinator."""
 
         self.mac = config_entry.data.get(CONF_ADDRESS)
-        mac_str = str(self.mac).replace(":", "")
+        self.mac_str = str(self.mac).replace(":", "")
 
-        ble_device = bluetooth.async_ble_device_from_address(hass, str(self.mac))
+        ble_device = bluetooth.async_ble_device_from_address(
+            hass, str(self.mac), connectable=True
+        )
 
         super().__init__(
             hass,
-            logging.getLogger(f"{__name__}.{mac_str}"),
+            logging.getLogger(f"{__name__}.{self.mac_str}"),
             config_entry=config_entry,
-            name=f"{DOMAIN}.{mac_str}",
+            name=f"{DOMAIN}.{self.mac_str}",
             update_interval=timedelta(seconds=60),
         )
 
         if ble_device is None:
-            raise HomeAssistantError("Device not found")
+            raise ConfigEntryNotReady(f"Cannot connect to {self.mac}")
 
         if config_entry.data.get(CONF_API_VERSION) == 1:
             self.device = BaseDeviceV1()
