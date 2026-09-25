@@ -38,6 +38,8 @@ from homeassistant.components.weather import (
 
 DOMAIN = "met"
 
+DEFAULT_NAME = "Met.no"
+
 HOME_LOCATION_NAME = "Home"
 
 CONF_TRACK_HOME = "track_home"
