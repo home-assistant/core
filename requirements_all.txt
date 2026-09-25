@@ -1327,7 +1327,7 @@ homekit-audio-proxy==1.2.1
 homelink-integration-api==0.1.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.17.0
+homematicip==2.18.0
 
 # homeassistant.components.homevolt
 homevolt==0.7.0
@@ -1529,7 +1529,7 @@ librouteros==4.2.2
 libsoundtouch==0.8
 
 # homeassistant.components.lifx
-lifx-async==6.5.1
+lifx-async==7.4.0
 
 # homeassistant.components.osramlightify
 lightify==1.0.7.3
@@ -2038,7 +2038,7 @@ pyElectra==1.2.4
 pyEmby==1.10
 
 # homeassistant.components.hikvision
-pyHik==0.4.6
+pyHik==0.4.7
 
 # homeassistant.components.homee
 pyHomee==1.4.4
@@ -2750,7 +2750,7 @@ python-homeassistant-analytics==0.9.0
 python-homewizard-energy==10.2.0
 
 # homeassistant.components.hotspring
-python-hotspring==3.0.0
+python-hotspring==3.0.1
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -2814,7 +2814,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==7.7.1
+python-roborock==7.9.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -3129,7 +3129,7 @@ snapcast==2.3.8
 soco==0.31.2
 
 # homeassistant.components.sofar
-sofar-modbus==0.14.0
+sofar-modbus==0.15.0
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
@@ -3251,7 +3251,7 @@ tesla-powerwall==0.5.3
 tesla-wall-connector==1.2.0
 
 # homeassistant.components.teslemetry
-teslemetry-stream==1.0.1
+teslemetry-stream==1.0.2
 
 # homeassistant.components.tessie
 tessie-api==0.1.3

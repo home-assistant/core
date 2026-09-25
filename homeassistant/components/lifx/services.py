@@ -115,8 +115,13 @@ LIFX_EFFECT_SCHEMA = {
 LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
-        probatio.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
-        probatio.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
+        # A brightness of zero would pulse to black
+        probatio.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): probatio.All(
+            VALID_BRIGHTNESS, probatio.Clamp(min=1)
+        ),
+        probatio.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): probatio.All(
+            VALID_BRIGHTNESS_PCT, probatio.Clamp(min=1)
+        ),
         probatio.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
         probatio.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): probatio.All(
             probatio.Coerce(tuple), probatio.ExactSequence((cv.byte, cv.byte, cv.byte))
@@ -152,11 +157,12 @@ LIFX_EFFECT_COLORLOOP_SCHEMA = cv.make_entity_service_schema(
         **LIFX_EFFECT_SCHEMA,
         probatio.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
         probatio.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
+        # A saturation of zero switches the bulb to color temperature mode
         ATTR_SATURATION_MAX: probatio.All(
-            probatio.Coerce(int), probatio.Clamp(min=0, max=100)
+            probatio.Coerce(int), probatio.Clamp(min=1, max=100)
         ),
         ATTR_SATURATION_MIN: probatio.All(
-            probatio.Coerce(int), probatio.Clamp(min=0, max=100)
+            probatio.Coerce(int), probatio.Clamp(min=1, max=100)
         ),
         ATTR_PERIOD: probatio.All(probatio.Coerce(float), probatio.Clamp(min=0.05)),
         ATTR_CHANGE: probatio.All(

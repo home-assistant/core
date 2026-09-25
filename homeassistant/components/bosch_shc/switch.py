@@ -108,6 +108,33 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_value=BypassService.State.BYPASS_ACTIVE,
         should_poll=False,
     ),
+    "energy_saving_mode_enabled": SHCSwitchEntityDescription(
+        key="energy_saving_mode_enabled",
+        translation_key="energy_saving_mode_enabled",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="energy_saving_mode_enabled",
+        on_value=True,
+        should_poll=False,
+    ),
+    "humidity_warning_enabled": SHCSwitchEntityDescription(
+        key="humidity_warning_enabled",
+        translation_key="humidity_warning_enabled",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="humidity_warning_enabled",
+        on_value=True,
+        should_poll=False,
+    ),
+    "nightly_promise_enabled": SHCSwitchEntityDescription(
+        key="nightly_promise_enabled",
+        translation_key="nightly_promise_enabled",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="nightly_promise_enabled",
+        on_value=True,
+        should_poll=False,
+    ),
     "pet_immunity_enabled": SHCSwitchEntityDescription(
         key="pet_immunity_enabled",
         translation_key="pet_immunity_enabled",
@@ -276,6 +303,59 @@ async def async_setup_entry(
             unique_id_suffix="pet_immunity",
         )
         for switch in session.device_helper.motion_detectors2
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["nightly_promise_enabled"],
+        )
+        for switch in session.device_helper.twinguards
+        if switch.supports_nightly_promise
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["energy_saving_mode_enabled"],
+            unique_id_suffix="energy_saving_mode",
+        )
+        for switch in session.device_helper.smart_plugs
+        if switch.supports_energy_saving_mode
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["energy_saving_mode_enabled"],
+            unique_id_suffix="energy_saving_mode",
+        )
+        for switch in session.device_helper.smart_plugs_compact
+        if switch.supports_energy_saving_mode
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["humidity_warning_enabled"],
+        )
+        for switch in (
+            *session.device_helper.thermostats,
+            *session.device_helper.roomthermostats,
+        )
+        if getattr(switch, "supports_display_configuration", False)
     )
 
     async_add_entities(entities)
