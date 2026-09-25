@@ -1,0 +1,30 @@
+{
+  "applianceId": "900402068224000950000000",
+  "connectionState": "Connected",
+  "properties": {
+    "reported": {
+      "VmNo_MCU": "VM220_T_03.05.83_MIDAS",
+      "VmNo_NIU": "VM214_A_03.42.11_MIDAS_GD",
+      "batteryStatus": 100,
+      "binTank": "both",
+      "capabilities": {},
+      "chargingStatus": "fullyCharged",
+      "cleaningMode": "notSet",
+      "faultCode": "fullyCharged",
+      "logE": 2525,
+      "logW": 1827,
+      "mopInstalled": true,
+      "niuStatus": "available",
+      "state": "idle",
+      "tasks": {},
+      "upgradeProgress": 0,
+      "upgradeState": "idle",
+      "vacuumMode": "powerful",
+      "voiceVolume": "medium",
+      "waterPumpRate": "low",
+      "cleanTime": 0,
+      "cleanSize": 43
+    }
+  },
+  "status": "enabled"
+}

@@ -1,6 +1,7 @@
 """Electrolux coordinator class."""
 
 from asyncio import Task
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
 from typing import override
@@ -34,6 +35,7 @@ class ElectroluxData:
     appliances: list[ApplianceData]
     coordinators: dict[str, ElectroluxDataUpdateCoordinator]
     sse_task: Task
+    on_livestream_opening_callback_list: list[Callable[[], Awaitable[None]]]
 
 
 type ElectroluxConfigEntry = ConfigEntry[ElectroluxData]
@@ -41,6 +43,8 @@ type ElectroluxConfigEntry = ConfigEntry[ElectroluxData]
 
 class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[ApplianceState]):
     """Class for fetching appliance data from the API."""
+
+    config_entry: ElectroluxConfigEntry
 
     def __init__(
         self,
@@ -94,3 +98,19 @@ class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[ApplianceState]):
         )
 
         self.async_set_updated_data(updated_state)
+
+    def add_livestream_opening_callback(
+        self, callback: Callable[[], Awaitable[None]]
+    ) -> None:
+        """Add a callback to be called when the livestream opens."""
+        self.config_entry.runtime_data.on_livestream_opening_callback_list.append(
+            callback
+        )
+
+    def remove_livestream_opening_callback(
+        self, callback: Callable[[], Awaitable[None]]
+    ) -> None:
+        """Remove a callback that was previously added to be called when the livestream opens."""
+        self.config_entry.runtime_data.on_livestream_opening_callback_list.remove(
+            callback
+        )
