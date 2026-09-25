@@ -198,7 +198,9 @@ async def _async_stream(
 async def _async_stop_process(process: asyncio.subprocess.Process) -> None:
     """Kill FFmpeg if it is still running and reap it."""
     if process.returncode is None:
-        process.kill()
+        with suppress(ProcessLookupError):
+            # FFmpeg may have exited between the check and the kill.
+            process.kill()
     await process.wait()
 
 
