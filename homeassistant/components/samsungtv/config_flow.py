@@ -372,7 +372,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             if (
-                (pin := user_input.get(CONF_PIN))
+                (pin := user_input[CONF_PIN])
                 and (token := await self._authenticator.try_pin(pin))
                 and (session_id := await self._authenticator.get_session_id_and_close())
             ):
@@ -658,7 +658,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             if (
-                (pin := user_input.get(CONF_PIN))
+                (pin := user_input[CONF_PIN])
                 and (token := await self._authenticator.try_pin(pin))
                 and (session_id := await self._authenticator.get_session_id_and_close())
             ):
