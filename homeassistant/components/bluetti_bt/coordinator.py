@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_API_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_ENCRYPTION, DOMAIN
 
@@ -58,13 +58,11 @@ class PollingCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from bluetooth device."""
 
-        # Check if device is connected
         if (
             bluetooth.async_address_present(self.hass, str(self.mac), connectable=True)
             is False
         ):
-            self.logger.warning("Device not connected")
             self.last_update_success = False
-            return {}
+            raise UpdateFailed("Device not connected")
 
         return await self.reader.read()

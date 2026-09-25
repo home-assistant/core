@@ -13,12 +13,10 @@ PLATFORMS: list[Platform] = [
 async def async_setup_entry(hass: HomeAssistant, entry: BluettiBtConfigEntry) -> bool:
     """Set up Bluetti BT from a config entry."""
 
-    # Setup coordinator
     coordinator = PollingCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
-    # Setup platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
