@@ -73,14 +73,50 @@ class VistapoolLEDPulseButton(VistapoolEntity, ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Send a color-advance pulse to the pool LED fixture."""
+        # Serialized with the light entity, which writes the same path: an
+        # interleaved write would break the pending-order/wire-order match.
+        async with self.coordinator.write_lock(_LIGHT_STATUS_PATH):
+            await self._async_pulse()
+
+    async def _async_pulse(self) -> None:
+        """Run the pulse sequence; caller holds the light.status write lock."""
+        if self.coordinator.get_value(_LIGHT_STATUS_PATH) not in (True, "1"):
+            await self._async_write_status(1)
+            self.coordinator.apply_optimistic(_LIGHT_STATUS_PATH, 1)
+            return
+        # Queue the whole off/on sequence before the first send: the echoes
+        # are then confirmed in order, and a push landing inside the pulse
+        # delay is overlaid with the final on instead of the transient off,
+        # so the light entity never flickers. A failed send discards the
+        # writes the cloud never acknowledged.
+        self.coordinator.record_optimistic(_LIGHT_STATUS_PATH, 0)
+        self.coordinator.record_optimistic(_LIGHT_STATUS_PATH, 1)
         try:
-            if self.coordinator.get_value(_LIGHT_STATUS_PATH) in (True, "1"):
-                await self.coordinator.api.set_value(
-                    self.coordinator.pool_id, _LIGHT_STATUS_PATH, 0
-                )
-                await asyncio.sleep(_LED_PULSE_DELAY_SECONDS)
+            await self._async_write_status(0)
+        except HomeAssistantError:
+            self.coordinator.discard_optimistic(_LIGHT_STATUS_PATH)
+            self.coordinator.discard_optimistic(_LIGHT_STATUS_PATH)
+            # A push consumed mid-send may have been overlaid with a queued
+            # value that just got discarded; fetch the truth.
+            self.coordinator.start_self_heal()
+            raise
+        await asyncio.sleep(_LED_PULSE_DELAY_SECONDS)
+        try:
+            await self._async_write_status(1)
+        except HomeAssistantError:
+            self.coordinator.discard_optimistic(_LIGHT_STATUS_PATH)
+            self.coordinator.start_self_heal()
+            raise
+        # The on write was queued before the off send and the pulse delay;
+        # restart its TTL now so it covers the round trip of its own send.
+        self.coordinator.refresh_optimistic(_LIGHT_STATUS_PATH)
+        self.coordinator.async_set_updated_data(self.coordinator.data)
+
+    async def _async_write_status(self, value: int) -> None:
+        """Write light.status via the cloud API."""
+        try:
             await self.coordinator.api.set_value(
-                self.coordinator.pool_id, _LIGHT_STATUS_PATH, 1
+                self.coordinator.pool_id, _LIGHT_STATUS_PATH, value
             )
         except AquariteError as err:
             raise HomeAssistantError(
@@ -88,4 +124,3 @@ class VistapoolLEDPulseButton(VistapoolEntity, ButtonEntity):
                 translation_key="set_failed",
                 translation_placeholders={"entity": self.entity_id},
             ) from err
-        self.coordinator.apply_optimistic(_LIGHT_STATUS_PATH, 1)

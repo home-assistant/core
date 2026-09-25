@@ -1,6 +1,8 @@
 """Data coordinator for the Vistapool integration."""
 
+import asyncio
 import logging
+from time import monotonic
 from typing import TYPE_CHECKING, Any, override
 
 from aioaquarite import (
@@ -19,6 +21,10 @@ if TYPE_CHECKING:
     from . import VistapoolConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+# Fallback for when a Firestore push never arrives (controller offline,
+# command dropped); a confirming push normally clears the pending entry first.
+OPTIMISTIC_TTL_SECONDS = 10.0
 
 
 class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -41,7 +47,13 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.pool_id: str = pool_id
         self.pool_name: str = pool_name
         self.subscription: ResilientPoolSubscription | None = None
+        self._pending_optimistic: dict[str, list[tuple[Any, float]]] = {}
+        self._write_locks: dict[str, asyncio.Lock] = {}
+        self._optimistic_handles: dict[str, asyncio.TimerHandle] = {}
+        self._self_heal_handle: asyncio.TimerHandle | None = None
+        self._self_heal_task: asyncio.Task[None] | None = None
         self._push_connected = True
+        self._data_generation = 0
 
         super().__init__(
             hass,
@@ -54,13 +66,30 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch latest pool data (fallback for manual refresh)."""
+        generation = self._data_generation
         try:
-            return await self.api.fetch_pool_data(self.pool_id)
+            data = await self.api.fetch_pool_data(self.pool_id)
         except AquariteError as err:
+            # A late failure must not mark data unavailable that a push or
+            # self-heal delivered while this fetch was in flight.
+            if generation != self._data_generation:
+                return self.data
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from err
+        # A push or self-heal publish that landed while this fetch was in
+        # flight is newer than anything the fetch read, and may have consumed
+        # pending writes the fetch result would need to be protected against.
+        if generation != self._data_generation:
+            return self.data
+        # This fetch is as authoritative as a push: a pending self-heal
+        # retry would only refetch and could mark recovered data
+        # unavailable again on a transient failure.
+        self._cancel_self_heal()
+        # A manual refresh must not clobber optimistic writes for other
+        # paths that are still inside their own TTL window.
+        return self._merge_optimistic(data)
 
     @property
     def push_connected(self) -> bool:
@@ -80,11 +109,17 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @callback
     def _async_handle_push(self, data: dict[str, Any]) -> None:
-        """Apply a snapshot; its arrival is what proves the connection is up."""
+        """Apply a snapshot, preserving unconfirmed optimistic writes.
+
+        A snapshot is authoritative: its arrival proves the connection is
+        up and supersedes any pending self-heal fetch.
+        """
+        self._data_generation += 1
         if not self._push_connected:
             self._push_connected = True
             _LOGGER.info("Reconnected to %s, entities are available again", self.name)
-        self.async_set_updated_data(data)
+        self._cancel_self_heal()
+        self.async_set_updated_data(self._merge_optimistic(data))
 
     @callback
     def _async_on_subscription_health(self, healthy: bool) -> None:
@@ -108,6 +143,11 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @override
     async def async_shutdown(self) -> None:
         """Cleanly close the resilient subscription."""
+        for handle in self._optimistic_handles.values():
+            handle.cancel()
+        self._optimistic_handles.clear()
+        self._pending_optimistic.clear()
+        self._cancel_self_heal()
         if self.subscription is not None:
             await self.subscription.aclose()
             self.subscription = None
@@ -117,14 +157,48 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Get nested data using dot-notation path."""
         return AquariteClient.get_value(self.data, path, default)
 
-    def apply_optimistic(self, value_path: str, value: Any) -> None:
-        """Reflect a just-written value before the Firestore push round-trips.
+    def write_lock(self, value_path: str) -> asyncio.Lock:
+        """Return the lock serializing writers of a path.
 
-        Hayward's cloud takes several seconds to acknowledge a write back
-        through Firestore, which would make the UI feel laggy. Writing into
-        coordinator.data after a successful REST call gives entities instant
-        feedback; the next snapshot from Firestore overwrites it harmlessly.
+        Writers sharing a path across platforms (the light entity and the
+        LED pulse) must keep the pending-write order identical to the wire
+        order, or confirmations would overlay values the controller no
+        longer has.
         """
+        return self._write_locks.setdefault(value_path, asyncio.Lock())
+
+    def record_optimistic(self, value_path: str, value: Any) -> None:
+        """Track a just-written value without announcing new entity state.
+
+        For transient values in a write sequence (the LED pulse's
+        intermediate off): the echo must be confirmed in order, but
+        entities and automations must not see the value flash by.
+        """
+        writes = self._pending_optimistic.setdefault(value_path, [])
+        now = monotonic()
+        # Age out entries by their own timestamp so sustained writing cannot
+        # grow the queue without bound; the newest write keeps its full TTL.
+        while writes and now - writes[0][1] >= OPTIMISTIC_TTL_SECONDS:
+            writes.pop(0)
+        if writes and writes[-1][0] == value:
+            # An idempotent repeat causes no second document transition, so
+            # a second entry would wait for a confirmation Firestore never
+            # emits, suppressing the next real push until the TTL.
+            writes[-1] = (value, now)
+        else:
+            writes.append((value, now))
+        _set_path(self.data, value_path, value)
+        if (handle := self._optimistic_handles.pop(value_path, None)) is not None:
+            handle.cancel()
+        # Without a polling interval, a vanished push (controller offline,
+        # cloud lost the command) would leave the optimistic value stuck.
+        # Schedule an authoritative refresh after the TTL to self-heal.
+        self._optimistic_handles[value_path] = self.hass.loop.call_later(
+            OPTIMISTIC_TTL_SECONDS, self._expire_optimistic, value_path
+        )
+
+    def apply_optimistic(self, value_path: str, value: Any) -> None:
+        """Reflect a just-written value and protect it from stale Firestore pushes."""
         self.apply_optimistic_values({value_path: value})
 
     def apply_optimistic_values(self, updates: dict[str, Any]) -> None:
@@ -135,13 +209,164 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         path briefly read as a different value.
         """
         for value_path, value in updates.items():
-            keys = value_path.split(".")
-            target: dict[str, Any] = self.data
-            for key in keys[:-1]:
-                child = target.get(key)
-                if not isinstance(child, dict):
-                    child = {}
-                    target[key] = child
-                target = child
-            target[keys[-1]] = value
+            self.record_optimistic(value_path, value)
         self.async_set_updated_data(self.data)
+
+    def refresh_optimistic(self, value_path: str) -> None:
+        """Restart the newest pending write's protection window.
+
+        For a write queued ahead of time (the LED pulse's final on): its
+        TTL must cover the Firestore round trip from the actual send, not
+        from queueing, or expiry could publish stale data just before the
+        confirming push lands.
+        """
+        writes = self._pending_optimistic.get(value_path)
+        if not writes:
+            return
+        writes[-1] = (writes[-1][0], monotonic())
+        if (handle := self._optimistic_handles.pop(value_path, None)) is not None:
+            handle.cancel()
+        self._optimistic_handles[value_path] = self.hass.loop.call_later(
+            OPTIMISTIC_TTL_SECONDS, self._expire_optimistic, value_path
+        )
+
+    def discard_optimistic(self, value_path: str) -> None:
+        """Drop the newest pending write for a path.
+
+        For unwinding a prequeued write whose send failed: it must not
+        keep suppressing the pushes that reflect what the cloud really has.
+        """
+        writes = self._pending_optimistic.get(value_path)
+        if not writes:
+            return
+        writes.pop()
+        if not writes:
+            self._clear_optimistic(value_path)
+            return
+        # The expiry timer was armed by the newer, discarded write; re-arm
+        # it from the remaining tail or the older value would stay visible
+        # past its own TTL, extended further by every failed sequence.
+        if (handle := self._optimistic_handles.pop(value_path, None)) is not None:
+            handle.cancel()
+        self._optimistic_handles[value_path] = self.hass.loop.call_later(
+            max(0.0, writes[-1][1] + OPTIMISTIC_TTL_SECONDS - monotonic()),
+            self._expire_optimistic,
+            value_path,
+        )
+
+    def _merge_optimistic(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Overlay unconfirmed optimistic writes onto freshly fetched data."""
+        now = monotonic()
+        for path, writes in list(self._pending_optimistic.items()):
+            # Coalesced snapshots may never match the oldest entries, so age
+            # each write out on its own timestamp instead of keeping the
+            # whole queue alive as long as the newest write is fresh.
+            pruned = False
+            while writes and now - writes[0][1] >= OPTIMISTIC_TTL_SECONDS:
+                writes.pop(0)
+                pruned = True
+            if not writes:
+                self._clear_optimistic(path)
+                continue
+            remote_value = AquariteClient.get_value(data, path)
+            # A push can only confirm writes in order: with ON then OFF in
+            # flight, a pre-ON echo carrying OFF must not lift protection,
+            # or the later ON confirmation would flip the entity back. A
+            # snapshot that just pruned an expired write may itself be such
+            # a pre-write echo, so it cannot confirm the new head either.
+            if not pruned and _values_agree(remote_value, writes[0][0]):
+                writes.pop(0)
+                if not writes:
+                    self._clear_optimistic(path)
+                    continue
+            _set_path(data, path, writes[-1][0])
+        return data
+
+    def _clear_optimistic(self, value_path: str) -> None:
+        """Drop a pending optimistic entry and its scheduled expiry."""
+        self._pending_optimistic.pop(value_path, None)
+        if (handle := self._optimistic_handles.pop(value_path, None)) is not None:
+            handle.cancel()
+
+    def _expire_optimistic(self, value_path: str) -> None:
+        """TTL fired without a confirming push: drop and force a refresh."""
+        self._optimistic_handles.pop(value_path, None)
+        if value_path not in self._pending_optimistic:
+            return
+        del self._pending_optimistic[value_path]
+        self.start_self_heal()
+
+    def start_self_heal(self) -> None:
+        """Launch an authoritative fetch unless one is already running.
+
+        Used by the TTL expiry, and by write sequences that failed halfway:
+        the local prediction is then unreliable, so fetch the truth.
+        """
+        if self._self_heal_handle is not None:
+            self._self_heal_handle.cancel()
+            self._self_heal_handle = None
+        if self._self_heal_task is not None and not self._self_heal_task.done():
+            return
+        self._self_heal_task = self.config_entry.async_create_task(
+            self.hass,
+            self._async_self_heal(),
+            name=f"vistapool_self_heal_{self.pool_id}",
+        )
+
+    async def _async_self_heal(self) -> None:
+        """Fetch authoritative data after an expired write, retrying on failure.
+
+        Fetches directly instead of going through async_refresh: the base
+        class marks a cancelled refresh as unsuccessful, which would undo
+        the push that cancelled this task. Without a polling interval, a
+        failed fetch with a quiet Firestore document would otherwise leave
+        the entities unavailable indefinitely, so a failure re-arms the
+        retry; a successful fetch or an incoming push cancels it.
+        """
+        try:
+            data = await self.api.fetch_pool_data(self.pool_id)
+        except AquariteError as err:
+            self.async_set_update_error(err)
+            self._self_heal_handle = self.hass.loop.call_later(
+                OPTIMISTIC_TTL_SECONDS, self.start_self_heal
+            )
+            return
+        self._data_generation += 1
+        self.async_set_updated_data(self._merge_optimistic(data))
+
+    def _cancel_self_heal(self) -> None:
+        """Stop the self-heal retry: the pending timer and the in-flight task.
+
+        The in-flight task matters too: its late fetch result could
+        overwrite an authoritative push with older data, and its late
+        failure would re-arm the retry against fresh data.
+        """
+        if self._self_heal_handle is not None:
+            self._self_heal_handle.cancel()
+            self._self_heal_handle = None
+        if self._self_heal_task is not None:
+            self._self_heal_task.cancel()
+            self._self_heal_task = None
+
+
+def _set_path(data: dict[str, Any], value_path: str, value: Any) -> None:
+    """Write value into data at a dot-notation path, creating dicts as needed."""
+    keys = value_path.split(".")
+    target: dict[str, Any] = data
+    for key in keys[:-1]:
+        child = target.get(key)
+        if not isinstance(child, dict):
+            child = {}
+            target[key] = child
+        target = child
+    target[keys[-1]] = value
+
+
+def _values_agree(remote: Any, optimistic: Any) -> bool:
+    """Compare values tolerantly: Firestore can return int/str/bool variants."""
+    if remote == optimistic:
+        return True
+    try:
+        return float(remote) == float(optimistic)
+    except TypeError, ValueError:
+        return False
