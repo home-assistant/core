@@ -28,15 +28,7 @@ def parse_json_attributes_raise_error(
         if isinstance(json_dict, list) and json_dict:
             json_dict = json_dict[0]
         if isinstance(json_dict, dict):
-            if result := {k: json_dict[k] for k in json_attrs if k in json_dict}:
-                return result
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="attrs_not_found",
-                translation_placeholders={
-                    "json_attrs": ", ".join(json_attrs),
-                },
-            )
+            return {k: json_dict[k] for k in json_attrs if k in json_dict}
 
         raise HomeAssistantError(
             translation_domain=DOMAIN,

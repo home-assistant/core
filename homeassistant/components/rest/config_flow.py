@@ -298,6 +298,8 @@ class RestSubentryFlow(ConfigSubentryFlow):
                 | None
             ) = SUBENTRY_CONFIG[Platform(self._subentry_type)][VALIDATOR]
             if validator is not None:
+                if len(entry.subentries) == 0:
+                    await entry.runtime_data.async_refresh()
                 errors, placeholders = validator(user_input, entry.runtime_data.rest)
             if not errors:
                 title: str = user_input.get(

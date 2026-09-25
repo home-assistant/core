@@ -126,7 +126,6 @@
       },
       "entry_type": "[%key:component::sensor::title%]",
       "error": {
-        "attrs_not_found": "[%key:component::rest::exceptions::attrs_not_found::message%]",
         "invalid_result": "[%key:component::rest::exceptions::invalid_result::message%]",
         "no_json": "[%key:component::rest::exceptions::no_json::message%]",
         "parse_error": "[%key:component::rest::exceptions::parse_error::message%]",
@@ -180,9 +179,6 @@
     }
   },
   "exceptions": {
-    "attrs_not_found": {
-      "message": "JSON attributes \"{json_attrs}\" not found in endpoint response"
-    },
     "endpoint_error": {
       "message": "Error communicating with resource: {error_message}"
     },

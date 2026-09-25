@@ -163,8 +163,11 @@ class _EncodingSelector(selector.TextSelector):
         return encoding
 
 
-class _ObjectSelector(selector.ObjectSelector):
+class KeyedTemplateSelector(selector.ObjectSelector):
+    """Object selector that supports unique key:Template inputs."""
+
     def __init__(self, translation_key: str) -> None:
+        """Initialize the selector."""
         super().__init__(
             selector.ObjectSelectorConfig(
                 fields={
@@ -181,6 +184,25 @@ class _ObjectSelector(selector.ObjectSelector):
                 translation_key=translation_key,
             )
         )
+
+    @override
+    def __call__(self, data: Any) -> Any:
+        """Validate the selector then ensure there are not duplicate keys.
+
+        The legacy configuration doesn't support duplicate keys even though
+        they are supported for query params and headers in the http specifications.
+        """
+        super().__call__(data)
+        test_data = data if isinstance(data, list) else [data]
+        keys: set[str] = set()
+        for field in test_data:
+            if field["key"] not in keys:
+                keys.add(field["key"])
+            else:
+                raise probatio.Invalid(
+                    f"Duplicate keys are not supported. Found multiple `{field['key']}` keys."
+                )
+        return data
 
 
 class _auth_section(section):
@@ -238,10 +260,10 @@ def RESOURCE_FLOW_SCHEMA(collapse_auth: bool = True) -> probatio.Schema:
                 ),
                 options=SectionConfig(collapsed=collapse_auth),
             ),
-            probatio.Optional(CONF_HEADERS): _ObjectSelector(
+            probatio.Optional(CONF_HEADERS): KeyedTemplateSelector(
                 translation_key=CONF_HEADERS
             ),
-            probatio.Optional(CONF_PARAMS): _ObjectSelector(
+            probatio.Optional(CONF_PARAMS): KeyedTemplateSelector(
                 translation_key=CONF_PARAMS
             ),
             probatio.Optional(CONF_PAYLOAD): selector.TemplateSelector(),

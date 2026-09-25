@@ -206,36 +206,6 @@ async def test_sensor_subentry_flow_invalid_json_attrs_path(
     assert "json_path" in result["description_placeholders"]
 
 
-async def test_sensor_subentry_flow_invalid_json_attrs(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    get_config_entry_data: dict[str, Any],
-    get_subentry_data: list[config_entries.ConfigSubentryData],
-) -> None:
-    """Test a subentry flow with json_attrs not in response."""
-    aioclient_mock.get(
-        "http://localhost",
-        status=HTTPStatus.OK,
-        json={"items": [{"key": "on", "location": "fake area", "area": 15}]},
-    )
-    entry = await async_setup_entry(hass, get_config_entry_data)
-
-    result = await hass.config_entries.subentries.async_init(
-        (entry.entry_id, Platform.SENSOR),
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        get_subentry_data[SENSOR_DATA]["data"]
-        | {CONF_JSON_ATTRS: [{"item": "fake_attr"}]},
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {CONF_JSON_ATTRS: "attrs_not_found"}
-    assert "json_attrs" in result["description_placeholders"]
-
-
 async def test_sensor_subentry_flow_invalid_unit_state_class(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
