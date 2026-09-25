@@ -43,7 +43,7 @@ async def test_all_entities(
     ("unit_system", "entity_id", "unit"),
     [
         pytest.param(METRIC_SYSTEM, STATION_PRESSURE, "hPa", id="metric-pressure"),
-        pytest.param(METRIC_SYSTEM, VAPOR_PRESSURE, "mbar", id="metric-vapor"),
+        pytest.param(METRIC_SYSTEM, VAPOR_PRESSURE, "hPa", id="metric-vapor"),
         pytest.param(METRIC_SYSTEM, RAIN_LAST_MINUTE, "mm", id="metric-rain"),
         pytest.param(US_CUSTOMARY_SYSTEM, STATION_PRESSURE, "inHg", id="us-pressure"),
         pytest.param(US_CUSTOMARY_SYSTEM, VAPOR_PRESSURE, "inHg", id="us-vapor"),

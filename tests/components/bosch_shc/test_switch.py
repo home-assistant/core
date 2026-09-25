@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
-from boschshcpy import BypassService, ThermostatService
+from boschshcpy import BypassService, SilentModeService, ThermostatService
 import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -23,6 +23,7 @@ from .conftest import (
     presence_simulation_system_device,
     setup_integration,
     shutter_contact2_device,
+    shutter_contact2_plus_device,
     smart_plug_compact_device,
     smart_plug_device,
     smoke_detector_device,
@@ -75,6 +76,67 @@ async def test_thermostat_child_lock(
         blocking=True,
     )
     assert device.child_lock is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "thermostats": [
+                thermostat_device(
+                    supports_silentmode=True,
+                    silentmode=SilentModeService.State.MODE_NORMAL,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_silent_mode(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A thermostat's silent mode is exposed and controllable as a switch."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.thermostats[0]
+
+    state = hass.states.get("switch.thermostat_whisper_mode")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.thermostat_whisper_mode"},
+        blocking=True,
+    )
+    assert device.silentmode is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.thermostat_whisper_mode"},
+        blocking=True,
+    )
+    assert device.silentmode is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"thermostats": [thermostat_device(supports_silentmode=False)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_no_silent_mode_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No switch is created for a thermostat without silent-mode support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.thermostat_whisper_mode") is None
 
 
 @pytest.mark.parametrize(
@@ -322,6 +384,58 @@ async def test_shutter_contact2_bypass_unique_id(
     assert bypass_entry is not None
     assert bypass_infinite_entry is not None
     assert bypass_entry.unique_id != bypass_infinite_entry.unique_id
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"shutter_contacts2": [shutter_contact2_plus_device(vibration_enabled=False)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_shutter_contact2_plus_vibration_enabled(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Door/Window Contact II Plus's vibration detection is exposed and controllable."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.shutter_contacts2[0]
+
+    state = hass.states.get("switch.shutter_contact_vibration_detection")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.shutter_contact_vibration_detection"},
+        blocking=True,
+    )
+    assert device.enabled is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.shutter_contact_vibration_detection"},
+        blocking=True,
+    )
+    assert device.enabled is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"shutter_contacts2": [shutter_contact2_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_shutter_contact2_no_vibration_enabled_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No vibration switch is created for a plain (non-Plus) Door/Window Contact II."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.shutter_contact_vibration_detection") is None
 
 
 @pytest.mark.parametrize(

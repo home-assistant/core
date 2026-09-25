@@ -229,11 +229,16 @@
       "labels": ["dependency"]
     },
     {
-      "description": "For types-* stubs, only allow patch updates. Major/minor bumps track the upstream runtime package version and must be manually coordinated with the corresponding pin.",
+      "description": "types-* stubs (allowlisted). Enabled without matchUpdateTypes, because update types are unknown when Renovate decides whether a package is enabled.",
       "matchPackageNames": ["/^types-/"],
-      "matchUpdateTypes": ["patch"],
       "enabled": true,
       "labels": ["dependency"]
+    },
+    {
+      "description": "For types-* stubs, only allow patch updates. Major/minor bumps track the upstream runtime package version and must be manually coordinated with the corresponding pin.",
+      "matchPackageNames": ["/^types-/"],
+      "matchUpdateTypes": ["major", "minor"],
+      "enabled": false
     },
     {
       "description": "Pre-commit hook repos (allowlisted, matched by owner/repo)",
@@ -315,6 +320,17 @@
       "matchPackageNames": ["ghcr.io/alexxit/go2rtc"],
       "groupName": "go2rtc",
       "groupSlug": "go2rtc"
+    },
+    {
+      "description": "Group the types-* stub updates into one PR",
+      "matchPackageNames": ["/^types-/"],
+      "groupName": "types stubs",
+      "groupSlug": "types-stubs"
+    },
+    {
+      "description": "uv and pnpm release almost daily, so the cooldown alone still gives a PR (and a full CI run) nearly every day. Limit them to one PR per week.",
+      "matchPackageNames": ["uv", "pnpm"],
+      "schedule": ["after 5pm on friday"]
     }
   ]
 }

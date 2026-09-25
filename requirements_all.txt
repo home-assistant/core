@@ -573,7 +573,7 @@ aqualogic==2.6
 aranet4==2.6.0
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==1.8.3
+arcam-fmj==3.0.0
 
 # homeassistant.components.arris_tg2492lg
 arris-tg2492lg==2.2.0
@@ -2899,7 +2899,7 @@ pyvolumio==0.1.5
 pywaze==1.2.0
 
 # homeassistant.components.weatherflow
-pyweatherflowudp==1.5.2
+pyweatherflowudp==1.6.2
 
 # homeassistant.components.html5
 pywebpush==2.3.0
