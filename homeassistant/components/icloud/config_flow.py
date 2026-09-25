@@ -193,11 +193,16 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         established, and the code entry form is then a dead end. Dropping the
         session sends the next attempt through a fresh login, which raises the
         challenge again with a route behind it.
+
+        The forced challenge is cleared with the session it belonged to.
+        _requires_2fa reads it as well, so leaving it set would send the next
+        attempt back to this same dead end even once the login succeeds.
         """
         _LOGGER.error(
             "iCloud has no way to send a verification code for %s", self._username
         )
         self.api = None
+        self._forced_2fa = False
         return self._show_setup_form(
             user_input, {"base": "send_verification_code"}, step_id
         )

@@ -948,6 +948,24 @@ async def test_reauth_challenge_without_a_delivery_route_asks_for_the_password(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "send_verification_code"}
 
+    # The forced challenge goes with the session, or the retry below reads it
+    # and comes straight back here even though the login succeeded.
+    working_api = MagicMock()
+    working_api.requires_2fa = False
+    working_api.requires_2sa = False
+    working_api.two_factor_delivery_method = "unknown"
+    working_api.devices = MockDevices([MockDevice(DEVICE)])
+
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        return_value=working_api,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PASSWORD: "new-password"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+
 
 async def test_reauth_device_fetch_rejected_as_a_failed_login_is_reported(
     hass: HomeAssistant, service_auth_required: Mock
