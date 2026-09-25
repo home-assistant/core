@@ -26,7 +26,7 @@ type OPNsenseConvertedValue = datetime | str | None
 def _convert_expires(value: OPNsenseRawValue) -> OPNsenseConvertedValue:
     """Convert expires value to a timestamp when possible."""
     # Use exact type check to exclude bool, which is a subclass of int.
-    if type(value) is int:
+    if type(value) is int and value > 0:
         return dt_util.utcnow() + timedelta(seconds=value)
     return None
 

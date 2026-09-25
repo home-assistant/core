@@ -17,6 +17,8 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.util import dt as dt_util
 
+from .const import ARP
+
 from tests.common import MockConfigEntry
 
 
@@ -108,13 +110,17 @@ async def test_sensor_device_info_defaults(
     assert named_device.manufacturer == "OEM"
 
 
-@pytest.mark.usefixtures("mock_opnsense_client")
-async def test_expires_sensor_with_non_int_value_is_unknown(
+@pytest.mark.parametrize("expires", ["2026-06-01T10:00:00+00:00", 0, -1])
+async def test_expires_sensor_with_invalid_value_is_unknown(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
     entity_registry: er.EntityRegistry,
+    expires: str | int,
 ) -> None:
-    """Test timestamp sensor returns unknown when source value is not an int."""
+    """Test timestamp sensor returns unknown for invalid source values."""
+    mock_opnsense_client.get_arp_table.return_value = [{**ARP[1], "expires": expires}]
+
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
