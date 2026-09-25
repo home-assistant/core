@@ -890,3 +890,114 @@ async def test_motion_detector2_no_smart_sensitivity_support(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("switch.motion_detector_automatic_sensitivity") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "micromodule_relays": [
+                micromodule_relay_device(
+                    supports_switch_configuration=True, swap_inputs=False
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_micromodule_relay_swap_inputs(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Micromodule Relay's swap-inputs setting is exposed and controllable."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.micromodule_relays[0]
+
+    state = hass.states.get("switch.relay_swap_inputs")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.relay_swap_inputs"},
+        blocking=True,
+    )
+    assert device.swap_inputs is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.relay_swap_inputs"},
+        blocking=True,
+    )
+    assert device.swap_inputs is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "micromodule_relays": [
+                micromodule_relay_device(
+                    supports_switch_configuration=True, swap_outputs=False
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_micromodule_relay_swap_outputs(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Micromodule Relay's swap-outputs setting is exposed and controllable."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.micromodule_relays[0]
+
+    state = hass.states.get("switch.relay_swap_outputs")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.relay_swap_outputs"},
+        blocking=True,
+    )
+    assert device.swap_outputs is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.relay_swap_outputs"},
+        blocking=True,
+    )
+    assert device.swap_outputs is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "micromodule_relays": [
+                micromodule_relay_device(supports_switch_configuration=False)
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_micromodule_relay_no_switch_configuration_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No swap-inputs/outputs switches are created without switch-configuration support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.relay_swap_inputs") is None
+    assert hass.states.get("switch.relay_swap_outputs") is None

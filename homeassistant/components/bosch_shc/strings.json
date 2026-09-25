@@ -125,6 +125,12 @@
       "smart_sensitivity_enabled": {
         "name": "Automatic sensitivity"
       },
+      "swap_inputs": {
+        "name": "Swap inputs"
+      },
+      "swap_outputs": {
+        "name": "Swap outputs"
+      },
       "tamper_protection_enabled": {
         "name": "Sabotage detection"
       },
