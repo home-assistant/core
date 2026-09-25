@@ -23,6 +23,7 @@ from .helper import resolve_tfa_host
 
 _LOGGER = logging.getLogger(__name__)
 
+
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_IP_ADDRESS, default=""): str,
