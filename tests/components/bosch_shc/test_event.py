@@ -94,13 +94,18 @@ async def test_motion_detector_dedup_guard(
     ],
     indirect=True,
 )
-@pytest.mark.usefixtures("mock_session")
 async def test_motion_detector_no_replay_on_startup(
     hass: HomeAssistant,
+    mock_session: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """A pre-existing latestmotion value is not replayed as a new event on startup."""
     await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.motion_detectors[0]
+    latest_motion_service = device.device_services[0]
+
+    latest_motion_service._event_callbacks[device.id]()
+    await hass.async_block_till_done()
 
     state = hass.states.get("event.motion_detector")
     assert state is not None
