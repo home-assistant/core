@@ -1,0 +1,21 @@
+{
+  "domain": "neosol",
+  "name": "Profalux Neosol",
+  "codeowners": ["@bbayszczak"],
+  "config_flow": true,
+  "dependencies": ["usb"],
+  "documentation": "https://www.home-assistant.io/integrations/neosol",
+  "integration_type": "hub",
+  "iot_class": "assumed_state",
+  "loggers": ["pyneosol"],
+  "quality_scale": "silver",
+  "requirements": ["pyneosol==1.1.0"],
+  "single_config_entry": true,
+  "usb": [
+    {
+      "known_devices": ["MAI-DONGLE868-1A"],
+      "pid": "0003",
+      "vid": "10C4"
+    }
+  ]
+}

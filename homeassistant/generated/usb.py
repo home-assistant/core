@@ -45,6 +45,11 @@ USB = [
         "vid": "0572",
     },
     {
+        "domain": "neosol",
+        "pid": "0003",
+        "vid": "10C4",
+    },
+    {
         "description": "*raven*",
         "domain": "rainforest_raven",
         "manufacturer": "*rainforest*",
