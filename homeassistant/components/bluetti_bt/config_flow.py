@@ -55,9 +55,9 @@ class BluettiConfigFlow(ConfigFlow, domain=DOMAIN):
 
             data = await self._async_detect_bluetti_device(self._discovery_info.address)
 
-            if data is None:
-                errors["base"] = "unsupported_device"
-                return self.async_abort(reason="unsupported_device")
+            if isinstance(data, str):
+                errors["base"] = data
+                return self.async_abort(reason=data)
 
             return self.async_create_entry(
                 title=str(data.get(CONF_MODEL)),
@@ -85,8 +85,8 @@ class BluettiConfigFlow(ConfigFlow, domain=DOMAIN):
 
             data = await self._async_detect_bluetti_device(address)
 
-            if data is None:
-                return self.async_abort(reason="unsupported_device")
+            if isinstance(data, str):
+                return self.async_abort(reason=data)
 
             return self.async_update_reload_and_abort(
                 entry,
@@ -99,7 +99,7 @@ class BluettiConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=Schema({}),
         )
 
-    async def _async_detect_bluetti_device(self, address: str) -> dict | None:
+    async def _async_detect_bluetti_device(self, address: str) -> dict | str:
         _LOGGER.debug("Starting device detection")
 
         ble_device = bluetooth.async_ble_device_from_address(
@@ -107,7 +107,7 @@ class BluettiConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         if ble_device is None:
-            return None
+            return "unreachable"
 
         result = await recognize_device(
             address,
@@ -119,7 +119,7 @@ class BluettiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if result is None:
             _LOGGER.error("Unknown or unsupported device")
-            return None
+            return "unsupported_device"
 
         data = {
             CONF_ADDRESS: address,
