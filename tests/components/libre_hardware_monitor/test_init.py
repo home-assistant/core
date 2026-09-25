@@ -150,18 +150,18 @@ async def test_migration_to_sensor_device_classes(
     await init_integration(hass, legacy_config_entry)
 
     entity_entry = entity_registry.async_get(f"sensor.{object_id}")
-    assert entity_entry.unit_of_measurement == UnitOfDataRate.KILOBYTES_PER_SECOND
+    assert entity_entry.unit_of_measurement == UnitOfDataRate.KIBIBYTES_PER_SECOND
 
     # the entity keeps reporting the migrated unit once it is set up
     state = hass.states.get(f"sensor.{object_id}")
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == (
-        UnitOfDataRate.KILOBYTES_PER_SECOND
+        UnitOfDataRate.KIBIBYTES_PER_SECOND
     )
 
     custom_equivalent_units = async_custom_equivalent_units(hass)
     assert custom_equivalent_units == {
         f"sensor.{object_id}": {
-            LEGACY_THROUGHPUT_UNIT: UnitOfDataRate.KILOBYTES_PER_SECOND
+            LEGACY_THROUGHPUT_UNIT: UnitOfDataRate.KIBIBYTES_PER_SECOND
         }
     }
 

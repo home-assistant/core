@@ -69,7 +69,7 @@ async def async_migrate_entry(
         _LOGGER.debug("Migration to version 2.1 successful")
 
     if config_entry.version == 2 and config_entry.minor_version == 1:
-        # Migrate Throughput unit from KB/s to kB/s
+        # Migrate Throughput unit from KB/s to KiB/s
         entity_registry = er.async_get(hass)
         registry_entries = er.async_entries_for_config_entry(
             entity_registry, config_entry.entry_id
@@ -85,11 +85,11 @@ async def async_migrate_entry(
                 "Migrating entity %s unit from %s to %s",
                 reg_entry.entity_id,
                 reg_entry.unit_of_measurement,
-                UnitOfDataRate.KILOBYTES_PER_SECOND,
+                UnitOfDataRate.KIBIBYTES_PER_SECOND,
             )
             entity_registry.async_update_entity(
                 reg_entry.entity_id,
-                unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
+                unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
             )
 
         hass.config_entries.async_update_entry(

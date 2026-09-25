@@ -105,9 +105,9 @@ class LibreHardwareMonitorSensor(
 
             if device_class is SensorDeviceClass.DATA_RATE:
                 self._attr_suggested_unit_of_measurement = (
-                    UnitOfDataRate.KILOBYTES_PER_SECOND
+                    UnitOfDataRate.KIBIBYTES_PER_SECOND
                 )
-                # Device class default rounds throughput to whole kB/s
+                # Device class default rounds throughput to whole KiB/s
                 self._attr_suggested_display_precision = 1
             elif device_class is SensorDeviceClass.VOLTAGE:
                 # Device class default rounds voltages to whole volts
