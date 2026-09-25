@@ -1,7 +1,9 @@
 """Tests for rainbird button platform."""
 
 from http import HTTPStatus
+import json
 
+from pyrainbird import encryption
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -14,6 +16,7 @@ from homeassistant.helpers import entity_registry as er
 from .conftest import (
     ACK_ECHO,
     CONFIG_ENTRY_DATA_OLD_FORMAT,
+    PASSWORD,
     mock_response,
     mock_response_error,
 )
@@ -72,23 +75,36 @@ async def test_program_count(hass: HomeAssistant) -> None:
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 3
 
 
+@pytest.mark.parametrize(
+    ("program", "command"),
+    [
+        pytest.param("a", "3800", id="program_a"),
+        pytest.param("b", "3801", id="program_b"),
+        pytest.param("c", "3802", id="program_c"),
+    ],
+)
 async def test_press(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     responses: list[AiohttpClientMockResponse],
+    program: str,
+    command: str,
 ) -> None:
-    """Test pressing a button starts the program."""
+    """Test pressing a button starts its program."""
     aioclient_mock.mock_calls.clear()
     responses.append(mock_response(ACK_ECHO))
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: PROGRAM_A_ENTITY_ID},
+        {ATTR_ENTITY_ID: f"button.rain_bird_controller_run_pgm_{program}"},
         blocking=True,
     )
 
     assert len(aioclient_mock.mock_calls) == 1
+    payload = encryption.decrypt(aioclient_mock.mock_calls[0][2], PASSWORD)
+    request = json.loads(payload.decode().rstrip("\x00"))
+    assert request["params"]["data"] == command
 
 
 @pytest.mark.parametrize(
