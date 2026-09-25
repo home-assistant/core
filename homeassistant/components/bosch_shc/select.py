@@ -39,10 +39,7 @@ def _siren_current_option(
 
 async def _siren_select_option(device: SHCOutdoorSiren, option: str) -> None:
     """Write the Outdoor Siren's sound level."""
-    try:
-        level = OutdoorSirenService.SoundLevel[option.upper()]
-    except KeyError:
-        return
+    level = OutdoorSirenService.SoundLevel[option.upper()]
     await device.siren.async_set_configuration(sound_level=level)
 
 
