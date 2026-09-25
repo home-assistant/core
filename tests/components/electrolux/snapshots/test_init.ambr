@@ -30,6 +30,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_all_appliances[dish_washer]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '911438421_03:33109002-443E07338CF5',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'AEG',
+    'model': 'SprayZone',
+    'model_id': None,
+    'name': 'Dish Washer',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '33109002',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_all_appliances[electrolux_ac]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -336,6 +367,68 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '74852244',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[washer_dryer]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '999007132_50:23300001-443E0733A070',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'AEG',
+    'model': '9000 Series',
+    'model_id': None,
+    'name': 'Washer Dryer',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '23300001',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[washing_machine]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '999007091_50:22002306-443E071A93FA',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'AEG',
+    'model': 'LR744P96Q',
+    'model_id': None,
+    'name': 'Washing Machine',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '22002306',
     'sw_version': None,
     'via_device_id': None,
   })
