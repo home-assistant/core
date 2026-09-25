@@ -61,10 +61,9 @@ class ArcamFmjCoordinator(DataUpdateCoordinator[None]):
             unique_id_device += f"-{zone}"
             device_name += f" Zone {zone}"
 
-        self._device_identifier = (DOMAIN, unique_id_device)
         self.device_name = device_name
         self.device_info = DeviceInfo(
-            identifiers={self._device_identifier},
+            identifiers={(DOMAIN, unique_id_device)},
             manufacturer="Arcam",
             model="Arcam FMJ AVR",
             name=device_name,
