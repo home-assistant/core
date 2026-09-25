@@ -1073,8 +1073,14 @@
           "level_3": "[%key:common::state::full%]"
         }
       },
+      "water_once": {
+        "name": "Session water usage"
+      },
       "water_time": {
         "name": "Water usage duration"
+      },
+      "water_total": {
+        "name": "Total water usage"
       },
       "wind_chill_index_temperature": {
         "name": "Wind chill index"
