@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, override
 
 import aiounifi
-from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
+from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.dpi_restriction_groups import DPIRestrictionGroups
 from aiounifi.interfaces.firewall_policies import FirewallPolicies
@@ -47,6 +47,12 @@ from aiounifi.models.port_forward import PortForward, PortForwardEnableRequest
 from aiounifi.models.traffic_route import TrafficRoute, TrafficRouteSaveRequest
 from aiounifi.models.traffic_rule import TrafficRule, TrafficRuleEnableRequest
 from aiounifi.models.wlan import Wlan, WlanEnableRequest
+from aiounifi.network.v1.interfaces.firewall import (
+    FirewallPolicies as NetworkFirewallPolicies,
+)
+from aiounifi.network.v1.interfaces.wifi_broadcasts import WifiBroadcasts
+from aiounifi.network.v1.models.firewall import FirewallPolicy as NetworkFirewallPolicy
+from aiounifi.network.v1.models.wifi_broadcast import WifiBroadcast
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -62,6 +68,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
 from .const import ATTR_MANUFACTURER, DOMAIN
+from .coordinator import UnifiApiHandler
 from .entity import (
     SubscriptionType,
     UnifiEntity,
@@ -69,6 +76,7 @@ from .entity import (
     async_client_device_info_fn,
     async_device_available_fn,
     async_device_device_info_fn,
+    async_wifi_broadcast_device_info_fn,
     async_wlan_device_info_fn,
 )
 from .hub import UnifiHub
@@ -251,8 +259,29 @@ async def async_wlan_control_fn(hub: UnifiHub, obj_id: str, target: bool) -> Non
     await hub.api.request(WlanEnableRequest.create(obj_id, target))
 
 
+async def async_network_firewall_policy_control_fn(
+    hub: UnifiHub, obj_id: str, target: bool
+) -> None:
+    """Enable or disable a firewall policy of the Integration API."""
+    await hub.api.network.firewall_policies.set_enabled(obj_id, target)
+
+
+async def async_network_wlan_control_fn(
+    hub: UnifiHub, obj_id: str, target: bool
+) -> None:
+    """Enable or disable a WiFi broadcast of the Integration API."""
+    await hub.api.network.wifi_broadcasts.set_enabled(obj_id, target)
+
+
+@callback
+def async_network_firewall_policy_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if a firewall policy of the Integration API can be controlled."""
+    policy = hub.api.network.firewall_policies[obj_id]
+    return not policy.predefined and policy.name != ""
+
+
 @dataclass(frozen=True, kw_only=True)
-class UnifiSwitchEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
+class UnifiSwitchEntityDescription[HandlerT: UnifiApiHandler, ApiItemT: ApiItem](
     SwitchEntityDescription, UnifiEntityDescription[HandlerT, ApiItemT]
 ):
     """Class describing UniFi switch entity."""
@@ -421,21 +450,53 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
 )
 
 
+NETWORK_API_ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
+    UnifiSwitchEntityDescription[NetworkFirewallPolicies, NetworkFirewallPolicy](
+        key="Firewall policy control",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        api_handler_fn=lambda api: api.network.firewall_policies,
+        control_fn=async_network_firewall_policy_control_fn,
+        device_info_fn=async_unifi_network_device_info_fn,
+        is_on_fn=lambda hub, firewall_policy: firewall_policy.enabled,
+        name_fn=lambda firewall_policy: firewall_policy.name,
+        object_fn=lambda api, obj_id: api.network.firewall_policies[obj_id],
+        unique_id_fn=lambda hub, obj_id: f"firewall_policy-{obj_id}",
+        supported_fn=async_network_firewall_policy_supported_fn,
+    ),
+    UnifiSwitchEntityDescription[WifiBroadcasts, WifiBroadcast](
+        key="WLAN control",
+        translation_key="wlan_control",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        api_handler_fn=lambda api: api.network.wifi_broadcasts,
+        control_fn=async_network_wlan_control_fn,
+        device_info_fn=async_wifi_broadcast_device_info_fn,
+        is_on_fn=lambda hub, broadcast: broadcast.enabled,
+        object_fn=lambda api, obj_id: api.network.wifi_broadcasts[obj_id],
+        unique_id_fn=lambda hub, obj_id: f"wlan-{obj_id}",
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: UnifiConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches for UniFi Network integration."""
-    config_entry.runtime_data.entity_loader.register_platform(
+    hub = config_entry.runtime_data
+    hub.entity_loader.register_platform(
         async_add_entities,
         UnifiSwitchEntity,
-        ENTITY_DESCRIPTIONS,
+        NETWORK_API_ENTITY_DESCRIPTIONS
+        if hub.config.uses_api_key
+        else ENTITY_DESCRIPTIONS,
         requires_admin=True,
     )
 
 
-class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
+class UnifiSwitchEntity[HandlerT: UnifiApiHandler, ApiItemT: ApiItem](
     UnifiEntity[HandlerT, ApiItemT], SwitchEntity
 ):
     """Base representation of a UniFi switch."""

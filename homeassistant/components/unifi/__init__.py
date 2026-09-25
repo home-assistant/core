@@ -11,9 +11,16 @@ from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, PLATFORMS, UNIFI_WIRELESS_CLIENTS
+from .const import (
+    CONF_CONNECTION_MODE,
+    CONNECTION_MODE_API_KEY,
+    DOMAIN,
+    PLATFORMS,
+    UNIFI_WIRELESS_CLIENTS,
+)
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import UnifiHub, get_unifi_api
+from .hub.client_store import UnifiNetworkClientStore
 from .services import async_setup_services
 
 type UnifiConfigEntry = ConfigEntry[UnifiHub]
@@ -58,17 +65,18 @@ async def async_setup_entry(
     # the matching device existing in the registry. Other fields are populated
     # when entities with DeviceInfo are added by their respective platforms.
     device_registry = dr.async_get(hass)
-    for device in hub.api.devices.values():
+    for mac in _device_macs(hub):
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
         )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     hub.async_update_device_registry()
     hub.entity_loader.load_entities()
 
-    hub.websocket.start()
+    if not hub.config.uses_api_key:
+        hub.websocket.start()
 
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, hub.shutdown)
@@ -83,6 +91,14 @@ async def async_unload_entry(
     return await config_entry.runtime_data.async_reset()
 
 
+async def async_remove_entry(
+    hass: HomeAssistant, config_entry: UnifiConfigEntry
+) -> None:
+    """Delete what an entry set up with an API key stored."""
+    if config_entry.data.get(CONF_CONNECTION_MODE) == CONNECTION_MODE_API_KEY:
+        await UnifiNetworkClientStore(hass, config_entry).async_remove()
+
+
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: UnifiConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
@@ -90,10 +106,17 @@ async def async_remove_config_entry_device(
     if not isinstance(device_entry, dr.DeviceEntry):
         # This integration does not create child devices.
         return False
-    hub = config_entry.runtime_data
+    device_macs = set(_device_macs(config_entry.runtime_data))
     return not any(
-        identifier in hub.api.devices for _, identifier in device_entry.connections
+        identifier in device_macs for _, identifier in device_entry.connections
     )
+
+
+def _device_macs(hub: UnifiHub) -> list[str]:
+    """MAC addresses of the UniFi devices of the site."""
+    if hub.config.uses_api_key:
+        return list(hub.api.network.devices)
+    return [device.mac for device in hub.api.devices.values()]
 
 
 class UnifiWirelessClients:

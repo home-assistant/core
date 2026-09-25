@@ -15,33 +15,23 @@
     },
     "flow_title": "{name} ({host})",
     "step": {
-      "reconfigure": {
+      "api_key": {
+        "title": "Set up UniFi Network with an API key",
+        "description": "Connect with an API key from *Network → Settings → Control Plane → Integrations*, without a local user. This mode provides device and client trackers, device state, WLAN and firewall policy switches, device restart and a WLAN password button. For more information: {api_key_documentation_url}",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "site": "[%key:component::unifi::config::step::user::data::site%]",
-          "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "[%key:component::unifi::config::step::user::data_description::host%]",
-          "password": "[%key:component::unifi::config::step::user::data_description::password%]",
-          "port": "[%key:component::unifi::config::step::user::data_description::port%]",
-          "username": "[%key:component::unifi::config::step::user::data_description::username%]",
-          "verify_ssl": "[%key:component::unifi::config::step::user::data_description::verify_ssl%]"
-        },
-        "title": "[%key:component::unifi::config::step::user::title%]"
-      },
-      "site": {
-        "data": {
-          "site": "Site ID"
-        },
-        "data_description": {
-          "site": "The site ID of the UniFi Network site to manage."
+          "host": "[%key:component::unifi::config::step::local_user::data_description::host%]",
+          "api_key": "API key created in the UniFi Network application. Only the Network Integration API is used; entities that need a local user are not available.",
+          "port": "[%key:component::unifi::config::step::local_user::data_description::port%]",
+          "verify_ssl": "[%key:component::unifi::config::step::local_user::data_description::verify_ssl%]"
         }
       },
-      "user": {
+      "local_user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
@@ -58,6 +48,73 @@
           "verify_ssl": "Whether to verify the SSL certificate of the UniFi Network."
         },
         "title": "Set up UniFi Network"
+      },
+      "network_site": {
+        "data": {
+          "site": "[%key:component::unifi::config::step::site::data::site%]"
+        },
+        "data_description": {
+          "site": "[%key:component::unifi::config::step::site::data_description::site%]"
+        }
+      },
+      "reauth_api_key": {
+        "title": "Reauthenticate UniFi Network (API key)",
+        "description": "The API key is missing or was rejected. Enter a new API key from the UniFi Network application. For more information: {api_key_documentation_url}",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::unifi::config::step::api_key::data_description::api_key%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "site": "[%key:component::unifi::config::step::local_user::data::site%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "[%key:component::unifi::config::step::local_user::data_description::host%]",
+          "password": "[%key:component::unifi::config::step::local_user::data_description::password%]",
+          "port": "[%key:component::unifi::config::step::local_user::data_description::port%]",
+          "username": "[%key:component::unifi::config::step::local_user::data_description::username%]",
+          "verify_ssl": "[%key:component::unifi::config::step::local_user::data_description::verify_ssl%]"
+        },
+        "title": "[%key:component::unifi::config::step::local_user::title%]"
+      },
+      "reconfigure_api_key": {
+        "title": "[%key:component::unifi::config::step::api_key::title%]",
+        "description": "[%key:component::unifi::config::step::api_key::description%]",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "[%key:component::unifi::config::step::local_user::data_description::host%]",
+          "api_key": "[%key:component::unifi::config::step::api_key::data_description::api_key%]",
+          "port": "[%key:component::unifi::config::step::local_user::data_description::port%]",
+          "verify_ssl": "[%key:component::unifi::config::step::local_user::data_description::verify_ssl%]"
+        }
+      },
+      "site": {
+        "data": {
+          "site": "Site ID"
+        },
+        "data_description": {
+          "site": "The site ID of the UniFi Network site to manage."
+        }
+      },
+      "user": {
+        "menu_options": {
+          "local_user": "Local user (full access)",
+          "api_key": "API key only (limited feature set)"
+        },
+        "description": "A local user gives access to everything. An API key works on consoles that cannot have local users, such as members of a UniFi fabric, but provides fewer entities."
       }
     }
   },

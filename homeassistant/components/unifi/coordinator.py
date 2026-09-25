@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, override
 
 from aiounifi import EndpointNotFound
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
+from aiounifi.network.v1.api_handlers import APIHandler as NetworkAPIHandler
 
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -17,8 +18,11 @@ if TYPE_CHECKING:
 POLL_INTERVAL = timedelta(seconds=10)
 IDLE_POLL_INTERVAL = timedelta(minutes=10)
 
+type UnifiApiHandler = APIHandler | NetworkAPIHandler
+"""A handler of the classic API, or of the Network Integration API."""
 
-class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
+
+class UnifiDataUpdateCoordinator[HandlerT: UnifiApiHandler](
     DataUpdateCoordinator[tuple[ItemEvent, str] | None]
 ):
     """Coordinator managing websocket or polling updates for a UniFi API handler."""
@@ -31,7 +35,10 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
         disable_polling_on_endpoint_not_found: bool = False,
     ) -> None:
         """Initialize coordinator."""
-        supports_websocket = bool(handler.process_messages or handler.remove_messages)
+        # Handlers of the Integration API have no websocket and are polled
+        supports_websocket = isinstance(handler, APIHandler) and bool(
+            handler.process_messages or handler.remove_messages
+        )
         super().__init__(
             hub.hass,
             LOGGER,
