@@ -419,6 +419,16 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
+        entity_description=MatterNumericSwitchEntityDescription(
+            key="DoorLockEnableOneTouchLocking",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="one_touch_locking",
+        ),
+        entity_class=MatterNumericSwitch,
+        required_attributes=(clusters.DoorLock.Attributes.EnableOneTouchLocking,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
         entity_description=MatterGenericCommandSwitchEntityDescription(
             key="EnergyEvseChargingSwitch",
             translation_key="evse_charging_switch",
