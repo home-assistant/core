@@ -4,13 +4,13 @@ from abc import ABC, abstractmethod
 import asyncio
 from enum import StrEnum
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientError
 from ha_silabs_firmware_client import FirmwareUpdateClient, ManifestMissing
-from universal_silabs_flasher.common import Version
-from universal_silabs_flasher.firmware import NabuCasaMetadata
-from universal_silabs_flasher.flasher import DeviceSpecificFlasher
+
+if TYPE_CHECKING:
+    from universal_silabs_flasher.flasher import DeviceSpecificFlasher
 
 from homeassistant.components.hassio import (
     AddonError,
@@ -273,6 +273,11 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 assert self._probed_firmware_info is not None
 
                 # Make sure we do not downgrade the firmware
+                from universal_silabs_flasher.common import Version  # noqa: PLC0415
+                from universal_silabs_flasher.firmware import (  # noqa: PLC0415
+                    NabuCasaMetadata,
+                )
+
                 fw_metadata = NabuCasaMetadata.from_json(fw_manifest.metadata)
                 fw_version = fw_metadata.get_public_version()
                 probed_fw_version = Version(self._probed_firmware_info.firmware_version)

@@ -4,7 +4,6 @@ import logging
 from typing import override
 
 from aiohasupervisor import SupervisorError
-from universal_silabs_flasher.flasher import YellowFlasher
 
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
@@ -17,6 +16,7 @@ from homeassistant.components.homeassistant_hardware.update import (
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    LazyFlasherClass,
     async_get_raspberry_pi_firmware_info,
 )
 from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
@@ -178,7 +178,7 @@ async def async_setup_entry(
 class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """Yellow firmware update entity."""
 
-    _flasher_cls = YellowFlasher
+    _flasher_cls = LazyFlasherClass("YellowFlasher")
 
     def __init__(
         self,

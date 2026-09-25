@@ -813,7 +813,7 @@ async def test_probe_silabs_firmware_type(
     mock_flasher.app_type = None
 
     with patch(
-        "homeassistant.components.homeassistant_hardware.util.Flasher",
+        "universal_silabs_flasher.flasher.Flasher",
         autospec=True,
         return_value=mock_flasher,
     ):
@@ -872,9 +872,7 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
                 owners=[owner1, owner2],
             ),
         ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
-        ),
+        patch("universal_silabs_flasher.firmware.parse_firmware_image"),
         patch(
             "homeassistant.components.homeassistant_hardware.util.probe_silabs_firmware_info",
             return_value=expected_firmware_info,
@@ -952,9 +950,7 @@ async def test_async_flash_silabs_firmware_flash_failure(
                 owners=[owner1, owner2],
             ),
         ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
-        ),
+        patch("universal_silabs_flasher.firmware.parse_firmware_image"),
         pytest.raises(HomeAssistantError, match=expected_error_msg) as exc,
     ):
         async with async_firmware_flashing_context(
@@ -1006,9 +1002,7 @@ async def test_async_flash_silabs_firmware_probe_failure(hass: HomeAssistant) ->
                 owners=[owner1, owner2],
             ),
         ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
-        ),
+        patch("universal_silabs_flasher.firmware.parse_firmware_image"),
         patch(
             "homeassistant.components.homeassistant_hardware.util.probe_silabs_firmware_info",
             return_value=None,

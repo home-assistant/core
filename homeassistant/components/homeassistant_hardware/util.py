@@ -7,12 +7,14 @@ from contextlib import AsyncExitStack, asynccontextmanager
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
+from typing import TYPE_CHECKING
 
 from aiohasupervisor import SupervisorError, SupervisorNotFoundError
 from aiohasupervisor.models import RaspberryPiFirmwareInfo
-from universal_silabs_flasher.const import ApplicationType as FlasherApplicationType
-from universal_silabs_flasher.firmware import parse_firmware_image
-from universal_silabs_flasher.flasher import BaseFlasher, DeviceSpecificFlasher, Flasher
+
+if TYPE_CHECKING:
+    from universal_silabs_flasher.const import ApplicationType as FlasherApplicationType
+    from universal_silabs_flasher.flasher import BaseFlasher, DeviceSpecificFlasher
 
 from homeassistant.components.hassio import (
     AddonError,
@@ -110,6 +112,10 @@ class ApplicationType(StrEnum):
 
     def as_flasher_application_type(self) -> FlasherApplicationType:
         """Convert the application type enum into one compatible with USF."""
+        from universal_silabs_flasher.const import (  # noqa: PLC0415
+            ApplicationType as FlasherApplicationType,
+        )
+
         return FlasherApplicationType(self.value)
 
 
@@ -429,6 +435,8 @@ async def probe_silabs_firmware_type(
     application_probe_methods: Sequence[tuple[ApplicationType, int]],
 ) -> ApplicationType | None:
     """Probe the running firmware type on a SiLabs device."""
+    from universal_silabs_flasher.flasher import Flasher  # noqa: PLC0415
+
     flasher = Flasher(
         device=device,
         probe_methods=[
@@ -475,6 +483,8 @@ async def async_flash_silabs_firmware(
 
     This function is meant to be used within a firmware update context.
     """
+
+    from universal_silabs_flasher.firmware import parse_firmware_image  # noqa: PLC0415
 
     fw_image = await hass.async_add_executor_job(parse_firmware_image, fw_data)
 
@@ -582,3 +592,23 @@ async def async_update_raspberry_pi_firmware(hass: HomeAssistant) -> None:
         raise HomeAssistantError(
             f"Error updating Raspberry Pi firmware: {err}"
         ) from err
+
+
+class LazyFlasherClass:
+    """Descriptor that defers the flasher class import until first access.
+
+    The universal_silabs_flasher package pulls in zigpy and bellows, which are
+    expensive to import. Using this descriptor as a class variable lets
+    subclasses declare the flasher class name without importing it at module
+    load time.
+    """
+
+    def __init__(self, name: str) -> None:
+        """Store the class name for later resolution."""
+        self._name = name
+
+    def __get__(self, obj: object, objtype: type | None = None) -> type:
+        """Import the flasher module and return the requested class."""
+        from universal_silabs_flasher import flasher  # noqa: PLC0415
+
+        return getattr(flasher, self._name)  # type: ignore[no-any-return]

@@ -3,8 +3,6 @@
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, override
 
-from universal_silabs_flasher.flasher import Zbt2Flasher
-
 from homeassistant.components import usb
 from homeassistant.components.homeassistant_hardware import firmware_config_flow
 from homeassistant.components.homeassistant_hardware.helpers import (
@@ -13,6 +11,7 @@ from homeassistant.components.homeassistant_hardware.helpers import (
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    LazyFlasherClass,
 )
 from homeassistant.components.usb import usb_service_info_from_device
 from homeassistant.config_entries import (
@@ -72,7 +71,7 @@ class ZBT2FirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
     context: ConfigFlowContext
 
     ZIGBEE_BAUDRATE = 460800
-    _flasher_cls = Zbt2Flasher
+    _flasher_cls = LazyFlasherClass("Zbt2Flasher")
 
     async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None
