@@ -30,6 +30,8 @@ class PollingCoordinator(DataUpdateCoordinator):
         self.mac = config_entry.data.get(CONF_ADDRESS)
         mac_str = str(self.mac).replace(":", "")
 
+        ble_device = bluetooth.async_ble_device_from_address(hass, str(self.mac))
+
         super().__init__(
             hass,
             logging.getLogger(f"{__name__}.{mac_str}"),
@@ -37,6 +39,9 @@ class PollingCoordinator(DataUpdateCoordinator):
             name=f"{DOMAIN}.{mac_str}",
             update_interval=timedelta(seconds=60),
         )
+
+        if ble_device is None:
+            raise HomeAssistantError("Device not found")
 
         if config_entry.data.get(CONF_API_VERSION) == 1:
             self.device = BaseDeviceV1()
@@ -52,6 +57,7 @@ class PollingCoordinator(DataUpdateCoordinator):
             DeviceReaderConfig(
                 use_encryption=config_entry.data.get(CONF_ENCRYPTION),
             ),
+            ble_device=ble_device,
         )
 
     @override
