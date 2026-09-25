@@ -5,6 +5,7 @@ from functools import partial
 from re import search
 from types import MethodType
 from typing import Any, override
+from xml.parsers.expat import ExpatError
 
 from probatio import Invalid
 
@@ -90,6 +91,9 @@ def _validate_sensor_input(
                         else CONF_JSON_ATTRS
                     ] = ex.translation_key
                     placeholders = ex.translation_placeholders or {}
+        except ExpatError as ex:
+            errors["base"] = "xml_parse_error"
+            placeholders["xml_parse_error_message"] = str(ex)
     try:
         _validate_unit(input)
     except Invalid as ex:
@@ -185,7 +189,6 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Show menu for subentry creation."""
 
-        # Add steps dynamically
         async def _async_subentry_step(
             self: RestConfigFlow, user_input: dict[str, Any] | None, platform: str
         ) -> ConfigFlowResult:
@@ -235,6 +238,9 @@ class RestSubentryFlow(ConfigSubentryFlow):
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {}
         if user_input is not None:
+            entry: RestConfigEntry = self._get_entry()
+            if entry.state is not ConfigEntryState.LOADED:
+                return self.async_abort(reason="config_entry_not_loaded")
             validator: (
                 Callable[
                     [dict[str, Any], RestData], tuple[dict[str, str], dict[str, str]]
@@ -242,9 +248,6 @@ class RestSubentryFlow(ConfigSubentryFlow):
                 | None
             ) = SUBENTRY_CONFIG[Platform(self._subentry_type)][VALIDATOR]
             if validator is not None:
-                entry: RestConfigEntry = self._get_entry()
-                if entry.state is not ConfigEntryState.LOADED:
-                    return self.async_abort(reason="config_entry_not_loaded")
                 errors, placeholders = validator(user_input, entry.runtime_data.rest)
             if not errors:
                 title: str = user_input.get(

@@ -368,7 +368,7 @@ async def test_config_invalid_authentication_input(
     with pytest.raises(InvalidData) as ex:
         await hass.config_entries.flow.async_configure(result["flow_id"], user_input)
 
-    assert ex.value.error_message == "not a valid option."
+    assert ex.value.error_message == "not a valid option"
 
 
 async def test_config_template_error(
@@ -411,4 +411,44 @@ async def test_config_flow_template_error(
         result["errors"]
         and "base" in result["errors"]
         and result["errors"]["base"] == "template_error"
+    )
+
+
+async def test_config_flow_xml_parse_error(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    get_config_entry_data: dict[str, Any],
+    get_subentry_data: list[config_entries.ConfigSubentryData],
+) -> None:
+    """Test if the subentry user flow handles ExpatErrors correctly."""
+
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
+        text='<?xml version="1.0" encoding="UTF-8"?><root><item>this was not closed</root>',
+        headers={"Content-Type": "application/xml"},
+    )
+
+    entry = await async_setup_entry(hass, get_config_entry_data)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, Platform.SENSOR),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        (
+            get_subentry_data[SENSOR_DATA]["data"]
+            | {
+                CONF_JSON_ATTRS_PATH: "$.root",
+                CONF_JSON_ATTRS: [{"item": "item"}],
+            }
+        ),
+    )
+
+    assert (
+        result["errors"]
+        and "base" in result["errors"]
+        and result["errors"]["base"] == "xml_parse_error"
     )

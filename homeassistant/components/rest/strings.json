@@ -128,7 +128,8 @@
         "no_json": "[%key:component::rest::exceptions::no_json::message%]",
         "parse_error": "[%key:component::rest::exceptions::parse_error::message%]",
         "state_class_validation_error": "{state_class_validation_error_message}",
-        "unit_validation_error": "{unit_validation_error_message}"
+        "unit_validation_error": "{unit_validation_error_message}",
+        "xml_parse_error": "REST result could not be parsed as XML: {xml_parse_error_message}"
       },
       "initiate_flow": {
         "user": "Add sensor"
