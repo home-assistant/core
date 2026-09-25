@@ -63,6 +63,19 @@
       "depNameTemplate": "mariadb",
       "datasourceTemplate": "docker",
       "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "Update the PostgreSQL entries in the CI database test matrix",
+      "managerFilePatterns": ["/^\\.github/workflows/ci\\.yaml$/"],
+      "matchStringsStrategy": "recursive",
+      "matchStrings": [
+        "POSTGRESQL_VERSIONS: \".*\"",
+        "postgres:(?<currentValue>\\d+\\.\\d+)"
+      ],
+      "depNameTemplate": "postgres",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
     }
   ],
 
@@ -274,6 +287,21 @@
       "enabled": false
     },
     {
+      "description": "PostgreSQL versions tested in CI (allowlisted). Docker Hub returns no release timestamps for these tags, so the global cooldown needs to be bypassed.",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["postgres"],
+      "enabled": true,
+      "minimumReleaseAge": null,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "Keep each PostgreSQL entry on its major version. Adding a new major to the matrix is a deliberate choice.",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["postgres"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
       "description": "Group ruff pre-commit hook with its PyPI twin into one PR",
       "matchPackageNames": ["astral-sh/ruff-pre-commit", "ruff"],
       "groupName": "ruff",
@@ -326,6 +354,13 @@
       "matchPackageNames": ["/^types-/"],
       "groupName": "types stubs",
       "groupSlug": "types-stubs"
+    },
+    {
+      "description": "Group the PostgreSQL CI matrix updates into one PR (all supported majors are released on the same day)",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["postgres"],
+      "groupName": "PostgreSQL CI matrix",
+      "groupSlug": "postgresql-ci"
     },
     {
       "description": "uv and pnpm release almost daily, so the cooldown alone still gives a PR (and a full CI run) nearly every day. Limit them to one PR per week.",
