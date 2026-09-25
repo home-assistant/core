@@ -3,6 +3,7 @@
 from typing import override
 
 from pyrainbird.exceptions import RainbirdApiException, RainbirdDeviceBusyException
+from pyrainbird.timeline import ProgramId
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
@@ -37,13 +38,13 @@ class RainbirdProgramButton(CoordinatorEntity[RainbirdUpdateCoordinator], Button
         """Initialize the Rain Bird program button."""
         super().__init__(coordinator)
         self._program = program
-        letter = chr(ord("A") + program)
-        self._attr_translation_placeholders = {"program": letter}
+        program_name = ProgramId(program).name
+        self._attr_translation_placeholders = {"program": program_name}
         if coordinator.unique_id is not None:
             self._attr_unique_id = f"{coordinator.unique_id}-program-{program}"
             self._attr_device_info = coordinator.device_info
         else:
-            self._attr_name = f"{coordinator.device_name} Run program {letter}"
+            self._attr_name = f"{coordinator.device_name} Run {program_name}"
 
     @override
     async def async_press(self) -> None:

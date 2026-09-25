@@ -41,7 +41,7 @@
     },
     "button": {
       "run_program": {
-        "name": "Run program {program}"
+        "name": "Run {program}"
       }
     },
     "number": {

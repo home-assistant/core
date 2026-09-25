@@ -21,7 +21,7 @@ from .conftest import (
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
-PROGRAM_A_ENTITY_ID = "button.rain_bird_controller_run_program_a"
+PROGRAM_A_ENTITY_ID = "button.rain_bird_controller_run_pgm_a"
 
 
 @pytest.fixture
@@ -54,12 +54,12 @@ async def test_program_buttons(
     unique_id: str,
 ) -> None:
     """Test a button is created for each program supported by the ESP-TM2."""
-    entity_id = f"button.rain_bird_controller_run_program_{program}"
+    entity_id = f"button.rain_bird_controller_run_pgm_{program}"
     state = hass.states.get(entity_id)
     assert state is not None
     assert (
         state.attributes["friendly_name"]
-        == f"Rain Bird Controller Run program {program.upper()}"
+        == f"Rain Bird Controller Run PGM {program.upper()}"
     )
 
     entity_entry = entity_registry.async_get(entity_id)
@@ -143,5 +143,5 @@ async def test_no_unique_id(
 
     state = hass.states.get(PROGRAM_A_ENTITY_ID)
     assert state is not None
-    assert state.attributes["friendly_name"] == "Rain Bird Controller Run program A"
+    assert state.attributes["friendly_name"] == "Rain Bird Controller Run PGM A"
     assert not entity_registry.async_get(PROGRAM_A_ENTITY_ID)
