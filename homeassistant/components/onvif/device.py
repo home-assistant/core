@@ -67,6 +67,53 @@ class ONVIFDevice:
 
         self._dt_diff_seconds: float = 0
 
+    @callback
+    def async_mark_available(self) -> None:
+        """Mark the device as available after recovery."""
+        if not self.available:
+            LOGGER.info("%s: Device back online", self.name)
+            self.available = True
+
+    @callback
+    def async_mark_unavailable(self) -> None:
+        """Mark the device as unavailable."""
+        if self.available:
+            LOGGER.warning("%s: Device appears offline", self.name)
+            self.available = False
+
+    async def async_refresh_profiles(self, *, initial: bool = False) -> None:
+        """Re-fetch profiles and reload config entry if they changed.
+
+        When initial=True, this is called during first setup and will raise
+        ONVIFError if no profiles are found.
+        """
+        try:
+            new_profiles = await self.async_get_profiles()
+        except GET_CAPABILITIES_EXCEPTIONS:
+            if initial:
+                raise
+            LOGGER.debug("%s: Could not refresh profiles", self.name, exc_info=True)
+            return
+        if not new_profiles:
+            if initial:
+                raise ONVIFError("No camera profiles found")
+            return
+        old_tokens = {p.token for p in self.profiles}
+        new_tokens = {p.token for p in new_profiles}
+        if old_tokens != new_tokens:
+            LOGGER.info(
+                "%s: Profile change detected (old=%s, new=%s), reloading",
+                self.name,
+                old_tokens,
+                new_tokens,
+            )
+            self.profiles = new_profiles
+            if not initial:
+                self.hass.async_create_background_task(
+                    self.hass.config_entries.async_reload(self.config_entry.entry_id),
+                    f"{self.name} reload after profile change",
+                )
+
     async def _async_update_listener(
         self, hass: HomeAssistant, entry: ConfigEntry
     ) -> None:
@@ -120,7 +167,13 @@ class ONVIFDevice:
 
         # Create event manager
         assert self.config_entry.unique_id
-        self.events = EventManager(self.hass, self.device, self.config_entry, self.name)
+        self.events = EventManager(
+            self.hass,
+            self.device,
+            self.config_entry,
+            self.name,
+            onvif_device=self,
+        )
 
         # Fetch basic device info and capabilities
         self.info = await self.async_get_device_info()
@@ -138,12 +191,8 @@ class ONVIFDevice:
         self.capabilities = await self.async_get_capabilities()
 
         LOGGER.debug("%s: fetching profiles", self.name)
-        self.profiles = await self.async_get_profiles()
+        await self.async_refresh_profiles(initial=True)
         LOGGER.debug("Camera %s profiles = %s", self.name, self.profiles)
-
-        # No camera profiles to add
-        if not self.profiles:
-            raise ONVIFError("No camera profiles found")
 
         if self.capabilities.ptz:
             LOGGER.debug("%s: creating PTZ service", self.name)
