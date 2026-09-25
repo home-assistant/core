@@ -418,6 +418,7 @@ homeassistant.components.namecheapdns.*
 homeassistant.components.nasweb.*
 homeassistant.components.neato.*
 homeassistant.components.neopool.*
+homeassistant.components.neosol.*
 homeassistant.components.nest.*
 homeassistant.components.netatmo.*
 homeassistant.components.network.*
