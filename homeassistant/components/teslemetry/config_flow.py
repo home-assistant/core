@@ -347,6 +347,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             LOGGER.error("Bluetooth security handshake failed: %s", err)
             await self._async_disconnect()
             # The scan step owns the form; re-show it so a retry redoes scan and connect.
+            # pylint: disable-next=home-assistant-step_id-match-method
             return self.async_show_form(
                 step_id="scan",
                 errors={"base": "cannot_connect"},

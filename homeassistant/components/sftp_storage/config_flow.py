@@ -124,6 +124,7 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
 
             if not user_input[CONF_BACKUP_LOCATION].startswith("/"):
                 errors[CONF_BACKUP_LOCATION] = "backup_location_relative"
+                # pylint: disable-next=home-assistant-step_id-match-method
                 return self.async_show_form(
                     step_id=step_id,
                     data_schema=self.add_suggested_values_to_schema(
@@ -213,6 +214,7 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input:
             user_input.pop(CONF_PRIVATE_KEY_FILE, None)
 
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id=step_id,
             data_schema=self.add_suggested_values_to_schema(DATA_SCHEMA, user_input),
