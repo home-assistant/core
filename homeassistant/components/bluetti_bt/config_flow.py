@@ -7,8 +7,10 @@ from bluetti_bt_lib import recognize_device
 from habluetooth import BluetoothServiceInfoBleak
 from probatio import Schema
 
+from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_API_VERSION, CONF_MODEL
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import CONF_ENCRYPTION, CONF_SERIAL, DOMAIN
 
@@ -101,7 +103,16 @@ class BluettiConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_detect_bluetti_device(self, address: str) -> dict | None:
         _LOGGER.debug("Starting device detection")
 
-        result = await recognize_device(address, self.hass.loop.create_future)
+        ble_device = bluetooth.async_ble_device_from_address(self.hass, address)
+
+        if ble_device is None:
+            raise HomeAssistantError("Device not found")
+
+        result = await recognize_device(
+            address,
+            self.hass.loop.create_future,
+            ble_device=ble_device,
+        )
 
         _LOGGER.debug("Device detection complete")
 
