@@ -37,7 +37,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers.template import Template
 
 from . import CONFIG_ENTRY_PLATFORMS, create_rest_data_from_config_entry
@@ -93,13 +93,13 @@ def _validate_sensor_input(
     try:
         _validate_unit(input)
     except Invalid as ex:
-        errors[CONF_UNIT_OF_MEASUREMENT] = "validation_error"
-        placeholders["validation_error_message"] = str(ex)
+        errors[CONF_UNIT_OF_MEASUREMENT] = "unit_validation_error"
+        placeholders["unit_validation_error_message"] = str(ex)
     try:
         _validate_state_class(input)
     except Invalid as ex:
-        errors[CONF_STATE_CLASS] = "validation_error"
-        placeholders["validation_error_message"] = str(ex)
+        errors[CONF_STATE_CLASS] = "state_class_validation_error"
+        placeholders["state_class_validation_error_message"] = str(ex)
 
     return errors, placeholders
 
@@ -150,15 +150,19 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {}
         if user_input is not None:
-            rest = create_rest_data_from_config_entry(self.hass, user_input)
-            await rest.async_update()
-            if rest.last_exception:
-                errors["base"] = "endpoint_error"
-                placeholders["error_message"] = str(rest.last_exception)
-            if not errors:
-                self._title = f"{user_input[CONF_METHOD]} {Template(user_input[CONF_RESOURCE], self.hass).async_render()}"
-                self._data = user_input
-                return await self.async_step_subentries_menu()
+            try:
+                rest = create_rest_data_from_config_entry(self.hass, user_input)
+                await rest.async_update()
+                if rest.last_exception:
+                    errors["base"] = "endpoint_error"
+                    placeholders["error_message"] = str(rest.last_exception)
+                if not errors:
+                    self._title = f"{user_input[CONF_METHOD]} {Template(user_input[CONF_RESOURCE], self.hass).async_render()}"
+                    self._data = user_input
+                    return await self.async_step_subentries_menu()
+            except TemplateError as ex:
+                errors["base"] = "template_error"
+                placeholders["error_message"] = str(ex)
         suggested_values = user_input or {}
         return self.async_show_form(
             step_id="user",

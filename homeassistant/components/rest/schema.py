@@ -191,12 +191,12 @@ class _auth_section(section):
     @override
     def __call__(self, data: Any) -> Any:
         try:
-            result = self.schema(data)
+            return self.schema(data)
         except probatio.MultipleInvalid as ex:
             for error in ex.errors:
                 if isinstance(error, probatio.InclusiveInvalid):
                     raise probatio.Invalid("credentials_missing") from error
-        return result
+            raise
 
 
 def RESOURCE_FLOW_SCHEMA(collapse_auth: bool = True) -> probatio.Schema:

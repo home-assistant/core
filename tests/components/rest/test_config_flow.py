@@ -17,6 +17,7 @@ from homeassistant.components.sensor import CONF_STATE_CLASS, SensorDeviceClass
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
+    CONF_HEADERS,
     CONF_PARAMS,
     CONF_PAYLOAD,
     CONF_UNIT_OF_MEASUREMENT,
@@ -261,7 +262,11 @@ async def test_sensor_subentry_flow_invalid_unit_state_class(
         get_subentry_data[SENSOR_DATA]["data"] | {CONF_UNIT_OF_MEASUREMENT: "$"},
     )
     assert result["type"] == FlowResultType.FORM
-    assert "'$' is not a valid unit" in result["errors"][CONF_UNIT_OF_MEASUREMENT]
+    assert result["errors"][CONF_UNIT_OF_MEASUREMENT] == "unit_validation_error"
+    assert (
+        "'$' is not a valid unit"
+        in result["description_placeholders"]["unit_validation_error_message"]
+    )
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
@@ -269,8 +274,10 @@ async def test_sensor_subentry_flow_invalid_unit_state_class(
         | {CONF_DEVICE_CLASS: SensorDeviceClass.MONETARY},
     )
     assert result["type"] == FlowResultType.FORM
+    assert result["errors"][CONF_STATE_CLASS] == "state_class_validation_error"
     assert (
-        "'measurement' is not a valid state class" in result["errors"][CONF_STATE_CLASS]
+        "'measurement' is not a valid state class"
+        in result["description_placeholders"]["state_class_validation_error_message"]
     )
 
 
@@ -346,11 +353,29 @@ async def test_config_invalid_input(
     assert ex.value.schema_errors[CONF_AUTHENTICATION] == "credentials_missing"
 
 
+async def test_config_invalid_authentication_input(
+    hass: HomeAssistant,
+    get_config_entry_data: dict[str, Any],
+) -> None:
+    """Test custom auth section schema handling."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    user_input = get_config_entry_data | {  # missing auth method
+        CONF_AUTHENTICATION: {"extra_key": "fake_data"}
+    }
+    with pytest.raises(InvalidData) as ex:
+        await hass.config_entries.flow.async_configure(result["flow_id"], user_input)
+
+    assert ex.value.error_message == "not a valid option."
+
+
 async def test_config_template_error(
     hass: HomeAssistant,
     get_config_entry_data: dict[str, Any],
 ) -> None:
-    """Test config entry reconfigure flow."""
+    """Test template validation error handling."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -364,3 +389,26 @@ async def test_config_template_error(
         )
 
     assert "UndefinedError" in ex.value.schema_errors[CONF_RESOURCE]
+
+
+async def test_config_flow_template_error(
+    hass: HomeAssistant,
+    get_config_entry_data: dict[str, Any],
+) -> None:
+    """Test template render error handling."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        get_config_entry_data
+        | {CONF_HEADERS: [{"key": "Fake-Header", "value": "{{ 1/0 }}"}]},
+    )
+
+    assert (
+        result["errors"]
+        and "base" in result["errors"]
+        and result["errors"]["base"] == "template_error"
+    )

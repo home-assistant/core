@@ -19,7 +19,7 @@
       "credentials_missing": "Username and password are both required",
       "endpoint_error": "Error communicating with resource: {error_message}",
       "invalid url": "Invalid URL",
-      "template_error": "Template error: {error_message}"
+      "template_error": "Error rendering template: {error_message}"
     },
     "initiate_flow": {
       "user": "Add RESTful Resource"
@@ -127,7 +127,8 @@
         "invalid_result": "[%key:component::rest::exceptions::invalid_result::message%]",
         "no_json": "[%key:component::rest::exceptions::no_json::message%]",
         "parse_error": "[%key:component::rest::exceptions::parse_error::message%]",
-        "validation_error": "{validation_error_message}"
+        "state_class_validation_error": "{state_class_validation_error_message}",
+        "unit_validation_error": "{unit_validation_error_message}"
       },
       "initiate_flow": {
         "user": "Add sensor"
