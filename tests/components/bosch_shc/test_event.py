@@ -85,6 +85,30 @@ async def test_motion_detector_dedup_guard(
 
 @pytest.mark.parametrize(
     "device_buckets",
+    [
+        {
+            "motion_detectors": [
+                motion_detector_device(latestmotion="2026-09-25T09:00:00.000Z")
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_detector_no_replay_on_startup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A pre-existing latestmotion value is not replayed as a new event on startup."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("event.motion_detector")
+    assert state is not None
+    assert state.state == "unknown"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
     [{"motion_detectors2": [motion_detector2_device()]}],
     indirect=True,
 )
