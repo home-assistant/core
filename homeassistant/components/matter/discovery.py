@@ -10,6 +10,7 @@ from homeassistant.core import callback
 
 from .binary_sensor import DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS
 from .button import DISCOVERY_SCHEMAS as BUTTON_SCHEMAS
+from .camera import DISCOVERY_SCHEMAS as CAMERA_SCHEMAS
 from .climate import DISCOVERY_SCHEMAS as CLIMATE_SENSOR_SCHEMAS
 from .const import FEATUREMAP_ATTRIBUTE_ID
 from .cover import DISCOVERY_SCHEMAS as COVER_SCHEMAS
@@ -31,6 +32,7 @@ from .water_heater import DISCOVERY_SCHEMAS as WATER_HEATER_SCHEMAS
 DISCOVERY_SCHEMAS: dict[Platform, list[MatterDiscoverySchema]] = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_SCHEMAS,
     Platform.BUTTON: BUTTON_SCHEMAS,
+    Platform.CAMERA: CAMERA_SCHEMAS,
     Platform.CLIMATE: CLIMATE_SENSOR_SCHEMAS,
     Platform.COVER: COVER_SCHEMAS,
     Platform.EVENT: EVENT_SCHEMAS,
