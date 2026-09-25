@@ -1867,8 +1867,9 @@ def test_uom_selector_validate_schema(
                 UnitOfTemperature.CELSIUS,
                 UnitOfTemperature.FAHRENHEIT,
                 "cats",
+                None,
             ),
-            (),
+            (5, ["cats"]),
         ),
         (
             None,
@@ -1877,8 +1878,9 @@ def test_uom_selector_validate_schema(
                 UnitOfTemperature.CELSIUS,
                 UnitOfTemperature.FAHRENHEIT,
                 "cats",
+                None,
             ),
-            (),
+            (5, ["cats"]),
         ),
         (
             {"device_classes": "temperature"},
@@ -1926,7 +1928,7 @@ def test_uom_selector_validate_schema(
         ),
         (
             {"state_classes": "measurement_angle"},
-            (DEGREE),
+            (DEGREE,),
             (
                 UnitOfTemperature.KELVIN,
                 UnitOfTemperature.CELSIUS,
@@ -1937,7 +1939,7 @@ def test_uom_selector_validate_schema(
         ),
         (
             {"device_classes": "wind_direction", "state_classes": "measurement_angle"},
-            (DEGREE),
+            (DEGREE,),
             (
                 UnitOfTemperature.KELVIN,
                 UnitOfTemperature.CELSIUS,
@@ -1988,7 +1990,7 @@ def test_uom_selector_validate_schema(
                 "device_classes": ["battery", "humidity"],
                 "state_classes": ["measurement"],
             },
-            (PERCENTAGE),
+            (PERCENTAGE,),
             (
                 "cats",
                 "dogs",
@@ -1998,11 +2000,53 @@ def test_uom_selector_validate_schema(
                 UnitOfTemperature.FAHRENHEIT,
             ),
         ),
+        pytest.param(
+            {"device_classes": ["temperature", "humidity"]},
+            (UnitOfTemperature.CELSIUS, PERCENTAGE),
+            ("cats", DEGREE, None),
+            id="device_classes_union",
+        ),
+        pytest.param(
+            {"device_classes": "aqi"},
+            (None,),
+            ("cats", PERCENTAGE),
+            id="device_class_without_unit",
+        ),
+        pytest.param(
+            {"device_classes": "enum"},
+            (),
+            (None,),
+            id="device_class_without_units_rejects_none",
+        ),
+        pytest.param(
+            {"state_classes": "measurement_angle"},
+            (),
+            (None,),
+            id="state_class_limited_rejects_none",
+        ),
+        pytest.param(
+            {"state_classes": ["measurement_angle", "measurement"]},
+            (DEGREE,),
+            (PERCENTAGE, "cats"),
+            id="state_classes_mixed_limited",
+        ),
     ],
 )
-def test_uom_selector_schema(schema, valid_selections, invalid_selections) -> None:
+def test_uom_selector_schema(
+    schema: dict[str, Any] | None,
+    valid_selections: tuple[Any, ...],
+    invalid_selections: tuple[Any, ...],
+) -> None:
     """Test uom class selector."""
     _test_selector("unit_of_measurement", schema, valid_selections, invalid_selections)
+
+
+def test_uom_selector_allowed_context_keys() -> None:
+    """Test uom selector allows device class and state class context."""
+    assert selector.UnitOfMeasurementSelector().allowed_context_keys == {
+        "filter_device_class": {"device_class"},
+        "filter_state_class": {"state_class"},
+    }
 
 
 @pytest.mark.parametrize(

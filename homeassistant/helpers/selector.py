@@ -2352,7 +2352,7 @@ dumper.add_representer(
 
 
 @cache
-def _units_set(dict_name: str, key_filter: tuple[str,] | None) -> set[str | None]:
+def _units_set(dict_name: str, key_filter: tuple[str, ...] | None) -> set[str | None]:
     """Return a cached lookup of a sensor units dictionary.
 
     This will import a module from disk and is run from an executor when
@@ -2383,7 +2383,7 @@ class UnitOfMeasurementSelector(Selector[UnitOfMeasurementSelectorConfig]):
     selector_type = "unit_of_measurement"
 
     @staticmethod
-    def _valid_state_class(option: list[str]) -> list[str]:
+    def _valid_state_class(option: str) -> str:
         """Validate state class and raise if invalid."""
         probatio.In(_enum_options(Platform.SENSOR, "SensorStateClass"))(option)
         return option
@@ -2422,19 +2422,16 @@ class UnitOfMeasurementSelector(Selector[UnitOfMeasurementSelectorConfig]):
 
         valid_units_set: set[str | None] | None = None
         device_class_units: set[str | None] | None = None
-        if device_classes := self.config.get("device_classes"):
-            if TYPE_CHECKING:
-                # A list is ensured by the schema
-                assert isinstance(self.config["device_classes"], list)
+        # The config schema ensures a list
+        if device_classes := cast(list[str] | None, self.config.get("device_classes")):
             # limit valid units to device class units
             device_class_units = _units_set("DEVICE_CLASS_UNITS", tuple(device_classes))
             valid_units_set = device_class_units
-        if (state_classes := self.config.get("state_classes")) and (
+        if (
+            state_classes := cast(list[str] | None, self.config.get("state_classes"))
+        ) and (
             state_class_units := _units_set("STATE_CLASS_UNITS", tuple(state_classes))
         ):
-            if TYPE_CHECKING:
-                # A list is ensured by the schema
-                assert isinstance(self.config["state_classes"], list)
             # limit valid units to state class units
             valid_units_set = (
                 device_class_units & state_class_units
