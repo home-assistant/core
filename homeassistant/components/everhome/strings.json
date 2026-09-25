@@ -13,7 +13,7 @@
     "step": {
       "reconfigure": {
         "data": {
-          "host": "[%key:common::config_flow::data::ip%]"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
           "host": "The hostname or IP address of the EcoTracker device."
@@ -23,7 +23,7 @@
       },
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::ip%]"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
           "host": "The hostname or IP address of the EcoTracker device."
@@ -33,7 +33,7 @@
       },
       "zeroconf_confirm": {
         "data": {
-          "host": "[%key:common::config_flow::data::ip%]"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
           "host": "The hostname or IP address of the EcoTracker device."
