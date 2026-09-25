@@ -2340,6 +2340,52 @@ NETWORK_DEVICE = {
 }
 
 
+NETWORK_CLIENT = {
+    "type": "WIRELESS",
+    "id": "f9edef13-b667-369f-9556-bc36978095af",
+    "name": "phone",
+    "connectedAt": "2026-09-24T17:40:52Z",
+    "ipAddress": "10.8.0.20",
+    "macAddress": "00:00:00:00:00:01",
+    "uplinkDeviceId": "72cf3194-b496-3ada-877c-6764792adc4a",
+    "access": {"type": "DEFAULT"},
+}
+
+
+@pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_UPTIME_SENSORS: True}])
+@pytest.mark.parametrize("network_client_payload", [[NETWORK_CLIENT]])
+@pytest.mark.usefixtures("network_api_config_entry_setup")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_network_api_client_uptime_sensor(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the uptime of an Integration API client follows its connection."""
+    assert hass.states.get("sensor.phone_uptime").state == "2026-09-24T17:40:52+00:00"
+
+    # The client leaves: no connection, so no uptime
+    aioclient_mock.clear_requests()
+    mock_network_api_lists(aioclient_mock)
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.phone_uptime").state == STATE_UNKNOWN
+
+    # It comes back later, with a new connection time
+    aioclient_mock.clear_requests()
+    mock_network_api_lists(
+        aioclient_mock,
+        clients=[{**NETWORK_CLIENT, "connectedAt": "2026-09-25T08:00:00Z"}],
+    )
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.phone_uptime").state == "2026-09-25T08:00:00+00:00"
+
+
 @pytest.mark.parametrize("network_device_payload", [[NETWORK_DEVICE]])
 @pytest.mark.usefixtures("network_api_config_entry_setup")
 async def test_network_api_device_state_sensor(
