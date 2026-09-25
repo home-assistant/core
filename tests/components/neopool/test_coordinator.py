@@ -8,6 +8,7 @@ from neopool_modbus.registers import MAX_RELAY_GPIO
 import pytest
 
 from homeassistant.components.neopool.const import (
+    CAPABILITY_KEYS,
     CONF_CAPABILITIES,
     CONF_MODBUS_FRAMER,
     CONF_UNIT_ID,
@@ -94,6 +95,10 @@ async def test_persisted_snapshot_recreates_entity_set(
     assert live
 
     snapshot = mock_config_entry.options[CONF_CAPABILITIES]
+    # Every capability key the live poll produced must be in the snapshot, so a
+    # supported_fn that tolerates a missing key cannot mask a dropped key.
+    live_data = mock_config_entry.runtime_data.data
+    assert {k for k in CAPABILITY_KEYS if k in live_data} <= snapshot.keys()
     offline_entry = MockConfigEntry(
         domain=DOMAIN,
         title=MOCK_NAME,
