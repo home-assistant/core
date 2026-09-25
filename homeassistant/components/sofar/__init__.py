@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from modbus_connection import ModbusError
 from sofar_modbus.modern.device import SofarInverter, identify
+from sofar_modbus.tuning import LinkTuner, TimedUnit
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.components.sensor import (
@@ -145,8 +146,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         entry.data[CONF_UNIT_ID],
     )
 
+    link = TimedUnit(unit)
+    tuner = LinkTuner(link)
     device = SofarInverter(
-        unit,
+        link,
         serial_number=serial,
         model=model,
         inverter_type=inverter_type,
@@ -159,6 +162,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         device,
         device.async_update_readings,
         timedelta(seconds=SCAN_INTERVAL),
+        tuner,
     )
     settings = SofarDataUpdateCoordinator(
         hass,
@@ -166,6 +170,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         device,
         device.async_update_settings,
         timedelta(seconds=SETTINGS_SCAN_INTERVAL),
+        tuner,
     )
     await readings.async_config_entry_first_refresh()
     await settings.async_refresh()
@@ -177,7 +182,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
     inverter = dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id, **readings.device_info
     )
-    entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id)
+    entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id, link, tuner)
     _async_remove_denied_meter_energy(
         hass, serial, entry.runtime_data.served_components
     )
