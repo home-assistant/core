@@ -51,6 +51,35 @@ async def test_binary_sensors_ink(
     )
 
 
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        "binary_sensor.hl_l2340dw_input_tray_empty",
+        "binary_sensor.hl_l2340dw_input_tray_missing",
+        "binary_sensor.hl_l2340dw_low_paper",
+        "binary_sensor.hl_l2340dw_output_tray_full",
+        "binary_sensor.hl_l2340dw_output_tray_missing",
+        "binary_sensor.hl_l2340dw_output_tray_near_full",
+        "binary_sensor.hl_l2340dw_preventive_maintenance_overdue",
+        "binary_sensor.hl_l2340dw_service_requested",
+    ],
+)
+async def test_binary_sensors_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_brother_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+) -> None:
+    """Test the less critical errors are disabled by default."""
+    await init_integration(hass, mock_config_entry)
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    assert hass.states.get(entity_id) is None
+
+
 async def test_no_binary_sensors_when_printer_errors_unavailable(
     hass: HomeAssistant,
     mock_brother_client: AsyncMock,
