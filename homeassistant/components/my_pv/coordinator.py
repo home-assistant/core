@@ -166,3 +166,10 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         result = await self.device.turn_off()
         self.async_update_listeners()
         return result
+
+    @_my_pv_connection
+    async def update_firmware(self) -> bool:
+        """Send command."""
+        result = await self.device.update_firmware()
+        self.async_update_listeners()
+        return result
