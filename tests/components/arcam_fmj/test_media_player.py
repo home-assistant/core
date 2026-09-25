@@ -40,10 +40,11 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State as CoreState
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import DATA_INSTANCES
 
 from .conftest import MOCK_ENTITY_ID
 
-from tests.common import MockConfigEntry, get_entity, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -71,7 +72,9 @@ async def test_browse_media_without_presets(
 ) -> None:
     """Test browsing when the receiver has no preset details."""
     state_1.get_preset_details.return_value = None
-    player = get_entity(hass, MOCK_ENTITY_ID)
+    player = hass.data[DATA_INSTANCES][MEDIA_PLAYER_DOMAIN].get_entity(
+        MOCK_ENTITY_ID
+    )
     assert isinstance(player, ArcamFmj)
 
     media = await player.async_browse_media()
