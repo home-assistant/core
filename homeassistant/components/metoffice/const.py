@@ -37,6 +37,13 @@ DEFAULT_NAME = "Met Office"
 ATTRIBUTION = "Data provided by the Met Office"
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=15)
+SLOW_SCAN_INTERVAL = timedelta(minutes=60)
+
+SERVICE_SET_FORECAST_LOCATION = "set_forecast_location"
+# Minimum distance in metres that location must have changed
+# to trigger an update. This is used to limit the number of
+# API queries required if location is constantly moving.
+UPDATE_MINIMUM_DISTANCE = 500
 
 CONDITION_CLASSES: dict[str, list[int]] = {
     ATTR_CONDITION_CLEAR_NIGHT: [0],
