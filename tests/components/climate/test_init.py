@@ -36,9 +36,15 @@ from homeassistant.components.climate.const import (
     SWING_HORIZONTAL_ON,
     ClimateEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.common import (
     MockConfigEntry,
@@ -569,6 +575,179 @@ async def test_humidity_validation(
             },
             blocking=True,
         )
+
+
+async def _setup_bounded_climate(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    features: ClimateEntityFeature = ClimateEntityFeature.TARGET_TEMPERATURE,
+    precision: float | None = None,
+) -> MockClimateEntity:
+    """Set up a climate entity with temperature limits of 9.7 to 32.2."""
+
+    class MockClimateEntityTemp(MockClimateEntity):
+        """Mock climate class with a bounded temperature range."""
+
+        _attr_supported_features = features
+        _attr_min_temp = 9.7
+        _attr_max_temp = 32.2
+        _attr_temperature_unit = UnitOfTemperature.CELSIUS
+
+        def set_temperature(self, **kwargs: Any) -> None:
+            """Set new target temperature."""
+            if ATTR_TEMPERATURE in kwargs:
+                self._attr_target_temperature = kwargs[ATTR_TEMPERATURE]
+            if ATTR_TARGET_TEMP_HIGH in kwargs:
+                self._attr_target_temperature_high = kwargs[ATTR_TARGET_TEMP_HIGH]
+                self._attr_target_temperature_low = kwargs[ATTR_TARGET_TEMP_LOW]
+
+    test_climate = MockClimateEntityTemp(
+        name="Test",
+        unique_id="unique_climate_test",
+    )
+    if precision is not None:
+        test_climate._attr_precision = precision
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[test_climate], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    return test_climate
+
+
+async def _assert_temp_out_of_range(hass: HomeAssistant, data: dict[str, Any]) -> None:
+    """Assert the set temperature service call raises temp_out_of_range."""
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {"entity_id": "climate.test", **data},
+            blocking=True,
+        )
+    assert exc.value.translation_key == "temp_out_of_range"
+
+
+@pytest.mark.parametrize(
+    ("requested_temp_f", "expected_temp_c"),
+    [(90, 32.2), (49, 9.7)],
+)
+async def test_temperature_validation_unit_conversion_clamp(
+    hass: HomeAssistant,
+    register_test_integration: MockConfigEntry,
+    requested_temp_f: float,
+    expected_temp_c: float,
+) -> None:
+    """Test near limit temperatures from unit conversion clamp to the limit.
+
+    The limits are displayed rounded in the user's unit, so requesting the
+    displayed limit can convert to a value just outside the real limit.
+    """
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    test_climate = await _setup_bounded_climate(hass, register_test_integration)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {"entity_id": "climate.test", ATTR_TEMPERATURE: requested_temp_f},
+        blocking=True,
+    )
+    assert test_climate.target_temperature == expected_temp_c
+
+
+@pytest.mark.parametrize("requested_temp_f", [91, 48])
+async def test_temperature_validation_out_of_range_not_clamped(
+    hass: HomeAssistant,
+    register_test_integration: MockConfigEntry,
+    requested_temp_f: float,
+) -> None:
+    """Test temperatures beyond the display precision still raise."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    await _setup_bounded_climate(hass, register_test_integration)
+
+    await _assert_temp_out_of_range(hass, {ATTR_TEMPERATURE: requested_temp_f})
+
+
+async def test_temperature_validation_same_unit_clamp(
+    hass: HomeAssistant, register_test_integration: MockConfigEntry
+) -> None:
+    """Test sub display precision overshoot clamps without unit conversion."""
+    test_climate = await _setup_bounded_climate(hass, register_test_integration)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {"entity_id": "climate.test", ATTR_TEMPERATURE: 32.25},
+        blocking=True,
+    )
+    assert test_climate.target_temperature == 32.2
+
+
+async def test_temperature_validation_same_unit_out_of_range(
+    hass: HomeAssistant, register_test_integration: MockConfigEntry
+) -> None:
+    """Test overshoot beyond the display precision raises without conversion."""
+    await _setup_bounded_climate(hass, register_test_integration)
+
+    await _assert_temp_out_of_range(hass, {ATTR_TEMPERATURE: 32.31})
+
+
+async def test_temperature_validation_range_clamp(
+    hass: HomeAssistant, register_test_integration: MockConfigEntry
+) -> None:
+    """Test near limit low and high targets clamp to the limits."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    test_climate = await _setup_bounded_climate(
+        hass,
+        register_test_integration,
+        features=ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.test",
+            ATTR_TARGET_TEMP_LOW: 49,
+            ATTR_TARGET_TEMP_HIGH: 90,
+        },
+        blocking=True,
+    )
+    assert test_climate.target_temperature_low == 9.7
+    assert test_climate.target_temperature_high == 32.2
+
+    await _assert_temp_out_of_range(
+        hass, {ATTR_TARGET_TEMP_LOW: 50, ATTR_TARGET_TEMP_HIGH: 91}
+    )
+
+
+async def test_temperature_validation_precision_override_clamp(
+    hass: HomeAssistant, register_test_integration: MockConfigEntry
+) -> None:
+    """Test the clamp tolerance follows the entity precision override."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    test_climate = await _setup_bounded_climate(
+        hass, register_test_integration, precision=PRECISION_TENTHS
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {"entity_id": "climate.test", ATTR_TEMPERATURE: 90},
+        blocking=True,
+    )
+    assert test_climate.target_temperature == 32.2
+
+
+async def test_temperature_validation_precision_override_out_of_range(
+    hass: HomeAssistant, register_test_integration: MockConfigEntry
+) -> None:
+    """Test overshoot beyond an overridden precision raises."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    await _setup_bounded_climate(
+        hass, register_test_integration, precision=PRECISION_TENTHS
+    )
+
+    await _assert_temp_out_of_range(hass, {ATTR_TEMPERATURE: 90.2})
 
 
 async def test_temperature_validation(
