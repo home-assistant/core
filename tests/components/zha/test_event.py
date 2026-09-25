@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 from zha.application.platforms import ENTITY_REGISTRY, ClusterMatch
-from zha.application.platforms.event import BaseEvent
+from zha.application.platforms.event import BaseEvent, EntityEventTriggeredEvent
 from zha.application.platforms.event.const import (
     ATTR_MULTI_PRESS_COUNT,
     ButtonEventType,
@@ -29,9 +29,14 @@ from homeassistant.components.zha.helpers import (
     get_zha_gateway_proxy,
 )
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import entity_registry as er
 
 from .common import find_entity_id
+
+from tests.common import mock_restore_cache_with_extra_data
+
+ENTITY_ID = "event.fakemanufacturer_fakemodel_button"
 
 
 class FakeEvent(BaseEvent):
@@ -199,3 +204,53 @@ async def test_event_triggered(
     assert state
     assert state.attributes[ATTR_EVENT_TYPE] == "press_end"
     assert ATTR_MULTI_PRESS_COUNT not in state.attributes
+
+
+async def test_event_restored(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
+    """Test the last event is restored when the entity is set up again."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(ENTITY_ID, "2026-09-25T12:00:00.000+00:00"),
+                {
+                    "last_event_type": "multi_press_end",
+                    "last_event_attributes": {ATTR_MULTI_PRESS_COUNT: 2},
+                },
+            )
+        ],
+    )
+
+    entity_id, _ = await _setup_device(hass, setup_zha, zigpy_device_mock)
+    assert entity_id == ENTITY_ID
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "2026-09-25T12:00:00.000+00:00"
+    assert state.attributes[ATTR_EVENT_TYPE] == "multi_press_end"
+    assert state.attributes[ATTR_MULTI_PRESS_COUNT] == 2
+
+
+async def test_event_removed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
+    """Test removing the entity stops listening to the zha entity."""
+    entity_id, zha_entity = await _setup_device(hass, setup_zha, zigpy_device_mock)
+    assert zha_entity._listeners[EntityEventTriggeredEvent.event]
+
+    entity_registry.async_remove(entity_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id) is None
+    assert not zha_entity._listeners[EntityEventTriggeredEvent.event]
+
+    # Must not write state for the removed entity
+    zha_entity.trigger(ButtonEventType.PRESS_END)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id) is None

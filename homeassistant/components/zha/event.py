@@ -1,9 +1,9 @@
 """Events on Zigbee Home Automation networks."""
 
 import functools
-from typing import Any, cast, override
+from typing import override
 
-from zha.application.platforms.event import BaseEvent, EntityEventTriggeredEvent
+from zha.application.platforms.event import EntityEventTriggeredEvent
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.config_entries import ConfigEntry
@@ -15,7 +15,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .entity import ZHAEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
-    EntityData,
     async_add_entities as zha_async_add_entities,
     get_zha_data,
 )
@@ -34,37 +33,38 @@ async def async_setup_entry(
         hass,
         SIGNAL_ADD_ENTITIES,
         functools.partial(
-            zha_async_add_entities, async_add_entities, Event, entities_to_create
+            zha_async_add_entities, async_add_entities, ZHAEvent, entities_to_create
         ),
     )
     config_entry.async_on_unload(unsub)
 
 
-class Event(ZHAEntity, EventEntity):
+class ZHAEvent(ZHAEntity, EventEntity):
     """ZHA event."""
 
-    def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
-        """Initialize the ZHA event entity."""
-        super().__init__(entity_data, **kwargs)
-        entity = cast(BaseEvent, self.entity_data.entity)
+    @override
+    def _update_capability_attrs(self) -> None:
+        """Re-derive capability attributes from the cached state."""
+        super()._update_capability_attrs()
 
-        if entity.device_class is not None:
-            self._attr_device_class = EventDeviceClass(entity.device_class)
-
-        self._attr_event_types = entity.event_types
+        device_class = self._zha_state.device_class
+        self._attr_device_class = (
+            EventDeviceClass(device_class) if device_class is not None else None
+        )
+        self._attr_event_types = self._zha_state.event_types
 
     @override
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
-        entity = cast(BaseEvent, self.entity_data.entity)
         self._unsubs.append(
-            entity.on_event(EntityEventTriggeredEvent.event, self._handle_entity_events)
+            self.entity_data.entity.on_event(
+                EntityEventTriggeredEvent.event, self._handle_entity_events
+            )
         )
 
     @callback
     def _handle_entity_events(self, data: EntityEventTriggeredEvent) -> None:
         """Handle an event triggered by the ZHA entity."""
-
         self.debug("Handling event from entity: %s", data.triggered.event_type)
         self._trigger_event(data.triggered.event_type, data.triggered.event_attributes)
         self.async_write_ha_state()
