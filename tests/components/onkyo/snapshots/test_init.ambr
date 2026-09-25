@@ -20,8 +20,8 @@
     'labels': set({
     }),
     'manufacturer': None,
-    'model': 'TX-NR7100',
-    'model_id': None,
+    'model': None,
+    'model_id': 'TX-NR7100',
     'name': 'TX-NR7100',
     'name_by_user': None,
     'serial_number': None,

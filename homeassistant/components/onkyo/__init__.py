@@ -73,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, info.identifier)},
         name=info.model_name,
-        model=info.model_name,
+        model_id=info.model_name,
     )
 
     sources_store: dict[str, str] = entry.options[OPTION_INPUT_SOURCES]
