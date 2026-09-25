@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from types import SimpleNamespace
 from typing import Any
-from unittest.mock import MagicMock, create_autospec, patch
+from unittest.mock import MagicMock, PropertyMock, create_autospec, patch
 
 from boschshcpy import (
     BatteryLevelService,
@@ -315,6 +315,7 @@ def micromodule_relay_device(
     swap_inputs: bool = False,
     swap_outputs: bool = False,
     impulse_length: float | None = None,
+    impulse_length_raises_key_error: bool = False,
 ) -> SHCMicromoduleRelay:
     """Build a minimal device double for the micromodule_relays bucket."""
     device = create_autospec(SHCMicromoduleRelay, instance=True, spec_set=True)
@@ -331,7 +332,12 @@ def micromodule_relay_device(
     device.supports_switch_configuration = supports_switch_configuration
     device.swap_inputs = swap_inputs
     device.swap_outputs = swap_outputs
-    device.impulse_length = impulse_length
+    if impulse_length_raises_key_error:
+        type(device).impulse_length = PropertyMock(
+            side_effect=KeyError("impulseLength")
+        )
+    else:
+        device.impulse_length = impulse_length
     return device
 
 

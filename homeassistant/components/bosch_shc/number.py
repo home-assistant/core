@@ -8,6 +8,7 @@ from boschshcpy import SHCMicromoduleRelay
 from boschshcpy.device import SHCDevice
 
 from homeassistant.components.number import (
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
@@ -56,6 +57,7 @@ NUMBER_TYPES: dict[str, SHCNumberEntityDescription] = {
         key=IMPULSE_LENGTH,
         translation_key=IMPULSE_LENGTH,
         entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         native_min_value=0.1,
         native_max_value=60.0,
@@ -80,16 +82,14 @@ async def async_setup_entry(
 
     entities: list[SHCNumber] = []
     for device in session.device_helper.micromodule_impulse_relays:
-        # hasattr() only swallows AttributeError; impulse_length can raise
-        # KeyError on a partial poll, which would otherwise propagate out
-        # of this loop and abort setup for every remaining entity.
+        # KeyError means a partial poll temporarily omits the field, not that
+        # the device is unsupported, so the entity is still created with an
+        # unknown state until a later poll or callback fills it in.
         try:
-            impulse_length = device.impulse_length
-        except AttributeError:
-            continue
+            supported = device.impulse_length is not None
         except KeyError:
-            impulse_length = None
-        if impulse_length is None:
+            supported = True
+        if not supported:
             continue
         entities.append(
             SHCNumber(
