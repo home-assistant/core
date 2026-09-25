@@ -1,6 +1,5 @@
 """Support for HomematicIP Cloud ventilation actuators."""
 
-import math
 from typing import Any, override
 
 from homematicip.base.functionalChannels import FunctionalChannelType
@@ -68,7 +67,7 @@ class HomematicipVentilationFan(HomematicipGenericEntity, FanEntity):
     def percentage(self) -> int | None:
         """Return the current ventilation level in percent."""
         channel = self.get_channel_or_raise()
-        return math.ceil(channel.ventilationLevel * 100)
+        return round(channel.ventilationLevel * 100)
 
     @override
     async def async_set_percentage(self, percentage: int) -> None:
@@ -87,10 +86,10 @@ class HomematicipVentilationFan(HomematicipGenericEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Start ventilating, optionally at a given level."""
-        channel = self.get_channel_or_raise()
         if percentage is not None:
-            await channel.async_set_ventilation_level(percentage / 100)
+            await self.async_set_percentage(percentage)
             return
+        channel = self.get_channel_or_raise()
         await channel.async_set_ventilation_state(STATE_VENTILATION)
 
     @override

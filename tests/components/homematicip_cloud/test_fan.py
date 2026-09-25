@@ -76,6 +76,12 @@ async def test_ventilation_fan(
     )
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == 50
 
+    # 0.07 * 100 is 7.000000000000001 in binary floating point.
+    await async_manipulate_test_data(
+        hass, hmip_device, "ventilationLevel", 0.07, channel=1
+    )
+    assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == 7
+
 
 async def test_ventilation_fan_percentage_zero_stops_ventilation(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
@@ -91,6 +97,16 @@ async def test_ventilation_fan_percentage_zero_stops_ventilation(
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 0},
+        blocking=True,
+    )
+
+    assert channel.mock_calls[-1][0] == "async_set_ventilation_state"
+    assert channel.mock_calls[-1][1] == ("NO_VENTILATION",)
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 0},
         blocking=True,
     )
