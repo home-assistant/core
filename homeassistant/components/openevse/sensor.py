@@ -43,7 +43,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateTyp
 from homeassistant.util import slugify
 
 from .const import DOMAIN, INTEGRATION_TITLE
-from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
+from .coordinator import OpenEVSEConfigEntry
 from .entity import OpenEVSEEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -459,16 +459,6 @@ class OpenEVSESensor(OpenEVSEEntity, SensorEntity):
     """Implementation of an OpenEVSE sensor."""
 
     entity_description: OpenEVSESensorDescription
-
-    def __init__(
-        self,
-        coordinator: OpenEVSEDataUpdateCoordinator,
-        description: OpenEVSESensorDescription,
-        identifier: str,
-        unique_id: str | None,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, description, identifier, unique_id)
 
     @property
     @override

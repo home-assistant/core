@@ -10,7 +10,7 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
+from .coordinator import OpenEVSEConfigEntry
 from .entity import OpenEVSEEntity
 from .helpers import openevse_exception_handler
 
@@ -77,16 +77,6 @@ class OpenEVSESwitch(OpenEVSEEntity, SwitchEntity):
     """Implementation of an OpenEVSE switch."""
 
     entity_description: OpenEVSESwitchDescription
-
-    def __init__(
-        self,
-        coordinator: OpenEVSEDataUpdateCoordinator,
-        description: OpenEVSESwitchDescription,
-        identifier: str,
-        unique_id: str | None,
-    ) -> None:
-        """Initialize the switch."""
-        super().__init__(coordinator, description, identifier, unique_id)
 
     @property
     @override

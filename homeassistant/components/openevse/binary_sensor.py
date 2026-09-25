@@ -15,7 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
+from .coordinator import OpenEVSEConfigEntry
 from .entity import OpenEVSEEntity
 
 PARALLEL_UPDATES = 0
@@ -87,16 +87,6 @@ class OpenEVSEBinarySensor(OpenEVSEEntity, BinarySensorEntity):
     """Implementation of an OpenEVSE binary sensor."""
 
     entity_description: OpenEVSEBinarySensorDescription
-
-    def __init__(
-        self,
-        coordinator: OpenEVSEDataUpdateCoordinator,
-        description: OpenEVSEBinarySensorDescription,
-        identifier: str,
-        unique_id: str | None,
-    ) -> None:
-        """Initialize the binary sensor."""
-        super().__init__(coordinator, description, identifier, unique_id)
 
     @property
     @override

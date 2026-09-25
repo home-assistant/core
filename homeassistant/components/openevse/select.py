@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
+from .coordinator import OpenEVSEConfigEntry
 from .entity import OpenEVSEEntity
 from .helpers import openevse_exception_handler
 
@@ -71,16 +71,6 @@ class OpenEVSESelect(OpenEVSEEntity, SelectEntity):
     entity_description: OpenEVSESelectDescription
     _attr_current_option: str | None = None
     _update_task: asyncio.Task[None] | None = None
-
-    def __init__(
-        self,
-        coordinator: OpenEVSEDataUpdateCoordinator,
-        description: OpenEVSESelectDescription,
-        identifier: str,
-        unique_id: str | None,
-    ) -> None:
-        """Initialize the select."""
-        super().__init__(coordinator, description, identifier, unique_id)
 
     @property
     @override

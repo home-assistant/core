@@ -15,7 +15,7 @@ from homeassistant.const import EntityCategory, UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
+from .coordinator import OpenEVSEConfigEntry
 from .entity import OpenEVSEEntity
 from .helpers import openevse_exception_handler
 
@@ -66,16 +66,6 @@ class OpenEVSENumber(OpenEVSEEntity, NumberEntity):
     """Implementation of an OpenEVSE sensor."""
 
     entity_description: OpenEVSENumberDescription
-
-    def __init__(
-        self,
-        coordinator: OpenEVSEDataUpdateCoordinator,
-        description: OpenEVSENumberDescription,
-        identifier: str,
-        unique_id: str | None,
-    ) -> None:
-        """Initialize the number entity."""
-        super().__init__(coordinator, description, identifier, unique_id)
 
     @property
     @override

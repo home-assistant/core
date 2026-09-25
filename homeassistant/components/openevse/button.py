@@ -15,7 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
+from .coordinator import OpenEVSEConfigEntry
 from .entity import OpenEVSEEntity
 from .helpers import openevse_exception_handler
 
@@ -65,16 +65,6 @@ class OpenEVSEButton(OpenEVSEEntity, ButtonEntity):
     """Implementation of an OpenEVSE button."""
 
     entity_description: OpenEVSEButtonDescription
-
-    def __init__(
-        self,
-        coordinator: OpenEVSEDataUpdateCoordinator,
-        description: OpenEVSEButtonDescription,
-        identifier: str,
-        unique_id: str | None,
-    ) -> None:
-        """Initialize the button."""
-        super().__init__(coordinator, description, identifier, unique_id)
 
     @override
     async def async_press(self) -> None:
