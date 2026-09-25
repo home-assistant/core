@@ -5,10 +5,10 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from pyrainbird.async_client import create_controller
 from pyrainbird.data import WifiParams
 from pyrainbird.exceptions import RainbirdApiException, RainbirdAuthException
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD
@@ -29,17 +29,17 @@ from .coordinator import async_create_clientsession
 _LOGGER = logging.getLogger(__name__)
 
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): selector.TextSelector(),
-        vol.Required(CONF_PASSWORD): selector.TextSelector(
+        probatio.Required(CONF_HOST): selector.TextSelector(),
+        probatio.Required(CONF_PASSWORD): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
     }
 )
-REAUTH_SCHEMA = vol.Schema(
+REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): selector.TextSelector(
+        probatio.Required(CONF_PASSWORD): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
     }
@@ -205,9 +205,9 @@ class RainBirdOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         ATTR_DURATION,
                         default=self.config_entry.options[ATTR_DURATION],
                     ): cv.positive_int,

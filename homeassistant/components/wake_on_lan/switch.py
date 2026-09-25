@@ -4,7 +4,7 @@ import logging
 import subprocess as sp
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 import wakeonlan
 
 from homeassistant.components.switch import (
@@ -30,12 +30,12 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_MAC): cv.string,
-        vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
-        vol.Optional(CONF_BROADCAST_PORT): cv.port,
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Required(CONF_MAC): cv.string,
+        probatio.Optional(CONF_BROADCAST_ADDRESS): cv.string,
+        probatio.Optional(CONF_BROADCAST_PORT): cv.port,
+        probatio.Optional(CONF_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
     }
 )
 
