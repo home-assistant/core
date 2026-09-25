@@ -1858,6 +1858,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     mandatory=True,
                 ),
                 TypeHintMatch(
+                    function_name="stop_transition",
+                    return_type=None,
+                    has_async_counterpart=True,
+                    mandatory=True,
+                ),
+                TypeHintMatch(
                     function_name="supported_color_modes",
                     return_type=["set[ColorMode]", None],
                     mandatory=True,

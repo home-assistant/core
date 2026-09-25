@@ -325,3 +325,10 @@ toggle:
         white: *white
         profile: *profile
         flash: *flash
+
+stop_transition:
+  target:
+    entity:
+      domain: light
+      supported_features:
+        - light.LightEntityFeature.STOP_TRANSITION

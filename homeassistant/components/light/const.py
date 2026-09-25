@@ -17,6 +17,8 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 DATA_PROFILES: HassKey[Profiles] = HassKey(f"{DOMAIN}_profiles")
 
+SERVICE_STOP_TRANSITION: Final = "stop_transition"
+
 
 class LightEntityCapabilityAttribute(StrEnum):
     """Capability attributes for light entities."""
@@ -47,6 +49,7 @@ class LightEntityFeature(IntFlag):
     EFFECT = 4
     FLASH = 8
     TRANSITION = 32
+    STOP_TRANSITION = 64
 
 
 class ColorMode(StrEnum):

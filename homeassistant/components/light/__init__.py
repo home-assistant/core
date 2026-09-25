@@ -35,6 +35,7 @@ from .const import (  # noqa: F401
     DEFAULT_MIN_KELVIN,
     DOMAIN,
     SCAN_INTERVAL,
+    SERVICE_STOP_TRANSITION,
     VALID_COLOR_MODES,
     ColorMode,
     LightEntityCapabilityAttribute,
@@ -566,6 +567,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA), preprocess_data
         ),
         async_handle_toggle_service,
+    )
+
+    component.async_register_entity_service(
+        SERVICE_STOP_TRANSITION,
+        None,
+        "async_stop_transition",
+        [LightEntityFeature.STOP_TRANSITION],
     )
 
     return True
@@ -1134,3 +1142,11 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         params = process_turn_off_params(self.hass, self, kwargs)
         await self.async_turn_off(**filter_turn_off_params(self, params))
+
+    def stop_transition(self) -> None:
+        """Stop an in-progress transition, keeping the light at its current state."""
+        raise NotImplementedError
+
+    async def async_stop_transition(self) -> None:
+        """Stop an in-progress transition, keeping the light at its current state."""
+        await self.hass.async_add_executor_job(self.stop_transition)
