@@ -51,7 +51,8 @@ class PushChannel:
             if self.on_teardown is not None:
                 await self.async_teardown()
 
-            await fallback_send(data)
+            if fallback_send is not None:
+                await fallback_send(data)
 
         self.pending_confirms[confirm_id] = {
             "unsub_scheduled_push_failed": async_call_later(
