@@ -3,7 +3,7 @@
 from asyncio import Task
 from dataclasses import dataclass
 import logging
-from typing import override
+from typing import Any, override
 
 from electrolux_group_developer_sdk.client.appliance_client import (
     ApplianceClient,
@@ -19,6 +19,7 @@ from electrolux_group_developer_sdk.client.dto.appliance_state import ApplianceS
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -94,3 +95,26 @@ class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[ApplianceState]):
         )
 
         self.async_set_updated_data(updated_state)
+
+    async def send_command(
+        self, command: dict[str, Any], max_amount_retries: int = 2, current_try: int = 0
+    ) -> None:
+        """Send a command to the appliance."""
+        try:
+            await self.client.send_command(self._appliance_id, command)
+        except ApplianceClientException as exception:
+            if exception.status in [401, 403]:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="authorization_failed",
+                ) from exception
+            if exception.status == 406:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="command_validation_failed",
+                ) from exception
+
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="generic_error",
+            ) from exception

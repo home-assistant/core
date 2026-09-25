@@ -134,15 +134,13 @@ class DehumidifierEntity(ElectroluxBaseEntity[DHAppliance], HumidifierEntity):
         """Turn the device off."""
         command = self._appliance_data.get_turn_off_command()
 
-        await self.coordinator.client.send_command(self._appliance_id, command)
-        await self.coordinator.async_refresh()
+        await self._send_command(command)
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         command = self._appliance_data.get_turn_on_command()
-        await self.coordinator.client.send_command(self._appliance_id, command)
-        await self.coordinator.async_refresh()
+        await self._send_command(command)
 
     @override
     async def async_set_humidity(self, humidity: int) -> None:
@@ -151,12 +149,14 @@ class DehumidifierEntity(ElectroluxBaseEntity[DHAppliance], HumidifierEntity):
             round(humidity / self._humidity_step) * self._humidity_step
         )
         command = self._appliance_data.get_humidity_command(rounded_humidity)
-        await self.coordinator.client.send_command(self._appliance_id, command)
-        await self.coordinator.async_refresh()
+        await self._send_command(command)
 
     @override
     async def async_set_mode(self, mode: str) -> None:
         """Set new target preset mode."""
         command = self._appliance_data.get_mode_command(mode)
+        await self._send_command(command)
+
+    async def _send_command(self, command: dict[str, Any]) -> None:
         await self.coordinator.client.send_command(self._appliance_id, command)
         await self.coordinator.async_refresh()
