@@ -83,7 +83,7 @@ TFA_ME_ENTITY_DESCRIPTIONS: dict[str, TFAmeSensorEntityDescription] = {
         value_fn=lambda entity, data: int(data["value"]),
     ),
     # Low battery warning states: 0 = OK, 1 = low (warning), 2 = critical low (urgent warning)
-    # 3 = battery missing/removed (Remark: some sensor have more than one power supply)
+    # 3 = battery missing/removed (Remark: some sensors have more than one power supply)
     "lowbatt": TFAmeSensorEntityDescription(
         key="lowbatt",
         translation_key="lowbatt",

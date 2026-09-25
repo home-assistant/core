@@ -20,38 +20,7 @@
         "state": {
           "critical": "mdi:battery-sync",
           "low": "mdi:battery-alert",
-          "missing": "mdi:battery-off",
-          "ok": "mdi:battery"
-        }
-      },
-      "rain": {
-        "default": "mdi:weather-rainy"
-      },
-      "rain_1_hour": {
-        "default": "mdi:weather-sunny",
-        "range": {
-          "0": "mdi:weather-sunny",
-          "0.1": "mdi:weather-partly-rainy",
-          "0.5": "mdi:weather-rainy",
-          "4": "mdi:weather-pouring"
-        }
-      },
-      "rain_24_hours": {
-        "default": "mdi:weather-sunny",
-        "range": {
-          "0": "mdi:weather-sunny",
-          "0.1": "mdi:weather-partly-rainy",
-          "0.5": "mdi:weather-rainy",
-          "4": "mdi:weather-pouring"
-        }
-      },
-      "rain_relative": {
-        "default": "mdi:weather-sunny",
-        "range": {
-          "0": "mdi:weather-sunny",
-          "0.1": "mdi:weather-partly-rainy",
-          "0.5": "mdi:weather-rainy",
-          "4": "mdi:weather-pouring"
+          "missing": "mdi:battery-off"
         }
       },
       "rssi": {
