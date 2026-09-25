@@ -43,6 +43,16 @@
     }
   },
   "entity": {
+    "select": {
+      "siren_sound_level": {
+        "name": "Siren volume",
+        "state": {
+          "high": "Loud",
+          "low": "Reduced",
+          "medium": "Medium"
+        }
+      }
+    },
     "sensor": {
       "air_quality": {
         "name": "Air quality"
