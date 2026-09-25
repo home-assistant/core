@@ -2,9 +2,11 @@
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from modbus_connection import ModbusError, ModbusTcpParams
 from sofar_modbus.modern.device import SofarInverter, identify
+from sofar_modbus.tuning import LinkTuner, TimedUnit
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.components.sensor import (
@@ -12,8 +14,9 @@ from homeassistant.components.sensor import (
     SensorExtraStoredData,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -23,7 +26,14 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_UNIT_ID, DOMAIN, SCAN_INTERVAL, SETTINGS_SCAN_INTERVAL
+from .const import (
+    BATTERY_COMPONENTS,
+    CONF_UNIT_ID,
+    DOMAIN,
+    METER_ENERGY,
+    SCAN_INTERVAL,
+    SETTINGS_SCAN_INTERVAL,
+)
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
 from .sensor import SENSOR_DESCRIPTIONS
 from .services import async_setup_services
@@ -43,6 +53,7 @@ _IDENTITY_ATTEMPTS = 3
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
+@callback
 def _async_remove_stale_waiting_time(hass: HomeAssistant, serial: str) -> None:
     """Drop the removed waiting-time entity so it doesn't linger unavailable."""
     registry = er.async_get(hass)
@@ -51,6 +62,24 @@ def _async_remove_stale_waiting_time(hass: HomeAssistant, serial: str) -> None:
     )
     if entity_id is not None:
         registry.async_remove(entity_id)
+
+
+@callback
+def _async_remove_denied_meter_energy(
+    hass: HomeAssistant, serial: str, served: frozenset[str]
+) -> None:
+    """Drop meter sensors a model denies, so they don't linger unavailable."""
+    if METER_ENERGY in served:
+        return
+    registry = er.async_get(hass)
+    for description in SENSOR_DESCRIPTIONS:
+        if description.component != METER_ENERGY:
+            continue
+        entity_id = registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{serial}_{description.key}"
+        )
+        if entity_id is not None:
+            registry.async_remove(entity_id)
 
 
 async def _async_read_identity(entry: SofarConfigEntry, device: SofarInverter) -> None:
@@ -115,8 +144,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         entry.data[CONF_UNIT_ID],
     )
 
+    link = TimedUnit(unit)
+    tuner = LinkTuner(link)
     device = SofarInverter(
-        unit,
+        link,
         serial_number=serial,
         model=model,
         inverter_type=inverter_type,
@@ -129,6 +160,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         device,
         device.async_update_readings,
         timedelta(seconds=SCAN_INTERVAL),
+        tuner,
     )
     settings = SofarDataUpdateCoordinator(
         hass,
@@ -136,6 +168,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         device,
         device.async_update_settings,
         timedelta(seconds=SETTINGS_SCAN_INTERVAL),
+        tuner,
     )
     await readings.async_config_entry_first_refresh()
     await settings.async_refresh()
@@ -147,9 +180,53 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
     inverter = dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id, **readings.device_info
     )
-    entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id)
+    entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id, link, tuner)
+    _async_remove_denied_meter_energy(
+        hass, serial, entry.runtime_data.served_components
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
+
+
+def _battery_pack_number(serial: str, identifier: str) -> int | None:
+    """The battery pack a device identifier names, if it names one."""
+    prefix = f"{serial}_battery_"
+    if not identifier.startswith(prefix):
+        return None
+    suffix = identifier.removeprefix(prefix)
+    number = int(suffix) if suffix.isdecimal() else None
+    return number if number in BATTERY_COMPONENTS else None
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: SofarConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
+) -> bool:
+    """Allow removing a battery pack the inverter no longer reports."""
+    serial = config_entry.unique_id
+    if TYPE_CHECKING:
+        assert serial is not None
+    runtime_data = (
+        config_entry.runtime_data
+        if config_entry.state is ConfigEntryState.LOADED
+        else None
+    )
+    packs: set[int] = set()
+    for domain, identifier in device_entry.identifiers:
+        if domain != DOMAIN:
+            continue
+        if identifier == serial or identifier.startswith(f"{serial}_pv_string_"):
+            return False
+        if (number := _battery_pack_number(serial, identifier)) is None:
+            continue
+        if runtime_data is not None and runtime_data.pack_is_wired(number):
+            return False
+        packs.add(number)
+
+    if runtime_data is not None:
+        runtime_data.wired_packs -= packs
     return True
 
 

@@ -7,9 +7,9 @@ from pathlib import Path
 import shutil
 from typing import Any, Protocol, cast, override
 
-from aiohttp import web
+from aiohttp import hdrs, web
 from aiohttp.web_request import FileField
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import http, websocket_api
 from homeassistant.components.http import require_admin
@@ -24,7 +24,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
-from .const import DATA_LOCAL_SOURCE, DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES
+from .const import (
+    DATA_LOCAL_SOURCE,
+    DOMAIN,
+    DOWNLOAD_ONLY_MIME_TYPES,
+    MEDIA_CLASS_MAP,
+    MEDIA_MIME_TYPES,
+)
 from .error import Unresolvable
 from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
 
@@ -127,7 +133,7 @@ class LocalSource(MediaSource):
 
         if not uploaded_file.content_type.startswith(("image/", "video/", "audio/")):
             LOGGER.error("Content type not allowed")
-            raise vol.Invalid("Only images and video are allowed")
+            raise probatio.Invalid("Only images and video are allowed")
 
         try:
             raise_if_invalid_filename(uploaded_file.filename)
@@ -349,6 +355,15 @@ class LocalSource(MediaSource):
         return media
 
 
+@callback
+def _async_media_headers(mime_type: str) -> dict[str, str]:
+    """Return the headers a media file of this type is served with."""
+    if mime_type in DOWNLOAD_ONLY_MIME_TYPES:
+        return {hdrs.CONTENT_DISPOSITION: "attachment"}
+
+    return {}
+
+
 class LocalMediaView(http.HomeAssistantView):
     """Local Media Finder View.
 
@@ -364,8 +379,10 @@ class LocalMediaView(http.HomeAssistantView):
         self.name = source.url_prefix.strip("/").replace("/", ":")
         self.url = f"{source.url_prefix}/{{source_dir_id}}/{{location:.*}}"
 
-    async def _validate_media_path(self, source_dir_id: str, location: str) -> Path:
-        """Validate media path and return it if valid."""
+    async def _validate_media_path(
+        self, source_dir_id: str, location: str
+    ) -> tuple[Path, str]:
+        """Validate media path and return it with its media type if valid."""
         try:
             raise_if_invalid_path(location)
         except ValueError as err:
@@ -385,7 +402,7 @@ class LocalMediaView(http.HomeAssistantView):
         if not mime_type or mime_type.split("/")[0] not in MEDIA_MIME_TYPES:
             raise web.HTTPNotFound
 
-        return media_path
+        return media_path, mime_type
 
     async def head(
         self, request: web.Request, source_dir_id: str, location: str
@@ -397,16 +414,17 @@ class LocalMediaView(http.HomeAssistantView):
 
         Check whether the location exists or not.
         """
-        media_path = await self._validate_media_path(source_dir_id, location)
-        mime_type, _ = mimetypes.guess_type(str(media_path))
-        return web.Response(content_type=mime_type)
+        _, mime_type = await self._validate_media_path(source_dir_id, location)
+        return web.Response(
+            content_type=mime_type, headers=_async_media_headers(mime_type)
+        )
 
     async def get(
         self, request: web.Request, source_dir_id: str, location: str
     ) -> web.FileResponse:
         """Handle a GET request."""
-        media_path = await self._validate_media_path(source_dir_id, location)
-        return web.FileResponse(media_path)
+        media_path, mime_type = await self._validate_media_path(source_dir_id, location)
+        return web.FileResponse(media_path, headers=_async_media_headers(mime_type))
 
 
 class UploadMediaView(http.HomeAssistantView):
@@ -414,7 +432,7 @@ class UploadMediaView(http.HomeAssistantView):
 
     url = "/api/media_source/local_source/upload"
     name = "api:media_source:local_source:upload"
-    schema = vol.Schema(
+    schema = probatio.Schema(
         {
             "media_content_id": str,
             "file": FileField,
@@ -431,7 +449,7 @@ class UploadMediaView(http.HomeAssistantView):
 
         try:
             data = self.schema(dict(await request.post()))
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             LOGGER.error("Received invalid upload data: %s", err)
             raise web.HTTPBadRequest from err
 
@@ -469,8 +487,8 @@ class UploadMediaView(http.HomeAssistantView):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "media_source/local_source/remove",
-        vol.Required("media_content_id"): str,
+        probatio.Required("type"): "media_source/local_source/remove",
+        probatio.Required("media_content_id"): str,
     }
 )
 @websocket_api.require_admin

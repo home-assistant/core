@@ -19,7 +19,7 @@ from aiohttp.web import (
     middleware,
 )
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
-import voluptuous as vol
+import probatio
 
 from homeassistant.config import load_yaml_config_file
 from homeassistant.core import HomeAssistant, callback
@@ -45,8 +45,8 @@ NOTIFICATION_ID_LOGIN: Final = "http-login"
 IP_BANS_FILE: Final = "ip_bans.yaml"
 ATTR_BANNED_AT: Final = "banned_at"
 
-SCHEMA_IP_BAN_ENTRY: Final = vol.Schema(
-    {vol.Optional(ATTR_BANNED_AT, default=None): vol.Any(None, cv.datetime)}
+SCHEMA_IP_BAN_ENTRY: Final = probatio.Schema(
+    {probatio.Optional(ATTR_BANNED_AT, default=None): probatio.Any(None, cv.datetime)}
 )
 
 
@@ -232,7 +232,7 @@ class IpBanManager:
                 ip_info = SCHEMA_IP_BAN_ENTRY(ip_info)
                 ban = IpBan(ip_ban, ip_info["banned_at"])
                 ip_bans_lookup[ban.ip_address] = ban
-            except vol.Invalid as err:
+            except probatio.Invalid as err:
                 _LOGGER.error("Failed to load IP ban %s: %s", ip_info, err)
                 continue
             except ValueError:

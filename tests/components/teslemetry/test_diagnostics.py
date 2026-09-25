@@ -1,7 +1,7 @@
 """Test the Teslemetry Diagnostics."""
 
 from copy import deepcopy
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -41,6 +41,7 @@ async def test_diagnostics(
     snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
     mock_legacy: AsyncMock,
+    mock_energy_totals_stream: MagicMock,
 ) -> None:
     """Test diagnostics for a polling vehicle."""
 
@@ -49,6 +50,9 @@ async def test_diagnostics(
     # Wait for coordinator refresh
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_energy_totals_stream.send()
     await hass.async_block_till_done()
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)

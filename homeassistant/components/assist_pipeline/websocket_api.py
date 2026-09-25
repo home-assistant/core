@@ -9,7 +9,7 @@ import math
 from typing import Any, Final
 
 import audioop  # pylint: disable=deprecated-module
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import conversation, stt, tts, websocket_api
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_SECONDS, MATCH_ALL
@@ -29,20 +29,16 @@ from .const import (
     SAMPLE_RATE,
     SAMPLE_WIDTH,
 )
-from .error import PipelineNotFound
-from .pipeline import (
-    KEY_ASSIST_PIPELINE,
+from .error import PipelineError, PipelineNotFound
+from .models import (
     AudioSettings,
-    DeviceAudioQueue,
-    PipelineError,
     PipelineEvent,
     PipelineEventType,
-    PipelineInput,
-    PipelineRun,
     PipelineStage,
     WakeWordSettings,
-    async_get_pipeline,
 )
+from .pipeline import PipelineInput, PipelineRun, async_get_pipeline
+from .runtime import KEY_ASSIST_PIPELINE, DeviceAudioQueue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,58 +60,58 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
 
 
 @websocket_api.websocket_command(
-    vol.All(
+    probatio.All(
         websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
             {
-                vol.Required("type"): "assist_pipeline/run",
+                probatio.Required("type"): "assist_pipeline/run",
                 # pylint: disable-next=unnecessary-lambda
-                vol.Required("start_stage"): lambda val: PipelineStage(val),
+                probatio.Required("start_stage"): lambda val: PipelineStage(val),
                 # pylint: disable-next=unnecessary-lambda
-                vol.Required("end_stage"): lambda val: PipelineStage(val),
-                vol.Optional("input"): dict,
-                vol.Optional("pipeline"): str,
-                vol.Optional("conversation_id"): vol.Any(str, None),
-                vol.Optional("device_id"): vol.Any(str, None),
-                vol.Optional("timeout"): vol.Any(int, float),
+                probatio.Required("end_stage"): lambda val: PipelineStage(val),
+                probatio.Optional("input"): dict,
+                probatio.Optional("pipeline"): str,
+                probatio.Optional("conversation_id"): probatio.Any(str, None),
+                probatio.Optional("device_id"): probatio.Any(str, None),
+                probatio.Optional("timeout"): probatio.Any(int, float),
             },
         ),
         cv.key_value_schemas(
             "start_stage",
             {
-                PipelineStage.WAKE_WORD: vol.Schema(
+                PipelineStage.WAKE_WORD: probatio.Schema(
                     {
-                        vol.Required("input"): {
-                            vol.Required("sample_rate"): int,
-                            vol.Optional("timeout"): vol.Any(int, float),
-                            vol.Optional("audio_seconds_to_buffer"): vol.Any(
+                        probatio.Required("input"): {
+                            probatio.Required("sample_rate"): int,
+                            probatio.Optional("timeout"): probatio.Any(int, float),
+                            probatio.Optional("audio_seconds_to_buffer"): probatio.Any(
                                 int, float
                             ),
                             # Audio enhancement
-                            vol.Optional("noise_suppression_level"): int,
-                            vol.Optional("auto_gain_dbfs"): int,
-                            vol.Optional("volume_multiplier"): float,
+                            probatio.Optional("noise_suppression_level"): int,
+                            probatio.Optional("auto_gain_dbfs"): int,
+                            probatio.Optional("volume_multiplier"): float,
                             # Advanced use cases/testing
-                            vol.Optional("no_vad"): bool,
+                            probatio.Optional("no_vad"): bool,
                         }
                     },
-                    extra=vol.ALLOW_EXTRA,
+                    extra=probatio.ALLOW_EXTRA,
                 ),
-                PipelineStage.STT: vol.Schema(
+                PipelineStage.STT: probatio.Schema(
                     {
-                        vol.Required("input"): {
-                            vol.Required("sample_rate"): int,
-                            vol.Optional("wake_word_phrase"): str,
+                        probatio.Required("input"): {
+                            probatio.Required("sample_rate"): int,
+                            probatio.Optional("wake_word_phrase"): str,
                         }
                     },
-                    extra=vol.ALLOW_EXTRA,
+                    extra=probatio.ALLOW_EXTRA,
                 ),
-                PipelineStage.INTENT: vol.Schema(
-                    {vol.Required("input"): {"text": str}},
-                    extra=vol.ALLOW_EXTRA,
+                PipelineStage.INTENT: probatio.Schema(
+                    {probatio.Required("input"): {"text": str}},
+                    extra=probatio.ALLOW_EXTRA,
                 ),
-                PipelineStage.TTS: vol.Schema(
-                    {vol.Required("input"): {"text": str}},
-                    extra=vol.ALLOW_EXTRA,
+                PipelineStage.TTS: probatio.Schema(
+                    {probatio.Required("input"): {"text": str}},
+                    extra=probatio.ALLOW_EXTRA,
                 ),
             },
         ),
@@ -278,8 +274,8 @@ async def websocket_run(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "assist_pipeline/pipeline_debug/list",
-        vol.Required("pipeline_id"): str,
+        probatio.Required("type"): "assist_pipeline/pipeline_debug/list",
+        probatio.Required("pipeline_id"): str,
     }
 )
 def websocket_list_runs(
@@ -315,7 +311,7 @@ def websocket_list_runs(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "assist_pipeline/device/list",
+        probatio.Required("type"): "assist_pipeline/device/list",
     }
 )
 def websocket_list_devices(
@@ -344,9 +340,9 @@ def websocket_list_devices(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "assist_pipeline/pipeline_debug/get",
-        vol.Required("pipeline_id"): str,
-        vol.Required("pipeline_run_id"): str,
+        probatio.Required("type"): "assist_pipeline/pipeline_debug/get",
+        probatio.Required("pipeline_id"): str,
+        probatio.Required("pipeline_run_id"): str,
     }
 )
 def websocket_get_run(
@@ -385,7 +381,7 @@ def websocket_get_run(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "assist_pipeline/language/list",
+        probatio.Required("type"): "assist_pipeline/language/list",
     }
 )
 @callback
@@ -444,12 +440,12 @@ def websocket_list_languages(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "assist_pipeline/device/capture",
-        vol.Required("device_id"): str,
-        vol.Required("timeout"): vol.All(
+        probatio.Required("type"): "assist_pipeline/device/capture",
+        probatio.Required("device_id"): str,
+        probatio.Required("timeout"): probatio.All(
             # 0 < timeout <= MAX_CAPTURE_TIMEOUT
-            vol.Coerce(float),
-            vol.Range(min=0, min_included=False, max=MAX_CAPTURE_TIMEOUT),
+            probatio.Coerce(float),
+            probatio.Range(min=0, min_included=False, max=MAX_CAPTURE_TIMEOUT),
         ),
     }
 )
