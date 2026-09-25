@@ -126,6 +126,14 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_value=True,
         should_poll=False,
     ),
+    "intrusion_alarm": SHCSwitchEntityDescription(
+        key="intrusion_alarm",
+        translation_key="intrusion_alarm",
+        device_class=SwitchDeviceClass.SWITCH,
+        on_key="intrusion_alarm",
+        on_value=True,
+        should_poll=False,
+    ),
     "nightly_promise_enabled": SHCSwitchEntityDescription(
         key="nightly_promise_enabled",
         translation_key="nightly_promise_enabled",
@@ -141,6 +149,24 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
         on_key="pet_immunity_enabled",
+        on_value=True,
+        should_poll=False,
+    ),
+    "tamper_protection_enabled": SHCSwitchEntityDescription(
+        key="tamper_protection_enabled",
+        translation_key="tamper_protection_enabled",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="tamper_protection_enabled",
+        on_value=True,
+        should_poll=False,
+    ),
+    "smart_sensitivity_enabled": SHCSwitchEntityDescription(
+        key="smart_sensitivity_enabled",
+        translation_key="smart_sensitivity_enabled",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="smart_sensitivity_enabled",
         on_value=True,
         should_poll=False,
     ),
@@ -311,6 +337,30 @@ async def async_setup_entry(
             device=switch,
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["tamper_protection_enabled"],
+            unique_id_suffix="tamper_protection",
+        )
+        for switch in session.device_helper.motion_detectors2
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["intrusion_alarm"],
+        )
+        for switch in session.device_helper.smoke_detectors
+        if switch.supports_intrusion_alarm
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
             description=SWITCH_TYPES["nightly_promise_enabled"],
         )
         for switch in session.device_helper.twinguards
@@ -356,6 +406,19 @@ async def async_setup_entry(
             *session.device_helper.roomthermostats,
         )
         if getattr(switch, "supports_display_configuration", False)
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["smart_sensitivity_enabled"],
+            unique_id_suffix="smart_sensitivity",
+        )
+        for switch in session.device_helper.motion_detectors2
+        if switch.supports_smart_sensitivity
     )
 
     async_add_entities(entities)
