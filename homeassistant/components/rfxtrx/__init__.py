@@ -283,13 +283,11 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     @callback
     def _remove_device(subentry_id: str) -> None:
-        nonlocal pending_internal_updates
         device_id = next(
             (d for d, s in devices.items() if s.subentry_id == subentry_id), None
         )
         if device_id is not None:
             devices.pop(device_id)
-        pending_internal_updates += 1
         hass.config_entries.async_remove_subentry(entry, subentry_id)
 
     @callback

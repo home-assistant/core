@@ -160,6 +160,32 @@ async def test_ws_device_remove(
     assert mock_entry.subentries == {}
 
 
+async def test_rediscover_removed_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    rfxtrx: Mock,
+) -> None:
+    """Test a removed device is recreated when it is automatically rediscovered."""
+    mock_entry = await setup_rfx_test_cfg(hass, automatic_add=True, devices={})
+
+    await rfxtrx.signal("0b1100100118cdea02010f70")
+    assert hass.states.get("binary_sensor.ac_118cdea_2")
+    (subentry,) = mock_entry.subentries.values()
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry.subentry_id), mock_entry.entry_id
+    )
+    assert device_entry
+    device_registry.async_remove_device(device_entry.id)
+    await hass.async_block_till_done()
+    assert mock_entry.subentries == {}
+
+    # Fire the event again, the device should be rediscovered
+    await rfxtrx.signal("0b1100100118cdea02010f70")
+    assert len(mock_entry.subentries) == 1
+    assert hass.states.get("binary_sensor.ac_118cdea_2")
+
+
 async def test_connect(
     rfxtrx, connect_mock, transport_mock, hass: HomeAssistant
 ) -> None:
@@ -232,7 +258,7 @@ async def test_connect_failed(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_reconnect(rfxtrx, hass: HomeAssistant) -> None:
+async def test_reconnect(rfxtrx: Mock, hass: HomeAssistant) -> None:
     """Test that we reconnect on connection loss."""
     config_entry = await setup_rfx_test_cfg(hass, device="/dev/ttyUSBfake")
 
@@ -249,7 +275,7 @@ async def test_reconnect(rfxtrx, hass: HomeAssistant) -> None:
     rfxtrx.connect.call_count = 2
 
 
-async def test_shutdown_closes_connection(rfxtrx, hass: HomeAssistant) -> None:
+async def test_shutdown_closes_connection(rfxtrx: Mock, hass: HomeAssistant) -> None:
     """Test the connection is closed when Home Assistant stops."""
     await setup_rfx_test_cfg(hass, device="/dev/ttyUSBfake")
 
@@ -259,7 +285,7 @@ async def test_shutdown_closes_connection(rfxtrx, hass: HomeAssistant) -> None:
     rfxtrx.close_connection.assert_called_once()
 
 
-async def test_unload_entry_platforms_fail(rfxtrx, hass: HomeAssistant) -> None:
+async def test_unload_entry_platforms_fail(rfxtrx: Mock, hass: HomeAssistant) -> None:
     """Test unload fails if a platform fails to unload."""
     config_entry = await setup_rfx_test_cfg(hass, device="/dev/ttyUSBfake")
 
@@ -272,7 +298,7 @@ async def test_unload_entry_platforms_fail(rfxtrx, hass: HomeAssistant) -> None:
     assert result is False
 
 
-async def test_receive_event_without_device(rfxtrx, hass: HomeAssistant) -> None:
+async def test_receive_event_without_device(rfxtrx: Mock, hass: HomeAssistant) -> None:
     """Test an event without a device is ignored."""
     await setup_rfx_test_cfg(hass, devices={})
 

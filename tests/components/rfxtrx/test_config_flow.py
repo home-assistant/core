@@ -1,7 +1,7 @@
 """Test the Rfxtrx config flow."""
 
 import asyncio
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from RFXtrx import RFXtrxTransportError
 
@@ -424,7 +424,7 @@ async def test_options_replace_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    rfxtrx,
+    rfxtrx: Mock,
 ) -> None:
     """Test pointing a configured device at different hardware.
 
