@@ -1,5 +1,6 @@
 """Integration to UniFi Network and its various features."""
 
+import aiounifi
 from aiounifi.models.client import Client
 
 from homeassistant.config_entries import ConfigEntry
@@ -56,7 +57,14 @@ async def async_setup_entry(
         raise ConfigEntryAuthFailed from err
 
     hub = config_entry.runtime_data = UnifiHub(hass, config_entry, api)
-    await hub.initialize()
+    try:
+        await hub.initialize()
+    except aiounifi.Unauthorized as err:
+        # The Integration API needs more requests to set up than the one
+        # get_unifi_api makes; the classic path never raises here
+        raise ConfigEntryAuthFailed from err
+    except (TimeoutError, aiounifi.AiounifiException) as err:
+        raise ConfigEntryNotReady from err
 
     # Pre-populate device registry with UniFi devices before forwarding to
     # platforms. Without this, device_tracker entities may be registered as

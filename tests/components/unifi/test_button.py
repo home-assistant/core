@@ -398,6 +398,17 @@ NETWORK_WIFI_BROADCAST_DETAILS = {
 }
 
 
+@pytest.mark.parametrize(
+    "network_device_payload", [[{**NETWORK_DEVICE, "supported": False}]]
+)
+@pytest.mark.usefixtures("network_api_config_entry_setup")
+async def test_network_api_unsupported_device_has_no_restart_button(
+    hass: HomeAssistant,
+) -> None:
+    """Test a device the Integration API cannot act on gets no restart button."""
+    assert hass.states.get("button.switch_restart") is None
+
+
 @pytest.mark.parametrize("network_device_payload", [[NETWORK_DEVICE]])
 @pytest.mark.usefixtures("network_api_config_entry_setup")
 async def test_network_api_restart_button(

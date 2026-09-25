@@ -293,6 +293,39 @@ async def test_setup_entry_with_rejected_api_key_triggers_reauth(
     assert flows[0]["step_id"] == "reauth_api_key"
 
 
+@pytest.mark.parametrize(
+    ("status", "state", "reauth"),
+    [
+        (401, ConfigEntryState.SETUP_ERROR, True),
+        (503, ConfigEntryState.SETUP_RETRY, False),
+    ],
+)
+async def test_setup_entry_with_api_key_site_request_fails(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    network_api_config_entry: MockConfigEntry,
+    status: int,
+    state: ConfigEntryState,
+    reauth: bool,
+) -> None:
+    """Test a failing site request after the key was accepted maps like the first."""
+    aioclient_mock.get(
+        f"{NETWORK_API_URL}/v1/info", json={"applicationVersion": "10.6.106"}
+    )
+    aioclient_mock.get(
+        f"{NETWORK_API_URL}/v1/sites",
+        status=status,
+        json={"error": {"code": status, "message": "failed"}},
+    )
+
+    await hass.config_entries.async_setup(network_api_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert network_api_config_entry.state is state
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert [flow["step_id"] for flow in flows] == (["reauth_api_key"] if reauth else [])
+
+
 async def test_revoked_api_key_triggers_reauth_while_polling(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,

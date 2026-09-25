@@ -42,9 +42,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
 
-from .conftest import NETWORK_SITE_ID
+from .conftest import DEFAULT_HOST, DEFAULT_PORT, NETWORK_API_URL, NETWORK_SITE_ID
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIENTS = [{"mac": "00:00:00:00:00:01"}]
 
@@ -1014,6 +1015,49 @@ async def test_api_key_flow_fails_and_recovers(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == NETWORK_SITE_ID
+
+
+@pytest.mark.parametrize(
+    ("status", "errors"),
+    [
+        (401, {CONF_API_KEY: "faulty_credentials"}),
+        (503, {"base": "service_unavailable"}),
+    ],
+)
+async def test_api_key_flow_site_request_fails(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    status: int,
+    errors: dict[str, str],
+) -> None:
+    """Test a failing site request, after the key was accepted, shows a form error."""
+    aioclient_mock.get(
+        f"{NETWORK_API_URL}/v1/info", json={"applicationVersion": "10.6.106"}
+    )
+    aioclient_mock.get(
+        f"{NETWORK_API_URL}/v1/sites",
+        status=status,
+        json={"error": {"code": status, "message": "failed"}},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "api_key"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: DEFAULT_HOST,
+            CONF_API_KEY: "api-key",
+            CONF_PORT: DEFAULT_PORT,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "api_key"
+    assert result["errors"] == errors
 
 
 @pytest.mark.usefixtures("mock_network_api_requests")

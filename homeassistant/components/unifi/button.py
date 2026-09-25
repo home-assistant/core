@@ -168,6 +168,7 @@ NETWORK_API_ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
         control_fn=async_network_restart_device_control_fn,
         device_info_fn=async_network_device_device_info_fn,
         object_fn=lambda api, obj_id: api.network.devices[obj_id],
+        supported_fn=lambda hub, obj_id: hub.api.network.devices[obj_id].supported,
         unique_id_fn=lambda hub, obj_id: f"device_restart-{obj_id}",
     ),
     UnifiButtonEntityDescription[WifiBroadcasts, WifiBroadcast](

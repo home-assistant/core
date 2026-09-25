@@ -13,6 +13,7 @@ import socket
 from types import MappingProxyType
 from typing import Any, override
 
+import aiounifi
 from aiounifi.interfaces.sites import Sites
 from aiounifi.network.v1.models.site import Site as NetworkSite
 import probatio
@@ -649,10 +650,15 @@ def _build_api_key_schema(
 def _catch_unifi_api_flow_errors(
     errors: dict[str, str], auth_error_field: str = "base"
 ) -> Iterator[None]:
-    """Map UniFi API exceptions to config flow form errors."""
+    """Map UniFi API exceptions to config flow form errors.
+
+    `get_unifi_api` maps what its first request raises; the site request
+    that follows it raises aiounifi's own exceptions, mapped here the same
+    way.
+    """
     try:
         yield
-    except AuthenticationRequired:
+    except AuthenticationRequired, aiounifi.Unauthorized, aiounifi.LoginRequired:
         errors[auth_error_field] = "faulty_credentials"
-    except CannotConnect:
+    except CannotConnect, TimeoutError, aiounifi.AiounifiException:
         errors["base"] = "service_unavailable"
