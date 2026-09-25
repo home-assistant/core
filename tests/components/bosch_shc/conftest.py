@@ -14,6 +14,7 @@ from boschshcpy import (
     SHCLightSwitchBSM,
     SHCMicromoduleBlinds,
     SHCMicromoduleRelay,
+    SHCMotionDetector,
     SHCMotionDetector2,
     SHCPresenceSimulationSystem,
     SHCShutterContact,
@@ -440,6 +441,46 @@ def shutter_contact2_plus_device(
     device.bypass = bypass
     device.bypass_infinite = bypass_infinite
     device.enabled = vibration_enabled
+    return device
+
+
+class FakeLatestMotionService:
+    """Minimal double of a LatestMotion DeviceService's event-callback API."""
+
+    id = "LatestMotion"
+
+    def __init__(self) -> None:
+        """Initialize the fake service's callback registry."""
+        self._event_callbacks: dict[str, Any] = {}
+
+    def register_event(self, event: str, callback: Any) -> None:
+        """Register a callback for the given device id."""
+        self._event_callbacks[event] = callback
+
+    def subscribe_callback(self, entity_id: str, callback: Any) -> None:
+        """No-op: SHCEntity subscribes to every device service's generic callback."""
+
+    def unsubscribe_callback(self, entity_id: str) -> None:
+        """No-op counterpart to subscribe_callback."""
+
+
+def motion_detector_device(
+    device_id: str = "hdm:HomeMaticIP:motion1",
+    name: str = "Motion Detector",
+    latestmotion: str = "",
+) -> SHCMotionDetector:
+    """Build a minimal device double for the motion_detectors bucket."""
+    device = create_autospec(SHCMotionDetector, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "MD"
+    device.device_services = [FakeLatestMotionService()]
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.latestmotion = latestmotion
     return device
 
 
