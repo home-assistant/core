@@ -39,6 +39,7 @@ from .coordinator import (
     TeslaFleetEnergySiteHistoryCoordinator,
     TeslaFleetEnergySiteInfoCoordinator,
     TeslaFleetEnergySiteLiveCoordinator,
+    TeslaFleetEnergySiteStatisticsCoordinator,
     TeslaFleetVehicleDataCoordinator,
     _stale_site_info_error,
 )
@@ -214,15 +215,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                 hass, entry, api_energy
             )
             history_coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-                hass, entry, api_energy, product.get("site_name", "Energy Site")
+                hass, entry, api_energy
             )
 
             await live_coordinator.async_config_entry_first_refresh()
             if info_coordinator.data.get(
                 "components_battery"
             ) or info_coordinator.data.get("components_solar"):
+                statistics_coordinator = TeslaFleetEnergySiteStatisticsCoordinator(
+                    hass, entry, api_energy, product.get("site_name", "Energy Site")
+                )
                 entry.async_on_unload(
-                    history_coordinator.async_add_listener(lambda: None)
+                    statistics_coordinator.async_add_listener(lambda: None)
                 )
 
             # Create energy site model

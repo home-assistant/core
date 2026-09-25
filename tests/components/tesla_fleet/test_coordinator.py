@@ -1,13 +1,11 @@
 """Tests for Tesla Fleet historical energy statistics."""
 
-from asyncio import Event, wait_for
 from copy import deepcopy
 from datetime import datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, call, patch
 
 from aiohttp import ClientConnectionError
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from tesla_fleet_api.const import TeslaEnergyPeriod
 from tesla_fleet_api.exceptions import (
@@ -24,18 +22,16 @@ from homeassistant.components.recorder.statistics import (
     statistics_during_period,
 )
 from homeassistant.components.tesla_fleet.coordinator import (
-    ENERGY_HISTORY_INTERVAL,
-    TeslaFleetEnergySiteHistoryCoordinator,
+    TeslaFleetEnergySiteStatisticsCoordinator,
 )
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import CONF_TOKEN, Platform
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from . import setup_platform
 from .conftest import UID
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 from tests.components.recorder.common import async_wait_recording_done
 
 SITE_ID = "123456"
@@ -70,13 +66,11 @@ def _history(
 
 
 async def _refresh(
-    hass: HomeAssistant, coordinator: TeslaFleetEnergySiteHistoryCoordinator
-) -> dict[str, Any]:
-    """Refresh sensors and finish the background import and recorder writes."""
-    output = await coordinator._async_update_data()
-    await hass.async_block_till_done(wait_background_tasks=True)
+    hass: HomeAssistant, coordinator: TeslaFleetEnergySiteStatisticsCoordinator
+) -> None:
+    """Run one import and wait for recorder to write it."""
+    await coordinator.async_refresh()
     await async_wait_recording_done(hass)
-    return output
 
 
 async def _get_hourly_stats(
@@ -129,10 +123,10 @@ def coordinator(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_energy_site: AsyncMock,
-) -> TeslaFleetEnergySiteHistoryCoordinator:
+) -> TeslaFleetEnergySiteStatisticsCoordinator:
     """Create a coordinator with an isolated recorder."""
     mock_config_entry.add_to_hass(hass)
-    return TeslaFleetEnergySiteHistoryCoordinator(
+    return TeslaFleetEnergySiteStatisticsCoordinator(
         hass, mock_config_entry, mock_energy_site, SITE_NAME
     )
 
@@ -155,7 +149,7 @@ def history_responses(
 
 
 async def test_hourly_aggregation_and_repeated_refresh(
-    coordinator: TeslaFleetEnergySiteHistoryCoordinator,
+    coordinator: TeslaFleetEnergySiteStatisticsCoordinator,
     hass: HomeAssistant,
     mock_energy_site: AsyncMock,
 ) -> None:
@@ -167,8 +161,7 @@ async def test_hourly_aggregation_and_repeated_refresh(
         ("2023-06-01T09:00:00-07:00", {GRID: 75, SOLAR: 100}),
         (None, {GRID: 1000}),
     )
-    output = await _refresh(hass, coordinator)
-    assert output[GRID] == 1375
+    await _refresh(hass, coordinator)
     ids = {GRID_STATISTIC_ID, SOLAR_STATISTIC_ID}
     stats = await _get_hourly_stats(hass, ids)
     assert _hourly_rows(stats[GRID_STATISTIC_ID]) == [
@@ -249,7 +242,7 @@ async def test_hourly_aggregation_and_repeated_refresh(
     ],
 )
 async def test_backfill_after_midnight(
-    coordinator: TeslaFleetEnergySiteHistoryCoordinator,
+    coordinator: TeslaFleetEnergySiteStatisticsCoordinator,
     hass: HomeAssistant,
     mock_energy_site: AsyncMock,
     history_responses: dict[str | None, dict[str, Any]],
@@ -277,9 +270,7 @@ async def test_backfill_after_midnight(
     history_responses[None] = _history(
         (current.isoformat(), {GRID: 20}), time_zone=time_zone
     )
-    output = await _refresh(hass, coordinator)
-    assert output[GRID] == 20
-    assert output["_period_start"] == current
+    await _refresh(hass, coordinator)
     mock_energy_site.energy_history.assert_called_with(
         TeslaEnergyPeriod.DAY, end_date=end_date
     )
@@ -313,78 +304,49 @@ async def test_backfill_after_midnight(
     ],
 )
 async def test_multi_day_recovery(
+    coordinator: TeslaFleetEnergySiteStatisticsCoordinator,
     hass: HomeAssistant,
-    normal_config_entry: MockConfigEntry,
-    mock_energy_history: AsyncMock,
-    freezer: FrozenDateTimeFactory,
+    history_responses: dict[str | None, dict[str, Any]],
     time_zone: str,
     expected: list[tuple[str, float, float]],
 ) -> None:
-    """A loaded integration recovers each missed hour without lumping energy together."""
+    """Recover each missed hour across several days without lumping energy together."""
     zone = await dt_util.async_get_time_zone(time_zone)
     assert zone is not None
     day = datetime(2023, 6, 1, tzinfo=zone)
     last = day + timedelta(hours=23, minutes=55)
-    freezer.move_to(last - ENERGY_HISTORY_INTERVAL)
-    mock_energy_history.return_value = _history(
+    history_responses[None] = _history(
         (last.isoformat(), {GRID: 1, SOLAR: 100}), time_zone=time_zone
     )
-    await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
-    freezer.tick(ENERGY_HISTORY_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    await async_wait_recording_done(hass)
-    mock_energy_history.assert_called_once_with(TeslaEnergyPeriod.DAY)
-    assert await hass.config_entries.async_unload(normal_config_entry.entry_id)
+    await _refresh(hass, coordinator)
 
-    freezer.move_to(day + timedelta(days=2))
-    mock_energy_history.side_effect = [
-        _history(
-            ((day + timedelta(days=2, minutes=5)).isoformat(), {GRID: 80, SOLAR: 50}),
-            time_zone=time_zone,
-        ),
-        _history((last.isoformat(), {GRID: 10, SOLAR: 100}), time_zone=time_zone),
-        _history(
-            ((day + timedelta(days=1)).isoformat(), {GRID: 20}),
-            ((last + timedelta(days=1)).isoformat(), {GRID: 30}),
-            time_zone=time_zone,
-        ),
-    ]
-    mock_energy_history.reset_mock()
-    with patch("homeassistant.components.tesla_fleet.PLATFORMS", [Platform.SENSOR]):
-        assert await hass.config_entries.async_setup(normal_config_entry.entry_id)
-    freezer.tick(ENERGY_HISTORY_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    await async_wait_recording_done(hass)
+    history_responses[None] = _history(
+        ((day + timedelta(days=2, minutes=5)).isoformat(), {GRID: 80, SOLAR: 50}),
+        time_zone=time_zone,
+    )
+    history_responses[(day + timedelta(days=1, seconds=-1)).isoformat()] = _history(
+        (last.isoformat(), {GRID: 10, SOLAR: 100}), time_zone=time_zone
+    )
+    history_responses[(day + timedelta(days=2, seconds=-1)).isoformat()] = _history(
+        ((day + timedelta(days=1)).isoformat(), {GRID: 20}),
+        ((last + timedelta(days=1)).isoformat(), {GRID: 30}),
+        time_zone=time_zone,
+    )
+    await _refresh(hass, coordinator)
 
-    assert mock_energy_history.call_args_list == [
-        call(TeslaEnergyPeriod.DAY),
-        call(
-            TeslaEnergyPeriod.DAY,
-            end_date=(day + timedelta(days=1, seconds=-1)).isoformat(),
-        ),
-        call(
-            TeslaEnergyPeriod.DAY,
-            end_date=(day + timedelta(days=2, seconds=-1)).isoformat(),
-        ),
-    ]
     stats = await _get_hourly_stats(hass, {GRID_STATISTIC_ID, SOLAR_STATISTIC_ID})
     assert _hourly_rows(stats[GRID_STATISTIC_ID]) == expected
     assert _hourly_rows(stats[SOLAR_STATISTIC_ID]) == [
         (expected[0][0], 100, 100),
         (expected[-1][0], 50, 150),
     ]
-    state = hass.states.get("sensor.energy_site_grid_imported")
-    assert state is not None
-    assert state.state == "0.08"
 
 
 @pytest.mark.parametrize(
     "first_values", [{GRID: 20}, {}], ids=["new-hour", "same-hour"]
 )
 async def test_repeated_import_with_delayed_recorder(
-    coordinator: TeslaFleetEnergySiteHistoryCoordinator,
+    coordinator: TeslaFleetEnergySiteStatisticsCoordinator,
     recorder_mock: Recorder,
     hass: HomeAssistant,
     history_responses: dict[str | None, dict[str, Any]],
@@ -396,11 +358,9 @@ async def test_repeated_import_with_delayed_recorder(
     history_responses[None] = _history((AFTER, first_values))
     history_responses[END_DATE] = _history((BEFORE, {GRID: 100}), (LAST, {GRID: 50}))
     with patch.object(recorder_mock, "queue_task") as queue:
-        await coordinator._async_update_data()
-        await hass.async_block_till_done(wait_background_tasks=True)
+        await coordinator.async_refresh()
         history_responses[None] = _history((AFTER, {GRID: 20}))
-        await coordinator._async_update_data()
-        await hass.async_block_till_done(wait_background_tasks=True)
+        await coordinator.async_refresh()
     for queued in queue.call_args_list:
         recorder_mock.queue_task(queued.args[0])
     await async_wait_recording_done(hass)
@@ -433,7 +393,7 @@ async def test_repeated_import_with_delayed_recorder(
     ],
 )
 async def test_inactive_field_does_not_block_progress(
-    coordinator: TeslaFleetEnergySiteHistoryCoordinator,
+    coordinator: TeslaFleetEnergySiteStatisticsCoordinator,
     hass: HomeAssistant,
     mock_energy_site: AsyncMock,
     history_responses: dict[str | None, dict[str, Any]],
@@ -455,8 +415,10 @@ async def test_inactive_field_does_not_block_progress(
         ("2023-06-02T01:05:00-07:00", {GRID: 30}),
     )
     mock_energy_site.energy_history.reset_mock()
-    assert (await _refresh(hass, coordinator))[GRID] == 50
-    mock_energy_site.energy_history.assert_called_once_with(TeslaEnergyPeriod.DAY)
+    await _refresh(hass, coordinator)
+    mock_energy_site.energy_history.assert_called_once_with(
+        TeslaEnergyPeriod.DAY, end_date=None
+    )
     stats = await _get_hourly_stats(hass, {GRID_STATISTIC_ID, DISCHARGE_STATISTIC_ID})
     assert _hourly_rows(stats[GRID_STATISTIC_ID]) == [
         ("2023-06-02T06:00:00+00:00", 100, 100),
@@ -478,7 +440,7 @@ async def test_inactive_field_does_not_block_progress(
     mock_energy_site.energy_history.reset_mock()
     await _refresh(hass, coordinator)
     assert mock_energy_site.energy_history.call_args_list == [
-        call(TeslaEnergyPeriod.DAY),
+        call(TeslaEnergyPeriod.DAY, end_date=None),
         call(TeslaEnergyPeriod.DAY, end_date="2023-06-02T23:59:59-07:00"),
     ]
     stats = await _get_hourly_stats(hass, {GRID_STATISTIC_ID, DISCHARGE_STATISTIC_ID})
@@ -487,7 +449,7 @@ async def test_inactive_field_does_not_block_progress(
 
 
 async def test_independent_baselines_and_new_fields(
-    coordinator: TeslaFleetEnergySiteHistoryCoordinator,
+    coordinator: TeslaFleetEnergySiteStatisticsCoordinator,
     hass: HomeAssistant,
     history_responses: dict[str | None, dict[str, Any]],
 ) -> None:
@@ -519,30 +481,29 @@ async def test_independent_baselines_and_new_fields(
 
 
 @pytest.mark.parametrize(
-    ("failure", "interval", "expires_at"),
+    ("failure", "retry_after", "expires_at"),
     [
-        pytest.param(TeslaFleetError(), 300, 1000, id="api"),
-        pytest.param(InvalidToken(), 300, 0, id="invalid-token"),
-        pytest.param(OAuthExpired(), 300, 0, id="expired-token"),
+        pytest.param(TeslaFleetError(), None, 1000, id="api"),
+        pytest.param(InvalidToken(), None, 0, id="invalid-token"),
+        pytest.param(OAuthExpired(), None, 0, id="expired-token"),
         pytest.param(RateLimited({"after": 600}), 600, 1000, id="rate-limit"),
-        pytest.param(TimeoutError(), 300, 1000, id="timeout"),
-        pytest.param(ClientConnectionError(), 300, 1000, id="connection"),
-        pytest.param({}, 300, 1000, id="missing-response"),
-        pytest.param(_history(), 300, 1000, id="empty-day"),
-        pytest.param(_history((AFTER, {GRID: 10})), 300, 1000, id="wrong-day"),
+        pytest.param(TimeoutError(), None, 1000, id="timeout"),
+        pytest.param(ClientConnectionError(), None, 1000, id="connection"),
+        pytest.param({}, None, 1000, id="missing-response"),
+        pytest.param(_history(), None, 1000, id="empty-day"),
+        pytest.param(_history((AFTER, {GRID: 10})), None, 1000, id="wrong-day"),
     ],
 )
-async def test_history_errors_preserve_sensors_and_retry(
-    coordinator: TeslaFleetEnergySiteHistoryCoordinator,
+async def test_history_errors_retry_without_skipping(
+    coordinator: TeslaFleetEnergySiteStatisticsCoordinator,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_energy_site: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
     failure: TeslaFleetError | TimeoutError | ClientConnectionError | dict[str, Any],
-    interval: int,
+    retry_after: float | None,
     expires_at: int,
 ) -> None:
-    """Recover history independently of today's sensor data without skipping gaps."""
+    """A failed historical day is retried later without skipping the gap."""
     current = _history((AFTER, {GRID: 20}))
     mock_energy_site.energy_history.side_effect = [
         _history((BEFORE, {GRID: 100})),
@@ -559,36 +520,35 @@ async def test_history_errors_preserve_sensors_and_retry(
     await _refresh(hass, coordinator)
     previous = await _get_hourly_stats(hass, {GRID_STATISTIC_ID})
     for _ in range(2):
-        assert (await _refresh(hass, coordinator))[GRID] == 20
-        assert coordinator.update_interval == timedelta(seconds=interval)
+        await _refresh(hass, coordinator)
+        assert not coordinator.last_update_success
+        assert getattr(coordinator.last_exception, "retry_after", None) == retry_after
         assert mock_config_entry.data[CONF_TOKEN]["expires_at"] == expires_at
         assert await _get_hourly_stats(hass, {GRID_STATISTIC_ID}) == previous
-    assert caplog.text.count("Unable to import statistics") == 1
     await _refresh(hass, coordinator)
+    assert coordinator.last_update_success
     stats = await _get_hourly_stats(hass, {GRID_STATISTIC_ID})
     assert stats[GRID_STATISTIC_ID][-1]["sum"] == 170
-    assert coordinator.update_interval == ENERGY_HISTORY_INTERVAL
-    assert "Statistics import recovered" in caplog.text
 
 
 async def test_history_login_required(
-    coordinator: TeslaFleetEnergySiteHistoryCoordinator,
+    coordinator: TeslaFleetEnergySiteStatisticsCoordinator,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_energy_site: AsyncMock,
 ) -> None:
-    """A background import can request reauthentication."""
+    """An import that needs new credentials starts reauthentication."""
     await _refresh(hass, coordinator)
     mock_energy_site.energy_history.side_effect = [
         _history((AFTER, {GRID: 20})),
         LoginRequired(),
     ]
-    assert (await _refresh(hass, coordinator))[GRID] == 20
+    await _refresh(hass, coordinator)
     assert any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 async def test_resume_valid_prefix_after_failure(
-    coordinator: TeslaFleetEnergySiteHistoryCoordinator,
+    coordinator: TeslaFleetEnergySiteStatisticsCoordinator,
     hass: HomeAssistant,
     mock_energy_site: AsyncMock,
 ) -> None:
@@ -602,7 +562,7 @@ async def test_resume_valid_prefix_after_failure(
         TeslaFleetError(),
     ]
     await _refresh(hass, coordinator)
-    assert (await _refresh(hass, coordinator))[GRID] == 40
+    await _refresh(hass, coordinator)
     stats = await _get_hourly_stats(hass, {GRID_STATISTIC_ID})
     assert _hourly_rows(stats[GRID_STATISTIC_ID]) == [
         ("2023-06-01T23:00:00+00:00", 10, 10)
@@ -626,76 +586,16 @@ async def test_resume_valid_prefix_after_failure(
 
 @pytest.mark.parametrize("time_zone", [None, "", "Invalid/Timezone"])
 async def test_invalid_site_timezone(
-    coordinator: TeslaFleetEnergySiteHistoryCoordinator,
+    coordinator: TeslaFleetEnergySiteStatisticsCoordinator,
     hass: HomeAssistant,
     mock_energy_site: AsyncMock,
     caplog: pytest.LogCaptureFixture,
     time_zone: str | None,
 ) -> None:
-    """Report unusable timezone metadata without guessing a zone or losing sensors."""
+    """Report unusable timezone metadata without guessing a zone."""
     mock_energy_site.energy_history.return_value = _history(
         (BEFORE, {GRID: 100}), time_zone=time_zone
     )
-    assert (await _refresh(hass, coordinator))[GRID] == 100
+    await _refresh(hass, coordinator)
     assert await _get_hourly_stats(hass, {GRID_STATISTIC_ID}) == {}
     assert "timezone" in caplog.text
-
-
-@pytest.mark.parametrize(
-    ("last_response", "cancelled_before_unload"),
-    [
-        pytest.param(_history((AFTER, {GRID: 30})), False, id="unload"),
-        pytest.param(RateLimited({"after": 600}), True, id="rate-limit"),
-    ],
-)
-async def test_one_import_job_and_unload(
-    hass: HomeAssistant,
-    normal_config_entry: MockConfigEntry,
-    mock_energy_history: AsyncMock,
-    freezer: FrozenDateTimeFactory,
-    last_response: dict[str, Any] | RateLimited,
-    cancelled_before_unload: bool,
-) -> None:
-    """Current polling continues during an import, and unloading cancels that import."""
-    mock_energy_history.return_value = _history((BEFORE, {GRID: 100}))
-    await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
-    freezer.tick(ENERGY_HISTORY_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    await async_wait_recording_done(hass)
-    previous = await _get_hourly_stats(hass, {GRID_STATISTIC_ID})
-    entered, release, cancelled = Event(), Event(), Event()
-
-    get_current = AsyncMock(side_effect=[_history((AFTER, {GRID: 20})), last_response])
-
-    async def get_historical() -> dict[str, Any]:
-        entered.set()
-        try:
-            await release.wait()
-        finally:
-            cancelled.set()
-        return _history((LAST, {GRID: 50}))
-
-    async def get_history(
-        period: TeslaEnergyPeriod, *, end_date: str | None = None
-    ) -> dict[str, Any]:
-        return await {None: get_current, END_DATE: get_historical}[end_date]()
-
-    mock_energy_history.side_effect = get_history
-    mock_energy_history.reset_mock()
-    freezer.tick(ENERGY_HISTORY_INTERVAL)
-    async_fire_time_changed(hass)
-    await wait_for(entered.wait(), 5)
-    freezer.tick(ENERGY_HISTORY_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert mock_energy_history.call_args_list == [
-        call(TeslaEnergyPeriod.DAY),
-        call(TeslaEnergyPeriod.DAY, end_date=END_DATE),
-        call(TeslaEnergyPeriod.DAY),
-    ]
-    assert cancelled.is_set() is cancelled_before_unload
-    assert await hass.config_entries.async_unload(normal_config_entry.entry_id)
-    await wait_for(cancelled.wait(), 5)
-    await async_wait_recording_done(hass)
-    assert await _get_hourly_stats(hass, {GRID_STATISTIC_ID}) == previous

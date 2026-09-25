@@ -1,11 +1,10 @@
 """Tesla Fleet Data Coordinator."""
 
-from asyncio import Task
 from datetime import datetime, timedelta
+from random import randint
 from time import time
 from typing import TYPE_CHECKING, Any, override
 
-from aiohttp import ClientError
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     InternalServerError,
@@ -33,11 +32,12 @@ from homeassistant.const import CONF_TOKEN, UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import EnergyConverter
 
 if TYPE_CHECKING:
     from . import TeslaFleetConfigEntry
+
+from homeassistant.util import dt as dt_util
 
 from .const import (
     DOMAIN,
@@ -56,6 +56,7 @@ VEHICLE_STUCK_SECONDS = 1200
 ENERGY_INTERVAL_SECONDS = 60
 ENERGY_INTERVAL = timedelta(seconds=ENERGY_INTERVAL_SECONDS)
 ENERGY_HISTORY_INTERVAL = timedelta(minutes=5)
+ENERGY_STATISTICS_INTERVAL = timedelta(hours=1)
 
 
 def _stale_site_info_error(err: BaseException | None) -> TeslaFleetError | None:
@@ -367,7 +368,6 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         hass: HomeAssistant,
         config_entry: TeslaFleetConfigEntry,
         api: EnergySite,
-        site_name: str,
     ) -> None:
         """Initialize Tesla Fleet Energy Site History coordinator."""
         super().__init__(
@@ -375,25 +375,31 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
             LOGGER,
             config_entry=config_entry,
             name=f"Tesla Fleet Energy History {api.energy_site_id}",
-            update_interval=ENERGY_HISTORY_INTERVAL,
+            update_interval=timedelta(seconds=300),
         )
         self.api = api
-        self.site_name = site_name
         self.data = {}
         self.updated_once = False
-        self._statistics_task: Task[None] | None = None
-        self._statistics_failed = False
+
+    @override
+    async def async_config_entry_first_refresh(self) -> None:
+        """Set up the data coordinator."""
+        await super().async_config_entry_first_refresh()
+
+        # Calculate seconds until next 5 minute period plus a random delay
+        delta = randint(310, 330) - (int(time()) % 300)
+        self.logger.debug("Scheduling next %s refresh in %s seconds", self.name, delta)
+        self.update_interval = timedelta(seconds=delta)
+        self._schedule_refresh()
+        self.update_interval = ENERGY_HISTORY_INTERVAL
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site history data using Tesla Fleet API."""
-        self.update_interval = ENERGY_HISTORY_INTERVAL
 
         try:
-            response = await self.api.energy_history(TeslaEnergyPeriod.DAY)
+            data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))["response"]
         except RateLimited as e:
-            if self._statistics_task is not None:
-                self._statistics_task.cancel()
             if isinstance(e.data, dict) and "after" in e.data:
                 LOGGER.warning(
                     "%s rate limited, will retry in %s seconds",
@@ -411,10 +417,22 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
+        self.updated_once = True
 
-        data, period_start = _parse_energy_history(response)
-        time_series: list[dict[str, Any]] = data["time_series"]
+        if (
+            not data
+            or not isinstance((time_series := data.get("time_series")), list)
+            or not time_series
+            or not isinstance((first_period := time_series[0]), dict)
+            or not isinstance((timestamp := first_period.get("timestamp")), str)
+            or (period_start := dt_util.parse_datetime(timestamp)) is None
+        ):
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_data",
+            )
 
+        # Add all time periods together
         output: dict[str, Any] = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
         for period in time_series:
             for key in ENERGY_HISTORY_FIELDS:
@@ -426,60 +444,60 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
 
         output["_period_start"] = period_start
 
-        if self._statistics_task is None or self._statistics_task.done():
-            self._statistics_task = self.config_entry.async_create_background_task(
-                self.hass,
-                self._async_import_statistics(data, period_start),
-                f"{self.name} statistics",
-            )
-            self._statistics_task.add_done_callback(self._statistics_done)
-
-        self.updated_once = True
         return output
 
-    @callback
-    def _statistics_done(self, task: Task[None]) -> None:
-        """Report unexpected import failures; cancellation is handled by the entry."""
-        if not task.cancelled() and (error := task.exception()) is not None:
-            LOGGER.error(
-                "Unexpected statistics error for %s", self.name, exc_info=error
-            )
 
-    async def _async_import_statistics(
-        self, data: dict[str, Any], period_start: datetime
+class TeslaFleetEnergySiteStatisticsCoordinator(DataUpdateCoordinator[None]):
+    """Import energy site history as hourly external statistics."""
+
+    config_entry: TeslaFleetConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: TeslaFleetConfigEntry,
+        api: EnergySite,
+        site_name: str,
     ) -> None:
-        """Import history without blocking current-day sensor updates."""
+        """Initialize Tesla Fleet Energy Site Statistics coordinator."""
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=f"Tesla Fleet Energy Statistics {api.energy_site_id}",
+            update_interval=ENERGY_STATISTICS_INTERVAL,
+        )
+        self.api = api
+        self.site_name = site_name
+
+    async def _async_get_history(
+        self, end_date: str | None = None
+    ) -> tuple[dict[str, Any], datetime]:
+        """Fetch one local day of energy history."""
         try:
-            await self._async_backfill(data, period_start)
-        except (TeslaFleetError, ClientError, TimeoutError, UpdateFailed) as err:
-            if isinstance(err, LoginRequired):
-                self.config_entry.async_start_reauth(self.hass)
-            elif isinstance(err, (InvalidToken, OAuthExpired)):
-                _invalidate_access_token(self.hass, self.config_entry)
-            elif (
-                isinstance(err, RateLimited)
-                and isinstance(err.data, dict)
-                and "after" in err.data
-            ):
-                self.update_interval = timedelta(seconds=int(err.data["after"]))
-                if self._listeners:
-                    self._schedule_refresh()
-            if not self._statistics_failed:
-                LOGGER.warning(
-                    "Unable to import statistics for %s: %s",
-                    self.name,
-                    str(err) or type(err).__name__,
-                )
-            self._statistics_failed = True
-        else:
-            if self._statistics_failed:
-                LOGGER.info("Statistics import recovered for %s", self.name)
-            self._statistics_failed = False
+            response = await self.api.energy_history(
+                TeslaEnergyPeriod.DAY, end_date=end_date
+            )
+        except RateLimited as e:
+            retry_after = (
+                float(e.data["after"])
+                if isinstance(e.data, dict) and "after" in e.data
+                else None
+            )
+            raise UpdateFailed(e.message, retry_after=retry_after) from e
+        except (InvalidToken, OAuthExpired) as e:
+            _invalidate_access_token(self.hass, self.config_entry)
+            raise UpdateFailed(e.message) from e
+        except LoginRequired as e:
+            raise ConfigEntryAuthFailed from e
+        except TeslaFleetError as e:
+            raise UpdateFailed(e.message) from e
+        return _parse_energy_history(response)
 
-    async def _async_backfill(
-        self, data: dict[str, Any], period_start: datetime
-    ) -> None:
-        """Stream daily history from the last recorded hour through today."""
+    @override
+    async def _async_update_data(self) -> None:
+        """Import daily history from the last recorded hour through today."""
+        data, period_start = await self._async_get_history()
         if (
             not isinstance((time_zone := data.get("installation_time_zone")), str)
             or not time_zone
@@ -520,11 +538,9 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         while day <= today:
             next_day = day + timedelta(days=1)
             if day < today:
-                response = await self.api.energy_history(
-                    TeslaEnergyPeriod.DAY,
-                    end_date=(next_day - timedelta(seconds=1)).isoformat(),
+                history, history_start = await self._async_get_history(
+                    (next_day - timedelta(seconds=1)).isoformat()
                 )
-                history, history_start = _parse_energy_history(response)
                 if history_start.astimezone(site_time_zone).date() != day.date():
                     raise UpdateFailed("Energy history did not match the requested day")
                 # Leave the boundary hour for the next day's overlapping window.

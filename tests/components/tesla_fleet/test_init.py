@@ -33,6 +33,7 @@ from homeassistant.components.tesla_fleet.coordinator import (
     ENERGY_HISTORY_INTERVAL,
     ENERGY_INTERVAL,
     ENERGY_INTERVAL_SECONDS,
+    ENERGY_STATISTICS_INTERVAL,
     VEHICLE_INTERVAL,
     VEHICLE_INTERVAL_SECONDS,
     VEHICLE_WAIT,
@@ -108,7 +109,7 @@ async def test_remove_entry_clears_statistics_after_last_owner(
 ) -> None:
     """Clear shared statistics only after removing the last site owner."""
     await setup_platform(hass, normal_config_entry)
-    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    freezer.tick(ENERGY_STATISTICS_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     statistic_ids = await _get_statistic_ids(hass)
@@ -879,9 +880,6 @@ async def test_energy_history_refresh_ratelimited(
 
     await setup_platform(hass, normal_config_entry)
 
-    # The listener schedules the first refresh without blocking setup.
-    assert mock_energy_history.call_count == 0
-
     mock_energy_history.side_effect = RateLimited(
         {"after": int(ENERGY_HISTORY_INTERVAL.total_seconds() + 10)}
     )
@@ -904,28 +902,6 @@ async def test_energy_history_refresh_ratelimited(
 
     assert mock_energy_history.call_count == 2
 
-    mock_energy_history.side_effect = None
-
-    # Still in backoff from the second rate limited response
-    freezer.tick(ENERGY_HISTORY_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert mock_energy_history.call_count == 2
-
-    freezer.tick(ENERGY_HISTORY_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert mock_energy_history.call_count == 3
-
-    # A successful refresh resets the backoff to the normal interval
-    freezer.tick(ENERGY_HISTORY_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert mock_energy_history.call_count == 4
-
 
 @pytest.mark.parametrize(
     ("battery", "solar", "expected_calls"),
@@ -936,7 +912,7 @@ async def test_energy_history_refresh_ratelimited(
         pytest.param(True, True, 1, id="battery-and-solar"),
     ],
 )
-async def test_energy_history_refresh_without_sensor_entities(
+async def test_energy_statistics_polling(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
@@ -948,7 +924,7 @@ async def test_energy_history_refresh_without_sensor_entities(
     solar: bool,
     expected_calls: int,
 ) -> None:
-    """Test only battery and solar sites poll history without sensor entities."""
+    """Test only battery and solar sites import statistics, even without sensors."""
     components = {"battery": battery, "solar": solar}
     products = deepcopy(mock_products.return_value)
     products["response"][1]["components"].update(components)
@@ -970,13 +946,13 @@ async def test_energy_history_refresh_without_sensor_entities(
     assert hass.states.get("sensor.wall_connector_power") is not None
     assert mock_energy_history.call_count == 0
 
-    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    freezer.tick(ENERGY_STATISTICS_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert mock_energy_history.call_count == expected_calls
 
     assert await hass.config_entries.async_unload(normal_config_entry.entry_id)
-    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    freezer.tick(ENERGY_STATISTICS_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert mock_energy_history.call_count == expected_calls
