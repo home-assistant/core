@@ -51,6 +51,7 @@ SELECT_TYPES: dict[str, SHCSelectEntityDescription] = {
         key=SIREN_SOUND_LEVEL,
         translation_key=SIREN_SOUND_LEVEL,
         entity_category=EntityCategory.CONFIG,
+        options=_SIREN_SOUND_LEVEL_OPTIONS,
         unique_id_suffix="sound_level",
         current_option_fn=_siren_current_option,
         select_option_fn=_siren_select_option,
@@ -76,7 +77,6 @@ async def async_setup_entry(
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
             description=SELECT_TYPES[SIREN_SOUND_LEVEL],
-            options=_SIREN_SOUND_LEVEL_OPTIONS,
         )
         for siren in session.device_helper.outdoor_sirens
         if siren.siren is not None
@@ -101,11 +101,9 @@ class SHCSelect[_DeviceT: SHCDevice](SHCEntity, SelectEntity):
         parent_id: str,
         entry_id: str,
         description: SHCSelectEntityDescription[_DeviceT],
-        options: list[str],
     ) -> None:
         """Initialize the select entity."""
         self.entity_description = description
-        self._attr_options = options
         super().__init__(
             hass=hass, device=device, parent_id=parent_id, entry_id=entry_id
         )
@@ -115,9 +113,7 @@ class SHCSelect[_DeviceT: SHCDevice](SHCEntity, SelectEntity):
     @override
     def current_option(self) -> str | None:
         """Return the current option."""
-        return self.entity_description.current_option_fn(
-            self._device, self._attr_options
-        )
+        return self.entity_description.current_option_fn(self._device, self.options)
 
     @override
     async def async_select_option(self, option: str) -> None:
