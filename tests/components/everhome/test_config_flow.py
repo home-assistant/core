@@ -125,6 +125,7 @@ async def test_zeroconf_flow_error(
     )
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_zeroconf_flow_no_serial(
