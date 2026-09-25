@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from probatio import MultipleInvalid
 import pytest
 
 from homeassistant.components.tesla_fleet.const import DOMAIN
@@ -98,6 +99,31 @@ async def test_navigation_gps_request(
     navigation_gps_request.assert_called_once_with(
         lat=LAT, lon=LON, order=expected_order
     )
+
+
+@pytest.mark.parametrize("order", [0, 4])
+async def test_navigation_gps_request_invalid_order(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    order: int,
+) -> None:
+    """Test an order outside the supported range is rejected."""
+    await setup_platform(hass, normal_config_entry)
+
+    with pytest.raises(MultipleInvalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_NAVIGATION_GPS_REQUEST,
+            {
+                CONF_DEVICE_ID: get_vehicle_device_id(
+                    device_registry, normal_config_entry
+                ),
+                ATTR_GPS: {CONF_LATITUDE: LAT, CONF_LONGITUDE: LON},
+                ATTR_ORDER: order,
+            },
+            blocking=True,
+        )
 
 
 async def test_navigation_request_command_error(

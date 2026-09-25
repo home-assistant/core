@@ -103,7 +103,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     probatio.Required(CONF_LATITUDE): cv.latitude,
                     probatio.Required(CONF_LONGITUDE): cv.longitude,
                 },
-                probatio.Optional(ATTR_ORDER): cv.positive_int,
+                probatio.Optional(ATTR_ORDER): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=1, max=3)
+                ),
             }
         ),
     )
