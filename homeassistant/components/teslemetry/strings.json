@@ -1289,9 +1289,6 @@
     "update_failed_insufficient_credits": {
       "message": "Teslemetry account has insufficient command credits, pausing updates until credits are added"
     },
-    "update_failed_invalid_data": {
-      "message": "Received invalid data from API"
-    },
     "wake_up_failed": {
       "message": "Failed to wake up vehicle: {message}"
     },
