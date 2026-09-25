@@ -23,6 +23,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_BROWSE_MEDIA,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
@@ -40,7 +41,6 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State as CoreState
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_component import DATA_INSTANCES
 
 from .conftest import MOCK_ENTITY_ID
 
@@ -72,10 +72,14 @@ async def test_browse_media_without_presets(
 ) -> None:
     """Test browsing when the receiver has no preset details."""
     state_1.get_preset_details.return_value = None
-    player = hass.data[DATA_INSTANCES][MEDIA_PLAYER_DOMAIN].get_entity(MOCK_ENTITY_ID)
-    assert isinstance(player, ArcamFmj)
-
-    media = await player.async_browse_media()
+    response = await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_BROWSE_MEDIA,
+        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+    media = response[MOCK_ENTITY_ID]
 
     assert media.media_content_id == "root"
     assert media.children == []
