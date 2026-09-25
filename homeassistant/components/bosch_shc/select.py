@@ -84,12 +84,7 @@ async def async_setup_entry(
 
 
 class SHCSelect[_DeviceT: SHCDevice](SHCEntity, SelectEntity):
-    """Generic SHC select entity, driven by a SHCSelectEntityDescription.
-
-    ``current_option``/``async_select_option`` delegate to the description's
-    ``current_option_fn``/``select_option_fn``, so a single class covers
-    every select type — the per-type behavior lives in the description.
-    """
+    """Generic SHC select entity, driven by a SHCSelectEntityDescription."""
 
     entity_description: SHCSelectEntityDescription[_DeviceT]
     _device: _DeviceT
