@@ -29,13 +29,18 @@ from . import (
     LOCK_SERVICE_INFO,
     STANDING_FAN_SERVICE_INFO,
     WOCURTAIN_SERVICE_INFO,
+    WOMETERTHP_SERVICE_INFO,
     WOMETERTHPC_SERVICE_INFO,
     WOSENSORTH_SERVICE_INFO,
     patch_async_ble_device_from_address,
 )
 
 from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
+from tests.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_bluetooth_service_info,
+)
 
 
 @pytest.mark.parametrize(
@@ -329,6 +334,76 @@ async def test_migrate_deprecated_air_purifier_sensor_type_device_not_in_range(
     # sensor_type unchanged and entry not loaded; will retry when device advertises
     assert entry.data[CONF_SENSOR_TYPE] == DEPRECATED_SENSOR_TYPE_AIR_PURIFIER
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_migrate_hygrometer_to_hygrometer_pro(hass: HomeAssistant) -> None:
+    """Test a cached Meter Pro advertisement upgrades a hygrometer entry."""
+    inject_bluetooth_service_info(hass, WOMETERTHP_SERVICE_INFO)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_NAME: "test-name",
+            CONF_SENSOR_TYPE: "hygrometer",
+        },
+        unique_id="aabbccddeeff",
+        version=1,
+        minor_version=2,
+        options={CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.data[CONF_SENSOR_TYPE] == "hygrometer_pro"
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_migrate_hygrometer_unchanged_for_plain_meter(
+    hass: HomeAssistant,
+) -> None:
+    """Test a plain Meter's hygrometer entry is not upgraded to hygrometer_pro."""
+    manufacturer_data = {2409: b"\xda,\x1e\xb1\x86Au\x03\x00\x96\xac"}
+    service_data = {"0000fd3d-0000-1000-8000-00805f9b34fb": b"T\x00d\x00\x96\xac"}
+    plain_meter_service_info = BluetoothServiceInfoBleak(
+        name="WoSensorTH",
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        address="AA:BB:CC:DD:EE:FF",
+        manufacturer_data=manufacturer_data,
+        service_data=service_data,
+        rssi=-60,
+        source="local",
+        advertisement=generate_advertisement_data(
+            manufacturer_data=manufacturer_data, service_data=service_data
+        ),
+        device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoSensorTH"),
+        time=0,
+        connectable=False,
+        tx_power=-127,
+    )
+    inject_bluetooth_service_info(hass, plain_meter_service_info)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_NAME: "test-name",
+            CONF_SENSOR_TYPE: "hygrometer",
+        },
+        unique_id="aabbccddeeff",
+        version=1,
+        minor_version=2,
+        options={CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.data[CONF_SENSOR_TYPE] == "hygrometer"
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_standing_fan_setup(
