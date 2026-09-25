@@ -46,7 +46,7 @@ async def test_set_target_temperature(
     assert state.state == "40.0"
 
     def set_temp_mock(value: float) -> None:
-        device_fixture.heater.set_temperature = float(value)
+        device_fixture.heater.set_temperature = value
 
     mock_hotspring.set_temperature.side_effect = set_temp_mock
 
