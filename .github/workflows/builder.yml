@@ -198,7 +198,7 @@ jobs:
           echo "${GITHUB_SHA};${GITHUB_REF};${GITHUB_EVENT_NAME};${GITHUB_ACTOR}" > rootfs/OFFICIAL_IMAGE
 
       - name: Build base image
-        uses: home-assistant/builder/actions/build-image@4de35182ce1e329181bffcbcc84d33db5e2c7e10 # 2026.06.0
+        uses: home-assistant/builder/actions/build-image@7412f0023ea9b6e58e8bb5059f1660f51376f49a # 2026.09.0
         with:
           arch: ${{ matrix.arch }}
           build-args: |
@@ -256,7 +256,7 @@ jobs:
           fi
 
       - name: Build machine image
-        uses: home-assistant/builder/actions/build-image@4de35182ce1e329181bffcbcc84d33db5e2c7e10 # 2026.06.0
+        uses: home-assistant/builder/actions/build-image@7412f0023ea9b6e58e8bb5059f1660f51376f49a # 2026.09.0
         with:
           arch: ${{ matrix.arch }}
           build-args: |
@@ -402,7 +402,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}},value=${{ needs.init.outputs.version }},enable=${{ !contains(needs.init.outputs.version, 'd') && !contains(needs.init.outputs.version, 'b') }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Copy architecture images to DockerHub
         if: matrix.registry == 'docker.io/homeassistant'
@@ -538,7 +538,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker image
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: . # So action will not pull the repository again
           file: ./script/hassfest/docker/Dockerfile
@@ -551,7 +551,7 @@ jobs:
       - name: Push Docker image
         if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
         id: push
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: . # So action will not pull the repository again
           file: ./script/hassfest/docker/Dockerfile

@@ -8,7 +8,7 @@ from urllib.parse import ParseResult, urlparse
 
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import FritzConnectionException
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
@@ -228,14 +228,14 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
-                    vol.Optional(CONF_PORT): vol.Coerce(int),
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
-                    vol.Required(
+                    probatio.Optional(CONF_HOST, default=DEFAULT_HOST): str,
+                    probatio.Optional(CONF_PORT): probatio.Coerce(int),
+                    probatio.Required(CONF_USERNAME): str,
+                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
+                    probatio.Required(
                         CONF_FEATURE_DEVICE_TRACKING,
                         default=DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
                     ): bool,
@@ -250,12 +250,12 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
-                    vol.Required(
+                    probatio.Required(CONF_USERNAME): str,
+                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
+                    probatio.Required(
                         CONF_FEATURE_DEVICE_TRACKING,
                         default=DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
                     ): bool,
@@ -310,10 +310,10 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         default_username = user_input.get(CONF_USERNAME)
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME, default=default_username): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME, default=default_username): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             description_placeholders={"host": self._host},
@@ -354,13 +354,13 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         """Show the reconfigure form to the user."""
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
-                    vol.Optional(CONF_PORT, default=user_input[CONF_PORT]): vol.Coerce(
-                        int
-                    ),
-                    vol.Required(CONF_SSL, default=user_input[CONF_SSL]): bool,
+                    probatio.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
+                    probatio.Optional(
+                        CONF_PORT, default=user_input[CONF_PORT]
+                    ): probatio.Coerce(int),
+                    probatio.Required(CONF_SSL, default=user_input[CONF_SSL]): bool,
                 }
             ),
             description_placeholders={"host": user_input[CONF_HOST]},
@@ -383,7 +383,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 # as they are determined by ssl value
                 # this allows the user to toggle ssl
                 # without having to change the port
-                port = vol.UNDEFINED
+                port = probatio.UNDEFINED
 
             return self._show_setup_form_reconfigure(
                 {
@@ -427,19 +427,19 @@ class FritzBoxToolsOptionsFlowHandler(OptionsFlowWithReload):
             return self.async_create_entry(data=user_input)
 
         options = self.config_entry.options
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_CONSIDER_HOME,
                     default=options.get(
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
                     ),
-                ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900)),
-                vol.Optional(
+                ): probatio.All(probatio.Coerce(int), probatio.Clamp(min=0, max=900)),
+                probatio.Optional(
                     CONF_OLD_DISCOVERY,
                     default=options.get(CONF_OLD_DISCOVERY, DEFAULT_CONF_OLD_DISCOVERY),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_FEATURE_DEVICE_TRACKING,
                     default=options.get(
                         CONF_FEATURE_DEVICE_TRACKING,

@@ -8,7 +8,7 @@ import posixpath
 from typing import Any
 from urllib.parse import unquote, urlsplit
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import frontend, onboarding, websocket_api
 from homeassistant.config import (
@@ -63,46 +63,46 @@ _LOGGER = logging.getLogger(__name__)
 def _validate_url_slug(value: Any) -> str:
     """Validate value is a valid url slug."""
     if value is None:
-        raise vol.Invalid("Slug should not be None")
+        raise probatio.Invalid("Slug should not be None")
     if value != "lovelace" and "-" not in value:
-        raise vol.Invalid("Url path needs to contain a hyphen (-)")
+        raise probatio.Invalid("Url path needs to contain a hyphen (-)")
     str_value = str(value)
     slg = slugify(str_value, separator="-")
     if str_value == slg:
         return str_value
-    raise vol.Invalid(f"invalid slug {value} (try {slg})")
+    raise probatio.Invalid(f"invalid slug {value} (try {slg})")
 
 
 CONF_DASHBOARDS = "dashboards"
 
-YAML_DASHBOARD_SCHEMA = vol.Schema(
+YAML_DASHBOARD_SCHEMA = probatio.Schema(
     {
         **DASHBOARD_BASE_CREATE_FIELDS,
-        vol.Required(CONF_MODE): MODE_YAML,
-        vol.Required(CONF_FILENAME): cv.path,
+        probatio.Required(CONF_MODE): MODE_YAML,
+        probatio.Required(CONF_FILENAME): cv.path,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(DOMAIN, default={}): vol.Schema(
+        probatio.Optional(DOMAIN, default={}): probatio.Schema(
             {
                 # Deprecated - Remove in 2026.8
-                vol.Optional(CONF_MODE, default=MODE_STORAGE): vol.All(
-                    vol.Lower, vol.In([MODE_YAML, MODE_STORAGE])
+                probatio.Optional(CONF_MODE, default=MODE_STORAGE): probatio.All(
+                    probatio.Lower, probatio.In([MODE_YAML, MODE_STORAGE])
                 ),
-                vol.Optional(CONF_RESOURCE_MODE): vol.All(
-                    vol.Lower, vol.In([MODE_YAML, MODE_STORAGE])
+                probatio.Optional(CONF_RESOURCE_MODE): probatio.All(
+                    probatio.Lower, probatio.In([MODE_YAML, MODE_STORAGE])
                 ),
-                vol.Optional(CONF_DASHBOARDS): cv.schema_with_slug_keys(
+                probatio.Optional(CONF_DASHBOARDS): cv.schema_with_slug_keys(
                     YAML_DASHBOARD_SCHEMA,
                     slug_validator=_validate_url_slug,
                 ),
-                vol.Optional(CONF_RESOURCES): [RESOURCE_SCHEMA],
+                probatio.Optional(CONF_RESOURCES): [RESOURCE_SCHEMA],
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -481,7 +481,7 @@ async def _async_migrate_default_config(
                 CONF_URL_PATH: DOMAIN,
             }
         )
-    except HomeAssistantError, vol.Invalid:
+    except HomeAssistantError, probatio.Invalid:
         _LOGGER.exception("Failed to create dashboard entry during migration")
         return
 

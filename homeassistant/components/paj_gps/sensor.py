@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import override
 
+from pajgps_api.models.sensordata import SensorData
 from pajgps_api.models.trackpoint import TrackPoint
 
 from homeassistant.components.sensor import (
@@ -12,7 +13,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfSpeed
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfElectricPotential,
+    UnitOfSpeed,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -27,7 +33,8 @@ PARALLEL_UPDATES = 0
 class PajGpsSensorEntityDescription(SensorEntityDescription):
     """Describes a PAJ GPS sensor entity."""
 
-    value_fn: Callable[[TrackPoint], int | None]
+    trackpoint_value_fn: Callable[[TrackPoint], int | None] | None = None
+    sensor_data_value_fn: Callable[[SensorData], int | None] | None = None
     supported_fn: Callable[[Device], bool] = field(default=lambda _: True)
 
 
@@ -38,7 +45,7 @@ SENSOR_DESCRIPTIONS: tuple[PajGpsSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        value_fn=lambda tp: tp.speed,
+        trackpoint_value_fn=lambda tp: tp.speed,
     ),
     PajGpsSensorEntityDescription(
         key="battery",
@@ -47,8 +54,19 @@ SENSOR_DESCRIPTIONS: tuple[PajGpsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=0,
-        value_fn=lambda tp: tp.battery_level,
+        trackpoint_value_fn=lambda tp: tp.battery_level,
         supported_fn=lambda device: device.has_battery,
+    ),
+    PajGpsSensorEntityDescription(
+        key="voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+        suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=2,
+        sensor_data_value_fn=lambda data: data.volt,
+        supported_fn=lambda device: device.has_voltage_sensor,
     ),
 )
 
@@ -102,8 +120,32 @@ class PajGpsSensor(PajGpsEntity, SensorEntity):
     @property
     @override
     def native_value(self) -> int | None:
-        """Return the sensor value from the latest trackpoint."""
-        tp = self.coordinator.data.positions.get(self._device_id)
-        if tp is None:
+        """Return the sensor value from the latest coordinator snapshot."""
+        if (
+            trackpoint_value_fn := self.entity_description.trackpoint_value_fn
+        ) is not None:
+            tp = self.coordinator.data.positions.get(self._device_id)
+            if tp is None:
+                return None
+            return trackpoint_value_fn(tp)
+
+        if (
+            sensor_data_value_fn := self.entity_description.sensor_data_value_fn
+        ) is None:
             return None
-        return self.entity_description.value_fn(tp)
+
+        sensor_data = self.coordinator.data.sensor_data.get(self._device_id)
+        if sensor_data is None:
+            return None
+        return sensor_data_value_fn(sensor_data)
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the sensor is available."""
+        if self.entity_description.key != "voltage":
+            return super().available
+
+        return (
+            super().available and self._device_id in self.coordinator.data.sensor_data
+        )
