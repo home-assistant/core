@@ -57,6 +57,13 @@
       }
     }
   },
+  "entity": {
+    "switch": {
+      "bstmode": {
+        "name": "Boost Mode"
+      }
+    }
+  },
   "exceptions": {
     "auth_error": {
       "message": "Authentication failed, please reauthenticate."
