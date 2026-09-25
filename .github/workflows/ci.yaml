@@ -46,7 +46,8 @@ env:
   # - 10.11.2 is the oldest supported long term version (as of September 2026)
   # - 11.4.9 is used in Alpine 3.23 (used in latest HA base images as of April 2026)
   # - 11.8.8 is used in Alpine 3.24 (used in latest HA base images as of July 2026)
-  # - 12.3.3 is the latest supported long term version (as of September 2026)
+  # - 12.3.3 is the latest supported long term version (as of September 2026),
+  #   the last mariadb entry is bumped by Renovate when a new LTS is released
   # mysql 8.0.32 does not always behave the same as MariaDB
   # and some queries that work on MariaDB do not work on MySQL
   MARIADB_VERSIONS: "['mariadb:10.3.32','mariadb:10.6.10','mariadb:10.11.2','mariadb:11.4.9','mariadb:11.8.8','mariadb:12.3.3','mysql:8.0.32']"
@@ -761,7 +762,7 @@ jobs:
         || contains(fromJSON(needs.info.outputs.core), 'benchmarks'))
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Set up Python and restore venv

@@ -146,6 +146,34 @@
           "on": "mdi:lightbulb-fluorescent-tube"
         }
       }
+    },
+    "time": {
+      "filtration_start": {
+        "default": "mdi:clock-start"
+      },
+      "filtration_stop": {
+        "default": "mdi:clock-end"
+      },
+      "relay_aux_start": {
+        "default": "mdi:clock-start"
+      },
+      "relay_aux_stop": {
+        "default": "mdi:clock-end"
+      },
+      "relay_light_start": {
+        "default": "mdi:clock-start"
+      },
+      "relay_light_stop": {
+        "default": "mdi:clock-end"
+      }
+    }
+  },
+  "services": {
+    "get_device_time": {
+      "service": "mdi:clock-check-outline"
+    },
+    "set_device_time": {
+      "service": "mdi:clock-edit-outline"
     }
   }
 }
