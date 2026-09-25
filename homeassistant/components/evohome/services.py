@@ -103,12 +103,12 @@ def _register_zone_entity_services(hass: HomeAssistant) -> None:
     )
 
 
-def _resolve_ctl_unique_id(
+def _resolve_target_tcs(
     hass: HomeAssistant,
     call: ServiceCall,
-    tcs_id: str,
-) -> str:
-    """Resolve the target controller unique_id from an optional entity_id.
+    tcs: ControlSystem,
+) -> ControlSystem:
+    """Resolve the target controller from an optional entity_id.
 
     During the deprecation window, advise users to switch to targeting the controller.
     """
@@ -121,7 +121,7 @@ def _resolve_ctl_unique_id(
             translation_key="deprecated_controller_service",
             translation_placeholders={"service": call.service},
         )
-        return tcs_id
+        return tcs
 
     entry = er.async_get(hass).async_get(entity_id)
 
@@ -136,7 +136,7 @@ def _resolve_ctl_unique_id(
     if (
         entry.domain != CLIMATE_DOMAIN
         or entry.platform != DOMAIN
-        or entry.unique_id != tcs_id
+        or entry.unique_id != tcs.id
     ):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
@@ -144,7 +144,7 @@ def _resolve_ctl_unique_id(
             translation_placeholders={"service": call.service},
         )
 
-    return tcs_id
+    return tcs
 
 
 def _register_dhw_entity_services(hass: HomeAssistant) -> None:
@@ -243,8 +243,9 @@ def async_setup_services(
             )
 
         if call.service == EvoService.SET_SYSTEM_MODE:
-            _validate_set_system_mode_params(coordinator.tcs, call.data)
-            unique_id = _resolve_ctl_unique_id(hass, call, coordinator.tcs.id)
+            target_tcs = _resolve_target_tcs(hass, call, coordinator.tcs)
+            _validate_set_system_mode_params(target_tcs, call.data)
+            unique_id = target_tcs.id
         else:
             # this service call to be deprecated, so no need to _resolve_ctl_unique_id
             unique_id = coordinator.tcs.id
