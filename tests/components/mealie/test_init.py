@@ -128,14 +128,17 @@ async def test_update_options(
     """Test reloading the config entry when options updated."""
     await setup_integration(hass, mock_config_entry)
 
-    async_reload = AsyncMock()
-    with patch.object(hass.config_entries, "async_reload", async_reload):
-        hass.config_entries.async_update_entry(
-            mock_config_entry, options={"parser": "brute"}
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as async_schedule_reload:
+        result = await hass.config_entries.options.async_init(
+            mock_config_entry.entry_id
         )
-        await hass.async_block_till_done()
+        await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={"parser": "brute"}
+        )
 
-    async_reload.assert_awaited_once_with(mock_config_entry.entry_id)
+    async_schedule_reload.assert_called_once_with(mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(

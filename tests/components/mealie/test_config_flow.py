@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from aiomealie import About, MealieAuthenticationError, MealieConnectionError
 import pytest
 
-from homeassistant.components.mealie.const import DOMAIN
+from homeassistant.components.mealie.const import CONF_PARSER, DOMAIN
 from homeassistant.config_entries import (
     SOURCE_HASSIO,
     SOURCE_IGNORE,
@@ -548,10 +548,10 @@ async def test_options(
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"parse_todo_new": False}
+        result["flow_id"], user_input={"parse_todo_new": False, CONF_PARSER: "brute"}
     )
 
     assert not result["data"]["parse_todo_new"]
     assert result["data"]["parse_todo_edit"]
-    assert result["data"]["parser"] == "nlp"
+    assert result["data"][CONF_PARSER] == "brute"
     assert result["type"] is FlowResultType.CREATE_ENTRY

@@ -98,7 +98,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
         shoppinglist_coordinator,
         statistics_coordinator,
     )
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -108,8 +107,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def update_listener(hass: HomeAssistant, entry: MealieConfigEntry) -> None:
-    """Update when config_entry options update."""
-    await hass.config_entries.async_reload(entry.entry_id)

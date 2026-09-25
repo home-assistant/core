@@ -15,7 +15,7 @@ from homeassistant.config_entries import (
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
@@ -261,7 +261,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class MealieOptionsFlowHandler(OptionsFlow):
+class MealieOptionsFlowHandler(OptionsFlowWithReload):
     """Handle Mealie options."""
 
     async def async_step_init(

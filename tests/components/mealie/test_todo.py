@@ -9,6 +9,7 @@ from aiomealie import (
     MealieError,
     MutateShoppingItem,
     ParsedIngredient,
+    RegisteredParser,
     ShoppingListsResponse,
 )
 from freezegun.api import FrozenDateTimeFactory
@@ -16,6 +17,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mealie import DOMAIN
+from homeassistant.components.mealie.const import (
+    CONF_PARSE_TODO_EDIT,
+    CONF_PARSE_TODO_NEW,
+)
 from homeassistant.components.todo import (
     ATTR_ITEM,
     ATTR_RENAME,
@@ -93,6 +98,11 @@ async def test_add_todo_item_parsed(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test adding a parsed To-do item."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={**mock_config_entry.options, "parser": RegisteredParser.BRUTE},
+    )
     shopping_item = mock_mealie_client.get_shopping_items.return_value.items[1]
     mock_mealie_client.parse_ingredient.return_value = ParsedIngredient(
         ingredient=Ingredient(
@@ -107,7 +117,8 @@ async def test_add_todo_item_parsed(
         confidence=IngredientConfidence(average=1.0),
     )
 
-    await setup_integration(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         TODO_DOMAIN,
@@ -127,6 +138,39 @@ async def test_add_todo_item_parsed(
             quantity=1.0,
         )
     )
+    mock_mealie_client.parse_ingredient.assert_awaited_once_with(
+        "1 can acorn squash", parser=RegisteredParser.BRUTE
+    )
+
+
+async def test_add_todo_item_parser_disabled(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test adding a to-do item without parsing."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            **mock_config_entry.options,
+            CONF_PARSE_TODO_NEW: False,
+        },
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "Misc Item"},
+        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        blocking=True,
+    )
+
+    mock_mealie_client.parse_ingredient.assert_not_awaited()
+    mock_mealie_client.add_shopping_item.assert_called_once()
 
 
 async def test_add_todo_item_parse_fallback(
@@ -308,6 +352,36 @@ async def test_update_todo_item_parsed(
             checked=False,
         ),
     )
+
+
+async def test_update_todo_item_parser_disabled(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test updating a to-do item without parsing."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            **mock_config_entry.options,
+            CONF_PARSE_TODO_EDIT: False,
+        },
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "aubergine", ATTR_RENAME: "Eggplant"},
+        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        blocking=True,
+    )
+
+    mock_mealie_client.parse_ingredient.assert_not_awaited()
+    mock_mealie_client.update_shopping_item.assert_called_once()
 
 
 async def test_update_todo_item_parse_fallback(
