@@ -2904,6 +2904,105 @@
     'state': '0.0',
   })
 # ---
+# name: test_sensors[sensor.test_charge_schedules-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_charge_schedules',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charge schedules',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charge schedules',
+    'platform': 'tesla_fleet',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_schedule_data_charge_schedules',
+    'unique_id': 'LRWXF7EK4KC700000-charge_schedule_data_charge_schedules',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_charge_schedules-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Charge schedules',
+      'schedules': list([
+        dict({
+          'days_of_week': list([
+            'friday',
+          ]),
+          'enabled': True,
+          'end_time': '15:30',
+          'id': 1788504061,
+          'name': 'Work',
+          'one_time': True,
+          'start_time': '11:30',
+        }),
+        dict({
+          'days_of_week': list([
+            'thursday',
+          ]),
+          'enabled': True,
+          'id': 1788552110,
+          'one_time': True,
+          'start_time': '22:00',
+        }),
+        dict({
+          'days_of_week': list([
+            'monday',
+            'tuesday',
+            'wednesday',
+          ]),
+          'enabled': False,
+          'end_time': '06:00',
+          'id': 1788552125,
+          'one_time': False,
+          'start_time': '22:00',
+        }),
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_charge_schedules',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_sensors[sensor.test_charge_schedules-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Charge schedules',
+      'schedules': list([
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_charge_schedules',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[sensor.test_charger_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
