@@ -47,7 +47,7 @@ NUMERIC_SETTINGS = [
         "candidate": [{"min": -50, "max": 50, "step": 1}],
         "isAvailable": True,
     },
-    # pictureMode is an enum and belongs to the select platform
+    # pictureMode is an enum setting; the numeric filter must skip it
     {
         "target": "pictureMode",
         "currentValue": "vivid",
