@@ -205,13 +205,15 @@ class MockBridge:
     async def set_warm_dim(
         self,
         device_id: str,
+        enabled: bool,
         value: int | None = None,
         fade_time: timedelta | None = None,
     ) -> None:
         """Mock changing the warm dim state and invoke callbacks."""
-        if device_id in self.devices and value is not None:
-            self.devices[device_id]["current_state"] = value
-            self.devices[device_id]["warm_dim"] = True
+        if device_id in self.devices:
+            self.devices[device_id]["warm_dim"] = enabled
+            if value is not None:
+                self.devices[device_id]["current_state"] = value
         self.call_subscribers(device_id)
 
     def load_devices(self):
