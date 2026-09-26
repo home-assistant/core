@@ -345,9 +345,16 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if not self.hass.config_entries.async_loaded_entries(DOMAIN):
                 return self.async_abort(reason="not_loaded")
+            matter = get_matter(self.hass)
+            # The server may have loaded, or lost its proxy, since discovery.
+            if not ble_commissioning_available(
+                matter.matter_client.server_info,
+                matter.config_entry.runtime_data.ble_proxy,
+            ):
+                return self.async_abort(reason="bluetooth_not_supported")
             # The device stops advertising once the server connects to it.
             self._ble.async_stop()
-            matter_client = get_matter(self.hass).matter_client
+            matter_client = matter.matter_client
             try:
                 await matter_client.commission_with_code(
                     user_input[CONF_CODE].strip(), network_only=False

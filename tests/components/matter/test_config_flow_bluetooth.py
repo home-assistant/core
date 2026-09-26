@@ -285,6 +285,37 @@ async def test_stale_discovery_forgets_the_device(
 
 
 @pytest.mark.usefixtures("bluetooth_enabled", "integration")
+async def test_card_in_use_is_not_dropped(
+    hass: HomeAssistant, ble_clock: _Clock
+) -> None:
+    """A card the user is working through survives the device going quiet."""
+    result = await _async_start_discovery(hass)
+    # Interacting with the card protects it from being dismissed.
+    await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    await ble_clock.async_advance(70)
+
+    assert hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+@pytest.mark.usefixtures("bluetooth_enabled", "integration")
+async def test_commission_without_a_bluetooth_path(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> None:
+    """The server may lose its Bluetooth path between discovery and submitting."""
+    result = await _async_start_discovery(hass)
+    matter_client.server_info.bluetooth_enabled = False
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"code": PAIRING_CODE}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "bluetooth_not_supported"
+    matter_client.commission_with_code.assert_not_called()
+
+
+@pytest.mark.usefixtures("bluetooth_enabled", "integration")
 async def test_commission_success(
     hass: HomeAssistant, matter_client: MagicMock
 ) -> None:
