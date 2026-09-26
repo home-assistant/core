@@ -1111,7 +1111,7 @@ async def test_camera_with_linked_doorbell_sensor(
     acc.run()
 
     assert acc.aid == 2
-    assert acc.category == 17  # Camera
+    assert acc.category == 18  # Video Doorbell
 
     service = acc.get_service(SERV_DOORBELL)
     assert service
@@ -1227,7 +1227,7 @@ async def test_camera_with_linked_doorbell_event(
     acc.run()
 
     assert acc.aid == 2
-    assert acc.category == 17  # Camera
+    assert acc.category == 18  # Video Doorbell
 
     service = acc.get_service(SERV_DOORBELL)
     assert service
