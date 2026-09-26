@@ -136,6 +136,24 @@
                 'type': 'NBO',
               }),
               dict({
+                'id': '12:34:56:40:d5:d4',
+                'modules_bridged': list([
+                  '0009999994',
+                ]),
+                'name': '**REDACTED**',
+                'room_id': '3688132631',
+                'setup_date': 1594132017,
+                'type': 'BNMH',
+              }),
+              dict({
+                'bridge': '12:34:56:40:d5:d4',
+                'id': '0009999994',
+                'name': '**REDACTED**',
+                'room_id': '3688132631',
+                'setup_date': 1594132017,
+                'type': 'BNAS',
+              }),
+              dict({
                 'alarm_config': dict({
                   'default_alarm': list([
                     dict({
@@ -463,6 +481,7 @@
                   '12:34:56:00:e3:9b',
                   '0009999992',
                   '0009999993',
+                  '0009999994',
                 ]),
                 'name': '**REDACTED**',
                 'type': 'custom',

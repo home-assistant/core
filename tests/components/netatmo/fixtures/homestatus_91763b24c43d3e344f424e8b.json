@@ -152,6 +152,24 @@
           "bridge": "12:34:56:30:d5:d4"
         },
         {
+          "id": "12:34:56:40:d5:d4",
+          "type": "BNMH",
+          "firmware_revision": 1,
+          "wifi_strength": 65,
+          "reachable": true
+        },
+        {
+          "id": "0009999994",
+          "type": "BNAS",
+          "target_position": 50,
+          "target_position:step": 100,
+          "firmware_revision": 1,
+          "rf_strength": 0,
+          "last_seen": 1671395511,
+          "reachable": true,
+          "bridge": "12:34:56:40:d5:d4"
+        },
+        {
           "id": "12:34:56:00:86:99",
           "type": "NACamDoorTag",
           "battery_state": "high",

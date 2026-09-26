@@ -14,6 +14,9 @@ async def test_get_api_scopes_cloud() -> None:
     for scope in API_SCOPES_EXCLUDED_FROM_CLOUD:
         assert scope not in result
 
+    assert "read_mhs1" in result
+    assert "write_mhs1" in result
+
 
 async def test_get_api_scopes_other() -> None:
     """Test method to get API scopes when using cloud auth implementation."""
