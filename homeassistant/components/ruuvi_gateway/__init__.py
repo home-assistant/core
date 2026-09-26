@@ -2,6 +2,7 @@
 
 import logging
 
+from homeassistant.components.bluetooth import async_remove_scanner
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -34,3 +35,11 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return True
+
+
+async def async_remove_entry(
+    hass: HomeAssistant, entry: RuuviGatewayConfigEntry
+) -> None:
+    """Remove a config entry."""
+    if mac_address := entry.unique_id:
+        async_remove_scanner(hass, mac_address.upper())
