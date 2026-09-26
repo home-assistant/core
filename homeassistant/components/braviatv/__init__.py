@@ -1,5 +1,6 @@
 """The Bravia TV integration."""
 
+import asyncio
 from typing import Final
 
 from aiohttp import CookieJar
@@ -12,11 +13,17 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import CONF_USE_SSL
-from .coordinator import BraviaTVConfigEntry, BraviaTVCoordinator
+from .coordinator import (
+    BraviaTVConfigEntry,
+    BraviaTVCoordinator,
+    BraviaTVData,
+    BraviaTVPictureCoordinator,
+)
 
 PLATFORMS: Final[list[Platform]] = [
     Platform.BUTTON,
     Platform.MEDIA_PLAYER,
+    Platform.NUMBER,
     Platform.REMOTE,
 ]
 
@@ -38,18 +45,31 @@ async def async_setup_entry(
         config_entry=config_entry,
         client=client,
     )
+    picture_coordinator = BraviaTVPictureCoordinator(
+        hass=hass,
+        config_entry=config_entry,
+        client=client,
+        coordinator=coordinator,
+    )
     config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 
     await coordinator.async_config_entry_first_refresh()
+    await picture_coordinator.async_config_entry_first_refresh()
 
-    config_entry.runtime_data = coordinator
+    config_entry.runtime_data = BraviaTVData(
+        coordinator=coordinator,
+        picture_coordinator=picture_coordinator,
+    )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     async def async_ssdp_callback(
         discovery_info: SsdpServiceInfo, change: ssdp.SsdpChange
     ) -> None:
-        await coordinator.async_request_refresh()
+        await asyncio.gather(
+            coordinator.async_request_refresh(),
+            picture_coordinator.async_request_refresh(),
+        )
 
     config_entry.async_on_unload(
         await ssdp.async_register_callback(
