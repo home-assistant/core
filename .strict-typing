@@ -120,6 +120,7 @@ homeassistant.components.besen.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bitcoin.*
 homeassistant.components.bitvis.*
+homeassistant.components.bizkaibus.*
 homeassistant.components.blockchain.*
 homeassistant.components.blue_current.*
 homeassistant.components.blueprint.*

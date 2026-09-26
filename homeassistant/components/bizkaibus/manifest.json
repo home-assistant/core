@@ -2,9 +2,11 @@
   "domain": "bizkaibus",
   "name": "Bizkaibus",
   "codeowners": ["@UgaitzEtxebarria"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bizkaibus",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["bizkaibus"],
-  "quality_scale": "legacy",
-  "requirements": ["bizkaibus==0.1.1"]
+  "quality_scale": "bronze",
+  "requirements": ["bizkaibus==0.5.3"]
 }
