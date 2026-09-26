@@ -16,8 +16,7 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .api import IottyProxy
-from .coordinator import IottyConfigEntry, IottyDataUpdateCoordinator
+from .coordinator import IottyConfigEntry
 from .entity import IottyEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,15 +97,6 @@ class IottyShutter(IottyEntity, CoverEntity):
         | CoverEntityFeature.STOP
         | CoverEntityFeature.SET_POSITION
     )
-
-    def __init__(
-        self,
-        coordinator: IottyDataUpdateCoordinator,
-        iotty_cloud: IottyProxy,
-        iotty_device: Shutter,
-    ) -> None:
-        """Initialize the Shutter device."""
-        super().__init__(coordinator, iotty_cloud, iotty_device)
 
     @property
     @override
