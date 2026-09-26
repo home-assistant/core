@@ -378,7 +378,7 @@ async def test_subentry_web_search_user_location(
             type="message",
             id="mock_message_id",
             role="assistant",
-            model="claude-sonnet-4-0",
+            model="claude-sonnet-4-5",
             usage=types.Usage(input_tokens=100, output_tokens=100),
             content=[
                 types.TextBlock(
