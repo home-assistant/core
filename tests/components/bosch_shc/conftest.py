@@ -311,6 +311,9 @@ def micromodule_relay_device(
     device_id: str = "hdm:ZigBee:relay1",
     name: str = "Relay",
     child_lock: bool = False,
+    supports_switch_configuration: bool = False,
+    swap_inputs: bool = False,
+    swap_outputs: bool = False,
 ) -> SHCMicromoduleRelay:
     """Build a minimal device double for the micromodule_relays bucket."""
     device = create_autospec(SHCMicromoduleRelay, instance=True, spec_set=True)
@@ -324,6 +327,9 @@ def micromodule_relay_device(
     device.deleted = False
     device.status = "AVAILABLE"
     device.child_lock = child_lock
+    device.supports_switch_configuration = supports_switch_configuration
+    device.swap_inputs = swap_inputs
+    device.swap_outputs = swap_outputs
     return device
 
 
