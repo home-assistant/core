@@ -651,6 +651,15 @@ class DefaultAgent(ConversationEntity):
                     error_response_type, lang_intents, **error_response_args
                 ),
             )
+        except intent.IntentNoResultsError as err:
+            _LOGGER.debug("Intent found no results: %s", err)
+            intent_response = _make_error_result(
+                language,
+                intent.IntentResponseErrorCode.NO_RESULTS,
+                self._get_error_text(
+                    err.response_key or ErrorKey.HANDLE_ERROR, lang_intents
+                ),
+            )
         except intent.IntentHandleError as err:
             # Intent was valid and entities matched constraints, but an error
             # occurred during handling.

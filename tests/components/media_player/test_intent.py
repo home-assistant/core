@@ -804,7 +804,7 @@ async def test_search_and_play_media_player_intent(hass: HomeAssistant) -> None:
 
     # Test no search results
     search_results.clear()
-    with pytest.raises(intent.IntentHandleError, match="No results found"):
+    with pytest.raises(intent.IntentNoResultsError, match="No results found"):
         await intent.async_handle(
             hass,
             "test",

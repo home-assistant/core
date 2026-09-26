@@ -170,6 +170,10 @@ class IntentHandleError(IntentError):
         self.response_key = response_key
 
 
+class IntentNoResultsError(IntentHandleError):
+    """Error when an intent was handled correctly but found nothing to act on."""
+
+
 class IntentUnexpectedError(IntentError):
     """Unexpected error while handling intent."""
 
@@ -1336,6 +1340,9 @@ class IntentResponseErrorCode(StrEnum):
 
     NO_VALID_TARGETS = "no_valid_targets"
     """Intent was matched, but no valid areas/devices/entities were targeted"""
+
+    NO_RESULTS = "no_results"
+    """Intent was handled, but it found nothing to act on"""
 
     FAILED_TO_HANDLE = "failed_to_handle"
     """Unexpected error occurred while handling intent"""
