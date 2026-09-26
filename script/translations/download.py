@@ -8,6 +8,7 @@ from typing import Any
 
 from .const import CLI_2_DOCKER_IMAGE, CORE_PROJECT_ID, INTEGRATIONS_DIR
 from .error import ExitApp
+from .upload import load_device_type_strings
 from .util import (
     flatten_translations,
     get_lokalise_token,
@@ -112,6 +113,10 @@ def save_language_translations(lang: str, translations: dict[str, Any]) -> None:
             )
             continue
         strings = load_json_from_path(strings_path)
+        if component == "homeassistant":
+            # Device type prose lives in files paired with each definition, so it
+            # is absent from strings.json and filter_translations would drop it.
+            strings["device_types"] = load_device_type_strings()
 
         path = component_path / "translations" / f"{lang}.json"
         path.parent.mkdir(parents=True, exist_ok=True)
