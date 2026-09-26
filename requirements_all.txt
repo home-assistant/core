@@ -3120,7 +3120,7 @@ slack_sdk==3.33.4
 slixmpp==1.17.0
 
 # homeassistant.components.smart_meter_texas
-smart-meter-texas==0.5.5
+smart-meter-texas==0.5.6
 
 # homeassistant.components.snapcast
 snapcast==2.3.8
