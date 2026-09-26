@@ -302,6 +302,57 @@ def mock_delay_save() -> Generator[None]:
             "minor_version": 7,
             "version": 1,
         },
+        {
+            "data": {
+                "backups": [
+                    {
+                        "backup_id": "abc123",
+                        "failed_addons": [
+                            {
+                                "name": "Test add-on",
+                                "slug": "test_addon",
+                                "version": "1.0.0",
+                            }
+                        ],
+                        "failed_agent_ids": ["test.remote"],
+                        "failed_folders": ["ssl"],
+                    }
+                ],
+                "config": {
+                    "agents": {
+                        "test.remote": {
+                            "protected": True,
+                            "retention": {"copies": None, "days": None},
+                        }
+                    },
+                    "automatic_backups_configured": True,
+                    "create_backup": {
+                        "agent_ids": [],
+                        "include_addons": None,
+                        "include_all_addons": False,
+                        "include_database": True,
+                        "include_folders": None,
+                        "name": None,
+                        "password": "hunter2",
+                    },
+                    "last_attempted_automatic_backup": None,
+                    "last_completed_automatic_backup": None,
+                    "retention": {
+                        "copies": None,
+                        "days": None,
+                    },
+                    "schedule": {
+                        "days": [],
+                        "recurrence": "never",
+                        "state": "never",
+                        "time": None,
+                    },
+                },
+            },
+            "key": DOMAIN,
+            "minor_version": 8,
+            "version": 1,
+        },
     ],
 )
 async def test_store_migration(

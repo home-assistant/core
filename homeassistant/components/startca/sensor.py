@@ -152,7 +152,7 @@ async def async_setup_platform(
     ts_data = StartcaData(websession, apikey, bandwidthcap)
     ret = await ts_data.async_update()
     if ret is False:
-        _LOGGER.error("Invalid Start.ca API key: %s", apikey)
+        _LOGGER.error("Invalid Start.ca API key")
         return
 
     name = config[CONF_NAME]

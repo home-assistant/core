@@ -1,7 +1,6 @@
 """Support for water heater devices."""
 
 from datetime import timedelta
-from enum import IntFlag
 import functools as ft
 import logging
 from typing import Any, final, override
@@ -30,7 +29,12 @@ from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import DOMAIN, WaterHeaterCapabilityAttribute, WaterHeaterStateAttribute
+from .const import (
+    DOMAIN,
+    WaterHeaterCapabilityAttribute,
+    WaterHeaterEntityFeature,
+    WaterHeaterStateAttribute,
+)
 
 DATA_COMPONENT: HassKey[EntityComponent[WaterHeaterEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -51,15 +55,6 @@ STATE_PERFORMANCE = "performance"
 STATE_HIGH_DEMAND = "high_demand"
 STATE_HEAT_PUMP = "heat_pump"
 STATE_GAS = "gas"
-
-
-class WaterHeaterEntityFeature(IntFlag):
-    """Supported features of the water heater entity."""
-
-    TARGET_TEMPERATURE = 1
-    OPERATION_MODE = 2
-    AWAY_MODE = 4
-    ON_OFF = 8
 
 
 ATTR_MAX_TEMP = "max_temp"

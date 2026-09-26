@@ -7,6 +7,7 @@ import enum
 from functools import partial
 import logging
 import os
+from pathlib import Path
 import re
 from socket import _GLOBAL_DEFAULT_TIMEOUT
 import threading
@@ -29,6 +30,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.config_validation import TRIGGER_SCHEMA
 from homeassistant.util import dt as dt_util
+from homeassistant.util.yaml import load_yaml_dict
 
 
 def test_boolean() -> None:
@@ -1230,6 +1232,76 @@ def test_deprecated_logger_without_config_attributes(
 
     caplog.clear()
     assert len(caplog.records) == 0
+
+
+@pytest.mark.parametrize(
+    ("validator", "option_status"),
+    [
+        pytest.param(cv.deprecated, "is deprecated", id="deprecated"),
+        pytest.param(
+            partial(cv.removed, raise_if_present=False),
+            "has been removed",
+            id="removed",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "preprocess",
+    [
+        pytest.param(lambda config: config, id="raw_loader_output"),
+        pytest.param(probatio.Schema(dict), id="pass_through_schema"),
+        pytest.param(
+            probatio.Schema({}, extra=probatio.ALLOW_EXTRA),
+            id="rebuilding_schema",
+            marks=pytest.mark.xfail(
+                strict=True,
+                reason=(
+                    "The mapping engine allocates a fresh container and never copies "
+                    "the __config_file__/__line__ slots, so _deprecated_or_removed "
+                    "takes its 'except AttributeError' branch and logs no location."
+                ),
+            ),
+        ),
+        pytest.param(
+            cv.PLATFORM_SCHEMA_BASE,
+            id="platform_schema_base",
+            marks=pytest.mark.xfail(
+                strict=True,
+                reason=(
+                    "Same rebuild, through the real PLATFORM_SCHEMA_BASE that "
+                    "check_config.py runs before the platform's own PLATFORM_SCHEMA."
+                ),
+            ),
+        ),
+    ],
+)
+def test_deprecated_or_removed_location_survives_schema_rebuild(
+    caplog: pytest.LogCaptureFixture,
+    tmp_path: Path,
+    validator: Callable[..., Callable[[dict], dict]],
+    option_status: str,
+    preprocess: Callable[[dict], dict],
+) -> None:
+    """Test the location prefix survives a schema the config was passed through.
+
+    The config is built with the real YAML loader so the annotation is the one
+    production gets, not a hand-set attribute.
+    """
+    # Note: Unlike find_annotation, which reads the location off the mapping key,
+    # _deprecated_or_removed reads it off the container itself, so a schema that
+    # rebuilds the container silently drops the "near <file>:<line>" prefix. That is
+    # what check_config.py does when it hands the already validated p_validated to
+    # the platform's own PLATFORM_SCHEMA, where the cv.deprecated calls of broadlink,
+    # canary, mvglive and integration live.
+
+    config_file = tmp_path / "configuration.yaml"
+    config_file.write_text("platform: test_platform\nmars: blah\n", encoding="utf8")
+    config = load_yaml_dict(str(config_file))
+
+    validator("mars", default=False)(preprocess(config))
+
+    assert len(caplog.records) == 1
+    assert f"The 'mars' option near {config_file}:1 {option_status}" in caplog.text
 
 
 def test_key_dependency() -> None:

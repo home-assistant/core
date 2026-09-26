@@ -148,7 +148,7 @@ async def test_setup_creates_energy_coordinator(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_waterfurnace_client.login.call_count == 2
-    assert mock_waterfurnace_client.read_with_retry.call_count == 1
+    assert mock_waterfurnace_client.read.call_count == 1
     assert mock_waterfurnace_client.get_energy_data.call_count == 1
 
 

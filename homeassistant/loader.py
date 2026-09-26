@@ -384,17 +384,17 @@ class ComponentProtocol(Protocol):
 
     async def async_setup_entry(
         self, hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up a config entry."""
 
     async def async_unload_entry(
         self, hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Unload a config entry."""
 
     async def async_migrate_entry(
         self, hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Migrate an old config entry."""
 
     async def async_remove_entry(

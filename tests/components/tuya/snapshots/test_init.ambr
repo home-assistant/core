@@ -20,7 +20,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'LCDÕ▒Åµ©®µ╣┐Õ║ªõ©çÞâ¢ÚüÑµÄºÕÖ¿ (unsupported)',
+    'model': 'LCDÕ▒Åµ©®µ╣┐Õ║ªõ©çÞâ¢ÚüÑµÄºÕÖ¿',
     'model_id': 'ay30hrndaogxclh0',
     'name': 'LCDÕ▒Åµ©®µ╣┐Õ║ªõ©çÞâ¢ÚüÑµÄºÕÖ¿',
     'name_by_user': None,
@@ -80,7 +80,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'TV (unsupported)',
+    'model': 'TV',
     'model_id': '47pew0',
     'name': 'TV',
     'name_by_user': None,
@@ -140,7 +140,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'SORIA (unsupported)',
+    'model': 'SORIA',
     'model_id': '5l1ht8jygsyr1wn1',
     'name': 'Panneaux solaires 2',
     'name_by_user': None,
@@ -770,7 +770,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Gateway (unsupported)',
+    'model': 'Gateway',
     'model_id': 'v7owd9tzcaninc36',
     'name': 'Gateway2',
     'name_by_user': None,
@@ -830,7 +830,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart IR (unsupported)',
+    'model': 'Smart IR',
     'model_id': 'rqhxdyusjrwxyff6',
     'name': 'Smart IR',
     'name_by_user': None,
@@ -890,7 +890,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'S1-TY-BLE-PRO (unsupported)',
+    'model': 'S1-TY-BLE-PRO',
     'model_id': 'xqeob8h6',
     'name': 'S1-TY-BLE-PRO 2',
     'name_by_user': None,
@@ -1610,7 +1610,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Curtain switch (unsupported)',
+    'model': 'Curtain switch',
     'model_id': 'TtXKwTMwiPpURWLJ',
     'name': 'Dining-Blinds',
     'name_by_user': None,
@@ -2210,7 +2210,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'T & H Sensor (unsupported)',
+    'model': 'T & H Sensor',
     'model_id': 'x3o8epevyeo3z3oa',
     'name': 'Interior Bedroom Sensor',
     'name_by_user': None,
@@ -2420,7 +2420,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Curtain switch (unsupported)',
+    'model': 'Curtain switch',
     'model_id': 'uoa3mayicscacseb',
     'name': 'Living room left',
     'name_by_user': None,
@@ -2630,7 +2630,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Double Digital Meter (unsupported)',
+    'model': 'Double Digital Meter',
     'model_id': '79a7z01v3n35kytb',
     'name': 'Double Digital Meter',
     'name_by_user': None,
@@ -2720,7 +2720,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Tower bladeless fan  (unsupported)',
+    'model': 'Tower bladeless fan ',
     'model_id': 'ibytpo6fpnugft1c',
     'name': 'Ventilador Cama',
     'name_by_user': None,
@@ -2780,7 +2780,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'QNECT WI-FI PIR SENSOR (unsupported)',
+    'model': 'QNECT WI-FI PIR SENSOR',
     'model_id': 'j5jgnjvdaczeb6dc',
     'name': 'QNECT WI-FI PIR SENSOR',
     'name_by_user': None,
@@ -3230,7 +3230,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'ISV-100W2.0 (unsupported)',
+    'model': 'ISV-100W2.0',
     'model_id': 'jlapoy5liocmtdvd',
     'name': 'ISV-100W2.0',
     'name_by_user': None,
@@ -3260,7 +3260,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'DOLCECLIMA 10 HP WIFI (unsupported)',
+    'model': 'DOLCECLIMA 10 HP WIFI',
     'model_id': 'jevroj5aguwdbs2e',
     'name': 'DOLCECLIMA 10 HP WIFI',
     'name_by_user': None,
@@ -3290,7 +3290,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'VITAL+ (unsupported)',
+    'model': 'VITAL+',
     'model_id': 'urzivdhumrwfakie',
     'name': 'VITAL+',
     'name_by_user': None,
@@ -3320,7 +3320,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Air Conditioning (unsupported)',
+    'model': 'Air Conditioning',
     'model_id': 'qzktzhehinzsz2je',
     'name': 'Air',
     'name_by_user': None,
@@ -3380,7 +3380,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Contact Sensor (unsupported)',
+    'model': 'Contact Sensor',
     'model_id': 'p6sqiuesvhmhvv4f',
     'name': 'Entrance Door',
     'name_by_user': None,
@@ -3590,7 +3590,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart IR+RF Remote Control (unsupported)',
+    'model': 'Smart IR+RF Remote Control',
     'model_id': 'x0lyfgjuguuh1vof',
     'name': 'Smart IR+RF Remote Control',
     'name_by_user': None,
@@ -3890,7 +3890,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart IR  (unsupported)',
+    'model': 'Smart IR ',
     'model_id': 'kzwdw5bpxlbs9h9g',
     'name': 'IR Minero',
     'name_by_user': None,
@@ -4550,7 +4550,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart IR (unsupported)',
+    'model': 'Smart IR',
     'model_id': 'om518smspsaltzdi',
     'name': 'Smart IR Theater',
     'name_by_user': None,
@@ -5150,7 +5150,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'ZigBee Gateway (unsupported)',
+    'model': 'ZigBee Gateway',
     'model_id': 'b25mh8sxawsgndck',
     'name': 'ZigBee Gateway',
     'name_by_user': None,
@@ -5360,7 +5360,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart IR (unsupported)',
+    'model': 'Smart IR',
     'model_id': 'npbbca46yiug8ysk',
     'name': 'Bedroom IR',
     'name_by_user': None,
@@ -5390,7 +5390,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '水泵 (unsupported)',
+    'model': '水泵',
     'model_id': 'l6ax0u6jwbz82atk',
     'name': 'Pond',
     'name_by_user': None,
@@ -5600,7 +5600,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Double Digital Meter (unsupported)',
+    'model': 'Double Digital Meter',
     'model_id': 'dhto3y4uachr1wll',
     'name': 'Meter',
     'name_by_user': None,
@@ -5750,7 +5750,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'INTELAR IR288 (unsupported)',
+    'model': 'INTELAR IR288',
     'model_id': '5vlawhjm',
     'name': 'INTELAR IR288',
     'name_by_user': None,
@@ -6170,7 +6170,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Zigbee Gateway (unsupported)',
+    'model': 'Zigbee Gateway',
     'model_id': 'plp0gnfcacdeqk5o',
     'name': 'Zigbee Gateway',
     'name_by_user': None,
@@ -6530,7 +6530,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'TV Sync Backlights (unsupported)',
+    'model': 'TV Sync Backlights',
     'model_id': 'gaobbrxqiblcng2p',
     'name': 'TV Sync Backlights',
     'name_by_user': None,
@@ -6560,7 +6560,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'PC321-W-TY(Bi-Directional) (unsupported)',
+    'model': 'PC321-W-TY(Bi-Directional)',
     'model_id': 'gqmmtjclqb7reg5p',
     'name': 'Wi-Fi Meter(Bi-Directional)',
     'name_by_user': None,
@@ -6950,7 +6950,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Genio Nebula & Blue Star Projector (unsupported)',
+    'model': 'Genio Nebula & Blue Star Projector',
     'model_id': '3djw12ln4xtvv8eq',
     'name': 'Genio Nebula & Blue Star Projector',
     'name_by_user': None,
@@ -7340,7 +7340,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Zigbee Smart Gateway (unsupported)',
+    'model': 'Zigbee Smart Gateway',
     'model_id': 'lieerjyy6l4ykjor',
     'name': 'Zigbee Gateway',
     'name_by_user': None,
@@ -7820,7 +7820,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Gateway (unsupported)',
+    'model': 'Gateway',
     'model_id': 'tmwhss6ntjfc7prs',
     'name': 'Gateway',
     'name_by_user': None,
@@ -7970,7 +7970,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Air Conditioner (unsupported)',
+    'model': 'Air Conditioner',
     'model_id': '47peys',
     'name': 'Ar',
     'name_by_user': None,
@@ -8030,7 +8030,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'TION Breezer Bio X (unsupported)',
+    'model': 'TION Breezer Bio X',
     'model_id': '9mqdhwklpvnnvb7t',
     'name': 'Бризер Зал',
     'name_by_user': None,
@@ -8240,7 +8240,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'GIEX Watering Timer (unsupported)',
+    'model': 'GIEX Watering Timer',
     'model_id': '7ytb3h8u',
     'name': 'GIEX Watering Timer',
     'name_by_user': None,
@@ -8300,7 +8300,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Siren (unsupported)',
+    'model': 'Siren',
     'model_id': 'DYgId0sz6zWlmmYu',
     'name': 'Siren',
     'name_by_user': None,
@@ -8690,7 +8690,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Zigbee Repeater (unsupported)',
+    'model': 'Zigbee Repeater',
     'model_id': 'nkkl7uzv',
     'name': 'Zigby répéteur ',
     'name_by_user': None,
@@ -8810,9 +8810,39 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'InverFlow (unsupported)',
+    'model': 'InverFlow',
     'model_id': 'ircs2n82vgrozoew',
     'name': 'InverFlow',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[wrr5fva8vgffwlxqbdnz]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'wrr5fva8vgffwlxqbdnz',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Test No Loop-Multi-Channel Metering Cat.1',
+    'model_id': 'qxlwffgv8avf5rrw',
+    'name': '测试无回路-多路计量cat.1',
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
@@ -9620,7 +9650,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'TV (unsupported)',
+    'model': 'TV',
     'model_id': 'lplun31mo1xaonwz',
     'name': 'TV',
     'name_by_user': None,
@@ -9650,7 +9680,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'REGISTER BOOSTER FAN  (unsupported)',
+    'model': 'REGISTER BOOSTER FAN ',
     'model_id': 'pjabraecffsfrmxz',
     'name': 'Register booster fan',
     'name_by_user': None,

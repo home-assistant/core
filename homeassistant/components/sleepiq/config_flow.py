@@ -4,7 +4,12 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-from asyncsleepiq import AsyncSleepIQ, SleepIQLoginException, SleepIQTimeoutException
+from asyncsleepiq import (
+    AsyncSleepIQ,
+    SleepIQConnectionException,
+    SleepIQLoginException,
+    SleepIQTimeoutException,
+)
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -116,6 +121,8 @@ async def try_connection(hass: HomeAssistant, user_input: dict[str, Any]) -> str
     gateway = AsyncSleepIQ(client_session=client_session)
     try:
         await gateway.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+    except SleepIQConnectionException:
+        return "cannot_connect"
     except SleepIQLoginException:
         return "invalid_auth"
     except SleepIQTimeoutException:

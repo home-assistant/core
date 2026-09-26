@@ -39,13 +39,13 @@ async def test_availability(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Ensure that we mark the entities unavailable correctly when device is offline."""
-    entity_id = "sensor.hl_l2340dw_status"
+    entity_id = "sensor.hl_l2340dw_printer_status"
     await init_integration(hass, mock_config_entry)
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "waiting"
+    assert state.state == "idle"
 
     mock_brother_client.async_update.side_effect = ConnectionError
     freezer.tick(UPDATE_INTERVAL)
@@ -64,7 +64,7 @@ async def test_availability(
     state = hass.states.get(entity_id)
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "waiting"
+    assert state.state == "idle"
 
 
 async def test_unique_id_migration(

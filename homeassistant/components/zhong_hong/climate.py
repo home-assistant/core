@@ -1,5 +1,6 @@
 """Support for ZhongHong HVAC Controller."""
 
+from collections.abc import Callable
 from typing import Any, override
 
 import probatio
@@ -186,6 +187,9 @@ class ZhongHongClimate(CoordinatorEntity[ZhongHongCoordinator], ClimateEntity):
     )
     _attr_target_temperature_step = 1
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    # Two of the five speeds the gateway addresses have no name of their own in
+    # the climate component, so they are named here.
+    _attr_translation_key = "air_conditioner"
 
     def __init__(
         self,
@@ -248,53 +252,61 @@ class ZhongHongClimate(CoordinatorEntity[ZhongHongCoordinator], ClimateEntity):
         """Return the maximum temperature."""
         return self._device.max_temp
 
-    def _command(self, sent: bool, command: str) -> None:
-        """Fail if the command did not go out.
+    async def _command(
+        self, command: str, send: Callable[..., bool], *args: Any
+    ) -> None:
+        """Send a command to the unit, and re-read it shortly after.
 
-        Nothing is written here on success: the unit reports the state it
-        actually reached, which is not always the one it was asked for.
+        The library talks to the gateway over a blocking socket, so the call
+        goes to the executor. The unit reports the new state itself once it
+        acts on the command, so the re-read is only there for the reports that
+        go missing.
         """
-        if not sent:
+        if not await self.hass.async_add_executor_job(send, *args):
             raise _send_failed(command)
 
+        self.coordinator.async_schedule_readback()
+
     @override
-    def turn_on(self) -> None:
+    async def async_turn_on(self) -> None:
         """Turn on ac."""
-        self._command(self._device.turn_on(), "turn-on")
+        await self._command("turn-on", self._device.turn_on)
 
     @override
-    def turn_off(self) -> None:
+    async def async_turn_off(self) -> None:
         """Turn off ac."""
-        self._command(self._device.turn_off(), "turn-off")
+        await self._command("turn-off", self._device.turn_off)
 
     @override
-    def set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            self._command(self._device.set_temperature(temperature), "temperature")
+            await self._command(
+                "temperature", self._device.set_temperature, temperature
+            )
 
         if (operation_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
-            self.set_hvac_mode(operation_mode)
+            await self.async_set_hvac_mode(operation_mode)
 
     @override
-    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         if hvac_mode == HVACMode.OFF:
             if self.is_on:
-                self.turn_off()
+                await self.async_turn_off()
             return
 
         if not self.is_on:
-            self.turn_on()
+            await self.async_turn_on()
 
-        self._command(self._device.set_operation_mode(hvac_mode.upper()), "mode")
+        await self._command("mode", self._device.set_operation_mode, hvac_mode.upper())
 
     @override
-    def set_fan_mode(self, fan_mode: str) -> None:
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         mapped_mode = FAN_MODE_MAP.get(fan_mode)
         if not mapped_mode:
             LOGGER.error("Unsupported fan mode: %s", fan_mode)
             return
 
-        self._command(self._device.set_fan_mode(mapped_mode), "fan")
+        await self._command("fan", self._device.set_fan_mode, mapped_mode)

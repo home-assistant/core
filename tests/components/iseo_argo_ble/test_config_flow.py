@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
 
-from . import MOCK_ADDRESS, MOCK_SERVICE_INFO, MOCK_UUID_HEX
+from . import ISEO_SERVICE_UUIDS, MOCK_ADDRESS, MOCK_SERVICE_INFO, MOCK_UUID_HEX
 
 from tests.common import MockConfigEntry
 
@@ -52,15 +52,11 @@ async def test_bluetooth_discovery_confirm_and_register(
     mock_iseo_client: MagicMock,
 ) -> None:
     """Test full bluetooth discovery → confirm → gw_register flow."""
-    with patch(
-        "homeassistant.components.iseo_argo_ble.config_flow.is_iseo_advertisement",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_BLUETOOTH},
-            data=MOCK_SERVICE_INFO,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=MOCK_SERVICE_INFO,
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
@@ -146,15 +142,42 @@ async def test_bluetooth_discovery_abort_if_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_bluetooth_discovery_not_iseo(hass: HomeAssistant) -> None:
-    """Test bluetooth discovery aborts for non-ISEO devices."""
+@pytest.mark.parametrize(
+    ("address", "service_uuids"),
+    [
+        pytest.param(
+            MOCK_ADDRESS,
+            ["0000180f-0000-1000-8000-00805f9b34fb"],
+            id="iseo_address_without_device_type_uuid",
+        ),
+        pytest.param(
+            "F8:24:41:C5:98:2C",
+            ISEO_SERVICE_UUIDS,
+            id="device_type_uuid_without_iseo_address",
+        ),
+        pytest.param(
+            "F8:24:41:C5:98:2C",
+            [],
+            id="neither",
+        ),
+    ],
+)
+async def test_bluetooth_discovery_not_iseo(
+    hass: HomeAssistant, address: str, service_uuids: list[str]
+) -> None:
+    """Test bluetooth discovery aborts for non-ISEO devices.
+
+    The 0xF000-0xF03F device-type range is unassigned by the Bluetooth SIG, so
+    unrelated vendors advertise in it too; matching it must not be enough on its
+    own to offer a discovery.
+    """
     non_iseo_info = BluetoothServiceInfoBleak(
         name="SomeOtherDevice",
-        address="11:22:33:44:55:66",
+        address=address,
         rssi=-70,
         manufacturer_data={},
         service_data={},
-        service_uuids=["0000180f-0000-1000-8000-00805f9b34fb"],  # not ISEO
+        service_uuids=service_uuids,
         source="local",
         device=MagicMock(),
         advertisement=MagicMock(),
@@ -163,15 +186,11 @@ async def test_bluetooth_discovery_not_iseo(hass: HomeAssistant) -> None:
         tx_power=None,
     )
 
-    with patch(
-        "homeassistant.components.iseo_argo_ble.config_flow.is_iseo_advertisement",
-        return_value=False,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_BLUETOOTH},
-            data=non_iseo_info,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=non_iseo_info,
+    )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_iseo_device"
 
@@ -199,15 +218,11 @@ async def test_gw_register_connection_error(
     """Test gw_register handles connection error."""
     mock_iseo_client.setup_gateway.side_effect = IseoConnectionError
 
-    with patch(
-        "homeassistant.components.iseo_argo_ble.config_flow.is_iseo_advertisement",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_BLUETOOTH},
-            data=MOCK_SERVICE_INFO,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=MOCK_SERVICE_INFO,
+    )
 
     # Move to gw_register
     result2 = await hass.config_entries.flow.async_configure(
@@ -231,15 +246,11 @@ async def test_gw_register_auth_error(
     """Test gw_register handles auth error."""
     mock_iseo_client.setup_gateway.side_effect = IseoAuthError
 
-    with patch(
-        "homeassistant.components.iseo_argo_ble.config_flow.is_iseo_advertisement",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_BLUETOOTH},
-            data=MOCK_SERVICE_INFO,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=MOCK_SERVICE_INFO,
+    )
 
     # Move to gw_register
     result2 = await hass.config_entries.flow.async_configure(
@@ -260,15 +271,11 @@ async def test_gw_register_no_ble_device(
     hass: HomeAssistant,
 ) -> None:
     """Test gw_register handles case where ble_device is None."""
-    with patch(
-        "homeassistant.components.iseo_argo_ble.config_flow.is_iseo_advertisement",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_BLUETOOTH},
-            data=MOCK_SERVICE_INFO,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=MOCK_SERVICE_INFO,
+    )
 
     # Move to gw_register
     result2 = await hass.config_entries.flow.async_configure(
@@ -296,15 +303,11 @@ async def test_gw_register_unknown_error(
     """Test gw_register handles unknown error."""
     mock_iseo_client.setup_gateway.side_effect = Exception("BOOM")
 
-    with patch(
-        "homeassistant.components.iseo_argo_ble.config_flow.is_iseo_advertisement",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_BLUETOOTH},
-            data=MOCK_SERVICE_INFO,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=MOCK_SERVICE_INFO,
+    )
 
     # Move to gw_register
     result2 = await hass.config_entries.flow.async_configure(
@@ -321,14 +324,14 @@ async def test_gw_register_unknown_error(
 
 
 async def test_discover_locks(hass: HomeAssistant) -> None:
-    """Test the _discover_locks helper function."""
+    """Test _discover_locks skips devices that only look like a lock."""
     non_iseo_info = BluetoothServiceInfoBleak(
         name="Other",
-        address="11:22:33:44:55:66",
+        address="F8:24:41:C5:98:2C",
         rssi=-70,
         manufacturer_data={},
         service_data={},
-        service_uuids=[],
+        service_uuids=ISEO_SERVICE_UUIDS,
         source="local",
         device=MagicMock(),
         advertisement=MagicMock(),

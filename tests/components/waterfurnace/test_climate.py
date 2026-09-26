@@ -67,7 +67,7 @@ async def test_hvac_mode_mapping(
     expected_hvac_mode: HVACMode,
 ) -> None:
     """Test that ActiveSettings.mode maps to the correct HVACMode."""
-    mock_waterfurnace_client.read_with_retry.return_value.activesettings.activemode = (
+    mock_waterfurnace_client.read.return_value.activesettings.activemode = (
         active_mode_index
     )
 
@@ -117,7 +117,7 @@ async def test_hvac_action_mapping(
     expected_action: HVACAction,
 ) -> None:
     """Test that WFReading.mode maps to the correct HVACAction."""
-    mock_waterfurnace_client.read_with_retry.return_value.modeofoperation = mode_index
+    mock_waterfurnace_client.read.return_value.modeofoperation = mode_index
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -182,7 +182,7 @@ async def test_set_temperature_single_cool(
 ) -> None:
     """Test setting temperature in cool mode sets cooling setpoint."""
     # Switch to Cool mode
-    mock_waterfurnace_client.read_with_retry.return_value.activesettings.activemode = 2
+    mock_waterfurnace_client.read.return_value.activesettings.activemode = 2
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -208,7 +208,7 @@ async def test_set_temperature_range(
 ) -> None:
     """Test setting temperature range sets both setpoints."""
     # Switch to Auto mode
-    mock_waterfurnace_client.read_with_retry.return_value.activesettings.activemode = 1
+    mock_waterfurnace_client.read.return_value.activesettings.activemode = 1
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -254,7 +254,7 @@ async def test_target_temperature_cool_mode(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test target_temperature returns cooling setpoint in cool mode."""
-    mock_waterfurnace_client.read_with_retry.return_value.activesettings.activemode = 2
+    mock_waterfurnace_client.read.return_value.activesettings.activemode = 2
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -272,7 +272,7 @@ async def test_target_temperature_range_auto_mode(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test target_temperature_high/low in auto mode."""
-    mock_waterfurnace_client.read_with_retry.return_value.activesettings.activemode = 1
+    mock_waterfurnace_client.read.return_value.activesettings.activemode = 1
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

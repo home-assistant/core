@@ -87,28 +87,24 @@ def setup_platform(
 
     for account in balance_accounts:
         if config[CONF_ACCOUNTS] and account.iban not in account_config:
-            _LOGGER.debug("Skipping account %s for bank %s", account.iban, fints_name)
+            _LOGGER.debug("Skipping account for bank %s", fints_name)
             continue
 
         if not (account_name := account_config.get(account.iban)):
             account_name = f"{fints_name} - {account.iban}"
         accounts.append(FinTsAccount(client, account, account_name))
-        _LOGGER.debug("Creating account %s for bank %s", account.iban, fints_name)
+        _LOGGER.debug("Creating account for bank %s", fints_name)
 
     for account in holdings_accounts:
         if config[CONF_HOLDINGS] and account.accountnumber not in holdings_config:
-            _LOGGER.debug(
-                "Skipping holdings %s for bank %s", account.accountnumber, fints_name
-            )
+            _LOGGER.debug("Skipping holdings for bank %s", fints_name)
             continue
 
         account_name = holdings_config.get(account.accountnumber)
         if not account_name:
             account_name = f"{fints_name} - {account.accountnumber}"
         accounts.append(FinTsHoldingsAccount(client, account, account_name))
-        _LOGGER.debug(
-            "Creating holdings %s for bank %s", account.accountnumber, fints_name
-        )
+        _LOGGER.debug("Creating holdings for bank %s", fints_name)
 
     add_entities(accounts, True)
 
@@ -216,9 +212,7 @@ class FinTsClient:
 
             else:
                 _LOGGER.warning(
-                    "Could not determine type of account %s from %s",
-                    account.iban,
-                    self.client.user_id,
+                    "Could not determine type of account for bank %s", self.name
                 )
 
         return balance_accounts, holdings_accounts

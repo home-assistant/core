@@ -1,41 +1,19 @@
 """Integration to offer AI tasks to Home Assistant."""
 
 import logging
-from typing import Any
-
-import probatio
 
 from homeassistant.components.media_source import local_source
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_DESCRIPTION, CONF_SELECTOR
-from homeassistant.core import (
-    HassJobType,
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
-from homeassistant.helpers import config_validation as cv, selector, storage
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, storage
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
-from .const import (
-    ATTR_ATTACHMENTS,
-    ATTR_INSTRUCTIONS,
-    ATTR_REQUIRED,
-    ATTR_STRUCTURE,
-    ATTR_TASK_NAME,
-    DATA_COMPONENT,
-    DATA_PREFERENCES,
-    DOMAIN,
-    SERVICE_GENERATE_DATA,
-    SERVICE_GENERATE_IMAGE,
-    AITaskEntityFeature,
-)
+from .const import DATA_COMPONENT, DATA_PREFERENCES, DOMAIN, AITaskEntityFeature
 from .entity import AITaskEntity
 from .http import async_setup as async_setup_http
 from .media_source import async_get_media_source
+from .services import async_setup_services
 from .task import (
     GenDataTask,
     GenDataTaskResult,
@@ -61,32 +39,9 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-STRUCTURE_FIELD_SCHEMA = probatio.Schema(
-    {
-        probatio.Optional(CONF_DESCRIPTION): str,
-        probatio.Optional(ATTR_REQUIRED): bool,
-        probatio.Required(CONF_SELECTOR): selector.validate_selector,
-    }
-)
-
-
-def _validate_structure_fields(value: dict[str, Any]) -> probatio.Schema:
-    """Validate the structure fields as a probatio Schema."""
-    if not isinstance(value, dict):
-        raise probatio.Invalid("Structure must be a dictionary")
-    fields = {}
-    for k, v in value.items():
-        field_class = (
-            probatio.Required if v.get(ATTR_REQUIRED, False) else probatio.Optional
-        )
-        fields[field_class(k, description=v.get(CONF_DESCRIPTION))] = selector.selector(
-            v[CONF_SELECTOR]
-        )
-    return probatio.Schema(fields, extra=probatio.PREVENT_EXTRA)
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Register the process service."""
+    """Set up AI Task."""
     entity_component = EntityComponent[AITaskEntity](_LOGGER, DOMAIN, hass)
     hass.data[DATA_COMPONENT] = entity_component
     hass.data[DATA_PREFERENCES] = AITaskPreferences(hass)
@@ -95,44 +50,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if hass.config.media_dirs:
         source = await async_get_media_source(hass)
         hass.http.register_view(local_source.LocalMediaView(hass, source))
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_GENERATE_DATA,
-        async_service_generate_data,
-        schema=probatio.Schema(
-            {
-                probatio.Required(ATTR_TASK_NAME): cv.string,
-                probatio.Optional(ATTR_ENTITY_ID): cv.entity_id,
-                probatio.Required(ATTR_INSTRUCTIONS): cv.string,
-                probatio.Optional(ATTR_STRUCTURE): probatio.All(
-                    probatio.Schema({str: STRUCTURE_FIELD_SCHEMA}),
-                    _validate_structure_fields,
-                ),
-                probatio.Optional(ATTR_ATTACHMENTS): selector.MediaSelector(
-                    {"accept": ["*/*"], "multiple": True}
-                ),
-            }
-        ),
-        supports_response=SupportsResponse.ONLY,
-        job_type=HassJobType.Coroutinefunction,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_GENERATE_IMAGE,
-        async_service_generate_image,
-        schema=probatio.Schema(
-            {
-                probatio.Required(ATTR_TASK_NAME): cv.string,
-                probatio.Optional(ATTR_ENTITY_ID): cv.entity_id,
-                probatio.Required(ATTR_INSTRUCTIONS): cv.string,
-                probatio.Optional(ATTR_ATTACHMENTS): selector.MediaSelector(
-                    {"accept": ["*/*"], "multiple": True}
-                ),
-            }
-        ),
-        supports_response=SupportsResponse.ONLY,
-        job_type=HassJobType.Coroutinefunction,
-    )
+    async_setup_services(hass)
     return True
 
 
@@ -144,19 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
-
-
-async def async_service_generate_data(call: ServiceCall) -> ServiceResponse:
-    """Run the data task service."""
-    result = await async_generate_data(
-        hass=call.hass, context=call.context, **call.data
-    )
-    return result.as_dict()
-
-
-async def async_service_generate_image(call: ServiceCall) -> ServiceResponse:
-    """Run the image task service."""
-    return await async_generate_image(hass=call.hass, context=call.context, **call.data)
 
 
 class AITaskPreferences:

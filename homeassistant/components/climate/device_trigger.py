@@ -23,7 +23,8 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, const
+from . import const
+from .const import DOMAIN
 
 TRIGGER_TYPES = {
     "current_temperature_changed",

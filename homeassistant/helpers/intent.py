@@ -873,6 +873,11 @@ def non_empty_string(value: Any) -> str:
     return value_str
 
 
+def is_blank_slot_value(value: Any) -> bool:
+    """Return if an LLM tool's blank value should be omitted from intent slots."""
+    return value is None or (isinstance(value, str) and not value.strip())
+
+
 @dataclass(kw_only=True)
 class IntentSlotInfo:
     """Details about how intent slots are processed and validated."""

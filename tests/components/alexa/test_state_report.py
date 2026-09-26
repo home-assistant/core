@@ -529,11 +529,14 @@ async def test_send_delete_message(
     )
 
 
+@pytest.mark.parametrize("http_status", [202, 204])
 async def test_doorbell_event_binary_sensor(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    http_status: int,
 ) -> None:
     """Test doorbell press via binary sensor reports."""
-    aioclient_mock.post(TEST_URL, text="", status=202)
+    aioclient_mock.post(TEST_URL, text="", status=http_status)
 
     hass.states.async_set(
         "binary_sensor.test_doorbell",
@@ -606,15 +609,17 @@ async def test_doorbell_event_binary_sensor(
     assert len(aioclient_mock.mock_calls) == 2
 
 
+@pytest.mark.parametrize("http_status", [202, 204])
 async def test_doorbell_event_for_event_entity(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
+    http_status: int,
 ) -> None:
     """Test doorbell event reports."""
     freezer.move_to("2026-05-11T19:50:47.647427+0000")
-    aioclient_mock.post(TEST_URL, text="", status=202)
+    aioclient_mock.post(TEST_URL, text="", status=http_status)
 
     hass.states.async_set(
         "event.test_doorbell",
