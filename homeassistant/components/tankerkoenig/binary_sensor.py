@@ -1,7 +1,7 @@
 """Tankerkoenig binary sensor integration."""
 
 import logging
-from typing import override
+from typing import Any, override
 
 from aiotankerkoenig import PriceInfo, Station, Status
 
@@ -13,6 +13,7 @@ from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import ATTR_OPENING_TIMES
 from .coordinator import TankerkoenigConfigEntry, TankerkoenigDataUpdateCoordinator
 from .entity import TankerkoenigCoordinatorEntity
 
@@ -20,6 +21,10 @@ from .entity import TankerkoenigCoordinatorEntity
 PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
+
+# Tankerkoenig marks a station that never closes with `wholeDay` and sends no opening
+# times for it. Publishing that as an opening time keeps a single attribute for both.
+WHOLE_DAY_OPENING_TIME = {"text": "Mo-So", "start": "00:00:00", "end": "24:00:00"}
 
 
 async def async_setup_entry(
@@ -44,6 +49,7 @@ class StationOpenBinarySensorEntity(TankerkoenigCoordinatorEntity, BinarySensorE
 
     _attr_device_class = BinarySensorDeviceClass.OPENING
     _attr_translation_key = "status"
+    _unrecorded_attributes = frozenset({ATTR_OPENING_TIMES})
 
     def __init__(
         self,
@@ -54,11 +60,25 @@ class StationOpenBinarySensorEntity(TankerkoenigCoordinatorEntity, BinarySensorE
         super().__init__(coordinator, station)
         self._station_id = station.id
         self._attr_unique_id = f"{station.id}_status"
+        attrs: dict[str, Any] = {}
+        if station.whole_day:
+            attrs[ATTR_OPENING_TIMES] = [dict(WHOLE_DAY_OPENING_TIME)]
+        elif station.opening_times:
+            attrs[ATTR_OPENING_TIMES] = [
+                {
+                    "start": opening_time.start,
+                    "end": opening_time.end,
+                    "text": opening_time.text,
+                }
+                for opening_time in station.opening_times
+            ]
+
         if coordinator.show_on_map:
-            self._attr_extra_state_attributes = {
-                EntityStateAttribute.LATITUDE: station.lat,
-                EntityStateAttribute.LONGITUDE: station.lng,
-            }
+            attrs[EntityStateAttribute.LATITUDE] = station.lat
+            attrs[EntityStateAttribute.LONGITUDE] = station.lng
+
+        if attrs:
+            self._attr_extra_state_attributes = attrs
 
     @property
     @override
