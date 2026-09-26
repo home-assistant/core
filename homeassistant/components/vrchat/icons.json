@@ -1,0 +1,35 @@
+{
+  "entity": {
+    "sensor": {
+      "location": {
+        "default": "mdi:map-marker",
+        "state": {
+          "active_on_web_or_mobile": "mdi:cellphone-marker",
+          "offline": "mdi:map-marker-off-outline",
+          "private": "mdi:map-marker-outline",
+          "traveling": "mdi:map-marker-distance",
+          "unknown": "mdi:map-marker-question-outline"
+        }
+      },
+      "state": {
+        "state": {
+          "active": "mdi:account-badge",
+          "active_on_web_or_mobile": "mdi:account-badge-outline",
+          "ask_me": "mdi:account-card",
+          "busy": "mdi:account-cancel",
+          "join_me": "mdi:account-arrow-left",
+          "offline": "mdi:account-outline"
+        }
+      },
+      "status": {
+        "state": {
+          "active": "mdi:account-badge",
+          "ask_me": "mdi:account-card",
+          "busy": "mdi:account-cancel",
+          "join_me": "mdi:account-arrow-left",
+          "offline": "mdi:account-outline"
+        }
+      }
+    }
+  }
+}
