@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 import pizone
+from pizone import ControllerEndpoint
 import pytest
 
 from homeassistant import config_entries
@@ -117,8 +118,9 @@ async def test_broadcast_skips_already_configured_controller(
     MockConfigEntry(
         domain=DOMAIN,
         unique_id=configured_controller.device_uid,
-        data={},
+        data={CONF_HOST: configured_controller.device_ip},
         version=2,
+        minor_version=2,
     ).add_to_hass(hass)
 
     with patch_discovered_controllers([configured_controller, unconfigured_controller]):
@@ -390,8 +392,9 @@ async def test_broadcast_nudges_manual_host_when_all_discovered_are_configured(
     MockConfigEntry(
         domain=DOMAIN,
         unique_id=configured_controller.device_uid,
-        data={},
+        data={CONF_HOST: configured_controller.device_ip},
         version=2,
+        minor_version=2,
     ).add_to_hass(hass)
 
     with patch_discovered_controllers(configured_controller):
@@ -765,8 +768,9 @@ async def test_homekit_aborts_when_uid_already_configured(
     MockConfigEntry(
         domain=DOMAIN,
         unique_id="000000001",
-        data={},
+        data={CONF_HOST: "192.0.2.1"},
         version=2,
+        minor_version=2,
     ).add_to_hass(hass)
 
     with (
@@ -801,8 +805,9 @@ async def test_homekit_aborts_when_uid_configured_during_discovery(
         MockConfigEntry(
             domain=DOMAIN,
             unique_id="000000001",
-            data={},
+            data={CONF_HOST: "192.0.2.1"},
             version=2,
+            minor_version=2,
         ).add_to_hass(hass)
         return {controller.device_uid: endpoint_from_controller(controller)}
 
@@ -986,8 +991,9 @@ async def test_runtime_integration_discovery_starts_confirm_flow(
     MockConfigEntry(
         domain=DOMAIN,
         unique_id="000000001",
-        data={},
+        data={CONF_HOST: "192.0.2.1"},
         version=2,
+        minor_version=2,
     ).add_to_hass(hass)
     new_ctrl = create_mock_controller("000000002", "192.0.2.2")
 
@@ -1039,8 +1045,9 @@ async def test_runtime_integration_discovery_skips_yaml_excluded_uid(
     MockConfigEntry(
         domain=DOMAIN,
         unique_id="000000001",
-        data={},
+        data={CONF_HOST: "192.0.2.1"},
         version=2,
+        minor_version=2,
     ).add_to_hass(hass)
     excluded_ctrl = create_mock_controller("000000002", "192.0.2.2")
 
@@ -1062,8 +1069,9 @@ async def test_runtime_integration_discovery_skips_when_uid_already_configured(
     MockConfigEntry(
         domain=DOMAIN,
         unique_id="000000002",
-        data={},
+        data={CONF_HOST: "192.0.2.2"},
         version=2,
+        minor_version=2,
     ).add_to_hass(hass)
     ctrl = create_mock_controller("000000002", "192.0.2.2")
 
@@ -1102,8 +1110,9 @@ async def test_runtime_integration_discovery_allows_during_user_select_controlle
     MockConfigEntry(
         domain=DOMAIN,
         unique_id="000000001",
-        data={},
+        data={CONF_HOST: "192.0.2.1"},
         version=2,
+        minor_version=2,
     ).add_to_hass(hass)
     first = create_mock_controller("000000002", "192.0.2.2")
     second = create_mock_controller("000000003", "192.0.2.3")
@@ -1322,15 +1331,12 @@ async def test_homekit_aborts_for_ignored_uid(
     mock_discover_one.assert_not_called()
 
 
-async def test_async_migrate_entry_clears_legacy_data(
+async def test_async_migrate_entry_discovers_legacy_domain(
     hass: HomeAssistant,
+    mock_create_discovery: AsyncMock,
+    mock_discovery_service: Mock,
 ) -> None:
-    """v1→v2 migration clears legacy entry data without network I/O.
-
-    ConfigEntryNotReady retry semantics only work inside async_setup_entry — raising
-    from async_migrate_entry permanently lands the entry in MIGRATION_ERROR with no
-    retry path. Setup then heals unique_id=DOMAIN / missing CONF_HOST via discovery.
-    """
+    """v1→v2.2 migrate discovers and writes UID + CONF_HOST (ConfigEntryNotReady retries)."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         version=1,
@@ -1339,6 +1345,9 @@ async def test_async_migrate_entry_clears_legacy_data(
         data={"host": "192.0.2.1"},
     )
     entry.add_to_hass(hass)
+    mock_discovery_service.discover_all = AsyncMock(
+        return_value=[ControllerEndpoint(uid="000000001", host="192.0.2.10")]
+    )
 
     with patch(
         "homeassistant.components.izone.async_setup_entry",
@@ -1348,7 +1357,10 @@ async def test_async_migrate_entry_clears_legacy_data(
         await hass.async_block_till_done()
 
     assert entry.version == 2
-    assert entry.data == {}
+    assert entry.minor_version == 2
+    assert entry.unique_id == "000000001"
+    assert entry.data == {CONF_HOST: "192.0.2.10"}
+    assert entry.title == "iZone 000000001"
 
 
 @pytest.mark.usefixtures("mock_entry_setup")
