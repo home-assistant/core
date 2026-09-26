@@ -50,6 +50,8 @@ from .const import (
     DATA_LIVE_ACTIVITY_TOKENS,
     DATA_PENDING_UPDATES,
     DATA_PUSH_CHANNEL,
+    DATA_REMOTE_MEDIA_MANAGER,
+    DATA_REMOTE_MEDIA_SESSIONS,
     DATA_STORE,
     DOMAIN,
     SENSOR_TYPES,
@@ -60,6 +62,12 @@ from .const import (
 from .helpers import async_is_local_only_user, savable_state
 from .http_api import RegistrationsView
 from .live_activity.store import async_cleanup_expired_live_activity_tokens
+from .remote_media import (
+    async_registration_updated as async_remote_media_registration_updated,
+    async_remove_entry as async_remote_media_remove_entry,
+    async_setup_entry as async_remote_media_setup_entry,
+    async_unload_entry as async_remote_media_unload_entry,
+)
 from .timers import async_handle_timer_event
 from .util import async_create_cloud_hook, supports_push
 from .webhook import handle_webhook
@@ -82,7 +90,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if (app_config := await store.async_load()) is None or not isinstance(
         app_config, dict
     ):
-        app_config = {DATA_DELETED_IDS: [], DATA_LIVE_ACTIVITY_TOKENS: {}}
+        app_config = {
+            DATA_DELETED_IDS: [],
+            DATA_LIVE_ACTIVITY_TOKENS: {},
+            DATA_REMOTE_MEDIA_SESSIONS: {},
+        }
 
     hass.data[DOMAIN] = {
         DATA_CONFIG_ENTRIES: {},
@@ -90,6 +102,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DATA_DEVICES: {},
         DATA_LIVE_ACTIVITY_TOKENS: app_config[DATA_LIVE_ACTIVITY_TOKENS],
         DATA_LIVE_ACTIVITY_CLEANUP_CANCEL: None,
+        DATA_REMOTE_MEDIA_SESSIONS: app_config.get(DATA_REMOTE_MEDIA_SESSIONS, {}),
+        DATA_REMOTE_MEDIA_MANAGER: None,
         DATA_PUSH_CHANNEL: {},
         DATA_STORE: store,
         DATA_PENDING_UPDATES: {sensor_type: {} for sensor_type in SENSOR_TYPES},
@@ -228,9 +242,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         )
 
+    # Resume any Follow relationships this registration had, now that its push configuration is
+    # available. Done per entry so a stored session is never mistaken for an orphan just because
+    # config entries have not been set up yet.
+    async_remote_media_setup_entry(hass, entry)
+
+    # `update_registration` is where an install that had no push configuration gains one, and a
+    # Follow relationship stored without one is waiting for exactly that. This does not reload the
+    # entry; it only lets the relationship start being watched.
+    entry.async_on_unload(entry.add_update_listener(_async_registration_updated))
+
     await hass_notify.async_reload(hass, DOMAIN)
 
     return True
+
+
+async def _async_registration_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """React to a registration's own data changing."""
+    async_remote_media_registration_updated(hass, entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -240,6 +269,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     webhook_id = entry.data[CONF_WEBHOOK_ID]
+
+    # A reload is not the user stopping following: detach the listeners and keep the sessions.
+    async_remote_media_unload_entry(hass, entry)
 
     webhook_unregister(hass, webhook_id)
     del hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
@@ -254,6 +286,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     webhook_id = entry.data[CONF_WEBHOOK_ID]
     hass.data[DOMAIN][DATA_DELETED_IDS].append(webhook_id)
     hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS].pop(webhook_id, None)
+    async_remote_media_remove_entry(hass, entry)
     store = hass.data[DOMAIN][DATA_STORE]
     await store.async_save(savable_state(hass))
 
@@ -275,4 +308,6 @@ class _MobileAppStore(Store[dict[str, Any]]):
         """Migrate mobile_app storage to the current version."""
         if old_major_version == 1 and old_minor_version < 2:
             old_data.setdefault(DATA_LIVE_ACTIVITY_TOKENS, {})
+        if old_major_version == 1 and old_minor_version < 3:
+            old_data.setdefault(DATA_REMOTE_MEDIA_SESSIONS, {})
         return old_data
