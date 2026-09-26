@@ -1,6 +1,6 @@
 """Tests for the Profalux Neosol setup and teardown."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyneosol import DongleNotFoundError, NotADongleError, ProtocolError, TransportError
@@ -73,6 +73,21 @@ async def test_port_released_when_first_refresh_fails(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_dongle.close.assert_awaited_once()
+
+
+async def test_port_released_when_platform_setup_fails(
+    hass: HomeAssistant, mock_dongle: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the port is not left open when the setup fails after the first read."""
+    with patch.object(
+        hass.config_entries,
+        "async_forward_entry_setups",
+        side_effect=RuntimeError("boom"),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     mock_dongle.close.assert_awaited_once()
 
 

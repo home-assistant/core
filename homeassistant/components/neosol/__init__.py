@@ -26,12 +26,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: NeosolConfigEntry) -> bo
             translation_placeholders={"port": port, "error": str(err)},
         ) from err
 
+    # Runs on unload and on any setup failure from here on, so the exclusive port is
+    # never left open.
+    entry.async_on_unload(dongle.close)
+
     coordinator = NeosolCoordinator(hass, entry, dongle, info)
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady:
-        await dongle.close()
-        raise
+    await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
 
@@ -54,9 +54,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: NeosolConfigEntry) -> bo
 
 async def async_unload_entry(hass: HomeAssistant, entry: NeosolConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        await entry.runtime_data.dongle.close()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
