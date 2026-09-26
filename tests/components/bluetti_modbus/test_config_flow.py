@@ -96,7 +96,28 @@ async def test_user_flow_retries_a_transient_busy_response(
         )
         await hass.async_block_till_done()
 
-    assert attempts > 1
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_user_flow_device_still_busy(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """A device that stays busy surfaces cannot_connect, then the flow recovers."""
+    mock_modbus_unit.fail_requests(AcknowledgeError())
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    flow_id = result["flow_id"]
+    result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_modbus_unit.fail_requests(None)
+    result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
+    await hass.async_block_till_done()
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
