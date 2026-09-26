@@ -3,11 +3,12 @@
 from http import HTTPStatus
 from pathlib import Path
 
+from aiohttp.hdrs import CACHE_CONTROL
 from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components.http import DOMAIN, StaticPathConfig
-from homeassistant.components.http.static import CachingStaticResource
+from homeassistant.components.http.static import CACHE_HEADER, CachingStaticResource
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.http import KEY_ALLOW_CONFIGURED_CORS
@@ -63,3 +64,39 @@ async def test_async_register_static_paths(
     assert resp.status == HTTPStatus.OK
     resp = await client.get("/something_else/__init__.py")
     assert resp.status == HTTPStatus.OK
+
+
+async def test_caching_static_resource_no_cache_header_on_404(
+    hass: HomeAssistant, mock_http_client: TestClient, tmp_path: Path
+) -> None:
+    """Test the caching static resource sends no cache header on a 404."""
+    app = hass.http.app
+
+    resource = CachingStaticResource("/static", tmp_path)
+    app.router.register_resource(resource)
+    app[KEY_ALLOW_CONFIGURED_CORS](resource)
+
+    (tmp_path / "exists.js").write_text("console.log('hi');", encoding="utf-8")
+
+    resp = await mock_http_client.get("/static/exists.js")
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers[CACHE_CONTROL] == CACHE_HEADER
+
+    # A missing file answers 404 without a cache header so clients don't
+    # cache the 404; the miss is not learned by the response cache either.
+    resp = await mock_http_client.get("/static/does-not-exist.js")
+    assert resp.status == HTTPStatus.NOT_FOUND
+    assert CACHE_CONTROL not in resp.headers
+
+    resp = await mock_http_client.get("/static/does-not-exist.js")
+    assert resp.status == HTTPStatus.NOT_FOUND
+    assert CACHE_CONTROL not in resp.headers
+
+    # A file created at the same path after the 404 is served normally,
+    # proving the miss was not retained in the response cache.
+    (tmp_path / "does-not-exist.js").write_text(
+        "console.log('late');", encoding="utf-8"
+    )
+    resp = await mock_http_client.get("/static/does-not-exist.js")
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers[CACHE_CONTROL] == CACHE_HEADER
