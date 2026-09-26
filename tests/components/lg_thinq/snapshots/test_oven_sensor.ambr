@@ -1,0 +1,235 @@
+# serializer version: 1
+# name: test_oven_sensor_entities[sensor.test_oven_lower_current_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'initial',
+        'preheating',
+        'cooking_in_progress',
+        'done',
+        'cooling',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_oven_lower_current_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'lower current status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'lower current status',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_state_for_location',
+    'unique_id': 'OV-00000000-0000-0000-0000-000000000001_lower_current_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_oven_sensor_entities[sensor.test_oven_lower_current_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test oven lower current status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'initial',
+        'preheating',
+        'cooking_in_progress',
+        'done',
+        'cooling',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_oven_lower_current_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cooking_in_progress',
+  })
+# ---
+# name: test_oven_sensor_entities[sensor.test_oven_lower_remaining_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_oven_lower_remaining_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'lower remaining time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'lower remaining time',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'remain_for_location',
+    'unique_id': 'OV-00000000-0000-0000-0000-000000000001_lower_remain',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_oven_sensor_entities[sensor.test_oven_lower_remaining_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test oven lower remaining time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_oven_lower_remaining_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-09-07T18:40:00+00:00',
+  })
+# ---
+# name: test_oven_sensor_entities[sensor.test_oven_upper_current_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'initial',
+        'preheating',
+        'cooking_in_progress',
+        'done',
+        'cooling',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_oven_upper_current_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'upper current status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'upper current status',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_state_for_location',
+    'unique_id': 'OV-00000000-0000-0000-0000-000000000001_upper_current_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_oven_sensor_entities[sensor.test_oven_upper_current_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test oven upper current status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'initial',
+        'preheating',
+        'cooking_in_progress',
+        'done',
+        'cooling',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_oven_upper_current_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cooking_in_progress',
+  })
+# ---
+# name: test_oven_sensor_entities[sensor.test_oven_upper_remaining_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_oven_upper_remaining_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'upper remaining time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'upper remaining time',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'remain_for_location',
+    'unique_id': 'OV-00000000-0000-0000-0000-000000000001_upper_remain',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_oven_sensor_entities[sensor.test_oven_upper_remaining_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test oven upper remaining time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_oven_upper_remaining_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-09-07T18:40:00+00:00',
+  })
+# ---

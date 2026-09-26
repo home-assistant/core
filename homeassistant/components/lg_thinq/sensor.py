@@ -9,7 +9,12 @@ from typing import override
 
 from thinqconnect import USAGE_DAILY, USAGE_MONTHLY, DeviceType, ThinQAPIException
 from thinqconnect.devices.const import Property as ThinQProperty
-from thinqconnect.integration import ActiveMode, ThinQPropertyEx, TimerProperty
+from thinqconnect.integration import (
+    ActiveMode,
+    OvenTimerPropertyState,
+    ThinQPropertyEx,
+    TimerProperty,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -524,6 +529,7 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
     DeviceType.OVEN: (
         RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],
         TEMPERATURE_SENSOR_DESC[ThinQProperty.TARGET_TEMPERATURE],
+        TIMER_SENSOR_DESC[TimerProperty.REMAIN],
     ),
     DeviceType.PLANT_CULTIVATOR: (
         LIGHT_SENSOR_DESC[ThinQProperty.BRIGHTNESS],
@@ -658,7 +664,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up an entry for sensor platform."""
     entities: list[
-        ThinQSensorEntity | ThinQEnergySensorEntity | ThinQEnumTempSensorEntity
+        ThinQSensorEntity
+        | ThinQOvenTimerSensorEntity
+        | ThinQEnergySensorEntity
+        | ThinQEnumTempSensorEntity
     ] = []
     for coordinator in entry.runtime_data.coordinators.values():
         if (
@@ -667,8 +676,14 @@ async def async_setup_entry(
             )
         ) is not None:
             for description in descriptions:
+                sensor_type = (
+                    ThinQOvenTimerSensorEntity
+                    if coordinator.api.device.device_type == DeviceType.OVEN
+                    and description.key == TimerProperty.REMAIN
+                    else ThinQSensorEntity
+                )
                 entities.extend(
-                    ThinQSensorEntity(coordinator, description, property_id)
+                    sensor_type(coordinator, description, property_id)
                     for property_id in coordinator.api.get_active_idx(
                         description.key,
                         (
@@ -715,6 +730,19 @@ async def async_setup_entry(
             )
     if entities:
         async_add_entities(entities)
+
+
+class ThinQOvenTimerSensorEntity(ThinQEntity, SensorEntity):
+    """Expose the cook-timer end time maintained by the ThinQ library."""
+
+    @override
+    def _update_status(self) -> None:
+        """Read the library's per-cavity timer state."""
+        self._attr_native_value = (
+            self.data.end_time
+            if isinstance(self.data, OvenTimerPropertyState)
+            else None
+        )
 
 
 class ThinQSensorEntity(ThinQEntity, SensorEntity):
