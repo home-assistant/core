@@ -2,8 +2,7 @@
 
 from typing import Any, override
 
-from bluetti_modbus_lib import BluettiModbusConnectionError
-from modbus_connection import AcknowledgeError, ModbusTcpParams, ServerDeviceBusyError
+from modbus_connection import ModbusError, ModbusTcpParams
 import probatio
 
 from homeassistant.components.modbus import async_get_temporary_unit
@@ -99,7 +98,7 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
             # Claimed by another entry with link settings one shared connection
             # cannot honour; retrying won't help.
             return {"base": "link_settings_in_use"}, None
-        except BluettiModbusConnectionError, AcknowledgeError, ServerDeviceBusyError:
+        except ModbusError:
             return {"base": "cannot_connect"}, None
 
         if device.values.get("d_inverter_type") != MODEL:
