@@ -1,7 +1,6 @@
 """Tests for the media_player LLM tools platform."""
 
 from typing import Any
-from unittest.mock import ANY
 
 import probatio
 import pytest
@@ -247,7 +246,12 @@ async def test_search_media(
                     "media_content_id": "library://album/2",
                 },
             ],
-            "instruction": ANY,
+            "instruction": (
+                "Pick the result that best matches the request. "
+                "Call media_player__play_media with its media_content_id and "
+                "media_content_type, and with the same name, area and floor "
+                "as this search."
+            ),
         }
     )
     assert len(search_calls) == 1

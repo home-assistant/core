@@ -140,7 +140,6 @@ class MediaSearchTool(Tool):
             **TARGET_SCHEMA,
         }
     )
-    # The player can search online sources, such as a streaming service.
     annotations = ToolAnnotations(read_only=True, destructive=False, idempotent=True)
     integration = DOMAIN
 
@@ -184,9 +183,10 @@ class MediaSearchTool(Tool):
             data={
                 "results": results,
                 "instruction": (
-                    "Pick the result that best matches the request. Call the play "
-                    "media tool with its media_content_id and media_content_type, "
-                    "and with the same name, area and floor as this search."
+                    "Pick the result that best matches the request. "
+                    f"Call {MediaPlayTool.name} with its media_content_id and "
+                    "media_content_type, and with the same name, area and floor "
+                    "as this search."
                 ),
             }
         )
