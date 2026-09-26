@@ -7,6 +7,7 @@ import pytest
 from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import create_mocked_hub
 
+from homeassistant.components.victron_gx import PLATFORMS
 from homeassistant.components.victron_gx.const import (
     CONF_INSTALLATION_ID,
     CONF_SERIAL,
@@ -19,6 +20,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 
@@ -56,21 +58,45 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
-@pytest.fixture
-async def init_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+async def _async_init_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    platforms: list[Platform],
 ) -> tuple[VictronVenusHub, MockConfigEntry]:
     """Set up the Victron GX MQTT integration for testing."""
     mock_config_entry.add_to_hass(hass)
 
     victron_hub = await create_mocked_hub()
 
-    with patch(
-        "homeassistant.components.victron_gx.hub.VictronVenusHub"
-    ) as mock_hub_class:
+    with (
+        patch("homeassistant.components.victron_gx.PLATFORMS", platforms),
+        patch(
+            "homeassistant.components.victron_gx.hub.VictronVenusHub"
+        ) as mock_hub_class,
+    ):
         mock_hub_class.return_value = victron_hub
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     return victron_hub, mock_config_entry
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> tuple[VictronVenusHub, MockConfigEntry]:
+    """Set up the Victron GX metric platforms for testing."""
+    return await _async_init_integration(
+        hass,
+        mock_config_entry,
+        [platform for platform in PLATFORMS if platform is not Platform.UPDATE],
+    )
+
+
+@pytest.fixture
+async def init_integration_with_update(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> tuple[VictronVenusHub, MockConfigEntry]:
+    """Set up all Victron GX platforms, including firmware updates."""
+    return await _async_init_integration(hass, mock_config_entry, PLATFORMS)
