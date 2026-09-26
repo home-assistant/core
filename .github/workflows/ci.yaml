@@ -134,12 +134,7 @@ jobs:
           filters: .core_files.yaml
       - name: Create a list of integrations to filter for changes
         run: |
-          integrations=$(ls -Ad ./homeassistant/components/[!_]*  | xargs -n 1 basename)
-          touch .integration_paths.yaml
-          for integration in $integrations; do
-            echo "${integration}: [homeassistant/components/${integration}/**, tests/components/${integration}/**]" \
-              >> .integration_paths.yaml;
-          done
+          python3 -m script.gen_integration_paths
           echo "Result:"
           cat .integration_paths.yaml
       - name: Filter for integration changes
