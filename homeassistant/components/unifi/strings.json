@@ -16,20 +16,20 @@
     "flow_title": "{name} ({host})",
     "step": {
       "api_key": {
-        "title": "Set up UniFi Network with an API key",
-        "description": "Connect with an API key from *Network → Settings → Control Plane → Integrations*, without a local user. This mode provides device and client trackers, device state, WLAN and firewall policy switches, device restart and a WLAN password button. For more information: {api_key_documentation_url}",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
+          "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "[%key:component::unifi::config::step::local_user::data_description::host%]",
           "api_key": "API key created in the UniFi Network application. Only the Network Integration API is used; entities that need a local user are not available.",
+          "host": "[%key:component::unifi::config::step::local_user::data_description::host%]",
           "port": "[%key:component::unifi::config::step::local_user::data_description::port%]",
           "verify_ssl": "[%key:component::unifi::config::step::local_user::data_description::verify_ssl%]"
-        }
+        },
+        "description": "Connect with an API key from *Network → Settings → Control Plane → Integrations*, without a local user. This mode provides device and client trackers, device state, WLAN and firewall policy switches, device restart and a WLAN password button. For more information: {api_key_documentation_url}",
+        "title": "Set up UniFi Network with an API key"
       },
       "local_user": {
         "data": {
@@ -58,14 +58,14 @@
         }
       },
       "reauth_api_key": {
-        "title": "Reauthenticate UniFi Network (API key)",
-        "description": "The API key is missing or was rejected. Enter a new API key from the UniFi Network application. For more information: {api_key_documentation_url}",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "api_key": "[%key:component::unifi::config::step::api_key::data_description::api_key%]"
-        }
+        },
+        "description": "The API key is missing or was rejected. Enter a new API key from the UniFi Network application. For more information: {api_key_documentation_url}",
+        "title": "Reauthenticate UniFi Network (API key)"
       },
       "reconfigure": {
         "data": {
@@ -86,20 +86,20 @@
         "title": "[%key:component::unifi::config::step::local_user::title%]"
       },
       "reconfigure_api_key": {
-        "title": "[%key:component::unifi::config::step::api_key::title%]",
-        "description": "[%key:component::unifi::config::step::api_key::description%]",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
+          "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "[%key:component::unifi::config::step::local_user::data_description::host%]",
           "api_key": "[%key:component::unifi::config::step::api_key::data_description::api_key%]",
+          "host": "[%key:component::unifi::config::step::local_user::data_description::host%]",
           "port": "[%key:component::unifi::config::step::local_user::data_description::port%]",
           "verify_ssl": "[%key:component::unifi::config::step::local_user::data_description::verify_ssl%]"
-        }
+        },
+        "description": "[%key:component::unifi::config::step::api_key::description%]",
+        "title": "[%key:component::unifi::config::step::api_key::title%]"
       },
       "site": {
         "data": {
@@ -110,11 +110,11 @@
         }
       },
       "user": {
+        "description": "A local user gives access to everything. An API key works on consoles that cannot have local users, such as members of a UniFi fabric, but provides fewer entities.",
         "menu_options": {
-          "local_user": "Local user (full access)",
-          "api_key": "API key only (limited feature set)"
-        },
-        "description": "A local user gives access to everything. An API key works on consoles that cannot have local users, such as members of a UniFi fabric, but provides fewer entities."
+          "api_key": "API key only (limited feature set)",
+          "local_user": "Local user (full access)"
+        }
       }
     }
   },
