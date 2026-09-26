@@ -511,6 +511,53 @@ async def test_streaming_enum_none_clears_state(
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
+@pytest.mark.parametrize(
+    "raw_value",
+    [
+        pytest.param("ShiftStateUnknown", id="unknown"),
+        pytest.param("ShiftStateInvalid", id="invalid"),
+        pytest.param("ShiftStateSNA", id="sna"),
+        pytest.param("NotAShiftState", id="unrecognised"),
+        pytest.param(None, id="none"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_streaming_shift_state_outside_options(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_add_listener: AsyncMock,
+    raw_value: str | None,
+) -> None:
+    """A streamed gear outside P/D/R/N must map to an enum option, not be rejected."""
+    await setup_platform(hass, [Platform.SENSOR])
+    vin = VEHICLE_DATA_ALT["response"]["vin"]
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{vin}-drive_state_shift_state"
+    )
+    assert entity_id is not None
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {Signal.GEAR: "ShiftStateD"},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "d"
+
+    # The mock dispatches synchronously, so a rejected state write raises here.
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {Signal.GEAR: raw_value},
+            "createdAt": "2024-10-04T10:45:18.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "p"
+
+
 def test_energy_history_fields_match_stream_totals() -> None:
     """The sensor key list mirrors the totals the stream event carries."""
     assert list(EnergyHistoryTotals.__dataclass_fields__) == ENERGY_HISTORY_FIELDS
