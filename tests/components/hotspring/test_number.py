@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from hotspring import HotSpringConnectionError, HotSpringError, Spa
+from hotspring import HotSpringConnectionError, HotSpringError, Spa, TemperatureUnit
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -45,8 +45,8 @@ async def test_set_target_temperature(
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == "40.0"
 
-    def set_temp_mock(value: int) -> None:
-        device_fixture.heater.set_temperature = float(value)
+    def set_temp_mock(value: float) -> None:
+        device_fixture.heater.set_temperature = value
 
     mock_hotspring.set_temperature.side_effect = set_temp_mock
 
@@ -60,7 +60,7 @@ async def test_set_target_temperature(
         blocking=True,
     )
 
-    mock_hotspring.set_temperature.assert_called_once_with(100)
+    mock_hotspring.set_temperature.assert_called_once_with(100.0)
     mock_hotspring.update.assert_called_once()
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == "37.8"
@@ -96,3 +96,38 @@ async def test_set_target_temperature_error(
             },
             blocking=True,
         )
+
+
+async def test_set_target_temperature_celsius(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hotspring: MagicMock,
+    device_fixture: Spa,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test setting target temperature when the spa is configured in Celsius."""
+    device_fixture.heater.temperature_unit = TemperatureUnit.CELSIUS
+    device_fixture.heater.set_temperature = 38.5
+
+    def set_temp_mock(value: float) -> None:
+        device_fixture.heater.set_temperature = value
+
+    mock_hotspring.set_temperature.side_effect = set_temp_mock
+
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.NUMBER])
+
+    assert hass.states.get(ENTITY_ID) == snapshot
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_VALUE: 37.5,
+        },
+        blocking=True,
+    )
+
+    mock_hotspring.set_temperature.assert_called_once_with(37.5)
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == "37.5"

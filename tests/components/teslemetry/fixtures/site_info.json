@@ -119,7 +119,7 @@
     },
     "nameplate_power": 15000,
     "nameplate_energy": 40500,
-    "installation_time_zone": "",
+    "installation_time_zone": "Australia/Brisbane",
     "max_site_meter_power_ac": 1000000000,
     "min_site_meter_power_ac": -1000000000,
     "tariff_content_v2": {

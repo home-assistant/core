@@ -255,6 +255,37 @@ async def test_setup_keeps_meter_sensors_a_model_serves(
     assert hass.states.get(entity_id).state == "1000.0"
 
 
+async def test_setup_removes_meter_sensors_a_model_denies(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an upgrade drops meter sensors the model turns out to deny."""
+    mock_config_entry.add_to_hass(hass)
+    deny_meter_energy(mock_connection.for_unit(1))
+    stale = [
+        entity_registry.async_get_or_create(
+            SENSOR_DOMAIN,
+            DOMAIN,
+            f"{MOCK_SERIAL}_{key}",
+            config_entry=mock_config_entry,
+        ).entity_id
+        for key in METER_ENERGY_KEYS
+    ]
+
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert all(entity_registry.async_get(entity_id) is None for entity_id in stale)
+
+
 async def test_setup_keeps_meter_sensors_when_no_mask_is_published(
     hass: HomeAssistant,
     mock_connection: MockModbusConnection,

@@ -51,13 +51,13 @@ PyYAML==6.0.3
 requests==2.34.2
 rf-protocols==4.3.0
 securetar==2026.4.1
-SQLAlchemy==2.0.53
+SQLAlchemy==2.0.54
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
 typing-extensions>=4.16.0,<5.0
 ulid-transform==2.2.9
 urllib3>=2.0
-uv==0.12.14
+uv==0.12.17
 webrtc-models==0.3.0
 yarl==1.25.1
 zeroconf==0.151.3
