@@ -177,14 +177,25 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
         """Build statistics data from fetched data."""
         consumption_statistics = []
         cost_statistics = []
+        seen_dates: dict[date, float] = {}
 
         for data in usage:
-            if (
-                (last_stats is not None and data.date <= last_stats)
-                or not data.index
-                or data.volume is None
-            ):
+            if last_stats is not None and data.date <= last_stats:
                 continue
+            if not data.index or data.volume is None:
+                continue
+            if data.date in seen_dates:
+                if seen_dates[data.date] != data.volume:
+                    _LOGGER.warning(
+                        "Duplicate date %s with different volume: %.2f L vs %.2f L - keeping first value",
+                        data.date,
+                        seen_dates[data.date],
+                        data.volume,
+                    )
+                else:
+                    _LOGGER.debug("Skipping duplicate date: %s", data.date)
+                continue
+            seen_dates[data.date] = data.volume
             consumption_date = dt_util.start_of_local_day(data.date)
 
             consumption_sum += data.volume
