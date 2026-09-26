@@ -355,9 +355,7 @@ async def on_execution_state_changed(
         if (device := coordinator.devices.get(device_url)) and (
             device.identifier.protocol is not Protocol.RTS
         ):
-            # The only place an unreachable device is reported. The server keeps
-            # answering for it and DeviceUnavailableEvent never fires, so
-            # without this the entity stays available and every command is
-            # silently dropped.
+            # An execution failure is the only notice: the server goes on
+            # answering for the device and never sends DeviceUnavailableEvent.
             LOGGER.debug("Device %s is unreachable: %s", device_url, event.failure_type)
             coordinator.unreachable_devices.add(device_url)
