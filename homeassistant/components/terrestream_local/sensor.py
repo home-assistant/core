@@ -18,19 +18,19 @@ from .entity import Entity
 
 PARALLEL_UPDATES = 0
 
-SENSORS: dict[str, tuple[str, SensorDeviceClass | None, str | None]] = {
-    "co2": ("Carbon dioxide", SensorDeviceClass.CO2, "ppm"),
-    "pm1": ("PM1", SensorDeviceClass.PM1, "µg/m³"),
-    "pm25": ("PM2.5", SensorDeviceClass.PM25, "µg/m³"),
-    "pm4": ("PM4", None, "µg/m³"),
-    "pm10": ("PM10", SensorDeviceClass.PM10, "µg/m³"),
-    "temperature": ("Temperature", SensorDeviceClass.TEMPERATURE, "°C"),
-    "humidity": ("Humidity", SensorDeviceClass.HUMIDITY, "%"),
-    "pressure": ("Pressure", SensorDeviceClass.ATMOSPHERIC_PRESSURE, "hPa"),
-    "illuminance": ("Illuminance", SensorDeviceClass.ILLUMINANCE, "lx"),
-    "computed_epa_aqi": ("Computed EPA particulate AQI", SensorDeviceClass.AQI, None),
-    "voc_index": ("VOC index", None, None),
-    "nox_index": ("NOx index", None, None),
+SENSORS: dict[str, tuple[SensorDeviceClass | None, str | None]] = {
+    "co2": (SensorDeviceClass.CO2, "ppm"),
+    "pm1": (SensorDeviceClass.PM1, "µg/m³"),
+    "pm25": (SensorDeviceClass.PM25, "µg/m³"),
+    "pm4": (None, "µg/m³"),
+    "pm10": (SensorDeviceClass.PM10, "µg/m³"),
+    "temperature": (SensorDeviceClass.TEMPERATURE, "°C"),
+    "humidity": (SensorDeviceClass.HUMIDITY, "%"),
+    "pressure": (SensorDeviceClass.ATMOSPHERIC_PRESSURE, "hPa"),
+    "illuminance": (SensorDeviceClass.ILLUMINANCE, "lx"),
+    "computed_epa_aqi": (SensorDeviceClass.AQI, None),
+    "voc_index": (None, None),
+    "nox_index": (None, None),
 }
 
 
@@ -57,12 +57,11 @@ class Sensor(Entity, SensorEntity):
         self,
         coordinator: Coordinator,
         key: str,
-        name: str,
         device_class: SensorDeviceClass | None,
         unit: str | None,
     ) -> None:
         """Initialize measurement metadata and its expiry timer."""
-        super().__init__(coordinator, key, name)
+        super().__init__(coordinator, key)
         self._attr_device_class = device_class
         self._attr_native_unit_of_measurement = unit
         self._cancel_expiry: Callable[[], None] | None = None

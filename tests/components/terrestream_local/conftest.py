@@ -59,8 +59,8 @@ def mock_client() -> Generator[MagicMock]:
             "pressure": 1013,
             "illuminance": 100,
             "computed_epa_aqi": 10,
-            "voc_index": 100,
-            "nox_index": 1,
+            "voc_index": 123,
+            "nox_index": 7,
         }
         client.refresh = AsyncMock(
             return_value={

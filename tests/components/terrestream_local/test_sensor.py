@@ -4,25 +4,39 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 from terrestream_local.errors import AuthenticationError, ClientError
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from .conftest import UUID
+
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY = "sensor.terrestream_indoor_air_quality_sensor_carbon_dioxide"
 
 
 async def test_sensors_and_unload(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mock_client: MagicMock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Expose 12 measurements and release ownership on unload."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all("sensor")) == 12
-    assert hass.states.get(ENTITY).state == "500"
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+    device = device_registry.async_get_device_by_identifier(
+        ("terrestream_local", UUID), config_entry.entry_id
+    )
+    assert device is not None
+    assert device == snapshot(name="device")
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     mock_client.command.assert_any_await("release")
 

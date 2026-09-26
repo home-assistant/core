@@ -14,7 +14,7 @@ class Entity(CoordinatorEntity[Coordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: Coordinator, key: str, name: str) -> None:
+    def __init__(self, coordinator: Coordinator, key: str) -> None:
         """Bind a measurement key to the sensor identity."""
         super().__init__(coordinator)
         self.key = key
