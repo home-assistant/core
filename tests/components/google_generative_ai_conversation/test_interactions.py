@@ -1041,29 +1041,54 @@ async def test_convert_chat_log_to_interactions_steps_tool_error(
     )
 
 
-async def test_convert_chat_log_to_interactions_steps_thinking_content_without_signature(
+async def test_convert_chat_log_to_interactions_steps_thought_with_signature(
     hass: HomeAssistant,
 ) -> None:
-    """Test converting thinking_content without signature to ThoughtStep with summary."""
+    """Test converting thinking_content with thought signature to ThoughtStep."""
     chat_log = conversation.ChatLog(hass, "test_conversation")
-    chat_log.async_add_user_content(conversation.UserContent(content=""))
+    chat_log.async_add_user_content(conversation.UserContent(content="What is 2+2?"))
+
+    thought_sig = (
+        "EuUSCuISAWkUfROUQtSdFAxbHyCEz9ttYVg3MCN1Opxxge6vZnWcDUyakfBipBz5fzX0Lg3e67t"
+        "dJp+asAxC2BuqWMtDTckCjWT+QJYLYhJHXsOvgdSj/lIK8BRiJWJ8BhV95l5vv6kV4KvQotEUk/"
+    )
+
     chat_log.async_add_assistant_content_without_tools(
         conversation.AssistantContent(
             agent_id="test_agent",
-            thinking_content="I need to think about this.",
-            content="Done thinking.",
+            thinking_content="Calculating 2+2=4.",
+            content="2 + 2 = 4.",
+            native=ContentDetails(
+                part_details=[
+                    PartDetails(
+                        part_type="thought",
+                        index=0,
+                        length=17,
+                        thought_signature=thought_sig,
+                    )
+                ]
+            ),
         )
+    )
+
+    chat_log.async_add_user_content(
+        conversation.UserContent(content="And what is 4+4?")
     )
 
     steps = convert_chat_log_to_interactions_steps(chat_log)
 
-    assert len(steps) == 3
+    assert len(steps) == 4
     assert steps[0] == interactions.UserInputStep(
-        content=[interactions.TextContent(text=" ")]
+        content=[interactions.TextContent(text="What is 2+2?")]
     )
     assert steps[1] == interactions.ThoughtStep(
-        summary=[interactions.TextContent(text="I need to think about this.")]
+        signature=thought_sig,
+        summary=[interactions.TextContent(text="Calculating 2+2=4.")],
     )
+    assert steps[1].signature == thought_sig
     assert steps[2] == interactions.ModelOutputStep(
-        content=[interactions.TextContent(text="Done thinking.")]
+        content=[interactions.TextContent(text="2 + 2 = 4.")]
+    )
+    assert steps[3] == interactions.UserInputStep(
+        content=[interactions.TextContent(text="And what is 4+4?")]
     )

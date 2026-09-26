@@ -242,7 +242,14 @@ def _convert_assistant_content_steps(
         None,
     )
     if thought_sig:
-        steps.append(interactions.ThoughtStep(signature=thought_sig))
+        steps.append(
+            interactions.ThoughtStep(
+                signature=thought_sig,
+                summary=[interactions.TextContent(text=content.thinking_content)]
+                if content.thinking_content
+                else None,
+            )
+        )
     elif content.thinking_content:
         steps.append(
             interactions.ThoughtStep(
