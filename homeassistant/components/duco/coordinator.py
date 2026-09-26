@@ -89,6 +89,12 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             await self.client.async_set_ventilation_state(node_id, state)
             await self._async_refresh_node(node_id)
 
+    async def async_set_node_identify(self, node_id: int, identify: bool) -> None:
+        """Set and refresh a node's identify state."""
+        async with self._request_lock:
+            await self.client.async_set_node_identify(node_id, identify)
+            await self._async_refresh_node(node_id)
+
     async def _async_refresh_node(self, node_id: int) -> None:
         """Refresh one node while holding the request lock."""
         try:
@@ -213,9 +219,9 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             )
             _LOGGER.warning(
                 "Could not fetch Duco node actions; %s",
-                "keeping previous select discovery data"
+                "keeping previous action discovery data"
                 if previous_data is not None
-                else "starting with empty select discovery data",
+                else "starting with empty action discovery data",
                 exc_info=err,
             )
 

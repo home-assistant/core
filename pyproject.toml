@@ -77,7 +77,7 @@ dependencies = [
   "typing-extensions>=4.16.0,<5.0",
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
-  "uv==0.12.15",
+  "uv==0.12.17",
   "probatio==0.12.1",
   "yarl==1.25.1",
   "webrtc-models==0.3.0",
