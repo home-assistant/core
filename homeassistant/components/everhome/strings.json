@@ -1,0 +1,73 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_serial": "Device did not provide a serial number during discovery. It will be retried automatically.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The serial number of the device does not match the previous serial number."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the EcoTracker device."
+        },
+        "description": "Update the IP address or hostname of your EcoTracker device.",
+        "title": "Reconfigure EcoTracker"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the EcoTracker device."
+        },
+        "description": "Set up the EcoTracker integration to monitor your electricity usage.",
+        "title": "Connect to the EcoTracker"
+      },
+      "zeroconf_confirm": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the EcoTracker device."
+        },
+        "description": "Do you want to add the everHome {name} at `{host}` to Home Assistant?",
+        "title": "Set up everHome {name}"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "energy_counter_in": {
+        "name": "Energy in"
+      },
+      "energy_counter_in_t1": {
+        "name": "Energy in T1"
+      },
+      "energy_counter_in_t2": {
+        "name": "Energy in T2"
+      },
+      "energy_counter_out": {
+        "name": "Energy out"
+      },
+      "power_avg": {
+        "name": "Power average"
+      },
+      "power_phase": {
+        "name": "Power phase {phase_number}"
+      }
+    }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "An error occurred while fetching data from the EcoTracker device."
+    }
+  }
+}
