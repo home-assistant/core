@@ -1,0 +1,194 @@
+"""Tests for the LaMetric time platform."""
+
+from datetime import time
+from unittest.mock import MagicMock
+
+from demetriek import LaMetricConnectionError, LaMetricError, ScreensaverMode
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.time import DOMAIN as TIME_DOMAIN, SERVICE_SET_VALUE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TIME,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
+
+from tests.common import MockConfigEntry, snapshot_platform
+
+ENTITY_START_TIME = "time.frenck_s_lametric_screensaver_start_time"
+ENTITY_END_TIME = "time.frenck_s_lametric_screensaver_end_time"
+
+pytestmark = pytest.mark.freeze_time("2025-01-15 12:00:00+00:00")
+
+
+@pytest.mark.parametrize("init_integration", [Platform.TIME], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the LaMetric screensaver time entities."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "expected_start", "expected_end"),
+    [
+        (ENTITY_START_TIME, time(4, 0), time(6, 30)),
+        (ENTITY_END_TIME, time(0, 0, 39), time(4, 0)),
+    ],
+    ids=["start_time", "end_time"],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_set_value(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+    entity_id: str,
+    expected_start: time,
+    expected_end: time,
+) -> None:
+    """Test setting a screensaver time sends both times, in UTC.
+
+    The device rejects a time based write that carries only one of the times,
+    so the time that was not changed is sent along unaltered.
+    """
+    await hass.services.async_call(
+        TIME_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TIME: "20:00:00"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_lametric.display.assert_called_once_with(
+        screensaver_mode=ScreensaverMode.TIME_BASED,
+        screensaver_start_time=expected_start,
+        screensaver_end_time=expected_end,
+    )
+
+
+async def test_unknown_times(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lametric: MagicMock,
+) -> None:
+    """Test a device that has no screensaver times configured."""
+    time_based = mock_lametric.device.return_value.display.screensaver.modes.time_based
+    time_based.start_time = None
+    time_based.end_time = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_START_TIME)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    state = hass.states.get(ENTITY_END_TIME)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_no_screensaver_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lametric: MagicMock,
+) -> None:
+    """Test devices that do not report a screensaver get no time entities."""
+    mock_lametric.device.return_value.display.screensaver = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_START_TIME) is None
+    assert hass.states.get(ENTITY_END_TIME) is None
+
+
+@pytest.mark.parametrize(
+    "entity_id", [ENTITY_START_TIME, ENTITY_END_TIME], ids=["start_time", "end_time"]
+)
+async def test_set_value_without_both_times(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lametric: MagicMock,
+    entity_id: str,
+) -> None:
+    """Test setting a screensaver time when the device has none configured."""
+    time_based = mock_lametric.device.return_value.display.screensaver.modes.time_based
+    time_based.start_time = None
+    time_based.end_time = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="screensaver start and end time can only be changed together",
+    ):
+        await hass.services.async_call(
+            TIME_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_TIME: "20:00:00"},
+            blocking=True,
+        )
+
+    mock_lametric.display.assert_not_called()
+
+
+@pytest.mark.parametrize("device_fixture", ["device_sa5"])
+@pytest.mark.usefixtures("init_integration")
+async def test_sky_has_no_times(hass: HomeAssistant) -> None:
+    """Test the SKY gets no screensaver time entities."""
+    assert hass.states.get("time.spyfly_s_lametric_sky_screensaver_start_time") is None
+    assert hass.states.get("time.spyfly_s_lametric_sky_screensaver_end_time") is None
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error_message", "expected_state"),
+    [
+        (
+            LaMetricError,
+            "Invalid response from the LaMetric device",
+            "16:00:39",
+        ),
+        (
+            LaMetricConnectionError,
+            "Error communicating with the LaMetric device",
+            STATE_UNAVAILABLE,
+        ),
+    ],
+    ids=["error", "connection_error"],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_time_errors(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+    side_effect: type[Exception],
+    error_message: str,
+    expected_state: str,
+) -> None:
+    """Test error handling of the LaMetric times."""
+    mock_lametric.display.side_effect = side_effect
+
+    with pytest.raises(HomeAssistantError, match=error_message):
+        await hass.services.async_call(
+            TIME_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: ENTITY_START_TIME, ATTR_TIME: "20:00:00"},
+            blocking=True,
+        )
+
+    state = hass.states.get(ENTITY_START_TIME)
+    assert state
+    assert state.state == expected_state
