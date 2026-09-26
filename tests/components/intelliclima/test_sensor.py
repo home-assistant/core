@@ -3,15 +3,17 @@
 from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
+from pyintelliclima import IntelliClimaDevices
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import setup_integration
+from . import async_poll, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -56,3 +58,35 @@ async def test_all_sensor_entities(
     assert entity_entry.device_id
     assert (device_entry := device_registry.async_get(entity_entry.device_id))
     assert device_entry == snapshot
+
+
+@pytest.mark.parametrize(
+    ("field", "sentinel", "entity_id"),
+    [
+        pytest.param("tamb", "327.67", "sensor.test_vmc_temperature", id="temperature"),
+        pytest.param("rh", "143", "sensor.test_vmc_humidity", id="humidity"),
+        pytest.param(
+            "voc_state",
+            "65535",
+            "sensor.test_vmc_volatile_organic_compounds_parts",
+            id="voc",
+        ),
+    ],
+)
+async def test_sensor_no_reading(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    single_eco_device: IntelliClimaDevices,
+    field: str,
+    sentinel: str,
+    entity_id: str,
+) -> None:
+    """Test a sensor reports unknown when the device sends its no-reading sentinel."""
+    assert (state := hass.states.get(entity_id))
+    assert state.state != STATE_UNKNOWN
+
+    setattr(single_eco_device.ecocomfort2_devices["56789"], field, sentinel)
+    await async_poll(hass, freezer)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
