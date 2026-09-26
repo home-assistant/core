@@ -61,6 +61,9 @@
     "entity_not_grouped": {
       "message": "Entity {entity_id} is not joined to a group"
     },
+    "external_source_queue": {
+      "message": "Announcements are not supported while the HEOS queue contains {count} item(s)"
+    },
     "integration_not_loaded": {
       "message": "The HEOS integration is not loaded"
     },
