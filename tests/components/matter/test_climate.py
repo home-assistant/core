@@ -1,6 +1,6 @@
 """Test Matter locks."""
 
-from unittest.mock import MagicMock, call
+from unittest.mock import AsyncMock, MagicMock, call
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
@@ -14,7 +14,13 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import Platform
+from homeassistant.components.matter.const import (
+    ATTR_EXPIRATION_IN_MINUTES,
+    ATTR_PRESET_HANDLE,
+    ATTR_UNIQUE_ID,
+    DOMAIN,
+)
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -775,3 +781,65 @@ async def test_thermostat_with_null_local_temperature(
     state = hass.states.get("climate.longan_link_hvac")
     assert state
     assert state.attributes["current_temperature"] is None
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_thermostat"])
+async def test_add_thermostat_suggestion(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test the add_thermostat_suggestion entity service."""
+    matter_client.send_device_command = AsyncMock(
+        return_value=clusters.Thermostat.Commands.AddThermostatSuggestionResponse(
+            uniqueID=7
+        )
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "add_thermostat_suggestion",
+        {
+            ATTR_ENTITY_ID: "climate.mock_thermostat",
+            ATTR_PRESET_HANDLE: "01",
+            ATTR_EXPIRATION_IN_MINUTES: 30,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.Thermostat.Commands.AddThermostatSuggestion(
+            presetHandle=b"\x01",
+            expirationInMinutes=30,
+        ),
+    )
+    assert result["climate.mock_thermostat"] == {"unique_id": 7}
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_thermostat"])
+async def test_remove_thermostat_suggestion(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test the remove_thermostat_suggestion entity service."""
+    await hass.services.async_call(
+        DOMAIN,
+        "remove_thermostat_suggestion",
+        {
+            ATTR_ENTITY_ID: "climate.mock_thermostat",
+            ATTR_UNIQUE_ID: 7,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.Thermostat.Commands.RemoveThermostatSuggestion(uniqueID=7),
+    )

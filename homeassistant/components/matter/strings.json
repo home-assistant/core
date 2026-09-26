@@ -640,6 +640,15 @@
       "tank_volume": {
         "name": "Tank volume"
       },
+      "thermostat_suggestion_effective_time": {
+        "name": "Suggestion effective"
+      },
+      "thermostat_suggestion_expiration_time": {
+        "name": "Suggestion expires"
+      },
+      "thermostat_suggestion_not_following_reason": {
+        "name": "Suggestion not followed reason"
+      },
       "thread_channel": {
         "name": "Thread channel"
       },
@@ -769,6 +778,20 @@
     }
   },
   "services": {
+    "add_thermostat_suggestion": {
+      "description": "Suggests a temporary preset for a limited duration (Matter Thermostat Suggestions feature).",
+      "fields": {
+        "expiration_in_minutes": {
+          "description": "Number of minutes after which the suggestion expires if not accepted.",
+          "name": "Expiration"
+        },
+        "preset_handle": {
+          "description": "Hex-encoded handle of an existing preset to suggest (see the preset_handle values reported by the thermostat).",
+          "name": "Preset handle"
+        }
+      },
+      "name": "Add thermostat suggestion"
+    },
     "clear_lock_credential": {
       "description": "Removes a credential from a lock.",
       "fields": {
@@ -824,6 +847,16 @@
         }
       },
       "name": "Open commissioning window"
+    },
+    "remove_thermostat_suggestion": {
+      "description": "Removes a previously added thermostat suggestion.",
+      "fields": {
+        "unique_id": {
+          "description": "Unique ID of the suggestion to remove, as returned by add_thermostat_suggestion.",
+          "name": "Unique ID"
+        }
+      },
+      "name": "Remove thermostat suggestion"
     },
     "set_lock_credential": {
       "description": "Adds or updates a credential on a lock.",
