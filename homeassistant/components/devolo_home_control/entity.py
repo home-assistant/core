@@ -20,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 class DevoloDeviceEntity(Entity):
     """Abstract representation of a device within devolo Home Control."""
 
+    _attr_device_info: dr.DeviceInfo
     _attr_has_entity_name = True
 
     def __init__(
@@ -53,10 +54,9 @@ class DevoloDeviceEntity(Entity):
     @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
-        assert self.device_info
-        assert self.device_info["name"]  # The name was set on entity creation
+        assert self._attr_device_info["name"]  # The name was set on entity creation
         self.subscriber = Subscriber(
-            self.device_info["name"], callback=self.sync_callback
+            self._attr_device_info["name"], callback=self.sync_callback
         )
         self._homecontrol.publisher.register(
             self._device_instance.uid, self.subscriber, self.sync_callback

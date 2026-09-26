@@ -52,6 +52,7 @@ class BeoBase:
 class BeoEntity(Entity, BeoBase):
     """Base Entity for Bang & Olufsen entities."""
 
+    _attr_device_info: DeviceInfo
     _attr_has_entity_name = True
     _attr_should_poll = False
 
