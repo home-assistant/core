@@ -1,7 +1,7 @@
 """Issue repair flow for Anthropic."""
 
 from collections.abc import Iterator
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import anthropic
 from anthropic.resources.messages.messages import DEPRECATED_MODELS
@@ -17,7 +17,13 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import CONF_CHAT_MODEL, DOMAIN
+from .const import (
+    CONF_CHAT_MODEL,
+    CONF_THINKING_EFFORT,
+    DEFAULT,
+    DOMAIN,
+    THINKING_EFFORT_NONE_SUPPORTED_MODELS,
+)
 from .coordinator import model_alias
 
 if TYPE_CHECKING:
@@ -30,7 +36,7 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
     _subentry_iter: Iterator[tuple[str, str]] | None
     _current_entry_id: str | None
     _current_subentry_id: str | None
-    _model_list_cache: dict[str, list[SelectOptionDict]] | None
+    _model_list_cache: dict[str, list[anthropic.types.ModelInfo]] | None
 
     def __init__(self) -> None:
         """Initialize the flow."""
@@ -45,7 +51,24 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
     ) -> RepairsFlowResult:
         """Handle the steps of a fix flow."""
         if user_input and user_input.get(CONF_CHAT_MODEL):
-            self._async_update_current_subentry(user_input)
+            try:
+                await self._async_update_current_subentry(user_input)
+            except anthropic.AnthropicError as err:
+                if self.cur_step is None:
+                    raise
+                return self.async_show_form(
+                    step_id="init",
+                    data_schema=self.add_suggested_values_to_schema(
+                        cast(probatio.Schema, self.cur_step["data_schema"]), user_input
+                    ),
+                    errors={CONF_CHAT_MODEL: "api_error"},
+                    description_placeholders={
+                        **(self.cur_step["description_placeholders"] or {}),
+                        "message": err.message
+                        if isinstance(err, anthropic.APIError)
+                        else str(err),
+                    },
+                )
 
         target = await self._async_next_target()
         if target is None:
@@ -54,16 +77,21 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
         entry, subentry, model = target
         if self._model_list_cache is None:
             self._model_list_cache = {}
-        if entry.entry_id in self._model_list_cache:
-            model_list = self._model_list_cache[entry.entry_id]
-        else:
+        if entry.entry_id not in self._model_list_cache:
             client = entry.runtime_data.client
-            model_list = [
-                model_option
-                for model_option in await self.get_model_list(client)
-                if model_option["value"] not in DEPRECATED_MODELS
-            ]
-            self._model_list_cache[entry.entry_id] = model_list
+            try:
+                models = (await client.models.list(timeout=10.0)).data
+            except anthropic.AnthropicError:
+                models = []
+            self._model_list_cache[entry.entry_id] = models
+        model_list = [
+            SelectOptionDict(
+                label=model_info.display_name,
+                value=model_alias(model_info.id),
+            )
+            for model_info in self._model_list_cache[entry.entry_id]
+            if model_alias(model_info.id) not in DEPRECATED_MODELS
+        ]
 
         family = (
             model.removeprefix("claude-")
@@ -107,22 +135,6 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
             },
         )
 
-    async def get_model_list(
-        self, client: anthropic.AsyncAnthropic
-    ) -> list[SelectOptionDict]:
-        """Get list of available models."""
-        try:
-            models = (await client.models.list(timeout=10.0)).data
-        except anthropic.AnthropicError:
-            models = []
-        return [
-            SelectOptionDict(
-                label=model_info.display_name,
-                value=model_alias(model_info.id),
-            )
-            for model_info in models
-        ]
-
     def _iter_deprecated_subentries(self) -> Iterator[tuple[str, str]]:
         """Yield entry/subentry pairs that use deprecated models."""
         for entry in self.hass.config_entries.async_entries(DOMAIN):
@@ -164,7 +176,7 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
             self._current_subentry_id = subentry_id
             return entry, subentry, model
 
-    def _async_update_current_subentry(self, user_input: dict[str, str]) -> None:
+    async def _async_update_current_subentry(self, user_input: dict[str, str]) -> None:
         """Update the currently selected subentry."""
         if (
             self._current_entry_id is None
@@ -185,6 +197,31 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
             **subentry.data,
             CONF_CHAT_MODEL: user_input[CONF_CHAT_MODEL],
         }
+        if (
+            subentry.data.get(CONF_THINKING_EFFORT) == "none"
+            and (alias := model_alias(user_input[CONF_CHAT_MODEL]))
+            not in THINKING_EFFORT_NONE_SUPPORTED_MODELS
+        ):
+            model_info = next(
+                (
+                    model
+                    for model in (self._model_list_cache or {}).get(entry.entry_id, [])
+                    if model_alias(model.id) == alias
+                ),
+                None,
+            )
+            if model_info is None:
+                model_info = await entry.runtime_data.client.models.retrieve(
+                    user_input[CONF_CHAT_MODEL], timeout=10.0
+                )
+            if (
+                model_info.capabilities
+                and model_info.capabilities.thinking.types.adaptive.supported
+                and model_alias(model_info.id)
+                not in THINKING_EFFORT_NONE_SUPPORTED_MODELS
+            ):
+                updated_data[CONF_THINKING_EFFORT] = DEFAULT[CONF_THINKING_EFFORT]
+
         self.hass.config_entries.async_update_subentry(
             entry,
             subentry,
