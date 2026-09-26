@@ -1,0 +1,5 @@
+{
+  "domain": "kaco",
+  "name": "KACO new energy",
+  "integrations": ["kaco_modbus", "kaco_rs485"]
+}
