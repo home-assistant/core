@@ -324,6 +324,7 @@ homeassistant.components.integration.*
 homeassistant.components.intelliclima.*
 homeassistant.components.intent.*
 homeassistant.components.intent_script.*
+homeassistant.components.iont.*
 homeassistant.components.ios.*
 homeassistant.components.iotty.*
 homeassistant.components.ipp.*
