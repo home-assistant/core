@@ -1,8 +1,10 @@
 """Tests for the Interactions API helpers in Google Generative AI Conversation."""
 
 from types import SimpleNamespace
+from typing import override
 from unittest.mock import MagicMock
 
+from google.genai import interactions
 from google.genai.types import HarmCategory
 import probatio
 import pytest
@@ -49,6 +51,7 @@ def test_format_tools_for_interactions() -> None:
             }
         )
 
+        @override
         async def async_call(
             self,
             hass: HomeAssistant,
@@ -61,11 +64,10 @@ def test_format_tools_for_interactions() -> None:
 
     formatted = format_tools_for_interactions([tool])
     assert formatted == [
-        {
-            "type": "function",
-            "name": "test_tool",
-            "description": "A test tool",
-            "parameters": {
+        interactions.Function(
+            name="test_tool",
+            description="A test tool",
+            parameters={
                 "type": "object",
                 "properties": {
                     "location": {"type": "string"},
@@ -74,17 +76,17 @@ def test_format_tools_for_interactions() -> None:
                 "required": ["location", "count"],
                 "additionalProperties": False,
             },
-        }
+        )
     ]
 
 
 def test_format_tools_google_search() -> None:
     """Test formatting Google Search tool for Interactions API."""
     formatted = format_tools_for_interactions([], enable_google_search=True)
-    assert formatted == [{"type": "google_search"}]
+    assert formatted == [interactions.GoogleSearch()]
 
     formatted_none = format_tools_for_interactions(None, enable_google_search=True)
-    assert formatted_none == [{"type": "google_search"}]
+    assert formatted_none == [interactions.GoogleSearch()]
 
 
 def test_format_response_format() -> None:
@@ -93,10 +95,10 @@ def test_format_response_format() -> None:
 
     schema = probatio.Schema({probatio.Required("status"): str})
     formatted = format_response_format(schema)
-    assert formatted == {
-        "type": "text",
-        "mime_type": "application/json",
-        "schema": {
+    assert formatted == interactions.TextResponseFormat(
+        type="text",
+        mime_type="application/json",
+        schema_={
             "type": "object",
             "properties": {
                 "status": {"type": "string"},
@@ -104,7 +106,7 @@ def test_format_response_format() -> None:
             "required": ["status"],
             "additionalProperties": False,
         },
-    }
+    )
 
 
 def test_create_safety_settings() -> None:
@@ -155,8 +157,10 @@ def test_build_interaction_request_full_parameters() -> None:
         CONF_THINKING_LEVEL: "high",
     }
     safety_settings = create_safety_settings({})
-    tools = [{"type": "google_search"}]
-    response_format = {"type": "text", "mime_type": "application/json", "schema": {}}
+    tools = [interactions.GoogleSearch()]
+    response_format = interactions.TextResponseFormat(
+        type="text", mime_type="application/json", schema_={}
+    )
 
     request = build_interaction_request(
         model="gemini-3.1-flash-lite",
