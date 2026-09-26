@@ -35,6 +35,38 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "ac_maintenance_reminder": {
+        "name": "AC maintenance"
+      },
+      "air_cleaner_reminder": {
+        "name": "Air cleaner"
+      },
+      "air_filter_reminder": {
+        "name": "Air filter"
+      },
+      "dehumidifier_filter_reminder": {
+        "name": "Dehumidifier filter"
+      },
+      "economizer_reminder": {
+        "name": "Economizer"
+      },
+      "furnace_filter_reminder": {
+        "name": "Furnace filter"
+      },
+      "humidifier_filter_reminder": {
+        "name": "Humidifier filter"
+      },
+      "hvac_maintenance_reminder": {
+        "name": "HVAC maintenance"
+      },
+      "uv_lamp_reminder": {
+        "name": "UV lamp"
+      },
+      "ventilator_reminder": {
+        "name": "Ventilator"
+      }
+    },
     "climate": {
       "ecobee": {
         "state_attributes": {

@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from pyecobee import (
     ECOBEE_API_KEY,
+    ECOBEE_OPTIONS_NOTIFICATIONS,
     ECOBEE_PASSWORD,
     ECOBEE_REFRESH_TOKEN,
     ECOBEE_USERNAME,
@@ -98,7 +99,11 @@ class EcobeeData:
 
         if api_key:
             self.ecobee = Ecobee(
-                config={ECOBEE_API_KEY: api_key, ECOBEE_REFRESH_TOKEN: refresh_token}
+                config={
+                    ECOBEE_API_KEY: api_key,
+                    ECOBEE_REFRESH_TOKEN: refresh_token,
+                    ECOBEE_OPTIONS_NOTIFICATIONS: True,
+                }
             )
         elif username and password:
             self.ecobee = Ecobee(
@@ -106,6 +111,7 @@ class EcobeeData:
                     ECOBEE_USERNAME: username,
                     ECOBEE_PASSWORD: password,
                     ECOBEE_REFRESH_TOKEN: refresh_token,
+                    ECOBEE_OPTIONS_NOTIFICATIONS: True,
                 }
             )
         else:

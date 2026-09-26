@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from pyecobee import (
     ECOBEE_API_KEY,
+    ECOBEE_OPTIONS_NOTIFICATIONS,
     ECOBEE_PASSWORD,
     ECOBEE_REFRESH_TOKEN,
     ECOBEE_USERNAME,
@@ -304,3 +305,47 @@ async def test_runtime_refresh_persists_new_refresh_token(
     await hass.async_block_till_done()
 
     assert entry.data[CONF_REFRESH_TOKEN] == "rotated-refresh-token"
+
+
+async def test_api_key_path_passes_notifications_option(hass: HomeAssistant) -> None:
+    """API-key auth includes ECOBEE_OPTIONS_NOTIFICATIONS in the Ecobee config."""
+    entry = _api_key_entry(hass)
+    ecobee = _build_mock_ecobee()
+
+    with (
+        patch(
+            "homeassistant.components.ecobee.Ecobee", return_value=ecobee
+        ) as mock_cls,
+        patch("homeassistant.components.ecobee.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    config_arg = mock_cls.call_args[1]["config"]
+    assert config_arg[ECOBEE_OPTIONS_NOTIFICATIONS] is True
+
+
+async def test_credentials_path_passes_notifications_option(
+    hass: HomeAssistant,
+) -> None:
+    """Username/password auth includes ECOBEE_OPTIONS_NOTIFICATIONS in the Ecobee config."""
+    entry = _credentials_entry(hass)
+    ecobee = _build_mock_ecobee(
+        config={
+            ECOBEE_USERNAME: "user@example.com",
+            ECOBEE_PASSWORD: "test-password",
+            ECOBEE_REFRESH_TOKEN: "new-refresh-token",
+        }
+    )
+
+    with (
+        patch(
+            "homeassistant.components.ecobee.Ecobee", return_value=ecobee
+        ) as mock_cls,
+        patch("homeassistant.components.ecobee.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    config_arg = mock_cls.call_args[1]["config"]
+    assert config_arg[ECOBEE_OPTIONS_NOTIFICATIONS] is True
