@@ -78,6 +78,9 @@ SEARCH_PLAY_FEATURES = (
     MediaPlayerEntityFeature.SEARCH_MEDIA | MediaPlayerEntityFeature.PLAY_MEDIA
 )
 
+# Some players return hundreds of results, which would fill the LLM context.
+MAX_SEARCH_RESULTS = 20
+
 TARGET_SCHEMA = {
     probatio.Optional("name"): cv.string,
     probatio.Optional("area"): cv.string,
@@ -167,6 +170,7 @@ class MediaSearchTool(Tool):
             return_response=True,
         )
         search_media = cast(dict[str, SearchMedia], service_result)[entity_id]
+        playable = [item for item in search_media.result if item.can_play]
         results: list[JsonValueType] = [
             {
                 "title": item.title,
@@ -174,8 +178,7 @@ class MediaSearchTool(Tool):
                 ATTR_MEDIA_CONTENT_TYPE: item.media_content_type,
                 ATTR_MEDIA_CONTENT_ID: item.media_content_id,
             }
-            for item in search_media.result
-            if item.can_play
+            for item in playable[:MAX_SEARCH_RESULTS]
         ]
         if not results:
             return ToolResult(data={"results": results})

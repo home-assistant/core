@@ -258,6 +258,35 @@ async def test_search_media(
     assert search_calls[0].data == service_data
 
 
+async def test_search_media_limits_results(hass: HomeAssistant) -> None:
+    """Test the search tool returns at most 20 playable results."""
+    tracks = [
+        BrowseMedia(
+            title=f"Track {index}",
+            media_class=MediaClass.TRACK,
+            media_content_type=MediaType.TRACK,
+            media_content_id=f"library://track/{index}",
+            can_play=True,
+            can_expand=False,
+        )
+        for index in range(25)
+    ]
+    async_mock_service(
+        hass,
+        DOMAIN,
+        SERVICE_SEARCH_MEDIA,
+        response={ENTITY_ID: SearchMedia(result=[ARTIST, *tracks])},
+    )
+
+    result = await _async_call_tool(
+        hass, "media_player__search_media", {"search_query": "track"}
+    )
+
+    assert [item["title"] for item in result.data["results"]] == [
+        f"Track {index}" for index in range(20)
+    ]
+
+
 async def test_search_media_no_results(hass: HomeAssistant) -> None:
     """Test the search tool returns an empty list when nothing matches."""
     async_mock_service(
