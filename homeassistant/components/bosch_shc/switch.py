@@ -5,10 +5,14 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, override
 
 from boschshcpy import (
+    BypassService,
     CameraLightService,
     PowerSwitchService,
     PrivacyModeService,
+    SHCShutterContact2,
+    SHCShutterContact2Plus,
     SHCSmartPlug,
+    SilentModeService,
     ThermostatService,
 )
 from boschshcpy.device import SHCDevice
@@ -94,6 +98,94 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
     "presencesimulation": SHCSwitchEntityDescription(
         key="presencesimulation",
         device_class=SwitchDeviceClass.SWITCH,
+        on_key="enabled",
+        on_value=True,
+        should_poll=False,
+    ),
+    "bypass": SHCSwitchEntityDescription(
+        key="bypass",
+        translation_key="bypass",
+        device_class=SwitchDeviceClass.SWITCH,
+        on_key="bypass",
+        on_value=BypassService.State.BYPASS_ACTIVE,
+        should_poll=False,
+    ),
+    "energy_saving_mode_enabled": SHCSwitchEntityDescription(
+        key="energy_saving_mode_enabled",
+        translation_key="energy_saving_mode_enabled",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="energy_saving_mode_enabled",
+        on_value=True,
+        should_poll=False,
+    ),
+    "humidity_warning_enabled": SHCSwitchEntityDescription(
+        key="humidity_warning_enabled",
+        translation_key="humidity_warning_enabled",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="humidity_warning_enabled",
+        on_value=True,
+        should_poll=False,
+    ),
+    "intrusion_alarm": SHCSwitchEntityDescription(
+        key="intrusion_alarm",
+        translation_key="intrusion_alarm",
+        device_class=SwitchDeviceClass.SWITCH,
+        on_key="intrusion_alarm",
+        on_value=True,
+        should_poll=False,
+    ),
+    "nightly_promise_enabled": SHCSwitchEntityDescription(
+        key="nightly_promise_enabled",
+        translation_key="nightly_promise_enabled",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="nightly_promise_enabled",
+        on_value=True,
+        should_poll=False,
+    ),
+    "pet_immunity_enabled": SHCSwitchEntityDescription(
+        key="pet_immunity_enabled",
+        translation_key="pet_immunity_enabled",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="pet_immunity_enabled",
+        on_value=True,
+        should_poll=False,
+    ),
+    "tamper_protection_enabled": SHCSwitchEntityDescription(
+        key="tamper_protection_enabled",
+        translation_key="tamper_protection_enabled",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="tamper_protection_enabled",
+        on_value=True,
+        should_poll=False,
+    ),
+    "silent_mode": SHCSwitchEntityDescription(
+        key="silent_mode",
+        translation_key="silent_mode",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="silentmode",
+        on_value=SilentModeService.State.MODE_SILENT,
+        should_poll=False,
+    ),
+    "smart_sensitivity_enabled": SHCSwitchEntityDescription(
+        key="smart_sensitivity_enabled",
+        translation_key="smart_sensitivity_enabled",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="smart_sensitivity_enabled",
+        on_value=True,
+        should_poll=False,
+    ),
+    "vibration_enabled": SHCSwitchEntityDescription(
+        key="vibration_enabled",
+        translation_key="vibration_enabled",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
         on_key="enabled",
         on_value=True,
         should_poll=False,
@@ -226,6 +318,155 @@ async def async_setup_entry(
             )
         )
 
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["bypass"],
+        )
+        for switch in session.device_helper.shutter_contacts2
+    )
+
+    entities.extend(
+        SHCBypassInfiniteSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+        )
+        for switch in session.device_helper.shutter_contacts2
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["vibration_enabled"],
+            unique_id_suffix="vibration_enabled",
+        )
+        for switch in session.device_helper.shutter_contacts2
+        if isinstance(switch, SHCShutterContact2Plus)
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["pet_immunity_enabled"],
+            unique_id_suffix="pet_immunity",
+        )
+        for switch in session.device_helper.motion_detectors2
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["tamper_protection_enabled"],
+            unique_id_suffix="tamper_protection",
+        )
+        for switch in session.device_helper.motion_detectors2
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["intrusion_alarm"],
+        )
+        for switch in session.device_helper.smoke_detectors
+        if switch.supports_intrusion_alarm
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["silent_mode"],
+            unique_id_suffix="silent_mode",
+        )
+        for switch in session.device_helper.thermostats
+        if switch.supports_silentmode
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["nightly_promise_enabled"],
+        )
+        for switch in session.device_helper.twinguards
+        if switch.supports_nightly_promise
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["energy_saving_mode_enabled"],
+            unique_id_suffix="energy_saving_mode",
+        )
+        for switch in session.device_helper.smart_plugs
+        if switch.supports_energy_saving_mode
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["energy_saving_mode_enabled"],
+            unique_id_suffix="energy_saving_mode",
+        )
+        for switch in session.device_helper.smart_plugs_compact
+        if switch.supports_energy_saving_mode
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["humidity_warning_enabled"],
+        )
+        for switch in (
+            *session.device_helper.thermostats,
+            *session.device_helper.roomthermostats,
+        )
+        if getattr(switch, "supports_display_configuration", False)
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["smart_sensitivity_enabled"],
+            unique_id_suffix="smart_sensitivity",
+        )
+        for switch in session.device_helper.motion_detectors2
+        if switch.supports_smart_sensitivity
+    )
+
     async_add_entities(entities)
 
 
@@ -308,3 +549,35 @@ class SHCRoutingSwitch(SHCEntity, SwitchEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._device.routing = False
+
+
+class SHCBypassInfiniteSwitch(SHCEntity, SwitchEntity):
+    """Representation of a SHC alarm-bypass "never expires" switch."""
+
+    _attr_translation_key = "bypass_infinite"
+    _attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_entity_category = EntityCategory.CONFIG
+    _device: SHCShutterContact2
+
+    def __init__(
+        self, hass: HomeAssistant, device: SHCDevice, parent_id: str, entry_id: str
+    ) -> None:
+        """Initialize an SHC bypass-never-expires switch."""
+        super().__init__(hass, device, parent_id, entry_id)
+        self._attr_unique_id = f"{device.serial}_bypass_infinite"
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return the state of the switch."""
+        return self._device.bypass_infinite
+
+    @override
+    def turn_on(self, **kwargs: Any) -> None:
+        """Turn the switch on."""
+        self._device.set_bypass_configuration(infinite=True)
+
+    @override
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn the switch off."""
+        self._device.set_bypass_configuration(infinite=False)

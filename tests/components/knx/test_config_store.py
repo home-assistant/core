@@ -17,9 +17,11 @@ from homeassistant.components.knx.storage.config_store import (
 )
 from homeassistant.components.knx.storage.const import CONF_DATA
 from homeassistant.components.knx.storage.entity_store_schema import (
+    BaseEntityConfig,
     BinarySensorKnxConfig,
     DateKnxConfig,
     DatetimeKnxConfig,
+    KnxEntityData,
     NotifyKnxConfig,
     NumberKnxConfig,
     SceneKnxConfig,
@@ -751,7 +753,7 @@ async def test_load_applies_schema_defaults_and_coercion(
     )
     assert hass.states.get("light.missing_defaults") is not None
     config_store = hass.data[KNX_MODULE_KEY].config_store
-    light_config = config_store.get_entity_configs(Platform.LIGHT)[LIGHT_UID][DOMAIN]
+    light_config = config_store.get_entity_configs(Platform.LIGHT)[LIGHT_UID].knx
     assert light_config["color_temp_min"] == 2700
     assert light_config["color_temp_max"] == 6000
 
@@ -980,16 +982,23 @@ def test_typed_config_storage_roundtrip(
     validated = validate_entity_data(
         {CONF_PLATFORM: platform, CONF_DATA: {"entity": entity_input, "knx": knx_input}}
     )[CONF_DATA]
-    assert isinstance(validated[DOMAIN], config_type)
+    assert isinstance(validated, KnxEntityData)
+    assert validated.entity == BaseEntityConfig(name="test")
+    assert isinstance(validated.knx, config_type)
 
     stored = to_storage_dict(validated)
+    assert stored["entity"] == {
+        "name": "test",
+        "device_info": None,
+        "entity_category": None,
+    }
     assert stored["knx"] == knx_stored
     assert json.loads(json.dumps(stored)) == stored  # storage is JSON
 
     reloaded = validate_entity_data({CONF_PLATFORM: platform, CONF_DATA: stored})[
         CONF_DATA
     ]
-    assert reloaded[DOMAIN] == validated[DOMAIN]
+    assert reloaded == validated
     assert to_storage_dict(reloaded) == stored
 
 

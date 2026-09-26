@@ -1,4 +1,4 @@
-"""Test the Sofar Inverter Modbus binary sensor platform."""
+"""Tests for the Sofar binary sensor platform."""
 
 from unittest.mock import patch
 

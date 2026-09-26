@@ -13,7 +13,7 @@ aiozoneinfo==0.2.3
 annotatedyaml==1.0.2
 astral==2.2
 async-interrupt==1.2.2
-async-upnp-client==0.48.1
+async-upnp-client==0.48.2
 atomicwrites-homeassistant==1.4.1
 attrs==26.1.0
 audioop-lts==0.2.2
@@ -36,7 +36,7 @@ fnv-hash-fast==2.0.3
 gazetteer-matcher==1.1.0
 go2rtc-client==0.4.0
 ha-ffmpeg==3.2.2
-habluetooth==7.0.0
+habluetooth==7.1.2
 hass-nabucasa==2.7.0
 hassil==3.12.1
 home-assistant-bluetooth==2.0.0
@@ -66,13 +66,13 @@ PyYAML==6.0.3
 requests==2.34.2
 securetar==2026.4.1
 serialx==1.10.0
-SQLAlchemy==2.0.52
+SQLAlchemy==2.0.54
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
 typing-extensions>=4.16.0,<5.0
 ulid-transform==2.2.9
 urllib3>=2.0
-uv==0.12.13
+uv==0.12.17
 webrtc-models==0.3.0
 yarl==1.25.1
 zeroconf==0.151.3
@@ -253,9 +253,6 @@ caio<0.12.3
 # https://github.com/auth0/auth0-python/releases/tag/5.0.0
 auth0-python<5.0
 
-# Setuptools >=82.0.0 doesn't contain pkg_resources anymore
-setuptools<82.0.0
-
 # backoff and python-backoff share the same package name
 # pin versions which are mostly compatible to each other
 backoff==2.2.1
@@ -268,7 +265,7 @@ python-backoff<2.4.0
 azure-kusto-data==4.5.1
 azure-kusto-ingest==4.5.1
 coloredlogs==15.0.1
-setuptools==81.0.0
+setuptools==84.0.0
 
 # Pin cffi to 2.0.0 to avoid version mismatch with the pre-baked _cffi_backend in the base image.
 # https://github.com/home-assistant/core/issues/175832

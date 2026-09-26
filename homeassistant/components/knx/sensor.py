@@ -36,7 +36,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.util.enum import try_parse_enum
 
-from .const import ATTR_SOURCE, CONF_SYNC_STATE, DOMAIN, KNX_MODULE_KEY
+from .const import ATTR_SOURCE, CONF_SYNC_STATE, KNX_MODULE_KEY
 from .dpt import get_supported_dpts
 from .entity import (
     KnxUiEntity,
@@ -47,9 +47,7 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .schema import SensorSchema
-from .storage.config_store import KnxEntityData
-from .storage.const import CONF_ENTITY
-from .storage.entity_store_schema import SensorKnxConfig
+from .storage.entity_store_schema import KnxEntityData, SensorKnxConfig
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -256,16 +254,16 @@ class KnxUiSensor(_KnxSensor, KnxUiEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=unique_id,
-            entity_config=config[CONF_ENTITY],
+            entity_config=config.entity,
         )
-        knx_conf = config[DOMAIN]
+        knx_conf = config.knx
         dpt_string = knx_conf.ga_sensor.dpt
         assert dpt_string is not None  # required for sensor
         dpt_info = get_supported_dpts()[dpt_string]
 
         self._device = XknxSensor(
             knx_module.xknx,
-            name=config[CONF_ENTITY][CONF_NAME],
+            name=config.entity.xknx_name,
             group_address_state=knx_conf.ga_sensor.state_and_passive(),
             sync_state=knx_conf.sync_state,
             always_callback=True,

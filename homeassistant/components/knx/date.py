@@ -21,7 +21,6 @@ from .const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
-    DOMAIN,
     KNX_ADDRESS,
     KNX_MODULE_KEY,
 )
@@ -32,9 +31,7 @@ from .entity import (
     build_yaml_unique_id,
 )
 from .knx_module import KNXModule
-from .storage.config_store import KnxEntityData
-from .storage.const import CONF_ENTITY
-from .storage.entity_store_schema import DateKnxConfig
+from .storage.entity_store_schema import DateKnxConfig, KnxEntityData
 
 
 async def async_setup_entry(
@@ -137,12 +134,12 @@ class KnxUiDate(_KNXDate, KnxUiEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=unique_id,
-            entity_config=config[CONF_ENTITY],
+            entity_config=config.entity,
         )
-        knx_conf = config[DOMAIN]
+        knx_conf = config.knx
         self._device = XknxDateDevice(
             knx_module.xknx,
-            name=config[CONF_ENTITY][CONF_NAME],
+            name=config.entity.xknx_name,
             localtime=False,
             group_address=knx_conf.ga_date.write,
             group_address_state=knx_conf.ga_date.state_and_passive(),

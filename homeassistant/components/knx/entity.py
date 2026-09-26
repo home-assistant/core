@@ -27,8 +27,8 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.entity_registry import RegistryEntry
 
 from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN
-from .storage.config_store import KnxEntityData, PlatformControllerBase
-from .storage.const import CONF_DEVICE_INFO
+from .storage.config_store import PlatformControllerBase
+from .storage.entity_store_schema import BaseEntityConfig, KnxEntityData
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
@@ -260,13 +260,15 @@ class KnxUiEntity(_KnxEntityBase):
     """Representation of a KNX UI entity."""
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, entity_config: dict[str, Any]
+        self, knx_module: KNXModule, unique_id: str, entity_config: BaseEntityConfig
     ) -> None:
         """Initialize the UI entity."""
         self._knx_module = knx_module
 
-        self._attr_name = entity_config[CONF_NAME]
+        self._attr_name = entity_config.name
         self._attr_unique_id = unique_id
-        self._attr_entity_category = entity_config[CONF_ENTITY_CATEGORY]
-        if device_info := entity_config[CONF_DEVICE_INFO]:
-            self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_info)})
+        self._attr_entity_category = entity_config.entity_category
+        if entity_config.device_info:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, entity_config.device_info)}
+            )

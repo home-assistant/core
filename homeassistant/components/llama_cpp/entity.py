@@ -67,7 +67,9 @@ def _format_structured_output(
 ) -> ResponseFormatJSONSchema:
     """Format structured output specification."""
     schema = probatio.to_openapi(
-        structure, custom_serializer=llm_api.custom_serializer if llm_api else None
+        structure,
+        custom_serializer=llm_api.custom_serializer if llm_api else None,
+        openapi_version="3.1.0",
     )
     return ResponseFormatJSONSchema(
         type="json_schema",
@@ -87,7 +89,9 @@ def _format_tool(
     tool_spec = FunctionDefinition(
         name=tool.name,
         parameters=probatio.to_openapi(
-            tool.parameters, custom_serializer=custom_serializer
+            tool.parameters,
+            custom_serializer=custom_serializer,
+            openapi_version="3.1.0",
         ),
     )
     if tool.description:

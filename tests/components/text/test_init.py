@@ -13,8 +13,8 @@ from homeassistant.components.text import (
     DOMAIN,
     SERVICE_SET_VALUE,
     TextMode,
-    _async_set_value,
 )
+from homeassistant.components.text.services import _async_set_value
 from homeassistant.const import MAX_LENGTH_STATE_STATE
 from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
