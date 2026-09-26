@@ -177,28 +177,53 @@ def build_interaction_request(
     return request
 
 
-def _trace_usage(chat_log: conversation.ChatLog, event: Any) -> None:
+def _decode_signature(sig: bytes | str) -> str:
+    """Decode signature to base64 string if bytes."""
+    if isinstance(sig, bytes):
+        return base64.b64encode(sig).decode("utf-8")
+    return sig
+
+
+def _parse_tool_args(args_str: str, args_dict: dict[str, Any] | None) -> dict[str, Any]:
+    """Parse tool arguments from json string or prepopulated dictionary."""
+    if args_str:
+        try:
+            return json.loads(args_str)
+        except json.JSONDecodeError as err:
+            LOGGER.error("Error decoding tool args JSON: %s", err)
+            return {}
+    if args_dict is not None:
+        return args_dict
+    return {}
+
+
+def _trace_usage(
+    chat_log: conversation.ChatLog, event: interactions.InteractionSSEEvent
+) -> None:
     """Extract and trace token usage from an event."""
-    metadata = getattr(event, "metadata", None)
-    total_usage = getattr(metadata, "total_usage", None) if metadata else None
-    interaction = getattr(event, "interaction", None)
-    interaction_usage = getattr(interaction, "usage", None) if interaction else None
-    step_usage = getattr(event, "step_usage", None)
-    usage = total_usage or interaction_usage or step_usage
+    usage: Any = None
+    match event.event_type:
+        case "step.delta":
+            if event.metadata and event.metadata.total_usage:
+                usage = event.metadata.total_usage
+        case "step.stop":
+            usage = event.step_usage or event.usage
+        case "interaction.completed":
+            usage = event.interaction.usage
     if usage is None:
         return
 
-    prompt_tokens = getattr(usage, "total_input_tokens", None)
-    if prompt_tokens is None:
-        prompt_tokens = getattr(usage, "prompt_token_count", None)
+    prompt_tokens = getattr(usage, "total_input_tokens", None) or getattr(
+        usage, "prompt_token_count", None
+    )
     cached_tokens = (
         getattr(usage, "total_cached_tokens", 0)
         or getattr(usage, "cached_content_token_count", 0)
         or 0
     )
-    output_tokens = getattr(usage, "total_output_tokens", None)
-    if output_tokens is None:
-        output_tokens = getattr(usage, "candidates_token_count", None)
+    output_tokens = getattr(usage, "total_output_tokens", None) or getattr(
+        usage, "candidates_token_count", None
+    )
 
     if prompt_tokens is not None and output_tokens is not None:
         chat_log.async_trace(
@@ -212,34 +237,33 @@ def _trace_usage(chat_log: conversation.ChatLog, event: Any) -> None:
         )
 
 
-def _check_event_error(event: Any) -> None:
+def _check_event_error(event: interactions.InteractionSSEEvent) -> None:
     """Check for error conditions in an interactions event."""
-    event_type = getattr(event, "event_type", None)
-
-    if event_type == "error":
-        error_obj = getattr(event, "error", None)
-        message = (
-            getattr(error_obj, "message", "Unknown error")
-            if error_obj
-            else "Unknown error"
-        )
-        raise HomeAssistantError(f"{ERROR_GETTING_RESPONSE}: {message}")
-
-    if event_type == "interaction.status_update":
-        status = getattr(event, "status", None)
-        if status in ("failed", "cancelled"):
-            raise HomeAssistantError(f"{ERROR_GETTING_RESPONSE} Status: {status}")
-
-    if event_type == "interaction.completed":
-        interaction = getattr(event, "interaction", None)
-        status = getattr(interaction, "status", None) if interaction else None
-        if status in ("failed", "cancelled"):
-            raise HomeAssistantError(f"{ERROR_GETTING_RESPONSE} Status: {status}")
+    match event.event_type:
+        case "error":
+            error_obj = event.error
+            message = (
+                error_obj.message
+                if error_obj and error_obj.message
+                else "Unknown error"
+            )
+            raise HomeAssistantError(f"{ERROR_GETTING_RESPONSE}: {message}")
+        case "interaction.status_update":
+            if event.status in ("failed", "cancelled"):
+                raise HomeAssistantError(
+                    f"{ERROR_GETTING_RESPONSE} Status: {event.status}"
+                )
+        case "interaction.completed":
+            interaction = event.interaction
+            if interaction and interaction.status in ("failed", "cancelled"):
+                raise HomeAssistantError(
+                    f"{ERROR_GETTING_RESPONSE} Status: {interaction.status}"
+                )
 
 
 async def transform_interactions_stream(
     chat_log: conversation.ChatLog,
-    result: AsyncIterator[Any],
+    result: AsyncIterator[interactions.InteractionSSEEvent],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     """Transform Gemini Interactions SSE stream into AssistantContentDeltaDict chunks."""
     new_message = True
@@ -264,84 +288,56 @@ async def transform_interactions_stream(
                 yield {"role": "assistant"}
                 new_message = False
 
-            match getattr(event, "event_type", None):
+            match event.event_type:
                 case "step.start":
                     step = event.step
-                    if step.type == "function_call":
-                        current_tool_id = getattr(step, "id", None)
-                        current_tool_name = getattr(step, "name", None)
-                        current_tool_args_str = ""
-                        current_tool_args_dict = None
-                        if sig := getattr(step, "signature", None):
-                            sig_str = (
-                                base64.b64encode(sig).decode("utf-8")
-                                if isinstance(sig, bytes)
-                                else sig
-                            )
-                            part_details.append(
-                                PartDetails(
-                                    part_type="function_call",
-                                    index=tool_call_index,
-                                    thought_signature=sig_str,
-                                )
-                            )
-                        if (
-                            isinstance(args := getattr(step, "arguments", None), dict)
-                            and args
-                        ):
-                            current_tool_args_dict = args
+                    match step.type:
+                        case "function_call":
+                            current_tool_id = step.id
+                            current_tool_name = step.name
+                            current_tool_args_str = ""
+                            current_tool_args_dict = None
+                            if isinstance(step.arguments, dict) and step.arguments:
+                                current_tool_args_dict = step.arguments
 
                 case "step.delta":
                     delta = event.delta
                     match delta.type:
                         case "text":
-                            if text := getattr(delta, "text", ""):
+                            if text := delta.text:
                                 yield {"content": text}
                                 content_index += len(text)
 
-                        case "thought" | "thought_summary":
-                            thought_text = getattr(delta, "text", None)
-                            if not thought_text and hasattr(delta, "content"):
-                                thought_text = getattr(delta.content, "text", None)
-                            if thought_text:
+                        case "thought":
+                            if hasattr(delta, "text") and (thought_text := delta.text):
                                 yield {"thinking_content": thought_text}
                                 thinking_content_index += len(thought_text)
 
+                        case "thought_summary":
+                            if delta.content and hasattr(delta.content, "text"):
+                                if thought_text := delta.content.text:
+                                    yield {"thinking_content": thought_text}
+                                    thinking_content_index += len(thought_text)
+
                         case "thought_signature":
-                            if sig := getattr(delta, "signature", None):
-                                sig_str = (
-                                    base64.b64encode(sig).decode("utf-8")
-                                    if isinstance(sig, bytes)
-                                    else sig
-                                )
+                            if sig := delta.signature:
                                 part_details.append(
                                     PartDetails(
                                         part_type="thought",
                                         index=thinking_content_index,
                                         length=0,
-                                        thought_signature=sig_str,
+                                        thought_signature=_decode_signature(sig),
                                     )
                                 )
 
                         case "arguments_delta":
-                            current_tool_args_str += (
-                                getattr(delta, "arguments", "") or ""
-                            )
+                            current_tool_args_str += delta.arguments or ""
 
                 case "step.stop":
                     if current_tool_name:
-                        tool_args: dict[str, Any]
-                        if current_tool_args_str:
-                            try:
-                                tool_args = json.loads(current_tool_args_str)
-                            except json.JSONDecodeError as err:
-                                LOGGER.error("Error decoding tool args JSON: %s", err)
-                                tool_args = {}
-                        elif current_tool_args_dict is not None:
-                            tool_args = current_tool_args_dict
-                        else:
-                            tool_args = {}
-
+                        tool_args = _parse_tool_args(
+                            current_tool_args_str, current_tool_args_dict
+                        )
                         yield {
                             "tool_calls": [
                                 llm.ToolInput(

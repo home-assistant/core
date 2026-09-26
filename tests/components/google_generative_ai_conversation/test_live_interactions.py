@@ -3,6 +3,7 @@
 from collections.abc import Generator
 import os
 import socket
+from typing import override
 
 from google import genai
 import probatio
@@ -85,6 +86,7 @@ async def test_live_chat_log_tool_calling(hass: HomeAssistant) -> None:
         description = "Get current weather for a city"
         parameters = probatio.Schema({probatio.Required("city"): str})
 
+        @override
         async def async_call(
             self,
             hass: HomeAssistant,
@@ -111,6 +113,7 @@ async def test_live_chat_log_tool_calling(hass: HomeAssistant) -> None:
     tool_call_deltas = [d for d in deltas if "tool_calls" in d]
     assert len(tool_call_deltas) > 0
     tool_calls = tool_call_deltas[0]["tool_calls"]
+    assert tool_calls is not None
     assert len(tool_calls) > 0
     assert tool_calls[0].tool_name == "get_weather"
     assert "city" in tool_calls[0].tool_args

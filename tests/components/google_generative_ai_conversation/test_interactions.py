@@ -1,6 +1,5 @@
 """Tests for the Interactions API helpers in Google Generative AI Conversation."""
 
-from types import SimpleNamespace
 from typing import override
 from unittest.mock import MagicMock
 
@@ -196,29 +195,35 @@ async def test_transform_interactions_stream_text() -> None:
     chat_log = MagicMock()
 
     async def mock_events():
-        yield SimpleNamespace(
-            event_type="step.start",
-            step=SimpleNamespace(type="model_output"),
+        yield interactions.StepStart(
+            index=0,
+            step=interactions.ModelOutputStep(),
         )
-        yield SimpleNamespace(
-            event_type="step.delta",
-            delta=SimpleNamespace(type="text", text="Hello, "),
+        yield interactions.StepDelta(
+            index=0,
+            delta=interactions.TextDelta(text="Hello, "),
         )
-        yield SimpleNamespace(
-            event_type="step.delta",
-            delta=SimpleNamespace(type="text", text="world!"),
-            metadata=SimpleNamespace(
-                total_usage=SimpleNamespace(
+        yield interactions.StepDelta(
+            index=0,
+            delta=interactions.TextDelta(text="world!"),
+            metadata=interactions.StepDeltaMetadata(
+                total_usage=interactions.Usage(
                     total_input_tokens=10,
                     total_cached_tokens=0,
                     total_output_tokens=5,
                 )
             ),
         )
-        yield SimpleNamespace(event_type="step.stop")
-        yield SimpleNamespace(
-            event_type="interaction.completed",
-            interaction=SimpleNamespace(status="completed"),
+        yield interactions.StepStop(index=0)
+        yield interactions.InteractionCompletedEvent(
+            interaction=interactions.InteractionSseEventInteraction(
+                id="int_1",
+                status="completed",
+                created="",
+                model="gemini-2.5-flash",
+                object="interaction",
+                updated="",
+            ),
         )
 
     deltas = [
@@ -247,31 +252,32 @@ async def test_transform_interactions_stream_thinking_and_signature() -> None:
     chat_log = MagicMock()
 
     async def mock_events():
-        yield SimpleNamespace(
-            event_type="step.start",
-            step=SimpleNamespace(type="thought"),
+        yield interactions.StepStart(
+            index=0,
+            step=interactions.ThoughtStep(),
         )
-        yield SimpleNamespace(
-            event_type="step.delta",
-            delta=SimpleNamespace(type="thought", text="Thinking deeply..."),
-        )
-        yield SimpleNamespace(
-            event_type="step.delta",
-            delta=SimpleNamespace(
-                type="thought_signature",
-                signature=b"test_sig_123",
+        yield interactions.StepDelta(
+            index=0,
+            delta=interactions.ThoughtSummaryDelta(
+                content=interactions.TextContent(text="Thinking deeply..."),
             ),
         )
-        yield SimpleNamespace(event_type="step.stop")
-        yield SimpleNamespace(
-            event_type="step.start",
-            step=SimpleNamespace(type="model_output"),
+        yield interactions.StepDelta(
+            index=0,
+            delta=interactions.ThoughtSignatureDelta(
+                signature="dGVzdF9zaWdfMTIz",
+            ),
         )
-        yield SimpleNamespace(
-            event_type="step.delta",
-            delta=SimpleNamespace(type="text", text="Result."),
+        yield interactions.StepStop(index=0)
+        yield interactions.StepStart(
+            index=1,
+            step=interactions.ModelOutputStep(),
         )
-        yield SimpleNamespace(event_type="step.stop")
+        yield interactions.StepDelta(
+            index=1,
+            delta=interactions.TextDelta(text="Result."),
+        )
+        yield interactions.StepStop(index=1)
 
     deltas = [
         delta async for delta in transform_interactions_stream(chat_log, mock_events())
@@ -299,19 +305,17 @@ async def test_transform_interactions_stream_thought_summary_nested_content() ->
     chat_log = MagicMock()
 
     async def mock_events():
-        yield SimpleNamespace(
-            event_type="step.start",
-            step=SimpleNamespace(type="thought"),
+        yield interactions.StepStart(
+            index=0,
+            step=interactions.ThoughtStep(),
         )
-        yield SimpleNamespace(
-            event_type="step.delta",
-            delta=SimpleNamespace(
-                type="thought_summary",
-                text=None,
-                content=SimpleNamespace(type="text", text="Summarized reasoning"),
+        yield interactions.StepDelta(
+            index=0,
+            delta=interactions.ThoughtSummaryDelta(
+                content=interactions.TextContent(text="Summarized reasoning"),
             ),
         )
-        yield SimpleNamespace(event_type="step.stop")
+        yield interactions.StepStop(index=0)
 
     deltas = [
         delta async for delta in transform_interactions_stream(chat_log, mock_events())
@@ -328,30 +332,27 @@ async def test_transform_interactions_stream_tool_calls_streamed() -> None:
     chat_log = MagicMock()
 
     async def mock_events():
-        yield SimpleNamespace(
-            event_type="step.start",
-            step=SimpleNamespace(
-                type="function_call",
+        yield interactions.StepStart(
+            index=0,
+            step=interactions.FunctionCallStep(
                 id="call_123",
                 name="turn_on",
-                signature="sig_call",
+                arguments={},
             ),
         )
-        yield SimpleNamespace(
-            event_type="step.delta",
-            delta=SimpleNamespace(
-                type="arguments_delta",
+        yield interactions.StepDelta(
+            index=0,
+            delta=interactions.ArgumentsDelta(
                 arguments='{"entity_id": ',
             ),
         )
-        yield SimpleNamespace(
-            event_type="step.delta",
-            delta=SimpleNamespace(
-                type="arguments_delta",
+        yield interactions.StepDelta(
+            index=0,
+            delta=interactions.ArgumentsDelta(
                 arguments='"light.living_room"}',
             ),
         )
-        yield SimpleNamespace(event_type="step.stop")
+        yield interactions.StepStop(index=0)
 
     deltas = [
         delta async for delta in transform_interactions_stream(chat_log, mock_events())
@@ -367,18 +368,6 @@ async def test_transform_interactions_stream_tool_calls_streamed() -> None:
             )
         ]
     }
-    assert deltas[2] == {
-        "native": ContentDetails(
-            part_details=[
-                PartDetails(
-                    part_type="function_call",
-                    index=0,
-                    length=0,
-                    thought_signature="sig_call",
-                )
-            ]
-        )
-    }
 
 
 async def test_transform_interactions_stream_prepopulated_tool_calls() -> None:
@@ -386,16 +375,15 @@ async def test_transform_interactions_stream_prepopulated_tool_calls() -> None:
     chat_log = MagicMock()
 
     async def mock_events():
-        yield SimpleNamespace(
-            event_type="step.start",
-            step=SimpleNamespace(
-                type="function_call",
+        yield interactions.StepStart(
+            index=0,
+            step=interactions.FunctionCallStep(
                 id="call_456",
                 name="turn_off",
                 arguments={"entity_id": "switch.ac"},
             ),
         )
-        yield SimpleNamespace(event_type="step.stop")
+        yield interactions.StepStop(index=0)
 
     deltas = [
         delta async for delta in transform_interactions_stream(chat_log, mock_events())
@@ -418,9 +406,8 @@ async def test_transform_interactions_stream_error_event() -> None:
     chat_log = MagicMock()
 
     async def mock_events():
-        yield SimpleNamespace(
-            event_type="error",
-            error=SimpleNamespace(message="Resource exhausted"),
+        yield interactions.ErrorEvent(
+            error=interactions.Error(message="Resource exhausted"),
         )
 
     with pytest.raises(HomeAssistantError, match="Resource exhausted"):
@@ -433,8 +420,8 @@ async def test_transform_interactions_stream_status_update_failed() -> None:
     chat_log = MagicMock()
 
     async def mock_events():
-        yield SimpleNamespace(
-            event_type="interaction.status_update",
+        yield interactions.InteractionStatusUpdate(
+            interaction_id="int_123",
             status="failed",
         )
 
@@ -448,9 +435,15 @@ async def test_transform_interactions_stream_failed_interaction() -> None:
     chat_log = MagicMock()
 
     async def mock_events():
-        yield SimpleNamespace(
-            event_type="interaction.completed",
-            interaction=SimpleNamespace(status="failed"),
+        yield interactions.InteractionCompletedEvent(
+            interaction=interactions.InteractionSseEventInteraction(
+                id="int_123",
+                status="failed",
+                created="",
+                model="gemini-2.5-flash",
+                object="interaction",
+                updated="",
+            ),
         )
 
     with pytest.raises(HomeAssistantError, match="Status: failed"):
