@@ -1,0 +1,21 @@
+{
+  "config": {
+    "abort": {
+      "home_server_unavailable": "The Haus-Bus network connection failed to shut down cleanly earlier and cannot be reopened until Home Assistant restarts."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "progress": {
+      "wait_for_device": "Searching for Haus-Bus devices..."
+    },
+    "step": {
+      "search_timeout": {
+        "description": "Device discovery timed out or failed. Click OK to try again."
+      },
+      "user": {
+        "description": "Perform auto-discovery of Haus-Bus devices."
+      }
+    }
+  }
+}
