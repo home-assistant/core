@@ -20,6 +20,23 @@
       '4480': 0,
     }),
     'inverter_type': 1537,
+    'link': dict({
+      'stats': dict({
+        'answered': 43,
+        'failures': dict({
+        }),
+        'median': float,
+        'p95': float,
+        'requests': 43,
+        'slowest': float,
+      }),
+      'tuning': dict({
+        'connect_delay': 0.0,
+        'spacing': 0.0,
+        'timeout': None,
+        'withdrawals': 0,
+      }),
+    }),
     'model': '4.4 KTLX-G3',
     'raw': dict({
       'holding': dict({
