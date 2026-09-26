@@ -1,6 +1,6 @@
 """The tests for the InfluxDB component."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
@@ -619,6 +619,75 @@ async def test_event_listener(
         assert write_api.call_count == 1
         assert write_api.call_args == get_mock_call(body)
         write_api.reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "mock_client", "config_ext", "get_write_api", "get_mock_call"),
+    [
+        (
+            {
+                "influxdb": {
+                    "tags_attributes": ["room"],
+                    "tags": {"site": "first\nfloor"},
+                }
+            },
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+        ),
+        (
+            {
+                "influxdb": {
+                    "tags_attributes": ["room"],
+                    "tags": {"site": "first\nfloor"},
+                }
+            },
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
+async def test_event_listener_multiline_strings(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    config_ext: dict[str, Any],
+    get_write_api: Callable[[MagicMock], MagicMock],
+    get_mock_call: Callable[..., Any],
+) -> None:
+    """Test line breaks in strings are replaced, line protocol has no escape for them."""
+    await _setup(hass, mock_client, config_ext, get_write_api)
+
+    hass.states.async_set(
+        "fake.entity_id",
+        "Avenida de Logroño, 50\n28002 Madrid\r\nEspaña",
+        {"address": "line one\nline two", "room": "living\nroom"},
+    )
+    await hass.async_block_till_done()
+    await async_wait_for_queue_to_process(hass)
+
+    body = [
+        {
+            "measurement": "fake.entity_id",
+            "tags": {
+                "domain": "fake",
+                "entity_id": "entity_id",
+                "room": "living room",
+                "site": "first floor",
+            },
+            "time": ANY,
+            "fields": {
+                "state": "Avenida de Logroño, 50 28002 Madrid España",
+                "address_str": "line one line two",
+            },
+        }
+    ]
+    write_api = get_write_api(mock_client)
+    assert write_api.call_count == 1
+    assert write_api.call_args == get_mock_call(body)
 
 
 @pytest.mark.parametrize(
