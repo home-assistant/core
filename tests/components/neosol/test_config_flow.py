@@ -37,16 +37,6 @@ PROBE_FAILURES = [
     pytest.param("info", RuntimeError("boom"), "unknown", id="unexpected"),
 ]
 
-OTHER_PORT = "/dev/ttyACM1"
-OTHER_SERIAL = "0099FFFF"
-
-# A dongle counts as configured when an entry uses its port, or its serial number on
-# another port. Only the latter needs a probe to be told apart.
-ALREADY_CONFIGURED = [
-    pytest.param(MOCK_PORT, OTHER_SERIAL, 0, id="same-port"),
-    pytest.param(OTHER_PORT, MOCK_SERIAL, 1, id="same-dongle"),
-]
-
 
 def _fail_probe(
     mock_dongle_class: MagicMock, failing_call: str, exception: Exception
@@ -143,70 +133,33 @@ async def test_port_released_when_identification_fails(
     mock_dongle.close.assert_awaited_once()
 
 
-@pytest.mark.parametrize(("entry_port", "entry_serial", "probes"), ALREADY_CONFIGURED)
-async def test_user_flow_already_configured(
-    hass: HomeAssistant,
-    mock_dongle_class: MagicMock,
-    entry_port: str,
-    entry_serial: str,
-    probes: int,
-) -> None:
-    """Test the user flow refuses a dongle that is already configured."""
-    MockConfigEntry(
-        domain=DOMAIN, data={CONF_DEVICE: entry_port}, unique_id=entry_serial
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_DEVICE: MOCK_PORT}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    # A port already in use is refused before the probe talks over it.
-    assert mock_dongle_class.open.call_count == probes
-
-
-@pytest.mark.parametrize(("entry_port", "entry_serial", "probes"), ALREADY_CONFIGURED)
-async def test_usb_discovery_already_configured(
-    hass: HomeAssistant,
-    mock_dongle_class: MagicMock,
-    entry_port: str,
-    entry_serial: str,
-    probes: int,
-) -> None:
-    """Test discovery aborts on a dongle that is already configured."""
-    MockConfigEntry(
-        domain=DOMAIN, data={CONF_DEVICE: entry_port}, unique_id=entry_serial
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USB}, data=USB_DISCOVERY_INFO
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert mock_dongle_class.open.call_count == probes
-
-
 @pytest.mark.usefixtures("mock_dongle")
-async def test_second_dongle(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test another dongle can be configured next to an existing one."""
-    MockConfigEntry(
-        domain=DOMAIN, data={CONF_DEVICE: OTHER_PORT}, unique_id=OTHER_SERIAL
-    ).add_to_hass(hass)
+@pytest.mark.parametrize(
+    ("source", "data"),
+    [
+        pytest.param(SOURCE_USER, None, id="user"),
+        pytest.param(SOURCE_USB, USB_DISCOVERY_INFO, id="usb"),
+    ],
+)
+async def test_only_one_entry_is_allowed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    source: str,
+    data: UsbServiceInfo | None,
+) -> None:
+    """Test a second dongle is refused, whatever starts the flow.
+
+    The integration takes a single config entry, so Home Assistant aborts before the
+    flow itself runs.
+    """
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_DEVICE: MOCK_PORT}
+        DOMAIN, context={"source": source}, data=data
     )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == MOCK_SERIAL
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
 
 
 @pytest.mark.usefixtures("mock_dongle")

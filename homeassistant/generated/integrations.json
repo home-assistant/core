@@ -4857,7 +4857,8 @@
       "name": "Profalux Neosol",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "assumed_state"
+      "iot_class": "assumed_state",
+      "single_config_entry": true
     },
     "ness_alarm": {
       "name": "Ness Alarm",
