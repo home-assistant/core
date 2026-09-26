@@ -10,8 +10,10 @@ from pylutron import (
     Led,
     Lutron,
     LutronException,
+    Motor,
     OccupancyGroup,
     Output,
+    Shade,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -50,9 +52,10 @@ class LutronData:
     client: Lutron
     binary_sensors: list[tuple[str, OccupancyGroup]]
     buttons: list[tuple[str, Keypad, Button]]
-    covers: list[tuple[str, Output]]
+    covers: list[tuple[str, Shade]]
     fans: list[tuple[str, Output]]
     lights: list[tuple[str, Output]]
+    motors: list[tuple[str, Motor]]
     scenes: list[tuple[str, Keypad, Button, Led | None]]
     switches: list[tuple[str, Output]]
 
@@ -85,6 +88,7 @@ async def async_setup_entry(
         covers=[],
         fans=[],
         lights=[],
+        motors=[],
         scenes=[],
         switches=[],
     )
@@ -159,7 +163,11 @@ def _setup_output(
 ) -> None:
     """Set up a Lutron output."""
     _LOGGER.debug("Working on output %s", output.type)
-    if output.type == "SYSTEM_SHADE":
+    if isinstance(output, Motor):
+        # raise/lower/stop only - separate entity class on the cover platform
+        entry_data.motors.append((area_name, output))
+        platform = Platform.COVER
+    elif isinstance(output, Shade):
         entry_data.covers.append((area_name, output))
         platform = Platform.COVER
     elif output.type == "CEILING_FAN_TYPE":
