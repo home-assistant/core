@@ -1,0 +1,12 @@
+{
+  "domain": "clicky",
+  "name": "Clicky Web Analytics",
+  "codeowners": ["@avclicky"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/clicky",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["pyclicky==0.3.0"]
+}
