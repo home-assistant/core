@@ -55,6 +55,17 @@
       "current_electricity_price": {
         "name": "Current electricity price"
       },
+      "current_electricity_tariff_group": {
+        "name": "Current electricity tariff group",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "normal": "Normal"
+        }
+      },
+      "current_sustainability_score": {
+        "name": "Current sustainability score"
+      },
       "electricity_price_low_today_end_time": {
         "name": "Electricity price low today end time"
       },
@@ -88,6 +99,9 @@
       },
       "lowest_electricity_price_tomorrow": {
         "name": "Lowest electricity price tomorrow"
+      },
+      "next_hour_electricity_price": {
+        "name": "Next hour electricity price"
       }
     }
   },

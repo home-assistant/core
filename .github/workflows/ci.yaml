@@ -349,7 +349,7 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/hadolint.json"
       - name: Check ${{ matrix.file }}
-        uses: docker://hadolint/hadolint:v2.12.0@sha256:30a8fd2e785ab6176eed53f74769e04f125afb2f74a6c52aef7d463583b6d45e
+        uses: docker://hadolint/hadolint:v2.15.1@sha256:32dac94127fd60b7b7e3fbfc65e1383b9b5e25c9bfd7b8536de7a539fe68a12d
         with:
           args: hadolint ${{ matrix.file }}
 

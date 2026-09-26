@@ -1,4 +1,4 @@
-"""Test the Sofar Inverter Modbus diagnostics."""
+"""Tests for the Sofar diagnostics."""
 
 from unittest.mock import patch
 
