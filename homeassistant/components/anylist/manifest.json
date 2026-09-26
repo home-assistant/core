@@ -1,0 +1,11 @@
+{
+  "domain": "anylist",
+  "name": "AnyList",
+  "codeowners": ["@BookCatKid"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/anylist",
+  "integration_type": "service",
+  "iot_class": "cloud_push",
+  "quality_scale": "silver",
+  "requirements": ["aioanylist==1.0.2"]
+}
