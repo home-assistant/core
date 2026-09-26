@@ -344,6 +344,76 @@
     'state': 'off',
   })
 # ---
+# name: test_fans[mock_smart_tcl_portable_ac][fan.smart_tcl_portable_ac-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'preset_modes': list([
+        'low',
+        'medium',
+        'high',
+        'auto',
+        'sleep_wind',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.smart_tcl_portable_ac',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 59>,
+    'translation_key': 'fan',
+    'unique_id': '00000000000004D2-000000000000003F-MatterNodeDevice-1-MatterFan-514-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fans[mock_smart_tcl_portable_ac][fan.smart_tcl_portable_ac-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Smart TCL Portable AC',
+      'oscillating': None,
+      'percentage': 0,
+      'percentage_step': 1.0,
+      'preset_mode': None,
+      'preset_modes': list([
+        'low',
+        'medium',
+        'high',
+        'auto',
+        'sleep_wind',
+      ]),
+      'supported_features': <FanEntityFeature: 59>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.smart_tcl_portable_ac',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_fans[silabs_fan][fan.sl_fan-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
