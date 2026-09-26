@@ -4,10 +4,10 @@ from collections.abc import Callable, Coroutine
 from functools import wraps
 from typing import TYPE_CHECKING, Any, cast
 
+import probatio
 import python_otbr_api
 from python_otbr_api import PENDING_DATASET_DELAY_TIMER, tlv_parser
 from python_otbr_api.tlv_parser import MeshcopTLVType
-import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
@@ -136,7 +136,7 @@ def async_get_otbr_data(
 @websocket_api.websocket_command(
     {
         "type": "otbr/create_network",
-        vol.Required("extended_address"): str,
+        probatio.Required("extended_address"): str,
     }
 )
 @websocket_api.require_admin
@@ -202,8 +202,8 @@ async def websocket_create_network(
 @websocket_api.websocket_command(
     {
         "type": "otbr/set_network",
-        vol.Required("extended_address"): str,
-        vol.Required("dataset_id"): str,
+        probatio.Required("extended_address"): str,
+        probatio.Required("dataset_id"): str,
     }
 )
 @websocket_api.require_admin
@@ -263,8 +263,8 @@ async def websocket_set_network(
 @websocket_api.websocket_command(
     {
         "type": "otbr/set_channel",
-        vol.Required("extended_address"): str,
-        vol.Required("channel"): int,
+        probatio.Required("extended_address"): str,
+        probatio.Required("channel"): int,
     }
 )
 @websocket_api.require_admin

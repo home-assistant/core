@@ -10,7 +10,7 @@ from elkm1_lib.panel import Panel
 from elkm1_lib.settings import Setting
 from elkm1_lib.util import pretty_const
 from elkm1_lib.zones import Zone
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -51,7 +51,9 @@ _STATE_CLASS_MAP: dict[ZoneType, SensorStateClass] = {
 }
 
 ELK_SET_COUNTER_SERVICE_SCHEMA: VolDictType = {
-    vol.Required(ATTR_VALUE): vol.All(vol.Coerce(int), vol.Range(0, 65535))
+    probatio.Required(ATTR_VALUE): probatio.All(
+        probatio.Coerce(int), probatio.Range(0, 65535)
+    )
 }
 
 

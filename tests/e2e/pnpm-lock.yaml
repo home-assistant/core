@@ -1,3 +1,161 @@
+---
+lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    configDependencies: {}
+    packageManagerDependencies:
+      pnpm:
+        specifier: 12.5.0
+        version: 12.5.0
+
+packages:
+
+  '@pnpm/exe.android-arm64@12.5.0':
+    resolution: {integrity: sha512-C4iLRWxzKsiCSpPPAd900l7WjS33i18NZtS4N5ipPoyoxa8mBDPqzCtotrVMgwLf0lg5JxFE0AclQeoElGxyqA==}
+    cpu: [arm64]
+    os: [android]
+
+  '@pnpm/exe.android-x64@12.5.0':
+    resolution: {integrity: sha512-RAIVixakgre9ZleT7+jM9yVmTyeTx9G4B4eFJpTyUWxwXYzlXQjqF8HEzZiQqSzqDrIK8wAN5M/pVBr4ir0Knw==}
+    cpu: [x64]
+    os: [android]
+
+  '@pnpm/exe.darwin-arm64@12.5.0':
+    resolution: {integrity: sha512-K8rNKO35WwekMWpXHZ6W1I/JVRj4E8eeH4WWNPHzrq5OeMncYYlonDqEe2gaq2moyB16ZZcl4M7H6O/ErdP5Fw==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@pnpm/exe.darwin-x64@12.5.0':
+    resolution: {integrity: sha512-+TiMTr/I8RVyihaXnqJAsB8Eucs9r8MAmijUfky5J2GJbA6Ohy+BoX3xN9gXtPx5SY44UfPec5Ce4/xpReNCJQ==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@pnpm/exe.freebsd-x64@12.5.0':
+    resolution: {integrity: sha512-tFJ2Em8eEsWeiwOo86e7Z9tfD8zLyGZaz80936xYFlHE+P3JAr8HNcbP00aZP0+M8PTUzRL09aU/2wF68rG8Mg==}
+    cpu: [x64]
+    os: [freebsd]
+
+  '@pnpm/exe.linux-arm64-musl@12.5.0':
+    resolution: {integrity: sha512-WW0pfDwg3yw+b3NkFucdd3BPgFTTFOHOrouzAfDZYkrBP6RZO79ibEWYaHMCgiEGD5iv+VBq5MWc2kj2v5ZmdQ==}
+    cpu: [arm64]
+    os: [linux]
+    libc: [musl]
+
+  '@pnpm/exe.linux-arm64@12.5.0':
+    resolution: {integrity: sha512-nzslUiy7LAFke3niLKdSaHcUdFeIhSKI0101u3QKWu6Q4T/75gUwTUxcMPVz2svUUmctXAdAv6cnpkyfvK2Srg==}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
+  '@pnpm/exe.linux-ppc64@12.5.0':
+    resolution: {integrity: sha512-+rAvHN7IUwrZlTSXUJre3WVWGcWg3U5KKiG6CGAKzo1mR/LVxTcluAKWX8CCcXfba0fbIKsnH6g5CKwMqQ/eKA==}
+    cpu: [ppc64]
+    os: [linux]
+    libc: [glibc]
+
+  '@pnpm/exe.linux-riscv64@12.5.0':
+    resolution: {integrity: sha512-Cw23dm6GfDmto3/W7fAmGY0+XHwwf6/5kCQxvmlXt89y7yOj+2W9bSFz35PkQbEHJg4gThzlKYuDsg3g6PGC9w==}
+    cpu: [riscv64]
+    os: [linux]
+    libc: [glibc]
+
+  '@pnpm/exe.linux-s390x@12.5.0':
+    resolution: {integrity: sha512-SETqRcig1q/LC09ABHwMsuFtMWa+M4whpkaUHNhCFUasHEQnQYgyqv/7VpnL/fIxhucF8MsWrfz2HVNlGDnIDg==}
+    cpu: [s390x]
+    os: [linux]
+    libc: [glibc]
+
+  '@pnpm/exe.linux-x64-musl@12.5.0':
+    resolution: {integrity: sha512-wk+OUvDXQBA/QigLcbqGf+dEA/K4EoC7Zur/UMMj4AgFW3gxCHsV8QOJgrEGMVdb4wp8c9MmQfMmrK4xvRiCaQ==}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
+
+  '@pnpm/exe.linux-x64@12.5.0':
+    resolution: {integrity: sha512-8n0fXtmCWMq558AD1ZeW9dImG8TwQY6ws6jsYcoRV+2uBBcLEHJ5lfeXvBj990nofwS7XZihqZDvy1LBknKWBQ==}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
+
+  '@pnpm/exe.win32-arm64@12.5.0':
+    resolution: {integrity: sha512-jYf9X9YqucxQ8cuphUO1ZoiCMfWbC8K9Wgptk5+pqh0UDTSvL+aZBWZLvx7H3x2tlzLsWlfvSgnK7OLKBdSR+w==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@pnpm/exe.win32-x64@12.5.0':
+    resolution: {integrity: sha512-j6W4tAVFsZrTxWlpzD13lMGR/dxDGpPiUAM6zssmHpU2Mkh4XE2DDHH6hs+k2o/c55gND7YyLkUShBFVBSkv4w==}
+    cpu: [x64]
+    os: [win32]
+
+  pnpm@12.5.0:
+    resolution: {integrity: sha512-nNuqNP+srhdoY1rA0j6U22IBx9Wb89ojayPWfI9reU0dqzI7zVvMUbVcjK+/bxmiTkqmHWq3dyqjtcyF4yXcTQ==}
+    engines: {node: '>=18.*'}
+    hasBin: true
+
+snapshots:
+
+  '@pnpm/exe.android-arm64@12.5.0':
+    optional: true
+
+  '@pnpm/exe.android-x64@12.5.0':
+    optional: true
+
+  '@pnpm/exe.darwin-arm64@12.5.0':
+    optional: true
+
+  '@pnpm/exe.darwin-x64@12.5.0':
+    optional: true
+
+  '@pnpm/exe.freebsd-x64@12.5.0':
+    optional: true
+
+  '@pnpm/exe.linux-arm64-musl@12.5.0':
+    optional: true
+
+  '@pnpm/exe.linux-arm64@12.5.0':
+    optional: true
+
+  '@pnpm/exe.linux-ppc64@12.5.0':
+    optional: true
+
+  '@pnpm/exe.linux-riscv64@12.5.0':
+    optional: true
+
+  '@pnpm/exe.linux-s390x@12.5.0':
+    optional: true
+
+  '@pnpm/exe.linux-x64-musl@12.5.0':
+    optional: true
+
+  '@pnpm/exe.linux-x64@12.5.0':
+    optional: true
+
+  '@pnpm/exe.win32-arm64@12.5.0':
+    optional: true
+
+  '@pnpm/exe.win32-x64@12.5.0':
+    optional: true
+
+  pnpm@12.5.0:
+    optionalDependencies:
+      '@pnpm/exe.android-arm64': 12.5.0
+      '@pnpm/exe.android-x64': 12.5.0
+      '@pnpm/exe.darwin-arm64': 12.5.0
+      '@pnpm/exe.darwin-x64': 12.5.0
+      '@pnpm/exe.freebsd-x64': 12.5.0
+      '@pnpm/exe.linux-arm64': 12.5.0
+      '@pnpm/exe.linux-arm64-musl': 12.5.0
+      '@pnpm/exe.linux-ppc64': 12.5.0
+      '@pnpm/exe.linux-riscv64': 12.5.0
+      '@pnpm/exe.linux-s390x': 12.5.0
+      '@pnpm/exe.linux-x64': 12.5.0
+      '@pnpm/exe.linux-x64-musl': 12.5.0
+      '@pnpm/exe.win32-arm64': 12.5.0
+      '@pnpm/exe.win32-x64': 12.5.0
+
+---
 lockfileVersion: '9.0'
 
 settings:
@@ -9,44 +167,34 @@ importers:
   .:
     devDependencies:
       '@playwright/test':
-        specifier: 1.61.1
-        version: 1.61.1
+        specifier: 1.63.0
+        version: 1.63.0
 
 packages:
 
-  '@playwright/test@1.61.1':
-    resolution: {integrity: sha512-8nKv6+0RJSL9FE4jYOEGXnPeM/Hg12qZpmqzZjRh3qM0Y7c3z1mrOTfFLids72RDQYVh9WpLEfR5WdpNX4fkig==}
-    engines: {node: '>=18'}
+  '@playwright/test@1.63.0':
+    resolution: {integrity: sha512-oxMK4vllB9RK5NQ2l1pq1IfOf2AvnEuj/vYGDj0H2nMtmtZpKtCwt/l00GEO6xjGfpBNAvjovvYdCm50dRQkpQ==}
+    engines: {node: '>=20'}
     hasBin: true
 
-  fsevents@2.3.2:
-    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
-    engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
-    os: [darwin]
-
-  playwright-core@1.61.1:
-    resolution: {integrity: sha512-h7Qlt6m4REp25qvIdvbDtVmD4LqVXfpRxhORv9L0jzETM05p4fuPJ3dKyuSXQxDSbXnmS79HAgi9589lGSpLkg==}
-    engines: {node: '>=18'}
+  playwright-core@1.63.0:
+    resolution: {integrity: sha512-rYCsBF/M5HjUch52bbtVONEFjv6Xu8sm8h72dNlR5bzIE1fvC/bxgspzkjSfU+MweEMmPM8KJebG6nnyxo5mCg==}
+    engines: {node: '>=20'}
     hasBin: true
 
-  playwright@1.61.1:
-    resolution: {integrity: sha512-DWnY5o3YbLWK4GovuAVwpqL+1VwGNdUGrRr++8j8PtQQzvAVZUIMjKQ90fY689sEJZJBbZVw1rXaOKSTitkzPQ==}
-    engines: {node: '>=18'}
+  playwright@1.63.0:
+    resolution: {integrity: sha512-+7ziBLidS4NaNCdt57SUDT+wYmmd5fmiQejUic/kb+YsYSCPyOOE9sebzMjNmQrsnNpDJqd4WHvV/8lfKfUDUg==}
+    engines: {node: '>=20'}
     hasBin: true
 
 snapshots:
 
-  '@playwright/test@1.61.1':
+  '@playwright/test@1.63.0':
     dependencies:
-      playwright: 1.61.1
+      playwright: 1.63.0
 
-  fsevents@2.3.2:
-    optional: true
+  playwright-core@1.63.0: {}
 
-  playwright-core@1.61.1: {}
-
-  playwright@1.61.1:
+  playwright@1.63.0:
     dependencies:
-      playwright-core: 1.61.1
-    optionalDependencies:
-      fsevents: 2.3.2
+      playwright-core: 1.63.0

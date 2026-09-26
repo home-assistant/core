@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import override
 
 from googlewifiapi import GoogleWifiAPI, GoogleWifiStatus
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -57,7 +57,7 @@ SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
         icon="mdi:update",
         value_fn=lambda status: status.software.update_status,
     ),
-    # deprecated: The uptime sensor is deprecated and will be removed in 2027.4.0. Please use last_restart instead.
+    # deprecated: The uptime sensor is deprecated and will be removed in 2027.4.0. Use last_restart instead.
     GoogleWifiSensorEntityDescription(
         key=ATTR_UPTIME,
         native_unit_of_measurement=UnitOfTime.DAYS,
@@ -83,18 +83,18 @@ SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     }
 )
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(DATA_SCHEMA).extend(
     {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)]
+        probatio.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): probatio.All(
+            cv.ensure_list, [probatio.In(SENSOR_KEYS)]
         ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 

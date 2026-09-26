@@ -1,7 +1,7 @@
 """The OpenEVSE integration."""
 
 from openevsehttp.__main__ import OpenEVSE
-from openevsehttp.exceptions import AuthenticationError
+from openevsehttp.exceptions import AuthenticationError, MissingSerial
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
@@ -15,6 +15,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
@@ -41,6 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> 
             translation_domain=DOMAIN,
             translation_key="authentication_error",
         ) from ex
+    except MissingSerial:
+        pass
 
     coordinator = OpenEVSEDataUpdateCoordinator(hass, entry, charger)
     await coordinator.async_config_entry_first_refresh()

@@ -23,7 +23,7 @@ from homeassistant.components.google_generative_ai_conversation.entity import (
 )
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import intent
+from homeassistant.helpers import intent, llm
 from homeassistant.helpers.llm import ToolInput
 
 from . import API_ERROR_500, CLIENT_ERROR_BAD_REQUEST
@@ -115,12 +115,14 @@ async def test_function_call(
             agent_id=agent_id,
             tool_call_id="01KGW7TFC1VVVK7ANHVMDA4DJ6",
             tool_name="HassGetCurrentTime",
-            tool_result={
-                "speech": {"plain": {"speech": "4:24 PM", "extra_data": None}},
-                "response_type": "action_done",
-                "speech_slots": {"time": datetime.time(16, 24, 17, 813343)},
-                "data": {"success": [], "failed": []},
-            },
+            result=llm.ToolResult(
+                data={
+                    "speech": {"plain": {"speech": "4:24 PM", "extra_data": None}},
+                    "response_type": "action_done",
+                    "speech_slots": {"time": datetime.time(16, 24, 17, 813343)},
+                    "data": {"success": [], "failed": []},
+                }
+            ),
         )
     )
     mock_chat_log.async_add_assistant_content_without_tools(
@@ -267,14 +269,17 @@ async def test_function_call(
             "name": "test_tool",
             "parts": None,
             "response": {
-                "result": "Test response",
+                "data": {"result": "Test response"},
+                "error": False,
             },
             "scheduling": None,
             "will_continue": None,
         },
         "inline_data": None,
+        "media_processing": None,
         "media_resolution": None,
         "part_metadata": None,
+        "speech_metadata": None,
         "text": None,
         "thought": None,
         "thought_signature": None,

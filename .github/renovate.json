@@ -9,6 +9,7 @@
     "dockerfile",
     "npm",
     "custom.regex",
+    "github-actions",
     "homeassistant-manifest"
   ],
 
@@ -51,11 +52,22 @@
       "matchStrings": ["RECOMMENDED_VERSION = \"(?<currentValue>[\\d.]+)\""],
       "depNameTemplate": "ghcr.io/alexxit/go2rtc",
       "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "Update the newest MariaDB entry (the latest LTS) in the CI database test matrix",
+      "managerFilePatterns": ["/^\\.github/workflows/ci\\.yaml$/"],
+      "matchStrings": [
+        "MARIADB_VERSIONS: \".*'mariadb:(?<currentValue>\\d+\\.\\d+\\.\\d+)','mysql:"
+      ],
+      "depNameTemplate": "mariadb",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
     }
   ],
 
   "minimumReleaseAge": "7 days",
-  "prConcurrentLimit": 10,
+  "prConcurrentLimit": 0,
   "prHourlyLimit": 2,
   "schedule": ["before 6am"],
 
@@ -184,6 +196,22 @@
       "labels": ["dependency"]
     },
     {
+      "description": "GitHub Actions used in our workflows (allowlisted). Runner labels and action version inputs are deliberately left out.",
+      "matchManagers": ["github-actions"],
+      "matchDepTypes": ["action", "workflow", "docker", "container", "service"],
+      "enabled": true,
+      "labels": ["dependency", "github_actions"]
+    },
+    {
+      "description": "Managed by gh aw compile. Version-locked to the gh-aw compiler; do not bump.",
+      "matchPackageNames": [
+        "github/gh-aw-actions",
+        "/^github\\/gh-aw-actions\\//",
+        "/^ghcr\\.io\\/github\\/gh-aw/"
+      ],
+      "enabled": false
+    },
+    {
       "description": "pnpm version pinned in the E2E tests packageManager field (allowlisted)",
       "matchManagers": ["npm"],
       "matchFileNames": ["tests/e2e/package.json"],
@@ -193,11 +221,24 @@
       "labels": ["dependency"]
     },
     {
-      "description": "For types-* stubs, only allow patch updates. Major/minor bumps track the upstream runtime package version and must be manually coordinated with the corresponding pin.",
-      "matchPackageNames": ["/^types-/"],
-      "matchUpdateTypes": ["patch"],
+      "description": "Playwright pinned in the E2E tests (allowlisted)",
+      "matchManagers": ["npm"],
+      "matchFileNames": ["tests/e2e/package.json"],
+      "matchPackageNames": ["@playwright/test"],
       "enabled": true,
       "labels": ["dependency"]
+    },
+    {
+      "description": "types-* stubs (allowlisted). Enabled without matchUpdateTypes, because update types are unknown when Renovate decides whether a package is enabled.",
+      "matchPackageNames": ["/^types-/"],
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "For types-* stubs, only allow patch updates. Major/minor bumps track the upstream runtime package version and must be manually coordinated with the corresponding pin.",
+      "matchPackageNames": ["/^types-/"],
+      "matchUpdateTypes": ["major", "minor"],
+      "enabled": false
     },
     {
       "description": "Pre-commit hook repos (allowlisted, matched by owner/repo)",
@@ -216,6 +257,21 @@
       "enabled": true,
       "minimumReleaseAge": null,
       "labels": ["dependency"]
+    },
+    {
+      "description": "Latest MariaDB LTS tested in CI (allowlisted). Since MariaDB 12, only the x.3 series are LTS.",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["mariadb"],
+      "allowedVersions": "/^\\d+\\.3\\.\\d+$/",
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "Only open a MariaDB PR for a new LTS series, not for its patch releases",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["mariadb"],
+      "matchUpdateTypes": ["patch"],
+      "enabled": false
     },
     {
       "description": "Group ruff pre-commit hook with its PyPI twin into one PR",
@@ -248,10 +304,33 @@
       "groupSlug": "pylint"
     },
     {
+      "description": "Group the github/codeql-action subactions into one PR (they share a release)",
+      "matchPackageNames": ["/^github\\/codeql-action(?:\\/|$)/"],
+      "groupName": "github/codeql-action",
+      "groupSlug": "codeql-action"
+    },
+    {
+      "description": "Group the actions/cache subactions into one PR (they share a release)",
+      "matchPackageNames": ["/^actions\\/cache(?:\\/|$)/"],
+      "groupName": "actions/cache",
+      "groupSlug": "actions-cache"
+    },
+    {
       "description": "Group go2rtc Dockerfile pin with const.py RECOMMENDED_VERSION into one PR",
       "matchPackageNames": ["ghcr.io/alexxit/go2rtc"],
       "groupName": "go2rtc",
       "groupSlug": "go2rtc"
+    },
+    {
+      "description": "Group the types-* stub updates into one PR",
+      "matchPackageNames": ["/^types-/"],
+      "groupName": "types stubs",
+      "groupSlug": "types-stubs"
+    },
+    {
+      "description": "uv and pnpm release almost daily, so the cooldown alone still gives a PR (and a full CI run) nearly every day. Limit them to one PR per week.",
+      "matchPackageNames": ["uv", "pnpm"],
+      "schedule": ["after 5pm on friday"]
     }
   ]
 }

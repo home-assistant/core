@@ -425,7 +425,13 @@ async def test_invalid_trigger_configuration(
     )
     # After changing the config in async_attach_trigger, the config is validated again
     # against the integration trigger. This test checks if this validation works.
-    with pytest.raises(InvalidDeviceAutomationConfig):
+    with pytest.raises(
+        InvalidDeviceAutomationConfig,
+        match=(
+            "Invalid KNX telegram trigger configuration: "
+            "invalid boolean value invalid at 'group_value_write'"
+        ),
+    ):
         await device_trigger.async_attach_trigger(
             hass,
             {

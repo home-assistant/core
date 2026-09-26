@@ -1,6 +1,5 @@
 """Tests for the swiss_public_transport sensor platform."""
 
-import json
 from unittest.mock import AsyncMock, patch
 
 from opendata_transport.exceptions import (
@@ -25,7 +24,7 @@ from . import setup_integration
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    async_load_fixture,
+    async_load_json_array_fixture,
     snapshot_platform,
 )
 from tests.test_config_entries import FrozenDateTimeFactory
@@ -93,8 +92,8 @@ async def test_fetching_data(
     assert hass.states.get("sensor.zurich_bern_line").state == "T10"
 
     # Set new data and verify it
-    mock_opendata_client.connections = json.loads(
-        await async_load_fixture(hass, "connections.json", DOMAIN)
+    mock_opendata_client.connections = (
+        await async_load_json_array_fixture(hass, "connections.json", DOMAIN)
     )[3:6]
     freezer.tick(DEFAULT_UPDATE_TIME)
     async_fire_time_changed(hass)
@@ -113,8 +112,8 @@ async def test_fetching_data(
 
     # Recover and fetch new data again
     mock_opendata_client.async_get_data.side_effect = None
-    mock_opendata_client.connections = json.loads(
-        await async_load_fixture(hass, "connections.json", DOMAIN)
+    mock_opendata_client.connections = (
+        await async_load_json_array_fixture(hass, "connections.json", DOMAIN)
     )[6:9]
     freezer.tick(DEFAULT_UPDATE_TIME)
     async_fire_time_changed(hass)

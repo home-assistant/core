@@ -1,8 +1,5 @@
 {
   "config": {
-    "abort": {
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
-    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_backbone_key": "Invalid backbone key. 32 hexadecimal digits expected.",
@@ -218,6 +215,50 @@
     },
     "dpt": {
       "options": {
+        "1": "Generic 1-bit",
+        "1_001": "Switch",
+        "1_002": "Boolean",
+        "1_003": "Enable",
+        "1_004": "Ramp",
+        "1_005": "Alarm",
+        "1_006": "Binary value",
+        "1_007": "Step",
+        "1_008": "Up / Down",
+        "1_009": "Open / Close",
+        "1_010": "Start",
+        "1_011": "State",
+        "1_012": "Invert",
+        "1_013": "Dimming send style",
+        "1_014": "Input source",
+        "1_015": "Reset",
+        "1_016": "Acknowledge",
+        "1_017": "Trigger",
+        "1_018": "Occupancy",
+        "1_019": "Window / Door",
+        "1_021": "Logical function",
+        "1_022": "Scene A/B",
+        "1_023": "Shutter / Blinds mode",
+        "1_024": "Day / Night",
+        "1_100": "Heat / Cool",
+        "1_1200": "Consumer / Producer",
+        "1_1201": "Energy direction",
+        "2": "Generic 2-bit boolean control",
+        "2_001": "Switch control",
+        "2_002": "Boolean control",
+        "2_003": "Enable control",
+        "2_004": "Ramp control",
+        "2_005": "Alarm control",
+        "2_006": "Binary value control",
+        "2_007": "Step control",
+        "2_008": "Direction 1 control",
+        "2_009": "Direction 2 control",
+        "2_010": "Start control",
+        "2_011": "State control",
+        "2_012": "Invert control",
+        "3_007": "Dimming control",
+        "3_008": "Blinds control",
+        "4_001": "Character (ASCII)",
+        "4_002": "Character (Latin-1)",
         "5": "Generic 1-byte unsigned integer",
         "5_001": "Percent (0 … 100)",
         "5_003": "Angle",
@@ -276,6 +317,8 @@
         "9_029": "Absolute humidity",
         "9_030": "Concentration",
         "9_60000": "Enthalpy",
+        "10_001": "Time of day",
+        "11_001": "Date",
         "12": "Generic 4-byte unsigned integer",
         "12_001": "Counter (0 … 4 294 967 295)",
         "12_100": "Time period (4-byte)",
@@ -383,10 +426,25 @@
         "16_000": "String (ASCII)",
         "16_001": "String (Latin-1)",
         "17_001": "Scene number",
+        "18_001": "Scene control",
+        "19_001": "Date and time",
+        "20_102": "HVAC mode",
+        "20_105": "HVAC controller mode",
+        "20_60102": "HVAC status",
         "29": "Generic 8-byte signed integer",
         "29_010": "Active energy (8-byte)",
         "29_011": "Apparent energy (8-byte)",
-        "29_012": "Reactive energy (8-byte)"
+        "29_012": "Reactive energy (8-byte)",
+        "232_600": "RGB color",
+        "235_001": "Tariff active energy",
+        "242_600": "xyY color",
+        "243_600": "xyY color transition",
+        "249_600": "Brightness and color temperature transition",
+        "250_600": "Brightness and color temperature control",
+        "251_600": "RGBW color",
+        "252_600": "Relative RGBW control",
+        "253_600": "Relative xyY control",
+        "254_600": "Relative RGB control"
       },
       "selector": {
         "label": "Select a datapoint type",
@@ -1215,11 +1273,11 @@
     },
     "extra_fields_descriptions": {
       "destination": "The trigger will listen to telegrams sent or received on these group addresses. If no address is selected, the trigger will fire for every group address.",
-      "group_value_read": "Listen on GroupValueRead telegrams.",
-      "group_value_response": "Listen on GroupValueResponse telegrams.",
-      "group_value_write": "Listen on GroupValueWrite telegrams.",
-      "incoming": "Listen on incoming telegrams.",
-      "outgoing": "Listen on outgoing telegrams."
+      "group_value_read": "Listen on GroupValueRead telegrams. These request the current value of a group address.",
+      "group_value_response": "Listen on GroupValueResponse telegrams. These answer a GroupValueRead request.",
+      "group_value_write": "Listen on GroupValueWrite telegrams. These write a new value to a group address.",
+      "incoming": "Listen on telegrams received from the KNX bus.",
+      "outgoing": "Listen on telegrams sent to the KNX bus by Home Assistant."
     },
     "trigger_type": {
       "telegram": "Telegram"
@@ -1279,6 +1337,9 @@
     }
   },
   "exceptions": {
+    "device_trigger_invalid_config": {
+      "message": "Invalid KNX telegram trigger configuration: {error}"
+    },
     "integration_not_loaded": {
       "message": "KNX integration is not loaded."
     },
@@ -1317,6 +1378,10 @@
         }
       },
       "title": "KNX Data Secure telegrams can't be decrypted"
+    },
+    "entity_validation_error": {
+      "description": "The stored configuration of the following KNX {platform} entities is invalid, so they were not set up:\n\n{entities}\n\nCorrect or delete them. Check the logs for details.",
+      "title": "Invalid KNX entity configuration"
     },
     "telegram_storage_error": {
       "description": "The configured KNX telegram storage backend failed to initialize. As a result, KNX telegrams are currently not being stored. Check the logs for details on the error and ensure your database is accessible.",
@@ -1382,14 +1447,6 @@
     }
   },
   "selector": {
-    "sensor_state_class": {
-      "options": {
-        "measurement": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement%]",
-        "measurement_angle": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement_angle%]",
-        "total": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total%]",
-        "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"
-      }
-    },
     "telegram_backend": {
       "options": {
         "postgres": "PostgreSQL (External)",
@@ -1481,6 +1538,42 @@
         }
       },
       "name": "Send to KNX bus"
+    }
+  },
+  "triggers": {
+    "telegram": {
+      "description": "Triggers when a KNX telegram is received from or sent to the bus.",
+      "fields": {
+        "destination": {
+          "description": "[%key:component::knx::device_automation::extra_fields_descriptions::destination%]",
+          "name": "[%key:component::knx::device_automation::extra_fields::destination%]"
+        },
+        "group_value_read": {
+          "description": "[%key:component::knx::device_automation::extra_fields_descriptions::group_value_read%]",
+          "name": "[%key:component::knx::device_automation::extra_fields::group_value_read%]"
+        },
+        "group_value_response": {
+          "description": "[%key:component::knx::device_automation::extra_fields_descriptions::group_value_response%]",
+          "name": "[%key:component::knx::device_automation::extra_fields::group_value_response%]"
+        },
+        "group_value_write": {
+          "description": "[%key:component::knx::device_automation::extra_fields_descriptions::group_value_write%]",
+          "name": "[%key:component::knx::device_automation::extra_fields::group_value_write%]"
+        },
+        "incoming": {
+          "description": "[%key:component::knx::device_automation::extra_fields_descriptions::incoming%]",
+          "name": "[%key:component::knx::device_automation::extra_fields::incoming%]"
+        },
+        "outgoing": {
+          "description": "[%key:component::knx::device_automation::extra_fields_descriptions::outgoing%]",
+          "name": "[%key:component::knx::device_automation::extra_fields::outgoing%]"
+        },
+        "type": {
+          "description": "KNX datapoint type used to decode the telegram payload, for example \"9.001\" or \"temperature\". If omitted, the datapoint type from the ETS project is used, when available.",
+          "name": "Datapoint type"
+        }
+      },
+      "name": "KNX telegram received or sent"
     }
   }
 }
