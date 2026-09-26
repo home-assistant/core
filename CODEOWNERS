@@ -1892,6 +1892,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/temperature/ @home-assistant/core
 /homeassistant/components/template/ @Petro31 @home-assistant/core
 /tests/components/template/ @Petro31 @home-assistant/core
+/homeassistant/components/terrestream_local/ @Xynergi
+/tests/components/terrestream_local/ @Xynergi
 /homeassistant/components/tesla_fleet/ @Bre77
 /tests/components/tesla_fleet/ @Bre77
 /homeassistant/components/tesla_wall_connector/ @einarhauks @sarabveer

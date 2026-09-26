@@ -1,0 +1,65 @@
+rules:
+  action-setup:
+    status: exempt
+    comment: The initial sensor platform defines no custom actions.
+  appropriate-polling: done
+  brands:
+    status: todo
+    comment: Artwork is prepared for a coordinated brands PR.
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: The integration defines no custom actions.
+  docs-triggers:
+    status: exempt
+    comment: Standard state and numeric-state triggers are documented.
+  docs-conditions:
+    status: exempt
+    comment: Standard numeric and availability conditions apply.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+  action-exceptions: todo
+  config-entry-unloading: todo
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: todo
+  integration-owner: todo
+  log-when-unavailable: todo
+  parallel-updates: todo
+  reauthentication-flow: todo
+  test-coverage: todo
+  devices: todo
+  diagnostics: todo
+  discovery: todo
+  discovery-update-info: todo
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category: todo
+  entity-device-class: todo
+  entity-disabled-by-default: todo
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices: todo
+  async-dependency: todo
+  inject-websession: todo
+  strict-typing: todo
