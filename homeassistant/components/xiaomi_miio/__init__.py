@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
+from construct.core import ChecksumError
 from miio import (
     AirFresh,
     AirFreshA1,
@@ -29,7 +30,9 @@ from miio import (
     RoborockVacuum,
     Timer,
     VacuumStatus,
+    WifiRepeater,
 )
+from miio.wifirepeater import WifiRepeaterStatus
 
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -45,6 +48,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
+    CONF_WIFI_REPEATER,
     DOMAIN,
     MODEL_AIRFRESH_A1,
     MODEL_AIRFRESH_T2017,
@@ -147,6 +151,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: XiaomiMiioConfigEntry) -
         await async_setup_gateway_entry(hass, entry)
         return True
 
+    if entry.data[CONF_FLOW_TYPE] == CONF_WIFI_REPEATER:
+        await async_setup_repeater_entry(hass, entry)
+        return True
+
     return bool(
         entry.data[CONF_FLOW_TYPE] != CONF_DEVICE
         or await async_setup_device_entry(hass, entry)
@@ -161,6 +169,8 @@ def get_platforms(config_entry):
 
     if flow_type == CONF_GATEWAY:
         return GATEWAY_PLATFORMS
+    if flow_type == CONF_WIFI_REPEATER:
+        return [Platform.DEVICE_TRACKER]
     if flow_type == CONF_DEVICE:
         if model in MODELS_SWITCH:
             return SWITCH_PLATFORMS
@@ -201,6 +211,8 @@ def _async_update_data_default(hass, device):
         try:
             return await _async_fetch_data()
         except DeviceException as ex:
+            if isinstance(ex.__cause__, ChecksumError):
+                raise ConfigEntryAuthFailed from ex
             if getattr(ex, "code", None) != -9999:
                 raise UpdateFailed(ex) from ex
             _LOGGER.error(
@@ -210,6 +222,8 @@ def _async_update_data_default(hass, device):
         try:
             return await _async_fetch_data()
         except DeviceException as ex:
+            if isinstance(ex.__cause__, ChecksumError):
+                raise ConfigEntryAuthFailed from ex
             raise UpdateFailed(ex) from ex
 
     return update
@@ -290,6 +304,8 @@ def _async_update_data_vacuum(
         try:
             return await execute_update()
         except DeviceException as ex:
+            if isinstance(ex.__cause__, ChecksumError):
+                raise ConfigEntryAuthFailed from ex
             if getattr(ex, "code", None) != -9999:
                 raise UpdateFailed(ex) from ex
             _LOGGER.error(
@@ -300,6 +316,8 @@ def _async_update_data_vacuum(
         try:
             return await execute_update()
         except DeviceException as ex:
+            if isinstance(ex.__cause__, ChecksumError):
+                raise ConfigEntryAuthFailed from ex
             raise UpdateFailed(ex) from ex
 
     return update_async
@@ -456,6 +474,59 @@ async def async_setup_gateway_entry(
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, GATEWAY_PLATFORMS)
+
+
+async def async_setup_repeater_entry(
+    hass: HomeAssistant, entry: XiaomiMiioConfigEntry
+) -> None:
+    """Set up the Xiaomi Mi WiFi Repeater 2 component from a config entry."""
+    host = entry.data[CONF_HOST]
+    token = entry.data[CONF_TOKEN]
+    name = entry.title
+    repeater_id = entry.unique_id
+
+    assert repeater_id
+
+    _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
+
+    device = WifiRepeater(host, token)
+    try:
+        device_info = await hass.async_add_executor_job(device.info)
+    except DeviceException as error:
+        if isinstance(error.__cause__, ChecksumError):
+            raise ConfigEntryAuthFailed from error
+        raise ConfigEntryNotReady from error
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
+        identifiers={(DOMAIN, repeater_id)},
+        manufacturer="Xiaomi",
+        name=name,
+        model=device_info.model,
+        sw_version=device_info.firmware_version,
+        hw_version=device_info.hardware_version,
+    )
+
+    coordinator: DataUpdateCoordinator[WifiRepeaterStatus] = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        config_entry=entry,
+        name=name,
+        update_method=_async_update_data_default(hass, device),
+        # Polling interval. Will only be polled if there are subscribers.
+        update_interval=UPDATE_INTERVAL,
+    )
+
+    # Trigger first data fetch
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = XiaomiMiioRuntimeData(
+        device=device, device_coordinator=coordinator
+    )
+
+    await hass.config_entries.async_forward_entry_setups(entry, get_platforms(entry))
 
 
 async def async_setup_device_entry(

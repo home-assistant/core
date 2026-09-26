@@ -3,82 +3,159 @@
 import logging
 from typing import override
 
-from miio import DeviceException, WifiRepeater
-import probatio
+from miio.wifirepeater import WifiRepeaterStatus
 
-from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
-    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    DeviceScanner,
-)
-from homeassistant.const import CONF_HOST, CONF_TOKEN
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.components.device_tracker import ScannerEntity
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .typing import XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {
-        probatio.Required(CONF_HOST): cv.string,
-        probatio.Required(CONF_TOKEN): probatio.All(
-            cv.string, probatio.Length(min=32, max=32)
-        ),
-    }
-)
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: XiaomiMiioConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the device tracker platform for a Xiaomi Mi WiFi Repeater 2."""
+    coordinator = entry.runtime_data.device_coordinator
+    tracked: dict[str, XiaomiMiioRepeaterDevice] = {}
+
+    # Restore entities for devices that were previously seen but are not
+    # currently connected, so they keep reporting not_home instead of vanishing.
+    entity_registry = er.async_get(hass)
+    # unique_id is f"{entry_id}_{mac}". format_mac passes unknown formats
+    # through unchanged, so the prefix is matched explicitly.
+    prefix = f"{entry.entry_id}_"
+    restore_entities: list[XiaomiMiioRepeaterDevice] = []
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    ):
+        if entity_entry.domain != "device_tracker" or not entity_entry.unique_id:
+            continue
+        if not entity_entry.unique_id.startswith(prefix):
+            continue
+        mac = format_mac(entity_entry.unique_id.removeprefix(prefix))
+        if mac not in tracked:
+            tracked[mac] = entity = XiaomiMiioRepeaterDevice(coordinator, mac)
+            restore_entities.append(entity)
+    if restore_entities:
+        async_add_entities(restore_entities)
+
+    @callback
+    def add_tracked_entities() -> None:
+        """Add entities for stations that are connected but not yet tracked."""
+        add_entities(coordinator, coordinator.data, async_add_entities, tracked)
+
+    entry.async_on_unload(coordinator.async_add_listener(add_tracked_entities))
+    add_tracked_entities()
 
 
-def get_scanner(
-    hass: HomeAssistant, config: ConfigType
-) -> XiaomiMiioDeviceScanner | None:
-    """Return a Xiaomi MiIO device scanner."""
-    scanner = None
-    config = config[DEVICE_TRACKER_DOMAIN]
+@callback
+def add_entities(
+    coordinator: DataUpdateCoordinator[WifiRepeaterStatus],
+    station_info: WifiRepeaterStatus | None,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    tracked: dict[str, XiaomiMiioRepeaterDevice],
+) -> None:
+    """Add new tracker entities for devices connected to the repeater."""
+    if station_info is None:
+        return
 
-    host = config[CONF_HOST]
-    token = config[CONF_TOKEN]
-
-    _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
-
-    try:
-        device = WifiRepeater(host, token)
-        device_info = device.info()
-        _LOGGER.debug(
-            "%s %s %s detected",
-            device_info.model,
-            device_info.firmware_version,
-            device_info.hardware_version,
-        )
-        scanner = XiaomiMiioDeviceScanner(device)
-    except DeviceException as ex:
-        _LOGGER.error("Device unavailable or token incorrect: %s", ex)
-
-    return scanner
-
-
-class XiaomiMiioDeviceScanner(DeviceScanner):
-    """Class which queries a Xiaomi Mi WiFi Repeater."""
-
-    def __init__(self, device):
-        """Initialize the scanner."""
-        self.device = device
-
-    @override
-    async def async_scan_devices(self):
-        """Scan for devices and return a list containing found device IDs."""
+    new_tracked: list[XiaomiMiioRepeaterDevice] = []
+    for station in station_info.associated_stations:
+        if not isinstance(station, dict):
+            continue
         try:
-            station_info = await self.hass.async_add_executor_job(self.device.status)
-            _LOGGER.debug("Got new station info: %s", station_info)
-        except DeviceException as ex:
-            _LOGGER.error("Unable to fetch the state: %s", ex)
-            return []
+            mac = format_mac(station["mac"])
+        except KeyError, TypeError, ValueError:
+            _LOGGER.debug("Skipping station with invalid MAC address: %s", station)
+            continue
+        if mac in tracked:
+            continue
+        tracked[mac] = entity = XiaomiMiioRepeaterDevice(coordinator, mac)
+        new_tracked.append(entity)
 
-        return [device["mac"] for device in station_info.associated_stations]
+    if new_tracked:
+        async_add_entities(new_tracked)
+
+
+class XiaomiMiioRepeaterDevice(ScannerEntity):
+    """Representation of a device connected to a Xiaomi Mi WiFi Repeater 2."""
+
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[WifiRepeaterStatus],
+        mac: str,
+    ) -> None:
+        """Initialize the entity.
+
+        The repeater does not expose the name of the associated device,
+        so the MAC address is used as the entity name.
+        """
+        self._coordinator = coordinator
+        self._mac = mac
+        # Scoped to the config entry: the same client can be connected to
+        # multiple configured repeaters.
+        assert coordinator.config_entry is not None
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{mac}"
+        self._attr_name = mac
+        self._attr_mac_address = mac
+        self._attr_ip_address: str | None = None
+        self._connected = False
+        # add_to_platform_start runs before async_added_to_hass and reads
+        # is_connected/ip_address for connected-device discovery.
+        self.async_update_state()
+
+    @property
+    @override
+    def unique_id(self) -> str | None:
+        """Return the unique ID of the entity."""
+        return self._attr_unique_id
+
+    @callback
+    def async_update_state(self) -> None:
+        """Update the state from the latest station list."""
+        self._connected = False
+        self._attr_ip_address = None
+        data = self._coordinator.data
+        if data is None:
+            return
+        for station in data.associated_stations:
+            if not isinstance(station, dict):
+                continue
+            try:
+                station_mac = format_mac(station["mac"])
+            except KeyError, TypeError, ValueError:
+                continue
+            if station_mac == self._mac:
+                self._connected = True
+                self._attr_ip_address = station.get("ip")
+                break
+
+    @property
+    @override
+    def is_connected(self) -> bool:
+        """Return true if the device is connected to the repeater."""
+        return self._connected
+
+    @callback
+    def async_on_demand_update(self) -> None:
+        """Update state from the latest station list."""
+        self.async_update_state()
+        self.async_write_ha_state()
 
     @override
-    async def async_get_device_name(self, device: str) -> str | None:
-        """Return None.
-
-        The repeater doesn't provide the name of the associated device.
-        """
-        return None
+    async def async_added_to_hass(self) -> None:
+        """Register state update callback."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_on_demand_update)
+        )
