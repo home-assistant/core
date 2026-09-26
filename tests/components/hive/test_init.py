@@ -1,5 +1,6 @@
 """Tests for the Hive integration __init__."""
 
+from operator import attrgetter
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -13,11 +14,20 @@ from homeassistant.components.hive.const import (
     SERVICE_BOOST_HOT_WATER,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+
+_CLIMATE_ENTITY_ID = "climate.thermostat_heating"
+_WATER_HEATER_ENTITY_ID = "water_heater.hot_water"
 
 _ENTRY_DATA = {
     CONF_USERNAME: "user@example.com",
@@ -74,6 +84,49 @@ _GLASS_BREAK_BINARY_SENSOR = {
         "online": True,
     },
     "status": {"state": False},
+}
+
+_CLIMATE_DEVICE = {
+    "device_id": "hive-climate-id",
+    "hiveID": "hive-climate-id",
+    "hiveName": "Heating",
+    "haName": "Heating",
+    "device_name": "Thermostat",
+    "hiveType": "Heating",
+    "parentDevice": "hive-hub-id",
+    "temperatureunit": "C",
+    "min_temp": 7,
+    "max_temp": 35,
+    "deviceData": {
+        "model": "Thermostat",
+        "version": "1.2.3",
+        "manufacturer": "Hive",
+        "online": True,
+    },
+    "status": {
+        "mode": "SCHEDULE",
+        "action": False,
+        "current_temperature": 20,
+        "target_temperature": 21,
+        "boost": "OFF",
+    },
+}
+
+_WATER_HEATER_DEVICE = {
+    "device_id": "hive-water-heater-id",
+    "hiveID": "hive-water-heater-id",
+    "hiveName": "Hot Water",
+    "haName": "Hot Water",
+    "device_name": "Hot Water",
+    "hiveType": "HotWater",
+    "parentDevice": "hive-hub-id",
+    "deviceData": {
+        "model": "Hot Water",
+        "version": "1.2.3",
+        "manufacturer": "Hive",
+        "online": True,
+    },
+    "status": {"current_operation": "SCHEDULE"},
 }
 
 # The hub's own diagnostic sensor reports the hub as its own parent
@@ -283,3 +336,100 @@ async def test_all_platforms_forwarded_without_devices(
     assert entry.state is ConfigEntryState.LOADED
     assert "Error setting up entry" not in caplog.text
     assert "Error unloading entry" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "service",
+    [SERVICE_BOOST_HEATING_ON, SERVICE_BOOST_HEATING_OFF, SERVICE_BOOST_HOT_WATER],
+)
+async def test_services_registered_without_config_entry(
+    hass: HomeAssistant, service: str
+) -> None:
+    """Services are registered on component setup, without any config entry."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert not hass.config_entries.async_entries(DOMAIN)
+    assert hass.services.has_service(DOMAIN, service)
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "entity_id", "mock_path", "expected_args"),
+    [
+        pytest.param(
+            SERVICE_BOOST_HEATING_ON,
+            {"time_period": "01:30:00", "temperature": 24.5},
+            _CLIMATE_ENTITY_ID,
+            "heating.setBoostOn",
+            (90, 24.5),
+            id="boost_heating_on",
+        ),
+        pytest.param(
+            SERVICE_BOOST_HEATING_OFF,
+            {},
+            _CLIMATE_ENTITY_ID,
+            "heating.setBoostOff",
+            (),
+            id="boost_heating_off",
+        ),
+        pytest.param(
+            SERVICE_BOOST_HOT_WATER,
+            {"time_period": "00:45:00", "on_off": "on"},
+            _WATER_HEATER_ENTITY_ID,
+            "hotwater.setBoostOn",
+            (45,),
+            id="boost_hot_water_on",
+        ),
+        pytest.param(
+            SERVICE_BOOST_HOT_WATER,
+            {"on_off": "off"},
+            _WATER_HEATER_ENTITY_ID,
+            "hotwater.setBoostOff",
+            (),
+            id="boost_hot_water_off",
+        ),
+    ],
+)
+async def test_services_call_entity_method(
+    hass: HomeAssistant,
+    service: str,
+    service_data: dict[str, Any],
+    entity_id: str,
+    mock_path: str,
+    expected_args: tuple[Any, ...],
+) -> None:
+    """Calling a Hive service reaches the targeted entity's method."""
+    entry = MockConfigEntry(domain=DOMAIN, data=_ENTRY_DATA)
+    entry.add_to_hass(hass)
+
+    mock_hive = _make_mock_hive(
+        {},
+        {"climate": [_CLIMATE_DEVICE], "water_heater": [_WATER_HEATER_DEVICE]},
+    )
+    mock_hive.session.updateData = AsyncMock()
+    mock_hive.heating.getClimate = AsyncMock(side_effect=lambda device: device)
+    mock_hive.heating.setBoostOn = AsyncMock()
+    mock_hive.heating.setBoostOff = AsyncMock()
+    mock_hive.hotwater.getWaterHeater = AsyncMock(side_effect=lambda device: device)
+    mock_hive.hotwater.setBoostOn = AsyncMock()
+    mock_hive.hotwater.setBoostOff = AsyncMock()
+
+    with patch(
+        "homeassistant.components.hive.Hive",
+        return_value=mock_hive,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id)
+
+    await hass.services.async_call(
+        DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: entity_id, **service_data},
+        blocking=True,
+    )
+
+    mock_method = attrgetter(mock_path)(mock_hive)
+    assert mock_method.call_count == 1
+    assert mock_method.call_args.args[1:] == expected_args
