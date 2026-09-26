@@ -362,6 +362,45 @@ async def test_power_config_validation_multiple_methods() -> None:
         )
 
 
+async def test_power_config_validation_rejects_external_stat_for_transform() -> None:
+    """Test that power transform configs reject external statistics."""
+    # Inverted mode with an external statistic
+    with pytest.raises(probatio.Invalid, match="does not support external statistics"):
+        POWER_CONFIG_SCHEMA({"stat_rate_inverted": "sunnyportal2ha:netzbezug_leistung"})
+
+    # Combined mode with an external statistic on either side
+    with pytest.raises(probatio.Invalid, match="does not support external statistics"):
+        POWER_CONFIG_SCHEMA(
+            {
+                "stat_rate_from": "sunnyportal2ha:netzbezug_leistung",
+                "stat_rate_to": "sensor.battery_charge",
+            }
+        )
+    with pytest.raises(probatio.Invalid, match="does not support external statistics"):
+        POWER_CONFIG_SCHEMA(
+            {
+                "stat_rate_from": "sensor.battery_discharge",
+                "stat_rate_to": "sunnyportal2ha:einspeisung_leistung",
+            }
+        )
+
+    # Plain stat_rate with an external statistic stays valid: no transform
+    # sensor is created for it.
+    validated = POWER_CONFIG_SCHEMA({"stat_rate": "sunnyportal2ha:netzbezug_leistung"})
+    assert validated["stat_rate"] == "sunnyportal2ha:netzbezug_leistung"
+
+    # Entity IDs still pass for the transform modes.
+    validated = POWER_CONFIG_SCHEMA({"stat_rate_inverted": "sensor.battery_power"})
+    assert validated["stat_rate_inverted"] == "sensor.battery_power"
+    validated = POWER_CONFIG_SCHEMA(
+        {
+            "stat_rate_from": "sensor.battery_discharge",
+            "stat_rate_to": "sensor.battery_charge",
+        }
+    )
+    assert validated["stat_rate_from"] == "sensor.battery_discharge"
+
+
 async def test_flow_from_validation_multiple_prices() -> None:
     """Test that flow_from validation rejects both entity and number price."""
     # Both entity_energy_price and number_energy_price should fail

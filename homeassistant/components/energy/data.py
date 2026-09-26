@@ -367,6 +367,25 @@ def _validate_power_config(val: dict[str, Any]) -> dict[str, Any]:
     return val
 
 
+def _reject_external_stat_for_power_transform(val: dict[str, Any]) -> dict[str, Any]:
+    """Reject external statistics as sources for power transform sensors.
+
+    The transform sensor (EnergyPowerSensor) reads its sources from the
+    state machine and subscribes to state changes, so an external
+    statistic ID (which exists only in recorder statistics) would leave
+    the sensor permanently unavailable. The plain stat_rate mode is
+    unaffected because it creates no transform sensor.
+    """
+    for key in ("stat_rate_inverted", "stat_rate_from", "stat_rate_to"):
+        stat_id = val.get(key)
+        if stat_id is not None and not valid_entity_id(stat_id):
+            raise probatio.Invalid(
+                f"{key} does not support external statistics; "
+                "use a sensor entity instead"
+            )
+    return val
+
+
 POWER_CONFIG_SCHEMA = probatio.All(
     probatio.Schema(
         {
@@ -380,6 +399,7 @@ POWER_CONFIG_SCHEMA = probatio.All(
         }
     ),
     _validate_power_config,
+    _reject_external_stat_for_power_transform,
 )
 
 
