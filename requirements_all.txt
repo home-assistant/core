@@ -1659,7 +1659,7 @@ monarchmoneycommunity==1.6.0
 monzopy==1.8.0
 
 # homeassistant.components.mopeka
-mopeka-iot-ble==0.8.0
+mopeka-iot-ble==1.1.0
 
 # homeassistant.components.motion_blinds
 motionblinds==0.6.30
