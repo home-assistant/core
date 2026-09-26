@@ -1,177 +1,149 @@
 """Support for Xiaomi Mi routers."""
 
-from http import HTTPStatus
-import logging
 from typing import override
 
 import probatio
-import requests
 
 from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    DeviceScanner,
+    AsyncSeeCallback,
+    ScannerEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import issue_registry as ir
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DEFAULT_USERNAME, DOMAIN
+from .coordinator import XiaomiConfigEntry, XiaomiCoordinator, XiaomiDeviceInfo
+
+PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Required(CONF_USERNAME, default="admin"): cv.string,
+        probatio.Required(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
         probatio.Required(CONF_PASSWORD): cv.string,
     }
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> XiaomiDeviceScanner | None:
-    """Validate the configuration and return a Xiaomi Device Scanner."""
-    scanner = XiaomiDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_see: AsyncSeeCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
+    """Import legacy YAML configuration."""
 
-    return scanner if scanner.success_init else None
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_HOST: config[CONF_HOST],
+            CONF_USERNAME: config[CONF_USERNAME],
+            CONF_PASSWORD: config[CONF_PASSWORD],
+        },
+    )
 
-
-class XiaomiDeviceScanner(DeviceScanner):
-    """Class which queries a Xiaomi Mi router.
-
-    Adapted from Luci scanner.
-    """
-
-    def __init__(self, config):
-        """Initialize the scanner."""
-        self.host = config[CONF_HOST]
-        self.username = config[CONF_USERNAME]
-        self.password = config[CONF_PASSWORD]
-
-        self.last_results = {}
-        self.token = _get_token(self.host, self.username, self.password)
-
-        self.mac2name = None
-        self.success_init = self.token is not None
-
-    @override
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        self._update_info()
-        return self.last_results
-
-    @override
-    def get_device_name(self, device):
-        """Return the name of the given device or None if we don't know."""
-        if self.mac2name is None:
-            result = self._retrieve_list_with_retry()
-            if result:
-                hosts = [x for x in result if "mac" in x and "name" in x]
-                mac2name_list = [(x["mac"].upper(), x["name"]) for x in hosts]
-                self.mac2name = dict(mac2name_list)
-            else:
-                # Error, handled in the _retrieve_list_with_retry
-                return None
-        return self.mac2name.get(device.upper(), None)
-
-    def _update_info(self):
-        """Ensure the information from the router are up to date.
-
-        Returns true if scanning successful.
-        """
-        if not self.success_init:
-            return False
-
-        result = self._retrieve_list_with_retry()
-        if result:
-            self._store_result(result)
-            return True
-        return False
-
-    def _retrieve_list_with_retry(self):
-        """Retrieve the device list with a retry if token is invalid.
-
-        Return the list if successful.
-        """
-        _LOGGER.debug("Refreshing device list")
-        result = _retrieve_list(self.host, self.token)
-        if result:
-            return result
-
-        _LOGGER.debug("Refreshing token and retrying device list refresh")
-        self.token = _get_token(self.host, self.username, self.password)
-        return _retrieve_list(self.host, self.token)
-
-    def _store_result(self, result):
-        """Extract and store the device list in self.last_results."""
-        self.last_results = []
-        for device_entry in result:
-            # Check if the device is marked as connected
-            if int(device_entry["online"]) == 1:
-                self.last_results.append(device_entry["mac"])
-
-
-def _retrieve_list(host, token, **kwargs):
-    """Get device list for the given host."""
-    url = "http://{}/cgi-bin/luci/;stok={}/api/misystem/devicelist"
-    url = url.format(host, token)
-    try:
-        res = requests.get(url, timeout=10, **kwargs)
-    except requests.exceptions.Timeout:
-        _LOGGER.exception("Connection to the router timed out at URL %s", url)
-        return None
-    if res.status_code != HTTPStatus.OK:
-        _LOGGER.exception("Connection failed with http code %s", res.status_code)
-        return None
-    try:
-        result = res.json()
-    except ValueError:
-        # If json decoder could not parse the response
-        _LOGGER.exception("Failed to parse response from mi router")
-        return None
-    try:
-        xiaomi_code = result["code"]
-    except KeyError:
-        _LOGGER.exception("No field code in response from mi router. %s", result)
-        return None
-    if xiaomi_code == 0:
-        try:
-            return result["list"]
-        except KeyError:
-            _LOGGER.exception("No list in response from mi router. %s", result)
-            return None
-    else:
-        _LOGGER.warning(
-            "Receive wrong Xiaomi code %s, expected 0 in response %s",
-            xiaomi_code,
-            result,
-        )
-        return None
-
-
-def _get_token(host, username, password):
-    """Get authentication token for the given host+username+password."""
-    url = f"http://{host}/cgi-bin/luci/api/xqsystem/login"
-    data = {"username": username, "password": password}
-    try:
-        res = requests.post(url, data=data, timeout=5)
-    except requests.exceptions.Timeout:
-        _LOGGER.exception("Connection to the router timed out")
-        return None
-    if res.status_code == HTTPStatus.OK:
-        try:
-            result = res.json()
-        except ValueError:
-            # If JSON decoder could not parse the response
-            _LOGGER.exception("Failed to parse response from mi router")
-            return None
-        try:
-            return result["token"]
-        except KeyError:
-            error_message = (
-                "Xiaomi token cannot be refreshed, response from url: [%s] was: [%s]"
+    if result["type"] is FlowResultType.ABORT:
+        reason = result["reason"]
+        if reason in ("invalid_auth", "cannot_connect"):
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"yaml_import_{reason}_{config[CONF_HOST]}",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key=f"yaml_import_{reason}",
+                translation_placeholders={"host": config[CONF_HOST]},
             )
-            _LOGGER.exception(error_message, url, result)
-            return None
+            return True
 
-    _LOGGER.error("Invalid response: [%s] at url: [%s]", res, url)
-    return None
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_device_tracker_yaml_{config[CONF_HOST]}",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_device_tracker_yaml",
+        translation_placeholders={"host": config[CONF_HOST]},
+    )
+
+    return True
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: XiaomiConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up device tracker for the Xiaomi component."""
+    coordinator = entry.runtime_data
+    tracked: set[str] = set()
+
+    @callback
+    def _async_add_new_devices() -> None:
+        """Add entities for devices seen for the first time."""
+        if new_macs := coordinator.data.keys() - tracked:
+            tracked.update(new_macs)
+            async_add_entities(
+                XiaomiScannerEntity(coordinator, mac, coordinator.data[mac])
+                for mac in new_macs
+            )
+
+    _async_add_new_devices()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
+
+
+class XiaomiScannerEntity(CoordinatorEntity[XiaomiCoordinator], ScannerEntity):
+    """Representation of a device connected to a Xiaomi Mi router."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: XiaomiCoordinator,
+        mac: str,
+        device: XiaomiDeviceInfo,
+    ) -> None:
+        """Initialize the scanner entity."""
+        super().__init__(coordinator)
+        self._mac = mac
+        # Scoped to the config entry: the same client can be connected to
+        # multiple configured routers.
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{mac}"
+        self._attr_mac_address = mac
+        self._attr_hostname = device.get("name")
+        self._attr_ip_address = device.get("ip")
+        self._attr_name = device.get("name") or mac
+
+    @property
+    @override
+    def unique_id(self) -> str | None:
+        """Return the unique ID of the entity."""
+        return self._attr_unique_id
+
+    @property
+    @override
+    def is_connected(self) -> bool:
+        """Return true if the device is connected to the router."""
+        return self._mac in self.coordinator.data
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if self._mac in self.coordinator.data:
+            device = self.coordinator.data[self._mac]
+            self._attr_hostname = device.get("name")
+            self._attr_ip_address = device.get("ip")
+            self._attr_name = device.get("name") or self._mac
+        super()._handle_coordinator_update()

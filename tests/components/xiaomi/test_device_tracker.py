@@ -1,315 +1,306 @@
-"""The tests for the Xiaomi router device tracker platform."""
+"""Tests for the xiaomi device tracker."""
 
-from http import HTTPStatus
-import logging
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-import requests
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.components.xiaomi import device_tracker as xiaomi
-from homeassistant.components.xiaomi.device_tracker import get_scanner
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
+from homeassistant.components.xiaomi.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    STATE_HOME,
+    STATE_NOT_HOME,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-_LOGGER = logging.getLogger(__name__)
+from .conftest import LATE_DEVICE, MOCK_DEVICE_LIST, _create_device
 
-INVALID_USERNAME = "bob"
-TOKEN_TIMEOUT_USERNAME = "tok"
-ERROR_STATUS_USERNAME = "err"
-PASSWORD = "passwordTest"
-URL_AUTHORIZE = "http://192.168.0.1/cgi-bin/luci/api/xqsystem/login"
-URL_LIST_END = "api/misystem/devicelist"
-
-FIRST_CALL = True
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-def mocked_requests(*args, **kwargs):
-    """Mock requests.get invocations."""
-
-    class MockResponse:
-        """Class to represent a mocked response."""
-
-        def __init__(self, json_data, status_code) -> None:
-            """Initialize the mock response class."""
-            self.json_data = json_data
-            self.status_code = status_code
-
-        def json(self):
-            """Return the json of the response."""
-            return self.json_data
-
-        @property
-        def content(self):
-            """Return the content of the response."""
-            return self.json()
-
-        def raise_for_status(self):
-            """Raise an HTTPError if status is not OK."""
-            if self.status_code != HTTPStatus.OK:
-                raise requests.HTTPError(self.status_code)
-
-    data = kwargs.get("data")
-    # pylint: disable-next=global-statement
-    global FIRST_CALL  # noqa: PLW0603
-
-    if data and data.get("username", None) == ERROR_STATUS_USERNAME:
-        # deliver a response the router could not serve
-        return MockResponse({}, HTTPStatus.INTERNAL_SERVER_ERROR)
-    if data and data.get("username", None) == INVALID_USERNAME:
-        # deliver an invalid token
-        return MockResponse({"code": "401", "msg": "Invalid token"}, 200)
-    if data and data.get("username", None) == TOKEN_TIMEOUT_USERNAME:
-        # deliver an expired token
-        return MockResponse(
-            {
-                "url": "/cgi-bin/luci/;stok=ef5860/web/home",
-                "token": "timedOut",
-                "code": "0",
-            },
-            200,
-        )
-    if str(args[0]).startswith(URL_AUTHORIZE):
-        # deliver an authorized token
-        return MockResponse(
-            {
-                "url": "/cgi-bin/luci/;stok=ef5860/web/home",
-                "token": "ef5860",
-                "code": "0",
-            },
-            200,
-        )
-    if str(args[0]).endswith(f"timedOut/{URL_LIST_END}") and FIRST_CALL is True:
-        FIRST_CALL = False
-        # deliver an error when called with expired token
-        return MockResponse({"code": "401", "msg": "Invalid token"}, 200)
-    if str(args[0]).endswith(URL_LIST_END):
-        # deliver the device list
-        return MockResponse(
-            {
-                "mac": "1C:98:EC:0E:D5:A4",
-                "list": [
-                    {
-                        "mac": "23:83:BF:F6:38:A0",
-                        "oname": "12255ff",
-                        "isap": 0,
-                        "parent": "",
-                        "authority": {"wan": 1, "pridisk": 0, "admin": 1, "lan": 0},
-                        "push": 0,
-                        "online": 1,
-                        "name": "Device1",
-                        "times": 0,
-                        "ip": [
-                            {
-                                "downspeed": "0",
-                                "online": "496957",
-                                "active": 1,
-                                "upspeed": "0",
-                                "ip": "192.168.0.25",
-                            }
-                        ],
-                        "statistics": {
-                            "downspeed": "0",
-                            "online": "496957",
-                            "upspeed": "0",
-                        },
-                        "icon": "",
-                        "type": 1,
-                    },
-                    {
-                        "mac": "1D:98:EC:5E:D5:A6",
-                        "oname": "CdddFG58",
-                        "isap": 0,
-                        "parent": "",
-                        "authority": {"wan": 1, "pridisk": 0, "admin": 1, "lan": 0},
-                        "push": 0,
-                        "online": 1,
-                        "name": "Device2",
-                        "times": 0,
-                        "ip": [
-                            {
-                                "downspeed": "0",
-                                "online": "347325",
-                                "active": 1,
-                                "upspeed": "0",
-                                "ip": "192.168.0.3",
-                            }
-                        ],
-                        "statistics": {
-                            "downspeed": "0",
-                            "online": "347325",
-                            "upspeed": "0",
-                        },
-                        "icon": "",
-                        "type": 0,
-                    },
-                ],
-                "code": 0,
-            },
-            200,
-        )
-    _LOGGER.debug("UNKNOWN ROUTE")
-    return None
-
-
-@patch(
-    "homeassistant.components.xiaomi.device_tracker.XiaomiDeviceScanner",
-    return_value=MagicMock(),
-)
-async def test_config(xiaomi_mock, hass: HomeAssistant) -> None:
-    """Testing minimal configuration."""
-    config = {
-        DEVICE_TRACKER_DOMAIN: xiaomi.PLATFORM_SCHEMA(
-            {
-                CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
-                CONF_HOST: "192.168.0.1",
-                CONF_PASSWORD: "passwordTest",
-            }
-        )
-    }
-    xiaomi.get_scanner(hass, config)
-    assert xiaomi_mock.call_count == 1
-    assert xiaomi_mock.call_args == call(config[DEVICE_TRACKER_DOMAIN])
-    call_arg = xiaomi_mock.call_args[0][0]
-    assert call_arg["username"] == "admin"
-    assert call_arg["password"] == "passwordTest"
-    assert call_arg["host"] == "192.168.0.1"
-    assert call_arg["platform"] == "device_tracker"
-
-
-@patch(
-    "homeassistant.components.xiaomi.device_tracker.XiaomiDeviceScanner",
-    return_value=MagicMock(),
-)
-async def test_config_full(xiaomi_mock, hass: HomeAssistant) -> None:
-    """Testing full configuration."""
-    config = {
-        DEVICE_TRACKER_DOMAIN: xiaomi.PLATFORM_SCHEMA(
-            {
-                CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
-                CONF_HOST: "192.168.0.1",
-                CONF_USERNAME: "alternativeAdminName",
-                CONF_PASSWORD: "passwordTest",
-            }
-        )
-    }
-    xiaomi.get_scanner(hass, config)
-    assert xiaomi_mock.call_count == 1
-    assert xiaomi_mock.call_args == call(config[DEVICE_TRACKER_DOMAIN])
-    call_arg = xiaomi_mock.call_args[0][0]
-    assert call_arg["username"] == "alternativeAdminName"
-    assert call_arg["password"] == "passwordTest"
-    assert call_arg["host"] == "192.168.0.1"
-    assert call_arg["platform"] == "device_tracker"
-
-
-@patch("requests.get", side_effect=mocked_requests)
-@patch("requests.post", side_effect=mocked_requests)
-async def test_invalid_credential(mock_get, mock_post, hass: HomeAssistant) -> None:
-    """Testing invalid credential handling."""
-    config = {
-        DEVICE_TRACKER_DOMAIN: xiaomi.PLATFORM_SCHEMA(
-            {
-                CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
-                CONF_HOST: "192.168.0.1",
-                CONF_USERNAME: INVALID_USERNAME,
-                CONF_PASSWORD: "passwordTest",
-            }
-        )
-    }
-    assert get_scanner(hass, config) is None
-
-
-@patch("requests.get", side_effect=mocked_requests)
-@patch("requests.post", side_effect=mocked_requests)
-async def test_valid_credential(mock_get, mock_post, hass: HomeAssistant) -> None:
-    """Testing valid refresh."""
-    config = {
-        DEVICE_TRACKER_DOMAIN: xiaomi.PLATFORM_SCHEMA(
-            {
-                CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
-                CONF_HOST: "192.168.0.1",
-                CONF_USERNAME: "admin",
-                CONF_PASSWORD: "passwordTest",
-            }
-        )
-    }
-    scanner = get_scanner(hass, config)
-    assert scanner is not None
-    assert len(scanner.scan_devices()) == 2
-    assert scanner.get_device_name("23:83:BF:F6:38:A0") == "Device1"
-    assert scanner.get_device_name("1D:98:EC:5E:D5:A6") == "Device2"
-
-
-@patch("requests.get", side_effect=mocked_requests)
-@patch("requests.post", side_effect=mocked_requests)
-async def test_token_timed_out(mock_get, mock_post, hass: HomeAssistant) -> None:
-    """Testing refresh with a timed out token.
-
-    New token is requested and list is downloaded a second time.
-    """
-    config = {
-        DEVICE_TRACKER_DOMAIN: xiaomi.PLATFORM_SCHEMA(
-            {
-                CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
-                CONF_HOST: "192.168.0.1",
-                CONF_USERNAME: TOKEN_TIMEOUT_USERNAME,
-                CONF_PASSWORD: "passwordTest",
-            }
-        )
-    }
-    scanner = get_scanner(hass, config)
-    assert scanner is not None
-    assert len(scanner.scan_devices()) == 2
-    assert scanner.get_device_name("23:83:BF:F6:38:A0") == "Device1"
-    assert scanner.get_device_name("1D:98:EC:5E:D5:A6") == "Device2"
-
-
-@patch("requests.get", side_effect=mocked_requests)
-@patch("requests.post", side_effect=mocked_requests)
-async def test_rejected_login_does_not_log_password(
-    mock_get: MagicMock,
-    mock_post: MagicMock,
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_xiaomi_client")
+async def test_device_tracker_setup(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that a router refusing the login keeps the password out of the log."""
-    config = {
-        DEVICE_TRACKER_DOMAIN: xiaomi.PLATFORM_SCHEMA(
-            {
-                CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
-                CONF_HOST: "192.168.0.1",
-                CONF_USERNAME: INVALID_USERNAME,
-                CONF_PASSWORD: PASSWORD,
-            }
-        )
+    """Test device tracker entities are created."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_xiaomi_client")
+async def test_device_tracker_data_shape(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test offline, MAC-less (missing or empty) and duplicate-MAC devices are filtered out."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entities = [
+        entity
+        for entity in entity_registry.entities.values()
+        if entity.domain == DEVICE_TRACKER_DOMAIN
+    ]
+    # Offline, MAC-less, empty-MAC and dual-stack duplicate devices are dropped.
+    assert {entity.unique_id for entity in entities} == {
+        f"{mock_config_entry.entry_id}_aa:bb:cc:dd:ee:ff",
+        f"{mock_config_entry.entry_id}_11:22:33:44:55:66",
     }
 
-    assert get_scanner(hass, config) is None
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.my_phone")
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["mac"] == "aa:bb:cc:dd:ee:ff"
+    assert state.attributes["ip"] == "192.168.31.10"
+    assert state.attributes["host_name"] == "my-phone"
+    assert state.attributes["source_type"] == "router"
+    assert state.attributes["tracking_type"] == "connection"
 
-    assert "Xiaomi token cannot be refreshed" in caplog.text
-    assert PASSWORD not in caplog.text
 
-
-@patch("requests.get", side_effect=mocked_requests)
-@patch("requests.post", side_effect=mocked_requests)
-async def test_error_response_does_not_log_password(
-    mock_get, mock_post, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_device_tracker_legacy_string_ip(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_xiaomi_client: MagicMock,
 ) -> None:
-    """Test that a non-OK response keeps the password out of the log."""
-    config = {
-        DEVICE_TRACKER_DOMAIN: xiaomi.PLATFORM_SCHEMA(
-            {
-                CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
-                CONF_HOST: "192.168.0.1",
-                CONF_USERNAME: ERROR_STATUS_USERNAME,
-                CONF_PASSWORD: PASSWORD,
-            }
-        )
+    """Test a legacy payload with a plain string IP is handled."""
+    legacy_device = _create_device("AA:BB:CC:DD:EE:FF", "my-phone", 1, "192.168.0.50")
+    legacy_device["ip"] = "192.168.0.50"
+    mock_xiaomi_client.get_device_list.return_value = [legacy_device]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.my_phone")
+    assert state is not None
+    assert state.attributes["ip"] == "192.168.0.50"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_device_tracker_without_ip_record(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_xiaomi_client: MagicMock,
+) -> None:
+    """Test a device without usable IP records still gets an entity."""
+    device = _create_device("AA:BB:CC:DD:EE:FF", "my-phone", 1, "")
+    device["ip"] = []
+    mock_xiaomi_client.get_device_list.return_value = [device]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.my_phone")
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert "ip" not in state.attributes
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_device_tracker_skips_empty_ip_records(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_xiaomi_client: MagicMock,
+) -> None:
+    """Test an empty first IP record is skipped in favor of a later one."""
+    device = _create_device("AA:BB:CC:DD:EE:FF", "my-phone", 1, "")
+    device["ip"] = [{"ip": ""}, {"ip": "192.168.0.99"}]
+    mock_xiaomi_client.get_device_list.return_value = [device]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.my_phone")
+    assert state is not None
+    assert state.attributes["ip"] == "192.168.0.99"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_xiaomi_client")
+async def test_device_tracker_mac_case_change(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_xiaomi_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a MAC casing change between polls keeps the same entity."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_xiaomi_client.get_device_list.return_value = [
+        {**device, "mac": device["mac"].lower()}
+        for device in MOCK_DEVICE_LIST
+        if device.get("mac")
+    ]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entities = [
+        entity
+        for entity in entity_registry.entities.values()
+        if entity.domain == DEVICE_TRACKER_DOMAIN
+    ]
+    assert {entity.unique_id for entity in entities} == {
+        f"{mock_config_entry.entry_id}_aa:bb:cc:dd:ee:ff",
+        f"{mock_config_entry.entry_id}_11:22:33:44:55:66",
+    }
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.my_phone")
+    assert state is not None
+    assert state.state == STATE_HOME
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_xiaomi_client")
+async def test_device_tracker_two_entries_same_mac(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """The same device seen by two configured routers gets one tracker per entry."""
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="01JBBBBBBBBBBBBBBBBBBBBBBBBB",
+        title="192.168.31.2",
+        data={
+            CONF_HOST: "192.168.31.2",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # A second router seeing the same device must not take over its tracker.
+    second_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(second_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert second_entry.state is ConfigEntryState.LOADED
+
+    entities = [
+        entity
+        for entity in entity_registry.entities.values()
+        if entity.domain == DEVICE_TRACKER_DOMAIN
+    ]
+    assert {entity.unique_id for entity in entities} == {
+        f"{mock_config_entry.entry_id}_aa:bb:cc:dd:ee:ff",
+        f"{mock_config_entry.entry_id}_11:22:33:44:55:66",
+        f"{second_entry.entry_id}_aa:bb:cc:dd:ee:ff",
+        f"{second_entry.entry_id}_11:22:33:44:55:66",
     }
 
-    assert get_scanner(hass, config) is None
 
-    assert "Invalid response" in caplog.text
-    assert PASSWORD not in caplog.text
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_device_tracker_disconnect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_xiaomi_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test device goes not_home when it disappears from a successful scan."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.my_phone")
+    assert state is not None
+    assert state.state == STATE_HOME
+
+    # Simulate the phone disconnecting from the router.
+    mock_xiaomi_client.get_device_list.return_value = [
+        device
+        for device in MOCK_DEVICE_LIST
+        if device.get("mac") != "AA:BB:CC:DD:EE:FF"
+    ]
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.my_phone")
+    assert state is not None
+    assert state.state == STATE_NOT_HOME
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_device_tracker_reconnect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_xiaomi_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test device goes home again with refreshed attributes on reconnect."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_xiaomi_client.get_device_list.return_value = [
+        device
+        for device in MOCK_DEVICE_LIST
+        if device.get("mac") != "AA:BB:CC:DD:EE:FF"
+    ]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.my_phone")
+    assert state is not None
+    assert state.state == STATE_NOT_HOME
+
+    # The phone reconnects with a new IP address.
+    phone = _create_device("AA:BB:CC:DD:EE:FF", "my-phone", 1, "192.168.31.42")
+    mock_xiaomi_client.get_device_list.return_value = [phone]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.my_phone")
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["ip"] == "192.168.31.42"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_device_tracker_late_joiner(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_xiaomi_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a device first seen after setup gets a new entity."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.my_desktop") is None
+
+    mock_xiaomi_client.get_device_list.return_value = [*MOCK_DEVICE_LIST, LATE_DEVICE]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.my_desktop")
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["mac"] == "33:44:55:66:77:88"
