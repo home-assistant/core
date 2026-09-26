@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from datetime import timedelta
 import logging
 from pathlib import Path
 from typing import NamedTuple
@@ -10,6 +11,7 @@ from unittest.mock import ANY, AsyncMock, Mock, patch
 from aiohttp import UnixConnector, encode_basic_auth
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
 from awesomeversion import AwesomeVersion
+from freezegun.api import FrozenDateTimeFactory
 from go2rtc_client import Stream
 from go2rtc_client.exceptions import Go2RtcClientError, Go2RtcVersionError
 from go2rtc_client.models import Producer
@@ -58,7 +60,7 @@ from homeassistant.setup import async_setup_component
 
 from . import MockCamera
 
-from tests.common import MockConfigEntry, load_fixture_bytes
+from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture_bytes
 
 # The go2rtc provider does not inspect the details of the offer and answer,
 # and is only a pass through.
@@ -977,6 +979,47 @@ async def test_setup_with_recommended_version_repair(
         "recommended_version": RECOMMENDED_VERSION,
         "current_version": "1.9.5",
     }
+
+
+@pytest.mark.parametrize("config", [{DOMAIN: {CONF_URL: "http://localhost:1984"}}])
+@pytest.mark.usefixtures("server")
+async def test_setup_with_unsupported_version_repair(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    rest_client: AsyncMock,
+    config: ConfigType,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a repair issue is shown while the server version is unsupported."""
+    rest_client.validate_server_version.side_effect = Go2RtcVersionError(
+        "1.9.2", "1.9.13", "2.0.0"
+    )
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    issue = issue_registry.async_get_issue(DOMAIN, "unsupported_version")
+    assert issue
+    assert issue.is_fixable is False
+    assert issue.is_persistent is False
+    assert issue.severity == ir.IssueSeverity.ERROR
+    assert issue.translation_key == "unsupported_version"
+    assert issue.translation_placeholders == {
+        "error": "server version '1.9.2' not >= 1.9.13 and < 2.0.0",
+    }
+
+    # The retry after the server is updated clears the issue
+    rest_client.validate_server_version.side_effect = None
+    rest_client.validate_server_version.return_value = AwesomeVersion(
+        RECOMMENDED_VERSION
+    )
+    freezer.tick(timedelta(seconds=11))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, "unsupported_version") is None
 
 
 @pytest.mark.usefixtures("init_integration")
