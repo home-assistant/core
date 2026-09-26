@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
-from .coordinator import BrotherConfigEntry, BrotherDataUpdateCoordinator
+from .coordinator import BrotherConfigEntry
 from .entity import BrotherPrinterEntity
 
 # Coordinator is used to centralize the data updates
@@ -46,6 +46,26 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         key="status",
         translation_key="status",
         value=lambda data: data.status,
+        entity_registry_enabled_default=False,
+    ),
+    BrotherSensorEntityDescription(
+        key="printer_status",
+        translation_key="printer_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=["idle", "other", "printing", "warmup"],
+        value=lambda data: (
+            None if data.printer_status == "unknown" else data.printer_status
+        ),
+    ),
+    BrotherSensorEntityDescription(
+        key="device_status",
+        translation_key="device_status",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=["down", "running", "testing", "warning"],
+        value=lambda data: (
+            None if data.device_status == "unknown" else data.device_status
+        ),
     ),
     BrotherSensorEntityDescription(
         key="page_counter",
@@ -282,6 +302,14 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         value=lambda data: data.yellow_ink_remaining,
     ),
     BrotherSensorEntityDescription(
+        key="ink_capture_box_remaining_life",
+        translation_key="ink_capture_box_remaining_life",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value=lambda data: data.ink_capture_box_remaining_life,
+    ),
+    BrotherSensorEntityDescription(
         key="uptime",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.UPTIME,
@@ -325,17 +353,6 @@ class BrotherPrinterSensor(BrotherPrinterEntity, SensorEntity):
     """Define a Brother Printer sensor."""
 
     entity_description: BrotherSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: BrotherDataUpdateCoordinator,
-        description: BrotherSensorEntityDescription,
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator)
-
-        self._attr_unique_id = f"{coordinator.brother.serial.lower()}_{description.key}"
-        self.entity_description = description
 
     @property
     @override

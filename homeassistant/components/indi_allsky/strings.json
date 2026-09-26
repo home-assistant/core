@@ -26,6 +26,31 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "binmode": {
+        "name": "Binning mode"
+      },
+      "camera_sensor_temp": {
+        "name": "Camera sensor temperature"
+      },
+      "exposure": {
+        "name": "Exposure time"
+      },
+      "filename": {
+        "name": "Filename"
+      },
+      "gain": {
+        "name": "Gain"
+      },
+      "sqm": {
+        "name": "Sky quality"
+      },
+      "stars": {
+        "name": "Stars"
+      }
+    }
+  },
   "exceptions": {
     "update_failed": {
       "message": "Error communicating with INDI Allsky API"

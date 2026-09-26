@@ -296,6 +296,21 @@
         "connectionStatus": "online",
         "uuid": "00000000-1111-2222-3333-555555555555",
         "configModule": "configModule"
+      },
+      {
+        "deviceRegion": "US",
+        "isOwner": true,
+        "cid": "vital200s-purifier",
+        "deviceType": "LAP-V201S-WUS",
+        "deviceName": "Air Purifier Vital 200S",
+        "subDeviceNo": null,
+        "deviceStatus": "on",
+        "deviceImg": "",
+        "type": "wifi-air",
+        "connectionType": "",
+        "connectionStatus": "online",
+        "uuid": "00000000-1111-2222-3333-666666666666",
+        "configModule": "configModule"
       }
     ]
   }

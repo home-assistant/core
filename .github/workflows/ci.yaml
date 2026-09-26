@@ -41,19 +41,16 @@ env:
   MYPY_CACHE_VERSION: 1
   HA_SHORT_VERSION: "2026.10"
   ADDITIONAL_PYTHON_VERSIONS: "[]"
-  # 10.3 is the oldest supported version
-  # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
-  # 10.6 is the current long-term-support
-  # - 10.6.10 is the version currently shipped with the Add-on (as of 31 Jan 2023)
-  # 10.10 is the latest short-term-support
-  # - 10.10.3 is the latest (as of 6 Feb 2023)
-  # 10.11 is the latest long-term-support
-  # - 10.11.2 is the version currently shipped with Synology (as of 11 Oct 2023)
-  # 11.4 is an LTS with support until May 2029
-  # - 11.4.9 is used in Alpine 3.23 (used in latest HA base images as of 11 Apr 2026)
+  # LTS versions: 10.3, 10.6, 10.11, 11.4, 11.8, 12.3
+  # - 10.3 and 10.6 are the versions currently phased out until 2027.3
+  # - 10.11.2 is the oldest supported long term version (as of September 2026)
+  # - 11.4.9 is used in Alpine 3.23 (used in latest HA base images as of April 2026)
+  # - 11.8.8 is used in Alpine 3.24 (used in latest HA base images as of July 2026)
+  # - 12.3.3 is the latest supported long term version (as of September 2026),
+  #   the last mariadb entry is bumped by Renovate when a new LTS is released
   # mysql 8.0.32 does not always behave the same as MariaDB
   # and some queries that work on MariaDB do not work on MySQL
-  MARIADB_VERSIONS: "['mariadb:10.3.32','mariadb:10.6.10','mariadb:10.10.3','mariadb:10.11.2','mariadb:11.4.9','mysql:8.0.32']"
+  MARIADB_VERSIONS: "['mariadb:10.3.32','mariadb:10.6.10','mariadb:10.11.2','mariadb:11.4.9','mariadb:11.8.8','mariadb:12.3.3','mysql:8.0.32']"
   # 12 is the oldest supported version
   # - 12.22 is the latest (as of 19 Aug 2026)
   # 15 is a supported version
@@ -352,7 +349,7 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/hadolint.json"
       - name: Check ${{ matrix.file }}
-        uses: docker://hadolint/hadolint:v2.12.0@sha256:30a8fd2e785ab6176eed53f74769e04f125afb2f74a6c52aef7d463583b6d45e
+        uses: docker://hadolint/hadolint:v2.15.1@sha256:32dac94127fd60b7b7e3fbfc65e1383b9b5e25c9bfd7b8536de7a539fe68a12d
         with:
           args: hadolint ${{ matrix.file }}
 
@@ -744,6 +741,47 @@ jobs:
           . venv/bin/activate
           python --version
           mypy --num-workers=4 $(printf "homeassistant/components/%s " ${INTEGRATIONS_GLOB})
+
+  benchmarks:
+    name: Run benchmarks
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write # OIDC token CodSpeed mints (no CODSPEED_TOKEN secret)
+    needs:
+      - info
+      - base
+    # Run only when core code or the benchmark suite itself changed. Skipped on
+    # forks, where the OIDC token CodSpeed needs is unavailable. Pushes to dev
+    # that touch core refresh the CodSpeed baseline.
+    if: >-
+      needs.info.outputs.lint_only != 'true'
+      && (github.event_name != 'pull_request'
+        || !github.event.pull_request.head.repo.fork)
+      && (contains(fromJSON(needs.info.outputs.core), 'core')
+        || contains(fromJSON(needs.info.outputs.core), 'benchmarks'))
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python and restore venv
+        id: python
+        uses: $/.github/actions/restore-or-build-venv
+        with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
+      - name: Run benchmarks
+        uses: CodSpeedHQ/action@373d6868929f444bc08d901fd0eb0ad52a8875ea # v5.2.1
+        with:
+          mode: simulation,memory
+          # No token: auth uses the OIDC id-token minted by the job permissions.
+          run: |
+            . venv/bin/activate
+            pytest benchmarks --codspeed --no-cov -o addopts=""
 
   prepare-pytest-full:
     name: Split tests for full run
@@ -1375,7 +1413,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           fail_ci_if_error: true
           flags: full-suite
@@ -1528,7 +1566,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }} # zizmor: ignore[secrets-outside-env]
@@ -1556,7 +1594,7 @@ jobs:
         with:
           pattern: test-results-*
       - name: Upload test results to Codecov
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           report_type: test_results
           fail_ci_if_error: true

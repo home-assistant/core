@@ -54,7 +54,7 @@ async def test_binary_sensor_update(
 
     freezer.tick(timedelta(seconds=90))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(hass.states.async_all(Platform.BINARY_SENSOR)) == 4
     assert (
@@ -154,7 +154,7 @@ async def test_binary_sensor_suspended_server_transition_runtime(
     server_data["1"] = server_1_data_suspended
     freezer.tick(timedelta(seconds=90))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         hass.states.get(f"{Platform.BINARY_SENSOR}.test_server_1_status").state == "off"
@@ -169,7 +169,7 @@ async def test_binary_sensor_suspended_server_transition_runtime(
     server_data["1"] = server_1_data
     freezer.tick(timedelta(seconds=90))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         hass.states.get(f"{Platform.BINARY_SENSOR}.test_server_1_status").state

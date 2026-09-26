@@ -137,6 +137,10 @@ async def test_device_in_dr(
     device_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, "a455b61e52394b2db5081ce025a430f3"), mock_config_entry.entry_id
     )
+    assert device_entry.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "01:23:45:67:00:01"),
+        (dr.CONNECTION_NETWORK_MAC, "01:23:45:67:00:02"),
+    }
     assert device_entry.hw_version == "AME Smile 2.0 board"
     assert device_entry.manufacturer == "Plugwise"
     assert device_entry.model == "Gateway"

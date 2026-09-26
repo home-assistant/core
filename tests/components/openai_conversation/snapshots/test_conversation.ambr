@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_code_interpreter
+# name: test_code_interpreter[completed]
   list([
     dict({
       'content': 'Please use the python tool to calculate square root of 55555',
@@ -7,15 +7,109 @@
       'type': 'message',
     }),
     dict({
-      'arguments': '{"code":"import math\\nmath.sqrt(55555)","container":"cntr_A"}',
-      'call_id': 'ci_A',
-      'name': 'code_interpreter',
-      'type': 'function_call',
+      'code': '''
+        import math
+        math.sqrt(55555)
+      ''',
+      'container_id': 'cntr_A',
+      'id': 'ci_A',
+      'outputs': list([
+        dict({
+          'logs': '''
+            235.70108188126758
+  
+          ''',
+          'type': 'logs',
+        }),
+      ]),
+      'status': 'completed',
+      'type': 'code_interpreter_call',
     }),
     dict({
-      'call_id': 'ci_A',
-      'output': '{"data":{"output":[{"logs":"235.70108188126758\\n","type":"logs"}]},"error":false}',
-      'type': 'function_call_output',
+      'content': 'I’ve calculated it with Python: the square root of 55555 is approximately 235.70108188126758.',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'Thank you!',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'You are welcome!',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+  ])
+# ---
+# name: test_code_interpreter[failed]
+  list([
+    dict({
+      'content': 'Please use the python tool to calculate square root of 55555',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'code': '''
+        import math
+        math.sqrt(55555)
+      ''',
+      'container_id': 'cntr_A',
+      'id': 'ci_A',
+      'outputs': list([
+        dict({
+          'logs': '''
+            235.70108188126758
+  
+          ''',
+          'type': 'logs',
+        }),
+      ]),
+      'status': 'failed',
+      'type': 'code_interpreter_call',
+    }),
+    dict({
+      'content': 'I’ve calculated it with Python: the square root of 55555 is approximately 235.70108188126758.',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'Thank you!',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'You are welcome!',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+  ])
+# ---
+# name: test_code_interpreter[incomplete]
+  list([
+    dict({
+      'content': 'Please use the python tool to calculate square root of 55555',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'code': '''
+        import math
+        math.sqrt(55555)
+      ''',
+      'container_id': 'cntr_A',
+      'id': 'ci_A',
+      'outputs': list([
+        dict({
+          'logs': '''
+            235.70108188126758
+  
+          ''',
+          'type': 'logs',
+        }),
+      ]),
+      'status': 'incomplete',
+      'type': 'code_interpreter_call',
     }),
     dict({
       'content': 'I’ve calculated it with Python: the square root of 55555 is approximately 235.70108188126758.',

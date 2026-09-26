@@ -43,7 +43,9 @@ def _format_tool(
     tool_spec = {
         "name": tool.name,
         "parameters": probatio.to_openapi(
-            tool.parameters, custom_serializer=custom_serializer
+            tool.parameters,
+            custom_serializer=custom_serializer,
+            openapi_version="3.1.0",
         ),
     }
     if tool.description:
@@ -238,6 +240,7 @@ class OllamaBaseLLMEntity(Entity):
                     if chat_log.llm_api
                     else llm.selector_serializer
                 ),
+                openapi_version="3.1.0",
             )
 
         # Get response
