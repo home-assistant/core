@@ -2952,6 +2952,12 @@
         "zigbee"
       ]
     },
+    "heiman_home": {
+      "name": "Heiman Home",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "heiwa": {
       "name": "Heiwa",
       "integration_type": "virtual",
