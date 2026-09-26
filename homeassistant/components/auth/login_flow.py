@@ -356,7 +356,7 @@ class LoginFlowIndexView(LoginFlowBaseView):
                 ),
                 probatio.Required("redirect_uri"): str,
                 # S256 challenges are always 43 unpadded base64url characters.
-                probatio.Optional("code_challenge"): vol.Match(r"^[A-Za-z0-9_-]{43}\Z"),
+                probatio.Optional("code_challenge"): probatio.Match(r"^[A-Za-z0-9_-]{43}\Z"),
                 probatio.Optional("code_challenge_method"): str,
                 probatio.Optional(
                     "type", default="authorize"
