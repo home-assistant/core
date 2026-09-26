@@ -77,6 +77,7 @@ class MockCalendarEntity(CalendarEntity):
         summary: str | None = None,
         description: str | None = None,
         location: str | None = None,
+        color: str | None = None,
     ) -> dict[str, Any]:
         """Create a new fake event, used by tests."""
         event = CalendarEvent(
@@ -85,6 +86,7 @@ class MockCalendarEntity(CalendarEntity):
             summary=summary or f"Event {secrets.token_hex(16)}",
             description=description,
             location=location,
+            color=color,
         )
         self._events.append(event)
         return event.as_dict()
@@ -213,6 +215,7 @@ def create_test_entities() -> list[MockCalendarEntity]:
                 start=middle_of_event,
                 end=middle_of_event + datetime.timedelta(minutes=60),
                 summary="Current Event",
+                color="#00FF00",
             )
         ],
         unique_id="calendar_2_id",

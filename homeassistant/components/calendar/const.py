@@ -61,6 +61,9 @@ EVENT_RECURRENCE_RANGE = "recurrence_range"
 EVENT_RRULE = "rrule"
 EVENT_STATUS = "status"
 
+# rfc7986 fields
+EVENT_COLOR = "color"
+
 # Service call fields
 EVENT_START_DATE = "start_date"
 EVENT_END_DATE = "end_date"
@@ -86,5 +89,6 @@ LIST_EVENT_FIELDS = {
     EVENT_SUMMARY,
     EVENT_DESCRIPTION,
     EVENT_LOCATION,
+    EVENT_COLOR,
     EVENT_STATUS,
 }

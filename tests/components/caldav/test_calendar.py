@@ -1119,6 +1119,7 @@ async def test_get_events_custom_calendars(
             "recurrence_id": None,
             "rrule": None,
             "status": None,
+            "color": None,
         }
     ]
 

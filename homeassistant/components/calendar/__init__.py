@@ -382,6 +382,16 @@ class CalendarEvent:
     rrule: str | None = None
     status: CalendarEventStatus | None = None
 
+    color: str | None = None
+    """A color for this event, overriding the color of its calendar entity.
+
+    RFC 7986 Section 5.9 defines the value as a CSS3 color name, for example
+    "turquoise". A hex color, for example "#0088aa", is also accepted, since
+    that is the form the calendar-level color option uses and the form
+    backends such as Google Calendar report. None means the calendar
+    entity's own color is used.
+    """
+
     @property
     def start_datetime_local(self) -> datetime.datetime:
         """Return event start time as a local datetime."""

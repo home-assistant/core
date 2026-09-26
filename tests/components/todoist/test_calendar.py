@@ -79,6 +79,7 @@ def get_events_response(start: dict[str, str], end: dict[str, str]) -> dict[str,
         "recurrence_id": None,
         "rrule": None,
         "status": None,
+        "color": None,
     }
 
 
