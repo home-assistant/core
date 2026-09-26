@@ -176,19 +176,29 @@ async def test_get_triggers(hass: HomeAssistant) -> None:
     assert triggers == unordered(expected_triggers)
 
 
-class MockQSXBridge(MockBridge):
-    """Mock bridge that reports as a HomeWorks QSX processor."""
+def _make_processor_bridge(device_type: str) -> type[MockBridge]:
+    """Build a MockBridge subclass reporting the given processor DeviceType."""
 
-    def load_devices(self):
-        """Load mock devices with QSX processor type."""
-        devices = super().load_devices()
-        devices["1"]["type"] = "HWQSProcessor"
-        return devices
+    class _MockProcessorBridge(MockBridge):
+        """Mock bridge that reports as a specific Lutron processor."""
+
+        def load_devices(self):
+            """Load mock devices with the processor type under test."""
+            devices = super().load_devices()
+            devices["1"]["type"] = device_type
+            return devices
+
+    return _MockProcessorBridge
 
 
-async def test_get_triggers_qsx_includes_long_press(hass: HomeAssistant) -> None:
-    """Test that long_press trigger is included for QSX bridges."""
-    config_entry_id = await _async_setup_lutron_with_picos(hass, MockQSXBridge)
+@pytest.mark.parametrize("processor_type", ["HWQSProcessor", "AthenaProcessor"])
+async def test_get_triggers_processor_includes_long_press(
+    hass: HomeAssistant, processor_type: str
+) -> None:
+    """Test long_press is offered for processors that emit LongHold."""
+    config_entry_id = await _async_setup_lutron_with_picos(
+        hass, _make_processor_bridge(processor_type)
+    )
 
     data: LutronCasetaData = hass.config_entries.async_get_entry(
         config_entry_id
@@ -330,7 +340,9 @@ async def test_if_fires_on_long_press_button_event(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for long_press trigger firing on a QSX bridge."""
-    config_entry_id = await _async_setup_lutron_with_picos(hass, MockQSXBridge)
+    config_entry_id = await _async_setup_lutron_with_picos(
+        hass, _make_processor_bridge("HWQSProcessor")
+    )
 
     device = MOCK_BUTTON_DEVICES[0]
     dr_device = device_registry.async_get_device_by_identifier(
@@ -381,7 +393,9 @@ async def test_long_hold_leap_event_maps_to_long_press_action(
     hass: HomeAssistant,
 ) -> None:
     """Test that a LongHold LEAP event is mapped to a long_press bus event."""
-    config_entry_id = await _async_setup_lutron_with_picos(hass, MockQSXBridge)
+    config_entry_id = await _async_setup_lutron_with_picos(
+        hass, _make_processor_bridge("HWQSProcessor")
+    )
     bridge = hass.config_entries.async_get_entry(config_entry_id).runtime_data.bridge
     captured = async_capture_events(hass, LUTRON_CASETA_BUTTON_EVENT)
 
