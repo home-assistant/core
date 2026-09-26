@@ -3,12 +3,13 @@
 from collections.abc import Callable
 from ipaddress import ip_address
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 from loqedAPI import loqed
 
 from homeassistant import config_entries
+from homeassistant.components.loqed.config_flow import LoqedConfigFlow
 from homeassistant.components.loqed.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
@@ -196,6 +197,19 @@ async def test_create_entry_user_with_pick_lock(
         CONF_API_TOKEN: TEST_API_TOKEN,
     }
     mock_lock.getWebhooks.assert_awaited()
+
+
+async def test_pick_lock_without_api_token(hass: HomeAssistant) -> None:
+    """Test picking a lock restarts the user step without an API token."""
+    flow = LoqedConfigFlow()
+    flow._locks = [{"id": "Foo", "name": "MyLock"}]
+    user_step = AsyncMock(return_value={"type": FlowResultType.FORM})
+
+    with patch.object(flow, "async_step_user", user_step):
+        result = await flow.async_step_pick_lock({"lock_id": "Foo"})
+
+    assert result == {"type": FlowResultType.FORM}
+    user_step.assert_awaited_once_with()
 
 
 async def test_cannot_connect(
