@@ -5,7 +5,13 @@ import re
 from typing import Any, override
 
 from uiprotect import ProtectEvent
-from uiprotect.data import Fob, ModelType, PublicDeviceModel, SmartDetectObjectType
+from uiprotect.data import (
+    Fob,
+    ModelType,
+    PublicCamera,
+    PublicDeviceModel,
+    SmartDetectObjectType,
+)
 from uiprotect.data.nvr import Event, EventDetectedThumbnail
 from uiprotect.data.types import EventButtonType
 
@@ -48,6 +54,7 @@ from .entity import (
     ProtectDeviceEntity,
     ProtectEventMixin,
     ProtectFobEntity,
+    _async_capability_supported,
 )
 
 PARALLEL_UPDATES = 0
@@ -671,7 +678,7 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectEventEntityDescription(
         key="package",
         translation_key="package",
-        ufp_required_field="can_detect_package",
+        ufp_capability=SmartDetectObjectType.PACKAGE,
         ufp_obj_type=SmartDetectObjectType.PACKAGE,
         event_types=[EVENT_TYPE_PACKAGE_DETECTED],
         entity_class=ProtectDeviceSmartDetectEventEntity,
@@ -687,7 +694,7 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectDetectionEventEntityDescription(
         key="smart_detection",
         translation_key="smart_detection",
-        ufp_required_field="feature_flags.has_smart_detect",
+        ufp_required_field="feature_flags.smart_detect_types",
         event_types=_SMART_OBJECT_EVENT_TYPES,
         ufp_public_event_types=_SMART_DETECT_EVENT_TYPES,
         include_event_source=True,
@@ -714,6 +721,21 @@ def _async_event_entities(
         for device in (data.get_cameras() if ufp_device is None else [ufp_device])
         for description in EVENT_DESCRIPTIONS
         if description.has_required(device)
+        and _async_capability_supported(None, device, description)
+    ]
+
+
+@callback
+def _async_public_event_entities(
+    data: ProtectData, camera: PublicCamera
+) -> list[ProtectDeviceEntity]:
+    # The other entity classes read their events from the private bootstrap.
+    return [
+        description.entity_class(data, camera, description)
+        for description in EVENT_DESCRIPTIONS
+        if issubclass(description.entity_class, ProtectDevicePublicEventEntity)
+        and description.has_required_public(camera)
+        and _async_capability_supported(camera, None, description)
     ]
 
 
@@ -729,6 +751,8 @@ async def async_setup_entry(
     def _add_new_public_device(device: PublicDeviceModel) -> None:
         if isinstance(device, Fob):
             async_add_entities([ProtectFobButtonEventEntity(data, device)])
+        elif isinstance(device, PublicCamera):
+            async_add_entities(_async_public_event_entities(data, device))
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
@@ -743,9 +767,13 @@ async def async_setup_entry(
             for fob in api.public_bootstrap.fobs.values()
         )
 
-    # Everything below is driven by the private bootstrap, which public-only
-    # entries do not have.
     if api.is_public_only:
+        async_add_entities(
+            entity
+            for public, _ in data.get_public_devices(ModelType.CAMERA)
+            if isinstance(public, PublicCamera)
+            for entity in _async_public_event_entities(data, public)
+        )
         return
 
     @callback
