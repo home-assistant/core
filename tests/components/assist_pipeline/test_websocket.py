@@ -953,6 +953,7 @@ async def test_add_pipeline(
         "wake_word_entity": "wakeword_entity_1",
         "wake_word_id": "wakeword_id_1",
         "prefer_local_intents": True,
+        "user_id": None,
     }
 
     assert len(pipeline_store.data) == 2
@@ -1159,6 +1160,7 @@ async def test_get_pipeline(
         "wake_word_entity": None,
         "wake_word_id": None,
         "prefer_local_intents": False,
+        "user_id": None,
     }
 
     # Get conversation agent as pipeline
@@ -1185,6 +1187,7 @@ async def test_get_pipeline(
         "wake_word_entity": None,
         "wake_word_id": None,
         "prefer_local_intents": False,
+        "user_id": None,
     }
 
     await client.send_json_auto_id(
@@ -1215,6 +1218,7 @@ async def test_get_pipeline(
             "wake_word_entity": "wakeword_entity_1",
             "wake_word_id": "wakeword_id_1",
             "prefer_local_intents": False,
+            "user_id": None,
         }
     )
     msg = await client.receive_json()
@@ -1244,6 +1248,7 @@ async def test_get_pipeline(
         "wake_word_entity": "wakeword_entity_1",
         "wake_word_id": "wakeword_id_1",
         "prefer_local_intents": False,
+        "user_id": None,
     }
 
 
@@ -1272,6 +1277,7 @@ async def test_list_pipelines(
                 "wake_word_entity": None,
                 "wake_word_id": None,
                 "prefer_local_intents": False,
+                "user_id": None,
             }
         ],
         "preferred_pipeline": ANY,
@@ -1364,6 +1370,7 @@ async def test_update_pipeline(
         "wake_word_entity": "new_wakeword_entity",
         "wake_word_id": "new_wakeword_id",
         "prefer_local_intents": False,
+        "user_id": None,
     }
 
     assert len(pipeline_store.data) == 2
@@ -1416,6 +1423,7 @@ async def test_update_pipeline(
         "wake_word_entity": None,
         "wake_word_id": None,
         "prefer_local_intents": False,
+        "user_id": None,
     }
 
     pipeline = pipeline_store.data[pipeline_id]

@@ -56,6 +56,8 @@ class Pipeline:
     wake_word_id: str | None
     prefer_local_intents: bool = False
 
+    user_id: str | None = None
+
     id: str = field(default_factory=ulid_util.ulid_now)
 
     @classmethod
@@ -79,6 +81,7 @@ class Pipeline:
             wake_word_entity=data["wake_word_entity"],
             wake_word_id=data["wake_word_id"],
             prefer_local_intents=data.get("prefer_local_intents", False),
+            user_id=data.get("user_id"),
         )
 
     def to_json(self) -> dict[str, Any]:
@@ -97,6 +100,7 @@ class Pipeline:
             "wake_word_entity": self.wake_word_entity,
             "wake_word_id": self.wake_word_id,
             "prefer_local_intents": self.prefer_local_intents,
+            "user_id": self.user_id,
         }
 
 

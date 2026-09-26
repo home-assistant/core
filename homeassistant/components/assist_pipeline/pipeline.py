@@ -81,7 +81,18 @@ PIPELINE_FIELDS: VolDictType = {
     probatio.Required("wake_word_id"): probatio.Any(str, None),
     probatio.Optional("prefer_local_intents"): bool,
     probatio.Optional("acknowledge_media_id"): str,
+    probatio.Optional("user_id"): probatio.Any(str, None),
 }
+
+
+async def _async_validate_user(hass: HomeAssistant, data: dict[str, Any]) -> None:
+    """Validate that the user a pipeline acts as exists and can act."""
+    user_id: str | None = data.get("user_id")
+    if user_id is None:
+        return
+    user = await hass.auth.async_get_user(user_id)
+    if user is None or not user.is_active:
+        raise probatio.Invalid(f"Unknown user {user_id}")
 
 
 @callback
@@ -291,6 +302,7 @@ async def async_update_pipeline(
     wake_word_entity: str | UndefinedType | None = UNDEFINED,
     wake_word_id: str | UndefinedType | None = UNDEFINED,
     prefer_local_intents: bool | UndefinedType = UNDEFINED,
+    user_id: str | UndefinedType | None = UNDEFINED,
 ) -> None:
     """Update a pipeline."""
     pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
@@ -315,6 +327,7 @@ async def async_update_pipeline(
                 ("wake_word_entity", wake_word_entity),
                 ("wake_word_id", wake_word_id),
                 ("prefer_local_intents", prefer_local_intents),
+                ("user_id", user_id),
             )
             if val is not UNDEFINED
         }
@@ -361,6 +374,7 @@ class PipelineStorageCollection(
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         validated_data: dict = validate_language(data)
+        await _async_validate_user(self.hass, validated_data)
         return validated_data
 
     @callback
@@ -373,6 +387,7 @@ class PipelineStorageCollection(
     async def _update_data(self, item: Pipeline, update_data: dict) -> Pipeline:
         """Return a new updated item."""
         update_data = validate_language(update_data)
+        await _async_validate_user(self.hass, update_data)
         return Pipeline(id=item.id, **update_data)
 
     @override

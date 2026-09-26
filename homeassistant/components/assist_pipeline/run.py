@@ -237,10 +237,43 @@ class PipelineRun:
             self._unregister()
             raise
 
+    async def _async_apply_pipeline_user(self) -> None:
+        """Give the run the identity its pipeline acts as.
+
+        A run started by a satellite has no user of its own, so anything acting on
+        behalf of the caller cannot tell whose request it is: the pipeline lends it
+        one.
+        A run started by a user keeps their own identity, unless that user is an
+        administrator: they may act as anyone anyway, which also makes the setting
+        testable from the pipeline debug page.
+        """
+        user_id: str | None = self.pipeline.user_id
+        if user_id is None or user_id == self.context.user_id:
+            return
+
+        if (caller_id := self.context.user_id) is not None:
+            caller = await self.hass.auth.async_get_user(caller_id)
+            if caller is None or not caller.is_admin:
+                return
+
+        # the stored user can have been deactivated or removed since, and this path
+        # builds a context outside the authentication boundary, so a stale identity is
+        # not handed the policies it no longer has
+        user = await self.hass.auth.async_get_user(user_id)
+        if user is None or not user.is_active:
+            return
+
+        self.context = Context(
+            user_id=user_id,
+            parent_id=self.context.parent_id,
+            id=self.context.id,
+        )
+
     async def async_execute(
         self, pipeline_input: PipelineInput, *, validate: bool = False
     ) -> None:
         """Run the pipeline processor with the Home Assistant lifecycle."""
+        await self._async_apply_pipeline_user()
         request = pipeline_input.create_processor_request()
         validation_error: PipelineError | None = None
         self._set_request_identity(request)
