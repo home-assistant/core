@@ -1,8 +1,9 @@
 """Test the Matter config flow Bluetooth discovery."""
 
 import asyncio
+from collections.abc import Generator
 from datetime import timedelta
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from matter_server.common.errors import NodeCommissionFailed
@@ -10,7 +11,11 @@ import pytest
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.matter.const import DOMAIN
-from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_IGNORE
+from homeassistant.config_entries import (
+    SOURCE_BLUETOOTH,
+    SOURCE_IGNORE,
+    ConfigEntryState,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -36,7 +41,7 @@ UNIQUE_ID = "fff18000f00"
 PAIRING_CODE = "MT:Y.K9042C00KA0648G00"
 
 
-def _inject_raw(hass: HomeAssistant, raw: bytes, time: float) -> None:
+def _inject_raw(hass: HomeAssistant, raw: bytes | None, time: float) -> None:
     """Inject a packet for the discovered address with the given raw bytes."""
     inject_advertisement_with_time_and_source_connectable(
         hass,
@@ -49,9 +54,43 @@ def _inject_raw(hass: HomeAssistant, raw: bytes, time: float) -> None:
     )
 
 
+class _Clock:
+    """A monotonic clock the test advances by hand."""
+
+    def __init__(self, hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+        """Initialize the clock."""
+        self._hass = hass
+        self._freezer = freezer
+        self.now = 1000.0
+
+    def __call__(self) -> float:
+        """Return the current time."""
+        return self.now
+
+    async def async_advance(self, seconds: float) -> None:
+        """Advance the clock and let anything it scheduled run."""
+        self.now += seconds
+        self._freezer.tick(timedelta(seconds=seconds))
+        async_fire_time_changed(self._hass)
+        await self._hass.async_block_till_done()
+
+
 @pytest.fixture(autouse=True)
 def mock_bluetooth(enable_bluetooth: None) -> None:
     """Auto mock bluetooth."""
+
+
+@pytest.fixture(name="ble_clock")
+def ble_clock_fixture(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> Generator[_Clock]:
+    """Keep the bluetooth manager's clock in step so it does not expire devices."""
+    clock = _Clock(hass, freezer)
+    with (
+        patch("homeassistant.components.bluetooth.MONOTONIC_TIME", side_effect=clock),
+        patch("habluetooth.manager.monotonic_time_coarse", side_effect=clock),
+    ):
+        yield clock
 
 
 @pytest.fixture(name="bluetooth_enabled")
@@ -154,11 +193,17 @@ async def test_server_without_bluetooth(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("bluetooth_enabled", "integration")
 async def test_invalid_advertisement(hass: HomeAssistant, service_data: bytes) -> None:
     """Advertisements that are not commissionable are ignored."""
-    result = await _async_start_discovery(
-        hass, matter_ble_service_info(service_data=service_data)
-    )
+    with patch(
+        "homeassistant.components.bluetooth.async_clear_address_from_match_history"
+    ) as clear_history:
+        result = await _async_start_discovery(
+            hass, matter_ble_service_info(service_data=service_data)
+        )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_commissionable"
+    # The matcher only records the service data key, so a later commissionable
+    # payload from this address has to be able to trigger discovery again.
+    assert clear_history.call_args == call(hass, MATTER_BLE_ADDRESS)
 
 
 @pytest.mark.usefixtures("bluetooth_enabled", "integration")
@@ -215,51 +260,27 @@ async def test_same_address_discovery_aborts(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("bluetooth_enabled", "integration")
 async def test_stale_discovery_is_dropped(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, ble_clock: _Clock
 ) -> None:
     """The discovery goes away when the device stops advertising as commissionable."""
-    now = 1000.0
+    result = await _async_start_discovery(hass)
+    assert result["type"] is FlowResultType.FORM
 
-    def _advance(seconds: float) -> None:
-        nonlocal now
-        now += seconds
-        freezer.tick(timedelta(seconds=seconds))
-        async_fire_time_changed(hass)
+    await ble_clock.async_advance(40)
+    _inject_raw(hass, RAW_COMMISSIONABLE, ble_clock.now)
+    await ble_clock.async_advance(40)
+    assert hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
-    # Keep the bluetooth manager's clock in step so it does not expire the device.
-    with (
-        patch(
-            "homeassistant.components.bluetooth.MONOTONIC_TIME",
-            side_effect=lambda: now,
-        ),
-        patch(
-            "habluetooth.manager.monotonic_time_coarse",
-            side_effect=lambda: now,
-        ),
-        patch(
-            "homeassistant.components.bluetooth.async_clear_address_from_match_history"
-        ) as clear_history,
-    ):
-        result = await _async_start_discovery(hass)
-        assert result["type"] is FlowResultType.FORM
+    # A packet without Matter service data does not keep the discovery alive.
+    _inject_raw(hass, RAW_OTHER, ble_clock.now)
+    await ble_clock.async_advance(10)
+    assert hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
-        _advance(40)
-        _inject_raw(hass, RAW_COMMISSIONABLE, now)
-        await hass.async_block_till_done()
-
-        _advance(40)
-        await hass.async_block_till_done()
-        assert hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-
-        # A packet without Matter service data does not keep the discovery alive.
-        _inject_raw(hass, RAW_OTHER, now)
-        _advance(10)
-        await hass.async_block_till_done()
-        assert hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-
-        _advance(20)
-        await hass.async_block_till_done()
-        assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    with patch(
+        "homeassistant.components.bluetooth.async_clear_address_from_match_history"
+    ) as clear_history:
+        await ble_clock.async_advance(20)
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert clear_history.call_args == call(hass, MATTER_BLE_ADDRESS)
 
 
@@ -361,3 +382,74 @@ async def test_commissioning_in_progress_is_never_aborted(
     result = await configure
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "commission_successful"
+
+
+@pytest.mark.usefixtures("bluetooth_enabled", "integration")
+async def test_unverifiable_packets_do_not_keep_the_card(
+    hass: HomeAssistant, ble_clock: _Clock
+) -> None:
+    """A scanner reporting no raw packet cannot prove the device is commissionable."""
+    result = await _async_start_discovery(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    for _ in range(3):
+        await ble_clock.async_advance(25)
+        _inject_raw(hass, None, ble_clock.now)
+
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+@pytest.mark.usefixtures("bluetooth_enabled", "integration")
+async def test_older_packet_does_not_move_liveness_backwards(
+    hass: HomeAssistant, ble_clock: _Clock
+) -> None:
+    """Packets arrive from several scanners, so liveness must only move forward."""
+    result = await _async_start_discovery(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    await ble_clock.async_advance(50)
+    _inject_raw(hass, RAW_COMMISSIONABLE, ble_clock.now)
+    # A weaker scanner reports the same device with an older timestamp.
+    _inject_raw(hass, RAW_COMMISSIONABLE, ble_clock.now - 40)
+    await ble_clock.async_advance(40)
+
+    assert hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+@pytest.mark.usefixtures("bluetooth_enabled", "integration")
+async def test_setup_card_is_dropped_when_device_goes_quiet(
+    hass: HomeAssistant, ble_clock: _Clock
+) -> None:
+    """The card offering Matter setup is tracked like a commissioning card."""
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    await hass.config_entries.async_remove(entry_id)
+
+    result = await _async_start_discovery(hass)
+    assert result["step_id"] == "manual"
+
+    await ble_clock.async_advance(70)
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+async def test_proxy_that_never_connected_cannot_commission(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> None:
+    """A server whose BLE proxy never connected has no path to the device."""
+    matter_client.server_info.bluetooth_enabled = True
+    matter_client.server_info.ble_proxy_enabled = True
+    proxy = MagicMock()
+    proxy.connect = AsyncMock(side_effect=TimeoutError)
+    proxy.disconnect = AsyncMock()
+    with patch(
+        "homeassistant.components.matter.ble_proxy.create_matter_ble_proxy",
+        return_value=proxy,
+    ):
+        entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    result = await _async_start_discovery(hass)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "bluetooth_not_supported"

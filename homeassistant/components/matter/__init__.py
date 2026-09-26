@@ -242,6 +242,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
             "bluetooth" in hass.config.components
             and server_info
             and server_info.bluetooth_enabled
+            # A proxy the server never reached leaves no path to the device.
+            and (not server_info.ble_proxy_enabled or ble_proxy is not None)
         ):
             _async_rediscover_commissionable_devices(hass)
         return True

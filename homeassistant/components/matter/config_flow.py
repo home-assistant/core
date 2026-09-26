@@ -276,15 +276,41 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
         """Handle a commissionable Matter device seen over Bluetooth."""
+        # Imported lazily; bluetooth is only an after dependency of Matter.
+        from homeassistant.components import bluetooth  # noqa: PLC0415
+
         advertisement = MatterBleAdvertisement.from_service_info(discovery_info)
         if advertisement is None:
+            # The matcher records only the FFF6 key, not its payload, so a later
+            # commissionable advertisement would otherwise never be discovered.
+            bluetooth.async_clear_address_from_match_history(
+                self.hass, discovery_info.address
+            )
             return self.async_abort(reason="not_commissionable")
+
+        # Watch the device from here on, so every card this flow can show is
+        # dropped once the device stops advertising as commissionable.
+        self._ble = MatterBleDiscovery(
+            self.hass, advertisement, discovery_info.address, self._async_ble_stale
+        )
+        self._ble.async_start()
+
         if not self._async_current_entries(include_ignore=False):
             # No server to commission with; offer to set up the integration first.
             return await self._async_step_discovery_without_unique_id()
         if self.hass.config_entries.async_loaded_entries(DOMAIN):
-            server_info = get_matter(self.hass).matter_client.server_info
-            if server_info is None or not server_info.bluetooth_enabled:
+            matter = get_matter(self.hass)
+            server_info = matter.matter_client.server_info
+            if (
+                server_info is None
+                or not server_info.bluetooth_enabled
+                # The server reports Bluetooth in proxy mode even when the proxy
+                # never connected, which leaves no path to the device.
+                or (
+                    server_info.ble_proxy_enabled
+                    and matter.config_entry.runtime_data.ble_proxy is None
+                )
+            ):
                 return self.async_abort(reason="bluetooth_not_supported")
 
         await self.async_set_unique_id(advertisement.unique_id, raise_on_progress=False)
@@ -299,18 +325,17 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
             if flow["handler"] == DOMAIN and flow["flow_id"] != self.flow_id:
                 raise AbortFlow("already_in_progress")
 
-        self._ble = MatterBleDiscovery(
-            self.hass, advertisement, discovery_info.address, self._async_ble_stale
-        )
         self.context["title_placeholders"] = {
             "name": ble_device_title(discovery_info.name, discovery_info.address)
         }
-        self._ble.async_start()
         return await self.async_step_bluetooth_confirm()
 
     @callback
     def _async_ble_stale(self) -> None:
         """Drop the discovery; the device stopped advertising as commissionable."""
+        # Never yank a card the user is working through.
+        if self.context.get("dismiss_protected"):
+            return
         self.hass.config_entries.flow.async_abort(self.flow_id)
 
     async def async_step_bluetooth_confirm(

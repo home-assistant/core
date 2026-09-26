@@ -122,11 +122,16 @@ class MatterBleDiscovery:
     @callback
     def _async_seen(self, service_info: BluetoothServiceInfoBleak) -> None:
         """Record when the device last advertised as commissionable."""
-        # Service data is aggregated across packets; only raw shows the latest one.
-        if service_info.raw is None or MatterBleAdvertisement.from_raw(
-            service_info.raw
-        ):
-            self._last_seen = service_info.time
+        # Service data is aggregated across packets, so only the packet itself
+        # proves the device is still commissionable. Packets from a scanner that
+        # reports no raw data cannot be checked and so prove nothing.
+        if (raw := service_info.raw) is None or MatterBleAdvertisement.from_raw(
+            raw
+        ) is None:
+            return
+        # Every scanner that hears the device reports it, including ones the
+        # manager discards, so liveness must never move backwards.
+        self._last_seen = max(self._last_seen, service_info.time)
 
     @callback
     def _async_check_stale(self, _now: object) -> None:
