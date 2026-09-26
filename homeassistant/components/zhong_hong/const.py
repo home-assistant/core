@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Final
 
-from homeassistant.components.climate import FAN_HIGH, FAN_LOW, FAN_MIDDLE
+from homeassistant.components.climate import FAN_HIGH, FAN_LOW, FAN_MEDIUM
 
 DOMAIN: Final = "zhong_hong"
 INTEGRATION_TITLE: Final = "ZhongHong"
@@ -16,13 +16,18 @@ LOGGER = logging.getLogger(__package__)
 
 CONF_GATEWAY_ADDRESS: Final = "gateway_address"
 
+# The fan speeds the air conditioners behind a gateway have, chosen in the
+# options. Kept for the whole entry: the units behind one gateway are usually
+# the same model, so they share the speeds.
+CONF_FAN_MODES: Final = "fan_modes"
+
 FAN_MEDIUM_LOW: Final = "medium_low"
 FAN_MEDIUM_HIGH: Final = "medium_high"
 
 ALL_FAN_MODES: Final = [
     FAN_LOW,
     FAN_MEDIUM_LOW,
-    FAN_MIDDLE,
+    FAN_MEDIUM,
     FAN_MEDIUM_HIGH,
     FAN_HIGH,
 ]
@@ -31,7 +36,7 @@ ALL_FAN_MODES: Final = [
 FAN_MODE_MAP: Final = {
     FAN_LOW: "LOW",
     FAN_MEDIUM_LOW: "MIDLOW",
-    FAN_MIDDLE: "MID",
+    FAN_MEDIUM: "MID",
     FAN_MEDIUM_HIGH: "MIDHIGH",
     FAN_HIGH: "HIGH",
 }
