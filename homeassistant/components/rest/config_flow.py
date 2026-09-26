@@ -28,8 +28,11 @@ from homeassistant.config_entries import (
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
+    CONF_HEADERS,
     CONF_METHOD,
     CONF_NAME,
+    CONF_PARAMS,
+    CONF_PAYLOAD,
     CONF_PLATFORM,
     CONF_RESOURCE,
     CONF_UNIT_OF_MEASUREMENT,
@@ -164,6 +167,15 @@ SUBENTRY_CONFIG: dict[Platform, dict[str, Any]] = {
     },
 }
 
+MATCH_ON = {
+    CONF_RESOURCE,
+    CONF_METHOD,
+    CONF_PAYLOAD,
+    CONF_USERNAME,
+    CONF_HEADERS,
+    CONF_PARAMS,
+}
+
 
 class RestConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for the RESTful integration."""
@@ -197,6 +209,9 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {}
         if user_input is not None:
+            self._async_abort_entries_match(
+                {key: value for key, value in user_input.items() if key in MATCH_ON}
+            )
             try:
                 rest = create_rest_data_from_config_entry(self.hass, user_input)
                 await rest.async_update()

@@ -14,10 +14,9 @@
   },
   "config": {
     "abort": {
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "This resource is already configured."
     },
     "error": {
-      "already_configured": "This resource is already configured as {entry_title}.",
       "codec not found": "Encoding not supported",
       "credentials_missing": "Username and password are both required",
       "endpoint_error": "Error communicating with resource: {error_message}",
@@ -125,8 +124,7 @@
     },
     "sensor": {
       "abort": {
-        "config_entry_not_loaded": "[%key:component::rest::common::config_entry_not_loaded%]",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+        "config_entry_not_loaded": "[%key:component::rest::common::config_entry_not_loaded%]"
       },
       "entry_type": "[%key:component::sensor::title%]",
       "error": {
