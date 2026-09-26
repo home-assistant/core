@@ -4,9 +4,14 @@ from typing import Any
 from unittest.mock import patch
 
 from bluetti_modbus_lib import get_device
-from modbus_connection import AcknowledgeError, ModbusTimeoutError
+from modbus_connection import (
+    AcknowledgeError,
+    ModbusConnectionError,
+    ModbusTimeoutError,
+)
 from modbus_connection.exceptions import IllegalDataAddressError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
+import pytest
 
 from homeassistant.components.bluetti_modbus.const import CONF_UNIT_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -49,28 +54,60 @@ async def test_user_flow(hass: HomeAssistant, mock_modbus_unit: MockModbusUnit) 
     assert result["result"].unique_id == SERIAL
 
 
+@pytest.mark.parametrize(
+    ("request_error", "teardown_error"),
+    [
+        pytest.param(ModbusTimeoutError("timed out"), None, id="timeout"),
+        pytest.param(TimeoutError("timed out"), None, id="bare_timeout"),
+        pytest.param(AcknowledgeError(), None, id="still_busy"),
+        pytest.param(
+            ModbusTimeoutError("timed out"),
+            ModbusConnectionError("teardown failed"),
+            id="teardown_fails",
+        ),
+    ],
+)
 async def test_user_flow_cannot_connect(
-    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+    hass: HomeAssistant,
+    mock_modbus_unit: MockModbusUnit,
+    request_error: Exception,
+    teardown_error: Exception | None,
 ) -> None:
-    """An unresponsive device surfaces cannot_connect, then the flow recovers."""
-    mock_modbus_unit.fail_requests(ModbusTimeoutError("timed out"))
+    """A device that can't be read surfaces cannot_connect, then the flow recovers."""
+    mock_modbus_unit.fail_requests(request_error)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     flow_id = result["flow_id"]
+    with patch.object(mock_modbus_unit, "disconnect", side_effect=teardown_error):
+        result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
 
-    result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
     mock_modbus_unit.fail_requests(None)
-
     result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TITLE
+
+
+async def test_user_flow_rejects_a_zero_serial(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """A responder reporting serial 0 is not a real device identity."""
+    mock_modbus_unit.holding[50206] = 0  # d_serial's least-significant word
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _user_input()
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_user_flow_retries_a_transient_busy_response(
@@ -95,28 +132,6 @@ async def test_user_flow_retries_a_transient_busy_response(
             result["flow_id"], _user_input()
         )
         await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_user_flow_device_still_busy(
-    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
-) -> None:
-    """A device that stays busy surfaces cannot_connect, then the flow recovers."""
-    mock_modbus_unit.fail_requests(AcknowledgeError())
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    flow_id = result["flow_id"]
-    result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    mock_modbus_unit.fail_requests(None)
-    result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -179,40 +194,6 @@ async def test_user_flow_link_settings_in_use(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_user_flow_rejects_a_zero_serial(
-    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
-) -> None:
-    """A responder reporting serial 0 is not a real device identity."""
-    mock_modbus_unit.holding[50206] = 0  # d_serial's least-significant word
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], _user_input()
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_user_flow_probe_timeout_surfaces_cannot_connect(
-    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
-) -> None:
-    """A probe that times out surfaces cannot_connect, not an uncaught crash."""
-    mock_modbus_unit.fail_requests(TimeoutError("timed out"))
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], _user_input()
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_user_flow_already_configured(

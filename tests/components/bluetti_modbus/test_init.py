@@ -3,8 +3,13 @@
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from modbus_connection import AcknowledgeError, ModbusTimeoutError
+from modbus_connection import (
+    AcknowledgeError,
+    ModbusConnectionError,
+    ModbusTimeoutError,
+)
 from modbus_connection.mock import MockModbusUnit
+import pytest
 
 from homeassistant.components.bluetti_modbus.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
@@ -12,7 +17,6 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import SERIAL
 
@@ -113,24 +117,40 @@ async def _tick(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
-async def test_dead_link_fails_the_refresh(
+@pytest.mark.parametrize(
+    ("request_error", "teardown_error"),
+    [
+        pytest.param(ModbusTimeoutError("link died"), None, id="dead_link"),
+        pytest.param(AcknowledgeError(), None, id="still_busy"),
+        pytest.param(
+            ModbusTimeoutError("link died"),
+            ModbusConnectionError("teardown failed"),
+            id="teardown_fails",
+        ),
+    ],
+)
+async def test_failed_refresh_goes_unavailable_then_recovers(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
     mock_config_entry: MockConfigEntry,
     mock_modbus_unit: MockModbusUnit,
+    request_error: Exception,
+    teardown_error: Exception | None,
 ) -> None:
-    """A device that stops answering after setup goes unavailable, then recovers."""
+    """A device that can't be read goes unavailable, then recovers."""
     await _setup(hass, mock_config_entry)
 
-    mock_modbus_unit.fail_requests(ModbusTimeoutError("link died"))
-    await _tick(hass, freezer)
-
-    coordinator = mock_config_entry.runtime_data.coordinator
-    assert coordinator.last_update_success is False
+    mock_modbus_unit.fail_requests(request_error)
+    with patch.object(mock_modbus_unit, "disconnect", side_effect=teardown_error):
+        await _tick(hass, freezer)
 
     state = hass.states.get(VOLTAGE_ENTITY)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+    # Reported as a failed update, not as an unexpected error with a traceback.
+    assert "An error occurred while communicating with the BLUETTI" in caplog.text
+    assert "Unexpected error" not in caplog.text
 
     mock_modbus_unit.fail_requests(None)
     await _tick(hass, freezer)
@@ -138,24 +158,6 @@ async def test_dead_link_fails_the_refresh(
     state = hass.states.get(VOLTAGE_ENTITY)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
-
-
-async def test_device_still_busy_after_the_retry_fails_the_refresh(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_config_entry: MockConfigEntry,
-    mock_modbus_unit: MockModbusUnit,
-) -> None:
-    """A device that stays busy is reported as a failed update."""
-    await _setup(hass, mock_config_entry)
-
-    mock_modbus_unit.fail_requests(AcknowledgeError())
-    await _tick(hass, freezer)
-
-    coordinator = mock_config_entry.runtime_data.coordinator
-    assert coordinator.last_update_success is False
-    assert isinstance(coordinator.last_exception, UpdateFailed)
-    assert coordinator.last_exception.translation_key == "communication_error"
 
 
 async def test_transient_busy_response_is_retried(
