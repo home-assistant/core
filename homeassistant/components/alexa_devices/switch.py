@@ -173,24 +173,21 @@ async def async_setup_entry(
             current_devices & coordinator.dnd_states.keys()
         ) - known_dnd_devices
 
-        if new_dnd_devices:
-            dnd_switches = [
+        async_add_entities(
+            [
                 AmazonSwitchEntity(coordinator, serial_num, DND_SWITCH)
                 for serial_num in new_dnd_devices
             ]
-            async_add_entities(dnd_switches)
-            known_dnd_devices.update(new_dnd_devices)
-
-        if new_devices:
-            communication_switches = [
+            + [
                 AmazonSwitchEntity(coordinator, serial_num, switch_desc)
                 for switch_desc in COMMUNICATION_SWITCHES
                 for serial_num in new_devices
                 if switch_desc.key
                 in coordinator.data[serial_num].communication_settings
             ]
-            async_add_entities(communication_switches)
-            known_devices.update(new_devices)
+        )
+        known_dnd_devices.update(new_dnd_devices)
+        known_devices.update(new_devices)
 
     _check_device()
     entry.async_on_unload(coordinator.async_add_listener(_check_device))
