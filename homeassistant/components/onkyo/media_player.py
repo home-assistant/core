@@ -403,6 +403,14 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             case status.InputSource(param=source):
                 if source in self._source_mapping:
                     self._attr_source = self._source_mapping[source]
+                # MAIN_SOURCE is a special source for secondary zones (Zone 2, 3, 4)
+                # It means "use the main zone's source". Always accept it without
+                # validation, even if not explicitly configured by the user.
+                elif (
+                    source is InputSource.MAIN_SOURCE
+                    and self._zone is not Zone.MAIN
+                ):
+                    self._attr_source = "MAIN SOURCE"
                 else:
                     source_meaning = get_meaning(source)
                     _LOGGER.warning(
