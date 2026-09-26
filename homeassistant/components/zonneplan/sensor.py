@@ -258,33 +258,12 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
 )
 
 
-def _delivery_cost(
-    group: ElectricityChartGroup | GasChartGroup | None,
-) -> Decimal | None:
-    """Return the month's delivery cost including tax, in euro."""
-    if group is None or not group.has_data:
-        return None
-    return Decimal(str(group.meta["delivery_costs_incl_tax"])) * MONEY_FACTOR
-
-
 @dataclass(frozen=True, kw_only=True)
 class ZonneplanUsageSensorEntityDescription(SensorEntityDescription):
-    """Describes a Zonneplan month-to-date usage sensor.
-
-    Usage comes from the grid operator a day or more late, so the value lags
-    behind and can still be revised.
-    """
+    """Describes a Zonneplan month-to-date usage sensor."""
 
     group_fn: Callable[[ZonneplanData], ElectricityChartGroup | GasChartGroup | None]
     value_fn: Callable[[ZonneplanData], Decimal | None]
-
-
-def _electricity_group(data: ZonneplanData) -> ElectricityChartGroup | None:
-    return data.electricity_usage.group if data.electricity_usage else None
-
-
-def _gas_group(data: ZonneplanData) -> GasChartGroup | None:
-    return data.gas_usage.group if data.gas_usage else None
 
 
 ZONNEPLAN_USAGE_SENSORS: tuple[ZonneplanUsageSensorEntityDescription, ...] = (
@@ -294,9 +273,13 @@ ZONNEPLAN_USAGE_SENSORS: tuple[ZonneplanUsageSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
-        group_fn=_electricity_group,
+        group_fn=lambda data: (
+            data.electricity_usage.group if data.electricity_usage else None
+        ),
         value_fn=lambda data: (
-            group.delivered_kwh if (group := _electricity_group(data)) else None
+            group.delivered_kwh
+            if data.electricity_usage and (group := data.electricity_usage.group)
+            else None
         ),
     ),
     ZonneplanUsageSensorEntityDescription(
@@ -305,9 +288,13 @@ ZONNEPLAN_USAGE_SENSORS: tuple[ZonneplanUsageSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
-        group_fn=_electricity_group,
+        group_fn=lambda data: (
+            data.electricity_usage.group if data.electricity_usage else None
+        ),
         value_fn=lambda data: (
-            group.produced_kwh if (group := _electricity_group(data)) else None
+            group.produced_kwh
+            if data.electricity_usage and (group := data.electricity_usage.group)
+            else None
         ),
     ),
     ZonneplanUsageSensorEntityDescription(
@@ -316,8 +303,12 @@ ZONNEPLAN_USAGE_SENSORS: tuple[ZonneplanUsageSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.GAS,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL,
-        group_fn=_gas_group,
-        value_fn=lambda data: group.total_m3 if (group := _gas_group(data)) else None,
+        group_fn=lambda data: data.gas_usage.group if data.gas_usage else None,
+        value_fn=lambda data: (
+            group.total_m3
+            if data.gas_usage and (group := data.gas_usage.group)
+            else None
+        ),
     ),
     ZonneplanUsageSensorEntityDescription(
         key="electricity_cost_this_month",
@@ -326,8 +317,16 @@ ZONNEPLAN_USAGE_SENSORS: tuple[ZonneplanUsageSensorEntityDescription, ...] = (
         native_unit_of_measurement=CURRENCY_EURO,
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=2,
-        group_fn=_electricity_group,
-        value_fn=lambda data: _delivery_cost(_electricity_group(data)),
+        group_fn=lambda data: (
+            data.electricity_usage.group if data.electricity_usage else None
+        ),
+        value_fn=lambda data: (
+            Decimal(str(group.meta["delivery_costs_incl_tax"])) * MONEY_FACTOR
+            if data.electricity_usage
+            and (group := data.electricity_usage.group)
+            and group.has_data
+            else None
+        ),
     ),
     ZonneplanUsageSensorEntityDescription(
         key="gas_cost_this_month",
@@ -336,8 +335,12 @@ ZONNEPLAN_USAGE_SENSORS: tuple[ZonneplanUsageSensorEntityDescription, ...] = (
         native_unit_of_measurement=CURRENCY_EURO,
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=2,
-        group_fn=_gas_group,
-        value_fn=lambda data: _delivery_cost(_gas_group(data)),
+        group_fn=lambda data: data.gas_usage.group if data.gas_usage else None,
+        value_fn=lambda data: (
+            Decimal(str(group.meta["delivery_costs_incl_tax"])) * MONEY_FACTOR
+            if data.gas_usage and (group := data.gas_usage.group) and group.has_data
+            else None
+        ),
     ),
 )
 
@@ -351,12 +354,16 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        ZonneplanPriceSensor(coordinator, description)
-        for description in ZONNEPLAN_SENSORS
-    )
-    async_add_entities(
-        ZonneplanUsageSensor(coordinator, description)
-        for description in ZONNEPLAN_USAGE_SENSORS
+        [
+            *(
+                ZonneplanPriceSensor(coordinator, description)
+                for description in ZONNEPLAN_SENSORS
+            ),
+            *(
+                ZonneplanUsageSensor(coordinator, description)
+                for description in ZONNEPLAN_USAGE_SENSORS
+            ),
+        ]
     )
 
 
