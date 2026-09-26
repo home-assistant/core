@@ -174,6 +174,13 @@ class MatterAdapter:
         endpoint = get_device_endpoint(endpoint)
 
         basic_info = endpoint.device_info
+        # a nested-aggregator child without its own identity cluster borrows its
+        # bridge parent's basic_info; that borrowed identity must not be used for
+        # this endpoint's own name/model/serial, or its siblings would collide
+        own_basic_info = not (
+            endpoint.is_bridged_device
+            and endpoint.get_cluster(clusters.BridgedDeviceBasicInformation) is None
+        )
         # use (first) DeviceType of the endpoint as fallback product name
         device_type = next(
             (
@@ -184,26 +191,30 @@ class MatterAdapter:
             None,
         )
         name = (
-            get_clean_name(basic_info.nodeLabel)
-            or get_clean_name(basic_info.productLabel)
-            or get_clean_name(basic_info.productName)
-            or (device_type.__name__ if device_type else None)
-        )
+            own_basic_info
+            and (
+                get_clean_name(basic_info.nodeLabel)
+                or get_clean_name(basic_info.productLabel)
+                or get_clean_name(basic_info.productName)
+            )
+        ) or (device_type.__name__ if device_type else None)
 
         device_registry = dr.async_get(self.hass)
 
         # handle bridged devices
         via_device_id: str | UndefinedType = UNDEFINED
-        if endpoint.is_bridged_device and endpoint.node.endpoints[0] != endpoint:
-            bridge_device_id = get_device_id(
-                server_info,
-                endpoint.node.endpoints[0],
-            )
-            via_device_id = dr.async_get_device_id_by_identifier(
-                self.hass,
-                (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{bridge_device_id}"),
-                config_entry_id=self.config_entry.entry_id,
-            )
+        if endpoint.is_bridged_device:
+            # the endpoint's immediate parent: the Aggregator that bridges it if
+            # nested behind one, otherwise the node's root endpoint
+            bridge_parent = endpoint.node.get_bridge_parent(endpoint.endpoint_id)
+            parent_endpoint = bridge_parent or endpoint.node.endpoints[0]
+            if parent_endpoint != endpoint:
+                bridge_device_id = get_device_id(server_info, parent_endpoint)
+                via_device_id = dr.async_get_device_id_by_identifier(
+                    self.hass,
+                    (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{bridge_device_id}"),
+                    config_entry_id=self.config_entry.entry_id,
+                )
 
         node_device_id = get_device_id(
             server_info,
@@ -214,7 +225,8 @@ class MatterAdapter:
         serial_number: str | None = None
         # if available, we also add the serial number as identifier
         if (
-            (basic_info_serial_number := basic_info.serialNumber)
+            own_basic_info
+            and (basic_info_serial_number := basic_info.serialNumber)
             and "test" not in basic_info_serial_number.lower()
             # some bridges report their own serial number for the devices they bridge,
             # which would make the identifier resolve to the bridge's device
@@ -241,12 +253,16 @@ class MatterAdapter:
 
         # Model name is the human readable name of the model/product name
         model_name = (
-            # productLabel is optional but preferred (e.g. Hue Bloom)
-            get_clean_name(basic_info.productLabel)
-            # alternative is the productName (e.g. LCT001)
-            or get_clean_name(basic_info.productName)
+            own_basic_info
+            and (
+                # productLabel is optional but preferred (e.g. Hue Bloom)
+                get_clean_name(basic_info.productLabel)
+                # alternative is the productName (e.g. LCT001)
+                or get_clean_name(basic_info.productName)
+            )
+        ) or (
             # if no product name, use the device type name
-            or (device_type.__name__ if device_type else None)
+            device_type.__name__ if device_type else None
         )
         # Model ID is the non-human readable product ID
         # we prefer the matter product ID so we can look it up in Matter DCL
