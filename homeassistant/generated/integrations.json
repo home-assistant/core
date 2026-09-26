@@ -7740,6 +7740,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "trimlight": {
+      "name": "Trimlight",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "trmnl": {
       "name": "TRMNL",
       "integration_type": "hub",
