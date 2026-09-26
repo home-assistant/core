@@ -1,4 +1,4 @@
-"""Test the Sofar Inverter Modbus sensor platform."""
+"""Tests for the Sofar sensor platform."""
 
 from collections.abc import Callable
 from datetime import timedelta

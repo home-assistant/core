@@ -1,4 +1,4 @@
-"""Test the Sofar Inverter Modbus integration setup and unload."""
+"""Tests for the Sofar integration setup and unload."""
 
 from collections.abc import Callable
 from datetime import timedelta

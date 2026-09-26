@@ -1,4 +1,4 @@
-"""Test the Sofar Inverter Modbus link tuning."""
+"""Tests for the Sofar link tuning."""
 
 from datetime import timedelta
 

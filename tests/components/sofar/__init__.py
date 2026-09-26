@@ -1,4 +1,4 @@
-"""Tests for the Sofar Inverter Modbus integration."""
+"""Tests for the Sofar integration."""
 
 from modbus_connection.mock import MockModbusUnit
 
