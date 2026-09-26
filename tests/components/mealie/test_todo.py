@@ -3,12 +3,24 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, call, patch
 
-from aiomealie import MealieError, MutateShoppingItem, ShoppingListsResponse
+from aiomealie import (
+    Ingredient,
+    IngredientConfidence,
+    MealieError,
+    MutateShoppingItem,
+    ParsedIngredient,
+    RegisteredParser,
+    ShoppingListsResponse,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mealie import DOMAIN
+from homeassistant.components.mealie.const import (
+    CONF_PARSE_TODO_EDIT,
+    CONF_PARSE_TODO_NEW,
+)
 from homeassistant.components.todo import (
     ATTR_ITEM,
     ATTR_RENAME,
@@ -78,6 +90,370 @@ async def test_todo_actions(
     )
 
     getattr(mock_mealie_client, method).assert_called_once()
+
+
+async def test_add_todo_item_parsed(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test adding a parsed To-do item."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={**mock_config_entry.options, "parser": RegisteredParser.BRUTE},
+    )
+    shopping_item = mock_mealie_client.get_shopping_items.return_value.items[1]
+    mock_mealie_client.parse_ingredient.return_value = ParsedIngredient(
+        ingredient=Ingredient(
+            quantity=1.0,
+            note="",
+            title="acorn squash",
+            display="1 can acorn squash",
+            unit=shopping_item.unit,
+            food=shopping_item.food,
+            reference_id="",
+        ),
+        confidence=IngredientConfidence(average=1.0),
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "1 can acorn squash"},
+        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        blocking=True,
+    )
+
+    mock_mealie_client.add_shopping_item.assert_called_once_with(
+        MutateShoppingItem(
+            list_id="27edbaab-2ec6-441f-8490-0283ea77585f",
+            position=1,
+            is_food=True,
+            food_id="09322430-d24c-4b1a-abb6-22b6ed3a88f5",
+            unit_id="7bf539d4-fc78-48bc-b48e-c35ccccec34a",
+            quantity=1.0,
+        )
+    )
+    mock_mealie_client.parse_ingredient.assert_awaited_once_with(
+        "1 can acorn squash", parser=RegisteredParser.BRUTE
+    )
+
+
+async def test_add_todo_item_parser_disabled(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test adding a to-do item without parsing."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            **mock_config_entry.options,
+            CONF_PARSE_TODO_NEW: False,
+        },
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "Misc Item"},
+        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        blocking=True,
+    )
+
+    mock_mealie_client.parse_ingredient.assert_not_awaited()
+    mock_mealie_client.add_shopping_item.assert_called_once()
+
+
+async def test_add_todo_item_parse_fallback(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test falling back when adding an item cannot be parsed."""
+    mock_mealie_client.parse_ingredient.return_value = None
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "Misc Item"},
+        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        blocking=True,
+    )
+
+    mock_mealie_client.add_shopping_item.assert_called_once_with(
+        MutateShoppingItem(
+            list_id="27edbaab-2ec6-441f-8490-0283ea77585f",
+            position=1,
+            note="Misc Item",
+            quantity=0.0,
+        )
+    )
+
+
+async def test_add_todo_item_low_confidence_fallback(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test falling back when parsing has low confidence."""
+    mock_mealie_client.parse_ingredient.return_value = ParsedIngredient(
+        ingredient=Ingredient(
+            quantity=0.0,
+            note="",
+            title="Misc Item",
+            display="Misc Item",
+            unit=None,
+            food=None,
+            reference_id="",
+        ),
+        confidence=IngredientConfidence(average=0.0),
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "Misc Item"},
+        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        blocking=True,
+    )
+
+    mock_mealie_client.add_shopping_item.assert_called_once_with(
+        MutateShoppingItem(
+            list_id="27edbaab-2ec6-441f-8490-0283ea77585f",
+            position=1,
+            note="Misc Item",
+            quantity=0.0,
+        )
+    )
+
+
+async def test_add_todo_item_without_food_fallback(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test falling back when parsing finds no food."""
+    mock_mealie_client.parse_ingredient.return_value = ParsedIngredient(
+        ingredient=Ingredient(
+            quantity=1.0,
+            note="",
+            title="Misc Item",
+            display="1 Misc Item",
+            unit=None,
+            food=None,
+            reference_id="",
+        ),
+        confidence=IngredientConfidence(average=1.0),
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "Misc Item"},
+        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        blocking=True,
+    )
+
+    mock_mealie_client.add_shopping_item.assert_called_once_with(
+        MutateShoppingItem(
+            list_id="27edbaab-2ec6-441f-8490-0283ea77585f",
+            position=1,
+            note="Misc Item",
+            quantity=0.0,
+        )
+    )
+
+
+async def test_add_todo_item_parse_error_fallback(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test falling back when ingredient parsing raises an error."""
+    mock_mealie_client.parse_ingredient.side_effect = MealieError
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "Misc Item"},
+        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        blocking=True,
+    )
+
+    mock_mealie_client.add_shopping_item.assert_called_once_with(
+        MutateShoppingItem(
+            list_id="27edbaab-2ec6-441f-8490-0283ea77585f",
+            position=1,
+            note="Misc Item",
+            quantity=0.0,
+        )
+    )
+    assert "Unable to parse to-do item Misc Item" in caplog.text
+
+
+async def test_update_todo_item_parsed(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test updating an item with parsed data."""
+    shopping_item = mock_mealie_client.get_shopping_items.return_value.items[1]
+    mock_mealie_client.parse_ingredient.return_value = ParsedIngredient(
+        ingredient=Ingredient(
+            quantity=1.0,
+            note="",
+            title="acorn squash",
+            display="1 can acorn squash",
+            unit=shopping_item.unit,
+            food=shopping_item.food,
+            reference_id="",
+        ),
+        confidence=IngredientConfidence(average=1.0),
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "aubergine", ATTR_RENAME: "1 can acorn squash"},
+        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        blocking=True,
+    )
+
+    mock_mealie_client.update_shopping_item.assert_called_once_with(
+        "69913b9a-7c75-4935-abec-297cf7483f88",
+        MutateShoppingItem(
+            item_id="69913b9a-7c75-4935-abec-297cf7483f88",
+            list_id="9ce096fe-ded2-4077-877d-78ba450ab13e",
+            position=2,
+            is_food=True,
+            food_id="09322430-d24c-4b1a-abb6-22b6ed3a88f5",
+            unit_id="7bf539d4-fc78-48bc-b48e-c35ccccec34a",
+            quantity=1.0,
+            checked=False,
+        ),
+    )
+
+
+async def test_update_todo_item_parser_disabled(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test updating a to-do item without parsing."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            **mock_config_entry.options,
+            CONF_PARSE_TODO_EDIT: False,
+        },
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "aubergine", ATTR_RENAME: "Eggplant"},
+        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        blocking=True,
+    )
+
+    mock_mealie_client.parse_ingredient.assert_not_awaited()
+    mock_mealie_client.update_shopping_item.assert_called_once()
+
+
+async def test_update_todo_item_parse_fallback(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test falling back when updating an item cannot be parsed."""
+    mock_mealie_client.parse_ingredient.return_value = None
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "aubergine", ATTR_RENAME: "Eggplant"},
+        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        blocking=True,
+    )
+
+    mock_mealie_client.update_shopping_item.assert_called_once_with(
+        "69913b9a-7c75-4935-abec-297cf7483f88",
+        MutateShoppingItem(
+            item_id="69913b9a-7c75-4935-abec-297cf7483f88",
+            list_id="9ce096fe-ded2-4077-877d-78ba450ab13e",
+            note="Eggplant",
+            display="aubergine",
+            quantity=0.0,
+            position=2,
+            is_food=False,
+            disable_amount=False,
+            food_id=None,
+            checked=False,
+        ),
+    )
+
+
+async def test_update_todo_item_parse_error_fallback(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test falling back when updating an item raises a parsing error."""
+    mock_mealie_client.parse_ingredient.side_effect = MealieError
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "aubergine", ATTR_RENAME: "Eggplant"},
+        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        blocking=True,
+    )
+
+    mock_mealie_client.update_shopping_item.assert_called_once_with(
+        "69913b9a-7c75-4935-abec-297cf7483f88",
+        MutateShoppingItem(
+            item_id="69913b9a-7c75-4935-abec-297cf7483f88",
+            list_id="9ce096fe-ded2-4077-877d-78ba450ab13e",
+            note="Eggplant",
+            display="aubergine",
+            quantity=0.0,
+            position=2,
+            is_food=False,
+            disable_amount=False,
+            food_id=None,
+            checked=False,
+        ),
+    )
+    assert "Unable to parse to-do item Eggplant" in caplog.text
 
 
 async def test_add_todo_list_item_error(
