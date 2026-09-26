@@ -13,11 +13,20 @@ from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
     BaseNotificationService,
+    NotifyEntity,
+    NotifyEntityDescription,
 )
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import DiscordConfigEntry
+from .const import CONF_ENTRY, CONF_TARGET_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +55,25 @@ async def async_get_service(
     """Get the Discord notification service."""
     if discovery_info is None:
         return None
-    return DiscordNotificationService(hass, discovery_info[CONF_API_TOKEN])
+    service = DiscordNotificationService(hass, discovery_info[CONF_API_TOKEN])
+    discovery_info[CONF_ENTRY].async_on_unload(service.async_unregister_services)
+    return service
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: DiscordConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Discord notification entities from target subentries."""
+    bot_device_id = dr.async_get_device_id_by_identifier(
+        hass, (DOMAIN, config_entry.entry_id), config_entry_id=config_entry.entry_id
+    )
+    for subentry_id, subentry in config_entry.subentries.items():
+        async_add_entities(
+            [DiscordNotifyEntity(config_entry, subentry, bot_device_id)],
+            config_subentry_id=subentry_id,
+        )
 
 
 class DiscordNotificationService(BaseNotificationService):
@@ -198,3 +225,59 @@ class DiscordNotificationService(BaseNotificationService):
         except (nextcord.HTTPException, nextcord.NotFound) as error:
             _LOGGER.warning("Communication error: %s", error)
         await discord_bot.close()
+
+
+class DiscordNotifyEntity(NotifyEntity):
+    """Representation of a Discord notification entity for a single target."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
+    entity_description = NotifyEntityDescription(key="send_message")
+
+    def __init__(
+        self,
+        config_entry: DiscordConfigEntry,
+        subentry: ConfigSubentry,
+        bot_device_id: str,
+    ) -> None:
+        """Initialize the notification entity."""
+        self._token = config_entry.data[CONF_API_TOKEN]
+        self._target_id = subentry.data[CONF_TARGET_ID]
+        self._attr_unique_id = f"{config_entry.entry_id}_{self._target_id}"
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, f"{config_entry.entry_id}_{self._target_id}")},
+            entry_type=dr.DeviceEntryType.SERVICE,
+            manufacturer="Discord",
+            name=subentry.title,
+            via_device_id=bot_device_id,
+        )
+
+    @override
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
+        """Send a message to the configured Discord target."""
+        nextcord.VoiceClient.warn_nacl = False
+        target = int(self._target_id)
+        discord_bot = nextcord.Client()
+        try:
+            await discord_bot.login(self._token)
+            try:
+                channel = cast(Messageable, await discord_bot.fetch_channel(target))
+            except nextcord.NotFound:
+                try:
+                    channel = await discord_bot.fetch_user(target)
+                except nextcord.NotFound as err:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="target_not_found",
+                        translation_placeholders={"target": self._target_id},
+                    ) from err
+            try:
+                await channel.send(message)
+            except (nextcord.HTTPException, nextcord.NotFound) as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="send_failed",
+                    translation_placeholders={"error": str(err)},
+                ) from err
+        finally:
+            await discord_bot.close()
