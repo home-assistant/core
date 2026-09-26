@@ -25,7 +25,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DOMAIN, SCAN_INTERVAL
+from .const import CONF_LISTEN_CREDENTIALS, DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -182,6 +182,24 @@ class RingListenCoordinator(BaseDataUpdateCoordinatorProtocol):
                 "Ring event listener failed to start after %s seconds",
                 self.start_timeout,
             )
+            # Clear stale GCM credentials so the next reload attempts fresh registration.
+            # Credentials become invalid after an abrupt HA shutdown (SIGKILL), causing
+            # PHONE_REGISTRATION_ERROR on every subsequent start until manually cleared.
+            if CONF_LISTEN_CREDENTIALS in self.config_entry.data:
+                self.logger.warning(
+                    "Clearing stale Ring listen credentials to force re-registration"
+                )
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry,
+                    data={
+                        k: v
+                        for k, v in self.config_entry.data.items()
+                        if k != CONF_LISTEN_CREDENTIALS
+                    },
+                )
+                self.hass.config_entries.async_schedule_reload(
+                    self.config_entry.entry_id
+                )
         self._listen_callback_id = self.event_listener.add_notification_callback(
             self._on_event
         )
