@@ -1,9 +1,11 @@
 """Test the UniFi Protect event platform."""
 
 import asyncio
+from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
 import json
 from pathlib import Path
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -16,6 +18,7 @@ from uiprotect.data import (
     ModelType,
     SmartDetectAudioType,
     SmartDetectObjectType,
+    WSAction,
 )
 from uiprotect.websocket import WebsocketState
 
@@ -24,6 +27,7 @@ from homeassistant.components.unifiprotect.const import (
     ATTR_EVENT_SOURCE,
     ATTR_SMART_DETECT_TYPES,
     DEFAULT_ATTRIBUTION,
+    DOMAIN,
     EVENT_TYPE_PACKAGE_DETECTED,
 )
 from homeassistant.components.unifiprotect.event import (
@@ -41,6 +45,8 @@ from .utils import (
     assert_entity_counts,
     ids_from_device_description,
     init_entry,
+    make_public_camera,
+    public_device_ws_message,
     remove_entities,
     setup_public_camera,
 )
@@ -2436,3 +2442,144 @@ async def test_event_entities_unavailable_on_events_ws_disconnect(
 
     assert hass.states.get(ring_id).state != STATE_UNAVAILABLE
     assert hass.states.get(motion_id).state != STATE_UNAVAILABLE
+
+
+def _event_keys(entity_registry: EntityRegistry, mac: str) -> set[str]:
+    """Return the description keys of a device's event entities."""
+    prefix = f"{mac}_"
+    return {
+        entry.unique_id.removeprefix(prefix)
+        for entry in entity_registry.entities.values()
+        if entry.domain == Platform.EVENT and entry.unique_id.startswith(prefix)
+    }
+
+
+async def test_smart_detection_events_need_advertised_types(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """A camera advertising no smart detection types gets no smart detection events."""
+    doorbell.feature_flags.has_smart_detect = True
+    doorbell.feature_flags.smart_detect_types = []
+
+    await init_entry(hass, ufp, [doorbell])
+
+    keys = _event_keys(entity_registry, doorbell.mac)
+    assert "motion_detection" in keys
+    assert not keys & {"smart_detection", "package"}
+
+
+@pytest.mark.parametrize(
+    ("object_types", "audio_types", "expected"),
+    [
+        pytest.param(
+            [SmartDetectObjectType.PERSON, SmartDetectObjectType.PACKAGE],
+            [SmartDetectAudioType.SMOKE],
+            {"motion_detection", "smart_detection", "sound_detection", "package"},
+            id="all",
+        ),
+        pytest.param([], [], {"motion_detection"}, id="motion_only"),
+    ],
+)
+async def test_public_only_event_entities(
+    entity_registry: EntityRegistry,
+    doorbell: Camera,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    object_types: list[SmartDetectObjectType],
+    audio_types: list[SmartDetectAudioType],
+    expected: set[str],
+) -> None:
+    """A public-only entry builds the event entities fed by the public events WS.
+
+    The ring event needs the private ``is_doorbell`` flag, which the public
+    camera does not carry.
+    """
+    doorbell.feature_flags.smart_detect_types = object_types
+    doorbell.feature_flags.smart_detect_audio_types = audio_types
+    public = make_public_camera(doorbell)
+    public.rtsps_streams = None
+    ufp_public_only.api.public_bootstrap.cameras[doorbell.id] = public
+
+    await setup_public_only()
+
+    assert _event_keys(entity_registry, doorbell.mac) == expected
+
+
+async def test_public_only_skips_private_event_classes(
+    entity_registry: EntityRegistry,
+    doorbell: Camera,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Event classes reading the private bootstrap stay off even if the flag matches."""
+    public = make_public_camera(doorbell)
+    public.rtsps_streams = None
+    public.feature_flags.has_smart_detect = True
+    ufp_public_only.api.public_bootstrap.cameras[doorbell.id] = public
+
+    await setup_public_only()
+
+    assert "vehicle" not in _event_keys(entity_registry, doorbell.mac)
+
+
+async def test_public_only_event_fires(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    doorbell: Camera,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    fixed_now: datetime,
+) -> None:
+    """A public detection event fires the public-only camera's event entity."""
+    public = make_public_camera(doorbell)
+    public.rtsps_streams = None
+    ufp_public_only.api.public_bootstrap.cameras[doorbell.id] = public
+    await setup_public_only()
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.EVENT, DOMAIN, f"{doorbell.mac}_smart_detection"
+    )
+    assert entity_id
+    ufp_public_only.events_msg(
+        ProtectEvent(
+            id="smart-1",
+            type=EventType.SMART_DETECT,
+            channel=ProtectEventChannel.DETECTION,
+            device_id=doorbell.id,
+            device_mac=doorbell.mac,
+            start=fixed_now,
+            smart_detect_types=[SmartDetectObjectType.PERSON],
+        ),
+        EventChange.STARTED,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["event_type"] == "person"
+    assert state.attributes[ATTR_EVENT_ID] == "smart-1"
+
+
+async def test_public_only_event_camera_added_after_setup(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    camera: Camera,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """A camera added later gets its event entities from its public add frame."""
+    await setup_public_only()
+    assert_entity_counts(hass, Platform.EVENT, 0, 0)
+
+    public = make_public_camera(camera)
+    public.rtsps_streams = None
+    ufp_public_only.api.public_bootstrap.cameras[camera.id] = public
+    msg = public_device_ws_message(public)
+    msg.action = WSAction.ADD
+    ufp_public_only.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert "motion_detection" in _event_keys(entity_registry, camera.mac)
