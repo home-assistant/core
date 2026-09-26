@@ -84,6 +84,50 @@ class OrderBeerIntentHandler(intent.IntentHandler):
         return response
 
 
+@pytest.mark.parametrize(
+    ("reprompt", "expected"),
+    [("Which one?", True), (None, False)],
+)
+async def test_reprompt_continues_the_conversation(
+    hass: HomeAssistant,
+    init_components: None,
+    reprompt: str | None,
+    expected: bool,
+) -> None:
+    """Test a reprompt keeps the satellite listening for the answer.
+
+    `intent_script` exposes a `reprompt:` option that sets this on the response,
+    which is a follow-up question. Without this the user has to say the wake
+    word again before answering, since only agents backed by an LLM reach
+    `chat_log.continue_conversation`.
+    """
+
+    class RepromptingIntentHandler(intent.IntentHandler):
+        """Handle OrderBeer, optionally with a reprompt."""
+
+        intent_type = "OrderBeer"
+
+        async def async_handle(
+            self, intent_obj: intent.Intent
+        ) -> intent.IntentResponse:
+            """Return speech response."""
+            response = intent_obj.create_response()
+            response.async_set_speech("You ordered a stout")
+            if reprompt is not None:
+                response.async_set_reprompt(reprompt)
+            return response
+
+    # Reuse the custom sentences in the test config to reach the default agent.
+    intent.async_register(hass, RepromptingIntentHandler())
+
+    result = await conversation.async_converse(
+        hass, "I'd like to order a stout, please", None, Context(), language="en"
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.continue_conversation is expected
+
+
 @pytest.fixture
 async def init_components(hass: HomeAssistant) -> None:
     """Initialize relevant components with empty configs."""
