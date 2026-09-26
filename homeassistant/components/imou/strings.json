@@ -141,6 +141,9 @@
     }
   },
   "exceptions": {
+    "alarm_arm_disarm_failed": {
+      "message": "Imou rejected the arming change"
+    },
     "get_image_failed": {
       "message": "Could not get a snapshot from Imou"
     },
