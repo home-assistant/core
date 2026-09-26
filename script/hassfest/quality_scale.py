@@ -517,7 +517,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "lg_thinq",
     "lidarr",
     "life360",
-    "lifx",
     "lifx_cloud",
     "lightwave",
     "limitlessled",

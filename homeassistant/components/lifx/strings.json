@@ -105,6 +105,19 @@
       "message": "Error fetching the state of the LIFX device: {error}"
     }
   },
+  "issues": {
+    "invalid_serial": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "Home Assistant cannot migrate the LIFX entry \"{title}\" because its stored identifier \"{unique_id}\" is not a valid LIFX serial number.\n\nClick **Submit** to delete the entry then either wait for it to be rediscovered automatically or add it manually.",
+            "title": "[%key:component::lifx::issues::invalid_serial::title%]"
+          }
+        }
+      },
+      "title": "LIFX entry {title} cannot be migrated"
+    }
+  },
   "services": {
     "effect_colorloop": {
       "description": "Runs an effect with looping colors.",
