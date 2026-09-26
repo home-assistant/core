@@ -20,8 +20,6 @@ from tests.common import MockConfigEntry
 
 TEST_URL = "http://localhost:4000/v1"
 
-MODELS = ["gpt-4o", "gpt-4o-transcribe"]
-
 
 async def models_response(*model_ids: str) -> AsyncGenerator[Model]:
     """Yield models as the OpenAI client's `models.list()` would."""
@@ -113,9 +111,6 @@ async def mock_openai_client() -> AsyncGenerator[AsyncMock]:
                 ),
             )
         )
-        client.with_options.return_value.models.list.side_effect = (
-            lambda *args, **kwargs: models_response("gpt-4o", "gpt-4o-transcribe")
-        )
         yield client
 
 
@@ -127,20 +122,9 @@ def mock_models() -> Generator[AsyncMock]:
     ) as mock_client:
         client = mock_client.return_value
         client.with_options.return_value.models.list.side_effect = (
-            lambda *args, **kwargs: models_response(*MODELS)
+            lambda *args, **kwargs: models_response("gpt-3.5-turbo", "gpt-4")
         )
         yield client
-
-
-@pytest.fixture
-def mock_get_models() -> Generator[AsyncMock]:
-    """Mock the model names returned by the proxy."""
-    with patch(
-        "homeassistant.components.litellm.config_flow._get_models",
-        new_callable=AsyncMock,
-    ) as mock_get_models:
-        mock_get_models.return_value = MODELS
-        yield mock_get_models
 
 
 @pytest.fixture(autouse=True)

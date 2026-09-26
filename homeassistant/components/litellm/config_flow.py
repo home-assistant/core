@@ -60,9 +60,10 @@ def _normalize_url(url: str) -> str:
 
 
 async def _get_models(hass: HomeAssistant, url: str, api_key: str | None) -> list[str]:
-    """Fetch the available models from the LiteLLM proxy.
+    """Fetch the available model names from the LiteLLM proxy.
 
-    Uses the OpenAI-compatible `/v1/models` endpoint.
+    Uses the OpenAI-compatible `/v1/models` endpoint, which a LiteLLM proxy
+    serves with the configured model names.
     """
     client = AsyncOpenAI(
         base_url=url,
