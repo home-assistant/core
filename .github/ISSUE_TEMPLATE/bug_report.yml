@@ -6,10 +6,14 @@ body:
       value: |
         This issue form is for reporting bugs only!
 
+        Please read our [issue reporting guide][reporting-issues] before submitting a report.
+
         If you have a feature or enhancement request, please [request them here instead][fr].
 
         [fr]: https://github.com/orgs/home-assistant/discussions
+        [reporting-issues]: https://www.home-assistant.io/help/reporting_issues/
   - type: textarea
+    id: problem
     validations:
       required: true
     attributes:
@@ -35,12 +39,14 @@ body:
 
         [![Open your Home Assistant instance and show the system information.](https://my.home-assistant.io/badges/system_health.svg)](https://my.home-assistant.io/redirect/system_health/)
   - type: input
+    id: last_working_version
     attributes:
       label: What was the last working version of Home Assistant Core?
       placeholder: core-
       description: >
         If known, otherwise leave blank.
   - type: dropdown
+    id: installation_type
     validations:
       required: true
     attributes:
@@ -76,6 +82,7 @@ body:
       value: |
         # Details
   - type: textarea
+    id: diagnostics
     attributes:
       label: Diagnostics information
       placeholder: "drag-and-drop the diagnostics data file here (do not copy-and-paste the content)"
@@ -87,6 +94,7 @@ body:
 
         It generally allows pinpointing defects and thus resolving issues faster.
   - type: textarea
+    id: configuration
     attributes:
       label: Example YAML snippet
       description: |
@@ -94,11 +102,13 @@ body:
         This can be from an automation, script, scene or configuration.
       render: yaml
   - type: textarea
+    id: logs
     attributes:
       label: Anything in the logs that might be useful for us?
       description: For example, error message, or stack traces.
       render: txt
   - type: textarea
+    id: additional_information
     attributes:
       label: Additional information
       description: >

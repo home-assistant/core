@@ -4,6 +4,16 @@
       "current_electricity_price": {
         "default": "mdi:cash-multiple"
       },
+      "current_electricity_tariff_group": {
+        "default": "mdi:cash",
+        "state": {
+          "high": "mdi:cash-plus",
+          "low": "mdi:cash-minus"
+        }
+      },
+      "current_sustainability_score": {
+        "default": "mdi:leaf"
+      },
       "electricity_price_low_today_end_time": {
         "default": "mdi:clock-end"
       },
@@ -36,6 +46,9 @@
         "default": "mdi:cash-multiple"
       },
       "lowest_electricity_price_tomorrow": {
+        "default": "mdi:cash-multiple"
+      },
+      "next_hour_electricity_price": {
         "default": "mdi:cash-multiple"
       }
     }

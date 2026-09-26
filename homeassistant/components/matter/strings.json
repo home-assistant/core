@@ -702,6 +702,9 @@
       "evse_charging_switch": {
         "name": "Enable charging"
       },
+      "one_touch_locking": {
+        "name": "One-touch locking"
+      },
       "power": {
         "name": "Power"
       },

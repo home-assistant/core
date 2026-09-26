@@ -13,7 +13,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import UnitOfMass, UnitOfTime, UnitOfVolume
+from homeassistant.const import EntityCategory, UnitOfMass, UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -64,6 +64,7 @@ NUMBERS: list[MideaNumberEntityDescription] = [
         native_max_value=360,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.DAYS,
+        entity_category=EntityCategory.CONFIG,
     ),
     MideaNumberEntityDescription(
         key="water_hardness",
@@ -72,6 +73,7 @@ NUMBERS: list[MideaNumberEntityDescription] = [
         native_min_value=0,
         native_max_value=65535,
         native_step=1,
+        entity_category=EntityCategory.CONFIG,
     ),
     MideaNumberEntityDescription(
         key="flushing_days",
@@ -82,6 +84,7 @@ NUMBERS: list[MideaNumberEntityDescription] = [
         native_max_value=99,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.DAYS,
+        entity_category=EntityCategory.CONFIG,
     ),
     MideaNumberEntityDescription(
         key="leak_water_protection_value",
@@ -92,6 +95,7 @@ NUMBERS: list[MideaNumberEntityDescription] = [
         native_max_value=2550,
         native_step=50,
         native_unit_of_measurement=UnitOfVolume.LITERS,
+        entity_category=EntityCategory.CONFIG,
     ),
     MideaNumberEntityDescription(
         key="salt_setting",

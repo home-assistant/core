@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast, override
 
 from aiohttp import ClientError
-from aiopowerwall import PowerwallAuthenticationError, PowerwallClient, PowerwallError
+from aiopowerwall import PowerwallAuthenticationError, PowerwallError
 from bleak.exc import BleakError
 import probatio
 from tesla_fleet_api.const import (
@@ -70,28 +70,17 @@ from .const import (
     SUBENTRY_TYPE_ENERGY_SITE,
     SUBENTRY_TYPE_VEHICLE,
 )
-from .helpers import async_get_ble_parent
+from .helpers import (
+    PowerwallKeyRejectedError,
+    async_get_ble_parent,
+    async_verify_local_gateway,
+    cloud_energy_site,
+)
 from .models import TeslemetryEnergyData
 
 
 class PowerwallLookupError(Exception):
     """Signal that the authorized-client lookup failed for a non-retryable reason."""
-
-
-class PowerwallKeyRejectedError(Exception):
-    """Signal that the gateway refused a v1r-signed read with our RSA key."""
-
-
-def _cloud_energy_site(
-    energy_site: TeslemetryEnergySite | EnergySiteRouter,
-) -> TeslemetryEnergySite:
-    """Return the cloud backend of a possibly routed energy-site API."""
-    return cast(
-        TeslemetryEnergySite,
-        energy_site.secondary
-        if isinstance(energy_site, EnergySiteRouter)
-        else energy_site,
-    )
 
 
 class OAuth2FlowHandler(
@@ -448,6 +437,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         self._discovered_host: str = ""
         self._site_id: int | None = None
         self._site_name: str = ""
+        self._approval_expired: bool = False
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -576,11 +566,11 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         if TYPE_CHECKING:
             assert self._energy_site is not None
         # Registration must reach Tesla, so it never routes to the local gateway.
-        cloud_energy_site = _cloud_energy_site(self._energy_site)
+        cloud_site = cloud_energy_site(self._energy_site)
         try:
             # Not revoked on removal: other consumers may share this key.
-            LOGGER.info("Powerwall key setup: id=%s", cloud_energy_site.energy_site_id)
-            await cloud_energy_site.add_authorized_client(
+            LOGGER.info("Powerwall key setup: id=%s", cloud_site.energy_site_id)
+            await cloud_site.add_authorized_client(
                 self._public_key_der,
                 description="Home Assistant",
                 key_type=AuthorizedClientKeyType.RSA,
@@ -601,6 +591,11 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is None:
             return self.async_show_form(step_id="pair")
 
+        if self._approval_expired:
+            # The user saw the expired-window notice and submitted to try again.
+            self._approval_expired = False
+            return await self._async_begin_pairing()
+
         try:
             client = await self._find_authorized_client()
         except PowerwallLookupError:
@@ -616,6 +611,10 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             return await self.async_step_credentials()
         if client.state == AuthorizedClientState.PENDING_VERIFICATION:
             return self.async_show_form(step_id="pair", errors={"base": "key_pending"})
+        if client.state == AuthorizedClientState.PENDING_VERIFICATION_TIMEOUT:
+            # Surface the expiry; the user's next submit reopens the window.
+            self._approval_expired = True
+            return self.async_show_form(step_id="pair", errors={"base": "key_expired"})
         # An unrecognized state reported as pending would trap the user forever.
         LOGGER.debug("Unrecognized authorized-client state: %s", client.state)
         return self.async_show_form(step_id="pair", errors={"base": "cannot_connect"})
@@ -639,24 +638,6 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             None,
         )
 
-    async def _verify_local_gateway(self, host: str, password: str) -> None:
-        """Prove the LAN connection and the RSA key against the gateway."""
-        if TYPE_CHECKING:
-            assert self._key_pem is not None
-            assert self._energy_site is not None
-        async with PowerwallClient(
-            host=host,
-            gateway_password=password,
-            rsa_private_key_pem=self._key_pem,
-            session=async_get_clientsession(self.hass),
-        ) as client:
-            await client.connect()
-            try:
-                # connect() passed the password, so a failure here is key rejection.
-                await client.get_status()
-            except PowerwallAuthenticationError as err:
-                raise PowerwallKeyRejectedError from err
-
     def _default_gateway_host(self) -> str:
         """Return the host to pre-fill on the credentials form, or "" for blank.
 
@@ -679,11 +660,14 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             if TYPE_CHECKING:
                 assert self._energy_site is not None
+                assert self._key_pem is not None
             host = user_input[CONF_HOST].strip()
             # The gateway accepts only the last 5 characters of the Wi-Fi password.
             password = user_input[CONF_PASSWORD].strip()[-5:]
             try:
-                await self._verify_local_gateway(host, password)
+                await async_verify_local_gateway(
+                    self.hass, host, password, self._key_pem
+                )
             except PowerwallKeyRejectedError as err:
                 LOGGER.debug("Powerwall rejected the signed read: %s", err.__cause__)
                 errors["base"] = "key_not_approved"

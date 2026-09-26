@@ -31,7 +31,11 @@ from homeassistant.components.http.config import (
     async_get_and_load_store,
     default_server_port,
 )
-from homeassistant.components.http.const import ENV_SETUP_PORT, ENV_SUPERVISOR
+from homeassistant.components.http.const import (
+    DATA_SUPERVISOR_USER,
+    ENV_SETUP_PORT,
+    ENV_SUPERVISOR,
+)
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, HASSIO_USER_NAME, SERVER_PORT
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -958,7 +962,7 @@ async def test_unix_socket_started_with_supervisor(
     tmp_path: Path,
 ) -> None:
     """Test unix socket is started when running under Supervisor."""
-    await hass.auth.async_create_system_user(
+    hass.data[DATA_SUPERVISOR_USER] = await hass.auth.async_create_system_user(
         HASSIO_USER_NAME, group_ids=["system-admin"]
     )
     socket_path = tmp_path / "core.sock"
@@ -1027,7 +1031,7 @@ async def test_supervisor_http_config_view(
     tmp_path: Path,
 ) -> None:
     """Test the HTTP config view is registered and served over the socket only."""
-    await hass.auth.async_create_system_user(
+    hass.data[DATA_SUPERVISOR_USER] = await hass.auth.async_create_system_user(
         HASSIO_USER_NAME, group_ids=["system-admin"]
     )
     socket_path = tmp_path / "core.sock"

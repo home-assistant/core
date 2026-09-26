@@ -59,12 +59,12 @@ from .const import (
     DPCode,
 )
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 from .util import get_device_temp_unit_convert
 
 
 @dataclass(frozen=True)
-class TuyaSensorEntityDescription(SensorEntityDescription):
+class TuyaSensorEntityDescription(TuyaEntityDescription, SensorEntityDescription):
     """Describes Tuya sensor entity."""
 
     dpcode: DPCode | None = None
@@ -1252,6 +1252,24 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.WORK_STATE,
             translation_key="irrigation_status",
             entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.WATER_ONCE,
+            translation_key="water_once",
+            device_class=SensorDeviceClass.WATER,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.WATER_TOTAL,
+            translation_key="water_total",
+            device_class=SensorDeviceClass.WATER,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.SENSOR_TEMPERATURE,
+            translation_key="temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         *BATTERY_SENSORS,
     ),

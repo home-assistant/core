@@ -33,7 +33,7 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 from .util import get_temperature_unit
 
 _TUYA_TO_HA_HVACMODE_MAPPINGS = {
@@ -63,7 +63,7 @@ _HA_TO_TUYA_TEMPERATURE = {
 
 
 @dataclass(frozen=True, kw_only=True)
-class TuyaClimateEntityDescription(ClimateEntityDescription):
+class TuyaClimateEntityDescription(TuyaEntityDescription, ClimateEntityDescription):
     """Describe an Tuya climate entity."""
 
     switch_only_hvac_mode: HVACMode

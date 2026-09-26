@@ -5,15 +5,24 @@ from unittest.mock import Mock
 
 import pytest
 
+from homeassistant.components.hue.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.json import JsonArrayType
 
-from .conftest import setup_platform
-from .const import FAKE_BINARY_SENSOR, FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY
+from .conftest import replace_resources, setup_platform
+from .const import (
+    FAKE_BINARY_SENSOR,
+    FAKE_BRIDGE,
+    FAKE_DEVICE,
+    FAKE_ZIGBEE_CONNECTIVITY,
+)
 
 MOTION_AWARE_ENTITY_ID = "binary_sensor.test_room_test_room_motion_aware_sensor_1"
 MOTION_AREA_CONFIGURATION_ID = "5e6f7a8b-9c1d-4e2f-b3a4-5c6d7e8f9a0b"
+TEST_ROOM_ID = "6ddc9066-7e7d-4a03-a773-c73937968296"
+BRIDGE_HOME_ID = "a3fbc86a-bf4c-4c69-899d-d6eafc37e288"
 AREA_MOTION_SERVICE_IDS = {
     "convenience_area_motion": "4f317b69-9da0-4b4f-84f2-7ca07b9fe345",
     "security_area_motion": "8b7e4f82-9c3d-4e1a-a5f6-8d9c7b2a3e4f",
@@ -55,16 +64,6 @@ def area_motion_service(
     if motion is not None:
         service["motion"] = motion
     return service
-
-
-def replace_resources(
-    data: JsonArrayType, resources: list[dict[str, Any]]
-) -> JsonArrayType:
-    """Return the test data with each resource of the same id replaced."""
-    replacements = {resource["id"]: resource for resource in resources}
-    missing = replacements.keys() - {resource["id"] for resource in data}
-    assert not missing, f"resource id(s) not present in the test data: {missing}"
-    return [replacements.get(resource["id"], resource) for resource in data]
 
 
 async def test_binary_sensors(
@@ -514,3 +513,57 @@ async def test_motion_aware_sensor_zone_not_reporting(
     )
     await hass.async_block_till_done()
     assert hass.states.get(MOTION_AWARE_ENTITY_ID).state == "off"
+
+
+@pytest.mark.parametrize(
+    ("group", "device_identifier"),
+    [
+        pytest.param(
+            {"rid": TEST_ROOM_ID, "rtype": "room"},
+            (DOMAIN, TEST_ROOM_ID),
+            id="room",
+        ),
+        pytest.param(
+            {"rid": BRIDGE_HOME_ID, "rtype": "bridge_home"},
+            (DOMAIN, FAKE_BRIDGE["bridge_id"]),
+            id="whole_home",
+        ),
+    ],
+)
+async def test_motion_aware_sensor_device(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    group: dict[str, str],
+    device_identifier: tuple[str, str],
+) -> None:
+    """Test the MotionAware sensor is attached to its room or zone, or to the bridge.
+
+    A MotionAware zone that covers the whole home points at `bridge_home`, which
+    has no device of its own.
+    """
+    motion_area_configuration = next(
+        resource
+        for resource in v2_resources_test_data
+        if resource["id"] == MOTION_AREA_CONFIGURATION_ID
+    )
+    await mock_bridge_v2.api.load_test_data(
+        replace_resources(
+            v2_resources_test_data, [{**motion_area_configuration, "group": group}]
+        )
+    )
+    await setup_platform(hass, mock_bridge_v2, Platform.BINARY_SENSOR)
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.BINARY_SENSOR, DOMAIN, AREA_MOTION_SERVICE_IDS["security_area_motion"]
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == "off"
+
+    device = device_registry.async_get_device_by_identifier(
+        device_identifier, mock_bridge_v2.config_entry.entry_id
+    )
+    assert device is not None
+    assert entity_registry.async_get(entity_id).device_id == device.id

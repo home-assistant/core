@@ -242,13 +242,15 @@ class _TranslationCache:
             )
 
             loaded_english_components = loaded.setdefault(LOCALE_EN, set())
-            # Since we just loaded english anyway we can avoid loading
-            # again if they switch back to english.
-            if loaded_english_components.isdisjoint(components):
+            # English is the fallback for missing keys, so cache it for every
+            # not-yet-cached component, not only when the whole batch is new.
+            if english_to_cache := components - loaded_english_components:
                 self._build_category_cache(
-                    LOCALE_EN, components, translation_by_language_strings[LOCALE_EN]
+                    LOCALE_EN,
+                    english_to_cache,
+                    translation_by_language_strings[LOCALE_EN],
                 )
-                loaded_english_components.update(components)
+                loaded_english_components.update(english_to_cache)
 
         loaded[language].update(components)
 

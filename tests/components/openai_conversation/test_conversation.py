@@ -1,6 +1,7 @@
 """Tests for the OpenAI integration."""
 
 import datetime
+from typing import Literal
 from unittest.mock import AsyncMock
 
 from freezegun import freeze_time
@@ -41,7 +42,7 @@ from homeassistant.components.openai_conversation.const import (
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import intent
-from homeassistant.helpers.llm import ToolInput
+from homeassistant.helpers.llm import ToolInput, ToolResult
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -284,12 +285,14 @@ async def test_function_call(
             agent_id="conversation.openai_conversation",
             tool_call_id="mock-tool-call-id",
             tool_name="HassGetCurrentTime",
-            tool_result={
-                "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
-                "response_type": "action_done",
-                "speech_slots": {"time": datetime.time(12, 0, 0, 0)},
-                "data": {"success": [], "failed": []},
-            },
+            result=ToolResult(
+                data={
+                    "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
+                    "response_type": "action_done",
+                    "speech_slots": {"time": datetime.time(12, 0, 0, 0)},
+                    "data": {"success": [], "failed": []},
+                }
+            ),
         )
     )
     mock_chat_log.async_add_assistant_content_without_tools(
@@ -711,13 +714,22 @@ async def test_web_search_remove_citations_gpt5(
     assert result.response.speech["plain"]["speech"] == "The match ended 0-2."
 
 
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    "status",
+    [
+        pytest.param("completed", id="completed"),
+        pytest.param("incomplete", id="incomplete"),
+        pytest.param("failed", id="failed"),
+    ],
+)
 async def test_code_interpreter(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
-    mock_create_stream,
+    mock_create_stream: AsyncMock,
     mock_chat_log: MockChatLog,  # noqa: F811
     snapshot: SnapshotAssertion,
+    status: Literal["completed", "incomplete", "failed"],
 ) -> None:
     """Test code_interpreter tool."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -742,6 +754,7 @@ async def test_code_interpreter(
                 code=["import", " math", "\n", "math", ".sqrt", "(", "555", "55", ")"],
                 logs="235.70108188126758\n",
                 output_index=0,
+                status=status,
             ),
             *create_message_item(id="msg_A", text=message, output_index=1),
         )
@@ -761,6 +774,16 @@ async def test_code_interpreter(
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert result.response.speech["plain"]["speech"] == message, result.response.speech
 
+    assistant_content = mock_chat_log.content[2]
+    assert isinstance(assistant_content, conversation.AssistantContent)
+    assert assistant_content.tool_calls
+    assert assistant_content.tool_calls[0].tool_args == {
+        "code": "import math\nmath.sqrt(55555)"
+    }
+    tool_result = mock_chat_log.content[3]
+    assert isinstance(tool_result, conversation.ToolResultContent)
+    assert tool_result.result.data["container_id"] == "cntr_A"
+
     # Test follow-up message in multi-turn conversation
     mock_create_stream.return_value = [
         (*create_message_item(id="msg_B", text="You are welcome!", output_index=1),)
@@ -775,6 +798,10 @@ async def test_code_interpreter(
     )
 
     assert mock_create_stream.mock_calls[1][2]["input"][1:] == snapshot
+    assert mock_create_stream.mock_calls[1][2]["tools"] == [
+        {"type": "code_interpreter", "container": {"type": "auto"}}
+    ]
+    assert mock_create_stream.mock_calls[1][2]["input"][2]["status"] == status
 
 
 async def test_flex_tier_retry(
@@ -890,6 +917,6 @@ async def test_model_args(
 
     model_args = mock_create_stream.call_args.kwargs.copy()
     model_args.pop("input")
-    assert model_args.pop("user") == result.conversation_id
+    assert model_args.pop("safety_identifier") == result.conversation_id
     assert model_args.pop("prompt_cache_key") == subentry.subentry_id
     assert model_args == snapshot
