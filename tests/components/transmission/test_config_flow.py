@@ -12,6 +12,7 @@ from transmission_rpc.error import (
 from homeassistant import config_entries
 from homeassistant.components import transmission
 from homeassistant.components.transmission.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -228,6 +229,50 @@ async def test_reauth_success(
         )
 
     assert len(mock_setup_entry.mock_calls) == 1
+    assert result["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+
+
+async def test_reauth_success_after_setup_error(
+    hass: HomeAssistant,
+    mock_transmission_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth retries an entry that failed during setup."""
+    mock_config_entry.add_to_hass(hass)
+    mock_transmission_client.side_effect = TransmissionAuthError()
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    mock_transmission_client.side_effect = None
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"password": "test-password"}
+        )
+
+    mock_reload.assert_called_once_with(mock_config_entry.entry_id)
+    assert result["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+
+
+async def test_reauth_success_when_credentials_are_unchanged(
+    hass: HomeAssistant,
+    mock_transmission_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth reloads when the credentials are unchanged."""
+    await setup_integration(hass, mock_config_entry)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"password": "pass"}
+        )
+
+    mock_reload.assert_called_once_with(mock_config_entry.entry_id)
     assert result["reason"] == "reauth_successful"
     assert result["type"] is FlowResultType.ABORT
 

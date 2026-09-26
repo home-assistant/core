@@ -1,6 +1,6 @@
 """Tests for Transmission init."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -229,3 +229,21 @@ async def test_coordinator_update_error(
     state = hass.states.get("sensor.transmission_status")
     assert state is not None
     assert state.state == "unavailable"
+
+
+@pytest.mark.usefixtures("mock_transmission_client")
+async def test_update_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reloading the config entry when options updated."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    async_reload = AsyncMock()
+    with patch.object(hass.config_entries, "async_reload", async_reload):
+        hass.config_entries.async_update_entry(mock_config_entry, options={"limit": 10})
+        await hass.async_block_till_done()
+
+    async_reload.assert_awaited_once_with(mock_config_entry.entry_id)
