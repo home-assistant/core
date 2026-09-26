@@ -1,7 +1,7 @@
 {
   "domain": "alexa_devices",
   "name": "Alexa Devices",
-  "codeowners": ["@chemelli74"],
+  "codeowners": ["@chemelli74", "@jamesonuk"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/alexa_devices",
   "integration_type": "hub",
