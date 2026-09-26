@@ -992,7 +992,7 @@ class EntityPlatform:
                     ) from None
 
         # Get entity_id from unique ID registration
-        if entity.unique_id is not None:
+        if entity.unique_id is not None:  # pylint: disable=too-many-nested-blocks
             registered_entity_id = entity_registry.async_get_entity_id(
                 self.domain, self.platform_name, entity.unique_id
             )
@@ -1028,6 +1028,29 @@ class EntityPlatform:
                         # device. An explicit None (as a dynamically built device info
                         # may carry) means a main device, so check `is not None`.
                         if device_info.get("parent_device_id") is not None:
+                            # A child device info must only carry ChildDeviceInfo keys;
+                            # main-only keys would be rejected by async_get_or_create_child
+                            # with a TypeError.
+                            extra_keys = (
+                                device_info.keys()
+                                - dr.ChildDeviceInfo.__annotations__.keys()
+                            )
+                            if extra_keys:
+                                raise dr.DeviceInfoError(  # noqa: TRY301
+                                    self.config_entry.domain,
+                                    cast("dr.DeviceInfo", device_info),
+                                    f"unexpected key(s) {', '.join(sorted(map(str, extra_keys)))} "
+                                    "for a child device",
+                                )
+                            # identifiers is a required ChildDeviceInfo key; a missing
+                            # one would splat into async_get_or_create_child as a raw
+                            # TypeError, so surface it via the curated error path.
+                            if "identifiers" not in device_info:
+                                raise dr.DeviceInfoError(  # noqa: TRY301
+                                    self.config_entry.domain,
+                                    device_info,
+                                    "a child device info must include identifiers",
+                                )
                             device = dev_reg.async_get_or_create_child(
                                 config_entry_id=self.config_entry.entry_id,
                                 config_subentry_id=config_subentry_id,
