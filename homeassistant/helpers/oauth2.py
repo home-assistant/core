@@ -8,7 +8,7 @@ import json
 import logging
 import secrets
 from typing import Any, Literal, NoReturn, cast
-from urllib.parse import quote
+from urllib.parse import quote_plus
 
 from aiohttp import ClientError, ClientResponseError, client, hdrs
 from multidict import CIMultiDict
@@ -39,7 +39,9 @@ def client_auth(
 
     if method == "client_secret_basic" and client_secret:
         # RFC 6749 section 2.3.1 requires form encoding before base64.
-        credentials = f"{quote(client_id, safe='')}:{quote(client_secret, safe='')}"
+        credentials = (
+            f"{quote_plus(client_id, safe='')}:{quote_plus(client_secret, safe='')}"
+        )
         encoded = base64.b64encode(credentials.encode()).decode()
         return dict(data), {hdrs.AUTHORIZATION: f"Basic {encoded}"}
 
