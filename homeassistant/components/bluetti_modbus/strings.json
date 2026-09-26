@@ -202,9 +202,6 @@
       "pv_4_i_v": {
         "name": "PV 4 input voltage"
       },
-      "pv_ac_count": {
-        "name": "AC PV input count"
-      },
       "pv_ac_e": {
         "name": "PV AC energy"
       },
