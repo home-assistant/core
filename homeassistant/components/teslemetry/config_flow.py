@@ -16,6 +16,7 @@ from tesla_fleet_api.const import (
     AuthorizedClientType,
 )
 from tesla_fleet_api.exceptions import (
+    BadGateway,
     BluetoothTimeout,
     BluetoothTransportError,
     InvalidToken,
@@ -549,6 +550,8 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         """Resume or begin key pairing based on the key's state on the gateway."""
         try:
             client = await self._find_authorized_client()
+        except BadGateway:
+            return self.async_abort(reason="powerwall_unreachable")
         except PowerwallLookupError:
             return self.async_abort(reason="cannot_connect")
         if client is not None:
@@ -576,6 +579,8 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 key_type=AuthorizedClientKeyType.RSA,
                 authorized_client_type=AuthorizedClientType.CUSTOMER_MOBILE_APP,
             )
+        except BadGateway:
+            return self.async_abort(reason="powerwall_unreachable")
         except (ClientError, TeslaFleetError) as err:
             LOGGER.error("Add authorized client failed: %s", err)
             return self.async_abort(reason="cannot_connect")
@@ -598,6 +603,10 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
         try:
             client = await self._find_authorized_client()
+        except BadGateway:
+            return self.async_show_form(
+                step_id="pair", errors={"base": "powerwall_unreachable"}
+            )
         except PowerwallLookupError:
             return self.async_show_form(
                 step_id="pair", errors={"base": "cannot_connect"}
@@ -625,6 +634,9 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             assert self._energy_site is not None
         try:
             result = await self._energy_site.find_authorized_clients()
+        except BadGateway:
+            # Unwrapped so callers can report an unreachable gateway as retryable.
+            raise
         except (ClientError, TeslaFleetError) as err:
             # Raise so a failed lookup is not mistaken for an unregistered key.
             LOGGER.debug("find_authorized_clients failed: %s", err)

@@ -21,6 +21,7 @@ import probatio
 import pytest
 from tesla_fleet_api.const import AuthorizedClientState
 from tesla_fleet_api.exceptions import (
+    BadGateway,
     BluetoothTimeout,
     BluetoothTransportError,
     InvalidResponse,
@@ -1714,14 +1715,23 @@ async def test_energy_subentry_pairing_requires_key_approval(
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
-async def test_subentry_null_body_aborts_as_lookup_failure(hass: HomeAssistant) -> None:
-    """A malformed authorized-clients read aborts rather than registering."""
+@pytest.mark.parametrize(
+    ("error", "expected_reason"),
+    [
+        pytest.param(InvalidResponse, "cannot_connect", id="null_body"),
+        pytest.param(BadGateway, "powerwall_unreachable", id="gateway_unreachable"),
+    ],
+)
+async def test_subentry_lookup_failure_aborts(
+    hass: HomeAssistant, error: type[Exception], expected_reason: str
+) -> None:
+    """A failed authorized-clients read aborts rather than registering."""
     entry = await _setup_account_no_subentry(hass)
 
     with (
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
-            new=AsyncMock(side_effect=InvalidResponse),
+            new=AsyncMock(side_effect=error),
         ),
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
@@ -1731,7 +1741,7 @@ async def test_subentry_null_body_aborts_as_lookup_failure(hass: HomeAssistant) 
         result = await _start_add_flow_select_site(hass, entry)
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == expected_reason
     mock_add.assert_not_awaited()
 
 
@@ -2195,7 +2205,17 @@ async def test_unrecognized_state_aborts_pairing(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
-async def test_add_authorized_client_failure_aborts(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("error", "expected_reason"),
+    [
+        pytest.param(ClientError, "cannot_connect", id="client_error"),
+        pytest.param(TeslaFleetError, "cannot_connect", id="tesla_fleet_error"),
+        pytest.param(BadGateway, "powerwall_unreachable", id="gateway_unreachable"),
+    ],
+)
+async def test_add_authorized_client_failure_aborts(
+    hass: HomeAssistant, error: type[Exception], expected_reason: str
+) -> None:
     """A failure while registering the key aborts the flow."""
     entry = await _setup_account_no_subentry(hass)
 
@@ -2206,13 +2226,13 @@ async def test_add_authorized_client_failure_aborts(hass: HomeAssistant) -> None
         ),
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
-            new=AsyncMock(side_effect=ClientError),
+            new=AsyncMock(side_effect=error),
         ),
     ):
         result = await _start_add_flow_select_site(hass, entry)
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == expected_reason
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
@@ -2220,6 +2240,7 @@ async def test_add_authorized_client_failure_aborts(hass: HomeAssistant) -> None
     ("second_lookup", "expected_error"),
     [
         pytest.param(InvalidResponse(), "cannot_connect", id="lookup_failure"),
+        pytest.param(BadGateway(), "powerwall_unreachable", id="gateway_unreachable"),
         pytest.param(_empty_clients(), "key_not_registered", id="key_not_registered"),
         pytest.param(
             _own_key_clients(AuthorizedClientState.PENDING_VERIFICATION_TIMEOUT),
