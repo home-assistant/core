@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+from itertools import batched
 from typing import Any, Final, override
 
 from youtubeaio.types import UnauthorizedError, YouTubeBackendError
@@ -26,9 +27,11 @@ from .const import (
     ATTR_TOTAL_VIEWS,
     ATTR_VIDEO_COUNT,
     ATTR_VIDEO_ID,
-    CONF_CHANNELS,
+    CONF_CHANNEL_ID,
     DOMAIN,
     LOGGER,
+    MAX_CHANNEL_IDS_PER_REQUEST,
+    SUBENTRY_TYPE_CHANNEL,
 )
 
 type YouTubeConfigEntry = ConfigEntry[YouTubeDataUpdateCoordinator]
@@ -53,7 +56,11 @@ def _build_video_dict(video: Any, is_short: bool) -> dict[str, Any]:
 
 
 class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """A YouTube Data Update Coordinator."""
+    """A YouTube Data Update Coordinator fetching all tracked channels.
+
+    The data maps channel id to its channel data. Channels missing from
+    the API response are absent from the data.
+    """
 
     config_entry: YouTubeConfigEntry
 
@@ -66,6 +73,10 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Initialize the YouTube data coordinator."""
         self._auth = auth
         self._is_short_cache: dict[str, bool] = {}
+        self.subentry_ids = {
+            subentry.subentry_id
+            for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_CHANNEL)
+        }
         super().__init__(
             hass,
             LOGGER,
@@ -76,64 +87,78 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:
+        """Fetch the data of all tracked channels in batched calls."""
         youtube = await self._auth.get_resource()
-        res = {}
-        channel_ids = self.config_entry.options[CONF_CHANNELS]
+        channel_ids = [
+            subentry.data[CONF_CHANNEL_ID]
+            for subentry in self.config_entry.get_subentries_of_type(
+                SUBENTRY_TYPE_CHANNEL
+            )
+        ]
+        if not channel_ids:
+            return {}
+        res: dict[str, Any] = {}
         try:
-            async for channel in youtube.get_channels(channel_ids):
-                checked = 0
-                latest_video: dict[str, Any] | None = None
-                latest_short: dict[str, Any] | None = None
-                latest_video_non_short: dict[str, Any] | None = None
-                try:
-                    async with asyncio.timeout(_SHORTS_DETECTION_TIMEOUT):
-                        # Only examine the first page (10 items): paginating
-                        # further burns API quota for no benefit.
-                        async for video in youtube.get_playlist_items(
-                            channel.upload_playlist_id, 10
-                        ):
-                            checked += 1
-                            is_short = await self._resolve_is_short(youtube, video)
-                            entry = _build_video_dict(video, is_short)
-                            if latest_video is None:
-                                latest_video = entry
-                            if is_short and latest_short is None:
-                                latest_short = entry
-                            if not is_short and latest_video_non_short is None:
-                                latest_video_non_short = entry
-                            if (
-                                latest_short is not None
-                                and latest_video_non_short is not None
-                            ):
-                                break
-                            if checked >= 10:
-                                break
-                except TimeoutError:
-                    LOGGER.warning(
-                        "Timed out processing recent uploads for channel %s; "
-                        "continuing with partial results",
-                        channel.channel_id,
+            for chunk in batched(
+                channel_ids, MAX_CHANNEL_IDS_PER_REQUEST, strict=False
+            ):
+                async for channel in youtube.get_channels(list(chunk)):
+                    res[channel.channel_id] = await self._async_get_channel_data(
+                        youtube, channel
                     )
-                LOGGER.debug(
-                    "Examined %d videos for channel %s", checked, channel.channel_id
-                )
-
-                res[channel.channel_id] = {
-                    ATTR_ID: channel.channel_id,
-                    ATTR_TITLE: channel.snippet.title,
-                    ATTR_ICON: channel.snippet.thumbnails.get_highest_quality().url,
-                    ATTR_LATEST_VIDEO: latest_video,
-                    ATTR_LATEST_SHORT: latest_short,
-                    ATTR_LATEST_VIDEO_NON_SHORT: latest_video_non_short,
-                    ATTR_SUBSCRIBER_COUNT: channel.statistics.subscriber_count,
-                    ATTR_TOTAL_VIEWS: channel.statistics.view_count,
-                    ATTR_VIDEO_COUNT: channel.statistics.video_count,
-                }
         except UnauthorizedError as err:
             raise ConfigEntryAuthFailed from err
         except YouTubeBackendError as err:
             raise UpdateFailed("Couldn't connect to YouTube") from err
         return res
+
+    async def _async_get_channel_data(
+        self, youtube: Any, channel: Any
+    ) -> dict[str, Any]:
+        """Fetch the uploads of the channel and build its sensor data."""
+        checked = 0
+        latest_video: dict[str, Any] | None = None
+        latest_short: dict[str, Any] | None = None
+        latest_video_non_short: dict[str, Any] | None = None
+        try:
+            async with asyncio.timeout(_SHORTS_DETECTION_TIMEOUT):
+                # Only examine the first page (10 items): paginating
+                # further burns API quota for no benefit.
+                async for video in youtube.get_playlist_items(
+                    channel.upload_playlist_id, 10
+                ):
+                    checked += 1
+                    is_short = await self._resolve_is_short(youtube, video)
+                    entry = _build_video_dict(video, is_short)
+                    if latest_video is None:
+                        latest_video = entry
+                    if is_short and latest_short is None:
+                        latest_short = entry
+                    if not is_short and latest_video_non_short is None:
+                        latest_video_non_short = entry
+                    if latest_short is not None and latest_video_non_short is not None:
+                        break
+                    if checked >= 10:
+                        break
+        except TimeoutError:
+            LOGGER.warning(
+                "Timed out processing recent uploads for channel %s; "
+                "continuing with partial results",
+                channel.channel_id,
+            )
+        LOGGER.debug("Examined %d videos for channel %s", checked, channel.channel_id)
+
+        return {
+            ATTR_ID: channel.channel_id,
+            ATTR_TITLE: channel.snippet.title,
+            ATTR_ICON: channel.snippet.thumbnails.get_highest_quality().url,
+            ATTR_LATEST_VIDEO: latest_video,
+            ATTR_LATEST_SHORT: latest_short,
+            ATTR_LATEST_VIDEO_NON_SHORT: latest_video_non_short,
+            ATTR_SUBSCRIBER_COUNT: channel.statistics.subscriber_count,
+            ATTR_TOTAL_VIEWS: channel.statistics.view_count,
+            ATTR_VIDEO_COUNT: channel.statistics.video_count,
+        }
 
     async def _resolve_is_short(self, youtube: Any, video: Any) -> bool:
         """Return whether a single video is a Short.
