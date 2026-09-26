@@ -86,6 +86,7 @@ class _StubTool(llm.Tool):
     """Minimal tool with a configurable parameter schema."""
 
     name = "test_tool"
+    integration = "test"
 
     def __init__(self, parameters: probatio.Schema) -> None:
         """Initialize the stub tool."""
@@ -631,6 +632,12 @@ async def test_mcp_tools_list(
     assert tool.inputSchema.get("type") == "object"
     properties = tool.inputSchema.get("properties")
     assert properties.get("name") == {"type": "string"}
+    assert tool.annotations == mcp.types.ToolAnnotations(
+        readOnlyHint=False,
+        destructiveHint=True,
+        idempotentHint=False,
+        openWorldHint=False,
+    )
 
 
 @pytest.mark.parametrize("llm_hass_api", [TEST_LLM_API_ID])
@@ -678,6 +685,92 @@ async def test_mcp_tools_list_required_parameters(
     tool = next(iter(tool for tool in result.tools if tool.name == "test_tool"))
     assert tool.inputSchema.get("type") == "object"
     assert tool.inputSchema.get("required") == expected_required
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize("llm_hass_api", [TEST_LLM_API_ID])
+@pytest.mark.parametrize(
+    ("parameters", "expected_schema"),
+    [
+        pytest.param(
+            probatio.Schema(
+                {probatio.Optional("value"): probatio.Range(min=0, min_included=False)}
+            ),
+            {"type": "number", "exclusiveMinimum": 0},
+            id="exclusive-minimum",
+        ),
+        pytest.param(
+            probatio.Schema({probatio.Optional("value"): probatio.Maybe(str)}),
+            {"anyOf": [{"type": "null"}, {"type": "string"}]},
+            id="nullable",
+        ),
+    ],
+)
+async def test_mcp_tools_list_json_schema(
+    hass: HomeAssistant,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+    parameters: probatio.Schema,
+    expected_schema: JsonObjectType,
+) -> None:
+    """Test tool parameters use JSON Schema 2020-12 compatible representations."""
+    llm.async_register_api(
+        hass,
+        MockLLMAPI(
+            hass=hass,
+            id=TEST_LLM_API_ID,
+            name="Test API",
+            tools=[_StubTool(parameters)],
+        ),
+    )
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.list_tools()
+
+    tool = next(tool for tool in result.tools if tool.name == "test_tool")
+    assert tool.inputSchema["properties"]["value"] == expected_schema
+
+
+@pytest.mark.parametrize("llm_hass_api", [TEST_LLM_API_ID])
+async def test_mcp_tools_list_metadata(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test the tools list advertises the tool title and annotations."""
+
+    class _AnnotatedTool(_StubTool):
+        """Tool that declares it only reads."""
+
+        title = "Test tool"
+        annotations = llm.ToolAnnotations(
+            read_only=True, destructive=False, idempotent=True, open_world=False
+        )
+
+    llm.async_register_api(
+        hass,
+        MockLLMAPI(
+            hass=hass,
+            id=TEST_LLM_API_ID,
+            name="Test API",
+            tools=[_AnnotatedTool(probatio.Schema({}))],
+        ),
+    )
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.list_tools()
+
+    tool = next(iter(tool for tool in result.tools if tool.name == "test_tool"))
+    assert tool.title == "Test tool"
+    assert tool.annotations == mcp.types.ToolAnnotations(
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=False,
+    )
 
 
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])

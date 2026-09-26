@@ -43,7 +43,11 @@ def _format_tool(
     """Format tool specification."""
     tool_spec = FunctionDefinition(
         name=tool.name,
-        parameters=to_openapi(tool.parameters, custom_serializer=custom_serializer),
+        parameters=to_openapi(
+            tool.parameters,
+            custom_serializer=custom_serializer,
+            openapi_version="3.1.0",
+        ),
     )
     if tool.description:
         tool_spec["description"] = tool.description

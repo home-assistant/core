@@ -228,8 +228,8 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
                 ):
                     continue
                 try:
-                    title = await self.client.titlehub.get_title_info(
-                        presence_detail.title_id
+                    title = await self.client.titlehub.get_title_info_by_xuid(
+                        person.xuid, presence_detail.title_id
                     )
                 except HTTPStatusError as e:
                     if e.response.status_code == HTTPStatus.NOT_FOUND:

@@ -59,7 +59,6 @@ from . import (
     target as target_helpers,
     template,
 )
-from .deprecation import deprecated_hass_argument
 from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType, VolDictType, VolSchemaType
 
@@ -348,7 +347,6 @@ def async_prepare_call_from_config(
     }
 
 
-@deprecated_hass_argument(breaks_in_ha_version="2026.10")
 def extract_entity_ids(
     service_call: ServiceCall, expand_group: bool = True
 ) -> set[str]:
@@ -361,7 +359,6 @@ def extract_entity_ids(
     ).result()
 
 
-@deprecated_hass_argument(breaks_in_ha_version="2026.10")
 async def async_extract_entities[_EntityT: Entity](
     entities: Iterable[_EntityT],
     service_call: ServiceCall,
@@ -400,7 +397,6 @@ async def async_extract_entities[_EntityT: Entity](
     return found
 
 
-@deprecated_hass_argument(breaks_in_ha_version="2026.10")
 async def async_extract_entity_ids(
     service_call: ServiceCall, expand_group: bool = True
 ) -> set[str]:
@@ -415,7 +411,6 @@ async def async_extract_entity_ids(
     return referenced.referenced | referenced.indirectly_referenced
 
 
-@deprecated_hass_argument(breaks_in_ha_version="2026.10")
 async def async_extract_config_entry_ids(
     service_call: ServiceCall, expand_group: bool = True
 ) -> set[str]:
@@ -1025,7 +1020,6 @@ def async_register_admin_service(
     )
 
 
-@deprecated_hass_argument(breaks_in_ha_version="2026.10")
 @callback
 def verify_domain_control(
     domain: str,

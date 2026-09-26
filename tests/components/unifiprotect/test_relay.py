@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 from uiprotect.data import (
+    DeviceState,
     ModelType,
     PublicRelayOutput,
     Relay,
@@ -62,6 +63,7 @@ def _make_output(
 def _make_relay(
     *,
     outputs: list[Mock] | None = None,
+    state: DeviceState = DeviceState.CONNECTED,
 ) -> Mock:
     """Build a mock :class:`Relay` whose ``activate_output`` is awaitable."""
     relay = Mock(spec=Relay)
@@ -69,6 +71,7 @@ def _make_relay(
     relay.mac = RELAY_MAC
     relay.name = RELAY_NAME
     relay.model = ModelType.RELAY
+    relay.state = state
     relay.outputs = outputs if outputs is not None else [_make_output()]
 
     def get_output(output_id: int) -> Mock | None:
@@ -387,6 +390,47 @@ async def test_relay_switch_becomes_unavailable_when_relay_removed(
     state = hass.states.get(SWITCH_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "state",
+    [DeviceState.DISCONNECTED, DeviceState.CONNECTING, DeviceState.UNKNOWN],
+)
+async def test_relay_switch_unavailable_when_not_connected_at_setup(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    state: DeviceState,
+) -> None:
+    """A relay that is not connected at setup starts out unavailable."""
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = _make_public_bootstrap(_make_relay(state=state))
+
+    await init_entry(hass, ufp, [])
+
+    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+async def test_relay_switch_unavailable_when_disconnected(
+    hass: HomeAssistant,
+    ufp_with_relay: tuple[MockUFPFixture, Mock],
+) -> None:
+    """A relay that drops off the console is unavailable, and recovers."""
+    ufp, relay = ufp_with_relay
+    relay.outputs[0].state = RelayOutputState.ON
+    await init_entry(hass, ufp, [])
+    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_ON
+
+    relay.state = DeviceState.DISCONNECTED
+    ufp.devices_ws_subscription(public_device_ws_message(relay))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    relay.state = DeviceState.CONNECTED
+    ufp.devices_ws_subscription(public_device_ws_message(relay))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_ON
 
 
 async def test_relay_switch_availability_follows_websocket_state(

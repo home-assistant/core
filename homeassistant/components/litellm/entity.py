@@ -38,8 +38,10 @@ def _format_tool(
     custom_serializer: Callable[[Any], Any] | None,
 ) -> ChatCompletionFunctionToolParam:
     """Format tool specification."""
-    unsupported_keys = {"oneOf", "anyOf", "allOf"}
-    schema = to_openapi(tool.parameters, custom_serializer=custom_serializer)
+    unsupported_keys = {"oneOf", "anyOf", "allOf", "enum", "not"}
+    schema = to_openapi(
+        tool.parameters, custom_serializer=custom_serializer, openapi_version="3.1.0"
+    )
     schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
 
     tool_spec = FunctionDefinition(

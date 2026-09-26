@@ -22,14 +22,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_INVERT,
-    CONF_RESPOND_TO_READ,
-    CONF_SYNC_STATE,
-    DOMAIN,
-    KNX_ADDRESS,
-    KNX_MODULE_KEY,
-)
+from .const import CONF_RESPOND_TO_READ, CONF_SYNC_STATE, KNX_ADDRESS, KNX_MODULE_KEY
 from .entity import (
     KnxUiEntity,
     KnxUiEntityPlatformController,
@@ -38,8 +31,7 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .schema import SwitchSchema
-from .storage.const import CONF_ENTITY, CONF_GA_SWITCH
-from .storage.util import ConfigExtractor
+from .storage.entity_store_schema import KnxEntityData, SwitchKnxConfig
 
 
 async def async_setup_entry(
@@ -65,7 +57,9 @@ async def async_setup_entry(
             KnxYamlSwitch(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.get_entity_configs(Platform.SWITCH):
+    if ui_config := knx_module.config_store.get_entity_configs(
+        Platform.SWITCH, SwitchKnxConfig
+    ):
         entities.extend(
             KnxUiSwitch(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -134,21 +128,24 @@ class KnxUiSwitch(_KnxSwitch, KnxUiEntity):
     _device: XknxSwitch
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: dict[str, Any]
+        self,
+        knx_module: KNXModule,
+        unique_id: str,
+        config: KnxEntityData[SwitchKnxConfig],
     ) -> None:
         """Initialize KNX switch."""
         super().__init__(
             knx_module=knx_module,
             unique_id=unique_id,
-            entity_config=config[CONF_ENTITY],
+            entity_config=config.entity,
         )
-        knx_conf = ConfigExtractor(config[DOMAIN])
+        knx_conf = config.knx
         self._device = XknxSwitch(
             knx_module.xknx,
-            name=config[CONF_ENTITY][CONF_NAME],
-            group_address=knx_conf.get_write(CONF_GA_SWITCH),
-            group_address_state=knx_conf.get_state_and_passive(CONF_GA_SWITCH),
-            respond_to_read=knx_conf.get(CONF_RESPOND_TO_READ),
-            sync_state=knx_conf.get(CONF_SYNC_STATE),
-            invert=knx_conf.get(CONF_INVERT),
+            name=config.entity.xknx_name,
+            group_address=knx_conf.ga_switch.write,
+            group_address_state=knx_conf.ga_switch.state_and_passive(),
+            respond_to_read=knx_conf.respond_to_read,
+            sync_state=knx_conf.sync_state,
+            invert=knx_conf.invert,
         )

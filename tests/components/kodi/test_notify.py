@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 import jsonrpc_async
 import pytest
 
+from homeassistant.components.kodi.const import DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -47,7 +48,10 @@ async def test_send_message_transport_error(hass: HomeAssistant) -> None:
     )
     await setup_notify(hass, server)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             NOTIFY_DOMAIN, "kodi", {"message": "Hello"}, blocking=True
         )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "notify_failed"

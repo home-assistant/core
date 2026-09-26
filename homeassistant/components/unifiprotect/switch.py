@@ -7,6 +7,7 @@ from typing import Any, Literal, override
 
 from uiprotect.data import (
     Camera,
+    DeviceState,
     ModelType,
     ProtectAdoptableDeviceModel,
     PublicDeviceModel,
@@ -99,9 +100,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         key="high_fps",
         translation_key="high_fps",
         entity_category=EntityCategory.CONFIG,
-        # has_highfps has no public counterpart yet (uilibs/uiprotect#1201), so
-        # this stays unreachable in API-key-only mode even though the value
-        # and setter are migrated.
         ufp_required_field="feature_flags.has_highfps",
         ufp_public_value="is_high_fps_enabled",
         ufp_set_method_fn=_set_highfps,
@@ -660,7 +658,11 @@ class ProtectRelayOutputSwitch(SwitchEntity):
             self._attr_available = False
             self._attr_is_on = None
             return
-        self._attr_available = self.data.last_public_update_success
+        # A relay that dropped off the console stays in the bootstrap.
+        self._attr_available = (
+            self.data.last_public_update_success
+            and relay.state is DeviceState.CONNECTED
+        )
         self._attr_is_on = (
             _RELAY_STATE_MAP.get(output.state) if output.state is not None else None
         )

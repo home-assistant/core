@@ -83,12 +83,10 @@ def _make_fob(
 
 def _make_public_bootstrap(fob: Mock | None) -> Mock:
     """Build a public bootstrap mock holding the given fob."""
-    nvr = Mock()
-    nvr.mac = "aa:bb:cc:dd:ee:ff"
+    nvr = Mock(
+        mac="aa:bb:cc:dd:ee:ff", display_name="Test NVR", device_type=None, type=None
+    )
     nvr.name = "Test NVR"
-    nvr.display_name = "Test NVR"
-    nvr.device_type = None
-    nvr.type = None
     return make_public_bootstrap(fobs={fob.id: fob} if fob is not None else {}, nvr=nvr)
 
 

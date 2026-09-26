@@ -230,6 +230,168 @@ async def test_call_tool_deprecated_json_object_custom_integration(
     assert "returns a JSON object from a tool" in caplog.text
 
 
+def _untagged_tool(module: str) -> llm.Tool:
+    """Return a tool that does not record the integration providing it."""
+
+    class UntaggedTool(llm.Tool):
+        """Tool that declares no integration."""
+
+        name = "test_tool"
+
+        async def async_call(
+            self, hass: HomeAssistant, tool_input: llm.ToolInput, _: llm.LLMContext
+        ) -> llm.ToolResult:
+            return llm.ToolResult(data={})
+
+    # The tool is reported against the integration its class comes from.
+    UntaggedTool.__module__ = module
+    return UntaggedTool()
+
+
+async def test_api_instance_reports_untagged_tool_for_custom_integration(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a custom integration is warned about a tool without an integration."""
+    mock_integration(hass, MockModule("my_custom"), built_in=False)
+    tool = _untagged_tool("custom_components.my_custom.llm")
+
+    llm.APIInstance(MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool])
+
+    assert "provides the LLM tool test_tool without an integration" in caplog.text
+
+
+async def test_api_instance_raises_untagged_tool_for_core_integration(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+) -> None:
+    """Test a core integration must record the integration on its tools."""
+    mock_integration(hass, MockModule("my_core"))
+    tool = _untagged_tool("homeassistant.components.my_core.llm")
+
+    with pytest.raises(
+        RuntimeError, match="provides the LLM tool test_tool without an integration"
+    ):
+        llm.APIInstance(
+            MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool]
+        )
+
+
+async def test_api_instance_reports_untagged_tool_from_the_api(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a tool defined outside an integration is reported against its API."""
+    mock_integration(hass, MockModule("my_custom"), built_in=False)
+    tool = _untagged_tool("homeassistant.helpers.llm")
+
+    class CustomAPI(MyAPI):
+        """API provided by a custom integration."""
+
+    CustomAPI.__module__ = "custom_components.my_custom.llm_api"
+    llm.APIInstance(
+        CustomAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool]
+    )
+
+    assert (
+        "custom integration 'my_custom' provides the LLM tool test_tool without an "
+        "integration" in caplog.text
+    )
+    # The tool carries the domain until the requirement is enforced.
+    assert tool.integration == "my_custom"
+
+
+async def test_merged_api_reports_untagged_tool_once(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a merged API reports the wrapped tool under its own name."""
+    mock_integration(hass, MockModule("my_custom"), built_in=False)
+
+    api = MyAPI(hass=hass, id="api-1", name="API 1")
+    api.tools = [_untagged_tool("custom_components.my_custom.llm")]
+    llm.async_register_api(hass, api)
+    other = MyAPI(hass=hass, id="api-2", name="API 2")
+    llm.async_register_api(hass, other)
+
+    await llm.async_get_api(hass, ["api-1", "api-2"], llm_context)
+
+    assert "provides the LLM tool test_tool without an integration" in caplog.text
+    # The wrapper reports the tool it wraps, so the report is not repeated.
+    assert caplog.text.count("without an integration") == 1
+
+
+def test_tool_metadata_defaults() -> None:
+    """Test a tool that declares no metadata is taken to be unsafe."""
+
+    class MyTool(llm.Tool):
+        name = "test_tool"
+
+        async def async_call(
+            self, hass: HomeAssistant, tool_input: llm.ToolInput, _: llm.LLMContext
+        ) -> llm.ToolResult:
+            return llm.ToolResult(data={})
+
+    tool = MyTool()
+    assert tool.title is None
+    assert tool.integration is None
+    assert tool.annotations == llm.ToolAnnotations(
+        read_only=False, destructive=True, idempotent=False, open_world=True
+    )
+
+
+def test_intent_tool_metadata() -> None:
+    """Test an intent tool takes the metadata of the integration exposing it."""
+
+    class MyIntentHandler(intent.IntentHandler):
+        intent_type = "test_intent"
+
+    annotations = llm.ToolAnnotations(read_only=True, open_world=False)
+    tool = llm.IntentTool(
+        "test_tool",
+        MyIntentHandler(),
+        title="Test tool",
+        integration="my_integration",
+        annotations=annotations,
+    )
+
+    assert tool.title == "Test tool"
+    assert tool.integration == "my_integration"
+    assert tool.annotations == annotations
+
+    # An intent tool that declares nothing keeps the unsafe defaults.
+    tool = llm.IntentTool("test_tool", MyIntentHandler())
+    assert tool.title is None
+    assert tool.integration is None
+    assert tool.annotations == llm.ToolAnnotations()
+
+
+def test_namespaced_tool_keeps_metadata() -> None:
+    """Test a namespaced tool carries the metadata of the tool it wraps."""
+
+    class MyTool(llm.Tool):
+        name = "test_tool"
+        title = "Test tool"
+        annotations = llm.ToolAnnotations(read_only=True, open_world=False)
+        integration = "my_integration"
+
+        async def async_call(
+            self, hass: HomeAssistant, tool_input: llm.ToolInput, _: llm.LLMContext
+        ) -> llm.ToolResult:
+            return llm.ToolResult(data={})
+
+    tool = MyTool()
+    namespaced = llm.NamespacedTool("test_api", tool)
+
+    assert namespaced.name == "test_api__test_tool"
+    assert namespaced.title == tool.title
+    assert namespaced.annotations == tool.annotations
+    assert namespaced.integration == tool.integration
+
+
 @pytest.mark.parametrize("namespaced", [False, True])
 async def test_intent_tool_omits_blank_arguments(
     hass: HomeAssistant, llm_context: llm.LLMContext, namespaced: bool
@@ -245,7 +407,7 @@ async def test_intent_tool_omits_blank_arguments(
             probatio.Optional("enabled"): cv.boolean,
         }
 
-    intent_tool = llm.IntentTool("test_intent", MyIntentHandler())
+    intent_tool = llm.IntentTool("test_intent", MyIntentHandler(), integration="test")
     tool: llm.Tool = (
         llm.NamespacedTool("test_api", intent_tool) if namespaced else intent_tool
     )
@@ -311,7 +473,7 @@ async def test_assist_api(
 
     intent_handler = MyIntentHandler()
 
-    tool = llm.IntentTool("test_intent", intent_handler)
+    tool = llm.IntentTool("test_intent", intent_handler, integration="test")
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
     assert tool.parameters == probatio.Schema(
@@ -473,7 +635,7 @@ async def test_assist_api_description(
         intent_type = "test_intent"
         description = "my intent handler"
 
-    tool = llm.IntentTool("test_intent", MyIntentHandler())
+    tool = llm.IntentTool("test_intent", MyIntentHandler(), integration="test")
     assert tool.name == "test_intent"
     assert tool.description == "my intent handler"
 
@@ -820,8 +982,8 @@ Static Context: An overview of the areas and the devices in this smart home:
     )
     dynamic_context_prompt = (
         "You ARE equipped to answer questions about the"
-        " current state of\nthe home using the"
-        " `homeassistant__GetLiveContext` tool. This is a primary"
+        " current state of\nthe home by retrieving"
+        " live context. This is a primary"
         " function. Do not state you lack the\n"
         "functionality if the question requires live"
         " data.\nIf the user asks about device"
@@ -833,7 +995,7 @@ Static Context: An overview of the areas and the devices in this smart home:
         ' "What mode is the thermostat in?", "What'
         ' is the temperature outside?"):\n'
         "    1.  Recognize this requires live data.\n"
-        "    2.  You MUST call `homeassistant__GetLiveContext`. This"
+        "    2.  You MUST use the provided tool to retrieve live context. This"
         " tool will provide the needed real-time"
         " information (like temperature from the local"
         " weather, lock status, etc.).\n"
@@ -1415,6 +1577,7 @@ async def test_merged_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> N
         def __init__(self, name: str, description: str) -> None:
             self.name = name
             self.description = description
+            self.integration = "test"
 
         async def async_call(
             self, hass: HomeAssistant, tool_input: llm.ToolInput, _: llm.LLMContext

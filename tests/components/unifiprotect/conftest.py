@@ -477,8 +477,11 @@ def sensor_fixture(fixed_now: datetime):
 
     data = load_json_object_fixture("sample_sensor.json", DOMAIN)
     sensor: Sensor = Sensor.from_unifi_dict(**data)
+    # Distinct offsets: these map to different public fields, and equal values
+    # would hide a swapped path. tampering stays unset on purpose, a value there
+    # would flip the tampering binary sensor.
     sensor.motion_detected_at = fixed_now - timedelta(hours=1)
-    sensor.open_status_changed_at = fixed_now - timedelta(hours=1)
+    sensor.open_status_changed_at = fixed_now - timedelta(hours=2)
     sensor.alarm_triggered_at = fixed_now - timedelta(hours=1)
     yield sensor
 

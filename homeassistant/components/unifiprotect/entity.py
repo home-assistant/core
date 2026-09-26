@@ -573,7 +573,10 @@ class ProtectFobEntity(Entity):
     ``ProtectApiClient.public_bootstrap.fobs`` and is refreshed over the public
     devices websocket, so it does not use the private-device machinery in
     :class:`BaseProtectEntity`. Availability follows the public websocket health
-    and the fob's presence in the bootstrap, mirroring the relay switch.
+    and the fob's presence in the bootstrap. Unlike every other public device it
+    deliberately ignores ``state``: Protect models a fob's reachability as
+    ``away_state``, which the status sensor surfaces, so gating on ``state``
+    would take that sensor away exactly when it has something to report.
     Subclasses fed by the events websocket set ``_ufp_requires_events_ws`` so
     they also go unavailable when that stream drops.
     """
