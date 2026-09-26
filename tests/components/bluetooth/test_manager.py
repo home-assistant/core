@@ -3,7 +3,7 @@
 from datetime import timedelta
 import time
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import AdvertisementHistory
@@ -1104,7 +1104,7 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
         patch.object(
             hass.config_entries.flow,
             "async_progress_by_init_data_type",
-            return_value=[{"flow_id": "mock_flow_id"}],
+            return_value=[{"flow_id": "mock_flow_id", "context": {}}],
         ) as mock_async_progress_by_init_data_type,
         patch.object(hass.config_entries.flow, "async_abort") as mock_async_abort,
         patch_bluetooth_time(
@@ -2088,3 +2088,23 @@ async def test_async_register_advertisement_callback(hass: HomeAssistant) -> Non
     cancel()
     inject_advertisement_with_source(hass, device, adv, "hci0")
     assert len(seen) == 2
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_address_disappeared_keeps_dismiss_protected_flows(
+    hass: HomeAssistant,
+) -> None:
+    """Flows the user is interacting with survive the device disappearing."""
+    with (
+        patch.object(
+            hass.config_entries.flow,
+            "async_progress_by_init_data_type",
+            return_value=[
+                {"flow_id": "pending", "context": {}},
+                {"flow_id": "pairing", "context": {"dismiss_protected": True}},
+            ],
+        ),
+        patch.object(hass.config_entries.flow, "async_abort") as mock_async_abort,
+    ):
+        _get_manager()._address_disappeared("44:44:33:11:23:45")
+    assert mock_async_abort.mock_calls == [call("pending")]
