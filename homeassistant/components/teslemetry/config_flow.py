@@ -25,6 +25,7 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
     WhitelistOperationAttemptingToAddExistingKey,
 )
+from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from tesla_fleet_api.teslemetry import Teslemetry
 from tesla_fleet_api.teslemetry.energysite import AuthorizedClient, TeslemetryEnergySite
@@ -75,6 +76,7 @@ from .helpers import (
     async_verify_local_gateway,
     cloud_energy_site,
 )
+from .models import TeslemetryEnergyData
 
 
 class PowerwallLookupError(Exception):
@@ -428,7 +430,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
     def __init__(self) -> None:
         """Initialize the energy site subentry flow."""
-        self._energy_site: TeslemetryEnergySite | None = None
+        self._energy_site: TeslemetryEnergySite | EnergySiteRouter | None = None
         self._key_pem: bytes | None = None
         self._public_key_der: bytes = b""
         self._public_key_b64: str = ""
@@ -470,9 +472,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             energy_data = available[user_input[CONF_SITE_ID]]
             self._site_id = energy_data.id
             self._site_name = energy_data.device.get("name") or "Energy Site"
-            if abort := await self._prepare_energy_site(
-                cloud_energy_site(energy_data.api)
-            ):
+            if abort := await self._prepare_energy_site(energy_data):
                 return abort
             return await self._async_begin_pairing()
 
@@ -509,14 +509,15 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         )
         if energy_data is None:
             return self.async_abort(reason="cannot_connect")
-        if abort := await self._prepare_energy_site(cloud_energy_site(energy_data.api)):
+        if abort := await self._prepare_energy_site(energy_data):
             return abort
         return await self._async_begin_pairing()
 
     async def _prepare_energy_site(
-        self, energy_site: TeslemetryEnergySite
+        self, energy_data: TeslemetryEnergyData
     ) -> SubentryFlowResult | None:
         """Discover the gateway address and load the integration's RSA key."""
+        energy_site = cast(TeslemetryEnergySite | EnergySiteRouter, energy_data.api)
         self._energy_site = energy_site
 
         try:
@@ -564,10 +565,12 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
         if TYPE_CHECKING:
             assert self._energy_site is not None
+        # Registration must reach Tesla, so it never routes to the local gateway.
+        cloud_site = cloud_energy_site(self._energy_site)
         try:
             # Not revoked on removal: other consumers may share this key.
-            LOGGER.info("Powerwall key setup: id=%s", self._energy_site.energy_site_id)
-            await self._energy_site.add_authorized_client(
+            LOGGER.info("Powerwall key setup: id=%s", cloud_site.energy_site_id)
+            await cloud_site.add_authorized_client(
                 self._public_key_der,
                 description="Home Assistant",
                 key_type=AuthorizedClientKeyType.RSA,
