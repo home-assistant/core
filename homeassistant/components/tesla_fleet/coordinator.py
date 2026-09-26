@@ -359,15 +359,23 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
                 translation_key="invalid_data",
             )
 
-        # Add all time periods together
-        output: dict[str, Any] = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
+        # Tesla omits a field from a period instead of sending zero, so a missing
+        # field is zero only when the day has at least one real numeric reading.
+        output: dict[str, Any] = dict.fromkeys(ENERGY_HISTORY_FIELDS)
+        saw_numeric = False
         for period in time_series:
+            if not isinstance(period, dict):
+                continue
             for key in ENERGY_HISTORY_FIELDS:
-                if key in period:
-                    if output[key] is None:
-                        output[key] = period[key]
-                    else:
-                        output[key] += period[key]
+                value = period.get(key)
+                if not isinstance(value, int | float) or isinstance(value, bool):
+                    continue
+                saw_numeric = True
+                output[key] = value if output[key] is None else output[key] + value
+        if saw_numeric:
+            for key in ENERGY_HISTORY_FIELDS:
+                if output[key] is None:
+                    output[key] = 0
 
         output["_period_start"] = period_start
 
