@@ -8,9 +8,11 @@ from unittest.mock import MagicMock, create_autospec, patch
 from boschshcpy import (
     BatteryLevelService,
     BypassService,
+    CameraLightService,
     PowerSwitchService,
     RoutingService,
     SHCBatteryDevice,
+    SHCCameraEyes,
     SHCLightSwitchBSM,
     SHCMicromoduleBlinds,
     SHCMicromoduleRelay,
@@ -159,6 +161,26 @@ def battery_only_device(
     device.device_model = "MD"
     device.status = "AVAILABLE"
     device.deleted = False
+    return device
+
+
+def camera_eyes_device(
+    device_id: str = "hdm:Cameras:eyes-1",
+    name: str = "Camera Eyes",
+    cameralight: CameraLightService.State = CameraLightService.State.OFF,
+) -> SHCCameraEyes:
+    """Build a minimal device double for the camera_eyes bucket."""
+    device = create_autospec(SHCCameraEyes, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "CAMERA_EYES"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.cameralight = cameralight
     return device
 
 
