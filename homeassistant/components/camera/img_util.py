@@ -3,9 +3,9 @@
 import logging
 from typing import TYPE_CHECKING, Literal, cast
 
-from turbojpeg import TurboJPEG
-
 if TYPE_CHECKING:
+    from turbojpeg import TurboJPEG
+
     from . import Image
 
 SUPPORTED_SCALING_FACTORS = [(7, 8), (3, 4), (5, 8), (1, 2), (3, 8), (1, 4), (1, 8)]
@@ -88,6 +88,8 @@ class TurboJPEGSingleton:
     def __init__(self) -> None:
         """Try to create TurboJPEG only once."""
         try:
+            from turbojpeg import TurboJPEG  # noqa: PLC0415
+
             TurboJPEGSingleton.__instance = TurboJPEG()
         except Exception:
             _LOGGER.exception(
@@ -97,7 +99,5 @@ class TurboJPEGSingleton:
             TurboJPEGSingleton.__instance = False
 
 
-# TurboJPEG loads libraries that do blocking I/O.
-# Initialize TurboJPEGSingleton in the executor to avoid
-# blocking the event loop.
-TurboJPEGSingleton.instance()
+# TurboJPEG loads libraries that do blocking I/O, so it is created on first use,
+# which happens in the executor (scale_jpeg_camera_image, stream keyframe converter).

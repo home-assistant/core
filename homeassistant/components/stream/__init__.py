@@ -33,7 +33,6 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util.async_ import create_eager_task
 
 from .const import (
@@ -263,9 +262,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for logging_namespace in ("libav.mp4", "libav.swscaler"):
         logging.getLogger(logging_namespace).setLevel(logging.ERROR)
 
-    # This will load av so we run it in the executor
-    with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
-        await hass.async_add_executor_job(set_pyav_logging, debug_enabled)
+    # PyAV is imported lazily by the stream worker, which sets the libav log level
 
     # Keep import here so that we can import stream integration without installing reqs
     from .recorder import async_setup_recorder  # noqa: PLC0415

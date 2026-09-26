@@ -7,10 +7,10 @@ from dataclasses import dataclass, field
 import datetime
 from enum import IntEnum
 import logging
+import types
 from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp import web
-import numpy as np
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -26,6 +26,7 @@ from .const import (
 
 if TYPE_CHECKING:
     from av import Packet, VideoCodecContext
+    import numpy as np
 
     from homeassistant.components.camera import DynamicStreamSettings
 
@@ -403,16 +404,25 @@ class StreamView(HomeAssistantView):
         raise NotImplementedError
 
 
+def _numpy() -> types.ModuleType:
+    """Import numpy only when an image is transformed."""
+    import numpy as np  # noqa: PLC0415
+
+    return np
+
+
 TRANSFORM_IMAGE_FUNCTION = (
     lambda image: image,  # Unused
     lambda image: image,  # No transform
-    lambda image: np.fliplr(image).copy(),  # Mirror
-    lambda image: np.rot90(image, 2).copy(),  # Rotate 180
-    lambda image: np.flipud(image).copy(),  # Flip
-    lambda image: np.flipud(np.rot90(image)).copy(),  # Rotate left and flip
-    lambda image: np.rot90(image).copy(),  # Rotate left
-    lambda image: np.flipud(np.rot90(image, -1)).copy(),  # Rotate right and flip
-    lambda image: np.rot90(image, -1).copy(),  # Rotate right
+    lambda image: _numpy().fliplr(image).copy(),  # Mirror
+    lambda image: _numpy().rot90(image, 2).copy(),  # Rotate 180
+    lambda image: _numpy().flipud(image).copy(),  # Flip
+    lambda image: _numpy().flipud(_numpy().rot90(image)).copy(),  # Rotate left and flip
+    lambda image: _numpy().rot90(image).copy(),  # Rotate left
+    lambda image: (
+        _numpy().flipud(_numpy().rot90(image, -1)).copy()
+    ),  # Rotate right and flip
+    lambda image: _numpy().rot90(image, -1).copy(),  # Rotate right
 )
 
 
@@ -438,16 +448,11 @@ class KeyFrameConverter:
         dynamic_stream_settings: DynamicStreamSettings,
     ) -> None:
         """Initialize."""
-
-        # Keep import here so that we can import stream integration
-        # without installing reqs
-        from homeassistant.components.camera import TurboJPEGSingleton  # noqa: PLC0415
-
         self._packet: Packet | None = None
         self._event: asyncio.Event = asyncio.Event()
         self._hass = hass
         self._image: bytes | None = None
-        self._turbojpeg = TurboJPEGSingleton.instance()
+        self._turbojpeg: Any = None  # created on first use, in the executor
         self._lock = asyncio.Lock()
         self._codec_context: VideoCodecContext | None = None
         self._stream_settings = stream_settings
@@ -484,7 +489,7 @@ class KeyFrameConverter:
     @staticmethod
     def transform_image(image: np.ndarray, orientation: int) -> np.ndarray:
         """Transform image to a given orientation."""
-        return TRANSFORM_IMAGE_FUNCTION[orientation](image)
+        return TRANSFORM_IMAGE_FUNCTION[orientation](image)  # type: ignore[no-any-return]
 
     def _generate_image(self, width: int | None, height: int | None) -> None:
         """Generate the keyframe image.
@@ -493,7 +498,10 @@ class KeyFrameConverter:
         the asyncio lock from the main thread, there will only be one entry
         at a time per instance.
         """
+        from homeassistant.components.camera import TurboJPEGSingleton  # noqa: PLC0415
 
+        if self._turbojpeg is None:
+            self._turbojpeg = TurboJPEGSingleton.instance()
         if not (self._turbojpeg and self._packet and self._codec_context):
             return
         packet = self._packet

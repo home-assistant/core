@@ -46,6 +46,12 @@ from .fmp4utils import read_init
 from .hls import HlsStreamOutput
 
 _LOGGER = logging.getLogger(__name__)
+# Only pass through PyAV log messages if stream logging is at DEBUG (set here, when av is first loaded)
+av.logging.set_level(
+    av.logging.VERBOSE
+    if logging.getLogger("homeassistant.components.stream").isEnabledFor(logging.DEBUG)
+    else av.logging.FATAL
+)
 NEGATIVE_INF = -math.inf
 
 
