@@ -582,12 +582,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Front lawn last time completed',
+    'object_id_base': 'Last time completed',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Front lawn last time completed',
+    'original_name': 'Last time completed',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -601,7 +601,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Front lawn last time completed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front lawn Last time completed',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_test_mower_1_front_lawn_last_time_completed',
@@ -635,12 +635,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Front lawn progress',
+    'object_id_base': 'Progress',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Front lawn progress',
+    'original_name': 'Progress',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -653,7 +653,7 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_front_lawn_progress-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Front lawn progress',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front lawn Progress',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
@@ -817,17 +817,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'My lawn last time completed',
+    'object_id_base': 'Last time completed',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'My lawn last time completed',
+    'original_name': 'Last time completed',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'my_lawn_last_time_completed',
+    'translation_key': 'work_area_last_time_completed',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_0_last_time_completed',
     'unit_of_measurement': None,
   })
@@ -836,7 +836,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 My lawn last time completed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My lawn Last time completed',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_test_mower_1_my_lawn_last_time_completed',
@@ -870,17 +870,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'My lawn progress',
+    'object_id_base': 'Progress',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'My lawn progress',
+    'original_name': 'Progress',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'my_lawn_progress',
+    'translation_key': 'work_area_progress',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_0_progress',
     'unit_of_measurement': '%',
   })
@@ -888,7 +888,7 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_my_lawn_progress-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 My lawn progress',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My lawn Progress',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
