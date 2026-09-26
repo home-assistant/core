@@ -543,6 +543,10 @@ def create_devices(
             kwargs[ATTR_CONNECTIONS] = {
                 (dr.CONNECTION_ZIGBEE, format_zigbee_address(zigbee.eui))
             }
+            if device.device.device_manufacturer_code:
+                kwargs.setdefault(
+                    ATTR_MANUFACTURER, device.device.device_manufacturer_code
+                )
         if (matter := device.device.matter) is not None:
             kwargs.update(
                 {
