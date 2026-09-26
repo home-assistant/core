@@ -2,33 +2,44 @@
 
 from collections.abc import Callable
 from datetime import timedelta
+from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from modbus_connection import ModbusConnectionError, ModbusError, ModbusTimeoutError
+from modbus_connection import (
+    ModbusConnectionError,
+    ModbusError,
+    ModbusSerialParams,
+    ModbusTcpParams,
+    ModbusTimeoutError,
+)
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sofar.const import (
+    CONF_BAUDRATE,
     DOMAIN,
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
 )
 from homeassistant.components.sofar.coordinator import SofarRuntimeData
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import CONF_PORT, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import (
+    MOCK_ENTRY_DATA,
     MOCK_HW_VERSION,
     MOCK_HYBRID_MODEL,
     MOCK_HYBRID_SERIAL,
+    MOCK_MODEL,
     MOCK_SERIAL,
+    MOCK_SERIAL_ENTRY_DATA,
     MOCK_SW_VERSION,
-    MOCK_USER_INPUT,
+    MOCK_TCP_INPUT,
     deny_meter_energy,
     seed_hybrid_inverter,
     serve_meter_energy,
@@ -89,6 +100,45 @@ async def test_setup_and_unload_entry(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize(
+    ("data", "expected_params"),
+    [
+        pytest.param(
+            {**MOCK_ENTRY_DATA, CONF_PORT: 1502},
+            ModbusTcpParams(host="192.168.1.100", port=1502),
+            id="tcp",
+        ),
+        pytest.param(
+            {**MOCK_SERIAL_ENTRY_DATA, CONF_BAUDRATE: 19200},
+            ModbusSerialParams(device="/dev/ttyUSB0", baudrate=19200),
+            id="serial",
+        ),
+    ],
+)
+async def test_setup_connects_over_the_configured_link(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    data: dict[str, Any],
+    expected_params: ModbusSerialParams | ModbusTcpParams,
+) -> None:
+    """Test setup opens the link the entry is configured for."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=MOCK_SERIAL, data=data, title=MOCK_MODEL
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ) as mock_get_unit:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_get_unit.assert_called_once_with(hass, entry, expected_params, 1)
 
 
 @pytest.mark.parametrize("key", ["serial_number", "waiting_time"])
@@ -323,7 +373,7 @@ async def test_setup_entry_unrecognized_inverter_raises_setup_error(
     # outliving a sofar-modbus library downgrade. Caught before any
     # Modbus I/O, so no connection needs mocking here.
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id="UNRECOGNIZED_SERIAL_XYZ", data=MOCK_USER_INPUT
+        domain=DOMAIN, unique_id="UNRECOGNIZED_SERIAL_XYZ", data=MOCK_ENTRY_DATA
     )
     entry.add_to_hass(hass)
 
@@ -403,7 +453,7 @@ async def test_settings_recover_without_a_reload(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
@@ -462,7 +512,7 @@ async def test_device_versions_need_a_reload_to_recover(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
@@ -665,7 +715,7 @@ async def test_only_wired_battery_packs_become_devices(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
@@ -761,7 +811,7 @@ async def test_battery_pack_appears_once_its_block_answers(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
@@ -793,7 +843,7 @@ async def _setup_hybrid(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
@@ -917,3 +967,43 @@ async def test_a_removed_pack_comes_back_without_a_restart(
     entity_id = entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id)
     assert entity_id is not None
     assert hass.states.get(entity_id).state == "51.5"
+
+
+@pytest.mark.parametrize(
+    ("data", "expected"),
+    [
+        pytest.param(MOCK_TCP_INPUT, MOCK_ENTRY_DATA, id="legacy_tcp"),
+        pytest.param(
+            MOCK_SERIAL_ENTRY_DATA,
+            MOCK_SERIAL_ENTRY_DATA,
+            id="reconfigured_while_disabled",
+        ),
+    ],
+)
+async def test_migrate_entry_adds_the_connection_type(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    data: dict[str, Any],
+    expected: dict[str, Any],
+) -> None:
+    """Test migration marks legacy entries as TCP and keeps a set type."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_SERIAL,
+        data=data,
+        title=MOCK_MODEL,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.minor_version == 2
+    assert entry.data == expected
