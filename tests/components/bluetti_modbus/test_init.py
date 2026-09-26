@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from bluetti_modbus_lib import get_device
 from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import (
     AcknowledgeError,
@@ -18,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import SERIAL
+from .conftest import SERIAL, SERIAL_ADDRESS
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -216,11 +217,8 @@ async def test_identity_mismatch_after_setup_fails_the_refresh(
     """An address reassigned to a different device stops updating, not just goes stale."""
     await _setup(hass, mock_config_entry)
 
-    mock_modbus_unit.holding[50206] = 1  # a different serial answers now
+    mock_modbus_unit.holding[SERIAL_ADDRESS] = 1
     await _tick(hass, freezer)
-
-    coordinator = mock_config_entry.runtime_data.coordinator
-    assert coordinator.last_update_success is False
 
     state = hass.states.get(VOLTAGE_ENTITY)
     assert state is not None
@@ -228,10 +226,17 @@ async def test_identity_mismatch_after_setup_fails_the_refresh(
 
 
 async def test_excluded_fields_are_dropped_from_the_read_plan(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
 ) -> None:
     """A field with no entity yet is not polled either, not just not created."""
     await _setup(hass, mock_config_entry)
 
-    device = mock_config_entry.runtime_data.coordinator.device
-    assert device.get_field("ac_o_switch") is None
+    ac_output = get_device("balco260").get_field("ac_o_switch")
+    assert ac_output is not None
+    assert mock_modbus_unit.read_events
+    assert not any(
+        event.address <= ac_output.address < event.address + event.count
+        for event in mock_modbus_unit.read_events
+    )
