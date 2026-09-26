@@ -12,6 +12,7 @@ from propcache.api import cached_property
 
 from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
     ATTR_AREA_ID,
     ATTR_ENTITY_ID,
@@ -317,6 +318,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_config)
 
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up automation config entry."""
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload automation config entry."""
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class BaseAutomationEntity(ToggleEntity, ABC):
