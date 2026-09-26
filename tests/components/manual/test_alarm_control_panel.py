@@ -1,6 +1,7 @@
 """The tests for the manual Alarm Control Panel component."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun import freeze_time
@@ -12,6 +13,7 @@ from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
+    CodeFormat,
 )
 from homeassistant.components.manual.alarm_control_panel import (
     ATTR_NEXT_STATE,
@@ -26,7 +28,7 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_ARM_VACATION,
 )
-from homeassistant.core import Context, CoreState, HomeAssistant, State, callback
+from homeassistant.core import Context, CoreState, Event, HomeAssistant, State, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -1658,3 +1660,273 @@ async def test_invalid_arming_states(hass: HomeAssistant) -> None:
 
     state = hass.states.get("alarm_control_panel.test")
     assert state is None
+
+
+CODE_LIST = ["1111", "2222", "3333"]
+CODE_MAPPING = {"dad": "1111", "mom": "2222", "kid": "3333"}
+ENTITY_ID = "alarm_control_panel.test"
+
+
+async def _setup_manual_alarm(
+    hass: HomeAssistant,
+    code: str | list[str | int] | dict[str | int, str],
+) -> None:
+    """Set up a manual alarm panel with the given code configuration."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+                "code": code,
+                "arming_time": 0,
+                "delay_time": 0,
+                "disarm_after_trigger": False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    "code_config",
+    [
+        pytest.param(CODE_LIST, id="list"),
+        pytest.param(CODE_MAPPING, id="mapping"),
+    ],
+)
+@pytest.mark.parametrize("code", CODE_LIST)
+async def test_multiple_codes_arm_and_disarm(
+    hass: HomeAssistant, code_config: list[str] | dict[str, str], code: str
+) -> None:
+    """Test that every configured code can arm and disarm the alarm."""
+    await _setup_manual_alarm(hass, code_config)
+
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
+
+    await common.async_alarm_arm_away(hass, code)
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.ARMED_AWAY
+
+    await common.async_alarm_disarm(hass, code)
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
+
+
+@pytest.mark.parametrize(
+    "code_config",
+    [
+        pytest.param(CODE_LIST, id="list"),
+        pytest.param(CODE_MAPPING, id="mapping"),
+    ],
+)
+async def test_multiple_codes_with_invalid_code(
+    hass: HomeAssistant, code_config: list[str] | dict[str, str]
+) -> None:
+    """Test that a code outside the configured ones is rejected."""
+    await _setup_manual_alarm(hass, code_config)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await common.async_alarm_arm_away(hass, "9999")
+    assert err.value.translation_key == "invalid_code"
+
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
+
+
+async def test_multiple_codes_from_yaml_numbers(hass: HomeAssistant) -> None:
+    """Test that codes written as YAML numbers are usable as strings."""
+    await _setup_manual_alarm(hass, [1111, 2222])
+
+    await common.async_alarm_arm_away(hass, "2222")
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.ARMED_AWAY
+
+
+@pytest.mark.parametrize(
+    "code_config",
+    [
+        pytest.param("", id="empty_string"),
+        pytest.param([], id="empty_list"),
+        pytest.param({}, id="empty_mapping"),
+    ],
+)
+async def test_empty_code_accepts_any_code(
+    hass: HomeAssistant, code_config: str | list[str] | dict[str, str]
+) -> None:
+    """Test that an empty code configuration requires and validates no code."""
+    await _setup_manual_alarm(hass, code_config)
+
+    attributes = hass.states.get(ENTITY_ID).attributes
+    assert attributes["code_format"] is None
+    assert attributes["code_arm_required"] is False
+
+    # The frontend shows no code field, so it arms without passing one
+    await common.async_alarm_arm_away(hass)
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.ARMED_AWAY
+
+    await common.async_alarm_disarm(hass)
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
+
+    # Any code is accepted too, since there is none to check against
+    await common.async_alarm_arm_away(hass, "whatever")
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.ARMED_AWAY
+
+
+@pytest.mark.parametrize(
+    "code_config",
+    [
+        pytest.param(["1111", "1111"], id="list"),
+        pytest.param({"dad": "1111", "mom": "1111"}, id="mapping"),
+    ],
+)
+async def test_duplicate_codes_are_rejected(
+    hass: HomeAssistant, code_config: list[str] | dict[str, str]
+) -> None:
+    """Test that duplicate codes are rejected, as their code ID is ambiguous."""
+    await _setup_manual_alarm(hass, code_config)
+
+    assert hass.states.get(ENTITY_ID) is None
+
+
+async def test_duplicate_code_ids_are_rejected(hass: HomeAssistant) -> None:
+    """Test that code IDs colliding once normalized do not discard a code."""
+    await _setup_manual_alarm(hass, {1: "1111", "1": "2222"})
+
+    assert hass.states.get(ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    ("code_config", "expected_format"),
+    [
+        pytest.param("1234", CodeFormat.NUMBER, id="single_number"),
+        pytest.param(CODE, CodeFormat.TEXT, id="single_text"),
+        pytest.param(CODE_LIST, CodeFormat.NUMBER, id="list_number"),
+        pytest.param(["1111", CODE], CodeFormat.TEXT, id="list_mixed"),
+        pytest.param(CODE_MAPPING, CodeFormat.NUMBER, id="mapping_number"),
+        pytest.param({"dad": CODE}, CodeFormat.TEXT, id="mapping_text"),
+    ],
+)
+async def test_code_format_with_multiple_codes(
+    hass: HomeAssistant,
+    code_config: str | list[str] | dict[str, str],
+    expected_format: CodeFormat,
+) -> None:
+    """Test the reported code format for the supported code configurations."""
+    await _setup_manual_alarm(hass, code_config)
+
+    assert hass.states.get(ENTITY_ID).attributes["code_format"] == expected_format
+
+
+@pytest.mark.parametrize(
+    ("code_config", "code", "expected_code_id"),
+    [
+        pytest.param(CODE, CODE, None, id="single"),
+        pytest.param(CODE_LIST, "2222", "1", id="list"),
+        pytest.param(CODE_MAPPING, "2222", "mom", id="mapping"),
+    ],
+)
+async def test_code_used_event_fired(
+    hass: HomeAssistant,
+    code_config: str | list[str] | dict[str, str],
+    code: str,
+    expected_code_id: str | None,
+) -> None:
+    """Test that manual_alarm_code_used reports which code was used."""
+    await _setup_manual_alarm(hass, code_config)
+
+    events: list[dict[str, Any]] = []
+
+    @callback
+    def event_listener(event: Event) -> None:
+        events.append(event.data)
+
+    hass.bus.async_listen("manual_alarm_code_used", event_listener)
+
+    mock_user_id = "test_user_id_123"
+    with patch("homeassistant.auth.AuthManager.async_get_user") as mock_get_user:
+        mock_user = MagicMock(spec=User)
+        mock_user.id = mock_user_id
+        mock_get_user.return_value = mock_user
+
+        await hass.services.async_call(
+            ALARM_DOMAIN,
+            SERVICE_ALARM_ARM_AWAY,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_CODE: code},
+            blocking=True,
+            context=Context(user_id=mock_user_id),
+        )
+    await hass.async_block_till_done()
+
+    assert events == [
+        {
+            "entity_id": ENTITY_ID,
+            "user_id": mock_user_id,
+            "target_state": AlarmControlPanelState.ARMED_AWAY,
+            "code_id": expected_code_id,
+        }
+    ]
+
+    await common.async_alarm_disarm(hass, code)
+    await hass.async_block_till_done()
+
+    assert len(events) == 2
+    assert events[1]["target_state"] == AlarmControlPanelState.DISARMED
+    assert events[1]["code_id"] == expected_code_id
+
+
+async def test_code_used_event_not_fired_on_bad_code(hass: HomeAssistant) -> None:
+    """Test that no code used event is fired when the code is rejected."""
+    await _setup_manual_alarm(hass, CODE_LIST)
+
+    events: list[dict[str, Any]] = []
+
+    @callback
+    def event_listener(event: Event) -> None:
+        events.append(event.data)
+
+    hass.bus.async_listen("manual_alarm_code_used", event_listener)
+
+    with pytest.raises(ServiceValidationError):
+        await common.async_alarm_arm_away(hass, "9999")
+    await hass.async_block_till_done()
+
+    assert events == []
+
+
+async def test_code_used_event_with_template_code(hass: HomeAssistant) -> None:
+    """Test the code used event for a template code, which has no code ID."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+                "code_template": '{{ "" if to_state == "armed_home" else "abc" }}',
+                "arming_time": 0,
+                "disarm_after_trigger": False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    events: list[dict[str, Any]] = []
+
+    @callback
+    def event_listener(event: Event) -> None:
+        events.append(event.data)
+
+    hass.bus.async_listen("manual_alarm_code_used", event_listener)
+
+    await common.async_alarm_arm_away(hass, "abc")
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0]["code_id"] is None
+    assert events[0]["target_state"] == AlarmControlPanelState.ARMED_AWAY
+
+    await common.async_alarm_disarm(hass, "abc")
+    await common.async_alarm_arm_home(hass, "wrong")
+    await hass.async_block_till_done()
+
+    # Arming home needs no code, so no code was used
+    assert len(events) == 2
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.ARMED_HOME

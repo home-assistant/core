@@ -13,6 +13,7 @@ from homeassistant.components.alarm_control_panel import (
     CodeFormat,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_ARMING_TIME,
     CONF_CODE,
     CONF_DELAY_TIME,
@@ -89,6 +90,40 @@ SUPPORTED_ARMING_STATE_TO_FEATURE = {
 
 ATTR_PREVIOUS_STATE = "previous_state"
 ATTR_NEXT_STATE = "next_state"
+ATTR_CODE_ID = "code_id"
+ATTR_TARGET_STATE = "target_state"
+ATTR_USER_ID = "user_id"
+
+EVENT_BAD_CODE_ATTEMPT = "manual_alarm_bad_code_attempt"
+EVENT_CODE_USED = "manual_alarm_code_used"
+
+
+def _codes_validator(value: Any) -> dict[str | None, str]:
+    """Normalize the configured code(s) to a mapping of code ID to code.
+
+    A single code has no code ID, codes given as a list are identified by their
+    index and codes given as a mapping by their key. Empty codes are dropped, so
+    that an empty configuration value keeps meaning that no code is validated.
+    """
+    items: list[tuple[str | None, Any]]
+    if isinstance(value, dict):
+        items = [(cv.string(key), code) for key, code in value.items()]
+    elif isinstance(value, list):
+        items = [(str(index), code) for index, code in enumerate(value)]
+    else:
+        items = [(None, value)]
+
+    # Mapping keys are normalized to strings, so 1 and "1" would name the same code
+    code_ids = [code_id for code_id, _ in items]
+    if len(set(code_ids)) != len(code_ids):
+        raise probatio.Invalid("Code IDs must be unique")
+
+    codes = {code_id: cv.string(code) for code_id, code in items}
+    codes = {code_id: code for code_id, code in codes.items() if code}
+    # Duplicate codes would make the reported code ID ambiguous
+    if len(set(codes.values())) != len(codes):
+        raise probatio.Invalid("Codes must be unique")
+    return codes
 
 
 def _state_validator(
@@ -133,7 +168,7 @@ PLATFORM_SCHEMA = probatio.Schema(
             {
                 probatio.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
                 probatio.Optional(CONF_UNIQUE_ID): cv.string,
-                probatio.Exclusive(CONF_CODE, "code validation"): cv.string,
+                probatio.Exclusive(CONF_CODE, "code validation"): _codes_validator,
                 probatio.Exclusive(CONF_CODE_TEMPLATE, "code validation"): cv.template,
                 probatio.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
                 probatio.Optional(
@@ -219,7 +254,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         hass: HomeAssistant,
         name: str,
         unique_id: str | None,
-        code: str | None,
+        codes: dict[str | None, str] | None,
         code_template: Template | None,
         code_arm_required: bool,
         disarm_after_trigger: bool,
@@ -230,8 +265,13 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         self._hass = hass
         self._attr_name = name
         self._attr_unique_id = unique_id
-        self._code = code_template or code or None
-        self._attr_code_arm_required = code_arm_required
+        self._code_template = code_template
+        self._codes = codes or {}
+        # Without a code to check against, requiring one for arming only makes the
+        # panel impossible to arm from the frontend, which shows no code field
+        self._attr_code_arm_required = code_arm_required and (
+            code_template is not None or bool(self._codes)
+        )
         self._disarm_after_trigger = disarm_after_trigger
         self._previous_state: AlarmControlPanelState = self._state
         self._state_ts: datetime.datetime = dt_util.utcnow()
@@ -311,9 +351,9 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
     @override
     def code_format(self) -> CodeFormat | None:
         """Return one or more digits/characters."""
-        if self._code is None:
+        if self._code_template is None and not self._codes:
             return None
-        if isinstance(self._code, str) and self._code.isdigit():
+        if self._codes and all(code.isdigit() for code in self._codes.values()):
             return CodeFormat.NUMBER
         return CodeFormat.TEXT
 
@@ -404,37 +444,48 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         """Validate given code."""
         if (
             state != AlarmControlPanelState.DISARMED and not self.code_arm_required
-        ) or self._code is None:
+        ) or (self._code_template is None and not self._codes):
             return
 
-        if isinstance(self._code, str):
-            alarm_code = self._code
-        else:
-            alarm_code = self._code.async_render(
+        if self._code_template is not None:
+            alarm_code = self._code_template.async_render(
                 parse_result=False, from_state=self._state, to_state=state
             )
+            if not alarm_code:
+                return
+            if code == alarm_code:
+                self._async_fire_code_used(state, None)
+                return
+        else:
+            for code_id, alarm_code in self._codes.items():
+                if code == alarm_code:
+                    self._async_fire_code_used(state, code_id)
+                    return
 
-        if not alarm_code or code == alarm_code:
-            return
-
-        current_context = (
-            self._context if hasattr(self, "_context") and self._context else None
-        )
-        user_id_from_context = current_context.user_id if current_context else None
-
-        self.hass.bus.async_fire(
-            "manual_alarm_bad_code_attempt",
-            {
-                "entity_id": self.entity_id,
-                "user_id": user_id_from_context,
-                "target_state": state,
-            },
-        )
+        self.hass.bus.async_fire(EVENT_BAD_CODE_ATTEMPT, self._code_event_data(state))
 
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_code",
         )
+
+    def _async_fire_code_used(self, state: str, code_id: str | None) -> None:
+        """Fire an event telling which code was accepted for a state change."""
+        self.hass.bus.async_fire(
+            EVENT_CODE_USED, self._code_event_data(state) | {ATTR_CODE_ID: code_id}
+        )
+
+    def _code_event_data(self, state: str) -> dict[str, Any]:
+        """Return the data shared by the code related events."""
+        current_context = (
+            self._context if hasattr(self, "_context") and self._context else None
+        )
+
+        return {
+            ATTR_ENTITY_ID: self.entity_id,
+            ATTR_USER_ID: current_context.user_id if current_context else None,
+            ATTR_TARGET_STATE: state,
+        }
 
     @property
     @override

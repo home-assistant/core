@@ -24,7 +24,7 @@ async def async_setup_entry(
                 hass,
                 "Security",
                 "demo_alarm_control_panel",
-                "1234",
+                {None: "1234"},
                 None,
                 True,
                 False,
