@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TeslemetryConfigEntry
-from .entity import TeslemetryVehicleStreamEntity
+from .entity import TeslemetryVehicleCommandEntity
 from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryVehicleData
 
@@ -73,7 +73,7 @@ async def async_setup_entry(
     )
 
 
-class TeslemetryButtonEntity(TeslemetryVehicleStreamEntity, ButtonEntity):
+class TeslemetryButtonEntity(TeslemetryVehicleCommandEntity, ButtonEntity):
     """Base class for Teslemetry buttons."""
 
     api: Vehicle | VehicleRouter
