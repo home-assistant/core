@@ -824,7 +824,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         port = reconfigure_entry.data.get(CONF_PORT)
 
         if user_input is not None:
-            host, port = self._async_get_host_port(host)
+            host, port = self._async_get_host_port(user_input[CONF_HOST])
 
             self.host = host
             credentials = await get_credentials(self.hass)
