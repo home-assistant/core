@@ -2160,6 +2160,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/xiaomi_miio/ @rytilahti @syssi @starkillerOG
 /tests/components/xiaomi_miio/ @rytilahti @syssi @starkillerOG
 /homeassistant/components/xiaomi_tv/ @simse
+/homeassistant/components/xiaomi_weather/ @shirok1
+/tests/components/xiaomi_weather/ @shirok1
 /homeassistant/components/xmpp/ @fabaff @flowolf
 /homeassistant/components/xthings_cloud/ @XthingsJacobs
 /tests/components/xthings_cloud/ @XthingsJacobs

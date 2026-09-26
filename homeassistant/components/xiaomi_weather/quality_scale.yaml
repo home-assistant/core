@@ -1,0 +1,75 @@
+rules:
+  action-exceptions: todo
+  action-setup:
+    status: exempt
+    comment: The integration does not register actions.
+  appropriate-polling: done
+  async-dependency: todo
+  brands:
+    status: done
+    comment: https://github.com/home-assistant/brands/pull/11187
+  common-modules: done
+  config-entry-unloading: todo
+  config-flow: done
+  config-flow-test-coverage:
+    status: done
+    comment: The coordinate setup flow has full line and branch coverage.
+  dependency-transparency:
+    status: exempt
+    comment: The API client is bundled; an exception is requested in https://github.com/home-assistant/core/pull/182576.
+  devices: todo
+  diagnostics: todo
+  discovery: todo
+  discovery-update-info: todo
+  docs-actions:
+    status: exempt
+    comment: Forecasts use the standard weather action.
+  docs-conditions:
+    status: exempt
+    comment: The integration does not provide conditions.
+  docs-configuration-parameters: todo
+  docs-data-update: todo
+  docs-examples: todo
+  docs-high-level-description:
+    status: done
+    comment: https://github.com/home-assistant/home-assistant.io/pull/48270
+  docs-installation-instructions:
+    status: done
+    comment: https://github.com/home-assistant/home-assistant.io/pull/48270
+  docs-installation-parameters: todo
+  docs-known-limitations: todo
+  docs-removal-instructions:
+    status: done
+    comment: https://github.com/home-assistant/home-assistant.io/pull/48270
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-triggers:
+    status: exempt
+    comment: The integration does not provide triggers.
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category: todo
+  entity-device-class: todo
+  entity-disabled-by-default: todo
+  entity-event-setup: done
+  entity-translations: todo
+  entity-unavailable: todo
+  entity-unique-id: done
+  exception-translations: todo
+  has-entity-name: done
+  icon-translations: todo
+  inject-websession: todo
+  integration-owner: todo
+  log-when-unavailable: todo
+  parallel-updates: todo
+  reauthentication-flow: todo
+  reconfiguration-flow: todo
+  repair-issues: todo
+  runtime-data: done
+  stale-devices: todo
+  strict-typing: todo
+  test-before-configure: done
+  test-before-setup: done
+  test-coverage: todo
+  unique-config-entry: done

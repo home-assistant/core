@@ -8394,6 +8394,12 @@
           "iot_class": "assumed_state",
           "name": "Xiaomi TV"
         },
+        "xiaomi_weather": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Xiaomi Weather"
+        },
         "xiaomi": {
           "integration_type": "hub",
           "config_flow": false,

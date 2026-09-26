@@ -675,6 +675,7 @@ homeassistant.components.workday.*
 homeassistant.components.worldclock.*
 homeassistant.components.xbox.*
 homeassistant.components.xiaomi_ble.*
+homeassistant.components.xiaomi_weather.*
 homeassistant.components.yale_smart_alarm.*
 homeassistant.components.yalexs_ble.*
 homeassistant.components.yoto.*

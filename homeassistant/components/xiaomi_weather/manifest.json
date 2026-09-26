@@ -1,0 +1,11 @@
+{
+  "domain": "xiaomi_weather",
+  "name": "Xiaomi Weather",
+  "codeowners": ["@shirok1"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/xiaomi_weather",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": []
+}

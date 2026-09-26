@@ -1,0 +1,40 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This city is already configured."
+    },
+    "error": {
+      "cannot_connect": "Unable to fetch weather right now. Please try again.",
+      "city_not_found": "No supported mainland China city found at these coordinates.",
+      "lookup_failed": "Unable to look up the city right now. Your inputs have been kept; please try again."
+    },
+    "step": {
+      "city": {
+        "data": {
+          "city_id": "City"
+        },
+        "data_description": {
+          "city_id": "Choose the matching city after checking its region and weather code."
+        },
+        "description": "Multiple cities match these coordinates. Select the city to use for weather data.",
+        "title": "Choose a city"
+      },
+      "confirm": {
+        "description": "City: {city_name}\n\nCity code: {city_id}\n\nLatitude: {latitude}\n\nLongitude: {longitude}\n\nSubmitting will verify weather access and save this location.",
+        "title": "Review location"
+      },
+      "user": {
+        "data": {
+          "latitude": "Latitude",
+          "longitude": "Longitude"
+        },
+        "data_description": {
+          "latitude": "Latitude of the weather location, between -90 and 90 degrees.",
+          "longitude": "Longitude of the weather location, between -180 and 180 degrees."
+        },
+        "description": "Enter the coordinates of the weather location. A city will be matched automatically.",
+        "title": "Enter coordinates"
+      }
+    }
+  }
+}
