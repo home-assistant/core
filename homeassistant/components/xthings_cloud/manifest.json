@@ -8,5 +8,5 @@
   "iot_class": "cloud_push",
   "loggers": ["ha_xthings_cloud"],
   "quality_scale": "bronze",
-  "requirements": ["ha-xthings-cloud==1.0.5"]
+  "requirements": ["ha-xthings-cloud==1.0.6.dev11"]
 }

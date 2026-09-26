@@ -1,5 +1,6 @@
 """Config flow for Xthings Cloud."""
 
+from collections.abc import Mapping
 from typing import Any, override
 
 from ha_xthings_cloud import (
@@ -9,12 +10,19 @@ from ha_xthings_cloud import (
 )
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
 from .const import CONF_REFRESH_TOKEN, DOMAIN, LOGGER
+from .coordinator import XthingsCloudConfigEntry
 
 ERROR_CODE_MAP: dict[int, str] = {
     20001: "token_invalid",
@@ -42,6 +50,15 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
     """Xthings Cloud config flow."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: XthingsCloudConfigEntry,
+    ) -> XthingsOptionsFlow:
+        """Return native bulb connection options."""
+        return XthingsOptionsFlow()
 
     @override
     async def async_step_user(
@@ -71,14 +88,20 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(token_data["user_id"])
+                data = {
+                    CONF_EMAIL: user_input[CONF_EMAIL],
+                    CONF_TOKEN: token_data["token"],
+                    CONF_REFRESH_TOKEN: token_data["refresh_token"],
+                }
+                if self.source == SOURCE_REAUTH:
+                    self._abort_if_unique_id_mismatch(reason="wrong_account")
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data_updates=data
+                    )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL],
-                    data={
-                        CONF_EMAIL: user_input[CONF_EMAIL],
-                        CONF_TOKEN: token_data["token"],
-                        CONF_REFRESH_TOKEN: token_data["refresh_token"],
-                    },
+                    data=data,
                 )
 
         return self.async_show_form(
@@ -90,4 +113,32 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Ask for fresh credentials for the existing account."""
+        return await self.async_step_user()
+
+
+class XthingsOptionsFlow(OptionsFlow):
+    """Configure optional native MQTT support."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Enable native bulb connections with the bundled app credential."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        "native_mqtt",
+                        default=self.config_entry.options.get("native_mqtt", False),
+                    ): bool,
+                }
+            ),
         )

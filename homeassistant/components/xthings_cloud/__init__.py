@@ -23,8 +23,17 @@ async def async_setup_entry(
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await coordinator.async_start_websocket()
+    entry.async_on_unload(entry.add_update_listener(_async_options_updated))
 
     return True
+
+
+async def _async_options_updated(
+    hass: HomeAssistant, entry: XthingsCloudConfigEntry
+) -> None:
+    """Reload when the native connection settings change."""
+    if entry.options != entry.runtime_data.native_options:
+        await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(
