@@ -4,6 +4,10 @@ from enum import StrEnum
 import logging
 
 DOMAIN = "teslemetry"
+LABS_CHARGE_ON_SOLAR_FEATURE = "charge_on_solar"
+CHARGE_ON_SOLAR_SWITCH_KEY = "charge_on_solar"
+CHARGE_ON_SOLAR_LOWER_LIMIT_KEY = "charge_on_solar_lower_limit"
+CHARGE_ON_SOLAR_LOWER_LIMIT_DEFAULT = 20
 
 LOGGER = logging.getLogger(__package__)
 
