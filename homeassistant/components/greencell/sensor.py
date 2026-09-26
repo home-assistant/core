@@ -223,6 +223,22 @@ async def async_setup_entry(
         """Handle the device state message. If device was unavailable, enable the entity."""
         access.on_msg(msg.payload)
 
+    unavailable_logged = False
+
+    @callback
+    def log_availability_change() -> None:
+        """Log the device going unavailable and coming back, once per transition."""
+        nonlocal unavailable_logged
+        if access.is_disabled():
+            if not unavailable_logged:
+                _LOGGER.warning("Device %s is unavailable", serial_number)
+                unavailable_logged = True
+        elif unavailable_logged:
+            _LOGGER.info("Device %s is available again", serial_number)
+            unavailable_logged = False
+
+    access.register_listener(log_availability_change)
+
     try:
         for topic, handler in (
             (mqtt_topic_current, current_message_received),
