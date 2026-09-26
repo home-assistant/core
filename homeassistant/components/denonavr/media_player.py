@@ -1,7 +1,6 @@
 """Support for Denon AVR receivers using their HTTP interface."""
 
 from collections.abc import Awaitable, Callable, Coroutine
-from datetime import timedelta
 from functools import wraps
 import logging
 from typing import Any, Concatenate, override
@@ -39,15 +38,21 @@ from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DenonavrConfigEntry
 from .const import (
     ATTR_DYNAMIC_EQ,
     CONF_MANUFACTURER,
     CONF_SERIAL_NUMBER,
-    CONF_UPDATE_AUDYSSEY,
-    DEFAULT_UPDATE_AUDYSSEY,
     DOMAIN,
+    TELNET_EVENTS,
+)
+from .coordinator import (
+    UNAVAILABLE_ON,
+    DenonAvrDataUpdateCoordinator,
+    async_update_zone_audyssey,
+    mark_unavailable,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,25 +78,7 @@ SUPPORT_MEDIA_MODES = (
     | MediaPlayerEntityFeature.STOP
 )
 
-SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 1
-
-# HA Telnet events
-TELNET_EVENTS = {
-    "HD",
-    "MS",
-    "MU",
-    "MV",
-    "NS",
-    "NSE",
-    "PS",
-    "SI",
-    "SS",
-    "TF",
-    "ZM",
-    "Z2",
-    "Z3",
-}
 
 DENON_STATE_MAPPING = {
     STATE_ON: MediaPlayerState.ON,
@@ -109,10 +96,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the DenonAVR receiver from a config entry."""
     entities = []
-    receiver = config_entry.runtime_data
-    update_audyssey = config_entry.options.get(
-        CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY
-    )
+    data = config_entry.runtime_data
+    receiver = data.receiver
     for receiver_zone in receiver.zones.values():
         if config_entry.data[CONF_SERIAL_NUMBER] is not None:
             unique_id = f"{config_entry.unique_id}-{receiver_zone.zone}"
@@ -120,115 +105,106 @@ async def async_setup_entry(
             unique_id = f"{config_entry.entry_id}-{receiver_zone.zone}"
         entities.append(
             DenonDevice(
+                data.coordinator,
+                data.audyssey_coordinator,
                 receiver_zone,
                 unique_id,
                 config_entry,
-                update_audyssey,
             )
         )
     _LOGGER.debug(
         "%s receiver at host %s initialized", receiver.manufacturer, receiver.host
     )
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
 
 def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
     func: Callable[Concatenate[_DenonDeviceT, _P], Awaitable[_R]],
 ) -> Callable[Concatenate[_DenonDeviceT, _P], Coroutine[Any, Any, _R | None]]:
-    """Log errors occurred when calling a Denon AVR receiver.
+    """Log command errors and refresh the coordinator after success.
 
-    Decorates methods of DenonDevice class.
-    Declaration of staticmethod for this method is at the end of this class.
+    The entity has should_poll=False, so nothing else refreshes it after a
+    successful command. A connectivity failure marks the coordinator
+    unavailable at once rather than leaving stale data looking current.
     """
 
     @wraps(func)
     async def wrapper(
         self: _DenonDeviceT, *args: _P.args, **kwargs: _P.kwargs
     ) -> _R | None:
-        available = True
-        try:
-            return await func(self, *args, **kwargs)
-        except AvrTimoutError:
-            available = False
-            if self.available:
-                _LOGGER.warning(
-                    (
-                        "Timeout connecting to Denon AVR receiver at host %s. "
-                        "Device is unavailable"
-                    ),
-                    self._receiver.host,
+        async with self.coordinator.lock:
+            # Read before the call: an Audyssey-scoped command marks the
+            # coordinators unavailable itself before re-raising.
+            was_available = self.available
+            try:
+                result = await func(self, *args, **kwargs)
+            except AvrTimoutError as err:
+                if was_available:
+                    _LOGGER.warning(
+                        "Timeout connecting to Denon AVR receiver at host %s: %s",
+                        self._receiver.host,
+                        err,
+                    )
+                mark_unavailable(self.coordinator)
+                return None
+            except AvrNetworkError as err:
+                if was_available:
+                    _LOGGER.warning(
+                        "Network error connecting to Denon AVR receiver at host %s: %s",
+                        self._receiver.host,
+                        err,
+                    )
+                mark_unavailable(self.coordinator)
+                return None
+            except AvrProcessingError as err:
+                if was_available:
+                    _LOGGER.warning(
+                        "Update of Denon AVR receiver at host %s not complete: %s",
+                        self._receiver.host,
+                        err,
+                    )
+                return None
+            except AvrForbiddenError as err:
+                if was_available:
+                    _LOGGER.warning(
+                        (
+                            "Denon AVR receiver at host %s responded with HTTP 403"
+                            " error. Please consider power cycling your receiver: %s"
+                        ),
+                        self._receiver.host,
+                        err,
+                    )
+                mark_unavailable(self.coordinator)
+                return None
+            except (AvrInvalidResponseError, AvrIncompleteResponseError) as err:
+                if was_available:
+                    _LOGGER.warning(
+                        "Denon AVR receiver at host %s returned malformed response: %s",
+                        self._receiver.host,
+                        err,
+                    )
+                mark_unavailable(self.coordinator)
+                return None
+            except AvrCommandError as err:
+                _LOGGER.error(
+                    "Command %s failed with error: %s",
+                    func.__name__,
+                    err,
                 )
-                self._attr_available = False
-        except AvrNetworkError:
-            available = False
-            if self.available:
-                _LOGGER.warning(
-                    (
-                        "Network error connecting to Denon AVR receiver at host %s. "
-                        "Device is unavailable"
-                    ),
-                    self._receiver.host,
+                return None
+            except DenonAvrError:
+                _LOGGER.exception(
+                    "Error occurred in method %s for Denon AVR receiver", func.__name__
                 )
-                self._attr_available = False
-        except AvrProcessingError:
-            available = True
-            if self.available:
-                _LOGGER.warning(
-                    (
-                        "Update of Denon AVR receiver at host %s not complete. "
-                        "Device is still available"
-                    ),
-                    self._receiver.host,
-                )
-        except AvrForbiddenError:
-            available = False
-            if self.available:
-                _LOGGER.warning(
-                    (
-                        "Denon AVR receiver at host %s responded with HTTP 403 error. "
-                        "Device is unavailable. Please consider power cycling your "
-                        "receiver"
-                    ),
-                    self._receiver.host,
-                )
-                self._attr_available = False
-        except AvrInvalidResponseError, AvrIncompleteResponseError:
-            available = False
-            if self.available:
-                _LOGGER.warning(
-                    (
-                        "Denon AVR receiver at host %s returned malformed response. "
-                        "Device is unavailable"
-                    ),
-                    self._receiver.host,
-                )
-                self._attr_available = False
-        except AvrCommandError as err:
-            available = False
-            _LOGGER.error(
-                "Command %s failed with error: %s",
-                func.__name__,
-                err,
-            )
-        except DenonAvrError:
-            available = False
-            _LOGGER.exception(
-                "Error occurred in method %s for Denon AVR receiver", func.__name__
-            )
-        finally:
-            if available and not self.available:
-                _LOGGER.warning(
-                    "Denon AVR receiver at host %s is available again",
-                    self._receiver.host,
-                )
-                self._attr_available = True
-        return None
+                return None
+        await self.coordinator.async_request_refresh()
+        return result
 
     return wrapper
 
 
-class DenonDevice(MediaPlayerEntity):
+class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerEntity):
     """Representation of a Denon Media Player Device."""
 
     _attr_has_entity_name = True
@@ -237,12 +213,15 @@ class DenonDevice(MediaPlayerEntity):
 
     def __init__(
         self,
+        coordinator: DenonAvrDataUpdateCoordinator,
+        audyssey_coordinator: DenonAvrDataUpdateCoordinator,
         receiver: DenonAVR,
         unique_id: str,
         config_entry: DenonavrConfigEntry,
-        update_audyssey: bool,
     ) -> None:
         """Initialize the device."""
+        super().__init__(coordinator)
+        self._audyssey_coordinator = audyssey_coordinator
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{config_entry.data[CONF_HOST]}/",
@@ -254,7 +233,6 @@ class DenonDevice(MediaPlayerEntity):
         )
         self._attr_sound_mode_list = receiver.sound_mode_list
         self._receiver = receiver
-        self._update_audyssey = update_audyssey
 
         self._supported_features_base = SUPPORT_DENON
         self._supported_features_base |= (
@@ -283,7 +261,15 @@ class DenonDevice(MediaPlayerEntity):
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Register for telnet events."""
+        """Register for coordinator updates and telnet events."""
+        await super().async_added_to_hass()
+        # super() subscribes to the status coordinator only, but dynamic_eq
+        # is Audyssey-scoped and would otherwise go stale.
+        self.async_on_remove(
+            self._audyssey_coordinator.async_add_listener(
+                self._handle_coordinator_update
+            )
+        )
         self._receiver.register_callback(ALL_TELNET_EVENTS, self._telnet_callback)
 
     @override
@@ -293,20 +279,16 @@ class DenonDevice(MediaPlayerEntity):
             await self._receiver.async_telnet_disconnect()
         self._receiver.unregister_callback(ALL_TELNET_EVENTS, self._telnet_callback)
 
-    @async_log_errors
+    @override
     async def async_update(self) -> None:
-        """Get the latest status information from device."""
-        receiver = self._receiver
+        """Refresh now, so update_entity returns after the read.
 
-        # We skip the update if telnet is healthy.
-        # When telnet recovers it automatically updates all properties.
-        if receiver.telnet_connected and receiver.telnet_healthy:
+        Skipped while Telnet is healthy. Reads every zone once per targeted
+        entity: unlike the Audyssey query, status reads are fast.
+        """
+        if not self.enabled:
             return
-
-        await receiver.async_update()
-
-        if self._update_audyssey:
-            await receiver.async_update_audyssey()
+        await self.coordinator.async_refresh()
 
     @property
     @override
@@ -529,16 +511,38 @@ class DenonDevice(MediaPlayerEntity):
 
     @async_log_errors
     async def async_update_audyssey(self) -> None:
-        """Get the latest audyssey information from device."""
-        await self._receiver.async_update_audyssey()
+        """Get the latest audyssey information from device.
+
+        This zone alone, not through the coordinator: as an entity service
+        it is already called once per zone, so refreshing every zone each
+        time would square these slow queries.
+        """
+        try:
+            await async_update_zone_audyssey(self._receiver)
+        except UNAVAILABLE_ON:
+            # Audyssey-scoped, so that coordinator's data is suspect too.
+            mark_unavailable(self._audyssey_coordinator)
+            raise
+        # Keeps last_update_success and the Audyssey entities in step with
+        # a fetch made outside the coordinator. Not async_set_updated_data():
+        # that cancels the refresh set_dynamic_eq queued for the other zones.
+        self._audyssey_coordinator.last_update_success = True
+        self._audyssey_coordinator.async_update_listeners()
 
     @async_log_errors
     async def async_set_dynamic_eq(self, dynamic_eq: bool) -> None:
         """Turn DynamicEQ on or off."""
-        if dynamic_eq:
-            await self._receiver.async_dynamic_eq_on()
-        else:
-            await self._receiver.async_dynamic_eq_off()
+        try:
+            if dynamic_eq:
+                await self._receiver.async_dynamic_eq_on()
+            else:
+                await self._receiver.async_dynamic_eq_off()
+        except UNAVAILABLE_ON:
+            # An Audyssey-scoped command, so that coordinator's data cannot
+            # be trusted either, not just the general one the decorator marks.
+            mark_unavailable(self._audyssey_coordinator)
+            raise
 
-        if self._update_audyssey:
-            await self._receiver.async_update_audyssey()
+        # The option governs the recurring poll alone. Safe inside the
+        # decorator's lock: async_request_refresh() only schedules.
+        await self._audyssey_coordinator.async_request_refresh()

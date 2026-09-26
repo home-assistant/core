@@ -193,7 +193,6 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
             self.zone2,
             self.zone3,
             use_telnet=False,
-            update_audyssey=False,
             async_client_getter=lambda: get_async_client(self.hass),
         )
 
