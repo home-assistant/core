@@ -40,7 +40,14 @@ from homeassistant.util.decorator import Registry
 if TYPE_CHECKING:
     from . import OverkizDataConfigEntry
 
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, LOGGER, UPDATE_INTERVAL
+from .const import (
+    DOMAIN,
+    IGNORED_OVERKIZ_DEVICES,
+    LOGGER,
+    UPDATE_INTERVAL,
+    UPDATE_INTERVAL_EXECUTION,
+    UPDATE_INTERVAL_RATE_LIMITED_MAX,
+)
 
 # Events are a discriminated union; each handler narrows to its own subtype.
 EVENT_HANDLERS: Registry[
@@ -53,6 +60,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
     config_entry: OverkizDataConfigEntry
     _default_update_interval: timedelta
+    _rate_limited_interval: timedelta | None
 
     def __init__(
         self,
@@ -79,6 +87,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.executions: dict[str, list[dict[str, str]]] = {}
         self.areas = self._places_to_area(places) if places else None
         self._default_update_interval = UPDATE_INTERVAL
+        self._rate_limited_interval = None
 
         self.is_stateless = all(
             device.identifier.protocol in (Protocol.RTS, Protocol.INTERNAL)
@@ -103,6 +112,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         except TooManyConcurrentRequestsError as exception:
             raise UpdateFailed("Too many concurrent requests.") from exception
         except TooManyRequestsError as exception:
+            self._back_off()
             raise UpdateFailed("Too many requests, try again later.") from exception
         except MaintenanceError as exception:
             raise UpdateFailed("Server is down for maintenance.") from exception
@@ -123,7 +133,10 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             except (BadCredentialsError, NotAuthenticatedError) as exception:
                 raise ConfigEntryAuthFailed("Invalid authentication.") from exception
             except TooManyRequestsError as exception:
+                self._back_off()
                 raise UpdateFailed("Too many requests, try again later.") from exception
+
+            self._on_successful_update()
 
             return self.devices
 
@@ -133,9 +146,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             if event_handler := EVENT_HANDLERS.get(event.name):
                 await event_handler(self, event)
 
-        # Restore the default update interval if no executions are pending
-        if not self.executions:
-            self.update_interval = self._default_update_interval
+        self._on_successful_update()
 
         return self.devices
 
@@ -155,6 +166,31 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 areas.update(self._places_to_area(sub_place))
 
         return areas
+
+    def _on_successful_update(self) -> None:
+        """Clear the rate limit back off and restore the polling cadence.
+
+        Every path that returns data has to go through this, including the
+        reconnect after a ServerDisconnectedError.
+        """
+        self._rate_limited_interval = None
+
+        if self.executions and not self.is_stateless:
+            self.update_interval = UPDATE_INTERVAL_EXECUTION
+        else:
+            self.update_interval = self._default_update_interval
+
+    def _back_off(self) -> None:
+        """Poll less often while the server is rate limiting us.
+
+        DataUpdateCoordinator otherwise retries at the unchanged interval.
+        """
+        # An all-assumed-state hub already polls hourly, so the cap has to
+        # respect the configured interval or backing off would speed it up.
+        maximum = max(UPDATE_INTERVAL_RATE_LIMITED_MAX, self._default_update_interval)
+        previous = self._rate_limited_interval or self._default_update_interval
+        self._rate_limited_interval = min(previous * 2, maximum)
+        self.update_interval = self._rate_limited_interval
 
     def set_update_interval(self, update_interval: timedelta) -> None:
         """Set the update interval and store this value."""
@@ -229,9 +265,6 @@ async def on_execution_registered(
     """Handle execution registered event."""
     if event.exec_id not in coordinator.executions:
         coordinator.executions[event.exec_id] = []
-
-    if not coordinator.is_stateless:
-        coordinator.update_interval = timedelta(seconds=1)
 
 
 @EVENT_HANDLERS.register(EventName.EXECUTION_STATE_CHANGED)
