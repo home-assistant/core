@@ -77,6 +77,13 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_value=PrivacyModeService.State.DISABLED,
         should_poll=True,
     ),
+    "cameraoutdoorgen2": SHCSwitchEntityDescription(
+        key="cameraoutdoorgen2",
+        device_class=SwitchDeviceClass.SWITCH,
+        on_key="privacymode",
+        on_value=PrivacyModeService.State.DISABLED,
+        should_poll=True,
+    ),
     "child_lock": SHCSwitchEntityDescription(
         key="child_lock",
         translation_key="child_lock",
@@ -286,6 +293,17 @@ async def async_setup_entry(
             description=SWITCH_TYPES["camera360"],
         )
         for switch in session.device_helper.camera_360
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["cameraoutdoorgen2"],
+        )
+        for switch in session.device_helper.camera_outdoor_gen2
     )
 
     entities.extend(

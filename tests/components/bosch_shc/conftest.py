@@ -9,8 +9,10 @@ from boschshcpy import (
     BatteryLevelService,
     BypassService,
     PowerSwitchService,
+    PrivacyModeService,
     RoutingService,
     SHCBatteryDevice,
+    SHCCameraOutdoorGen2,
     SHCLightSwitchBSM,
     SHCMicromoduleBlinds,
     SHCMicromoduleRelay,
@@ -75,6 +77,7 @@ _EMPTY_DEVICE_BUCKETS: dict[str, Any] = {
     for bucket in (
         "camera_360",
         "camera_eyes",
+        "camera_outdoor_gen2",
         "light_switches_bsm",
         "micromodule_blinds",
         "micromodule_dimmers",
@@ -159,6 +162,26 @@ def battery_only_device(
     device.device_model = "MD"
     device.status = "AVAILABLE"
     device.deleted = False
+    return device
+
+
+def camera_outdoor_gen2_device(
+    device_id: str = "hdm:Cameras:outdoorgen2-1",
+    name: str = "Outdoor Camera",
+    privacymode: PrivacyModeService.State = PrivacyModeService.State.ENABLED,
+) -> SHCCameraOutdoorGen2:
+    """Build a minimal device double for the camera_outdoor_gen2 bucket."""
+    device = create_autospec(SHCCameraOutdoorGen2, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "CAMERA_OUTDOOR_GEN2"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.privacymode = privacymode
     return device
 
 
