@@ -132,7 +132,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> bool:
     """Set up Sofar from a config entry."""
     serial = entry.unique_id
-    assert serial is not None
+    if TYPE_CHECKING:
+        assert serial is not None
     _async_remove_stale_sensors(hass, serial)
     inverter_type, model = identify(serial)
     if not inverter_type:

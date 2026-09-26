@@ -228,7 +228,6 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
         except (ModbusError, HomeAssistantError) as err:
             return None, {"base": "cannot_connect"}, {"error": str(err)}
 
-        assert device.serial_number is not None
         if not device.inverter_type:
             return None, {"base": "unrecognized_inverter"}, {}
 
