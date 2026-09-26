@@ -12,11 +12,13 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
+          "middleware": "Use middleware.php",
           "port": "[%key:common::config_flow::data::port%]",
           "uuid": "UUID"
         },
         "data_description": {
           "host": "IP address or hostname of the Volkszaehler server.",
+          "middleware": "Enable if your Volkszaehler instance uses 'middleware.php' in the URL (standard setup). Disable for Docker setups or custom endpoints without 'middleware.php'.",
           "port": "Port number of the Volkszaehler server.",
           "uuid": "UUID of the channel to monitor. In the Volkszaehler Web UI, click the (i) icon next to the channel to find it."
         },
