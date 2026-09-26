@@ -65,6 +65,9 @@
     "sensor": {
       "battery_voltage": {
         "name": "Battery voltage"
+      },
+      "chip_temperature": {
+        "name": "Chip temperature"
       }
     }
   },
