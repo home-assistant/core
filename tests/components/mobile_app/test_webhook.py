@@ -931,6 +931,41 @@ async def test_webhook_update_location_in_zones_rejects_non_zone_entity(
     assert state.state == STATE_HOME
 
 
+async def test_webhook_update_location_rejects_invalid_location_time(
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that an unparsable location_time drops the payload."""
+    resp = await webhook_client.post(
+        f"/api/webhook/{create_registrations[1]['webhook_id']}",
+        json={
+            "type": "update_location",
+            "data": {"location_name": STATE_HOME},
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    state = hass.states.get("device_tracker.test_1_2")
+    assert state is not None
+    assert state.state == STATE_HOME
+
+    resp = await webhook_client.post(
+        f"/api/webhook/{create_registrations[1]['webhook_id']}",
+        json={
+            "type": "update_location",
+            "data": {"location_name": "not_home", "location_time": "yesterday"},
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    assert "Received invalid webhook payload" in caplog.text
+
+    state = hass.states.get("device_tracker.test_1_2")
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert "location_time" not in state.attributes
+
+
 async def test_webhook_enable_encryption(
     hass: HomeAssistant,
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
