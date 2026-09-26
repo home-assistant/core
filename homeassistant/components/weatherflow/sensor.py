@@ -16,8 +16,8 @@ from pyweatherflowudp.device import (
 )
 
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
@@ -61,6 +61,7 @@ class WeatherFlowSensorEntityDescription(SensorEntityDescription):
     raw_data_conv_fn: Callable[[Any], datetime | StateType]
 
     device_attr: str | None = None
+    restore_last_value: bool = False
     event_subscriptions: list[str] = field(default_factory=lambda: [EVENT_OBSERVATION])
 
     def get_native_value(self, device: WeatherFlowDevice) -> datetime | StateType:
@@ -158,6 +159,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
     WeatherFlowSensorEntityDescription(
         key="lightning_strike_last_distance",
         device_attr="last_lightning_strike_event",
+        restore_last_value=True,
         translation_key="lightning_strike_last_distance",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DISTANCE,
@@ -169,6 +171,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
     WeatherFlowSensorEntityDescription(
         key="lightning_strike_last_energy",
         device_attr="last_lightning_strike_event",
+        restore_last_value=True,
         translation_key="lightning_strike_last_energy",
         state_class=SensorStateClass.MEASUREMENT,
         event_subscriptions=[EVENT_STRIKE],
@@ -177,6 +180,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
     WeatherFlowSensorEntityDescription(
         key="lightning_strike_last_epoch",
         device_attr="last_lightning_strike_event",
+        restore_last_value=True,
         translation_key="lightning_strike_last_epoch",
         device_class=SensorDeviceClass.TIMESTAMP,
         event_subscriptions=[EVENT_STRIKE],
@@ -350,7 +354,7 @@ async def async_setup_entry(
     )
 
 
-class WeatherFlowSensorEntity(SensorEntity):
+class WeatherFlowSensorEntity(RestoreSensor):
     """Defines a WeatherFlow sensor entity."""
 
     entity_description: WeatherFlowSensorEntityDescription
@@ -394,8 +398,17 @@ class WeatherFlowSensorEntity(SensorEntity):
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Subscribe to events."""
-        self._async_update_state()
+        """Restore the last value if configured, then subscribe to events."""
+        if (
+            self.entity_description.restore_last_value
+            and self.entity_description.get_native_value(self.device) is None
+            and (last_sensor_data := await self.async_get_last_sensor_data())
+            and last_sensor_data.native_value is not None
+        ):
+            # Strikes are only reported as events, so keep the last one.
+            self._attr_native_value = last_sensor_data.native_value
+        else:
+            self._async_update_state()
         for event in self.entity_description.event_subscriptions:
             self.async_on_remove(
                 self.device.on(event, lambda _: self._async_update_state())
