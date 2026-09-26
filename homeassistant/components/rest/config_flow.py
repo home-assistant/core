@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from functools import partial
-from re import search
 from types import MethodType
 from typing import Any, override
 from xml.parsers.expat import ExpatError
@@ -313,16 +312,10 @@ class RestSubentryFlow(ConfigSubentryFlow):
                 title: str = user_input.get(
                     CONF_NAME, SUBENTRY_CONFIG[Platform(self._subentry_type)][CONF_NAME]
                 )
-                idx = 0
-                for subentry in self._get_entry().subentries.values():
-                    if (subentry.subentry_type == self._subentry_type) and (
-                        val := search(r"\d+", subentry.unique_id or "0")
-                    ):
-                        idx = max(int(val.group(0)), idx)
                 return self.async_create_entry(
                     title=title,
                     data=user_input,
-                    unique_id=f"{self._subentry_type}_{idx + 1}",
+                    unique_id=f"{self._subentry_type}_{self.flow_id}",
                 )
         return self.async_show_form(
             step_id="user",

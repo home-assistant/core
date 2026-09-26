@@ -104,7 +104,7 @@ async def test_entry_and_binary_sensor_subentry(
         get_subentry_data[BINARY_SENSOR_DATA]["data"],
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["unique_id"] == f"{Platform.BINARY_SENSOR}_2"
+    assert result["unique_id"] == f"{Platform.BINARY_SENSOR}_{result['flow_id']}"
     assert len(hass.states.async_all(Platform.BINARY_SENSOR)) == 2
 
 
