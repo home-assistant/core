@@ -97,6 +97,14 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
+        # A disabled entry stored without a CID is only migrated once it is
+        # enabled, so until then it is this television under an empty unique ID.
+        if any(
+            not entry.unique_id and format_mac(entry.data[CONF_MAC]) == format_mac(mac)
+            for entry in self._async_current_entries(include_ignore=False)
+        ):
+            return self.async_abort(reason="already_configured")
+
         return self.async_create_entry(
             title=f"{system_info['name']} {system_info[ATTR_MODEL]}",
             data=self.device_config,

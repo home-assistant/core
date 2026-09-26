@@ -17,7 +17,7 @@ from homeassistant.components.braviatv.const import (
     DOMAIN,
     NICKNAME_PREFIX,
 )
-from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER, ConfigEntryDisabler
 from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -458,23 +458,56 @@ async def test_reauth_successful(hass: HomeAssistant, use_psk, new_pin) -> None:
 
 
 @pytest.mark.parametrize(
-    ("existing_unique_id", "expected_type", "expected_unique_ids"),
+    (
+        "existing_unique_id",
+        "existing_mac",
+        "disabled_by",
+        "expected_type",
+        "expected_unique_ids",
+    ),
     [
-        # Another television that was stored without a CID before the fallback.
-        ("", FlowResultType.CREATE_ENTRY, ["", "aa:bb:cc:dd:ee:ff"]),
+        # Another television that was stored without a CID before the fallback,
+        # which is migrated to its MAC address when the integration loads.
+        (
+            "",
+            "11:22:33:44:55:66",
+            None,
+            FlowResultType.CREATE_ENTRY,
+            ["11:22:33:44:55:66", "aa:bb:cc:dd:ee:ff"],
+        ),
         # The same television, already stored under its MAC address.
-        ("aa:bb:cc:dd:ee:ff", FlowResultType.ABORT, ["aa:bb:cc:dd:ee:ff"]),
+        (
+            "aa:bb:cc:dd:ee:ff",
+            "AA:BB:CC:DD:EE:FF",
+            None,
+            FlowResultType.ABORT,
+            ["aa:bb:cc:dd:ee:ff"],
+        ),
+        # The same television, stored without a CID and disabled, so it has
+        # not been migrated yet.
+        (
+            "",
+            "AA:BB:CC:DD:EE:FF",
+            ConfigEntryDisabler.USER,
+            FlowResultType.ABORT,
+            [""],
+        ),
     ],
 )
 async def test_user_flow_with_empty_cid(
     hass: HomeAssistant,
     existing_unique_id: str,
+    existing_mac: str,
+    disabled_by: ConfigEntryDisabler | None,
     expected_type: FlowResultType,
     expected_unique_ids: list[str],
 ) -> None:
     """Test a television that reports an empty CID is identified by its MAC."""
     MockConfigEntry(
-        domain=DOMAIN, unique_id=existing_unique_id, data={CONF_HOST: "other-host"}
+        domain=DOMAIN,
+        unique_id=existing_unique_id,
+        data={CONF_HOST: "other-host", CONF_MAC: existing_mac},
+        disabled_by=disabled_by,
     ).add_to_hass(hass)
 
     with (
