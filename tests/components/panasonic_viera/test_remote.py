@@ -1,12 +1,14 @@
 """Test the Panasonic Viera remote entity."""
 
-from unittest.mock import Mock, call
+from unittest.mock import AsyncMock, Mock, call, patch
 
 from panasonic_viera import Keys, SOAPError
 
 from homeassistant.components.panasonic_viera.const import ATTR_UDN, DOMAIN
 from homeassistant.components.remote import (
     ATTR_COMMAND,
+    ATTR_DELAY_SECS,
+    ATTR_NUM_REPEATS,
     DOMAIN as REMOTE_DOMAIN,
     SERVICE_SEND_COMMAND,
 )
@@ -60,3 +62,29 @@ async def test_send_command(hass: HomeAssistant, mock_remote) -> None:
     await hass.async_block_till_done()
 
     assert mock_remote.send_key.call_args == call("command")
+
+
+async def test_send_command_repeats_and_delay(hass: HomeAssistant, mock_remote) -> None:
+    """Test num_repeats and delay_secs are honoured by the send_command service."""
+
+    await setup_panasonic_viera(hass)
+
+    data = {
+        ATTR_ENTITY_ID: "remote.panasonic_viera_tv",
+        ATTR_COMMAND: ["down", "right"],
+        ATTR_NUM_REPEATS: 3,
+        ATTR_DELAY_SECS: 0.2,
+    }
+    with patch(
+        "homeassistant.components.panasonic_viera.remote.asyncio.sleep",
+        new_callable=AsyncMock,
+    ) as mock_sleep:
+        await hass.services.async_call(
+            REMOTE_DOMAIN, SERVICE_SEND_COMMAND, data, blocking=True
+        )
+
+    assert (
+        mock_remote.send_key.call_args_list == [call(Keys.DOWN), call(Keys.RIGHT)] * 3
+    )
+    # One delay between each key press, none before the first one
+    assert mock_sleep.call_args_list == [call(0.2)] * 5
