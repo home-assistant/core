@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for the Verisure integration."""
 
+import asyncio
 from datetime import datetime, timedelta
 from time import sleep
 from typing import override
@@ -28,6 +29,7 @@ from .const import (
     COOKIE_REFRESH_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    DRY_RUN_FALLBACK_INTERVAL,
     LOGGER,
     RATE_LIMIT_BACKOFF,
 )
@@ -44,6 +46,21 @@ def _requires_mfa_reauth(exc: VerisureLoginError) -> bool:
     return _MFA_REQUIRED_MESSAGE in str(exc)
 
 
+def _safe_nested_get(data: object, *keys: str) -> object:
+    """Traverse nested dict keys, tolerating a missing or null value at any level.
+
+    A plain chain of dict.get(key, {}) calls only falls back to {} when a key
+    is absent; a GraphQL error response can return an explicit null instead
+    (for example data itself, on an HTTP-200 error payload), which a chained
+    .get() then raises AttributeError on.
+    """
+    for key in keys:
+        if not isinstance(data, dict):
+            return None
+        data = data.get(key)
+    return data
+
+
 class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
     """A Verisure Data Update Coordinator."""
 
@@ -55,6 +72,11 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         self._overview: list[dict] = []
         self._rate_limit_backoff_level = 0
         self._last_successful_cookie_refresh: datetime | None = None
+        self._last_dry_run_check: datetime | None = None
+        self._last_door_window_fingerprint: frozenset[tuple[str, str]] | None = None
+        self._force_arm_required: bool | None = None
+        self._dry_run_retry_after: datetime | None = None
+        self._dry_run_backoff_level = 0
 
         self.verisure = Verisure(
             username=entry.data[CONF_EMAIL],
@@ -172,6 +194,138 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
 
         self._last_successful_cookie_refresh = dt_util.utcnow()
 
+    async def _async_check_force_arm_required(self, door_window: dict) -> None:
+        """Check via an arm state dry run whether arming currently requires force.
+
+        Runs when a door/window state changes, readiness is not currently
+        known, or otherwise at most once per DRY_RUN_FALLBACK_INTERVAL as a
+        safety net for violation types not reflected in door/window state,
+        for example an offline or otherwise faulted device. Checking on
+        unknown readiness (rather than only a fingerprint change or the
+        fallback interval) matters because the fingerprint is only stored on
+        success: if a check fails and the door/window state then reverts to
+        a value already seen before that failure, the fingerprint alone
+        would look unchanged and silently skip the retry a failure is
+        supposed to get on the next cycle. Failures are logged and do not
+        fail the overall coordinator update; readiness stays unknown until a
+        check succeeds (or after the rate limit backoff, if rate limited).
+        """
+        fingerprint = frozenset(
+            (label, device.get("state")) for label, device in door_window.items()
+        )
+        fingerprint_changed = fingerprint != self._last_door_window_fingerprint
+        due_for_fallback_check = (
+            self._last_dry_run_check is None
+            or dt_util.utcnow() - self._last_dry_run_check >= DRY_RUN_FALLBACK_INTERVAL
+        )
+        if (
+            not fingerprint_changed
+            and not due_for_fallback_check
+            and self._force_arm_required is not None
+        ):
+            return
+        if (
+            self._dry_run_retry_after is not None
+            and dt_util.utcnow() < self._dry_run_retry_after
+        ):
+            return
+
+        # A due check is about to run; any failure below now leaves readiness
+        # as unknown instead of holding onto a value that may no longer be
+        # accurate, for example after a door/window change.
+        self._force_arm_required = None
+
+        try:
+            dry_run = await self.hass.async_add_executor_job(
+                self.verisure.request, self.verisure.arm_state_dry_run()
+            )
+        except VerisureRateLimitError as ex:
+            self._defer_dry_run_retry(f"rate limited starting the dry run, {ex}")
+            return
+        except VerisureError as ex:
+            LOGGER.debug("Could not start arm state dry run, %s", ex)
+            return
+
+        if not isinstance(dry_run, dict):
+            return
+        data = dry_run.get("data")
+        if not isinstance(data, dict):
+            return
+        transaction_id = data.get("armStateDryRun")
+        if not transaction_id:
+            return
+
+        result = None
+        attempts = 0
+        while result is None:
+            if attempts == 30:
+                break
+            if attempts > 0:
+                await asyncio.sleep(0.5)
+            attempts += 1
+            try:
+                status = await self.hass.async_add_executor_job(
+                    self.verisure.request,
+                    self.verisure.arm_state_dry_run_status(transaction_id),
+                )
+            except VerisureRateLimitError as ex:
+                self._defer_dry_run_retry(f"rate limited polling the dry run, {ex}")
+                return
+            except VerisureError as ex:
+                LOGGER.debug("Could not poll arm state dry run, %s", ex)
+                return
+            if not isinstance(status, dict):
+                return
+            dry_run_status = _safe_nested_get(
+                status, "data", "installation", "armState", "dryRunStatus"
+            )
+            if not isinstance(dry_run_status, dict):
+                return
+            if _safe_nested_get(dry_run_status, "status", "status") != "DONE":
+                continue
+            result = dry_run_status.get("result")
+            if not isinstance(result, dict) or not isinstance(
+                result.get("deviceViolations"), list
+            ):
+                LOGGER.debug("Arm state dry run completed without a violations list")
+                return
+
+        if result is None:
+            self._defer_dry_run_retry(
+                f"exhausted {attempts} poll attempts without a DONE status"
+            )
+            return
+
+        self._force_arm_required = bool(result["deviceViolations"])
+        self._last_dry_run_check = dt_util.utcnow()
+        self._last_door_window_fingerprint = fingerprint
+        self._dry_run_retry_after = None
+        self._dry_run_backoff_level = 0
+
+    def _defer_dry_run_retry(self, reason: str) -> None:
+        """Back off the next dry run attempt on its own schedule.
+
+        Used both for rate limits and for a transaction that never reaches a
+        DONE status: either way, retrying right away risks piling more load
+        onto a backend that is already struggling. Uses a dedicated counter
+        and deadline rather than the coordinator's shared rate-limit backoff:
+        that level is reset whenever the overall update succeeds, which
+        happens right after this check runs on every cycle, so it can never
+        actually defer a retry here. A dedicated deadline is also checked
+        unconditionally, so it still defers a changed-fingerprint recheck,
+        which would otherwise see the fingerprint as still changed (it is
+        only stored on success) and retry every cycle.
+        """
+        level = min(self._dry_run_backoff_level, len(RATE_LIMIT_BACKOFF) - 1)
+        self._dry_run_retry_after = dt_util.utcnow() + RATE_LIMIT_BACKOFF[level]
+        if self._dry_run_backoff_level < len(RATE_LIMIT_BACKOFF) - 1:
+            self._dry_run_backoff_level += 1
+        LOGGER.debug(
+            "Deferring next arm state dry run check until %s, %s",
+            self._dry_run_retry_after,
+            reason,
+        )
+
     async def async_login(self) -> bool:
         """Login to Verisure."""
         try:
@@ -242,6 +396,12 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
             )
             return unpacked or []
 
+        door_window = {
+            device["device"]["deviceLabel"]: device
+            for device in unpack(overview, "doorWindows")
+        }
+        await self._async_check_force_arm_required(door_window)
+
         # Store data in a way Home Assistant can easily consume it
         self._overview = overview
         self._rate_limit_backoff_level = 0
@@ -256,10 +416,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                 device["device"]["deviceLabel"]: device
                 for device in unpack(overview, "climates")
             },
-            "door_window": {
-                device["device"]["deviceLabel"]: device
-                for device in unpack(overview, "doorWindows")
-            },
+            "door_window": door_window,
             "locks": {
                 device["device"]["deviceLabel"]: device
                 for device in unpack(overview, "smartLocks")
@@ -268,6 +425,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                 device["device"]["deviceLabel"]: device
                 for device in unpack(overview, "smartplugs")
             },
+            "force_arm_required": self._force_arm_required,
         }
 
     @Throttle(timedelta(seconds=60))
