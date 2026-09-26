@@ -41,11 +41,15 @@ import anyio
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
 from mcp import JSONRPCRequest, types
 from mcp.server import InitializationOptions, Server
-from mcp.shared.message import SessionMessage
+from mcp.shared.message import ServerMessageMetadata, SessionMessage
 
 from homeassistant.components import conversation
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.const import CONF_LLM_HASS_API, CONTENT_TYPE_JSON
+from homeassistant.const import (
+    CONF_LLM_HASS_API,
+    CONTENT_TYPE_JSON,
+    HTTP_HEADER_HA_DEVICE_ID,
+)
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import llm
@@ -53,7 +57,7 @@ from homeassistant.helpers import llm
 from .const import CONF_REQUIRE_ADMIN, DOMAIN
 from .server import create_server
 from .session import Session
-from .types import MCPServerConfigEntry
+from .types import MCPRequestContext, MCPServerConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -247,7 +251,16 @@ class ModelContextProtocolMessagesView(HomeAssistantView):
             raise HTTPBadRequest(text="Could not parse message") from err
 
         _LOGGER.debug("Received client message: %s", message)
-        await session.read_stream_writer.send(SessionMessage(message))
+        await session.read_stream_writer.send(
+            SessionMessage(
+                message,
+                ServerMessageMetadata(
+                    request_context=MCPRequestContext(
+                        device_id=request.headers.get(HTTP_HEADER_HA_DEVICE_ID)
+                    )
+                ),
+            )
+        )
         return web.Response(status=200)
 
 
@@ -292,7 +305,16 @@ async def _async_handle_streamable_message(
         async with asyncio.timeout(TIMEOUT), anyio.create_task_group() as tg:
             tg.start_soon(run_server)
 
-            await streams.read_stream_writer.send(SessionMessage(message))
+            await streams.read_stream_writer.send(
+                SessionMessage(
+                    message,
+                    ServerMessageMetadata(
+                        request_context=MCPRequestContext(
+                            device_id=request.headers.get(HTTP_HEADER_HA_DEVICE_ID)
+                        )
+                    ),
+                )
+            )
             session_message = await anext(streams.write_stream_reader)
             tg.cancel_scope.cancel()
 
