@@ -190,7 +190,14 @@
         "ruff",
         "codespell",
         "yamllint",
-        "zizmor"
+        "zizmor",
+        "license-expression",
+        "mock-open",
+        "pipdeptree",
+        "prek",
+        "PyGithub",
+        "pytest-codspeed",
+        "tqdm"
       ],
       "enabled": true,
       "labels": ["dependency"]
@@ -246,7 +253,9 @@
         "astral-sh/ruff-pre-commit",
         "codespell-project/codespell",
         "adrienverge/yamllint",
-        "zizmorcore/zizmor-pre-commit"
+        "zizmorcore/zizmor-pre-commit",
+        "pre-commit/pre-commit-hooks",
+        "cdce8p/python-typing-update"
       ],
       "enabled": true,
       "labels": ["dependency"]
