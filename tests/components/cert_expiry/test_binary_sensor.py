@@ -9,7 +9,8 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cert_expiry.errors import ValidationFailure
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -159,21 +160,25 @@ async def test_states(
 
 
 @pytest.mark.freeze_time(static_datetime())
-async def test_unavailable_when_handshake_fails(
+async def test_setup_retry_when_handshake_fails(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test every binary sensor is unavailable when the handshake fails."""
-    with patch(
-        "homeassistant.components.cert_expiry.coordinator.async_get_cert",
-        side_effect=ValidationFailure("no certificate"),
+    """Test setup is retried, and no binary sensors are created, when the handshake fails."""
+    mock_config_entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.cert_expiry.PLATFORMS", [Platform.BINARY_SENSOR]
+        ),
+        patch(
+            "homeassistant.components.cert_expiry.coordinator.async_get_cert",
+            side_effect=ValidationFailure("no certificate"),
+        ),
     ):
-        await setup_with_selected_platforms(
-            hass, mock_config_entry, [Platform.BINARY_SENSOR]
-        )
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert [hass.states.get(entity).state for entity in ENTITIES] == [
-        STATE_UNAVAILABLE
-    ] * len(ENTITIES)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert [hass.states.get(entity) for entity in ENTITIES] == [None] * len(ENTITIES)
 
 
 @pytest.mark.freeze_time(static_datetime())

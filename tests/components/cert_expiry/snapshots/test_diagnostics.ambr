@@ -105,38 +105,3 @@
     }),
   })
 # ---
-# name: test_config_entry_diagnostics_with_handshake_failure
-  dict({
-    'coordinator': dict({
-      'data': None,
-      'host': '**REDACTED**',
-      'last_update_success': False,
-      'name': '**REDACTED**',
-      'port': 443,
-    }),
-    'entry': dict({
-      'created_at': '2020-06-12T08:00:00+00:00',
-      'data': dict({
-        'host': '**REDACTED**',
-        'port': 443,
-      }),
-      'disabled_by': None,
-      'discovery_keys': dict({
-      }),
-      'domain': 'cert_expiry',
-      'entry_id': 'test-entry-error',
-      'minor_version': 1,
-      'modified_at': '2020-06-12T08:00:00+00:00',
-      'options': dict({
-      }),
-      'pref_disable_new_entities': False,
-      'pref_disable_polling': False,
-      'source': 'user',
-      'subentries': list([
-      ]),
-      'title': '**REDACTED**',
-      'unique_id': '**REDACTED**',
-      'version': 1,
-    }),
-  })
-# ---

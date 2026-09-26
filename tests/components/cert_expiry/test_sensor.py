@@ -15,6 +15,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.cert_expiry.const import DOMAIN
 from homeassistant.components.cert_expiry.errors import ResolveFailed, ValidationFailure
 from homeassistant.components.cert_expiry.sensor import DIAGNOSTIC_DESCRIPTIONS
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -72,16 +73,20 @@ async def test_async_setup_entry(
 async def test_async_setup_entry_validation_failure(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, message: str
 ) -> None:
-    """Test the sensor is unavailable when certificate validation fails during setup."""
-    with patch(
-        "homeassistant.components.cert_expiry.coordinator.async_get_cert",
-        side_effect=ValidationFailure(message),
+    """Test setup is retried, and no sensor is created, when certificate validation fails."""
+    mock_config_entry.add_to_hass(hass)
+    with (
+        patch("homeassistant.components.cert_expiry.PLATFORMS", [Platform.SENSOR]),
+        patch(
+            "homeassistant.components.cert_expiry.coordinator.async_get_cert",
+            side_effect=ValidationFailure(message),
+        ),
     ):
-        await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    state = hass.states.get(SENSOR_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert hass.states.get(SENSOR_ENTITY_ID) is None
 
 
 @pytest.mark.usefixtures("cert_verified")

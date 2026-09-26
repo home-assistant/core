@@ -32,7 +32,12 @@ rules:
   has-entity-name: done
   runtime-data: done
   test-before-configure: done
-  test-before-setup: todo
+  test-before-setup:
+    status: done
+    comment: >-
+      Setup after startup checks the host first. During boot the first check
+      is deferred until Home Assistant has started, so monitoring its own
+      certificate works (#56266).
   unique-config-entry: done
   # Silver
   action-exceptions:

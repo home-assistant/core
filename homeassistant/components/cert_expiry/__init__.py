@@ -21,16 +21,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: CertExpiryConfigEntry) -
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=f"{host}:{port}")
 
-    async def _async_finish_startup(_: HomeAssistant) -> None:
-        await coordinator.async_refresh()
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    if hass.state is not CoreState.running:
+        # Monitoring Home Assistant's own certificate fails until its HTTP
+        # server is listening, so defer the first check during boot (#56266).
+        async def _async_finish_startup(_: HomeAssistant) -> None:
+            await coordinator.async_refresh()
+            await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # When already started, async_at_started would run the forward in a task
-    # that setup doesn't await, which isn't allowed
-    if hass.state is CoreState.running:
-        await _async_finish_startup(hass)
-    else:
         async_at_started(hass, _async_finish_startup)
+        return
+
+    await coordinator.async_config_entry_first_refresh()
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: CertExpiryConfigEntry) -> None:

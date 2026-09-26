@@ -10,6 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cert_expiry.const import DOMAIN
 from homeassistant.components.cert_expiry.errors import ValidationFailure
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 
@@ -52,14 +53,13 @@ async def test_config_entry_diagnostics(
 
 
 @pytest.mark.freeze_time(static_datetime())
-async def test_config_entry_diagnostics_with_handshake_failure(
+async def test_config_entry_retries_when_handshake_fails(
     hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test config entry diagnostics when the TLS handshake itself fails.
+    """Test the config entry retries setup when the TLS handshake itself fails.
 
-    No certificate is ever obtained, so the coordinator produces no data.
+    No certificate is ever obtained, so first refresh fails and setup is retried;
+    there is no loaded entry to produce diagnostics for.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -74,13 +74,10 @@ async def test_config_entry_diagnostics_with_handshake_failure(
         side_effect=ValidationFailure("certificate error for sensitive.example.com"),
     ):
         entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        assert not await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert (
-            await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
-        )
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.freeze_time(static_datetime())
