@@ -63,6 +63,18 @@
       "depNameTemplate": "mariadb",
       "datasourceTemplate": "docker",
       "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "Update pins in CONSTRAINT_BASE of gen_requirements_all.py alongside package_constraints.txt, which is generated from it",
+      "managerFilePatterns": ["/^script/gen_requirements_all\\.py$/"],
+      "matchStringsStrategy": "recursive",
+      "matchStrings": [
+        "CONSTRAINT_BASE = \"\"\"[\\s\\S]*?\"\"\"",
+        "\\n(?<depName>[A-Za-z0-9][A-Za-z0-9._-]*)==(?<currentValue>[^\\s#]+)"
+      ],
+      "datasourceTemplate": "pypi",
+      "versioningTemplate": "pep440"
     }
   ],
 
@@ -163,6 +175,12 @@
       "enabled": true,
       "minimumReleaseAge": null,
       "labels": ["dependency", "core"]
+    },
+    {
+      "description": "pydantic (allowlisted). Pinned in requirements_test.txt and in CONSTRAINT_BASE, which generates package_constraints.txt; all are updated in the same PR.",
+      "matchPackageNames": ["pydantic"],
+      "enabled": true,
+      "labels": ["dependency"]
     },
     {
       "description": "Test dependencies (allowlisted)",
