@@ -385,12 +385,19 @@ class MatterEntity(Entity):
     async def send_device_command(
         self,
         command: ClusterCommand,
+        *,
+        endpoint: MatterEndpoint | None = None,
         **kwargs: Any,
     ) -> Any:
-        """Send device command on the primary attribute's endpoint."""
+        """Send device command on the given endpoint (defaults to the primary endpoint).
+
+        `endpoint` is only needed for entities composed of multiple endpoints,
+        e.g. a Closure entity commanding one of its ClosurePanel children.
+        """
+        target_endpoint = endpoint or self._endpoint
         return await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
+            node_id=target_endpoint.node.node_id,
+            endpoint_id=target_endpoint.endpoint_id,
             command=command,
             **kwargs,
         )
