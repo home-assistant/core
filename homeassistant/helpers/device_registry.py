@@ -45,7 +45,6 @@ from homeassistant.util.json import format_unserializable_data
 
 from . import storage, translation
 from .debounce import Debouncer
-from .deprecation import deprecated_function
 from .frame import (
     MissingIntegrationFrame,
     ReportBehavior,
@@ -94,7 +93,7 @@ ORPHANED_DEVICE_KEEP_SECONDS = 86400 * 30
 # suggested_area can be removed when suggested_area is removed from DeviceEntry.
 # pending_move can be removed once add_config_entry_id and remove_config_entry_id
 # are removed from the device registry API.
-RUNTIME_ONLY_ATTRS = {"suggested_area", "pending_move"}
+RUNTIME_ONLY_ATTRS = {"pending_move"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -535,8 +534,6 @@ class DeviceEntry(BaseDeviceEntry):
     # Core 2027.8.
     has_composite_identifiers: bool = attr.ib(default=False)
     serial_number: str | None = attr.ib(default=None)
-    # Suggested area is deprecated and will be removed from DeviceEntry in HA Core 2026.9.
-    _suggested_area: str | None = attr.ib(default=None)
     sw_version: str | None = attr.ib(default=None)
     via_device_id: str | None = attr.ib(default=None)
     # Transient pending move target (config_entry_id, config_subentry_id) initiated by
@@ -658,14 +655,6 @@ class DeviceEntry(BaseDeviceEntry):
                 "via_device_id": self.via_device_id,
             }
         )
-
-    @property
-    @deprecated_function(
-        "code which ignores suggested_area", breaks_in_ha_version="2026.9"
-    )
-    def suggested_area(self) -> str | None:
-        """Return the suggested area for this device entry."""
-        return self._suggested_area
 
 
 _CHILD_DEVICE_COMPAT_ATTRS = frozenset(
@@ -3468,11 +3457,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 new_values[attr_name] = value
                 old_values[attr_name] = getattr(old, attr_name)
 
-        # Can be removed when suggested_area is removed from DeviceEntry
-        if suggested_area is not UNDEFINED and suggested_area != old._suggested_area:  # noqa: SLF001
-            new_values["suggested_area"] = suggested_area
-            old_values["suggested_area"] = old._suggested_area  # noqa: SLF001
-
         if not new_values and not is_new:
             return old
 
@@ -3736,8 +3720,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
         remove_config_subentry_id: str | UndefinedType | None = UNDEFINED,
         serial_number: str | UndefinedType | None = UNDEFINED,
-        # suggested_area is deprecated and will be removed in 2026.9
-        suggested_area: str | UndefinedType | None = UNDEFINED,
+        # suggested_area should no longer be used as it will raise
+        suggested_area: UndefinedType = UNDEFINED,
         sw_version: str | UndefinedType | None = UNDEFINED,
         via_device_id: str | UndefinedType | None = UNDEFINED,
     ) -> DeviceEntry | None:
@@ -3817,7 +3801,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "remove_config_entry_id": remove_config_entry_id,
                 "remove_config_subentry_id": remove_config_subentry_id,
                 "serial_number": serial_number,
-                "suggested_area": suggested_area,
                 "sw_version": sw_version,
                 "via_device_id": via_device_id,
             }
@@ -3842,10 +3825,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 breaks_in_ha_version="2027.8.0",
             )
         if suggested_area is not UNDEFINED:
-            report_usage(
+            report_usage(  # type: ignore[unreachable]
                 "passes a suggested_area to device_registry.async_update device",
-                core_behavior=ReportBehavior.LOG,
-                breaks_in_ha_version="2026.9.0",
+                core_behavior=ReportBehavior.ERROR,
+                core_integration_behavior=ReportBehavior.ERROR,
+                custom_integration_behavior=ReportBehavior.ERROR,
             )
         if merge_connections is not UNDEFINED or merge_identifiers is not UNDEFINED:
             report_usage(
@@ -3886,7 +3870,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             new_identifiers=new_identifiers,
             remove_config_entry_id=remove_config_entry_id,
             remove_config_subentry_id=remove_config_subentry_id,
-            suggested_area=suggested_area,
             via_device_id=via_device_id,
             **validated_fields,
         )

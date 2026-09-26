@@ -5320,7 +5320,6 @@ async def test_update(
             new_connections=new_connections,
             new_identifiers=new_identifiers,
             serial_number="serial_no",
-            suggested_area="suggested_area",
             sw_version="version",
             via_device_id=via_device.id,
         )
@@ -5347,7 +5346,6 @@ async def test_update(
         name_by_user="Test Friendly Name",
         name="name",
         serial_number="serial_no",
-        suggested_area="suggested_area",
         sw_version="version",
         via_device_id=via_device.id,
     )
@@ -5402,7 +5400,6 @@ async def test_update(
             "name": None,
             "name_by_user": None,
             "serial_number": None,
-            "suggested_area": None,
             "sw_version": None,
             "via_device_id": None,
         },
@@ -5567,75 +5564,6 @@ async def test_update_remove_config_subentries(
     assert updated is None
     assert device_registry.async_get(entry.id) is None
     assert len(device_registry.devices) == 0
-
-
-@pytest.mark.parametrize(
-    ("initial_area", "device_area_id", "number_of_areas"),
-    [
-        (None, None, 0),
-        ("Living Room", "living_room", 1),
-    ],
-)
-async def test_update_suggested_area(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    area_registry: ar.AreaRegistry,
-    mock_config_entry: MockConfigEntry,
-    initial_area: str | None,
-    device_area_id: str | None,
-    number_of_areas: int,
-) -> None:
-    """Verify that we can update the suggested area of a device.
-
-    Updating the suggested area of a device should not create a new area, nor should
-    it change the area_id of the device.
-    """
-    update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
-    entry = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        identifiers={("bla", "123")},
-        suggested_area=initial_area,
-    )
-    assert entry.area_id == device_area_id
-
-    suggested_area = "Pool"
-
-    with patch.object(device_registry, "async_schedule_save") as mock_save:
-        updated_entry = device_registry.async_update_device(
-            entry.id, suggested_area=suggested_area
-        )
-
-    # Check the device registry was not saved
-    assert mock_save.call_count == 0
-    assert updated_entry != entry
-    assert updated_entry.area_id == device_area_id
-
-    # Check we did not create an area
-    pool_area = area_registry.async_get_area_by_name(suggested_area)
-    assert pool_area is None
-    assert updated_entry.area_id == device_area_id
-    assert len(area_registry.areas) == number_of_areas
-
-    await hass.async_block_till_done()
-
-    assert len(update_events) == 1
-    assert update_events[0].data == {
-        "action": "create",
-        "device_id": entry.id,
-    }
-
-    # Do not save or fire the event if the suggested
-    # area does not result in a change of area
-    # but still update the actual entry
-    with patch.object(device_registry, "async_schedule_save") as mock_save_2:
-        updated_entry = device_registry.async_update_device(
-            entry.id, suggested_area="Other"
-        )
-    assert len(update_events) == 1
-    assert mock_save_2.call_count == 0
-    assert updated_entry != entry
-    assert updated_entry.area_id == device_area_id
 
 
 @pytest.mark.parametrize(
@@ -6975,7 +6903,6 @@ async def test_restore_device(
         name_by_user="Test Friendly Name",
         name="name_new",
         serial_number="serial_no_new",
-        suggested_area="suggested_area_new",
         sw_version="version_new",
     )
 
@@ -7219,7 +7146,6 @@ async def test_restore_migrated_device_disabled_by(
         name_by_user=None,
         name="name_new",
         serial_number="serial_no_new",
-        suggested_area="suggested_area_new",
         sw_version="version_new",
     )
 
@@ -7393,7 +7319,6 @@ async def test_restore_disabled_by(
         name_by_user=None,
         name="name_new",
         serial_number="serial_no_new",
-        suggested_area="suggested_area_new",
         sw_version="version_new",
     )
 
@@ -8519,14 +8444,18 @@ async def test_connections_validator() -> None:
         )
 
 
-async def test_suggested_area_deprecation(
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_suggested_area_fails(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Make sure we do not duplicate entries."""
+    """Make sure passing suggested_area fails."""
     entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
@@ -8544,20 +8473,18 @@ async def test_suggested_area_deprecation(
 
     assert len(device_registry.devices) == 1
     assert entry.area_id == game_room_area.id
-    assert entry.suggested_area == "Game Room"
+    assert not hasattr(entry, "suggested_area")
 
-    assert (
-        "The deprecated function suggested_area was called. It will be removed in "
-        "HA Core 2026.9. Use code which ignores suggested_area instead"
-    ) in caplog.text
-
-    device_registry.async_update_device(entry.id, suggested_area="TV Room")
-
-    assert (
-        "Detected code that passes a suggested_area to device_registry.async_update "
-        "device. This will stop working in Home Assistant 2026.9.0, please report "
-        "this issue"
-    ) in caplog.text
+    with pytest.raises(
+        RuntimeError,
+        match=(
+            "Detected that custom integration 'test_integration' passes a suggested_area to"
+            " device_registry.async_update device at custom_components/test_integration/light.py,"
+            " line 23: self.light.is_on. Please report it to the author of the"
+            " 'test_integration' custom integration"
+        ),
+    ):
+        device_registry.async_update_device(entry.id, suggested_area="TV Room")
 
 
 COMPOSITE_ID = "composite0000000000000000000000"
