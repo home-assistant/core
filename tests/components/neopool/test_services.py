@@ -392,3 +392,46 @@ async def test_set_device_time_denied_for_non_admin(
             context=Context(user_id=hass_read_only_user.id),
         )
     mock_neopool_client.async_sync_device_time.assert_not_awaited()
+
+
+async def test_get_device_time_rejected_in_winter_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """Winter mode means no Modbus traffic, so reading the time is rejected."""
+    await setup_integration(hass, mock_config_entry)
+    mock_neopool_client.async_read_register = AsyncMock()
+    hass.config_entries.async_update_entry(mock_config_entry, pref_disable_polling=True)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_DEVICE_TIME,
+            {"device_id": _device_id(hass, mock_config_entry)},
+            blocking=True,
+            return_response=True,
+        )
+    assert exc_info.value.translation_key == "winter_mode_active"
+    mock_neopool_client.async_read_register.assert_not_awaited()
+
+
+async def test_set_device_time_rejected_in_winter_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """Winter mode means no Modbus traffic, so writing the time is rejected."""
+    await setup_integration(hass, mock_config_entry)
+    mock_neopool_client.async_sync_device_time = AsyncMock()
+    hass.config_entries.async_update_entry(mock_config_entry, pref_disable_polling=True)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_DEVICE_TIME,
+            {"device_id": _device_id(hass, mock_config_entry)},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "winter_mode_active"
+    mock_neopool_client.async_sync_device_time.assert_not_awaited()

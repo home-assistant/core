@@ -372,6 +372,9 @@
     },
     "relay_in_auto_mode": {
       "message": "This relay is currently in automatic mode. Change the mode to manual first to control it directly."
+    },
+    "winter_mode_active": {
+      "message": "This service is unavailable because polling is disabled for this device. Re-enable polling in the device's system options to communicate with the controller."
     }
   },
   "issues": {

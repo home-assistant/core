@@ -48,8 +48,10 @@ async def _get_coordinator(
     the config-entry extraction helper to a loaded NeoPool config entry. If
     omitted, fall back to the single loaded entry; error if none or more than
     one exist. The resolved entry must have a populated `runtime_data` (the
-    coordinator). Raises ServiceValidationError if any of those conditions is
-    not met.
+    coordinator). Rejects the call while winter mode is active, since the
+    services talk to the controller directly and winter mode means no Modbus
+    traffic. Raises ServiceValidationError if any of those conditions is not
+    met.
     """
     loaded = hass.config_entries.async_loaded_entries(DOMAIN)
     device_id = call.data.get(ATTR_DEVICE_ID)
@@ -80,6 +82,11 @@ async def _get_coordinator(
             translation_domain=DOMAIN,
             translation_key="no_coordinator",
             translation_placeholders={"entry_id": entry.entry_id},
+        )
+    if coordinator.winter_mode:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="winter_mode_active",
         )
     return coordinator
 

@@ -15,6 +15,15 @@ class NeoPoolEntity(CoordinatorEntity[NeoPoolCoordinator]):
     """Base class for NeoPool entities."""
 
     _attr_has_entity_name = True
+    _unavailable_in_winter_mode: bool = True
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return False while winter mode gates this entity."""
+        if self._unavailable_in_winter_mode and self.coordinator.winter_mode:
+            return False
+        return super().available
 
     @property
     @override
