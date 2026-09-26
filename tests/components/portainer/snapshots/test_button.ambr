@@ -283,7 +283,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'update_stack',
-    'unique_id': 'portainer_test_entry_123_2_update',
+    'unique_id': 'portainer_test_entry_123_2_update_stack',
     'unit_of_measurement': None,
   })
 # ---
@@ -1690,7 +1690,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'update_stack',
-    'unique_id': 'portainer_test_entry_123_1_update',
+    'unique_id': 'portainer_test_entry_123_1_update_stack',
     'unit_of_measurement': None,
   })
 # ---

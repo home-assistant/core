@@ -168,7 +168,7 @@ CONTAINER_BUTTONS: tuple[PortainerContainerButtonDescription, ...] = (
 
 STACK_BUTTONS: tuple[PortainerStackButtonDescription, ...] = (
     PortainerStackButtonDescription(
-        key="update",
+        key="update_stack",
         translation_key="update_stack",
         device_class=ButtonDeviceClass.UPDATE,
         entity_category=EntityCategory.CONFIG,
