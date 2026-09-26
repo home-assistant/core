@@ -127,6 +127,12 @@
           "unhealthy": "Unhealthy"
         }
       },
+      "container_restart_count": {
+        "name": "Restart count"
+      },
+      "container_started_at": {
+        "name": "Started"
+      },
       "container_state": {
         "name": "State",
         "state": {
