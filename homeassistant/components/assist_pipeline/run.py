@@ -17,6 +17,7 @@ from homeassistant.helpers import chat_session
 from homeassistant.util import ulid as ulid_util
 from homeassistant.util.limited_size_dict import LimitedSizeDict
 
+from .audio_output import AudioOutputStream, PipelineAudioOutput
 from .const import (
     CONF_DEBUG_RECORDING_DIR,
     DATA_CONFIG,
@@ -49,32 +50,20 @@ _LOGGER = logging.getLogger(__name__)
 STORED_PIPELINE_RUNS = 10
 
 
-class _PipelineResponseAudio(Protocol):
-    """Response audio metadata exposed by a pipeline processor."""
-
-    @property
-    def token(self) -> str:
-        """Return the response audio token."""
-
-    @property
-    def url(self) -> str:
-        """Return the response audio URL."""
-
-    @property
-    def content_type(self) -> str:
-        """Return the response audio content type."""
-
-
 class _PipelineProcessor(Protocol):
     """Implementation boundary for processing a pipeline run."""
 
     @property
-    def response_audio(self) -> _PipelineResponseAudio | None:
+    def response_audio(self) -> AudioOutputStream | None:
         """Return the response audio stream."""
 
     @property
     def supports_streaming_response(self) -> bool | None:
         """Return whether response audio can be streamed."""
+
+    @property
+    def start_response_immediately(self) -> bool:
+        """Return whether response audio should be consumed at run start."""
 
     async def async_validate(self, request: _PipelineProcessorRequest) -> None:
         """Validate pipeline input and prepare processing resources."""
@@ -128,6 +117,9 @@ class PipelineRun:
     _device_id: str | None = None
     _satellite_id: str | None = None
     _processor: _PipelineProcessor = field(init=False, repr=False)
+    _response_audio_outputs: list[PipelineAudioOutput] = field(
+        init=False, default_factory=list, repr=False
+    )
     _registered: bool = field(init=False, default=False, repr=False)
     _started: bool = field(init=False, default=False, repr=False)
     _ended: bool = field(init=False, default=False, repr=False)
@@ -169,6 +161,17 @@ class PipelineRun:
         return self._satellite_id
 
     @callback
+    def async_create_response_audio(
+        self, extension: str, content_type: str
+    ) -> PipelineAudioOutput:
+        """Create a controller-owned response audio stream."""
+        output = self.hass.data[KEY_ASSIST_PIPELINE].audio_output_manager.async_create(
+            extension, content_type
+        )
+        self._response_audio_outputs.append(output)
+        return output
+
+    @callback
     def process_event(self, event: PipelineEvent) -> None:
         """Log an event and call the listener."""
         self.event_callback(event)
@@ -199,13 +202,15 @@ class PipelineRun:
             data["satellite_id"] = satellite_id
         if self.runner_data is not None:
             data["runner_data"] = self.runner_data
-        if (response_audio := self._processor.response_audio) is not None:
-            data["tts_output"] = {
+        if response_audio := self._processor.response_audio:
+            tts_output = data["tts_output"] = {
                 "token": response_audio.token,
                 "url": response_audio.url,
                 "mime_type": response_audio.content_type,
                 "stream_response": self._processor.supports_streaming_response,
             }
+            if self._processor.start_response_immediately:
+                tts_output["start_streaming"] = True
         self.process_event(PipelineEvent(PipelineEventType.RUN_START, data))
 
     async def end(self) -> None:
@@ -220,6 +225,8 @@ class PipelineRun:
 
         self._ended = True
         try:
+            for output in self._response_audio_outputs:
+                output.async_close()
             self.capture_audio(None)
             await self._stop_debug_recording_thread()
             self.process_event(PipelineEvent(PipelineEventType.RUN_END))
@@ -232,9 +239,11 @@ class PipelineRun:
         self._set_request_identity(request)
         try:
             await self._processor.async_validate(request)
-        except BaseException:
-            self._cleanup_failed_processor()
-            self._unregister()
+        except BaseException as err:
+            try:
+                self._cleanup_failed_processor(err)
+            finally:
+                self._unregister()
             raise
 
     async def async_execute(
@@ -259,15 +268,15 @@ class PipelineRun:
             )
             await self._async_process(request, validation_error)
         except PipelineError as err:
-            self._cleanup_failed_processor()
+            self._cleanup_failed_processor(err)
             self.process_event(
                 PipelineEvent(
                     PipelineEventType.ERROR,
                     {"code": err.code, "message": err.message},
                 )
             )
-        except BaseException:
-            self._cleanup_failed_processor()
+        except BaseException as err:
+            self._cleanup_failed_processor(err)
             raise
         finally:
             await self.end()
@@ -289,8 +298,10 @@ class PipelineRun:
         self._satellite_id = request.satellite_id
 
     @callback
-    def _cleanup_failed_processor(self) -> None:
-        """Clean up processor resources after an error."""
+    def _cleanup_failed_processor(self, err: BaseException) -> None:
+        """Fail response streams and clean up processor resources."""
+        for output in self._response_audio_outputs:
+            output.async_fail(err)
         self._processor.cleanup()
 
     @callback
