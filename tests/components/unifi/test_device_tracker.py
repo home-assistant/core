@@ -33,6 +33,7 @@ from homeassistant.components.unifi.hub.client_store import (
     SAVE_DELAY,
     storage_key,
 )
+from homeassistant.components.unifi.hub.entity_loader import CLIENT_PRUNE_INTERVAL
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -1026,6 +1027,86 @@ async def test_network_api_client_store_saves_sparingly(
     await hass.async_block_till_done()
 
     assert set(hass_storage[key]["data"]) == {"00:00:00:00:00:01", "00:00:00:00:00:02"}
+
+
+@pytest.mark.usefixtures("mock_device_registry")
+@pytest.mark.parametrize("network_client_payload", [[NETWORK_CLIENT]])
+@pytest.mark.parametrize(
+    "config_entry_options", [{CONF_CLIENT_SOURCE: ["00:00:00:00:00:02"]}]
+)
+@pytest.mark.usefixtures("mock_device_registry")
+async def test_network_api_stale_client_pruned_at_runtime(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    network_api_config_entry: MockConfigEntry,
+    mock_network_api_requests: None,
+) -> None:
+    """Test a client gone past the retention window is dropped without a restart.
+
+    The selected client is kept, however long it has been away.
+    """
+    config_entry = network_api_config_entry
+    now = dt_util.utcnow()
+    hass_storage[storage_key(config_entry)] = {
+        "version": 1,
+        "data": {
+            "00:00:00:00:00:02": {
+                "raw": {
+                    **NETWORK_CLIENT,
+                    "name": "kept",
+                    "macAddress": "00:00:00:00:00:02",
+                },
+                "last_seen": (now - timedelta(days=1)).isoformat(),
+            },
+        },
+    }
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    hub = config_entry.runtime_data
+
+    assert hass.states.get("device_tracker.phone").state == STATE_HOME
+    assert hass.states.get("device_tracker.kept").state == STATE_NOT_HOME
+
+    # The phone leaves
+    aioclient_mock.clear_requests()
+    mock_network_api_lists(aioclient_mock)
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.phone") is not None
+
+    # A month passes with nobody restarting Home Assistant
+    freezer.tick(CLIENT_RESTORE_MAX_AGE + CLIENT_PRUNE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.phone") is None
+    assert (
+        entity_registry.async_get_entity_id(
+            "device_tracker",
+            DOMAIN,
+            f"{config_entry.data[CONF_SITE_ID]}-00:00:00:00:00:01",
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:01"), config_entry.entry_id
+        )
+        is None
+    )
+    assert hass.states.get("device_tracker.kept").state == STATE_NOT_HOME, (
+        "a selected client is never pruned"
+    )
+
+    assert hub.network_clients is not None
+    await flush_store(hub.network_clients._store)
+    assert set(hass_storage[storage_key(config_entry)]["data"]) == {"00:00:00:00:00:02"}
 
 
 @pytest.mark.usefixtures("mock_device_registry")

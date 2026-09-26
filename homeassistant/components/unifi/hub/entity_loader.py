@@ -18,6 +18,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
 
 from ..const import CLIENT_RESTORE_MAX_AGE, DOMAIN, LOGGER, UNIFI_WIRELESS_CLIENTS
@@ -28,6 +29,8 @@ if TYPE_CHECKING:
     from .hub import UnifiHub
 
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
+CLIENT_PRUNE_INTERVAL = timedelta(hours=1)
+"""How often clients of the Integration API are checked against the retention window."""
 
 
 class UnifiEntityLoader:
@@ -151,6 +154,11 @@ class UnifiEntityLoader:
             network.clients, set(hub.config.option_supported_clients)
         )
         self._remove_clients(pruned)
+        hub.config.entry.async_on_unload(
+            async_track_time_interval(
+                hub.hass, self._prune_network_clients, CLIENT_PRUNE_INTERVAL
+            )
+        )
 
         await self._refresh_data(
             [
@@ -219,6 +227,30 @@ class UnifiEntityLoader:
         for mac in always_restore:
             if mac not in api.clients and mac in api.clients_all:
                 api.clients.process_raw([dict(api.clients_all[mac].raw)])
+
+    @callback
+    def _prune_network_clients(self, now: datetime) -> None:
+        """Drop clients of the Integration API outside the retention window.
+
+        The store prunes when the entry starts; this keeps doing it while the
+        entry stays loaded, so a long-running instance does not keep every
+        client it has ever seen. Connected and selected clients stay.
+        """
+        clients = self.hub.api.network.clients
+        keep = set(self.hub.config.option_supported_clients)
+        stale = [
+            mac
+            for mac in clients
+            if mac not in keep
+            and not clients.is_connected(mac)
+            and (
+                (last_seen := clients.last_seen(mac)) is None
+                or now - last_seen > CLIENT_RESTORE_MAX_AGE
+            )
+        ]
+        for mac in stale:
+            clients.forget(mac)
+        self._remove_clients(stale)
 
     @callback
     def _remove_clients(self, macs: list[str]) -> None:
