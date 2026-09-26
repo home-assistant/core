@@ -1,0 +1,56 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "Reauthentication was successful",
+      "reconfigure_successful": "Reconfiguration was successful",
+      "unique_id_mismatch": "This Remootio device does not match the one already configured."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_auth_key": "[%key:component::remootio::config::step::user::data::api_auth_key%]",
+          "api_secret_key": "[%key:component::remootio::config::step::user::data::api_secret_key%]"
+        },
+        "data_description": {
+          "api_auth_key": "[%key:component::remootio::config::step::user::data_description::api_auth_key%]",
+          "api_secret_key": "[%key:component::remootio::config::step::user::data_description::api_secret_key%]"
+        },
+        "description": "The API keys for {host} appear to be no longer valid. Enter the current keys from the Remootio app.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "api_auth_key": "[%key:component::remootio::config::step::user::data::api_auth_key%]",
+          "api_secret_key": "[%key:component::remootio::config::step::user::data::api_secret_key%]",
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "api_auth_key": "Leave empty to keep the current key, or paste a new 64-character hex key from the Remootio app.",
+          "api_secret_key": "Leave empty to keep the current key, or paste a new 64-character hex key from the Remootio app.",
+          "host": "[%key:component::remootio::config::step::user::data_description::host%]"
+        },
+        "description": "Update the IP address or hostname. Leave the API keys empty to keep the current keys.",
+        "title": "Reconfigure Remootio"
+      },
+      "user": {
+        "data": {
+          "api_auth_key": "API auth key",
+          "api_secret_key": "API secret key",
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "api_auth_key": "64-character hex API Auth Key from the Remootio app.",
+          "api_secret_key": "64-character hex API Secret Key from the Remootio app.",
+          "host": "IP address or hostname of the Remootio on your local network."
+        },
+        "description": "In the Remootio app, choose Enable websocket API with logging. Then enter the device IP address and the API keys shown there."
+      }
+    }
+  }
+}
