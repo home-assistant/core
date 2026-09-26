@@ -41,12 +41,12 @@ async def test_speed_operation(
 ) -> None:
     """Test changing a speed."""
     bulb, _ = await async_setup_integration(hass, bulb_type=FAKE_DUAL_HEAD_RGBWW_BULB)
-    await async_push_update(hass, bulb, {"mac": FAKE_MAC})
+    await async_push_update(hass, bulb, {"mac": FAKE_MAC, "devices": 1})
     entity_id = "number.mock_title_effect_speed"
     assert entity_registry.async_get(entity_id).unique_id == f"{FAKE_MAC}_effect_speed"
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
-    await async_push_update(hass, bulb, {"mac": FAKE_MAC, "speed": 50})
+    await async_push_update(hass, bulb, {"mac": FAKE_MAC, "devices": 1, "speed": 50})
     assert hass.states.get(entity_id).state == "50.0"
 
     await hass.services.async_call(
@@ -56,23 +56,38 @@ async def test_speed_operation(
         blocking=True,
     )
     bulb.set_speed.assert_called_with(30)
-    await async_push_update(hass, bulb, {"mac": FAKE_MAC, "speed": 30})
+    await async_push_update(hass, bulb, {"mac": FAKE_MAC, "devices": 1, "speed": 30})
     assert hass.states.get(entity_id).state == "30.0"
+
+
+async def test_ratio_not_created_for_zoned_dual_head(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the ratio entity is not created for a zoned dual-head light."""
+    await async_setup_integration(hass, bulb_type=FAKE_DUAL_HEAD_RGBWW_BULB)
+
+    assert (
+        entity_registry.async_get_entity_id(
+            NUMBER_DOMAIN, DOMAIN, f"{FAKE_MAC}_dual_head_ratio"
+        )
+        is None
+    )
 
 
 async def test_ratio_operation(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test changing a dual head ratio."""
-    bulb, _ = await async_setup_integration(hass, bulb_type=FAKE_DUAL_HEAD_RGBWW_BULB)
-    await async_push_update(hass, bulb, {"mac": FAKE_MAC})
+    bulb = _mocked_wizlight(None, None, FAKE_DUAL_HEAD_RGBWW_BULB)
+    bulb.state = [PilotParser({"mac": FAKE_MAC, "ratio": 50})]
+    bulb.updateState.return_value = bulb.state
+
+    await async_setup_integration(hass, wizlight=bulb)
+
     entity_id = entity_registry.async_get_entity_id(
         NUMBER_DOMAIN, DOMAIN, f"{FAKE_MAC}_dual_head_ratio"
     )
     assert entity_id is not None
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-
-    await async_push_update(hass, bulb, {"mac": FAKE_MAC, "ratio": 50})
     assert hass.states.get(entity_id).state == "50.0"
 
     await hass.services.async_call(
@@ -91,10 +106,10 @@ async def test_ratio_operation_without_dual_head_feature(
 ) -> None:
     """Test changing a ratio reported by a light with an unadvertised dual head feature."""
     bulb = _mocked_wizlight(None, None, FAKE_TURNABLE_BULB)
-    bulb.state = None
+    bulb.state = []
 
-    async def _update_state() -> PilotParser:
-        bulb.state = PilotParser({"mac": FAKE_MAC, "ratio": 50})
+    async def _update_state() -> list[PilotParser]:
+        bulb.state = [PilotParser({"mac": FAKE_MAC, "ratio": 50})]
         return bulb.state
 
     bulb.updateState.side_effect = _update_state
