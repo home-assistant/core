@@ -22,6 +22,27 @@ from .utils import async_remove_entity_from_virtual_group, async_update_unique_i
 PARALLEL_UPDATES = 1
 
 
+def _dnd_is_on(
+    coordinator: AmazonDevicesCoordinator,
+    serial_num: str,
+    entity_description_key: str,
+) -> bool:
+    """Return the local DND state."""
+    return coordinator.dnd_states.get(serial_num, False)
+
+
+def _communication_is_on(
+    coordinator: AmazonDevicesCoordinator,
+    serial_num: str,
+    entity_description_key: str,
+) -> bool:
+    """Return the local communication settings state."""
+    return (
+        coordinator.data[serial_num].communication_settings[entity_description_key]
+        == "ON"
+    )
+
+
 def _update_dnd_state(
     coordinator: AmazonDevicesCoordinator,
     serial_num: str,
@@ -48,7 +69,7 @@ def _update_communication_state(
 class AmazonSwitchEntityDescription(SwitchEntityDescription):
     """Alexa Devices switch entity description."""
 
-    is_on_fn: Callable[[AmazonDevice, bool], bool]
+    is_on_fn: Callable[[AmazonDevicesCoordinator, str, str], bool]
     is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
         device.online
         and (sensor := device.sensors.get(key)) is not None
@@ -61,8 +82,8 @@ class AmazonSwitchEntityDescription(SwitchEntityDescription):
 DND_SWITCH: Final = AmazonSwitchEntityDescription(
     key="dnd",
     translation_key="do_not_disturb",
-    is_on_fn=lambda device, dnd: dnd,
-    is_available_fn=lambda device, _key: device.online,
+    is_on_fn=_dnd_is_on,
+    is_available_fn=lambda device, _: device.online,
     method="set_do_not_disturb",
     update_state_fn=_update_dnd_state,
 )
@@ -71,9 +92,7 @@ COMMUNICATION_SWITCHES: Final = (
         key="announcements",
         translation_key="announcements",
         entity_category=EntityCategory.CONFIG,
-        is_on_fn=lambda device, dnd: (
-            device.communication_settings["announcements"] == "ON"
-        ),
+        is_on_fn=_communication_is_on,
         is_available_fn=lambda device, key: (
             device.online
             and device.communication_settings.get(key) is not None
@@ -86,9 +105,7 @@ COMMUNICATION_SWITCHES: Final = (
         key="communications",
         translation_key="communications",
         entity_category=EntityCategory.CONFIG,
-        is_on_fn=lambda device, dnd: (
-            device.communication_settings["communications"] == "ON"
-        ),
+        is_on_fn=_communication_is_on,
         is_available_fn=lambda device, key: (
             device.online and device.communication_settings.get(key) is not None
         ),
@@ -195,8 +212,9 @@ class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
         """Return True if switch is on."""
 
         return self.entity_description.is_on_fn(
-            self.device,
-            self.coordinator.dnd_states.get(self.device.serial_number, False),
+            self.coordinator,
+            self.device.serial_number,
+            self.entity_description.key,
         )
 
     @property
