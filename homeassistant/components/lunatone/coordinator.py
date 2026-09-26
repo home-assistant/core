@@ -1,7 +1,7 @@
 """Coordinator for handling data fetching and updates."""
 
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 from typing import override
@@ -38,9 +38,9 @@ class LunatoneData:
 
     coordinator_info: LunatoneInfoDataUpdateCoordinator
     coordinator_devices: LunatoneDevicesDataUpdateCoordinator
-    coordinator_sensors: LunatoneSensorsDataUpdateCoordinator
     coordinator_scan: LunatoneScanDataUpdateCoordinator
-    dali_line_broadcasts: list[DALIBroadcast]
+    coordinator_sensors: LunatoneSensorsDataUpdateCoordinator | None = None
+    dali_line_broadcasts: list[DALIBroadcast] = field(default_factory=list)
 
 
 type LunatoneConfigEntry = ConfigEntry[LunatoneData]
