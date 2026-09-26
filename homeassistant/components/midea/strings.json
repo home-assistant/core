@@ -763,11 +763,32 @@
       "message": "HVAC mode {hvac_mode} is not supported by this device."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "power_analysis_method": "Power/Energy decode method"
+        },
+        "data_description": {
+          "power_analysis_method": "Select how your AC reports power and energy counters."
+        }
+      }
+    }
+  },
   "selector": {
     "login_mode": {
       "options": {
         "account": "Your account credentials",
         "preset": "Preset cloud credentials"
+      }
+    },
+    "power_analysis_method": {
+      "options": {
+        "1": "BCD (Default)",
+        "2": "Binary",
+        "3": "Mixed",
+        "12": "Binary (1/10 scale)",
+        "101": "BCD Energy + Binary Power"
       }
     }
   }

@@ -2,9 +2,10 @@
 
 from collections.abc import Mapping
 from functools import partial
+import json
 from typing import Any
 
-from midealocal.const import ProtocolVersion
+from midealocal.const import DeviceType, ProtocolVersion
 from midealocal.device import MideaDevice
 from midealocal.devices import device_selector
 from midealocal.discover import discover
@@ -25,7 +26,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_KEY, CONF_SN, CONF_SUBTYPE, DOMAIN, LOGGER
+from .const import (
+    CONF_KEY,
+    CONF_POWER_ANALYSIS_METHOD,
+    CONF_SN,
+    CONF_SUBTYPE,
+    DOMAIN,
+    LOGGER,
+    POWER_ANALYSIS_METHOD_VALUES,
+)
 from .entity import MideaConfigEntry
 
 _PLATFORMS: list[Platform] = [
@@ -44,8 +53,39 @@ _PLATFORMS: list[Platform] = [
 ]
 
 
-def _create_device(data: Mapping[str, Any], ip_address: str) -> MideaDevice | None:
+def _build_customize(data: Mapping[str, Any], options: Mapping[str, Any]) -> str:
+    """Build per-device customize JSON for midea-local."""
+    if data.get(CONF_TYPE) != DeviceType.AC:
+        return ""
+
+    analysis_method = options.get(CONF_POWER_ANALYSIS_METHOD)
+    if analysis_method is None:
+        return ""
+
+    try:
+        analysis_method = int(analysis_method)
+    except TypeError, ValueError:
+        LOGGER.warning(
+            "Ignoring invalid %s option: %r",
+            CONF_POWER_ANALYSIS_METHOD,
+            analysis_method,
+        )
+        return ""
+    if analysis_method not in POWER_ANALYSIS_METHOD_VALUES:
+        LOGGER.warning(
+            "Ignoring invalid %s option: %r",
+            CONF_POWER_ANALYSIS_METHOD,
+            analysis_method,
+        )
+        return ""
+    return json.dumps({CONF_POWER_ANALYSIS_METHOD: analysis_method})
+
+
+def _create_device(
+    data: Mapping[str, Any], ip_address: str, options: Mapping[str, Any]
+) -> MideaDevice | None:
     """Create the device object for the given entry data and IP address."""
+    customize = _build_customize(data, options)
     return device_selector(
         data[CONF_NAME],
         data[CONF_DEVICE_ID],
@@ -57,7 +97,7 @@ def _create_device(data: Mapping[str, Any], ip_address: str) -> MideaDevice | No
         ProtocolVersion(data[CONF_PROTOCOL]),
         data[CONF_MODEL],
         data[CONF_SUBTYPE],
-        "",
+        customize,
         data.get(CONF_MAC, None),
         data.get(CONF_SN, None),
     )
@@ -95,7 +135,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> boo
     device_id: int = data[CONF_DEVICE_ID]
     ip_address: str = data[CONF_IP_ADDRESS]
 
-    device = await hass.async_add_executor_job(_create_device, data, ip_address)
+    device = await hass.async_add_executor_job(
+        _create_device, data, ip_address, entry.options
+    )
     if device is None:
         raise ConfigEntryError(
             translation_domain=DOMAIN, translation_key="unable_initialize_device"
@@ -116,7 +158,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> boo
             data = {**data, CONF_IP_ADDRESS: new_ip_address}
             hass.config_entries.async_update_entry(entry, data=data)
             new_device = await hass.async_add_executor_job(
-                _create_device, data, new_ip_address
+                _create_device, data, new_ip_address, entry.options
             )
             if new_device is not None:
                 device = new_device
@@ -156,6 +198,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> boo
         await hass.async_add_executor_job(device.close)
 
     entry.async_on_unload(_close_device)
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
     return True
 
@@ -200,3 +243,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> b
 async def async_unload_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> None:
+    """Reload a config entry."""
+    await hass.config_entries.async_reload(entry.entry_id)
