@@ -4,7 +4,8 @@ from collections.abc import Generator
 from math import isclose
 from unittest.mock import Mock, PropertyMock, patch
 
-from arcam.fmj import ConnectionFailed, DecodeMode2CH, DecodeModeMCH, SourceCodes
+from arcam.fmj.codecs import DecodeMode2CH, DecodeModeMCH, SourceCodes
+from arcam.fmj.errors import ConnectionFailed
 from arcam.fmj.state import State
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -22,6 +23,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_BROWSE_MEDIA,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
@@ -62,6 +64,25 @@ async def test_setup(
 ) -> None:
     """Test setup creates expected entities."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("player_setup")
+async def test_browse_media_without_presets(
+    hass: HomeAssistant, state_1: State
+) -> None:
+    """Test browsing when the receiver has no preset details."""
+    state_1.get_preset_details.return_value = None
+    response = await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_BROWSE_MEDIA,
+        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+    media = response[MOCK_ENTITY_ID]
+
+    assert media.media_content_id == "root"
+    assert media.children == []
 
 
 @pytest.mark.usefixtures("player_setup")

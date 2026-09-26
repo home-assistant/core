@@ -3520,7 +3520,7 @@ async def test_intent_tool_call_in_chat_log(hass: HomeAssistant) -> None:
     # Verify tool result was stored
     assert tool_result_content is not None
     assert tool_result_content.tool_name == "HassTurnOn"
-    assert tool_result_content.tool_result["response_type"] == "action_done"
+    assert tool_result_content.result.data["response_type"] == "action_done"
 
     # Verify final assistant content with speech
     assert assistant_content is not None
@@ -3569,7 +3569,7 @@ async def test_trigger_tool_call_in_chat_log(hass: HomeAssistant) -> None:
     # Verify tool result was stored
     assert tool_result_content is not None
     assert tool_result_content.tool_name == "trigger_sentence"
-    assert tool_result_content.tool_result["response"] == trigger_response
+    assert tool_result_content.result.data["response"] == trigger_response
 
 
 @pytest.mark.usefixtures("init_components")

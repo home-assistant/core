@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from functools import partial
-from typing import TYPE_CHECKING, Literal, override
+from typing import TYPE_CHECKING, Literal, cast, override
 
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.clients import Clients
@@ -39,6 +39,8 @@ from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
     UnitOfDataRate,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfPower,
     UnitOfTime,
 )
@@ -198,6 +200,22 @@ def async_device_outlet_power_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
 def async_device_outlet_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Determine if a device supports reading overall power metrics."""
     return hub.api.devices[obj_id].outlet_ac_power_budget is not None
+
+
+@callback
+def async_device_battery_pool_supported_fn(
+    field: str, hub: UnifiHub, obj_id: str
+) -> bool:
+    """Determine if a device provides a battery pool field."""
+    return field in (hub.api.devices[obj_id].battery_pool or {})
+
+
+@callback
+def async_device_battery_pool_value_fn(
+    field: str, hub: UnifiHub, device: Device
+) -> float | int:
+    """Retrieve a battery pool field."""
+    return cast(dict[str, float | int], device.battery_pool)[field]
 
 
 @callback
@@ -404,7 +422,7 @@ class UnifiSensorEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
 ):
     """Class describing UniFi sensor entity."""
 
-    value_fn: Callable[[UnifiHub, ApiItemT], datetime | float | str | None]
+    value_fn: Callable[[UnifiHub, ApiItemT], datetime | float | int | str | None]
 
     # Optional
     is_connected_fn: Callable[[UnifiHub, str], bool] | None = None
@@ -624,6 +642,139 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         supported_fn=async_device_outlet_supported_fn,
         unique_id_fn=lambda hub, obj_id: f"ac_power_conumption-{obj_id}",
         value_fn=lambda hub, device: device.outlet_ac_power_consumption,
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="UPS battery level",
+        translation_key="ups_battery_level",
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        supported_fn=partial(async_device_battery_pool_supported_fn, "batteryLevel"),
+        unique_id_fn=lambda hub, obj_id: f"ups_battery_level-{obj_id}",
+        value_fn=partial(async_device_battery_pool_value_fn, "batteryLevel"),
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="UPS battery runtime",
+        translation_key="ups_battery_runtime",
+        device_class=SensorDeviceClass.DURATION,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        supported_fn=partial(async_device_battery_pool_supported_fn, "timeToRemain"),
+        unique_id_fn=lambda hub, obj_id: f"ups_battery_runtime-{obj_id}",
+        value_fn=partial(async_device_battery_pool_value_fn, "timeToRemain"),
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="UPS output power",
+        translation_key="ups_output_power",
+        device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        supported_fn=partial(
+            async_device_battery_pool_supported_fn, "device_total_power_output"
+        ),
+        unique_id_fn=lambda hub, obj_id: f"ups_output_power-{obj_id}",
+        value_fn=partial(
+            async_device_battery_pool_value_fn, "device_total_power_output"
+        ),
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="UPS output current",
+        translation_key="ups_output_current",
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        supported_fn=partial(
+            async_device_battery_pool_supported_fn, "device_output_current"
+        ),
+        unique_id_fn=lambda hub, obj_id: f"ups_output_current-{obj_id}",
+        value_fn=partial(async_device_battery_pool_value_fn, "device_output_current"),
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="UPS output voltage",
+        translation_key="ups_output_voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        supported_fn=partial(
+            async_device_battery_pool_supported_fn, "device_output_voltage"
+        ),
+        unique_id_fn=lambda hub, obj_id: f"ups_output_voltage-{obj_id}",
+        value_fn=partial(async_device_battery_pool_value_fn, "device_output_voltage"),
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="UPS input voltage",
+        translation_key="ups_input_voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        supported_fn=partial(
+            async_device_battery_pool_supported_fn, "device_input_voltage"
+        ),
+        unique_id_fn=lambda hub, obj_id: f"ups_input_voltage-{obj_id}",
+        value_fn=partial(async_device_battery_pool_value_fn, "device_input_voltage"),
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="UPS bypass voltage",
+        translation_key="ups_bypass_voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        supported_fn=partial(
+            async_device_battery_pool_supported_fn, "device_bypass_voltage"
+        ),
+        unique_id_fn=lambda hub, obj_id: f"ups_bypass_voltage-{obj_id}",
+        value_fn=partial(async_device_battery_pool_value_fn, "device_bypass_voltage"),
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="UPS output power factor",
+        translation_key="ups_output_power_factor",
+        device_class=SensorDeviceClass.POWER_FACTOR,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        supported_fn=partial(
+            async_device_battery_pool_supported_fn, "device_total_power_factor"
+        ),
+        unique_id_fn=lambda hub, obj_id: f"ups_output_power_factor-{obj_id}",
+        value_fn=partial(
+            async_device_battery_pool_value_fn, "device_total_power_factor"
+        ),
     ),
     UnifiSensorEntityDescription[Devices, Device](
         key="Device uptime",

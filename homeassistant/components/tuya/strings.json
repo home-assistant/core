@@ -5,6 +5,10 @@
       "login_error": "Login error ({code}): {msg}"
     },
     "step": {
+      "reauth_confirm": {
+        "description": "Your Smart Life or Tuya Smart account needs to be reauthenticated.\n\nSelect **Submit** to get a QR code to scan with the app.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "reauth_user_code": {
         "data": {
           "user_code": "User code"
@@ -1069,8 +1073,14 @@
           "level_3": "[%key:common::state::full%]"
         }
       },
+      "water_once": {
+        "name": "Session water usage"
+      },
       "water_time": {
         "name": "Water usage duration"
+      },
+      "water_total": {
+        "name": "Total water usage"
       },
       "wind_chill_index_temperature": {
         "name": "Wind chill index"

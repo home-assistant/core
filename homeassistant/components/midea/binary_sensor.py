@@ -25,6 +25,12 @@ BINARY_SENSORS: list[BinarySensorEntityDescription] = [
         device_class=BinarySensorDeviceClass.OPENING,
     ),
     BinarySensorEntityDescription(
+        key="door_warn",
+        translation_key="door_warn",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    BinarySensorEntityDescription(
         key="rinse_aid",
         translation_key="rinse_aid",
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -87,6 +93,7 @@ BINARY_SENSORS: list[BinarySensorEntityDescription] = [
         key="arofene_link",
         translation_key="arofene_link",
         device_class=BinarySensorDeviceClass.PLUG,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key="header_exist",

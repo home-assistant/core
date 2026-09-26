@@ -33,6 +33,7 @@ from . import (
     PERMANENT_OUTDOOR_LIGHT_SERVICE_INFO,
     RGBIC_NEON_LIGHT_SERVICE_INFO,
     RGBICWW_FLOOR_LAMP_SERVICE_INFO,
+    RGBICWW_LIGHT_BARS_SERVICE_INFO,
     RGBICWW_STRIP_LIGHT_SERVICE_INFO,
     STRIP_LIGHT_3_SERVICE_INFO,
     WOSTRIP_SERVICE_INFO,
@@ -407,6 +408,7 @@ async def test_strip_light_services_exception(
             "SwitchbotRgbicLight",
         ),
         ("rgbicww_floor_lamp", RGBICWW_FLOOR_LAMP_SERVICE_INFO, "SwitchbotRgbicLight"),
+        ("rgbicww_light_bars", RGBICWW_LIGHT_BARS_SERVICE_INFO, "SwitchbotRgbicLight"),
         (
             "permanent_outdoor_light",
             PERMANENT_OUTDOOR_LIGHT_SERVICE_INFO,

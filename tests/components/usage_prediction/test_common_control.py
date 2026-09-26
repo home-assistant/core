@@ -11,6 +11,7 @@ from homeassistant.components.usage_prediction.common_control import (
     async_predict_common_control,
     time_category,
 )
+from homeassistant.components.usage_prediction.const import DEFAULT_LIMIT
 from homeassistant.components.usage_prediction.models import EntityUsagePredictions
 from homeassistant.const import EVENT_CALL_SERVICE
 from homeassistant.core import Context, HomeAssistant
@@ -292,34 +293,18 @@ async def test_old_events_excluded(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("recorder_mock")
-async def test_entities_limit(hass: HomeAssistant) -> None:
-    """Test that only top entities are returned per time category."""
+async def test_more_than_default_limit_predicted(hass: HomeAssistant) -> None:
+    """Test more entities are predicted than a client gets by default."""
     user_id = str(uuid.uuid4())
+    entity_ids = [f"light.light_{index}" for index in range(DEFAULT_LIMIT + 2)]
 
-    hass.states.async_set("light.most_used", "off")
-    hass.states.async_set("light.second", "off")
-    hass.states.async_set("light.third", "off")
-    hass.states.async_set("light.fourth", "off")
-    hass.states.async_set("light.fifth", "off")
-    hass.states.async_set("light.sixth", "off")
-    hass.states.async_set("light.seventh", "off")
+    for entity_id in entity_ids:
+        hass.states.async_set(entity_id, "off")
 
-    # Create more than 5 different entities in morning
     with freeze_time("2023-07-01 08:00:00"):
-        # Create entities with different frequencies
-        entities_with_counts = [
-            ("light.most_used", 10),
-            ("light.second", 8),
-            ("light.third", 6),
-            ("light.fourth", 4),
-            ("light.fifth", 2),
-            ("light.sixth", 1),
-            ("light.seventh", 1),
-        ]
-
-        for entity_id, count in entities_with_counts:
+        # Distinct counts so the expected order is deterministic
+        for count, entity_id in enumerate(reversed(entity_ids), start=1):
             for _ in range(count):
-                # Use different context for each call
                 hass.bus.async_fire(
                     EVENT_CALL_SERVICE,
                     {
@@ -333,26 +318,11 @@ async def test_entities_limit(hass: HomeAssistant) -> None:
 
     await async_wait_recording_done(hass)
 
-    with (
-        freeze_time("2023-07-02 10:00:00"),
-        patch(
-            "homeassistant.components.usage_prediction.common_control.RESULTS_TO_INCLUDE",
-            5,
-        ),
-    ):  # Next day, so events are recent
+    with freeze_time("2023-07-02 10:00:00"):  # Next day, so events are recent
         results = await async_predict_common_control(hass, user_id)
 
-    # Should be the top 5 most used (08:00 UTC = 00:00 local = night)
-    assert results.night == [
-        "light.most_used",
-        "light.second",
-        "light.third",
-        "light.fourth",
-        "light.fifth",
-    ]
-    assert results.morning == []
-    assert results.afternoon == []
-    assert results.evening == []
+    # 08:00 UTC = 00:00 local = night
+    assert results == EntityUsagePredictions(night=entity_ids)
 
 
 @pytest.mark.usefixtures("recorder_mock")

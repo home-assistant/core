@@ -1,7 +1,8 @@
 """The tests for the denonavr media player platform."""
 
+from collections.abc import Generator
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from denonavr.exceptions import AvrIncompleteResponseError, AvrInvalidResponseError
 from freezegun.api import FrozenDateTimeFactory
@@ -14,13 +15,14 @@ from homeassistant.components.denonavr.config_flow import (
     CONF_TYPE,
     DOMAIN,
 )
-from homeassistant.components.denonavr.const import ATTR_DYNAMIC_EQ
+from homeassistant.components.denonavr.const import ATTR_DYNAMIC_EQ, CONF_USE_TELNET
 from homeassistant.components.denonavr.services import (
     ATTR_COMMAND,
     SERVICE_GET_COMMAND,
     SERVICE_SET_DYNAMIC_EQ,
     SERVICE_UPDATE_AUDYSSEY,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -43,7 +45,7 @@ ENTITY_ID = f"{media_player.DOMAIN}.{TEST_NAME}"
 
 
 @pytest.fixture(name="client")
-def client_fixture():
+def client_fixture() -> Generator[MagicMock]:
     """Patch of client library for tests."""
     with (
         patch(
@@ -107,7 +109,7 @@ async def test_setup_without_serial_number(
     )
 
 
-async def test_get_command(hass: HomeAssistant, client) -> None:
+async def test_get_command(hass: HomeAssistant, client: MagicMock) -> None:
     """Test generic command functionality."""
     await setup_denonavr(hass)
 
@@ -121,7 +123,7 @@ async def test_get_command(hass: HomeAssistant, client) -> None:
     client.async_get_command.assert_awaited_with("test_command")
 
 
-async def test_dynamic_eq(hass: HomeAssistant, client) -> None:
+async def test_dynamic_eq(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that dynamic eq method works."""
     await setup_denonavr(hass)
 
@@ -142,7 +144,7 @@ async def test_dynamic_eq(hass: HomeAssistant, client) -> None:
     client.async_dynamic_eq_off.assert_called_once()
 
 
-async def test_update_audyssey(hass: HomeAssistant, client) -> None:
+async def test_update_audyssey(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that dynamic eq method works."""
     await setup_denonavr(hass)
 
@@ -157,6 +159,34 @@ async def test_update_audyssey(hass: HomeAssistant, client) -> None:
     await hass.async_block_till_done()
 
     client.async_update_audyssey.assert_called_once()
+
+
+async def test_setup_retry_on_request_error(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """Test that a failed request during setup retries the config entry."""
+    client.async_update.side_effect = AvrInvalidResponseError(
+        "Server disconnected without sending a response", "GET"
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_UNIQUE_ID,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_MODEL: TEST_MODEL,
+            CONF_TYPE: TEST_RECEIVER_TYPE,
+            CONF_MANUFACTURER: TEST_MANUFACTURER,
+            CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
+        },
+        options={CONF_USE_TELNET: True},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(
@@ -174,7 +204,7 @@ async def test_update_audyssey(hass: HomeAssistant, client) -> None:
 )
 async def test_malformed_response_marks_unavailable(
     hass: HomeAssistant,
-    client,
+    client: MagicMock,
     freezer: FrozenDateTimeFactory,
     exception: Exception,
 ) -> None:

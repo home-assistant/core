@@ -6,5 +6,5 @@
   "iot_class": "local_polling",
   "loggers": ["pydanfossair"],
   "quality_scale": "legacy",
-  "requirements": ["pydanfossair==0.1.0"]
+  "requirements": ["pydanfossair==1.0.0"]
 }

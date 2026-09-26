@@ -116,7 +116,7 @@ SERVICE_DELETE_MEALPLAN = "delete_mealplan"
 SERVICE_DELETE_MEALPLAN_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
-        probatio.Required(ATTR_MEALPLAN_ID): str,
+        probatio.Required(ATTR_MEALPLAN_ID): probatio.Any(str, int),
     }
 )
 SERVICE_UPDATE_MEALPLAN = "update_mealplan"
@@ -124,7 +124,7 @@ SERVICE_UPDATE_MEALPLAN_SCHEMA = probatio.Any(
     probatio.Schema(
         {
             probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
-            probatio.Required(ATTR_MEALPLAN_ID): str,
+            probatio.Required(ATTR_MEALPLAN_ID): probatio.Any(str, int),
             probatio.Required(ATTR_DATE): cv.date,
             probatio.Required(ATTR_ENTRY_TYPE): probatio.In(
                 [x.lower() for x in MealplanEntryType]
@@ -135,7 +135,7 @@ SERVICE_UPDATE_MEALPLAN_SCHEMA = probatio.Any(
     probatio.Schema(
         {
             probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
-            probatio.Required(ATTR_MEALPLAN_ID): str,
+            probatio.Required(ATTR_MEALPLAN_ID): probatio.Any(str, int),
             probatio.Required(ATTR_DATE): cv.date,
             probatio.Required(ATTR_ENTRY_TYPE): probatio.In(
                 [x.lower() for x in MealplanEntryType]
@@ -319,7 +319,7 @@ async def _async_delete_mealplan(call: ServiceCall) -> ServiceResponse:
     entry: MealieConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
-    mealplan_id = call.data[ATTR_MEALPLAN_ID]
+    mealplan_id = int(call.data[ATTR_MEALPLAN_ID])
     client = entry.runtime_data.client
 
     try:
@@ -335,7 +335,7 @@ async def _async_delete_mealplan(call: ServiceCall) -> ServiceResponse:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="mealplan_not_found",
-            translation_placeholders={"mealplan_id": mealplan_id},
+            translation_placeholders={"mealplan_id": str(mealplan_id)},
         ) from err
     return None
 
@@ -345,7 +345,7 @@ async def _async_update_mealplan(call: ServiceCall) -> ServiceResponse:
     entry: MealieConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
-    mealplan_id = call.data[ATTR_MEALPLAN_ID]
+    mealplan_id = int(call.data[ATTR_MEALPLAN_ID])
     mealplan_date = call.data[ATTR_DATE]
     entry_type = MealplanEntryType(call.data[ATTR_ENTRY_TYPE])
     client = entry.runtime_data.client
@@ -370,7 +370,7 @@ async def _async_update_mealplan(call: ServiceCall) -> ServiceResponse:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="mealplan_not_found",
-            translation_placeholders={"mealplan_id": mealplan_id},
+            translation_placeholders={"mealplan_id": str(mealplan_id)},
         ) from err
     if call.return_response:
         return {"mealplan": asdict(mealplan)}

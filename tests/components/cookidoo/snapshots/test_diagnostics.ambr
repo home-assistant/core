@@ -67,6 +67,7 @@
       'email': 'test-email',
       'language': 'de-CH',
       'password': '**REDACTED**',
+      'token': '**REDACTED**',
     }),
     'user': dict({
       'description': None,

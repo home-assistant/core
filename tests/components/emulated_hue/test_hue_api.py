@@ -1770,6 +1770,36 @@ async def test_only_change_hue_or_saturation(
 
 
 @pytest.mark.usefixtures("base_setup")
+@pytest.mark.parametrize(
+    ("entity_config", "expected_exposed"),
+    [
+        pytest.param({}, True, id="hidden_omitted"),
+        pytest.param({emulated_hue.CONF_ENTITY_HIDDEN: False}, True, id="hidden_false"),
+        pytest.param({emulated_hue.CONF_ENTITY_HIDDEN: True}, False, id="hidden_true"),
+    ],
+)
+async def test_listed_entity_exposed_with_expose_by_default_off(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    entity_config: dict[str, bool],
+    expected_exposed: bool,
+) -> None:
+    """Test an explicitly listed entity is exposed with expose by default off."""
+    conf = {
+        emulated_hue.CONF_LISTEN_PORT: BRIDGE_SERVER_PORT,
+        emulated_hue.CONF_EXPOSE_BY_DEFAULT: False,
+        emulated_hue.CONF_ENTITIES: {"light.exposed": entity_config},
+    }
+    await _async_setup_emulated_hue(hass, conf)
+    _mock_hue_endpoints(hass, conf, {"1": "light.exposed"})
+    hass.states.async_set("light.exposed", STATE_ON)
+    await hass.async_block_till_done()
+    client = await hass_client_no_auth()
+    result_json = await async_get_lights(client)
+    assert bool(result_json) is expected_exposed
+
+
+@pytest.mark.usefixtures("base_setup")
 async def test_specificly_exposed_entities(
     hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
@@ -1797,8 +1827,25 @@ async def test_specificly_exposed_entities(
     hass.states.async_set("light.exposed", STATE_ON)
     await hass.async_block_till_done()
     result_json = await async_get_lights(client)
-
     assert "1" in result_json
+
+
+@pytest.mark.usefixtures("base_setup")
+async def test_unlisted_entity_not_exposed_with_expose_by_default_off(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test an entity not listed in the config is not exposed by default off."""
+    conf = {
+        emulated_hue.CONF_LISTEN_PORT: BRIDGE_SERVER_PORT,
+        emulated_hue.CONF_EXPOSE_BY_DEFAULT: False,
+    }
+    await _async_setup_emulated_hue(hass, conf)
+    _mock_hue_endpoints(hass, conf, {"1": "light.unlisted"})
+    hass.states.async_set("light.unlisted", STATE_ON)
+    await hass.async_block_till_done()
+    client = await hass_client_no_auth()
+    result_json = await async_get_lights(client)
+    assert not result_json
 
 
 async def test_get_light_state_when_none(

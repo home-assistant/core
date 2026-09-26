@@ -533,6 +533,7 @@ class UnitOfEnergy(StrEnum):
     KILO_CALORIE = "kcal"
     MEGA_CALORIE = "Mcal"
     GIGA_CALORIE = "Gcal"
+    THERM = "thm"
 
 
 # Reactive energy units
