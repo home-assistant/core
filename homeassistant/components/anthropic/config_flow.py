@@ -60,6 +60,7 @@ from .const import (
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     MIN_THINKING_BUDGET,
+    THINKING_EFFORT_NONE_SUPPORTED_MODELS,
     TOOL_SEARCH_UNSUPPORTED_MODELS,
     PromptCaching,
 )
@@ -411,7 +412,13 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         ):
             effort_options: list[str] = []
             if self.model_info.capabilities.thinking.types.adaptive.supported:
-                effort_options.append("none")
+                if (
+                    model_alias(self.model_info.id)
+                    in THINKING_EFFORT_NONE_SUPPORTED_MODELS
+                ):
+                    effort_options.append("none")
+                elif self.options.get(CONF_THINKING_EFFORT) == "none":
+                    self.options.pop(CONF_THINKING_EFFORT)
             if effort_capability.low.supported:
                 effort_options.append("low")
             if effort_capability.medium.supported:
