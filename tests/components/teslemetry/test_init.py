@@ -52,7 +52,6 @@ from homeassistant.components.teslemetry.const import (
 
 # Coordinator constants
 from homeassistant.components.teslemetry.coordinator import (
-    ENERGY_HISTORY_INTERVAL,
     INSUFFICIENT_CREDITS_RETRY_AFTER,
     METADATA_INTERVAL,
     VEHICLE_INTERVAL,
@@ -89,7 +88,6 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from . import mock_config_entry, setup_platform
 from .const import (
     CONFIG_V1,
-    ENERGY_HISTORY,
     LIVE_STATUS,
     METADATA,
     METADATA_NOSCOPE,
@@ -652,54 +650,6 @@ async def test_live_status_coordinator_retry_exceptions(
     assert entry.state is ConfigEntryState.LOADED
 
 
-@pytest.mark.parametrize(("exception", "expected_retry_after"), RETRY_EXCEPTIONS)
-async def test_energy_history_coordinator_retry_exceptions(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_energy_history: AsyncMock,
-    exception: TeslaFleetError,
-    expected_retry_after: float,
-) -> None:
-    """Test energy history coordinator raises UpdateFailed with retry_after."""
-    call_count = 0
-
-    def energy_history_side_effect(*args, **kwargs):
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            raise exception  # First call raises exception
-        return ENERGY_HISTORY  # Subsequent calls succeed
-
-    mock_energy_history.side_effect = energy_history_side_effect
-
-    entry = await setup_platform(hass)
-    assert entry.state is ConfigEntryState.LOADED
-    # Energy history doesn't have first_refresh during setup
-    assert call_count == 0
-
-    # Trigger first coordinator refresh - this will raise the exception
-    freezer.tick(ENERGY_HISTORY_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # API was called exactly once (no manual retry loop)
-    assert call_count == 1
-    # Entry stays loaded - UpdateFailed with retry_after doesn't break the entry
-    assert entry.state is ConfigEntryState.LOADED
-
-    # The coordinator staggers its scheduling deliberately, so these ticks
-    # bracket retry_after with a margin either side rather than sitting on it.
-    freezer.tick(timedelta(seconds=expected_retry_after - 2))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert call_count == 1
-
-    freezer.tick(timedelta(seconds=3))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert call_count == 2
-
-
 async def test_live_status_auth_error(
     hass: HomeAssistant,
 ) -> None:
@@ -1088,33 +1038,6 @@ async def test_live_status_coordinator_refresh_error(
     assert entry.state is ConfigEntryState.LOADED
 
     await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
-    await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.LOADED
-
-
-@pytest.mark.parametrize(
-    "side_effect",
-    [
-        [InvalidToken],
-        [TeslaFleetError],
-        [ENERGY_HISTORY, {"response": {}}],
-    ],
-)
-async def test_energy_history_coordinator_refresh_errors(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_energy_history: AsyncMock,
-    side_effect: list,
-) -> None:
-    """Test energy history coordinator handles errors during refresh."""
-    mock_energy_history.side_effect = side_effect
-
-    entry = await setup_platform(hass)
-    assert entry.state is ConfigEntryState.LOADED
-
-    freezer.tick(ENERGY_HISTORY_INTERVAL)
-    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
@@ -1826,6 +1749,7 @@ def test_stream_topic_allowlist() -> None:
         "live_status",
         "site_info",
         "tariff_content_v2",
+        "energy_totals",
     ]
 
 
@@ -1835,18 +1759,22 @@ async def test_energy_stream_no_recurring_rest_polling(
     mock_live_status: AsyncMock,
     mock_site_info: AsyncMock,
 ) -> None:
-    """The live/info REST cold reads happen once and do not recur."""
-    await setup_platform(hass, [Platform.SENSOR])
+    """The live/info REST cold reads happen once, and history never reads at all."""
+    with patch(
+        "tesla_fleet_api.tesla.energysite.EnergySite.energy_history"
+    ) as mock_energy_history:
+        await setup_platform(hass, [Platform.SENSOR])
+        assert mock_live_status.call_count == 1
+        assert mock_site_info.call_count == 1
+
+        # Advancing well past the old poll intervals triggers no REST reads.
+        freezer.tick(timedelta(minutes=5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
     assert mock_live_status.call_count == 1
     assert mock_site_info.call_count == 1
-
-    # Advancing well past the old 30-second poll intervals triggers no REST reads.
-    freezer.tick(ENERGY_HISTORY_INTERVAL * 2)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert mock_live_status.call_count == 1
-    assert mock_site_info.call_count == 1
+    mock_energy_history.assert_not_called()
 
 
 async def test_energy_stream_unload_unsubscribes_and_closes_stream(
@@ -1856,6 +1784,7 @@ async def test_energy_stream_unload_unsubscribes_and_closes_stream(
     live_unsub = MagicMock()
     info_unsub = MagicMock()
     tariff_unsub = MagicMock()
+    totals_unsub = MagicMock()
 
     with (
         patch(
@@ -1870,6 +1799,10 @@ async def test_energy_stream_unload_unsubscribes_and_closes_stream(
             "teslemetry_stream.TeslemetryStreamEnergySite.listen_TariffContentV2",
             return_value=tariff_unsub,
         ),
+        patch(
+            "teslemetry_stream.TeslemetryStreamEnergySite.listen_EnergyTotals",
+            return_value=totals_unsub,
+        ),
         patch("teslemetry_stream.TeslemetryStream.close") as mock_close,
     ):
         entry = await setup_platform(hass, [Platform.SENSOR])
@@ -1881,6 +1814,7 @@ async def test_energy_stream_unload_unsubscribes_and_closes_stream(
     live_unsub.assert_called_once()
     info_unsub.assert_called_once()
     tariff_unsub.assert_called_once()
+    totals_unsub.assert_called_once()
     mock_close.assert_called_once()
 
 
