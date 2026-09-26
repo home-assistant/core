@@ -30,7 +30,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
-from .helpers import async_deliver_events, device_created_event, device_removed_event
+from .helpers import (
+    async_deliver_events,
+    device_created_event,
+    device_removed_event,
+    execution_registered_event,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -280,6 +285,53 @@ async def test_reconnect_clears_rate_limit_back_off(
     assert coordinator.last_update_success
     assert not coordinator.is_rate_limited
     assert coordinator.update_interval == UPDATE_INTERVAL
+
+
+async def test_rate_limit_during_a_reconnect_backs_off(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A reconnect can be rate limited too, and has to back off like any refresh.
+
+    Retrying a login at the unchanged interval is what got us rate limited.
+    """
+    entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+    coordinator = entry.runtime_data.coordinator
+
+    mock_client.fetch_events.side_effect = ServerDisconnectedError
+    mock_client.login.side_effect = TooManyRequestsError("Too many requests")
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not coordinator.last_update_success
+    assert coordinator.is_rate_limited
+    assert coordinator.update_interval == UPDATE_INTERVAL * 2
+
+
+async def test_execution_registered_elsewhere_polls_faster(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """An execution started outside Home Assistant also needs the faster cadence.
+
+    Its states change just as fast as one we asked for, and the event is the
+    only notice we get of it.
+    """
+    entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+    coordinator = entry.runtime_data.coordinator
+
+    assert coordinator.update_interval == UPDATE_INTERVAL
+
+    await async_deliver_events(
+        hass, freezer, mock_client, [execution_registered_event("exec-elsewhere")]
+    )
+
+    assert coordinator.update_interval == UPDATE_INTERVAL_EXECUTION
 
 
 async def test_stateless_recovery_restores_default_interval(

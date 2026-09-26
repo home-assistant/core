@@ -271,10 +271,6 @@ async def on_execution_registered(
     if event.exec_id not in coordinator.executions:
         coordinator.executions[event.exec_id] = []
 
-    # Second-by-second polling is what the back off exists to prevent.
-    if not coordinator.is_stateless and not coordinator.is_rate_limited:
-        coordinator.update_interval = UPDATE_INTERVAL_EXECUTION
-
 
 @EVENT_HANDLERS.register(EventName.EXECUTION_STATE_CHANGED)
 async def on_execution_state_changed(
