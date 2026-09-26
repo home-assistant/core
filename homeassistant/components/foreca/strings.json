@@ -1,0 +1,49 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your Foreca Weather API key from the My API page"
+        },
+        "description": "Create a free account at developer.foreca.com to get an API key."
+      }
+    }
+  },
+  "config_subentries": {
+    "location": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+      },
+      "entry_type": "Location",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "initiate_flow": {
+        "user": "Add location"
+      },
+      "step": {
+        "location": {
+          "data": {
+            "location": "[%key:common::config_flow::data::location%]"
+          },
+          "data_description": {
+            "location": "The location to get the weather forecast for"
+          }
+        }
+      }
+    }
+  }
+}
