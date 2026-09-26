@@ -125,7 +125,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> bool:
-    """Set up Sofar Inverter Modbus from a config entry."""
+    """Set up Sofar from a config entry."""
     serial = entry.unique_id
     assert serial is not None
     _async_remove_stale_waiting_time(hass, serial)
