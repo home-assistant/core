@@ -335,6 +335,9 @@ aiokem==1.0.1
 # homeassistant.components.librenms
 aiolibrenms==0.0.4
 
+# homeassistant.components.libresync
+aiolibresync==0.5.1
+
 # homeassistant.components.lichess
 aiolichess==1.3.0
 
