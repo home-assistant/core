@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
+from itertools import pairwise
 from typing import override
 
 from weatherflow4py.models.rest.observation import Observation
@@ -24,6 +25,7 @@ from homeassistant.const import (
     PERCENTAGE,
     UV_INDEX,
     EntityCategory,
+    UnitOfElectricPotential,
     UnitOfIrradiance,
     UnitOfLength,
     UnitOfMass,
@@ -54,6 +56,41 @@ PRECIPITATION_TYPE = {
     3: "sleet",
     4: "storm",
 }
+
+LTO_BATTERY_CURVE = (
+    (2.00, 0),
+    (2.10, 5),
+    (2.15, 10),
+    (2.16, 20),
+    (2.19, 30),
+    (2.20, 40),
+    (2.23, 50),
+    (2.28, 60),
+    (2.32, 70),
+    (2.40, 80),
+    (2.50, 90),
+    (2.52, 95),
+    (2.70, 100),
+)
+
+
+def _battery_percentage(voltage: float) -> float:
+    """Estimate the Tempest LTO battery charge percentage."""
+    if voltage <= LTO_BATTERY_CURVE[0][0]:
+        return LTO_BATTERY_CURVE[0][1]
+    if voltage >= LTO_BATTERY_CURVE[-1][0]:
+        return LTO_BATTERY_CURVE[-1][1]
+
+    for (left_voltage, left_percentage), (
+        right_voltage,
+        right_percentage,
+    ) in pairwise(LTO_BATTERY_CURVE):
+        if voltage <= right_voltage:
+            return left_percentage + (right_percentage - left_percentage) * (
+                voltage - left_voltage
+            ) / (right_voltage - left_voltage)
+
+    raise RuntimeError("Failed to determine battery percentage")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -107,6 +144,23 @@ WEBSOCKET_WIND_SENSORS: tuple[
 WEBSOCKET_OBSERVATION_SENSORS: tuple[
     WeatherFlowCloudSensorEntityDescriptionWebsocketObservation, ...
 ] = (
+    WeatherFlowCloudSensorEntityDescriptionWebsocketObservation(
+        key="battery",
+        translation_key="battery_voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.battery,
+    ),
+    WeatherFlowCloudSensorEntityDescriptionWebsocketObservation(
+        key="battery_percent",
+        device_class=SensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: _battery_percentage(data.battery),
+    ),
     WeatherFlowCloudSensorEntityDescriptionWebsocketObservation(
         key="wind_lull",
         translation_key="wind_lull",
@@ -415,7 +469,6 @@ async def async_setup_entry(
         for station_id in rest_coordinator.data
         for sensor_description in WF_SENSORS
     ]
-
     entities.extend(
         WeatherFlowWebsocketSensorWind(
             coordinator=wind_coordinator,
