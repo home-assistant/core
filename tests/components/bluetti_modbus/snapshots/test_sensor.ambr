@@ -173,56 +173,6 @@
     'state': '242.0',
   })
 # ---
-# name: test_sensors[sensor.balco260_ac_pv_input_count-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.balco260_ac_pv_input_count',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'AC PV input count',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'AC PV input count',
-    'platform': 'bluetti_modbus',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'pv_ac_count',
-    'unique_id': '1234_pv_ac_count',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.balco260_ac_pv_input_count-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 AC PV input count',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.balco260_ac_pv_input_count',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
 # name: test_sensors[sensor.balco260_battery_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

@@ -67,6 +67,8 @@ EXCLUDED_FIELDS: Final = frozenset(
         "d_inverter_3_p",
         "d_inverter_3_v",
         "d_inverter_3_c",
+        # Always 0 on the Balco 260 tested, whose four PV inputs are all DC.
+        "pv_ac_count",
         # Equal to a total already exposed on a single-phase, single-inverter unit.
         "pv_i_p_local",
         "g_1_i_p",

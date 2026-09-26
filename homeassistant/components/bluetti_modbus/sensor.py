@@ -222,11 +222,6 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BluettiModbusSensorEntityDescription(
-        key="pv_ac_count",
-        translation_key="pv_ac_count",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    BluettiModbusSensorEntityDescription(
         key="pv_1_i_type",
         translation_key="pv_1_i_type",
         device_class=SensorDeviceClass.ENUM,
