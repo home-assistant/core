@@ -211,6 +211,37 @@ async def test_unknown_state_sensors(hass: HomeAssistant) -> None:
         assert state2.state == "OQ"
 
 
+async def test_battery_charger_status_charged(hass: HomeAssistant) -> None:
+    """Test the battery charger status sensor accepts a 'charged' state.
+
+    Some UPS drivers (e.g. Tripp Lite units) report "charged" for
+    battery.charger.status, which isn't one of the four values documented in
+    the NUT variable list (charging/discharging/floating/resting) but is a
+    real value seen in the wild, same as the already-supported
+    disabled/off/unknown values.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "mock", CONF_PORT: "mock"},
+    )
+    entry.add_to_hass(hass)
+
+    mock_pynut = _get_mock_nutclient(
+        list_ups={"ups1": "UPS 1"},
+        list_vars={"battery.charger.status": "charged"},
+    )
+
+    with patch(
+        "homeassistant.components.nut.AIONUTClient",
+        return_value=mock_pynut,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.ups1_charging_status")
+        assert state.state == "charged"
+
+
 async def test_stale_options(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
