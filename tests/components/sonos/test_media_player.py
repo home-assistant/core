@@ -1,11 +1,13 @@
 """Tests for the Sonos Media Player platform."""
 
 from collections.abc import Generator
+import datetime
 import logging
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from soco.data_structures import (
     DidlAudioBroadcast,
@@ -13,7 +15,7 @@ from soco.data_structures import (
     DidlPlaylistContainer,
     SearchResult,
 )
-from soco.exceptions import SoCoUPnPException
+from soco.exceptions import SoCoException, SoCoUPnPException
 from sonos_websocket.exception import SonosWebsocketError
 from syrupy.assertion import SnapshotAssertion
 
@@ -92,6 +94,8 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory, SonosMockEvent
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)
@@ -1701,6 +1705,294 @@ async def test_position_updates(
         state = hass.states.get(entity_id)
         assert state.attributes[ATTR_MEDIA_POSITION] == 70
         assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == dt_util.utcnow()
+
+
+@pytest.mark.freeze_time("2024-01-01T12:00:00Z")
+async def test_position_updated_on_track_change_while_playing(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    media_event: SonosMockEvent,
+    current_track_info: dict[str, Any],
+) -> None:
+    """Test a track change without a transport state change refreshes position."""
+    entity_id = "media_player.zone_a"
+    sub_callback = soco.avTransport.subscribe.return_value.callback
+
+    soco.get_current_track_info.return_value = current_track_info
+    sub_callback(media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_MEDIA_POSITION] == 42
+    updated_at = state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
+
+    # Skip to the next track while PLAYING: same transport state, new track
+    # uri. The mid-transition poll reports the new track's metadata but a
+    # position snapshot matching the previous track's extrapolated clock,
+    # which the jump heuristic alone would discard as unchanged.
+    new_track_info = current_track_info.copy()
+    new_track_info["uri"] = (
+        "x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/04%20Oh%21%20Darling.mp3"
+    )
+    new_track_info["title"] = "Oh! Darling"
+    new_track_info["position"] = "00:00:43"
+    soco.get_current_track_info.return_value = new_track_info
+    new_media_event = SonosMockEvent(
+        soco, soco.avTransport, media_event.variables.copy()
+    )
+    new_media_event.variables["current_track_uri"] = new_track_info["uri"]
+    with freeze_time("2024-01-01T12:00:01Z"):
+        sub_callback(new_media_event)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        state = hass.states.get(entity_id)
+        assert state.attributes[ATTR_MEDIA_TITLE] == "Oh! Darling"
+        # The reported clock matches the old track's extrapolation, but the
+        # track changed, so the position must be written and re-stamped fresh.
+        assert state.attributes[ATTR_MEDIA_POSITION] == 43
+        assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == dt_util.utcnow()
+        assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] > updated_at
+
+    # A settle poll corrects any snapshot that raced the transition once the
+    # track change has settled.
+    settled_track_info = new_track_info.copy()
+    settled_track_info["position"] = "00:00:02"
+    soco.get_current_track_info.return_value = settled_track_info
+    with freeze_time("2024-01-01T12:00:03Z"):
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done(wait_background_tasks=True)
+        state = hass.states.get(entity_id)
+        assert state.attributes[ATTR_MEDIA_POSITION] == 2
+        assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == dt_util.utcnow()
+
+
+async def test_position_stamped_with_poll_request_time(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    media_event: SonosMockEvent,
+    current_track_info: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a delayed poll response is stamped with the poll request time."""
+    entity_id = "media_player.zone_a"
+    request_time = dt_util.utcnow()
+
+    def delayed_track_info():
+        # The speaker takes 5 seconds to answer the poll.
+        freezer.tick(datetime.timedelta(seconds=5))
+        return current_track_info
+
+    soco.get_current_track_info.side_effect = delayed_track_info
+    soco.avTransport.subscribe.return_value.callback(media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_MEDIA_POSITION] == 42
+    # The position was true when the poll was requested, not when the delayed
+    # response was written.
+    assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == request_time
+
+    # Let the scheduled settle poll fire so no timer lingers.
+    freezer.tick(datetime.timedelta(seconds=5))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
+@pytest.mark.freeze_time("2024-01-01T12:00:00Z")
+async def test_settle_poll_failure_keeps_last_position(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    media_event: SonosMockEvent,
+    current_track_info: dict[str, Any],
+) -> None:
+    """Test a failing settle poll leaves the last written position in place."""
+    entity_id = "media_player.zone_a"
+    soco.get_current_track_info.return_value = current_track_info
+    soco.avTransport.subscribe.return_value.callback(media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_MEDIA_POSITION] == 42
+    updated_at = state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
+
+    # The speaker becomes unreachable before the settle poll fires.
+    soco.get_current_track_info.side_effect = SoCoException("connection lost")
+    with freeze_time("2024-01-01T12:00:02Z"):
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_MEDIA_POSITION] == 42
+    assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == updated_at
+
+
+@pytest.mark.freeze_time("2024-01-01T12:00:00Z")
+async def test_position_settles_after_resume(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    media_event: SonosMockEvent,
+    current_track_info: dict[str, Any],
+) -> None:
+    """Test a transient 0:00 reported during a resume is settled to the truth."""
+    entity_id = "media_player.zone_a"
+    soco.get_current_track_info.return_value = current_track_info
+    soco.avTransport.subscribe.return_value.callback(media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    # Consume the initial settle poll.
+    with freeze_time("2024-01-01T12:00:02Z"):
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Resume: while the stream rebuffers the speaker briefly reports 0:00,
+    # which the forced state-change poll captures.
+    resuming_track_info = current_track_info.copy()
+    resuming_track_info["position"] = "00:00:00"
+    soco.get_current_track_info.return_value = resuming_track_info
+    paused_event = SonosMockEvent(soco, soco.avTransport, media_event.variables.copy())
+    paused_event.variables["transport_state"] = "PAUSED_PLAYBACK"
+    with freeze_time("2024-01-01T12:00:10Z"):
+        soco.avTransport.subscribe.return_value.callback(paused_event)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    playing_event = SonosMockEvent(soco, soco.avTransport, media_event.variables.copy())
+    with freeze_time("2024-01-01T12:00:12Z"):
+        soco.avTransport.subscribe.return_value.callback(playing_event)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        state = hass.states.get(entity_id)
+        assert state.attributes[ATTR_MEDIA_POSITION] == 0
+
+    # Once the transition settles, the speaker reports the real clock again
+    # and the settle poll repairs the entity.
+    settled_track_info = current_track_info.copy()
+    settled_track_info["position"] = "00:00:44"
+    soco.get_current_track_info.return_value = settled_track_info
+    with freeze_time("2024-01-01T12:00:14Z"):
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done(wait_background_tasks=True)
+        state = hass.states.get(entity_id)
+        assert state.attributes[ATTR_MEDIA_POSITION] == 44
+        assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == dt_util.utcnow()
+
+
+@pytest.mark.freeze_time("2024-01-01T12:00:00Z")
+async def test_out_of_order_poll_does_not_restore_metadata(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    media_event: SonosMockEvent,
+    current_track_info: dict[str, Any],
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test a stale poll is discarded whole, metadata included."""
+    entity_id = "media_player.zone_a"
+    soco.get_current_track_info.return_value = current_track_info
+    soco.avTransport.subscribe.return_value.callback(media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    with freeze_time("2024-01-01T12:00:02Z"):
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_MEDIA_TITLE] == "Something"
+
+    media = list(config_entry.runtime_data.discovered.values())[0].media
+    # A newer poll has been applied while a slower one was still in flight.
+    media._newest_poll_at = dt_util.utcnow() + datetime.timedelta(seconds=5)
+    stale_info = dict(current_track_info)
+    stale_info["title"] = "Stale Old Title"
+    stale_info["position"] = "00:00:03"
+    soco.get_current_track_info.return_value = stale_info
+    media.set_basic_track_info(update_position=True)
+    # The stale result must not restore old metadata nor touch the position.
+    assert media.title == "Something"
+    assert media.position == 42
+
+
+async def test_event_with_stale_generation_does_not_arm_settle(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    media_event: SonosMockEvent,
+    current_track_info: dict[str, Any],
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test an event job submitted before cancellation cannot arm the timer."""
+    media = list(config_entry.runtime_data.discovered.values())[0].media
+    soco.get_current_track_info.return_value = current_track_info
+    # The generation is captured at submission; cancellation runs while the
+    # job's blocking poll is still in flight.
+    stale_generation = media.settle_generation
+    media.async_cancel_settle_poll()
+    await hass.async_add_executor_job(
+        media.update_media_from_event, media_event.variables, stale_generation
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert media._position_settle_unsub is None
+
+
+async def test_settle_poll_not_rearmed_after_cancellation(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test a schedule queued before cancellation cannot re-arm the timer."""
+    media = list(config_entry.runtime_data.discovered.values())[0].media
+    # An executor job captures the generation, then teardown cancels before
+    # the queued schedule reaches the event loop.
+    stale_generation = media._settle_generation
+    media.async_cancel_settle_poll()
+    media._async_schedule_settle_poll(stale_generation)
+    assert media._position_settle_unsub is None
+    # A schedule queued after the cancellation is honored again.
+    media._async_schedule_settle_poll(media._settle_generation)
+    assert media._position_settle_unsub is not None
+    media.async_cancel_settle_poll()
+
+
+@pytest.mark.freeze_time("2024-01-01T12:00:00Z")
+async def test_out_of_order_poll_result_discarded(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    media_event: SonosMockEvent,
+    current_track_info: dict[str, Any],
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test a poll result older than the newest processed one is discarded."""
+    entity_id = "media_player.zone_a"
+    soco.get_current_track_info.return_value = current_track_info
+    soco.avTransport.subscribe.return_value.callback(media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    # Consume the initial settle poll.
+    with freeze_time("2024-01-01T12:00:02Z"):
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_MEDIA_POSITION] == 42
+    updated_at = state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
+
+    media = list(config_entry.runtime_data.discovered.values())[0].media
+    # A newer poll whose position matches the extrapolation writes nothing
+    # but must still advance the ordering watermark.
+    newer = dict(current_track_info)
+    newer["duration_in_s"] = 156
+    newer["position_in_s"] = 44
+    media.update_media_position(
+        newer,
+        polled_at=dt_util.utcnow() + datetime.timedelta(seconds=2),
+    )
+    # A slower, older poll finishing afterwards must be discarded even though
+    # nothing was written since its request time.
+    stale = dict(current_track_info)
+    stale["duration_in_s"] = 156
+    stale["position_in_s"] = 3
+    media.update_media_position(
+        stale,
+        force_update=True,
+        polled_at=dt_util.utcnow() + datetime.timedelta(seconds=1),
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_MEDIA_POSITION] == 42
+    assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == updated_at
 
 
 @pytest.mark.parametrize(
