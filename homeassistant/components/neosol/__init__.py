@@ -26,8 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NeosolConfigEntry) -> bo
             translation_placeholders={"port": port, "error": str(err)},
         ) from err
 
-    # Runs on unload and on any setup failure from here on, so the exclusive port is
-    # never left open.
+    # Runs on unload and on any setup failure from here on, so the port never leaks.
     entry.async_on_unload(dongle.close)
 
     coordinator = NeosolCoordinator(hass, entry, dongle, info)
