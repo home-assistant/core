@@ -147,6 +147,11 @@
       "overheat_protection": {
         "name": "Overheat protection"
       }
+    },
+    "water_heater": {
+      "hot_water": {
+        "name": "Hot water"
+      }
     }
   },
   "exceptions": {
