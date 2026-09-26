@@ -78,7 +78,6 @@ async def test_migrate_entry_from_v1_1_to_v1_4(
     assert conversation_subentry.data[CONF_PROMPT] == "You are a helpful assistant."
     assert conversation_subentry.data[CONF_LLM_HASS_API] == ["assist"]
     assert conversation_subentry.data[CONF_WEB_SEARCH] == "off"
-    # Conversation subentries are not given output modalities
     assert CONF_OUTPUT_MODALITIES not in conversation_subentry.data
 
     ai_task_subentry = entry.subentries["ai_task_subentry"]

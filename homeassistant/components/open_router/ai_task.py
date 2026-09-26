@@ -3,6 +3,7 @@
 import base64
 from json import JSONDecodeError
 import logging
+import re
 from typing import override
 
 from python_open_router import Modality
@@ -19,6 +20,8 @@ from .const import CONF_OUTPUT_MODALITIES
 from .entity import OpenRouterEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+_DATA_URI_PATTERN = re.compile(r"^data:(image/[^;]+);base64,")
 
 
 async def async_setup_entry(
@@ -108,25 +111,29 @@ class OpenRouterAITaskEntity(
 
         # OpenRouter returns images as data URIs: `data:image/png;base64,<data>`
         try:
-            image_url: str = content.native[0]["image_url"]["url"]
+            image_url = content.native[0]["image_url"]["url"]
         except (LookupError, TypeError) as err:
             raise HomeAssistantError("Invalid image returned") from err
 
-        metadata, marker, encoded = image_url.partition(";base64,")
-        mime_type = metadata.removeprefix("data:")
-        is_base64_image_uri = marker == ";base64," and mime_type.startswith("image/")
+        # Discard the base64 payload so it isn't retained in the chat log cache.
+        content.native[0]["image_url"]["url"] = None
+
+        if not isinstance(image_url, str):
+            raise HomeAssistantError("Invalid image returned")
+
+        match = _DATA_URI_PATTERN.match(image_url)
+        if not match:
+            raise HomeAssistantError("Invalid image returned")
+
+        mime_type = match.group(1)
+        encoded = image_url[match.end() :]
 
         try:
-            image_data = (
-                base64.b64decode(encoded, validate=True) if is_base64_image_uri else b""
-            )
+            image_data = base64.b64decode(encoded, validate=True)
         except (TypeError, ValueError) as err:
             raise HomeAssistantError("Invalid image returned") from err
-        finally:
-            # Discard the base64 payload so it isn't retained in the chat log cache.
-            content.native[0]["image_url"]["url"] = None
 
-        if not is_base64_image_uri or not image_data:
+        if not image_data:
             raise HomeAssistantError("Invalid image returned")
 
         return ai_task.GenImageTaskResult(
