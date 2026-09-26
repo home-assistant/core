@@ -79,6 +79,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "manufacturer_id": 307,
     },
     {
+        "domain": "bluetti_bt",
+        "service_uuid": "0000ff00-0000-1000-8000-00805f9b34fb",
+    },
+    {
         "connectable": False,
         "domain": "bthome",
         "service_data_uuid": "0000181c-0000-1000-8000-00805f9b34fb",
