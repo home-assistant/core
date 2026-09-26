@@ -36,7 +36,7 @@ fnv-hash-fast==2.0.3
 gazetteer-matcher==1.1.0
 go2rtc-client==0.4.0
 ha-ffmpeg==3.2.2
-habluetooth==7.0.0
+habluetooth==7.1.2
 hass-nabucasa==2.7.0
 hassil==3.12.1
 home-assistant-bluetooth==2.0.0
@@ -66,13 +66,13 @@ PyYAML==6.0.3
 requests==2.34.2
 securetar==2026.4.1
 serialx==1.10.0
-SQLAlchemy==2.0.53
+SQLAlchemy==2.0.54
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
 typing-extensions>=4.16.0,<5.0
 ulid-transform==2.2.9
 urllib3>=2.0
-uv==0.12.14
+uv==0.12.17
 webrtc-models==0.3.0
 yarl==1.25.1
 zeroconf==0.151.3

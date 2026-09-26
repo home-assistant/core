@@ -63,7 +63,6 @@ from anthropic.types import (
     ToolParam,
     ToolSearchToolBm25_20251119Param,
     ToolSearchToolResultBlock,
-    ToolUnionParam,
     ToolUseBlock,
     ToolUseBlockParam,
     Usage,
@@ -1010,7 +1009,15 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                     effort=options[CONF_THINKING_EFFORT]
                 )
 
-        tools: list[ToolUnionParam] = []
+        tools: list[
+            ToolParam
+            | CodeExecutionTool20250825Param
+            | WebSearchTool20250305Param
+            | WebSearchTool20260209Param
+            | WebFetchTool20250910Param
+            | WebFetchTool20260209Param
+            | ToolSearchToolBm25_20251119Param
+        ] = []
         if chat_log.llm_api:
             tools = [
                 _format_tool(tool, chat_log.llm_api.custom_serializer)

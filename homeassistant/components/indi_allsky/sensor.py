@@ -75,7 +75,8 @@ SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = (
         value_fn=lambda data: data.exposure.stars if data.exposure else None,
     ),
     IndiAllSkySensorEntityDescription(
-        key="temperature",
+        key="camera_sensor_temp",
+        translation_key="camera_sensor_temp",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,

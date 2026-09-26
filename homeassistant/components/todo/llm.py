@@ -14,6 +14,7 @@ from homeassistant.helpers.llm import (
     IntentTool,
     LLMContext,
     Tool,
+    ToolAnnotations,
     ToolInput,
     ToolResult,
 )
@@ -26,13 +27,27 @@ from .intent import (
 )
 
 # Intents owned by this integration that are exposed as LLM tools.
-LLM_INTENTS = (INTENT_LIST_ADD_ITEM, INTENT_LIST_COMPLETE_ITEM, INTENT_LIST_REMOVE_ITEM)
+LLM_INTENTS = {
+    INTENT_LIST_ADD_ITEM: "Add to-do list item",
+    INTENT_LIST_COMPLETE_ITEM: "Complete to-do list item",
+    INTENT_LIST_REMOVE_ITEM: "Remove to-do list item",
+}
+
+# Adding an item appends to the list and takes nothing away. Completing and
+# removing both look for an item that is still there, so a repeated call
+# raises instead of having no further effect.
+INTENT_ANNOTATIONS = {
+    INTENT_LIST_ADD_ITEM: ToolAnnotations(destructive=False, open_world=False),
+    INTENT_LIST_COMPLETE_ITEM: ToolAnnotations(open_world=False),
+    INTENT_LIST_REMOVE_ITEM: ToolAnnotations(open_world=False),
+}
 
 
 class TodoGetItemsTool(Tool):
     """LLM Tool allowing querying a to-do list."""
 
     name = "todo__get_items"
+    title = "Get to-do list items"
     description = (
         "Query a to-do list to find out what items are on it. "
         "Use this to answer questions like "
@@ -40,6 +55,10 @@ class TodoGetItemsTool(Tool):
         "'Read my grocery list'. "
         "Filters items by status (needs_action, completed, all)."
     )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
 
     def __init__(self, todo_lists: list[str]) -> None:
         """Init the get items tool."""
@@ -115,7 +134,13 @@ def async_get_tools(
 
     tools: list[Tool] = [TodoGetItemsTool(names)]
     tools.extend(
-        IntentTool(f"{DOMAIN}__{handler.intent_type}", handler)
+        IntentTool(
+            f"{DOMAIN}__{handler.intent_type}",
+            handler,
+            title=LLM_INTENTS[handler.intent_type],
+            integration=DOMAIN,
+            annotations=INTENT_ANNOTATIONS[handler.intent_type],
+        )
         for handler in intent.async_get(hass)
         if handler.intent_type in LLM_INTENTS
     )

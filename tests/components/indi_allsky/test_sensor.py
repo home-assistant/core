@@ -54,9 +54,9 @@ async def test_disabled_sensors(
 
     for entity_id in (
         "sensor.indi_allsky_exposure_time",
+        "sensor.indi_allsky_camera_sensor_temperature",
         "sensor.indi_allsky_sky_quality",
         "sensor.indi_allsky_stars",
-        "sensor.indi_allsky_temperature",
     ):
         entry = entity_registry.async_get(entity_id)
         assert entry is not None
@@ -105,7 +105,7 @@ async def test_sensor_updates(
     assert state is not None
     assert state.state == "0.185"
 
-    state = hass.states.get("sensor.indi_allsky_temperature")
+    state = hass.states.get("sensor.indi_allsky_camera_sensor_temperature")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -133,6 +133,6 @@ async def test_sensor_updates(
         callback(replace(mock_exposure_data, temp=12.5))
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.indi_allsky_temperature")
+    state = hass.states.get("sensor.indi_allsky_camera_sensor_temperature")
     assert state is not None
     assert state.state == "12.5"
