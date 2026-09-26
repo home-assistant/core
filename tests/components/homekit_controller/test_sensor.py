@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 
-from aiohomekit.model import Accessory
+from aiohomekit.model import Accessories, AccessoriesState, Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.characteristics.const import ThreadNodeCapabilities, ThreadStatus
 from aiohomekit.model.services import Service, ServicesTypes
@@ -10,12 +10,14 @@ from aiohomekit.protocol.statuscodes import HapStatusCode
 import pytest
 
 from homeassistant.components.homekit_controller.sensor import (
+    SimpleSensor,
     thread_node_capability_to_str,
     thread_status_to_str,
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import DATA_INSTANCES
 
 from .common import TEST_DEVICE_SERVICE_INFO, Helper, setup_test_component
 
@@ -81,6 +83,20 @@ def create_humidifier_with_water_level_sensor(accessory: Accessory) -> Service:
     service.add_char(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT).value = 30
 
     return service
+
+
+def create_accessory_without_humidifier(aid: int) -> Accessory:
+    """Create an accessory without the humidifier service."""
+    return Accessory.create_with_info(
+        aid, "TestDevice", "example.com", "Test", "0001", "0.1"
+    )
+
+
+def create_humidifier_without_water_level(aid: int) -> Accessory:
+    """Create a humidifier accessory without the water level characteristic."""
+    accessory = create_accessory_without_humidifier(aid)
+    accessory.add_service(ServicesTypes.HUMIDIFIER_DEHUMIDIFIER)
+    return accessory
 
 
 async def test_temperature_sensor_read_state(
@@ -326,6 +342,48 @@ async def test_water_level_sensor_read_state(
     assert state.state == "20"
 
     assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
+
+
+@pytest.mark.parametrize(
+    "replacement_accessory_factory",
+    [
+        pytest.param(
+            create_accessory_without_humidifier,
+            id="service-removed",
+        ),
+        pytest.param(
+            create_humidifier_without_water_level,
+            id="characteristic-removed",
+        ),
+    ],
+)
+async def test_characteristic_sensor_removed_after_config_change(
+    hass: HomeAssistant,
+    get_next_aid: Callable[[], int],
+    replacement_accessory_factory: Callable[[int], Accessory],
+) -> None:
+    """Test a characteristic sensor is removed when its source disappears."""
+    aid = get_next_aid()
+    helper = await setup_test_component(
+        hass, aid, create_humidifier_with_water_level_sensor
+    )
+
+    assert hass.states.get("sensor.testdevice_water_level") is not None
+    entity = hass.data[DATA_INSTANCES]["sensor"].get_entity(
+        "sensor.testdevice_water_level"
+    )
+    assert isinstance(entity, SimpleSensor)
+
+    accessory = replacement_accessory_factory(aid)
+    accessories = Accessories()
+    accessories.add_accessory(accessory)
+    helper.pairing._accessories_state = AccessoriesState(
+        accessories, helper.pairing.config_num + 1
+    )
+    entity._async_config_changed()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.testdevice_water_level") is None
 
 
 def create_switch_with_sensor(accessory: Accessory) -> Service:
