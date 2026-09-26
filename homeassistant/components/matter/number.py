@@ -30,6 +30,12 @@ from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
+# Thermostat ClusterRevision (Matter spec 7.13.1) at which the
+# LocalTemperatureCalibration range was extended from ±2.5°C to the full
+# int8 storage range of ±12.7°C (Matter 1.4, see connectedhomeip
+# data_model/1.4/clusters/Thermostat.xml vs. data_model/1.3/clusters/Thermostat.xml)
+THERMOSTAT_EXTENDED_CALIBRATION_REVISION = 7
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -308,8 +314,31 @@ DISCOVERY_SCHEMAS = [
         ),
         featuremap_contains=(clusters.Thermostat.Bitmaps.Feature.kSetback),
     ),
-    # Eve temperature offset; shares the bounds of the generic schema below
-    # and will be merged into it under that schema's unique ID (follow-up PR)
+    # Eve temperature offset; identical to the generic schema below (will be
+    # merged into it in a follow-up PR). See that schema for the range rationale.
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="EveTemperatureOffset",
+            device_class=NumberDeviceClass.TEMPERATURE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="temperature_offset",
+            native_max_value=2.5,
+            native_min_value=-2.5,
+            native_step=0.1,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_to_ha=lambda x: None if x is None else x / 10,
+            ha_to_device=lambda x: round(x * 10),
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(
+            clusters.Thermostat.Attributes.LocalTemperatureCalibration,
+        ),
+        vendor_id=(4874,),  # Eve Systems
+        cluster_revision_max=THERMOSTAT_EXTENDED_CALIBRATION_REVISION - 1,
+    ),
+    # Eve temperature offset, extended range (Matter 1.4+)
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
@@ -317,10 +346,6 @@ DISCOVERY_SCHEMAS = [
             device_class=NumberDeviceClass.TEMPERATURE_DELTA,
             entity_category=EntityCategory.CONFIG,
             translation_key="temperature_offset",
-            # Matter 1.4 raises this to the SignedTemperature type's usable
-            # range (±127 in 0.1°C units; -128 is reserved). Matter 1.3 is
-            # limited to ±2.5°C; that will be enforced via cluster_revision
-            # filtering in a follow-up PR.
             native_max_value=12.7,
             native_min_value=-12.7,
             native_step=0.1,
@@ -334,7 +359,33 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.LocalTemperatureCalibration,
         ),
         vendor_id=(4874,),  # Eve Systems
+        cluster_revision_min=THERMOSTAT_EXTENDED_CALIBRATION_REVISION,
     ),
+    # Matter 1.3 and earlier (ClusterRevision <= 6) limit LocalTemperatureCalibration
+    # to ±2.5°C; this schema also matches when ClusterRevision is unreadable.
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="TemperatureOffset",
+            device_class=NumberDeviceClass.TEMPERATURE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="temperature_offset",
+            native_max_value=2.5,
+            native_min_value=-2.5,
+            native_step=0.1,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_to_ha=lambda x: None if x is None else x / 10,
+            ha_to_device=lambda x: round(x * 10),
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(
+            clusters.Thermostat.Attributes.LocalTemperatureCalibration,
+        ),
+        cluster_revision_max=THERMOSTAT_EXTENDED_CALIBRATION_REVISION - 1,
+    ),
+    # Temperature offset, extended range (Matter 1.4+): SignedTemperature's
+    # usable range, ±127 in 0.1°C units (-128 is reserved).
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
@@ -342,10 +393,6 @@ DISCOVERY_SCHEMAS = [
             device_class=NumberDeviceClass.TEMPERATURE_DELTA,
             entity_category=EntityCategory.CONFIG,
             translation_key="temperature_offset",
-            # Matter 1.4 raises this to the SignedTemperature type's usable
-            # range (±127 in 0.1°C units; -128 is reserved). Matter 1.3 is
-            # limited to ±2.5°C; that will be enforced via cluster_revision
-            # filtering in a follow-up PR.
             native_max_value=12.7,
             native_min_value=-12.7,
             native_step=0.1,
@@ -358,6 +405,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.Thermostat.Attributes.LocalTemperatureCalibration,
         ),
+        cluster_revision_min=THERMOSTAT_EXTENDED_CALIBRATION_REVISION,
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
