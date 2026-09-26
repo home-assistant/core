@@ -84,6 +84,23 @@ async def test_measurement_expiry(
     await hass.config_entries.async_unload(config_entry.entry_id)
 
 
+async def test_expiry_between_availability_and_state(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_client: MagicMock
+) -> None:
+    """Evaluate freshness once so a deadline cannot produce an unknown state."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    entity = hass.data["entity_components"]["sensor"].get_entity(ENTITY)
+    mock_client.measurement_available.side_effect = [True, False]
+
+    entity.async_write_ha_state()
+    assert hass.states.get(ENTITY).state == "500"
+
+    entity.async_write_ha_state()
+    assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+
 async def test_failed_first_refresh_releases_lease(
     hass: HomeAssistant, config_entry: MockConfigEntry, mock_client: MagicMock
 ) -> None:

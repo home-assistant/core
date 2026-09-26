@@ -4,8 +4,8 @@ rules:
     comment: The initial sensor platform defines no custom actions.
   appropriate-polling: done
   brands:
-    status: done
-    comment: Artwork is prepared for a coordinated brands PR.
+    status: todo
+    comment: Awaiting acceptance of home-assistant/brands PR 11222.
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done

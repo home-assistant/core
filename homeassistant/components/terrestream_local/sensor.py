@@ -110,9 +110,5 @@ class Sensor(Entity, SensorEntity):
     @property
     @override
     def native_value(self) -> float | int | None:
-        """Return the fresh measurement, without substituting missing values."""
-        return (
-            self.coordinator.data["measurements"][self.key].get("value")
-            if self.available
-            else None
-        )
+        """Return the cached value; availability is evaluated by Home Assistant."""
+        return self.coordinator.data["measurements"][self.key].get("value")

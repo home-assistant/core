@@ -67,7 +67,7 @@
       "message": "The sensor is unavailable. Check its network connection and allow any maintenance to finish."
     },
     "pairing_revoked": {
-      "message": "Pairing is no longer valid. Disconnect Home Assistant on the sensor and pair again."
+      "message": "Pairing is no longer valid. In Home Assistant, remove this sensor's integration entry. On the sensor, open Setup → Home Assistant, disconnect the old pairing, then tap Pair. Add the integration again using the new code."
     }
   }
 }
