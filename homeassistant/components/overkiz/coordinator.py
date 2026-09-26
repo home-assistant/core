@@ -167,11 +167,6 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
         return areas
 
-    @property
-    def is_rate_limited(self) -> bool:
-        """Return True while the server is rate limiting us."""
-        return self._rate_limited_interval is not None
-
     def _on_successful_update(self) -> None:
         """Clear the rate limit back off and restore the polling cadence.
 

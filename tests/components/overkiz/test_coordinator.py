@@ -226,7 +226,6 @@ async def test_rate_limit_back_off_never_polls_faster_than_configured(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert coordinator.is_rate_limited
     assert coordinator.update_interval >= UPDATE_INTERVAL_ALL_ASSUMED_STATE
     assert coordinator.update_interval > UPDATE_INTERVAL_RATE_LIMITED_MAX
 
@@ -247,7 +246,7 @@ async def test_rate_limit_recovery_restores_execution_polling(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert coordinator.is_rate_limited
+    assert coordinator.update_interval > UPDATE_INTERVAL
 
     mock_client.fetch_events.side_effect = None
     mock_client.fetch_events.return_value = []
@@ -255,7 +254,6 @@ async def test_rate_limit_recovery_restores_execution_polling(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert not coordinator.is_rate_limited
     assert coordinator.update_interval == UPDATE_INTERVAL_EXECUTION
 
 
@@ -274,7 +272,7 @@ async def test_reconnect_clears_rate_limit_back_off(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert coordinator.is_rate_limited
+    assert coordinator.update_interval > UPDATE_INTERVAL
 
     # A reconnect returns devices without ever reaching the event loop below it.
     mock_client.fetch_events.side_effect = ServerDisconnectedError
@@ -283,7 +281,6 @@ async def test_reconnect_clears_rate_limit_back_off(
     await hass.async_block_till_done()
 
     assert coordinator.last_update_success
-    assert not coordinator.is_rate_limited
     assert coordinator.update_interval == UPDATE_INTERVAL
 
 
@@ -307,7 +304,6 @@ async def test_rate_limit_during_a_reconnect_backs_off(
     await hass.async_block_till_done()
 
     assert not coordinator.last_update_success
-    assert coordinator.is_rate_limited
     assert coordinator.update_interval == UPDATE_INTERVAL * 2
 
 
@@ -359,7 +355,6 @@ async def test_stateless_recovery_restores_default_interval(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert not coordinator.is_rate_limited
     assert coordinator.update_interval == UPDATE_INTERVAL
 
 
