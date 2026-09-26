@@ -48,11 +48,11 @@ async def async_setup_entry(
 
     # Firmware versions come from the first refresh's own values - device
     # identity, so they go on DeviceInfo rather than becoming sensors.
-    arm_version = device.values.get("d_ver_arm")
-    dsp_version = device.values.get("d_ver_dsp")
-    sw_version = None
-    if arm_version is not None or dsp_version is not None:
-        sw_version = f"ARM {arm_version}, DSP {dsp_version}"
+    values = device.values
+    sw_version = (
+        f"ARM {values['d_ver_arm']}, DSP {values['d_ver_dsp']}, "
+        f"IoT {values['d_iot_ver']}"
+    )
 
     assert (
         entry.unique_id is not None

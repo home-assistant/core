@@ -82,6 +82,5 @@ EXCLUDED_FIELDS: Final = frozenset(
         "b_ver_4",
         "d_iot_model",
         "d_iot_serial",
-        "d_iot_ver",
     }
 )

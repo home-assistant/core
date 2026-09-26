@@ -23,7 +23,7 @@ INVERTER_POWER_ENTITY = "sensor.balco260_total_inverter_power"
 PV_1_TYPE_ENTITY = "sensor.balco260_pv_1_input_type"
 
 # Shown as DeviceInfo (serial number, firmware) rather than as sensors.
-DEVICE_INFO_FIELDS = {"d_serial", "d_ver_arm", "d_ver_dsp"}
+DEVICE_INFO_FIELDS = {"d_serial", "d_ver_arm", "d_ver_dsp", "d_iot_ver"}
 
 
 async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
