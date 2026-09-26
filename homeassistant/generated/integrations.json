@@ -7409,6 +7409,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "terrestream_local": {
+      "name": "Terrestream",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "tesla": {
       "name": "Tesla",
       "integrations": {
