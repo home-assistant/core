@@ -6,13 +6,15 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from teslemetry_stream.const import EnergyTotalsEvent
 from teslemetry_stream.stream import recursive_match
 
 from homeassistant.components.teslemetry.const import TOKEN_URL
 
 from .const import (
     COMMAND_OK,
-    ENERGY_HISTORY,
+    ENERGY_TOTALS,
+    ENERGY_TOTALS_DATE,
     LIVE_STATUS,
     METADATA,
     METADATA_ENERGY,
@@ -154,16 +156,6 @@ def mock_site_info():
 
 
 @pytest.fixture(autouse=True)
-def mock_energy_history():
-    """Mock Teslemetry Energy Specific site_info method."""
-    with patch(
-        "tesla_fleet_api.tesla.energysite.EnergySite.energy_history",
-        return_value=ENERGY_HISTORY,
-    ) as mock_live_status:
-        yield mock_live_status
-
-
-@pytest.fixture(autouse=True)
 def mock_stream_listen():
     """Mock Teslemetry Stream listen method."""
     with patch(
@@ -264,6 +256,43 @@ def mock_energy_info_stream() -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def mock_energy_totals_stream() -> Generator[MagicMock]:
+    """Capture the callback the integration registers for energy_totals events."""
+    with patch(
+        "teslemetry_stream.TeslemetryStreamEnergySite.listen_EnergyTotals",
+    ) as mock_listen:
+        callbacks: list = []
+
+        def side_effect(callback):
+            callbacks.append(callback)
+            return MagicMock()
+
+        def send(
+            totals: dict[str, float | None] | None = None,
+            *,
+            date: str = ENERGY_TOTALS_DATE,
+            created_at: str = "2024-09-18T08:50:00.000Z",
+            is_cache: bool = False,
+        ) -> None:
+            """Deliver a wire event through the library's own parsing."""
+            event = EnergyTotalsEvent.from_dict(
+                {
+                    "id": 123456,
+                    "date": date,
+                    "createdAt": created_at,
+                    "isCache": is_cache,
+                    "totals": ENERGY_TOTALS if totals is None else totals,
+                }
+            )
+            for callback in callbacks:
+                callback(event)
+
+        mock_listen.side_effect = side_effect
+        mock_listen.send = send
+        yield mock_listen
+
+
+@pytest.fixture
 def mock_energy_tariff_stream() -> Generator[MagicMock]:
     """Capture the callback the integration registers for tariff events."""
     with patch(
@@ -317,3 +346,12 @@ def mock_stream_connected():
         return_value=True,
     ) as mock_stream_connected:
         yield mock_stream_connected
+
+
+@pytest.fixture(autouse=True)
+def mock_powerwall_connect() -> Generator[AsyncMock]:
+    """Mock the local Powerwall gateway connection."""
+    with patch(
+        "aiopowerwall.PowerwallClient.connect", return_value="GATEWAY-DIN"
+    ) as mock_connect:
+        yield mock_connect

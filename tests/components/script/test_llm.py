@@ -54,6 +54,14 @@ def _llm_context() -> llm.LLMContext:
     )
 
 
+async def test_script_tool_title(hass: HomeAssistant) -> None:
+    """Test the script tool is titled with the name the user gave the script."""
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
+    tool = next(tool for tool in result.tools if tool.name == "script__test_script")
+    assert tool.title == "test script"
+    assert tool.integration == "script"
+
+
 async def test_script_tool_only_exposed(hass: HomeAssistant) -> None:
     """Test only exposed scripts get a tool."""
     result = await llm_component.async_get_tools(hass, _llm_context(), "assist")

@@ -118,11 +118,31 @@ async def test_store_telegram_history(
     assert result.telegrams[1].destination == "2/2/2"
 
 
+@pytest.mark.parametrize(
+    ("time_zone", "timestamp"),
+    [
+        pytest.param("UTC", "2024-07-01T12:00:00.123456+00:00", id="utc"),
+        pytest.param(
+            "Europe/Berlin", "2024-07-01T14:00:00.123456+02:00", id="berlin-summer"
+        ),
+        pytest.param(
+            "Europe/Berlin", "2024-01-01T13:00:00.123456+01:00", id="berlin-winter"
+        ),
+        pytest.param(
+            "America/New_York", "2024-07-01T08:00:00.123456-04:00", id="new-york"
+        ),
+    ],
+)
 async def test_store_telegram_history_sqlite(
     hass: HomeAssistant,
     knx: KNXTestKit,
+    freezer: FrozenDateTimeFactory,
+    time_zone: str,
+    timestamp: str,
 ) -> None:
-    """Test storing telegram history in SQLite."""
+    """Test SQLite history preserves the live timestamp, including its time zone."""
+    await hass.config.async_set_time_zone(time_zone)
+    freezer.move_to(timestamp)
     await knx.setup_integration(real_telegram_store=True)
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
 
@@ -137,6 +157,8 @@ async def test_store_telegram_history_sqlite(
     )
     assert len(result.telegrams) == 1
     assert result.telegrams[0].destination == "1/3/4"
+    assert telegrams_module.last_ga_telegrams["1/3/4"]["timestamp"] == timestamp
+    assert telegrams_module.model_to_dict(result.telegrams[0])["timestamp"] == timestamp
 
 
 @pytest.mark.parametrize(

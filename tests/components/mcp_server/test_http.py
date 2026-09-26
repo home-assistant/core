@@ -86,6 +86,7 @@ class _StubTool(llm.Tool):
     """Minimal tool with a configurable parameter schema."""
 
     name = "test_tool"
+    integration = "test"
 
     def __init__(self, parameters: probatio.Schema) -> None:
         """Initialize the stub tool."""
@@ -631,12 +632,11 @@ async def test_mcp_tools_list(
     assert tool.inputSchema.get("type") == "object"
     properties = tool.inputSchema.get("properties")
     assert properties.get("name") == {"type": "string"}
-    # A tool that declares no annotations is advertised as unsafe.
     assert tool.annotations == mcp.types.ToolAnnotations(
         readOnlyHint=False,
         destructiveHint=True,
         idempotentHint=False,
-        openWorldHint=True,
+        openWorldHint=False,
     )
 
 
