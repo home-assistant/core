@@ -493,7 +493,7 @@
     'object_id_base': 'PM4',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PM4: 'pm4'>,
     'original_icon': None,
     'original_name': 'PM4',
     'platform': 'terrestream_local',
@@ -508,6 +508,7 @@
 # name: test_sensors_and_unload[sensor.terrestream_indoor_air_quality_sensor_pm4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm4',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terrestream Indoor Air Quality sensor PM4',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,

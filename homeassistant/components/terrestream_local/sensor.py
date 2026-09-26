@@ -22,7 +22,7 @@ SENSORS: dict[str, tuple[SensorDeviceClass | None, str | None]] = {
     "co2": (SensorDeviceClass.CO2, "ppm"),
     "pm1": (SensorDeviceClass.PM1, "µg/m³"),
     "pm25": (SensorDeviceClass.PM25, "µg/m³"),
-    "pm4": (None, "µg/m³"),
+    "pm4": (SensorDeviceClass.PM4, "µg/m³"),
     "pm10": (SensorDeviceClass.PM10, "µg/m³"),
     "temperature": (SensorDeviceClass.TEMPERATURE, "°C"),
     "humidity": (SensorDeviceClass.HUMIDITY, "%"),
