@@ -9,7 +9,7 @@ from volkszaehler.exceptions import (
 )
 
 from homeassistant.components.volkszaehler.const import DOMAIN, SUBENTRY_TYPE_CHANNEL
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 async def test_create_entry(
@@ -296,6 +296,99 @@ async def test_import_same_host_different_port_creates_new_entry(
     )
 
     assert mock_api.get_data.call_count == 3
+
+
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test reconfiguring the host and port."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_RECONFIGURE,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "new-host", CONF_PORT: 9080},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {CONF_HOST: "new-host", CONF_PORT: 9080}
+    assert mock_api.get_data.call_count == 1
+    await hass.async_block_till_done()
+    assert mock_setup_entry.await_count == 1
+
+
+async def test_reconfigure_validation_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: AsyncMock,
+) -> None:
+    """Test reconfigure validation errors are shown in the form."""
+    mock_config_entry.add_to_hass(hass)
+    mock_api.get_data.side_effect = VolkszaehlerApiConnectionError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_RECONFIGURE,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "new-host", CONF_PORT: 8080},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_HOST)
+        == "new-host"
+    )
+    assert get_schema_suggested_value(result["data_schema"].schema, CONF_PORT) == 8080
+
+
+async def test_reconfigure_duplicate_host_port(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: AsyncMock,
+) -> None:
+    """Test reconfigure rejects a host and port used by another entry."""
+    mock_config_entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="new-host",
+        data={CONF_HOST: "new-host", CONF_PORT: 8080},
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_RECONFIGURE,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "new-host", CONF_PORT: 8080},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_api.get_data.call_count == 0
 
 
 async def test_subentry_duplicate_uuid(
