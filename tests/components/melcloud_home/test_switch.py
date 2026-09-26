@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from aiomelcloudhome import UserContext
 from aiomelcloudhome.exceptions import (
     MelCloudHomeAuthenticationError,
     MelCloudHomeConnectionError,
@@ -10,19 +11,24 @@ from aiomelcloudhome.exceptions import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.melcloud_home.const import DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -153,6 +159,95 @@ async def test_turn_on_off_exceptions(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             service_call,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+
+async def test_no_standby_switch_without_support(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test units without standby support get no standby switch."""
+    context = await async_load_json_object_fixture(hass, "context.json", DOMAIN)
+    building = context["buildings"][0]
+    building["airToAirUnits"][0]["capabilities"]["hasStandbyMode"] = False
+    building["airToWaterUnits"][0]["capabilities"]["hasStandbyMode"] = False
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(context)
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.living_room_ac_standby") is None
+    assert hass.states.get("switch.heat_pump_standby") is None
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "method", "unit_id"),
+    [
+        ("switch.living_room_ac_standby", "control_ata_unit", "ata-unit-uuid-1"),
+        ("switch.heat_pump_standby", "control_atw_unit", "atw-unit-uuid-1"),
+    ],
+)
+@pytest.mark.parametrize("service_call", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
+async def test_standby_turn_on_off(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    method: str,
+    unit_id: str,
+    service_call: str,
+) -> None:
+    """Test the standby switch puts the unit in or out of standby."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service_call,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    getattr(mock_melcloud_client, method).assert_called_once_with(
+        unit_id, in_standby_mode=service_call == SERVICE_TURN_ON
+    )
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "method"),
+    [
+        ("switch.living_room_ac_standby", "control_ata_unit"),
+        ("switch.heat_pump_standby", "control_atw_unit"),
+    ],
+)
+@pytest.mark.parametrize(
+    "exception",
+    [
+        MelCloudHomeAuthenticationError,
+        MelCloudHomeConnectionError,
+        MelCloudHomeTimeoutError,
+    ],
+)
+async def test_standby_exceptions(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    method: str,
+    exception: type[Exception],
+) -> None:
+    """Test the standby switch raises HomeAssistantError on client errors."""
+    await setup_integration(hass, mock_config_entry)
+    getattr(mock_melcloud_client, method).side_effect = exception
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )

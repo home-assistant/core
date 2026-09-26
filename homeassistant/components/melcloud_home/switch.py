@@ -30,6 +30,7 @@ class MelCloudHomeSwitchEntityDescription[_UnitT: ATAUnit | ATWUnit](
 
     available_fn: Callable[[_UnitT], bool]
     is_on_fn: Callable[[_UnitT], bool | None]
+    supported_fn: Callable[[_UnitT], bool] = lambda _: True
     turn_on_fn: Callable[[MELCloudHome, _UnitT], Coroutine[Any, Any, None]]
     turn_off_fn: Callable[[MELCloudHome, _UnitT], Coroutine[Any, Any, None]]
 
@@ -91,6 +92,26 @@ def _switch_descriptions[_UnitT: ATAUnit | ATWUnit](
                 **unit_ids(unit),
             ),
         ),
+        MelCloudHomeSwitchEntityDescription(
+            key="standby",
+            translation_key="standby",
+            device_class=SwitchDeviceClass.SWITCH,
+            supported_fn=lambda unit: bool(
+                unit.capabilities and unit.capabilities.has_standby_mode
+            ),
+            available_fn=lambda _: True,
+            is_on_fn=lambda unit: unit.in_standby_mode,
+            turn_on_fn=lambda client, unit: (
+                client.control_ata_unit(unit.id, in_standby_mode=True)
+                if isinstance(unit, ATAUnit)
+                else client.control_atw_unit(unit.id, in_standby_mode=True)
+            ),
+            turn_off_fn=lambda client, unit: (
+                client.control_ata_unit(unit.id, in_standby_mode=False)
+                if isinstance(unit, ATAUnit)
+                else client.control_atw_unit(unit.id, in_standby_mode=False)
+            ),
+        ),
     )
 
 
@@ -117,11 +138,13 @@ async def async_setup_entry(
             ATASwitch(coordinator, entity_description, unit)
             for entity_description in ATA_SWITCHES
             for unit in units
+            if entity_description.supported_fn(unit)
         ),
         lambda units: (
             ATWSwitch(coordinator, entity_description, unit)
             for entity_description in ATW_SWITCHES
             for unit in units
+            if entity_description.supported_fn(unit)
         ),
     )
 
@@ -156,7 +179,7 @@ class ATASwitch(MelCloudHomeATAUnitEntity, SwitchEntity):
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Enable the protection."""
+        """Turn the switch on."""
         await perform_action(
             self.coordinator,
             self.entity_description.turn_on_fn(self.coordinator.client, self.unit),
@@ -164,7 +187,7 @@ class ATASwitch(MelCloudHomeATAUnitEntity, SwitchEntity):
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Disable the protection."""
+        """Turn the switch off."""
         await perform_action(
             self.coordinator,
             self.entity_description.turn_off_fn(self.coordinator.client, self.unit),
@@ -201,7 +224,7 @@ class ATWSwitch(MelCloudHomeATWUnitEntity, SwitchEntity):
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Enable the protection."""
+        """Turn the switch on."""
         await perform_action(
             self.coordinator,
             self.entity_description.turn_on_fn(self.coordinator.client, self.unit),
@@ -209,7 +232,7 @@ class ATWSwitch(MelCloudHomeATWUnitEntity, SwitchEntity):
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Disable the protection."""
+        """Turn the switch off."""
         await perform_action(
             self.coordinator,
             self.entity_description.turn_off_fn(self.coordinator.client, self.unit),
