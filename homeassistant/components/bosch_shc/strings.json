@@ -107,6 +107,9 @@
       "humidity_warning_enabled": {
         "name": "Humidity warning"
       },
+      "intrusion_alarm": {
+        "name": "Intrusion alarm"
+      },
       "nightly_promise_enabled": {
         "name": "Heartbeat"
       },
@@ -115,6 +118,18 @@
       },
       "routing": {
         "name": "Range extension"
+      },
+      "silent_mode": {
+        "name": "Whisper mode"
+      },
+      "smart_sensitivity_enabled": {
+        "name": "Automatic sensitivity"
+      },
+      "tamper_protection_enabled": {
+        "name": "Sabotage detection"
+      },
+      "vibration_enabled": {
+        "name": "Vibration detection"
       }
     },
     "valve": {

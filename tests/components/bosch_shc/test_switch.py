@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
-from boschshcpy import BypassService, ThermostatService
+from boschshcpy import BypassService, SilentModeService, ThermostatService
 import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -23,8 +23,10 @@ from .conftest import (
     presence_simulation_system_device,
     setup_integration,
     shutter_contact2_device,
+    shutter_contact2_plus_device,
     smart_plug_compact_device,
     smart_plug_device,
+    smoke_detector_device,
     thermostat_device,
     thermostat_gen2_device,
     twinguard_device,
@@ -74,6 +76,67 @@ async def test_thermostat_child_lock(
         blocking=True,
     )
     assert device.child_lock is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "thermostats": [
+                thermostat_device(
+                    supports_silentmode=True,
+                    silentmode=SilentModeService.State.MODE_NORMAL,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_silent_mode(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A thermostat's silent mode is exposed and controllable as a switch."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.thermostats[0]
+
+    state = hass.states.get("switch.thermostat_whisper_mode")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.thermostat_whisper_mode"},
+        blocking=True,
+    )
+    assert device.silentmode is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.thermostat_whisper_mode"},
+        blocking=True,
+    )
+    assert device.silentmode is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"thermostats": [thermostat_device(supports_silentmode=False)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_no_silent_mode_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No switch is created for a thermostat without silent-mode support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.thermostat_whisper_mode") is None
 
 
 @pytest.mark.parametrize(
@@ -325,6 +388,58 @@ async def test_shutter_contact2_bypass_unique_id(
 
 @pytest.mark.parametrize(
     "device_buckets",
+    [{"shutter_contacts2": [shutter_contact2_plus_device(vibration_enabled=False)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_shutter_contact2_plus_vibration_enabled(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Door/Window Contact II Plus's vibration detection is exposed and controllable."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.shutter_contacts2[0]
+
+    state = hass.states.get("switch.shutter_contact_vibration_detection")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.shutter_contact_vibration_detection"},
+        blocking=True,
+    )
+    assert device.enabled is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.shutter_contact_vibration_detection"},
+        blocking=True,
+    )
+    assert device.enabled is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"shutter_contacts2": [shutter_contact2_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_shutter_contact2_no_vibration_enabled_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No vibration switch is created for a plain (non-Plus) Door/Window Contact II."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.shutter_contact_vibration_detection") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
     [{"motion_detectors2": [motion_detector2_device(pet_immunity_enabled=False)]}],
     indirect=True,
 )
@@ -357,6 +472,94 @@ async def test_motion_detector2_pet_immunity(
         blocking=True,
     )
     assert device.pet_immunity_enabled is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device(tamper_protection_enabled=False)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_detector2_tamper_protection(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Motion Detector 2's tamper protection setting is exposed and controllable."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.motion_detectors2[0]
+
+    state = hass.states.get("switch.motion_detector_sabotage_detection")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.motion_detector_sabotage_detection"},
+        blocking=True,
+    )
+    assert device.tamper_protection_enabled is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.motion_detector_sabotage_detection"},
+        blocking=True,
+    )
+    assert device.tamper_protection_enabled is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"smoke_detectors": [smoke_detector_device(intrusion_alarm=False)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smoke_detector_intrusion_alarm(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Smoke Detector II's intrusion alarm is exposed and controllable as a switch."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.smoke_detectors[0]
+
+    state = hass.states.get("switch.smoke_detector_intrusion_alarm")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.smoke_detector_intrusion_alarm"},
+        blocking=True,
+    )
+    assert device.intrusion_alarm is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.smoke_detector_intrusion_alarm"},
+        blocking=True,
+    )
+    assert device.intrusion_alarm is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"smoke_detectors": [smoke_detector_device(supports_intrusion_alarm=False)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smoke_detector_no_intrusion_alarm_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No switch is created for a gen-1 Smoke Detector without intrusion-alarm support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.smoke_detector_intrusion_alarm") is None
 
 
 @pytest.mark.parametrize(
@@ -621,3 +824,69 @@ async def test_smart_plug_compact_energy_saving_mode(
         blocking=True,
     )
     assert device.energy_saving_mode_enabled is True
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "motion_detectors2": [
+                motion_detector2_device(
+                    supports_smart_sensitivity=True, smart_sensitivity_enabled=False
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_detector2_smart_sensitivity(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Motion Detector 2's automatic sensitivity is exposed and controllable."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.motion_detectors2[0]
+
+    state = hass.states.get("switch.motion_detector_automatic_sensitivity")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.motion_detector_automatic_sensitivity"},
+        blocking=True,
+    )
+    assert device.smart_sensitivity_enabled is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.motion_detector_automatic_sensitivity"},
+        blocking=True,
+    )
+    assert device.smart_sensitivity_enabled is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "motion_detectors2": [
+                motion_detector2_device(supports_smart_sensitivity=False)
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_detector2_no_smart_sensitivity_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No switch is created for a Motion Detector 2 without smart-sensitivity support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.motion_detector_automatic_sensitivity") is None

@@ -16,14 +16,19 @@ from boschshcpy import (
     SHCMicromoduleRelay,
     SHCMotionDetector2,
     SHCPresenceSimulationSystem,
+    SHCShutterContact,
     SHCShutterContact2,
+    SHCShutterContact2Plus,
     SHCShutterControl,
     SHCSmartPlug,
     SHCSmartPlugCompact,
+    SHCSmokeDetector,
     SHCThermostat,
     SHCThermostatGen2,
     SHCTwinguard,
+    ShutterContactService,
     ShutterControlService,
+    SilentModeService,
     ThermostatService,
 )
 from boschshcpy.services_impl import (
@@ -257,6 +262,8 @@ def thermostat_device(
     child_lock: ThermostatService.State = ThermostatService.State.OFF,
     position: int = 50,
     valvestate: ValveTappetService.State = ValveTappetService.State.VALVE_ADAPTION_SUCCESSFUL,
+    supports_silentmode: bool = False,
+    silentmode: SilentModeService.State = SilentModeService.State.MODE_NORMAL,
 ) -> SHCThermostat:
     """Build a minimal device double for the thermostats/roomthermostats/wallthermostats buckets."""
     device = create_autospec(SHCThermostat, instance=True, spec_set=True)
@@ -272,6 +279,8 @@ def thermostat_device(
     device.child_lock = child_lock
     device.position = position
     device.valvestate = valvestate
+    device.supports_silentmode = supports_silentmode
+    device.silentmode = silentmode
     return device
 
 
@@ -366,6 +375,28 @@ def presence_simulation_system_device(
     return device
 
 
+def shutter_contact_device(
+    device_id: str = "hdm:ZigBee:shuttercontact1",
+    name: str = "Shutter contact",
+    device_class: str = "GENERIC",
+    state: ShutterContactService.State = ShutterContactService.State.CLOSED,
+) -> SHCShutterContact:
+    """Build a minimal device double for the shutter_contacts bucket."""
+    device = create_autospec(SHCShutterContact, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "SWD"
+    device.device_class = device_class
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.state = state
+    return device
+
+
 def shutter_contact2_device(
     device_id: str = "hdm:ZigBee:shuttercontact1",
     name: str = "Shutter contact",
@@ -388,10 +419,37 @@ def shutter_contact2_device(
     return device
 
 
+def shutter_contact2_plus_device(
+    device_id: str = "hdm:ZigBee:shuttercontact1",
+    name: str = "Shutter contact",
+    bypass: BypassService.State = BypassService.State.BYPASS_INACTIVE,
+    bypass_infinite: bool = False,
+    vibration_enabled: bool = False,
+) -> SHCShutterContact2Plus:
+    """Build a minimal device double for a vibration-capable Door/Window Contact II Plus."""
+    device = create_autospec(SHCShutterContact2Plus, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "SWD2_PLUS"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.bypass = bypass
+    device.bypass_infinite = bypass_infinite
+    device.enabled = vibration_enabled
+    return device
+
+
 def motion_detector2_device(
     device_id: str = "hdm:ZigBee:motiondetector1",
     name: str = "Motion Detector",
     pet_immunity_enabled: bool = False,
+    tamper_protection_enabled: bool = False,
+    supports_smart_sensitivity: bool = False,
+    smart_sensitivity_enabled: bool = False,
 ) -> SHCMotionDetector2:
     """Build a minimal device double for the motion_detectors2 bucket."""
     device = create_autospec(SHCMotionDetector2, instance=True, spec_set=True)
@@ -405,6 +463,31 @@ def motion_detector2_device(
     device.deleted = False
     device.status = "AVAILABLE"
     device.pet_immunity_enabled = pet_immunity_enabled
+    device.tamper_protection_enabled = tamper_protection_enabled
+    device.supports_smart_sensitivity = supports_smart_sensitivity
+    device.smart_sensitivity_enabled = smart_sensitivity_enabled
+    return device
+
+
+def smoke_detector_device(
+    device_id: str = "hdm:ZigBee:smokedetector1",
+    name: str = "Smoke Detector",
+    supports_intrusion_alarm: bool = True,
+    intrusion_alarm: bool = False,
+) -> SHCSmokeDetector:
+    """Build a minimal device double for the smoke_detectors bucket."""
+    device = create_autospec(SHCSmokeDetector, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "SMOKE_DETECTOR2"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.supports_intrusion_alarm = supports_intrusion_alarm
+    device.intrusion_alarm = intrusion_alarm
     return device
 
 
