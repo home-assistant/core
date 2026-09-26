@@ -729,7 +729,8 @@ def _async_event_entities(
 def _async_public_event_entities(
     data: ProtectData, camera: PublicCamera
 ) -> list[ProtectDeviceEntity]:
-    # The other entity classes read their events from the private bootstrap.
+    # NFC, fingerprint and vehicle read their events from the private bootstrap;
+    # the doorbell ring drops out on the missing public is_doorbell flag.
     return [
         description.entity_class(data, camera, description)
         for description in EVENT_DESCRIPTIONS
@@ -770,11 +771,14 @@ async def async_setup_entry(
     if api.is_public_only:
         async_add_entities(
             entity
-            for public, _ in data.get_public_devices(ModelType.CAMERA)
-            if isinstance(public, PublicCamera)
+            for public, _ in data.get_public_cameras()
+            if public is not None
             for entity in _async_public_event_entities(data, public)
         )
         return
+
+    # Everything below is driven by the private bootstrap, which public-only
+    # entries do not have.
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:

@@ -2508,6 +2508,23 @@ async def test_public_only_event_entities(
     assert _event_keys(entity_registry, doorbell.mac) == expected
 
 
+async def test_public_only_skips_private_event_classes(
+    entity_registry: EntityRegistry,
+    doorbell: Camera,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Event classes reading the private bootstrap stay off even if the flag matches."""
+    public = make_public_camera(doorbell)
+    public.rtsps_streams = None
+    public.feature_flags.has_smart_detect = True
+    ufp_public_only.api.public_bootstrap.cameras[doorbell.id] = public
+
+    await setup_public_only()
+
+    assert "vehicle" not in _event_keys(entity_registry, doorbell.mac)
+
+
 async def test_public_only_event_fires(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
