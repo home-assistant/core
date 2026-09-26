@@ -40,6 +40,9 @@
       "cyan_toner_remaining": {
         "default": "mdi:printer-3d-nozzle"
       },
+      "device_status": {
+        "default": "mdi:printer-check"
+      },
       "drum_page_counter": {
         "default": "mdi:chart-donut"
       },
@@ -54,6 +57,9 @@
       },
       "fuser_remaining_life": {
         "default": "mdi:water-outline"
+      },
+      "ink_capture_box_remaining_life": {
+        "default": "mdi:tray-full"
       },
       "laser_remaining_life": {
         "default": "mdi:spotlight-beam"
@@ -81,6 +87,9 @@
       },
       "pf_kit_mp_remaining_life": {
         "default": "mdi:printer-3d"
+      },
+      "printer_status": {
+        "default": "mdi:printer"
       },
       "status": {
         "default": "mdi:printer"

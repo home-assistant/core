@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 from anthropic import APITimeoutError, AuthenticationError, RateLimitError
 from freezegun import freeze_time
 from httpx import URL, Request, Response
+import pytest
 
 from homeassistant.components import conversation
 from homeassistant.components.anthropic.const import DOMAIN
@@ -21,11 +22,11 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @patch("anthropic.resources.models.AsyncModels.list", new_callable=AsyncMock)
+@pytest.mark.usefixtures("mock_init_component")
 async def test_auth_error_handling(
     mock_model_list: AsyncMock,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
 ) -> None:
     """Test reauth after authentication error during conversation."""
@@ -64,11 +65,10 @@ async def test_auth_error_handling(
 
 @freeze_time("2026-02-27 12:00:00")
 @patch("anthropic.resources.models.AsyncModels.list", new_callable=AsyncMock)
+@pytest.mark.usefixtures("mock_init_component")
 async def test_connection_error_handling(
     mock_model_list: AsyncMock,
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
 ) -> None:
     """Test making entity unavailable on connection error."""
@@ -133,11 +133,11 @@ async def test_connection_error_handling(
 
 
 @patch("anthropic.resources.models.AsyncModels.list", new_callable=AsyncMock)
+@pytest.mark.usefixtures("mock_init_component")
 async def test_connection_check_reauth(
     mock_model_list: AsyncMock,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
 ) -> None:
     """Test authentication error during background availability check."""
     mock_model_list.side_effect = APITimeoutError(
@@ -197,11 +197,10 @@ async def test_connection_check_reauth(
 
 
 @patch("anthropic.resources.models.AsyncModels.list", new_callable=AsyncMock)
+@pytest.mark.usefixtures("mock_init_component")
 async def test_connection_restore(
     mock_model_list: AsyncMock,
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
 ) -> None:
     """Test background availability check restore on non-connectivity error."""

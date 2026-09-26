@@ -1,5 +1,6 @@
 """Config flow for Besen."""
 
+from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any, override
 
@@ -45,6 +46,8 @@ PIN_ONLY_SCHEMA = probatio.Schema(
         probatio.Required(CONF_PIN, default=DEFAULT_PIN): PIN_SCHEMA,
     }
 )
+
+REAUTH_SCHEMA = probatio.Schema({probatio.Required(CONF_PIN): PIN_SCHEMA})
 
 
 def _user_schema(
@@ -243,5 +246,51 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=_user_schema(self._discovered_devices),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self,
+        entry_data: Mapping[str, Any],
+    ) -> ConfigFlowResult:
+        """Handle a PIN rejected by a configured charger."""
+
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Confirm the current PIN of a configured charger."""
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            entry = self._get_reauth_entry()
+            pin = user_input[CONF_PIN]
+            try:
+                await _async_validate_input(
+                    self.hass,
+                    address=entry.data[CONF_ADDRESS],
+                    pin=pin,
+                    name=entry.data[CONF_NAME],
+                )
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except NoConnectablePath:
+                errors["base"] = "no_connectable_path"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected Besen reauthentication error")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={CONF_PIN: pin},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=REAUTH_SCHEMA,
             errors=errors,
         )
