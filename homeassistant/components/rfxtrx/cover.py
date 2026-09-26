@@ -6,15 +6,16 @@ from typing import Any, override
 import RFXtrx as rfxtrxmod
 
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature, CoverState
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DeviceTuple, async_setup_platform_entry
+from . import DeviceTuple, async_setup_platform_entry, get_device_tuple_from_device
 from .const import (
     COMMAND_OFF_LIST,
     COMMAND_ON_LIST,
+    CONF_DATA_BITS,
     CONF_VENETIAN_BLIND_MODE,
     CONST_VENETIAN_BLIND_MODE_EU,
     CONST_VENETIAN_BLIND_MODE_US,
@@ -39,13 +40,17 @@ async def async_setup_entry(
     def _constructor(
         event: rfxtrxmod.RFXtrxEvent,
         auto: rfxtrxmod.RFXtrxEvent | None,
-        device_id: DeviceTuple,
-        entity_info: dict[str, Any],
+        subentry: ConfigSubentry,
     ) -> list[Entity]:
+        entity_info = subentry.data
+        device_id = get_device_tuple_from_device(
+            event.device, data_bits=entity_info.get(CONF_DATA_BITS)
+        )
         return [
             RfxtrxCover(
                 event.device,
                 device_id,
+                subentry.subentry_id,
                 venetian_blind_mode=entity_info.get(CONF_VENETIAN_BLIND_MODE),
                 event=event if auto else None,
             )
@@ -65,11 +70,12 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
         self,
         device: rfxtrxmod.RFXtrxDevice,
         device_id: DeviceTuple,
+        subentry_id: str,
         event: rfxtrxmod.RFXtrxEvent = None,
         venetian_blind_mode: str | None = None,
     ) -> None:
         """Initialize the RFXtrx cover device."""
-        super().__init__(device, device_id, event)
+        super().__init__(device, device_id, subentry_id, event)
         self._venetian_blind_mode = venetian_blind_mode
         self._attr_is_closed: bool | None = True
 

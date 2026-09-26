@@ -30,15 +30,16 @@ class RfxtrxEntity(RestoreEntity):
         self,
         device: rfxtrxmod.RFXtrxDevice,
         device_id: DeviceTuple,
+        subentry_id: str,
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialize the device."""
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_id.unique_id)},
+            identifiers={(DOMAIN, subentry_id)},
             model=device.type_string,
             name=f"{device.type_string} {device_id.id_string}",
         )
-        self._attr_unique_id = device_id.unique_id
+        self._attr_unique_id = subentry_id
         self._device = device
         self._event = event
         self._device_id = device_id
@@ -104,10 +105,11 @@ class RfxtrxCommandEntity(RfxtrxEntity):
         self,
         device: rfxtrxmod.RFXtrxDevice,
         device_id: DeviceTuple,
+        subentry_id: str,
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialzie a switch or light device."""
-        super().__init__(device, device_id, event=event)
+        super().__init__(device, device_id, subentry_id, event=event)
 
     async def _async_send[*_Ts](
         self, fun: Callable[[rfxtrxmod.PySerialTransport, *_Ts], None], *args: *_Ts
