@@ -1,7 +1,7 @@
 """Interactions API support for the Google Generative AI Conversation integration."""
 
-import base64
 from collections.abc import AsyncGenerator, AsyncIterator, Callable, Mapping, Sequence
+from dataclasses import dataclass, field
 import json
 from typing import Any
 
@@ -177,13 +177,6 @@ def build_interaction_request(
     return request
 
 
-def _decode_signature(sig: bytes | str) -> str:
-    """Decode signature to base64 string if bytes."""
-    if isinstance(sig, bytes):
-        return base64.b64encode(sig).decode("utf-8")
-    return sig
-
-
 def _parse_tool_args(args_str: str, args_dict: dict[str, Any] | None) -> dict[str, Any]:
     """Parse tool arguments from json string or prepopulated dictionary."""
     if args_str:
@@ -201,29 +194,25 @@ def _trace_usage(
     chat_log: conversation.ChatLog, event: interactions.InteractionSSEEvent
 ) -> None:
     """Extract and trace token usage from an event."""
-    usage: Any = None
-    match event.event_type:
-        case "step.delta":
-            if event.metadata and event.metadata.total_usage:
-                usage = event.metadata.total_usage
-        case "step.stop":
-            usage = event.step_usage or event.usage
-        case "interaction.completed":
-            usage = event.interaction.usage
+    usage: interactions.Usage | None = None
+    match event:
+        case interactions.StepDelta(metadata=metadata) if (
+            metadata and metadata.total_usage
+        ):
+            usage = metadata.total_usage
+        case interactions.StepStop(step_usage=step_usage, usage=stop_usage):
+            usage = step_usage or stop_usage
+        case interactions.InteractionCompletedEvent(interaction=interaction) if (
+            interaction
+        ):
+            usage = interaction.usage
+
     if usage is None:
         return
 
-    prompt_tokens = getattr(usage, "total_input_tokens", None) or getattr(
-        usage, "prompt_token_count", None
-    )
-    cached_tokens = (
-        getattr(usage, "total_cached_tokens", 0)
-        or getattr(usage, "cached_content_token_count", 0)
-        or 0
-    )
-    output_tokens = getattr(usage, "total_output_tokens", None) or getattr(
-        usage, "candidates_token_count", None
-    )
+    prompt_tokens = usage.total_input_tokens
+    cached_tokens = usage.total_cached_tokens or 0
+    output_tokens = usage.total_output_tokens
 
     if prompt_tokens is not None and output_tokens is not None:
         chat_log.async_trace(
@@ -239,26 +228,155 @@ def _trace_usage(
 
 def _check_event_error(event: interactions.InteractionSSEEvent) -> None:
     """Check for error conditions in an interactions event."""
-    match event.event_type:
-        case "error":
-            error_obj = event.error
+    match event:
+        case interactions.ErrorEvent(error=error_obj):
             message = (
                 error_obj.message
                 if error_obj and error_obj.message
                 else "Unknown error"
             )
             raise HomeAssistantError(f"{ERROR_GETTING_RESPONSE}: {message}")
-        case "interaction.status_update":
-            if event.status in ("failed", "cancelled"):
-                raise HomeAssistantError(
-                    f"{ERROR_GETTING_RESPONSE} Status: {event.status}"
-                )
-        case "interaction.completed":
-            interaction = event.interaction
+        case interactions.InteractionStatusUpdate(status=status):
+            if status in ("failed", "cancelled"):
+                raise HomeAssistantError(f"{ERROR_GETTING_RESPONSE} Status: {status}")
+        case interactions.InteractionCompletedEvent(interaction=interaction):
             if interaction and interaction.status in ("failed", "cancelled"):
                 raise HomeAssistantError(
                     f"{ERROR_GETTING_RESPONSE} Status: {interaction.status}"
                 )
+
+
+@dataclass
+class _StreamState:
+    """State tracked while streaming an interaction."""
+
+    part_details: list[PartDetails] = field(default_factory=list)
+    content_index: int = 0
+    thinking_content_index: int = 0
+    tool_call_index: int = 0
+
+    current_tool_id: str | None = None
+    current_tool_name: str | None = None
+    current_tool_args_str: str = ""
+    current_tool_args_dict: dict[str, Any] | None = None
+
+    current_search_call_id: str | None = None
+    current_search_queries: list[str] | None = None
+    current_search_signature: str | None = None
+
+
+def _handle_step_start(step: interactions.Step, state: _StreamState) -> None:
+    """Handle step start events."""
+    match step:
+        case interactions.FunctionCallStep(id=call_id, name=name, arguments=args):
+            state.current_tool_id = call_id
+            state.current_tool_name = name
+            state.current_tool_args_str = ""
+            state.current_tool_args_dict = (
+                args if isinstance(args, dict) and args else None
+            )
+        case interactions.GoogleSearchCallStep(
+            id=call_id, signature=sig, arguments=args
+        ):
+            state.current_search_call_id = call_id
+            state.current_search_signature = sig or None
+            state.current_search_queries = (
+                list(args.queries) if args and args.queries is not None else None
+            )
+
+
+def _handle_step_delta(
+    delta: interactions.StepDeltaData, state: _StreamState
+) -> conversation.AssistantContentDeltaDict | None:
+    """Handle step delta events."""
+    match delta:
+        case interactions.TextDelta(text=text):
+            if text:
+                state.content_index += len(text)
+                return {"content": text}
+
+        case interactions.ThoughtSummaryDelta(
+            content=interactions.TextContent(text=text)
+        ):
+            if text:
+                state.thinking_content_index += len(text)
+                return {"thinking_content": text}
+
+        case interactions.ThoughtSignatureDelta(signature=sig):
+            if sig:
+                state.part_details.append(
+                    PartDetails(
+                        part_type="thought",
+                        index=state.thinking_content_index,
+                        length=0,
+                        thought_signature=sig,
+                    )
+                )
+
+        case interactions.GoogleSearchCallDelta(signature=sig, arguments=args):
+            if sig:
+                state.current_search_signature = sig
+            if args and args.queries is not None:
+                state.current_search_queries = list(args.queries)
+
+        case interactions.ArgumentsDelta(arguments=args):
+            if args:
+                state.current_tool_args_str += args
+
+    return None
+
+
+def _handle_step_stop(
+    state: _StreamState,
+) -> conversation.AssistantContentDeltaDict | None:
+    """Handle step stop events."""
+    if state.current_tool_name:
+        tool_args = _parse_tool_args(
+            state.current_tool_args_str, state.current_tool_args_dict
+        )
+        delta: conversation.AssistantContentDeltaDict = {
+            "tool_calls": [
+                llm.ToolInput(
+                    tool_name=state.current_tool_name,
+                    tool_args=tool_args,
+                    id=state.current_tool_id or "",
+                )
+            ]
+        }
+        state.current_tool_id = None
+        state.current_tool_name = None
+        state.current_tool_args_str = ""
+        state.current_tool_args_dict = None
+        state.tool_call_index += 1
+        return delta
+
+    if state.current_search_call_id:
+        search_delta: conversation.AssistantContentDeltaDict = {
+            "tool_calls": [
+                llm.ToolInput(
+                    tool_name="google_search",
+                    tool_args={"queries": state.current_search_queries or []},
+                    id=state.current_search_call_id,
+                    external=True,
+                )
+            ]
+        }
+        if state.current_search_signature:
+            state.part_details.append(
+                PartDetails(
+                    part_type="google_search_call",
+                    index=state.tool_call_index,
+                    length=0,
+                    thought_signature=state.current_search_signature,
+                )
+            )
+        state.current_search_call_id = None
+        state.current_search_queries = None
+        state.current_search_signature = None
+        state.tool_call_index += 1
+        return search_delta
+
+    return None
 
 
 async def transform_interactions_stream(
@@ -267,15 +385,7 @@ async def transform_interactions_stream(
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     """Transform Gemini Interactions SSE stream into AssistantContentDeltaDict chunks."""
     new_message = True
-    part_details: list[PartDetails] = []
-    content_index = 0
-    thinking_content_index = 0
-    tool_call_index = 0
-
-    current_tool_id: str | None = None
-    current_tool_name: str | None = None
-    current_tool_args_str = ""
-    current_tool_args_dict: dict[str, Any] | None = None
+    state = _StreamState()
 
     try:
         async for event in result:
@@ -288,78 +398,20 @@ async def transform_interactions_stream(
                 yield {"role": "assistant"}
                 new_message = False
 
-            match event.event_type:
-                case "step.start":
-                    step = event.step
-                    match step.type:
-                        case "function_call":
-                            current_tool_id = step.id
-                            current_tool_name = step.name
-                            current_tool_args_str = ""
-                            current_tool_args_dict = None
-                            if isinstance(step.arguments, dict) and step.arguments:
-                                current_tool_args_dict = step.arguments
+            match event:
+                case interactions.StepStart(step=step):
+                    _handle_step_start(step, state)
+                case interactions.StepDelta(delta=delta):
+                    if out_delta := _handle_step_delta(delta, state):
+                        yield out_delta
+                case interactions.StepStop():
+                    if out_delta := _handle_step_stop(state):
+                        yield out_delta
 
-                case "step.delta":
-                    delta = event.delta
-                    match delta.type:
-                        case "text":
-                            if text := delta.text:
-                                yield {"content": text}
-                                content_index += len(text)
-
-                        case "thought":
-                            if hasattr(delta, "text") and (thought_text := delta.text):
-                                yield {"thinking_content": thought_text}
-                                thinking_content_index += len(thought_text)
-
-                        case "thought_summary":
-                            if delta.content and hasattr(delta.content, "text"):
-                                if thought_text := delta.content.text:
-                                    yield {"thinking_content": thought_text}
-                                    thinking_content_index += len(thought_text)
-
-                        case "thought_signature":
-                            if sig := delta.signature:
-                                part_details.append(
-                                    PartDetails(
-                                        part_type="thought",
-                                        index=thinking_content_index,
-                                        length=0,
-                                        thought_signature=_decode_signature(sig),
-                                    )
-                                )
-
-                        case "arguments_delta":
-                            current_tool_args_str += delta.arguments or ""
-
-                case "step.stop":
-                    if current_tool_name:
-                        tool_args = _parse_tool_args(
-                            current_tool_args_str, current_tool_args_dict
-                        )
-                        yield {
-                            "tool_calls": [
-                                llm.ToolInput(
-                                    tool_name=current_tool_name,
-                                    tool_args=tool_args,
-                                    id=current_tool_id or "",
-                                )
-                            ]
-                        }
-                        current_tool_id = None
-                        current_tool_name = None
-                        current_tool_args_str = ""
-                        current_tool_args_dict = None
-                        tool_call_index += 1
-
-        if part_details:
-            yield {"native": ContentDetails(part_details=part_details)}
+        if state.part_details:
+            yield {"native": ContentDetails(part_details=state.part_details)}
 
     except (APIError, ClientError, ValueError) as err:
         LOGGER.error("Error processing interactions stream: %s %s", type(err), err)
-        if isinstance(err, APIError):
-            message = err.message
-        else:
-            message = type(err).__name__
+        message = err.message if isinstance(err, APIError) else type(err).__name__
         raise HomeAssistantError(f"{ERROR_GETTING_RESPONSE}: {message}") from err

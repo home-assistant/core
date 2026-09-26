@@ -296,7 +296,7 @@ def _create_google_tool_response_content(
 class PartDetails:
     """Additional data for a content part."""
 
-    part_type: Literal["text", "thought", "function_call"]
+    part_type: Literal["text", "thought", "function_call", "google_search_call"]
     """The part type for which this data is relevant for."""
 
     index: int
@@ -306,7 +306,7 @@ class PartDetails:
     """Length of the relevant data."""
 
     thought_signature: str | None = None
-    """Base64 encoded thought signature, if available."""
+    """Signature, if available."""
 
 
 @dataclass(slots=True)
