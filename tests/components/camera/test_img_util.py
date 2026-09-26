@@ -35,33 +35,25 @@ def test_scale_jpeg_camera_image() -> None:
     camera_image = Image("image/jpeg", EMPTY_16_12_JPEG)
 
     turbo_jpeg = mock_turbo_jpeg(first_width=16, first_height=12)
-    with patch(
-        "homeassistant.components.camera.img_util.TurboJPEG", return_value=False
-    ):
+    with patch("turbojpeg.TurboJPEG", return_value=False):
         TurboJPEGSingleton()
         assert scale_jpeg_camera_image(camera_image, 16, 12) == camera_image.content
 
     turbo_jpeg = mock_turbo_jpeg(first_width=16, first_height=12)
     turbo_jpeg.decode_header.side_effect = OSError
-    with patch(
-        "homeassistant.components.camera.img_util.TurboJPEG", return_value=turbo_jpeg
-    ):
+    with patch("turbojpeg.TurboJPEG", return_value=turbo_jpeg):
         TurboJPEGSingleton()
         assert scale_jpeg_camera_image(camera_image, 16, 12) == camera_image.content
 
     turbo_jpeg = mock_turbo_jpeg(first_width=16, first_height=12)
-    with patch(
-        "homeassistant.components.camera.img_util.TurboJPEG", return_value=turbo_jpeg
-    ):
+    with patch("turbojpeg.TurboJPEG", return_value=turbo_jpeg):
         TurboJPEGSingleton()
         assert scale_jpeg_camera_image(camera_image, 16, 12) == EMPTY_16_12_JPEG
 
     turbo_jpeg = mock_turbo_jpeg(
         first_width=16, first_height=12, second_width=8, second_height=6
     )
-    with patch(
-        "homeassistant.components.camera.img_util.TurboJPEG", return_value=turbo_jpeg
-    ):
+    with patch("turbojpeg.TurboJPEG", return_value=turbo_jpeg):
         TurboJPEGSingleton()
         jpeg_bytes = scale_jpeg_camera_image(camera_image, 8, 6)
 
@@ -70,9 +62,7 @@ def test_scale_jpeg_camera_image() -> None:
     turbo_jpeg = mock_turbo_jpeg(
         first_width=640, first_height=480, second_width=640, second_height=480
     )
-    with patch(
-        "homeassistant.components.camera.img_util.TurboJPEG", return_value=turbo_jpeg
-    ):
+    with patch("turbojpeg.TurboJPEG", return_value=turbo_jpeg):
         TurboJPEGSingleton()
         jpeg_bytes = scale_jpeg_camera_image(camera_image, 320, 480)
 
@@ -84,9 +74,7 @@ def test_turbojpeg_load_failure(
 ) -> None:
     """Handle libjpegturbo not being installed."""
     _clear_turbojpeg_singleton()
-    with patch(
-        "homeassistant.components.camera.img_util.TurboJPEG", side_effect=Exception
-    ):
+    with patch("turbojpeg.TurboJPEG", side_effect=Exception):
         TurboJPEGSingleton()
         assert TurboJPEGSingleton.instance() is False
         assert caplog.record_tuples == [
