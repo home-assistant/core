@@ -24,6 +24,9 @@ MATTER_BLE_ADDRESS = "AA:BB:CC:DD:EE:F0"
 MATTER_BLE_NAME = "MATTER-3840"
 # Commissionable, discriminator 3840, vendor 0xFFF1, product 0x8000.
 MATTER_BLE_SERVICE_DATA = bytes([0x00, 0x00, 0x0F, 0xF1, 0xFF, 0x00, 0x80, 0x00])
+# The same payload as a whole packet, and a packet for an unrelated service.
+RAW_COMMISSIONABLE = bytes([0x0B, 0x16, 0xF6, 0xFF, *MATTER_BLE_SERVICE_DATA])
+RAW_OTHER = bytes([0x05, 0x16, 0xF0, 0xFF, 0x01, 0x02])
 
 
 def matter_ble_service_info(
@@ -32,21 +35,14 @@ def matter_ble_service_info(
     name: str = MATTER_BLE_NAME,
 ) -> BluetoothServiceInfoBleak:
     """Return a Matter commissionable Bluetooth discovery."""
-    return BluetoothServiceInfoBleak(
-        name=name,
-        address=address,
-        rssi=-60,
-        manufacturer_data={},
-        service_uuids=[],
-        service_data={MATTER_BLE_SERVICE_DATA_UUID: service_data},
-        source="local",
-        device=generate_ble_device(address=address, name=name),
-        advertisement=generate_advertisement_data(
+    return BluetoothServiceInfoBleak.from_device_and_advertisement_data(
+        generate_ble_device(address=address, name=name),
+        generate_advertisement_data(
             local_name=name, service_data={MATTER_BLE_SERVICE_DATA_UUID: service_data}
         ),
-        time=0,
-        connectable=True,
-        tx_power=-127,
+        "local",
+        0.0,
+        True,
     )
 
 

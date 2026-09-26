@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Generator
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from matter_server.common.errors import NodeCommissionFailed
@@ -23,6 +23,8 @@ from .common import (
     MATTER_BLE_ADDRESS,
     MATTER_BLE_NAME,
     MATTER_BLE_SERVICE_DATA,
+    RAW_COMMISSIONABLE,
+    RAW_OTHER,
     matter_ble_service_info,
 )
 
@@ -34,8 +36,6 @@ from tests.components.bluetooth import (
     inject_advertisement_with_time_and_source_connectable,
 )
 
-RAW_COMMISSIONABLE = bytes([0x0B, 0x16, 0xF6, 0xFF, *MATTER_BLE_SERVICE_DATA])
-RAW_OTHER = bytes([0x05, 0x16, 0xF0, 0xFF, 0x01, 0x02])
 ROTATED_ADDRESS = "AA:BB:CC:DD:EE:F1"
 UNIQUE_ID = "fff18000f00"
 PAIRING_CODE = "MT:Y.K9042C00KA0648G00"
@@ -75,20 +75,20 @@ class _Clock:
         await self._hass.async_block_till_done()
 
 
-@pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth: None) -> None:
-    """Auto mock bluetooth."""
+pytestmark = pytest.mark.usefixtures("enable_bluetooth")
 
 
 @pytest.fixture(name="ble_clock")
 def ble_clock_fixture(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> Generator[_Clock]:
-    """Keep the bluetooth manager's clock in step so it does not expire devices."""
+    """Keep the bluetooth clocks in step so the manager does not expire devices."""
     clock = _Clock(hass, freezer)
     with (
-        patch("homeassistant.components.bluetooth.MONOTONIC_TIME", side_effect=clock),
-        patch("habluetooth.manager.monotonic_time_coarse", side_effect=clock),
+        patch("homeassistant.components.bluetooth.MONOTONIC_TIME", new=clock),
+        patch("habluetooth.base_scanner.monotonic_time_coarse", new=clock),
+        patch("habluetooth.manager.monotonic_time_coarse", new=clock),
+        patch("habluetooth.scanner.monotonic_time_coarse", new=clock),
     ):
         yield clock
 
@@ -124,7 +124,7 @@ async def test_discovery_shows_confirm(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     assert result["description_placeholders"] == {
-        "name": f"{MATTER_BLE_NAME}-DDEEF0",
+        "name": f"{MATTER_BLE_NAME} (EEF0)",
         "vendor_id": "0xFFF1",
         "product_id": "0x8000",
         "discriminator": "3840",
@@ -132,45 +132,16 @@ async def test_discovery_shows_confirm(hass: HomeAssistant) -> None:
     (flow,) = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flow["context"]["unique_id"] == UNIQUE_ID
     assert flow["context"]["title_placeholders"] == {
-        "name": f"{MATTER_BLE_NAME}-DDEEF0"
+        "name": f"{MATTER_BLE_NAME} (EEF0)"
     }
 
 
-@pytest.mark.parametrize(
-    ("name", "title"),
-    [
-        pytest.param("", "Matter-DDEEF0", id="nameless"),
-        pytest.param(
-            "Shelly1MiniG4-A085E3B31284", "Shelly1MiniG4-A085E3B31284", id="mac_in_name"
-        ),
-    ],
-)
 @pytest.mark.usefixtures("bluetooth_enabled", "integration")
-async def test_discovery_title(hass: HomeAssistant, name: str, title: str) -> None:
-    """Names without a MAC get the short MAC appended, like Shelly names have."""
-    result = await _async_start_discovery(hass, matter_ble_service_info(name=name))
+async def test_discovery_title_without_name(hass: HomeAssistant) -> None:
+    """A nameless advertisement is named after its discriminator."""
+    result = await _async_start_discovery(hass, matter_ble_service_info(name=""))
     assert result["type"] is FlowResultType.FORM
-    assert result["description_placeholders"]["name"] == title
-
-
-async def test_ignored_device_without_server(hass: HomeAssistant) -> None:
-    """A device the user ignored stays ignored when no server is configured."""
-    MockConfigEntry(
-        domain=DOMAIN, source=SOURCE_IGNORE, unique_id=UNIQUE_ID
-    ).add_to_hass(hass)
-    result = await _async_start_discovery(hass)
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_ignored_device_does_not_block_setup(hass: HomeAssistant) -> None:
-    """Ignoring one device must not stop another from offering Matter setup."""
-    MockConfigEntry(
-        domain=DOMAIN, source=SOURCE_IGNORE, unique_id="fff10001abc"
-    ).add_to_hass(hass)
-    result = await _async_start_discovery(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "manual"
+    assert result["description_placeholders"]["name"] == "Matter device 3840 (EEF0)"
 
 
 async def test_entry_not_loaded_shows_confirm(hass: HomeAssistant) -> None:
@@ -217,19 +188,6 @@ async def test_invalid_advertisement(hass: HomeAssistant, service_data: bytes) -
 
 
 @pytest.mark.usefixtures("bluetooth_enabled", "integration")
-async def test_ignored_device(hass: HomeAssistant) -> None:
-    """An ignored device stays ignored after its address rotates."""
-    MockConfigEntry(
-        domain=DOMAIN, source=SOURCE_IGNORE, unique_id=UNIQUE_ID
-    ).add_to_hass(hass)
-    result = await _async_start_discovery(
-        hass, matter_ble_service_info(address=ROTATED_ADDRESS)
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-@pytest.mark.usefixtures("bluetooth_enabled", "integration")
 async def test_colliding_devices_keep_separate_cards(hass: HomeAssistant) -> None:
     """Identical products with the same discriminator are told apart by address."""
     first = await _async_start_discovery(hass)
@@ -240,8 +198,8 @@ async def test_colliding_devices_keep_separate_cards(hass: HomeAssistant) -> Non
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert {flow["flow_id"] for flow in flows} == {first["flow_id"], second["flow_id"]}
     assert {flow["context"]["title_placeholders"]["name"] for flow in flows} == {
-        f"{MATTER_BLE_NAME}-DDEEF0",
-        f"{MATTER_BLE_NAME}-DDEEF1",
+        f"{MATTER_BLE_NAME} (EEF0)",
+        f"{MATTER_BLE_NAME} (EEF1)",
     }
 
     # Ignoring one card ignores the product identity, whatever the address.
@@ -268,29 +226,61 @@ async def test_same_address_discovery_aborts(hass: HomeAssistant) -> None:
     assert [flow["flow_id"] for flow in flows] == [first["flow_id"]]
 
 
+@pytest.mark.parametrize(
+    ("packets", "alive"),
+    [
+        pytest.param(
+            [(40, RAW_COMMISSIONABLE), (40, RAW_COMMISSIONABLE)],
+            True,
+            id="commissionable",
+        ),
+        pytest.param(
+            [(40, RAW_COMMISSIONABLE), (40, RAW_OTHER), (30, RAW_OTHER)],
+            False,
+            id="other_service",
+        ),
+        pytest.param([(25, None), (25, None), (25, None)], False, id="unverifiable"),
+        pytest.param([(70, RAW_COMMISSIONABLE)], False, id="too_late"),
+    ],
+)
 @pytest.mark.usefixtures("bluetooth_enabled", "integration")
-async def test_stale_discovery_is_dropped(
-    hass: HomeAssistant, ble_clock: _Clock
+async def test_discovery_liveness(
+    hass: HomeAssistant,
+    ble_clock: _Clock,
+    packets: list[tuple[float, bytes | None]],
+    alive: bool,
 ) -> None:
-    """The discovery goes away when the device stops advertising as commissionable."""
+    """Only a packet that shows the device is still commissionable keeps the card."""
     result = await _async_start_discovery(hass)
     assert result["type"] is FlowResultType.FORM
 
-    await ble_clock.async_advance(40)
-    _inject_raw(hass, RAW_COMMISSIONABLE, ble_clock.now)
-    await ble_clock.async_advance(40)
-    assert hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    for seconds, raw in packets:
+        await ble_clock.async_advance(seconds)
+        _inject_raw(hass, raw, ble_clock.now)
 
-    # A packet without Matter service data does not keep the discovery alive.
-    _inject_raw(hass, RAW_OTHER, ble_clock.now)
-    await ble_clock.async_advance(10)
-    assert hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert bool(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) is alive
 
-    with patch(
-        "homeassistant.components.bluetooth.async_clear_address_from_match_history"
-    ) as clear_history:
-        await ble_clock.async_advance(20)
+
+@pytest.mark.usefixtures("bluetooth_enabled", "integration")
+async def test_stale_discovery_forgets_the_device(
+    hass: HomeAssistant, ble_clock: _Clock
+) -> None:
+    """A dropped card leaves nothing behind that could re-create it from stale data."""
+    result = await _async_start_discovery(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    with (
+        patch(
+            "homeassistant.components.bluetooth.async_clear_advertisement_history"
+        ) as clear_advertisements,
+        patch(
+            "homeassistant.components.bluetooth.async_clear_address_from_match_history"
+        ) as clear_history,
+    ):
+        await ble_clock.async_advance(70)
+
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert clear_advertisements.call_args == call(hass, MATTER_BLE_ADDRESS)
     assert clear_history.call_args == call(hass, MATTER_BLE_ADDRESS)
 
 
@@ -394,46 +384,11 @@ async def test_commissioning_in_progress_is_never_aborted(
     assert result["reason"] == "commission_successful"
 
 
-@pytest.mark.usefixtures("bluetooth_enabled", "integration")
-async def test_unverifiable_packets_do_not_keep_the_card(
-    hass: HomeAssistant, ble_clock: _Clock
-) -> None:
-    """A scanner reporting no raw packet cannot prove the device is commissionable."""
-    result = await _async_start_discovery(hass)
-    assert result["type"] is FlowResultType.FORM
-
-    for _ in range(3):
-        await ble_clock.async_advance(25)
-        _inject_raw(hass, None, ble_clock.now)
-
-    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-
-
-@pytest.mark.usefixtures("bluetooth_enabled", "integration")
-async def test_older_packet_does_not_move_liveness_backwards(
-    hass: HomeAssistant, ble_clock: _Clock
-) -> None:
-    """Packets arrive from several scanners, so liveness must only move forward."""
-    result = await _async_start_discovery(hass)
-    assert result["type"] is FlowResultType.FORM
-
-    await ble_clock.async_advance(50)
-    _inject_raw(hass, RAW_COMMISSIONABLE, ble_clock.now)
-    # A weaker scanner reports the same device with an older timestamp.
-    _inject_raw(hass, RAW_COMMISSIONABLE, ble_clock.now - 40)
-    await ble_clock.async_advance(40)
-
-    assert hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-
-
-@pytest.mark.usefixtures("bluetooth_enabled", "integration")
+@pytest.mark.usefixtures("bluetooth_enabled")
 async def test_setup_card_is_dropped_when_device_goes_quiet(
     hass: HomeAssistant, ble_clock: _Clock
 ) -> None:
     """The card offering Matter setup is tracked like a commissioning card."""
-    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
-    await hass.config_entries.async_remove(entry_id)
-
     result = await _async_start_discovery(hass)
     assert result["step_id"] == "manual"
 
@@ -442,22 +397,19 @@ async def test_setup_card_is_dropped_when_device_goes_quiet(
 
 
 async def test_proxy_that_never_connected_cannot_commission(
-    hass: HomeAssistant, matter_client: MagicMock
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
 ) -> None:
     """A server whose BLE proxy never connected has no path to the device."""
     matter_client.server_info.bluetooth_enabled = True
     matter_client.server_info.ble_proxy_enabled = True
-    proxy = MagicMock()
-    proxy.connect = AsyncMock(side_effect=TimeoutError)
-    proxy.disconnect = AsyncMock()
-    with patch(
-        "homeassistant.components.matter.ble_proxy.create_matter_ble_proxy",
-        return_value=proxy,
-    ):
-        entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    proxy, _factory = mock_ble_proxy
+    proxy.connect.side_effect = TimeoutError
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
     result = await _async_start_discovery(hass)

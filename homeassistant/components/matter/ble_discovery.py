@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from struct import Struct
 from typing import TYPE_CHECKING, Self
 
@@ -21,8 +22,7 @@ STALE_ADVERTISEMENT_SECONDS = 60
 
 _OPCODE_COMMISSIONABLE = 0x00
 # Opcode, discriminator with version nibble, vendor id, product id, flags.
-_unpack_commissionable = Struct("<BHHHB").unpack_from
-_COMMISSIONABLE_LENGTH = 8
+_COMMISSIONABLE = Struct("<BHHHB")
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,10 +46,10 @@ class MatterBleAdvertisement:
     @classmethod
     def from_service_data(cls, data: bytes | None) -> Self | None:
         """Decode the service data payload."""
-        if data is None or len(data) < _COMMISSIONABLE_LENGTH:
+        if data is None or len(data) < _COMMISSIONABLE.size:
             return None
-        opcode, discriminator, vendor_id, product_id, _flags = _unpack_commissionable(
-            data
+        opcode, discriminator, vendor_id, product_id, _flags = (
+            _COMMISSIONABLE.unpack_from(data)
         )
         if opcode != _OPCODE_COMMISSIONABLE:
             return None
@@ -91,7 +91,6 @@ class MatterBleDiscovery:
         self.advertisement = advertisement
         self._address = address
         self._on_stale = on_stale
-        self._last_seen = 0.0
         self._unsub: CALLBACK_TYPE | None = None
         self._stale_unsub: CALLBACK_TYPE | None = None
 
@@ -101,13 +100,10 @@ class MatterBleDiscovery:
         # Imported lazily; bluetooth is only an after dependency of Matter.
         from homeassistant.components import bluetooth  # noqa: PLC0415
 
-        self._last_seen = bluetooth.MONOTONIC_TIME()
         self._unsub = bluetooth.async_register_advertisement_callback(
             self._hass, self._async_seen, self._address
         )
-        self._stale_unsub = async_call_later(
-            self._hass, STALE_ADVERTISEMENT_SECONDS, self._async_check_stale
-        )
+        self._async_schedule_stale()
 
     @callback
     def async_stop(self) -> None:
@@ -120,34 +116,34 @@ class MatterBleDiscovery:
             self._stale_unsub = None
 
     @callback
+    def _async_schedule_stale(self) -> None:
+        """Restart the window the device has to advertise in."""
+        if self._stale_unsub is not None:
+            self._stale_unsub()
+        self._stale_unsub = async_call_later(
+            self._hass, STALE_ADVERTISEMENT_SECONDS, self._async_stale
+        )
+
+    @callback
     def _async_seen(self, service_info: BluetoothServiceInfoBleak) -> None:
-        """Record when the device last advertised as commissionable."""
+        """Extend the window while the device advertises as commissionable."""
         # Service data is aggregated across packets, so only the packet itself
         # proves the device is still commissionable. Packets from a scanner that
         # reports no raw data cannot be checked and so prove nothing.
-        if (raw := service_info.raw) is None or MatterBleAdvertisement.from_raw(
+        if (raw := service_info.raw) is not None and MatterBleAdvertisement.from_raw(
             raw
-        ) is None:
-            return
-        # Every scanner that hears the device reports it, including ones the
-        # manager discards, so liveness must never move backwards.
-        self._last_seen = max(self._last_seen, service_info.time)
+        ):
+            self._async_schedule_stale()
 
     @callback
-    def _async_check_stale(self, _now: object) -> None:
-        """Report the device as gone once it stopped advertising as commissionable."""
+    def _async_stale(self, _now: datetime) -> None:
+        """Report the device as gone; it stopped advertising as commissionable."""
         from homeassistant.components import bluetooth  # noqa: PLC0415
 
-        remaining = STALE_ADVERTISEMENT_SECONDS - (
-            bluetooth.MONOTONIC_TIME() - self._last_seen
-        )
-        if remaining > 0:
-            self._stale_unsub = async_call_later(
-                self._hass, remaining, self._async_check_stale
-            )
-            return
-        self._stale_unsub = None
         self.async_stop()
-        # Let the device be discovered again if it comes back.
+        # Drop the aggregated payload that still says the device is
+        # commissionable, so the next advertisement decides on its own whether
+        # this device is discovered again.
+        bluetooth.async_clear_advertisement_history(self._hass, self._address)
         bluetooth.async_clear_address_from_match_history(self._hass, self._address)
         self._on_stale()

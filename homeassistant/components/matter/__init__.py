@@ -38,7 +38,7 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.helpers.typing import ConfigType
 
 from .adapter import MatterAdapter
-from .addon import get_addon_manager
+from .addon import async_enable_ble_proxy, get_addon_manager
 from .api import async_register_api
 from .ble_discovery import MatterBleAdvertisement
 from .const import (
@@ -53,6 +53,7 @@ from .discovery import SUPPORTED_PLATFORMS
 from .helpers import (
     MatterConfigEntry,
     MatterEntryData,
+    ble_commissioning_available,
     get_matter,
     get_node_from_device_entry,
     node_from_ha_device_id,
@@ -238,12 +239,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
             setup_error = listen_err
 
     if setup_error is None:
-        if (
-            "bluetooth" in hass.config.components
-            and server_info
-            and server_info.bluetooth_enabled
-            # A proxy the server never reached leaves no path to the device.
-            and (not server_info.ble_proxy_enabled or ble_proxy is not None)
+        if "bluetooth" in hass.config.components and ble_commissioning_available(
+            server_info, ble_proxy
         ):
             _async_rediscover_commissionable_devices(hass)
         return True
@@ -501,12 +498,7 @@ async def _async_ensure_addon_ble_proxy(
         or options.get(CONF_ADDON_BLUETOOTH_ADAPTER_ID) is not None
     ):
         return
-    try:
-        await addon_manager.async_set_addon_options(
-            {**options, CONF_ADDON_BLE_PROXY: True}
-        )
-    except AddonError as err:
-        LOGGER.warning("Failed to enable the Matter Server add-on BLE proxy: %s", err)
+    if not await async_enable_ble_proxy(addon_manager, options):
         return
     addon_manager.async_schedule_restart_addon(catch_error=True)
     raise ConfigEntryNotReady(
