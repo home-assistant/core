@@ -28,7 +28,9 @@ async def open_dongle(port: str) -> tuple[Dongle, DongleInfo]:
     dongle = await Dongle.open(port, verify=False)
     try:
         return dongle, await dongle.info()
-    except NeosolError:
+    except BaseException:
+        # The port is exclusive: any failure left open, cancellation included, would
+        # block the next attempt.
         await dongle.close()
         raise
 
