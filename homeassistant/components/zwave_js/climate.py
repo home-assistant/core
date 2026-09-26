@@ -480,6 +480,21 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
         await self._async_set_value(self._fan_mode, new_state)
 
+    def _round_setpoint(self, temp: float) -> float:
+        """Round to a resolution the device can encode.
+
+        Z-Wave derives the encoded precision from the float itself, so an
+        unrounded unit conversion becomes a 4-byte payload some nodes
+        mis-parse. Fahrenheit thermostats step in half degrees at best.
+        Clamp afterwards in case rounding pushed an already-validated value
+        outside the device's range.
+        """
+        if self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
+            rounded = round(temp * 2) / 2
+        else:
+            rounded = round(temp, 1)
+        return min(max(rounded, self.min_temp), self.max_temp)
+
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -493,7 +508,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             )
             target_temp: float | None = kwargs.get(ATTR_TEMPERATURE)
             if target_temp is not None:
-                await self._async_set_value(setpoint, target_temp)
+                await self._async_set_value(setpoint, self._round_setpoint(target_temp))
         elif len(self._current_mode_setpoint_enums) == 2:
             setpoint_low: ZwaveValue = self._setpoint_value_or_raise(
                 self._current_mode_setpoint_enums[0]
@@ -504,9 +519,13 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             target_temp_low: float | None = kwargs.get(ATTR_TARGET_TEMP_LOW)
             target_temp_high: float | None = kwargs.get(ATTR_TARGET_TEMP_HIGH)
             if target_temp_low is not None:
-                await self._async_set_value(setpoint_low, target_temp_low)
+                await self._async_set_value(
+                    setpoint_low, self._round_setpoint(target_temp_low)
+                )
             if target_temp_high is not None:
-                await self._async_set_value(setpoint_high, target_temp_high)
+                await self._async_set_value(
+                    setpoint_high, self._round_setpoint(target_temp_high)
+                )
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
