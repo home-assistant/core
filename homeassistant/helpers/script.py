@@ -1299,6 +1299,9 @@ class _ScriptRun:
             self._async_set_remaining_time_var(timeout_handle)
             self._variables["wait"]["completed"] = True
             self._variables["wait"]["trigger"] = variables["trigger"]
+            for key, value in variables.items():
+                if key != "trigger":
+                    self._variables[key] = value
             _set_result_unless_done(done)
 
         def log_cb(level: int, msg: str, **kwargs: Any) -> None:
