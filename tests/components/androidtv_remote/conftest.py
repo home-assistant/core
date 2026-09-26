@@ -107,3 +107,13 @@ def mock_config_entry() -> MockConfigEntry:
         unique_id="1a:2b:3c:4d:5e:6f",
         state=ConfigEntryState.NOT_LOADED,
     )
+
+
+@pytest.fixture(autouse=True)
+def mock_get_mac_address() -> Generator[MagicMock]:
+    """Mock getmac.get_mac_address."""
+    with patch(
+        "homeassistant.components.androidtv_remote.helpers.getmac.get_mac_address",
+        return_value="aa:bb:cc:11:22:33",
+    ) as mock_get_mac:
+        yield mock_get_mac
