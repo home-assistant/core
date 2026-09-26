@@ -17,7 +17,7 @@ from homeassistant.helpers.selector import (
     TextSelector,
 )
 
-from .const import CONF_UNIT_ID, DEFAULT_PORT, DEFAULT_UNIT_ID, DOMAIN
+from .const import CONF_UNIT_ID, DEFAULT_PORT, DEFAULT_UNIT_ID, DOMAIN, MODEL
 from .device import restricted_device
 
 STEP_USER = probatio.Schema(
@@ -74,7 +74,7 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
                 # link (moved to a new address, for example).
                 await self.async_set_unique_id(serial)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title="Balco260", data=user_input)
+                return self.async_create_entry(title=MODEL, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER, errors=errors
@@ -102,6 +102,8 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
         except BluettiModbusConnectionError, AcknowledgeError, ServerDeviceBusyError:
             return {"base": "cannot_connect"}, None
 
+        if device.values.get("d_inverter_type") != MODEL:
+            return {"base": "unsupported_device"}, None
         serial = device.values.get("d_serial")
         if not serial:
             # 0 isn't a real Balco260 serial.

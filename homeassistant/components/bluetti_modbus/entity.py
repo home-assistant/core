@@ -3,10 +3,8 @@
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, MODEL
 from .coordinator import BluettiModbusConfigEntry, BluettiModbusDataUpdateCoordinator
-
-_MODEL_NAME = "Balco260"
 
 
 def bluetti_modbus_device_info(
@@ -16,8 +14,8 @@ def bluetti_modbus_device_info(
     return DeviceInfo(
         identifiers={(DOMAIN, serial)},
         manufacturer="BLUETTI",
-        model=_MODEL_NAME,
-        name=_MODEL_NAME,
+        model=MODEL,
+        name=MODEL,
         serial_number=serial,
         sw_version=sw_version,
     )

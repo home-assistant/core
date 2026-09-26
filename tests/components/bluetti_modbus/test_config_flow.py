@@ -121,6 +121,33 @@ async def test_user_flow_device_still_busy(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_user_flow_unsupported_device(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """A device reporting another model is rejected, then the flow recovers."""
+    field = get_device("balco260").get_field("d_inverter_type")
+    assert field is not None
+    balco260_words = field.encode("Balco260")
+    for offset, word in enumerate(field.encode("EP2000")):
+        mock_modbus_unit.holding[field.address + offset] = word
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    flow_id = result["flow_id"]
+    result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unsupported_device"}
+
+    for offset, word in enumerate(balco260_words):
+        mock_modbus_unit.holding[field.address + offset] = word
+    result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 class _ConflictingUnit:
     """An async context manager standing in for a claimed, incompatible link."""
 
