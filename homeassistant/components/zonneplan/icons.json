@@ -4,6 +4,12 @@
       "current_electricity_price": {
         "default": "mdi:cash-multiple"
       },
+      "electricity_cost_this_month": {
+        "default": "mdi:cash"
+      },
+      "electricity_delivered_this_month": {
+        "default": "mdi:transmission-tower-import"
+      },
       "electricity_price_low_today_end_time": {
         "default": "mdi:clock-end"
       },
@@ -22,6 +28,15 @@
           "available": "mdi:calendar-check",
           "incoming": "mdi:calendar-clock"
         }
+      },
+      "electricity_produced_this_month": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "gas_cost_this_month": {
+        "default": "mdi:cash"
+      },
+      "gas_delivered_this_month": {
+        "default": "mdi:fire"
       },
       "gas_price_today": {
         "default": "mdi:cash-multiple"

@@ -55,6 +55,12 @@
       "current_electricity_price": {
         "name": "Current electricity price"
       },
+      "electricity_cost_this_month": {
+        "name": "Electricity cost this month"
+      },
+      "electricity_delivered_this_month": {
+        "name": "Electricity used this month"
+      },
       "electricity_price_low_today_end_time": {
         "name": "Electricity price low today end time"
       },
@@ -73,6 +79,15 @@
           "available": "Available",
           "incoming": "Incoming"
         }
+      },
+      "electricity_produced_this_month": {
+        "name": "Electricity returned this month"
+      },
+      "gas_cost_this_month": {
+        "name": "Gas cost this month"
+      },
+      "gas_delivered_this_month": {
+        "name": "Gas used this month"
       },
       "gas_price_today": {
         "name": "Gas price daily"
