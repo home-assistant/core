@@ -29,8 +29,7 @@ async def open_dongle(port: str) -> tuple[Dongle, DongleInfo]:
     try:
         return dongle, await dongle.info()
     except BaseException:
-        # The port is exclusive: any failure left open, cancellation included, would
-        # block the next attempt.
+        # Any failure, cancellation included, would otherwise leak the open port.
         await dongle.close()
         raise
 

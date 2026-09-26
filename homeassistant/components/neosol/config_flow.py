@@ -33,7 +33,7 @@ class NeosolConfigFlow(ConfigFlow, domain=DOMAIN):
         """Read the dongle on ``port``, keeping its info, or return an error key.
 
         The dongle is closed again right away: the config entry setup is what owns the
-        serial port, and it can only be opened once.
+        serial port, and two users of it would talk over each other.
         """
         try:
             dongle, info = await open_dongle(port)
