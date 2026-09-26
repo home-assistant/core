@@ -100,8 +100,6 @@ async def async_setup_entry(
             camera_password = None
             camera_rtsp_stream = None
 
-        # Prefer local RTSP; fall back to the VTM cloud relay when the device
-        # has no RTSP server or no RTSP credentials are configured.
         use_vtm = camera_password is None or not rtsp_available(value)
         if use_vtm:
             async_register_vtm_camera(hass, entry, camera, coordinator.ezviz_client)

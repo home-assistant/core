@@ -76,6 +76,13 @@ def _token(source: str | None) -> str:
     return parse_qs(urlparse(source).query)["auth"][0]
 
 
+# Stands in for FFmpeg failing on its input.
+_FAIL = (
+    "import sys; sys.stdin.buffer.read();"
+    " sys.stderr.write('pipe:0: Invalid data found when processing input'); sys.exit(1)"
+)
+
+
 def _packet(body: bytes, *, encrypted: bool = False) -> MagicMock:
     """Return a mocked VTM stream packet."""
     return MagicMock(body=body, encrypted=encrypted)
@@ -599,3 +606,36 @@ async def test_stop_process_tolerates_ffmpeg_exiting_before_kill() -> None:
 
     process.kill.assert_called_once()
     process.wait.assert_awaited_once()
+
+
+async def test_vtm_view_logs_ffmpeg_failure(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an FFmpeg remux failure is logged with its error output."""
+    await _setup_vtm_camera(hass, mock_config_entry, mock_ezviz_client)
+    path = _local_url(await async_get_stream_source(hass, ENTITY_ID))
+    client = await hass_client_no_auth()
+    create_subprocess_exec = asyncio.create_subprocess_exec
+
+    async def _exec(*_args: str, **kwargs: object) -> asyncio.subprocess.Process:
+        return await create_subprocess_exec(sys.executable, "-c", _FAIL, **kwargs)
+
+    with (
+        patch(
+            "homeassistant.components.ezviz.vtm.asyncio.create_subprocess_exec",
+            side_effect=_exec,
+        ),
+        patch(
+            "homeassistant.components.ezviz.vtm.open_cloud_stream",
+            return_value=_mock_cloud_stream([_packet(b"garbage")]),
+        ),
+    ):
+        response = await client.get(path)
+        assert await response.read() == b""
+
+    assert "FFmpeg failed to remux the VTM stream (exit code 1)" in caplog.text
+    assert "Invalid data found when processing input" in caplog.text
