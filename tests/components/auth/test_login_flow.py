@@ -1,6 +1,7 @@
 """Tests for the login flow."""
 
 from http import HTTPStatus
+import os
 from typing import Any
 from unittest.mock import patch
 
@@ -283,6 +284,58 @@ async def test_login_exist_user(
     assert step["type"] == "create_entry"
     assert len(step["result"]) > 1
     assert len(mock_process_success_login.mock_calls) == 1
+
+
+async def test_login_refreshes_command_line_meta_before_access_check(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test command_line metadata is refreshed before local-only validation."""
+    provider_config = [
+        {
+            "type": "command_line",
+            "command": os.path.abspath(
+                os.path.join(
+                    os.path.dirname(__file__),
+                    "../../auth/providers/test_command_line_cmd.sh",
+                )
+            ),
+            "args": ["--with-meta-remote"],
+            "meta": True,
+        }
+    ]
+    client = await async_setup_auth(
+        hass, aiohttp_client, provider_config, custom_ip="1.2.3.4"
+    )
+    provider = hass.auth.auth_providers[0]
+    credentials = await provider.async_get_or_create_credentials(
+        {"username": "good-user"}
+    )
+    user = await hass.auth.async_get_or_create_user(credentials)
+    await hass.auth.async_update_user(user, local_only=True)
+
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["command_line", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+
+    resp = await client.post(
+        f"/auth/login_flow/{step['flow_id']}",
+        json={
+            "client_id": CLIENT_ID,
+            "username": "good-user",
+            "password": "good-pass",
+        },
+    )
+
+    assert resp.status == HTTPStatus.OK
+    assert (await resp.json())["type"] == "create_entry"
+    assert user.local_only is False
 
 
 async def test_login_local_only_user(
