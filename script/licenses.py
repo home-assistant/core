@@ -197,6 +197,7 @@ EXCEPTIONS = {
     "pymitv",  # MIT
     "pybbox",  # https://github.com/HydrelioxGitHub/pybbox/pull/5
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
+    "requests-unixsocket",  # https://github.com/msabramo/requests-unixsocket/blob/master/LICENSE
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
     "ujson",  # https://github.com/ultrajson/ultrajson/blob/main/LICENSE.txt
