@@ -937,6 +937,52 @@ async def test_state_from_device_clears_unreachable(
     assert hass.states.get(POOL_PUMP.entity_id).state != STATE_UNAVAILABLE
 
 
+async def test_execution_we_never_registered_is_ignored(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """An execution started elsewhere says nothing about our devices.
+
+    Its exec_id is absent from coordinator.executions, so there is no device to
+    attribute the verdict to.
+    """
+    await setup_overkiz_integration(fixture=POOL_PUMP.fixture)
+    await _async_command_pool_pump(hass)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                exec_id="exec-1",
+                new_state=ExecutionState.FAILED,
+                old_state=ExecutionState.IN_PROGRESS,
+                failure_type_code=FailureType.PEER_DOWN,
+            )
+        ],
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state == STATE_UNAVAILABLE
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                exec_id="exec-somebody-else",
+                new_state=ExecutionState.COMPLETED,
+                old_state=ExecutionState.IN_PROGRESS,
+            )
+        ],
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state == STATE_UNAVAILABLE
+
+
 async def test_completed_command_clears_unreachable(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

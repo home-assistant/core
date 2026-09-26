@@ -181,15 +181,9 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
         scratch based on datetime.now() and
         datetime.timedelta into the future.
 
-        If you execute `setAbsenceStartDate`,
-        `setAbsenceEndDate` and `setAbsenceMode`, the API
-        answers with "too many requests", as there's a polling
-        update after each command execution, and the device
-        becomes unavailable until the API is available again.
-        With `refresh_afterwards=False` on the first commands,
-        and `refresh_afterwards=True` only the last command,
-        the API is not choking and the transition is smooth
-        without the unavailability state.
+        The three commands this sends used to be answered with
+        "too many requests", because each one polled the API
+        afterwards; the refresh is debounced now.
         """
         now = dt_util.now()
         now_date = {
@@ -204,21 +198,18 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
         await self.executor.async_execute_command(
             OverkizCommand.SET_DATE_TIME,
             now_date,
-            refresh_afterwards=False,
         )
         await self.executor.async_execute_command(
-            OverkizCommand.SET_ABSENCE_START_DATE, now_date, refresh_afterwards=False
+            OverkizCommand.SET_ABSENCE_START_DATE, now_date
         )
         now_date["year"] = now_date["year"] + 1
         await self.executor.async_execute_command(
-            OverkizCommand.SET_ABSENCE_END_DATE, now_date, refresh_afterwards=False
+            OverkizCommand.SET_ABSENCE_END_DATE, now_date
         )
         await self.executor.async_execute_command(
             OverkizCommand.SET_ABSENCE_MODE,
             OverkizCommandParam.PROG,
-            refresh_afterwards=False,
         )
-        await self.coordinator.async_request_refresh()
 
     @override
     async def async_turn_away_mode_off(self) -> None:
