@@ -1,0 +1,37 @@
+navigation_request:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            - integration: tesla_fleet
+    destination:
+      required: true
+      example: "1600 Amphitheatre Parkway, Mountain View, CA"
+      selector:
+        text:
+
+navigation_gps_request:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            - integration: tesla_fleet
+    gps:
+      required: true
+      example: '{"latitude": -27.9699373, "longitude": 153.4081865}'
+      selector:
+        location:
+          radius: false
+    order:
+      required: false
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 3
+          step: 1
+          mode: box

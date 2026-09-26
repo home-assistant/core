@@ -634,6 +634,9 @@
     "no_cable": {
       "message": "Charge cable will lock automatically when connected"
     },
+    "no_vehicle_data_for_device": {
+      "message": "No vehicle data for device ID: {device_id}"
+    },
     "update_failed": {
       "message": "{endpoint} data request failed: {message}"
     },
@@ -650,6 +653,40 @@
         "eu": "Europe, Middle East & Africa",
         "na": "North America & Asia-Pacific"
       }
+    }
+  },
+  "services": {
+    "navigation_gps_request": {
+      "description": "Sets vehicle navigation to the provided latitude/longitude coordinates.",
+      "fields": {
+        "device_id": {
+          "description": "Vehicle to send the destination to.",
+          "name": "Vehicle"
+        },
+        "gps": {
+          "description": "Location to navigate to.",
+          "name": "Location"
+        },
+        "order": {
+          "description": "How to add this destination to the trip: 1 replaces the trip, 2 adds it as the next stop, 3 adds it as the last stop.",
+          "name": "Order"
+        }
+      },
+      "name": "Navigate to coordinates"
+    },
+    "navigation_request": {
+      "description": "Sets vehicle navigation to the provided destination, which can be an address, a place name or a map link.",
+      "fields": {
+        "destination": {
+          "description": "Address, place name or map link to navigate to.",
+          "name": "Destination"
+        },
+        "device_id": {
+          "description": "Vehicle to send the destination to.",
+          "name": "Vehicle"
+        }
+      },
+      "name": "Navigate to destination"
     }
   }
 }
