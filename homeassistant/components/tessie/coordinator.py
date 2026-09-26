@@ -26,6 +26,10 @@ TESSIE_SYNC_INTERVAL = 10
 TESSIE_FLEET_API_SYNC_INTERVAL = timedelta(seconds=30)
 TESSIE_ENERGY_HISTORY_INTERVAL = timedelta(seconds=60)
 
+# Kept well under HA's stage-2 setup budget (SLOW_SETUP_MAX_WAIT, 300s) so a stalled
+# first refresh raises ConfigEntryNotReady and retries instead of a non-retried setup error.
+FIRST_REFRESH_TIMEOUT = 60
+
 _LOGGER = logging.getLogger(__name__)
 
 

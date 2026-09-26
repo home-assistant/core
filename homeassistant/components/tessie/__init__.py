@@ -32,6 +32,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN, MODELS
 from .coordinator import (
+    FIRST_REFRESH_TIMEOUT,
     TessieEnergyHistoryCoordinator,
     TessieEnergySiteInfoCoordinator,
     TessieEnergySiteLiveCoordinator,
@@ -194,23 +195,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
                     )
                 )
 
-        # Populate coordinator data before forwarding to platforms
-        await asyncio.gather(
-            *(
-                energysite.live_coordinator.async_config_entry_first_refresh()
-                for energysite in energysites
-                if energysite.live_coordinator is not None
-            ),
-            *(
-                energysite.info_coordinator.async_config_entry_first_refresh()
-                for energysite in energysites
-            ),
-            *(
-                energysite.history_coordinator.async_config_entry_first_refresh()
-                for energysite in energysites
-                if energysite.history_coordinator is not None
-            ),
-        )
+        # Populate coordinator data before forwarding to platforms. Bound the first
+        # refresh so a stalled energy site retries instead of blocking HA startup.
+        try:
+            async with asyncio.timeout(FIRST_REFRESH_TIMEOUT):
+                await asyncio.gather(
+                    *(
+                        energysite.live_coordinator.async_config_entry_first_refresh()
+                        for energysite in energysites
+                        if energysite.live_coordinator is not None
+                    ),
+                    *(
+                        energysite.info_coordinator.async_config_entry_first_refresh()
+                        for energysite in energysites
+                    ),
+                    *(
+                        energysite.history_coordinator.async_config_entry_first_refresh()
+                        for energysite in energysites
+                        if energysite.history_coordinator is not None
+                    ),
+                )
+        except TimeoutError as err:
+            raise ConfigEntryNotReady("Timed out waiting for energy site data") from err
 
     entry.runtime_data = TessieData(vehicles, energysites)
 
