@@ -5,12 +5,13 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.earn_e_p1.const import CONF_SERIAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_MAC
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import DOMAIN, MOCK_MAC, MOCK_SERIAL, trigger_callback
+from .conftest import DOMAIN, MOCK_MAC, MOCK_NEW_HOST, MOCK_SERIAL, trigger_callback
 
 from tests.common import MockConfigEntry
 
@@ -54,6 +55,39 @@ async def test_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_listener.unregister.assert_called()
     mock_listener.stop.assert_awaited()
+
+
+async def test_unload_entry_keeps_listener_for_other_loaded_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_listener: MagicMock
+) -> None:
+    """Test the shared listener is only stopped when the last entry unloads."""
+    other_serial = "E0098765432109876"
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=f"EARN-E P1 ({MOCK_NEW_HOST})",
+        data={CONF_HOST: MOCK_NEW_HOST, CONF_SERIAL: other_serial},
+        unique_id=other_serial,
+    )
+    other_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert other_entry.state is ConfigEntryState.LOADED
+    mock_listener.start.assert_awaited_once()
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_listener.stop.assert_not_awaited()
+
+    await hass.config_entries.async_unload(other_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert other_entry.state is ConfigEntryState.NOT_LOADED
+    mock_listener.stop.assert_awaited_once()
 
 
 async def test_device_info(

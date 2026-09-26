@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from earn_e_p1 import EarnEP1Device, EarnEP1Listener, discover, validate
+from earn_e_p1 import EarnEP1Device, discover, validate
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -11,7 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import CONF_SERIAL, DOMAIN
+from .const import CONF_SERIAL, DOMAIN, EARN_E_P1_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_discover(self) -> EarnEP1Device | None:
         """Discover an EARN-E device on the network."""
-        listener: EarnEP1Listener | None = self.hass.data.get(DOMAIN)
+        listener = self.hass.data.get(EARN_E_P1_DATA)
         if listener is not None:
             devices = await listener.discover(timeout=DISCOVERY_TIMEOUT)
         else:
@@ -54,7 +54,7 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
         Uses the shared listener if available, otherwise creates a temporary one.
         Returns the device if serial is found, None on timeout.
         """
-        listener: EarnEP1Listener | None = self.hass.data.get(DOMAIN)
+        listener = self.hass.data.get(EARN_E_P1_DATA)
         if listener is not None:
             return await listener.validate(host, timeout=VALIDATION_TIMEOUT)
         return await validate(host, timeout=VALIDATION_TIMEOUT)
