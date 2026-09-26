@@ -3969,6 +3969,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "libresync": {
+      "name": "LibreSync",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "lichess": {
       "name": "Lichess",
       "integration_type": "service",

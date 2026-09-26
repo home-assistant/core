@@ -1,0 +1,22 @@
+{
+  "domain": "libresync",
+  "name": "LibreSync",
+  "codeowners": ["@drsound"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/libresync",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["aiolibresync"],
+  "quality_scale": "bronze",
+  "requirements": ["aiolibresync==0.5.1"],
+  "ssdp": [
+    {
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+      "manufacturer": "LibreWireless"
+    },
+    {
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+      "modelDescription": "LibreSyncDMR"
+    }
+  ]
+}
