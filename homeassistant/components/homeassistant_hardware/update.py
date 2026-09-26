@@ -3,12 +3,14 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, cast, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import RaspberryPiFirmwareInfo
 from ha_silabs_firmware_client import FirmwareManifest, FirmwareMetadata
-from universal_silabs_flasher.flasher import DeviceSpecificFlasher
+
+if TYPE_CHECKING:
+    from universal_silabs_flasher.flasher import DeviceSpecificFlasher
 from yarl import URL
 
 from homeassistant.components.update import (

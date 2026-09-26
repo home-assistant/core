@@ -6,7 +6,6 @@ import logging
 from typing import TYPE_CHECKING, Any, Protocol, final, override
 
 import probatio
-from universal_silabs_flasher.flasher import YellowFlasher
 
 from homeassistant.components.hassio import (
     SupervisorError,
@@ -24,6 +23,7 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    LazyFlasherClass,
     probe_silabs_firmware_info,
 )
 from homeassistant.config_entries import (
@@ -81,7 +81,7 @@ class YellowFirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
     """Mixin for Home Assistant Yellow firmware methods."""
 
     ZIGBEE_BAUDRATE = 115200
-    _flasher_cls = YellowFlasher
+    _flasher_cls = LazyFlasherClass("YellowFlasher")
 
     async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None
@@ -340,6 +340,8 @@ class HomeAssistantYellowMultiPanOptionsFlowHandler(
     @override
     def _flasher_cls(self) -> type:
         """Return the hardware-specific flasher class."""
+        from universal_silabs_flasher.flasher import YellowFlasher  # noqa: PLC0415
+
         return YellowFlasher  # type: ignore[no-any-return]
 
     @override

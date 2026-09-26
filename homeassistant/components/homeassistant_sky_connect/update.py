@@ -3,8 +3,6 @@
 import logging
 from typing import override
 
-from universal_silabs_flasher.flasher import Zbt1Flasher
-
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
@@ -15,6 +13,7 @@ from homeassistant.components.homeassistant_hardware.update import (
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    LazyFlasherClass,
 )
 from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.const import EntityCategory
@@ -152,7 +151,7 @@ async def async_setup_entry(
 class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """SkyConnect firmware update entity."""
 
-    _flasher_cls = Zbt1Flasher
+    _flasher_cls = LazyFlasherClass("Zbt1Flasher")
 
     def __init__(
         self,
