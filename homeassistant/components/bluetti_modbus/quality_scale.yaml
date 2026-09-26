@@ -55,11 +55,11 @@ rules:
   discovery:
     status: todo
     comment: >-
-      Devices are added by entering a host, port and unit ID directly - no
-      mDNS on the one device tested so far, and a MAC-vendor lookup alone
-      isn't specific enough to this product. The device's DHCP hostname may
-      be distinctive enough to discover on, but that's unverified across
-      more than one device/model - picking this up once confirmed.
+      Confirmed with an mDNS browser on a Balco 260: current firmware
+      advertises an `_http._tcp` service named "Bluetti HEMS" (mDNS hostname
+      `blhems-<MAC>`), and BLUETTI announced `_bluetti._tcp` named
+      "Balco260<serial>" for a later firmware. The DHCP hostname is the
+      generic "espressif". Left for a follow-up PR.
   discovery-update-info:
     status: todo
     comment: Depends on discovery above landing first.
