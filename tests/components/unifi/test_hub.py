@@ -6,16 +6,17 @@ from typing import Any
 from unittest.mock import patch
 
 import aiounifi
-from aiounifi import EndpointNotFound
+from aiounifi import EndpointNotFound, LoginRequired, Unauthorized
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.models.message import MessageKey
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.unifi.const import CONF_BLOCK_CLIENT, DOMAIN
 from homeassistant.components.unifi.coordinator import IDLE_POLL_INTERVAL, POLL_INTERVAL
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.components.unifi.hub import get_unifi_api
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST, EVENT_STATE_REPORTED, Platform
 from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -169,6 +170,52 @@ async def test_endpoint_not_found_disables_object_oriented_network_config_pollin
         )
         == 1
     )
+
+
+@pytest.mark.parametrize("error", [Unauthorized, LoginRequired])
+async def test_authentication_error_triggers_reauth(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    config_entry_setup: MockConfigEntry,
+    error: type[Exception],
+) -> None:
+    """Ensure an authentication error starts reauth instead of looping."""
+    api = config_entry_setup.runtime_data.api
+
+    with patch.object(
+        api.traffic_rules,
+        "update",
+        side_effect=error(
+            "Call https://host:443/v2/api/site/default/trafficrules received 401 Unauthorized"
+        ),
+    ) as mock_update:
+        freezer.tick(IDLE_POLL_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        assert mock_update.call_count == 1
+
+        # An authentication failure must stop the polling loop, otherwise the
+        # retries keep hitting the controller and can trip its login rate limit.
+        freezer.tick(IDLE_POLL_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        assert mock_update.call_count == 1
+
+    coordinator = (
+        config_entry_setup.runtime_data.entity_loader.get_data_update_coordinator(
+            api.traffic_rules
+        )
+    )
+    assert coordinator.last_update_success is False
+    assert "Unexpected error fetching" not in caplog.text
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == config_entry_setup.entry_id
 
 
 @pytest.mark.parametrize(
