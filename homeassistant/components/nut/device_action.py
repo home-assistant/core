@@ -2,7 +2,7 @@
 
 from typing import cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
 from homeassistant.config_entries import ConfigEntryState
@@ -18,7 +18,7 @@ ACTION_TYPES = {cmd.replace(".", "_") for cmd in INTEGRATION_SUPPORTED_COMMANDS}
 
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(ACTION_TYPES),
+        probatio.Required(CONF_TYPE): probatio.In(ACTION_TYPES),
     }
 )
 

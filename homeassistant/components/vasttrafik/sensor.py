@@ -3,8 +3,8 @@
 from datetime import datetime, timedelta
 import logging
 
+import probatio
 import vasttrafik
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -41,17 +41,17 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_KEY): cv.string,
-        vol.Required(CONF_SECRET): cv.string,
-        vol.Required(CONF_DEPARTURES): [
+        probatio.Required(CONF_KEY): cv.string,
+        probatio.Required(CONF_SECRET): cv.string,
+        probatio.Required(CONF_DEPARTURES): [
             {
-                vol.Required(CONF_FROM): cv.string,
-                vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): cv.positive_int,
-                vol.Optional(CONF_HEADING): cv.string,
-                vol.Optional(CONF_LINES, default=[]): vol.All(
+                probatio.Required(CONF_FROM): cv.string,
+                probatio.Optional(CONF_DELAY, default=DEFAULT_DELAY): cv.positive_int,
+                probatio.Optional(CONF_HEADING): cv.string,
+                probatio.Optional(CONF_LINES, default=[]): probatio.All(
                     cv.ensure_list, [cv.string]
                 ),
-                vol.Optional(CONF_NAME): cv.string,
+                probatio.Optional(CONF_NAME): cv.string,
             }
         ],
     }

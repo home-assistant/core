@@ -8,7 +8,7 @@ import logging
 import os
 from typing import Any, Final, TypedDict, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import SERVER_PORT
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
@@ -60,7 +60,7 @@ def default_server_port() -> int:
         return default
     try:
         return cast(int, cv.port(env_value))
-    except vol.Invalid:
+    except probatio.Invalid:
         _LOGGER.warning(
             "Invalid port %r in %s environment variable; falling back to %s",
             env_value,
@@ -135,31 +135,33 @@ def _ip_network_str(value: Any) -> str:
     return str(ip_network(value))
 
 
-HTTP_STORAGE_SCHEMA: Final = vol.Schema(
+HTTP_STORAGE_SCHEMA: Final = probatio.Schema(
     {
         # YAML used to allow base_url (deprecated); strip it on the way in so
         # the stored config never contains it.
-        vol.Remove(CONF_BASE_URL): object,
-        vol.Optional(CONF_SERVER_HOST): vol.All(
-            cv.ensure_list, vol.Length(min=1), [cv.string]
+        probatio.Remove(CONF_BASE_URL): object,
+        probatio.Optional(CONF_SERVER_HOST): probatio.All(
+            cv.ensure_list, probatio.Length(min=1), [cv.string]
         ),
-        vol.Optional(CONF_SERVER_PORT, default=default_server_port): cv.port,
-        vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
-        vol.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
-        vol.Optional(CONF_SSL_KEY): cv.isfile,
-        vol.Optional(CONF_CORS_ORIGINS, default=DEFAULT_CORS): vol.All(
+        probatio.Optional(CONF_SERVER_PORT, default=default_server_port): cv.port,
+        probatio.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
+        probatio.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
+        probatio.Optional(CONF_SSL_KEY): cv.isfile,
+        probatio.Optional(CONF_CORS_ORIGINS, default=DEFAULT_CORS): probatio.All(
             cv.ensure_list, [cv.string]
         ),
-        vol.Optional(CONF_USE_X_FORWARDED_FOR): cv.boolean,
-        vol.Optional(CONF_TRUSTED_PROXIES): vol.All(cv.ensure_list, [_ip_network_str]),
-        vol.Optional(
+        probatio.Optional(CONF_USE_X_FORWARDED_FOR): cv.boolean,
+        probatio.Optional(CONF_TRUSTED_PROXIES): probatio.All(
+            cv.ensure_list, [_ip_network_str]
+        ),
+        probatio.Optional(
             CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD
-        ): vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
-        vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean,
-        vol.Optional(CONF_SSL_PROFILE, default=SSL_MODERN): vol.In(
+        ): probatio.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
+        probatio.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean,
+        probatio.Optional(CONF_SSL_PROFILE, default=SSL_MODERN): probatio.In(
             [SSL_INTERMEDIATE, SSL_MODERN]
         ),
-        vol.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
+        probatio.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
     }
 )
 _DEFAULT_CONFIG: Final[ConfData] = ConfData(
@@ -669,7 +671,7 @@ class _HTTPStore(Store[_HTTPStoreData]):
             # load step can rely on direct key access.
             try:
                 stable = HTTP_STORAGE_SCHEMA(old_data)
-            except vol.Invalid:
+            except probatio.Invalid:
                 _LOGGER.warning(
                     "Discarding invalid v1 HTTP config during migration; "
                     "falling back to defaults"

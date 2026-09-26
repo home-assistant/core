@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
@@ -48,7 +48,7 @@ EVENT_TYPES_BY_EVENT_CLASS = {
 }
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
-    {vol.Required(CONF_TYPE): str, vol.Required(CONF_SUBTYPE): str}
+    {probatio.Required(CONF_TYPE): str, probatio.Required(CONF_SUBTYPE): str}
 )
 
 

@@ -2,8 +2,8 @@
 
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.mysensors.gateway import is_serial_port
 from homeassistant.core import HomeAssistant
@@ -27,7 +27,7 @@ def test_is_serial_port_windows(
     with patch("sys.platform", "win32"):
         try:
             is_serial_port(port)
-        except vol.Invalid:
+        except probatio.Invalid:
             assert not expect_valid
         else:
             assert expect_valid

@@ -20,6 +20,7 @@
         'error_type': None,
         'name': 'dnd',
         'scale': None,
+        'time_of_sample': None,
         'value': False,
       }),
       'temperature': dict({
@@ -28,6 +29,7 @@
         'error_type': None,
         'name': 'temperature',
         'scale': 'CELSIUS',
+        'time_of_sample': None,
         'value': '22.5',
       }),
     }),
@@ -59,6 +61,7 @@
               'error_type': None,
               'name': 'dnd',
               'scale': None,
+              'time_of_sample': None,
               'value': False,
             }),
             'temperature': dict({
@@ -67,6 +70,7 @@
               'error_type': None,
               'name': 'temperature',
               'scale': 'CELSIUS',
+              'time_of_sample': None,
               'value': '22.5',
             }),
           }),

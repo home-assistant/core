@@ -5,8 +5,8 @@ from datetime import datetime
 import logging
 from typing import Any
 
+import probatio
 import pywemo
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
@@ -54,7 +54,7 @@ def coerce_host_port(value: str) -> HostPortTuple:
     host, _, port_str = value.partition(":")
 
     if not host:
-        raise vol.Invalid("host cannot be empty")
+        raise probatio.Invalid("host cannot be empty")
 
     port = cv.port(port_str) if port_str else None
 
@@ -65,18 +65,20 @@ CONF_STATIC = "static"
 
 DEFAULT_DISCOVERY = True
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_STATIC, default=[]): vol.Schema(
-                    [vol.All(cv.string, coerce_host_port)]
+                probatio.Optional(CONF_STATIC, default=[]): probatio.Schema(
+                    [probatio.All(cv.string, coerce_host_port)]
                 ),
-                vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
+                probatio.Optional(
+                    CONF_DISCOVERY, default=DEFAULT_DISCOVERY
+                ): cv.boolean,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

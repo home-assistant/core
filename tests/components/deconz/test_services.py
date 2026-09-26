@@ -3,9 +3,9 @@
 from collections.abc import Callable
 from typing import Any
 
+import probatio
 from pydeconz.errors import RequestError
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.deconz.const import (
     CONF_BRIDGE_ID,
@@ -142,7 +142,7 @@ async def test_configure_service_with_faulty_field(hass: HomeAssistant) -> None:
     """Test that service fails on a bad field."""
     data = {SERVICE_FIELD: "light/2", SERVICE_DATA: {}}
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
         )

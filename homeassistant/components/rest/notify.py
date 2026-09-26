@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 import httpx
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
@@ -45,26 +45,26 @@ DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_RESOURCE): cv.url,
-        vol.Optional(
+        probatio.Required(CONF_RESOURCE): cv.url,
+        probatio.Optional(
             CONF_MESSAGE_PARAMETER_NAME, default=DEFAULT_MESSAGE_PARAM_NAME
         ): cv.string,
-        vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(
+        probatio.Optional(CONF_METHOD, default=DEFAULT_METHOD): probatio.In(
             ["POST", "GET", "POST_JSON"]
         ),
-        vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
-        vol.Optional(CONF_PARAMS): vol.Schema({cv.string: cv.string}),
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_TARGET_PARAMETER_NAME): cv.string,
-        vol.Optional(CONF_TITLE_PARAMETER_NAME): cv.string,
-        vol.Optional(CONF_DATA): vol.All(dict, cv.template_complex),
-        vol.Optional(CONF_DATA_TEMPLATE): vol.All(dict, cv.template_complex),
-        vol.Optional(CONF_AUTHENTICATION): vol.In(
+        probatio.Optional(CONF_HEADERS): probatio.Schema({cv.string: cv.string}),
+        probatio.Optional(CONF_PARAMS): probatio.Schema({cv.string: cv.string}),
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_TARGET_PARAMETER_NAME): cv.string,
+        probatio.Optional(CONF_TITLE_PARAMETER_NAME): cv.string,
+        probatio.Optional(CONF_DATA): probatio.All(dict, cv.template_complex),
+        probatio.Optional(CONF_DATA_TEMPLATE): probatio.All(dict, cv.template_complex),
+        probatio.Optional(CONF_AUTHENTICATION): probatio.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        probatio.Optional(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_USERNAME): cv.string,
+        probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
 )
 

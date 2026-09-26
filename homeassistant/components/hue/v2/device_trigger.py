@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING, Any
 
 from aiohue.v2.models.resource import ResourceTypes
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
@@ -37,9 +37,9 @@ if TYPE_CHECKING:
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): str,
-        vol.Required(CONF_SUBTYPE): vol.Union(int, str),
-        vol.Optional(CONF_UNIQUE_ID): str,
+        probatio.Required(CONF_TYPE): str,
+        probatio.Required(CONF_SUBTYPE): probatio.Union(int, str),
+        probatio.Optional(CONF_UNIQUE_ID): str,
     }
 )
 

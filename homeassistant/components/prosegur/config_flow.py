@@ -4,9 +4,9 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from pyprosegur.auth import COUNTRY, Auth
 from pyprosegur.installation import Installation
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
@@ -18,11 +18,11 @@ from .const import CONF_CONTRACT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_COUNTRY): selector.CountrySelector(
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_COUNTRY): selector.CountrySelector(
             selector.CountrySelectorConfig(countries=list(COUNTRY))
         ),
     }
@@ -97,9 +97,9 @@ class ProsegurConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="choose_contract",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_CONTRACT): selector.SelectSelector(
+                    probatio.Required(CONF_CONTRACT): selector.SelectSelector(
                         selector.SelectSelectorConfig(options=contract_options)
                     ),
                 }
@@ -142,12 +142,12 @@ class ProsegurConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_USERNAME, default=reauth_entry.data[CONF_USERNAME]
                     ): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,

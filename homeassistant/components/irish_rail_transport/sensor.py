@@ -3,8 +3,8 @@
 from datetime import timedelta
 from typing import Any, override
 
+import probatio
 from pyirishrail.pyirishrail import IrishRailRTPI
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -40,11 +40,11 @@ TIME_STR_FORMAT = "%H:%M"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_STATION): cv.string,
-        vol.Optional(CONF_DIRECTION): cv.string,
-        vol.Optional(CONF_DESTINATION): cv.string,
-        vol.Optional(CONF_STOPS_AT): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_STATION): cv.string,
+        probatio.Optional(CONF_DIRECTION): cv.string,
+        probatio.Optional(CONF_DESTINATION): cv.string,
+        probatio.Optional(CONF_STOPS_AT): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 

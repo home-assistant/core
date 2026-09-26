@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from dwdwfsapi import DwdWeatherWarningsAPI
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -87,10 +87,10 @@ class DwdWeatherWarningsConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             errors=errors,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_REGION_IDENTIFIER): cv.string,
-                    vol.Optional(CONF_REGION_DEVICE_TRACKER): EntitySelector(
+                    probatio.Optional(CONF_REGION_IDENTIFIER): cv.string,
+                    probatio.Optional(CONF_REGION_DEVICE_TRACKER): EntitySelector(
                         EntitySelectorConfig(domain="device_tracker")
                     ),
                 }

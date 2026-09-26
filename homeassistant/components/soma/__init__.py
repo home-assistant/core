@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from api.soma_api import SomaApi
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
@@ -15,16 +15,19 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, HOST, PORT
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
+CONFIG_SCHEMA = probatio.Schema(
+    probatio.All(
         cv.deprecated(DOMAIN),
         {
-            DOMAIN: vol.Schema(
-                {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_PORT): cv.string}
+            DOMAIN: probatio.Schema(
+                {
+                    probatio.Required(CONF_HOST): cv.string,
+                    probatio.Required(CONF_PORT): cv.string,
+                }
             )
         },
     ),
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

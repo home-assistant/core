@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pyaprilaire.const import Attribute
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -14,10 +14,10 @@ from homeassistant.helpers.device_registry import format_mac
 from .const import DOMAIN
 from .coordinator import AprilaireCoordinator
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=7000): cv.port,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=7000): cv.port,
     }
 )
 

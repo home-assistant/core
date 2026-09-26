@@ -9,7 +9,7 @@ from nextcloudmonitor import (
     NextcloudMonitorConnectionError,
     NextcloudMonitorRequestError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -20,18 +20,18 @@ from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VER
 
 from .const import DEFAULT_VERIFY_SSL, DOMAIN
 
-DATA_SCHEMA_USER = vol.Schema(
+DATA_SCHEMA_USER = probatio.Schema(
     {
-        vol.Required(CONF_URL): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+        probatio.Required(CONF_URL): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
     }
 )
-DATA_SCHEMA_REAUTH = vol.Schema(
+DATA_SCHEMA_REAUTH = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 

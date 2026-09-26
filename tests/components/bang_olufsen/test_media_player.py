@@ -15,10 +15,10 @@ from mozart_api.models import (
     SourceArray,
     WebsocketNotificationTag,
 )
+from probatio import Invalid, MultipleInvalid
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
-from voluptuous import Invalid, MultipleInvalid
 
 from homeassistant.components.bang_olufsen.const import (
     BEO_REPEAT_FROM_HA,

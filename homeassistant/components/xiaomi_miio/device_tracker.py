@@ -4,7 +4,7 @@ import logging
 from typing import override
 
 from miio import DeviceException, WifiRepeater
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -20,8 +20,10 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_TOKEN): probatio.All(
+            cv.string, probatio.Length(min=32, max=32)
+        ),
     }
 )
 

@@ -3,7 +3,7 @@
 from typing import Any, cast, override
 from urllib.parse import urlparse
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -55,7 +55,9 @@ class KaleidescapeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST, default=host): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_HOST, default=host): str}
+            ),
             errors=errors,
         )
 

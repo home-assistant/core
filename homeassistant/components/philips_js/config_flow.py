@@ -11,7 +11,7 @@ from haphilipsjs import (
     PairingFailure,
     PhilipsTV,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -38,21 +38,21 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from . import LOGGER
 from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, CONST_APP_ID, CONST_APP_NAME, DOMAIN
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(
+        probatio.Required(
             CONF_HOST,
         ): str,
-        vol.Required(
+        probatio.Required(
             CONF_API_VERSION,
             default="1",
-        ): vol.In(["1", "5", "6"]),
+        ): probatio.In(["1", "5", "6"]),
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_ALLOW_NOTIFY, default=False): selector.BooleanSelector(),
+        probatio.Optional(CONF_ALLOW_NOTIFY, default=False): selector.BooleanSelector(),
     }
 )
 OPTIONS_FLOW = {
@@ -123,9 +123,9 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._hub
 
         errors: dict[str, str] = {}
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_PIN): str,
+                probatio.Required(CONF_PIN): str,
             }
         )
 
@@ -184,7 +184,9 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
 
         LOGGER.debug(
-            "Checking discovered device: {discovery_info.name} on {discovery_info.host}"
+            "Checking discovered device: %s on %s",
+            discovery_info.name,
+            discovery_info.host,
         )
 
         secured_transport = discovery_info.type == "_philipstv_s_rpc._tcp.local."

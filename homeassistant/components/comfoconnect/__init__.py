@@ -2,8 +2,8 @@
 
 import logging
 
+import probatio
 from pycomfoconnect import Bridge, ComfoConnect
-import voluptuous as vol
 
 from homeassistant.const import (
     CONF_HOST,
@@ -31,21 +31,23 @@ DEFAULT_PIN = 0
 DEFAULT_TOKEN = "00000000000000000000000000000001"
 DEFAULT_USER_AGENT = "Home Assistant"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(CONF_TOKEN, default=DEFAULT_TOKEN): vol.Length(
+                probatio.Required(CONF_HOST): cv.string,
+                probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                probatio.Optional(CONF_TOKEN, default=DEFAULT_TOKEN): probatio.Length(
                     min=32, max=32, msg="invalid token"
                 ),
-                vol.Optional(CONF_USER_AGENT, default=DEFAULT_USER_AGENT): cv.string,
-                vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.positive_int,
+                probatio.Optional(
+                    CONF_USER_AGENT, default=DEFAULT_USER_AGENT
+                ): cv.string,
+                probatio.Optional(CONF_PIN, default=DEFAULT_PIN): cv.positive_int,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

@@ -956,7 +956,7 @@ async def test_media_browse_local_source(
     assert msg["result"]["title"] == "media"
     assert msg["result"]["media_class"] == MediaClass.DIRECTORY
     assert msg["result"]["media_content_type"] == ""
-    assert len(msg["result"]["children"]) == 2
+    assert len(msg["result"]["children"]) == 3
 
     assert msg["result"]["children"][0]["title"] == "Epic Sax Guy 10 Hours.mp4"
     assert msg["result"]["children"][0]["media_class"] == MediaClass.VIDEO

@@ -5,7 +5,7 @@ from collections.abc import Collection
 import logging
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -84,10 +84,10 @@ def _conf_preprocess(value: Any) -> dict[str, Any]:
     return value
 
 
-GROUP_SCHEMA = vol.All(
-    vol.Schema(
+GROUP_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Optional(CONF_ENTITIES): vol.Any(cv.entity_ids, None),
+            probatio.Optional(CONF_ENTITIES): probatio.Any(cv.entity_ids, None),
             CONF_NAME: cv.string,
             CONF_ICON: cv.icon,
             CONF_ALL: cv.boolean,
@@ -95,9 +95,13 @@ GROUP_SCHEMA = vol.All(
     )
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({cv.match_all: vol.All(_conf_preprocess, GROUP_SCHEMA)})},
-    extra=vol.ALLOW_EXTRA,
+CONFIG_SCHEMA = probatio.Schema(
+    {
+        DOMAIN: probatio.Schema(
+            {cv.match_all: probatio.All(_conf_preprocess, GROUP_SCHEMA)}
+        )
+    },
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -232,7 +236,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await async_reload_integration_platforms(hass, DOMAIN, PLATFORMS)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
+        DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=probatio.Schema({})
     )
 
     service_lock = asyncio.Lock()
@@ -318,16 +322,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_SET,
         locked_service_handler,
-        schema=vol.All(
-            vol.Schema(
+        schema=probatio.All(
+            probatio.Schema(
                 {
-                    vol.Required(ATTR_OBJECT_ID): cv.slug,
-                    vol.Optional(ATTR_NAME): cv.string,
-                    vol.Optional(ATTR_ICON): cv.string,
-                    vol.Optional(ATTR_ALL): cv.boolean,
-                    vol.Exclusive(ATTR_ENTITIES, "entities"): cv.entity_ids,
-                    vol.Exclusive(ATTR_ADD_ENTITIES, "entities"): cv.entity_ids,
-                    vol.Exclusive(ATTR_REMOVE_ENTITIES, "entities"): cv.entity_ids,
+                    probatio.Required(ATTR_OBJECT_ID): cv.slug,
+                    probatio.Optional(ATTR_NAME): cv.string,
+                    probatio.Optional(ATTR_ICON): cv.string,
+                    probatio.Optional(ATTR_ALL): cv.boolean,
+                    probatio.Exclusive(ATTR_ENTITIES, "entities"): cv.entity_ids,
+                    probatio.Exclusive(ATTR_ADD_ENTITIES, "entities"): cv.entity_ids,
+                    probatio.Exclusive(ATTR_REMOVE_ENTITIES, "entities"): cv.entity_ids,
                 }
             )
         ),
@@ -337,7 +341,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_REMOVE,
         groups_service_handler,
-        schema=vol.Schema({vol.Required(ATTR_OBJECT_ID): cv.slug}),
+        schema=probatio.Schema({probatio.Required(ATTR_OBJECT_ID): cv.slug}),
     )
 
     return True

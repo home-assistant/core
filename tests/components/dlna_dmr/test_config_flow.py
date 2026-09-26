@@ -754,7 +754,7 @@ async def test_options_flow(
     assert result["step_id"] == "init"
     assert result["errors"] == {}
 
-    # Invalid URL for callback (can't be validated automatically by voluptuous)
+    # Invalid URL for callback (can't be validated automatically by probatio)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={

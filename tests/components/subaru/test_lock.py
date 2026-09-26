@@ -2,9 +2,9 @@
 
 from unittest.mock import patch
 
+from probatio.error import MultipleInvalid
 import pytest
 from subarulink import SubaruException
-from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.subaru.const import (

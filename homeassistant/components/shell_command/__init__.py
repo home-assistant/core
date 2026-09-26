@@ -7,7 +7,7 @@ import logging
 import shlex
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 import homeassistant.config as conf_util
 from homeassistant.const import SERVICE_RELOAD
@@ -33,8 +33,8 @@ COMMAND_TIMEOUT = 60
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: cv.schema_with_slug_keys(cv.string)}, extra=vol.ALLOW_EXTRA
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: cv.schema_with_slug_keys(cv.string)}, extra=probatio.ALLOW_EXTRA
 )
 
 
@@ -196,7 +196,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         try:
             new_conf = CONFIG_SCHEMA(raw_config).get(DOMAIN, {})
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             _LOGGER.error("Invalid shell_command configuration: %s", err)
             return
 

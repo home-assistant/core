@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from nyt_games import NYTGamesAuthenticationError, NYTGamesClient, NYTGamesError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
@@ -42,6 +42,6 @@ class NYTGamesConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_TOKEN): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_TOKEN): str}),
             errors=errors,
         )

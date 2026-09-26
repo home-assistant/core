@@ -28,8 +28,7 @@ from openai.types.chat import (
 )
 from openai.types.chat.chat_completion_message_function_tool_call_param import Function
 from openai.types.shared_params import FunctionDefinition, ResponseFormatJSONSchema
-from probatio import to_openapi
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -64,11 +63,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _format_structured_output(
-    name: str, structure: vol.Schema, llm_api: llm.APIInstance | None
+    name: str, structure: probatio.Schema, llm_api: llm.APIInstance | None
 ) -> ResponseFormatJSONSchema:
     """Format structured output specification."""
-    schema = to_openapi(
-        structure, custom_serializer=llm_api.custom_serializer if llm_api else None
+    schema = probatio.to_openapi(
+        structure,
+        custom_serializer=llm_api.custom_serializer if llm_api else None,
+        openapi_version="3.1.0",
     )
     return ResponseFormatJSONSchema(
         type="json_schema",
@@ -87,7 +88,11 @@ def _format_tool(
     """Format tool specification."""
     tool_spec = FunctionDefinition(
         name=tool.name,
-        parameters=to_openapi(tool.parameters, custom_serializer=custom_serializer),
+        parameters=probatio.to_openapi(
+            tool.parameters,
+            custom_serializer=custom_serializer,
+            openapi_version="3.1.0",
+        ),
     )
     if tool.description:
         tool_spec["description"] = tool.description
@@ -103,7 +108,9 @@ def _convert_content_to_chat_message(
         return ChatCompletionToolMessageParam(
             role="tool",
             tool_call_id=content.tool_call_id,
-            content=json_dumps(content.tool_result),
+            content=json_dumps(
+                {"data": content.result.data, "error": content.result.error}
+            ),
         )
 
     role: Literal["user", "assistant", "system"] = content.role
@@ -176,7 +183,9 @@ def _convert_content_to_param(
         return ChatCompletionToolMessageParam(
             role="tool",
             tool_call_id=content.tool_call_id,
-            content=json_dumps(content.tool_result),
+            content=json_dumps(
+                {"data": content.result.data, "error": content.result.error}
+            ),
         )
     if not isinstance(content, conversation.AssistantContent) or not content.tool_calls:
         if isinstance(content, conversation.SystemContent):
@@ -304,7 +313,7 @@ class LlamaCppBaseLLMEntity(Entity):
         self,
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
-        structure: vol.Schema | None = None,
+        structure: probatio.Schema | None = None,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data

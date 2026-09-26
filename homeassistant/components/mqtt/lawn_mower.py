@@ -5,7 +5,7 @@ import contextlib
 import logging
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import lawn_mower
 from homeassistant.components.lawn_mower import (
@@ -62,23 +62,25 @@ FEATURE_STOP = "stop"
 
 PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_ACTIVITY_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_ACTIVITY_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_DOCK_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_DOCK_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-        vol.Optional(CONF_PAUSE_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_PAUSE_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(CONF_START_MOWING_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_START_MOWING_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_STOP_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_STOP_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_ACTIVITY_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_ACTIVITY_STATE_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_DOCK_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_DOCK_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+        probatio.Optional(CONF_PAUSE_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_PAUSE_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        probatio.Optional(CONF_START_MOWING_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_START_MOWING_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_STOP_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_STOP_COMMAND_TOPIC): valid_publish_topic,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA))
+DISCOVERY_SCHEMA = probatio.All(
+    PLATFORM_SCHEMA_MODERN.extend({}, extra=probatio.REMOVE_EXTRA)
+)
 
 
 async def async_setup_entry(

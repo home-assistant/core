@@ -52,8 +52,8 @@ from aiohasupervisor.os import OSClient
 from aiohasupervisor.resolution import ResolutionClient
 from aiohasupervisor.store import StoreClient
 from aiohasupervisor.supervisor import SupervisorManagementClient
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import components, loader
 from homeassistant.components import repairs
@@ -1061,7 +1061,7 @@ async def _check_step_or_section_translations(
     integration: str,
     translation_prefix: str,
     description_placeholders: dict[str, str],
-    data_schema: vol.Schema | None,
+    data_schema: probatio.Schema | None,
     ignore_translations_for_mock_domains: set[str],
 ) -> None:
     # neither title nor description are required

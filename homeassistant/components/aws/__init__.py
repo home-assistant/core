@@ -7,7 +7,7 @@ import logging
 from typing import Any
 
 from aiobotocore.session import AioSession
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
@@ -48,13 +48,13 @@ class AWSData:
     sessions: OrderedDict[str, AioSession]
 
 
-AWS_CREDENTIAL_SCHEMA = vol.Schema(
+AWS_CREDENTIAL_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
-        vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
-        vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
-        vol.Optional(CONF_VALIDATE, default=True): cv.boolean,
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
+        probatio.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
+        probatio.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
+        probatio.Optional(CONF_VALIDATE, default=True): cv.boolean,
     }
 )
 
@@ -64,35 +64,35 @@ DEFAULT_CREDENTIAL = [
 
 SUPPORTED_SERVICES = ["lambda", "sns", "sqs", "events"]
 
-NOTIFY_PLATFORM_SCHEMA = vol.Schema(
+NOTIFY_PLATFORM_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Required(CONF_SERVICE): vol.All(
-            cv.string, vol.Lower, vol.In(SUPPORTED_SERVICES)
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_SERVICE): probatio.All(
+            cv.string, probatio.Lower, probatio.In(SUPPORTED_SERVICES)
         ),
-        vol.Required(CONF_REGION): vol.All(cv.string, vol.Lower),
-        vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
-        vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
-        vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
-        vol.Exclusive(CONF_CREDENTIAL_NAME, ATTR_CREDENTIALS): cv.string,
-        vol.Optional(CONF_CONTEXT): vol.Coerce(dict),
+        probatio.Required(CONF_REGION): probatio.All(cv.string, probatio.Lower),
+        probatio.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
+        probatio.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
+        probatio.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
+        probatio.Exclusive(CONF_CREDENTIAL_NAME, ATTR_CREDENTIALS): cv.string,
+        probatio.Optional(CONF_CONTEXT): probatio.Coerce(dict),
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_CREDENTIALS, default=DEFAULT_CREDENTIAL): vol.All(
-                    cv.ensure_list, [AWS_CREDENTIAL_SCHEMA]
-                ),
-                vol.Optional(CONF_NOTIFY, default=[]): vol.All(
+                probatio.Optional(
+                    CONF_CREDENTIALS, default=DEFAULT_CREDENTIAL
+                ): probatio.All(cv.ensure_list, [AWS_CREDENTIAL_SCHEMA]),
+                probatio.Optional(CONF_NOTIFY, default=[]): probatio.All(
                     cv.ensure_list, [NOTIFY_PLATFORM_SCHEMA]
                 ),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

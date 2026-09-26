@@ -39,6 +39,9 @@
       },
       "led_bar_brightness": {
         "name": "LED bar brightness"
+      },
+      "measurement_interval": {
+        "name": "Measurement interval"
       }
     },
     "select": {

@@ -3,8 +3,8 @@
 from collections.abc import Mapping
 from typing import Any, override
 
+import probatio
 from smarttub import LoginFailed
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -12,8 +12,8 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from .const import DOMAIN
 from .controller import SmartTubController
 
-DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
+DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_EMAIL): str, probatio.Required(CONF_PASSWORD): str}
 )
 
 
@@ -69,13 +69,13 @@ class SmartTubConfigFlow(ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
             # same as DATA_SCHEMA but with default email
-            data_schema = vol.Schema(
+            data_schema = probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_EMAIL,
                         default=self._get_reauth_entry().data.get(CONF_EMAIL),
                     ): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             )
             return self.async_show_form(

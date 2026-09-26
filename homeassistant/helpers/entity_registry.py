@@ -19,7 +19,7 @@ import time
 from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict, override
 
 import attr
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
@@ -2768,13 +2768,13 @@ async def async_migrate_entries(
 def async_validate_entity_id(registry: EntityRegistry, entity_id_or_uuid: str) -> str:
     """Validate and resolve an entity id or UUID to an entity id.
 
-    Raises vol.Invalid if the entity or UUID is invalid, or if the UUID is not
+    Raises probatio.Invalid if the entity or UUID is invalid, or if the UUID is not
     associated with an entity registry item.
     """
     if valid_entity_id(entity_id_or_uuid):
         return entity_id_or_uuid
     if (entry := registry.entities.get_entry(entity_id_or_uuid)) is None:
-        raise vol.Invalid(f"Unknown entity registry entry {entity_id_or_uuid}")
+        raise probatio.Invalid(f"Unknown entity registry entry {entity_id_or_uuid}")
     return entry.entity_id
 
 
@@ -2801,7 +2801,7 @@ def async_validate_entity_ids(
     """Validate and resolve a list of entity ids or UUIDs to a list of entity ids.
 
     Returns a list with UUID resolved to entity_ids.
-    Raises vol.Invalid if any item is invalid, or if any a UUID is not associated with
+    Raises probatio.Invalid if any item is invalid, or if any a UUID is not associated with
     an entity registry item.
     """
 

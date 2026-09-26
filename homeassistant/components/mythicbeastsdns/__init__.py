@@ -3,7 +3,7 @@
 from datetime import timedelta
 
 import mbddns
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_DOMAIN,
@@ -21,20 +21,20 @@ DOMAIN = "mythicbeastsdns"
 
 DEFAULT_INTERVAL = timedelta(minutes=10)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_DOMAIN): cv.string,
-                vol.Required(CONF_HOST): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL): vol.All(
-                    cv.time_period, cv.positive_timedelta
-                ),
+                probatio.Required(CONF_DOMAIN): cv.string,
+                probatio.Required(CONF_HOST): cv.string,
+                probatio.Required(CONF_PASSWORD): cv.string,
+                probatio.Optional(
+                    CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL
+                ): probatio.All(cv.time_period, cv.positive_timedelta),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

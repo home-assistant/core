@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_NAME
@@ -53,40 +53,40 @@ async def _validate_config(
 ) -> dict[str, Any]:
     """Validate config."""
     try:
-        vol.Unique()(user_input[CONF_TARIFFS])
-    except vol.Invalid as exc:
+        probatio.Unique()(user_input[CONF_TARIFFS])
+    except probatio.Invalid as exc:
         raise SchemaFlowError("tariffs_not_unique") from exc
 
     return user_input
 
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_SOURCE_SENSOR): selector.EntitySelector(
+        probatio.Required(CONF_SOURCE_SENSOR): selector.EntitySelector(
             selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
         ),
-        vol.Required(
+        probatio.Required(
             CONF_METER_PERIODICALLY_RESETTING,
         ): selector.BooleanSelector(),
-        vol.Optional(
+        probatio.Optional(
             CONF_SENSOR_ALWAYS_AVAILABLE,
             default=False,
         ): selector.BooleanSelector(),
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME): selector.TextSelector(),
-        vol.Required(CONF_SOURCE_SENSOR): selector.EntitySelector(
+        probatio.Required(CONF_NAME): selector.TextSelector(),
+        probatio.Required(CONF_SOURCE_SENSOR): selector.EntitySelector(
             selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
         ),
-        vol.Required(CONF_METER_TYPE): selector.SelectSelector(
+        probatio.Required(CONF_METER_TYPE): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=METER_TYPES, translation_key=CONF_METER_TYPE
             ),
         ),
-        vol.Required(CONF_METER_OFFSET, default=0): selector.NumberSelector(
+        probatio.Required(CONF_METER_OFFSET, default=0): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=0,
                 max=28,
@@ -95,20 +95,20 @@ CONFIG_SCHEMA = vol.Schema(
                 translation_key=CONF_METER_OFFSET,
             ),
         ),
-        vol.Required(CONF_TARIFFS, default=[]): selector.SelectSelector(
+        probatio.Required(CONF_TARIFFS, default=[]): selector.SelectSelector(
             selector.SelectSelectorConfig(options=[], custom_value=True, multiple=True),
         ),
-        vol.Required(
+        probatio.Required(
             CONF_METER_NET_CONSUMPTION, default=False
         ): selector.BooleanSelector(),
-        vol.Required(
+        probatio.Required(
             CONF_METER_DELTA_VALUES, default=False
         ): selector.BooleanSelector(),
-        vol.Required(
+        probatio.Required(
             CONF_METER_PERIODICALLY_RESETTING,
             default=True,
         ): selector.BooleanSelector(),
-        vol.Optional(
+        probatio.Optional(
             CONF_SENSOR_ALWAYS_AVAILABLE,
             default=False,
         ): selector.BooleanSelector(),

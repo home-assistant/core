@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.input_select import DOMAIN as INPUT_SELECT_DOMAIN
 from homeassistant.const import CONF_OPTIONS
@@ -20,9 +20,9 @@ from .const import CONF_OPTION, DOMAIN
 
 IS_OPTION_SELECTED_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
-        vol.Required(CONF_OPTIONS): {
-            vol.Required(CONF_OPTION): vol.All(
-                cv.ensure_list, vol.Length(min=1), [str]
+        probatio.Required(CONF_OPTIONS): {
+            probatio.Required(CONF_OPTION): probatio.All(
+                cv.ensure_list, probatio.Length(min=1), [str]
             ),
         },
     }

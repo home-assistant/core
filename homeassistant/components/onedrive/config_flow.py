@@ -7,7 +7,7 @@ from typing import Any, cast, override
 from onedrive_personal_sdk.clients.client import OneDriveClient
 from onedrive_personal_sdk.exceptions import OneDriveException
 from onedrive_personal_sdk.models.items import AppRoot, ItemUpdate
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -31,7 +31,7 @@ from .const import (
 )
 from .coordinator import OneDriveConfigEntry
 
-FOLDER_NAME_SCHEMA = vol.Schema({vol.Required(CONF_FOLDER_NAME): str})
+FOLDER_NAME_SCHEMA = probatio.Schema({probatio.Required(CONF_FOLDER_NAME): str})
 
 
 class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -242,9 +242,9 @@ class OneDriveOptionsFlowHandler(OptionsFlow):
         if user_input:
             return self.async_create_entry(title="", data=user_input)
 
-        options_schema = vol.Schema(
+        options_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_DELETE_PERMANENTLY,
                     default=self.config_entry.options.get(
                         CONF_DELETE_PERMANENTLY, False

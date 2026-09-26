@@ -5,7 +5,7 @@ from typing import Any, override
 
 from apyosoenergyapi import OSOEnergy
 from apyosoenergyapi.helper.const import OSOEnergyWaterHeaterData
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
@@ -71,8 +71,8 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_TURN_AWAY_MODE_ON,
         {
-            vol.Required(ATTR_DURATION_DAYS): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=365)
+            probatio.Required(ATTR_DURATION_DAYS): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=1, max=365)
             ),
         },
         OSOEnergyWaterHeater.async_oso_turn_away_mode_on.__name__,
@@ -80,8 +80,8 @@ async def async_setup_entry(
 
     service_set_profile_schema = cv.make_entity_service_schema(
         {
-            vol.Optional(f"hour_{hour:02d}"): vol.All(
-                vol.Coerce(int), vol.Range(min=10, max=75)
+            probatio.Optional(f"hour_{hour:02d}"): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=10, max=75)
             )
             for hour in range(24)
         }
@@ -96,8 +96,8 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_V40MIN,
         {
-            vol.Required(ATTR_V40MIN): vol.All(
-                vol.Coerce(float), vol.Range(min=200, max=550)
+            probatio.Required(ATTR_V40MIN): probatio.All(
+                probatio.Coerce(float), probatio.Range(min=200, max=550)
             ),
         },
         OSOEnergyWaterHeater.async_set_v40_min.__name__,
@@ -105,13 +105,13 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_TURN_OFF,
-        {vol.Required(ATTR_UNTIL_TEMP_LIMIT): vol.All(cv.boolean)},
+        {probatio.Required(ATTR_UNTIL_TEMP_LIMIT): probatio.All(cv.boolean)},
         OSOEnergyWaterHeater.async_oso_turn_off.__name__,
     )
 
     platform.async_register_entity_service(
         SERVICE_TURN_ON,
-        {vol.Required(ATTR_UNTIL_TEMP_LIMIT): vol.All(cv.boolean)},
+        {probatio.Required(ATTR_UNTIL_TEMP_LIMIT): probatio.All(cv.boolean)},
         OSOEnergyWaterHeater.async_oso_turn_on.__name__,
     )
 

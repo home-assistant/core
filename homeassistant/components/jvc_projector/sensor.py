@@ -31,11 +31,13 @@ class JvcProjectorSensorDescription(SensorEntityDescription):
 SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
     JvcProjectorSensorDescription(
         key="power",
+        translation_key="power",
         command=cmd.Power,
         device_class=SensorDeviceClass.ENUM,
     ),
     JvcProjectorSensorDescription(
         key="light_time",
+        translation_key="light_time",
         command=cmd.LightTime,
         device_class=SensorDeviceClass.DURATION,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -43,6 +45,7 @@ SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
     ),
     JvcProjectorSensorDescription(
         key="color_depth",
+        translation_key="color_depth",
         command=cmd.ColorDepth,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -50,6 +53,7 @@ SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
     ),
     JvcProjectorSensorDescription(
         key="color_space",
+        translation_key="color_space",
         command=cmd.ColorSpace,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -57,13 +61,17 @@ SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
     ),
     JvcProjectorSensorDescription(
         key="hdr",
+        translation_key="hdr",
         command=cmd.Hdr,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
+    # Keep these entities available for existing installations while they are
+    # migrated to the equivalent select entities.
     JvcProjectorSensorDescription(
         key="hdr_processing",
+        translation_key="hdr_processing",
         command=cmd.HdrProcessing,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -71,7 +79,32 @@ SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
     ),
     JvcProjectorSensorDescription(
         key="picture_mode",
+        translation_key="picture_mode",
         command=cmd.PictureMode,
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    JvcProjectorSensorDescription(
+        key="resolution",
+        translation_key="resolution",
+        command=cmd.Source,
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    JvcProjectorSensorDescription(
+        key="colorimetry",
+        translation_key="colorimetry",
+        command=cmd.Colorimetry,
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    JvcProjectorSensorDescription(
+        key="link_rate",
+        translation_key="link_rate",
+        command=cmd.LinkRate,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -124,7 +157,7 @@ class JvcProjectorSensorEntity(JvcProjectorEntity, SensorEntity):
         self.command: type[Command] = description.command
 
         self.entity_description = description
-        self._attr_translation_key = description.key
+        self._attr_translation_key = description.translation_key
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
 
         self._options_map: dict[str, str] = {}

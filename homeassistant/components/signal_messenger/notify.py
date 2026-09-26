@@ -3,9 +3,9 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pysignalclirestapi import SignalCliRestApi, SignalCliRestApiError
 import requests
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -30,26 +30,32 @@ ATTR_TEXTMODE = "text_mode"
 
 TEXTMODE_OPTIONS = ["normal", "styled"]
 
-DATA_FILENAMES_SCHEMA = vol.Schema(
+DATA_FILENAMES_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_FILENAMES): [cv.string],
-        vol.Optional(ATTR_TEXTMODE, default="normal"): vol.In(TEXTMODE_OPTIONS),
+        probatio.Required(ATTR_FILENAMES): [cv.string],
+        probatio.Optional(ATTR_TEXTMODE, default="normal"): probatio.In(
+            TEXTMODE_OPTIONS
+        ),
     }
 )
 
-DATA_URLS_SCHEMA = vol.Schema(
+DATA_URLS_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_URLS): [cv.url],
-        vol.Optional(ATTR_VERIFY_SSL, default=True): cv.boolean,
-        vol.Optional(ATTR_TEXTMODE, default="normal"): vol.In(TEXTMODE_OPTIONS),
+        probatio.Required(ATTR_URLS): [cv.url],
+        probatio.Optional(ATTR_VERIFY_SSL, default=True): cv.boolean,
+        probatio.Optional(ATTR_TEXTMODE, default="normal"): probatio.In(
+            TEXTMODE_OPTIONS
+        ),
     }
 )
 
-DATA_SCHEMA = vol.Any(
+DATA_SCHEMA = probatio.Any(
     None,
-    vol.Schema(
+    probatio.Schema(
         {
-            vol.Optional(ATTR_TEXTMODE, default="normal"): vol.In(TEXTMODE_OPTIONS),
+            probatio.Optional(ATTR_TEXTMODE, default="normal"): probatio.In(
+                TEXTMODE_OPTIONS
+            ),
         }
     ),
     DATA_FILENAMES_SCHEMA,
@@ -58,9 +64,9 @@ DATA_SCHEMA = vol.Any(
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_SENDER_NR): cv.string,
-        vol.Required(CONF_SIGNAL_CLI_REST_API): cv.string,
-        vol.Required(CONF_RECP_NR): vol.All(cv.ensure_list, [cv.string]),
+        probatio.Required(CONF_SENDER_NR): cv.string,
+        probatio.Required(CONF_SIGNAL_CLI_REST_API): cv.string,
+        probatio.Required(CONF_RECP_NR): probatio.All(cv.ensure_list, [cv.string]),
     }
 )
 
@@ -108,7 +114,7 @@ class SignalNotificationService(BaseNotificationService):
 
         try:
             data = DATA_SCHEMA(data)
-        except vol.Invalid as ex:
+        except probatio.Invalid as ex:
             _LOGGER.error("Invalid message data: %s", ex)
             raise
 
@@ -134,7 +140,7 @@ class SignalNotificationService(BaseNotificationService):
         """Extract attachment filenames from data."""
         try:
             data = DATA_FILENAMES_SCHEMA(data)
-        except vol.Invalid:
+        except probatio.Invalid:
             return None
         return data[ATTR_FILENAMES]
 
@@ -147,7 +153,7 @@ class SignalNotificationService(BaseNotificationService):
         """Retrieve attachments from URLs defined in data."""
         try:
             data = DATA_URLS_SCHEMA(data)
-        except vol.Invalid:
+        except probatio.Invalid:
             return None
         urls = data[ATTR_URLS]
 

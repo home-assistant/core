@@ -17,8 +17,8 @@ from huawei_lte_api.exceptions import (
     ResponseErrorLoginRequiredException,
     ResponseErrorNotSupportedException,
 )
+import probatio
 from requests.exceptions import Timeout
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -89,7 +89,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.url})
+SERVICE_SCHEMA = probatio.Schema({probatio.Optional(CONF_URL): cv.url})
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,

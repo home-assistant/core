@@ -2,8 +2,8 @@
 
 from typing import override
 
+import probatio
 from pykwb import kwb
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -32,24 +32,24 @@ CONF_RAW = "raw"
 
 SERIAL_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_RAW, default=DEFAULT_RAW): cv.boolean,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_DEVICE): cv.string,
-        vol.Required(CONF_TYPE): "serial",
+        probatio.Optional(CONF_RAW, default=DEFAULT_RAW): cv.boolean,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_DEVICE): cv.string,
+        probatio.Required(CONF_TYPE): "serial",
     }
 )
 
 ETHERNET_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_RAW, default=DEFAULT_RAW): cv.boolean,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT): cv.port,
-        vol.Required(CONF_TYPE): "tcp",
+        probatio.Optional(CONF_RAW, default=DEFAULT_RAW): cv.boolean,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_PORT): cv.port,
+        probatio.Required(CONF_TYPE): "tcp",
     }
 )
 
-PLATFORM_SCHEMA = vol.Schema(vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA))
+PLATFORM_SCHEMA = probatio.Schema(probatio.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA))
 
 
 def setup_platform(

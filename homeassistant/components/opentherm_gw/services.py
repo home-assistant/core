@@ -3,8 +3,8 @@
 from datetime import date, datetime
 from typing import TYPE_CHECKING
 
+import probatio
 import pyotgw.vars as gw_vars
-import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_DATE,
@@ -63,100 +63,103 @@ def _get_gateway(call: ServiceCall) -> OpenThermGatewayHub:
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register services for the component."""
-    service_reset_schema = vol.Schema({vol.Required(ATTR_GW_ID): vol.All(cv.string)})
-    service_set_central_heating_ovrd_schema = vol.Schema(
+    service_reset_schema = probatio.Schema(
+        {probatio.Required(ATTR_GW_ID): probatio.All(cv.string)}
+    )
+    service_set_central_heating_ovrd_schema = probatio.Schema(
         {
-            vol.Required(ATTR_GW_ID): vol.All(cv.string),
-            vol.Required(ATTR_CH_OVRD): cv.boolean,
+            probatio.Required(ATTR_GW_ID): probatio.All(cv.string),
+            probatio.Required(ATTR_CH_OVRD): cv.boolean,
         }
     )
-    service_set_clock_schema = vol.Schema(
+    service_set_clock_schema = probatio.Schema(
         {
-            vol.Required(ATTR_GW_ID): vol.All(cv.string),
-            vol.Optional(ATTR_DATE, default=date.today): cv.date,
-            vol.Optional(
+            probatio.Required(ATTR_GW_ID): probatio.All(cv.string),
+            probatio.Optional(ATTR_DATE, default=date.today): cv.date,
+            probatio.Optional(
                 ATTR_TIME, default=lambda: dt_util.naive_now().time()
             ): cv.time,
         }
     )
-    service_set_control_setpoint_schema = vol.Schema(
+    service_set_control_setpoint_schema = probatio.Schema(
         {
-            vol.Required(ATTR_GW_ID): vol.All(cv.string),
-            vol.Required(ATTR_TEMPERATURE): vol.All(
-                vol.Coerce(float), vol.Range(min=0, max=90)
+            probatio.Required(ATTR_GW_ID): probatio.All(cv.string),
+            probatio.Required(ATTR_TEMPERATURE): probatio.All(
+                probatio.Coerce(float), probatio.Range(min=0, max=90)
             ),
         }
     )
     service_set_hot_water_setpoint_schema = service_set_control_setpoint_schema
-    service_set_hot_water_ovrd_schema = vol.Schema(
+    service_set_hot_water_ovrd_schema = probatio.Schema(
         {
-            vol.Required(ATTR_GW_ID): vol.All(cv.string),
-            vol.Required(ATTR_DHW_OVRD): vol.Any(
-                vol.Equal("A"), vol.All(vol.Coerce(int), vol.Range(min=0, max=1))
+            probatio.Required(ATTR_GW_ID): probatio.All(cv.string),
+            probatio.Required(ATTR_DHW_OVRD): probatio.Any(
+                probatio.Equal("A"),
+                probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=1)),
             ),
         }
     )
-    service_set_gpio_mode_schema = vol.Schema(
-        vol.Any(
-            vol.Schema(
+    service_set_gpio_mode_schema = probatio.Schema(
+        probatio.Any(
+            probatio.Schema(
                 {
-                    vol.Required(ATTR_GW_ID): vol.All(cv.string),
-                    vol.Required(ATTR_ID): vol.Equal("A"),
-                    vol.Required(ATTR_MODE): vol.All(
-                        vol.Coerce(int), vol.Range(min=0, max=6)
+                    probatio.Required(ATTR_GW_ID): probatio.All(cv.string),
+                    probatio.Required(ATTR_ID): probatio.Equal("A"),
+                    probatio.Required(ATTR_MODE): probatio.All(
+                        probatio.Coerce(int), probatio.Range(min=0, max=6)
                     ),
                 }
             ),
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Required(ATTR_GW_ID): vol.All(cv.string),
-                    vol.Required(ATTR_ID): vol.Equal("B"),
-                    vol.Required(ATTR_MODE): vol.All(
-                        vol.Coerce(int), vol.Range(min=0, max=7)
+                    probatio.Required(ATTR_GW_ID): probatio.All(cv.string),
+                    probatio.Required(ATTR_ID): probatio.Equal("B"),
+                    probatio.Required(ATTR_MODE): probatio.All(
+                        probatio.Coerce(int), probatio.Range(min=0, max=7)
                     ),
                 }
             ),
         )
     )
-    service_set_led_mode_schema = vol.Schema(
+    service_set_led_mode_schema = probatio.Schema(
         {
-            vol.Required(ATTR_GW_ID): vol.All(cv.string),
-            vol.Required(ATTR_ID): vol.In("ABCDEF"),
-            vol.Required(ATTR_MODE): vol.In("RXTBOFHWCEMP"),
+            probatio.Required(ATTR_GW_ID): probatio.All(cv.string),
+            probatio.Required(ATTR_ID): probatio.In("ABCDEF"),
+            probatio.Required(ATTR_MODE): probatio.In("RXTBOFHWCEMP"),
         }
     )
-    service_set_max_mod_schema = vol.Schema(
+    service_set_max_mod_schema = probatio.Schema(
         {
-            vol.Required(ATTR_GW_ID): vol.All(cv.string),
-            vol.Required(ATTR_LEVEL): vol.All(
-                vol.Coerce(int), vol.Range(min=-1, max=100)
+            probatio.Required(ATTR_GW_ID): probatio.All(cv.string),
+            probatio.Required(ATTR_LEVEL): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=-1, max=100)
             ),
         }
     )
-    service_set_oat_schema = vol.Schema(
+    service_set_oat_schema = probatio.Schema(
         {
-            vol.Required(ATTR_GW_ID): vol.All(cv.string),
-            vol.Required(ATTR_TEMPERATURE): vol.All(
-                vol.Coerce(float), vol.Range(min=-40, max=99)
+            probatio.Required(ATTR_GW_ID): probatio.All(cv.string),
+            probatio.Required(ATTR_TEMPERATURE): probatio.All(
+                probatio.Coerce(float), probatio.Range(min=-40, max=99)
             ),
         }
     )
-    service_set_sb_temp_schema = vol.Schema(
+    service_set_sb_temp_schema = probatio.Schema(
         {
-            vol.Required(ATTR_GW_ID): vol.All(cv.string),
-            vol.Required(ATTR_TEMPERATURE): vol.All(
-                vol.Coerce(float), vol.Range(min=0, max=30)
+            probatio.Required(ATTR_GW_ID): probatio.All(cv.string),
+            probatio.Required(ATTR_TEMPERATURE): probatio.All(
+                probatio.Coerce(float), probatio.Range(min=0, max=30)
             ),
         }
     )
-    service_send_transp_cmd_schema = vol.Schema(
+    service_send_transp_cmd_schema = probatio.Schema(
         {
-            vol.Required(ATTR_GW_ID): vol.All(cv.string),
-            vol.Required(ATTR_TRANSP_CMD): vol.All(
-                cv.string, vol.Length(min=2, max=2), vol.Coerce(str.upper)
+            probatio.Required(ATTR_GW_ID): probatio.All(cv.string),
+            probatio.Required(ATTR_TRANSP_CMD): probatio.All(
+                cv.string, probatio.Length(min=2, max=2), probatio.Coerce(str.upper)
             ),
-            vol.Required(ATTR_TRANSP_ARG): vol.All(
-                cv.string, vol.Length(min=1, max=12)
+            probatio.Required(ATTR_TRANSP_ARG): probatio.All(
+                cv.string, probatio.Length(min=1, max=12)
             ),
         }
     )

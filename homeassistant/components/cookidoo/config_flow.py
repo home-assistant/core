@@ -1,16 +1,19 @@
 """Config flow for Cookidoo integration."""
 
 from collections.abc import Mapping
+from dataclasses import asdict
 import logging
 from typing import Any, override
 
 from cookidoo_api import (
+    CookidooAuthData,
     CookidooAuthException,
+    CookidooParseException,
     CookidooRequestException,
     get_country_options,
     get_localization_options,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -18,7 +21,14 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_COUNTRY, CONF_EMAIL, CONF_LANGUAGE, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_COUNTRY,
+    CONF_EMAIL,
+    CONF_LANGUAGE,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+)
+from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     CountrySelector,
     CountrySelectorConfig,
@@ -35,13 +45,13 @@ from .helpers import cookidoo_from_config_data
 _LOGGER = logging.getLogger(__name__)
 
 AUTH_DATA_SCHEMA = {
-    vol.Required(CONF_EMAIL): TextSelector(
+    probatio.Required(CONF_EMAIL): TextSelector(
         TextSelectorConfig(
             type=TextSelectorType.EMAIL,
             autocomplete="email",
         ),
     ),
-    vol.Required(CONF_PASSWORD): TextSelector(
+    probatio.Required(CONF_PASSWORD): TextSelector(
         TextSelectorConfig(
             type=TextSelectorType.PASSWORD,
             autocomplete="current-password",
@@ -61,6 +71,9 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
 
     user_input: dict[str, Any]
     user_uuid: str
+    # A login whose token response carries no refresh token leaves the library
+    # with nothing to hand us, and the entry is then created without tokens
+    token: dict[str, Any] = {}
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any]
@@ -99,7 +112,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {**AUTH_DATA_SCHEMA, **self.COUNTRY_DATA_SCHEMA}
                 ),
                 suggested_values=suggested_values,
@@ -119,7 +132,12 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         ):
             if self.source == SOURCE_USER:
                 return self.async_create_entry(
-                    title="Cookidoo", data={**self.user_input, **language_input}
+                    title="Cookidoo",
+                    data={
+                        **self.user_input,
+                        **language_input,
+                        CONF_TOKEN: self.token,
+                    },
                 )
             reconfigure_entry = self._get_reconfigure_entry()
             return self.async_update_reload_and_abort(
@@ -128,13 +146,14 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
                     **reconfigure_entry.data,
                     **self.user_input,
                     **language_input,
+                    CONF_TOKEN: self.token,
                 },
             )
 
         await self.generate_language_schema()
         return self.async_show_form(
             step_id="language",
-            data_schema=vol.Schema(self.LANGUAGE_DATA_SCHEMA),
+            data_schema=probatio.Schema(self.LANGUAGE_DATA_SCHEMA),
             description_placeholders={"cookidoo": "Cookidoo"},
             errors=errors,
         )
@@ -160,12 +179,12 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(self.user_uuid)
                 self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
-                    reauth_entry, data_updates=user_input
+                    reauth_entry, data_updates={**user_input, CONF_TOKEN: self.token}
                 )
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=vol.Schema(AUTH_DATA_SCHEMA),
+                data_schema=probatio.Schema(AUTH_DATA_SCHEMA),
                 suggested_values={CONF_EMAIL: reauth_entry.data[CONF_EMAIL]},
             ),
             description_placeholders={"cookidoo": "Cookidoo"},
@@ -175,7 +194,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
     async def generate_country_schema(self) -> None:
         """Generate country schema."""
         self.COUNTRY_DATA_SCHEMA = {
-            vol.Required(CONF_COUNTRY): CountrySelector(
+            probatio.Required(CONF_COUNTRY): CountrySelector(
                 CountrySelectorConfig(
                     countries=[
                         country.upper() for country in await get_country_options()
@@ -187,7 +206,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
     async def generate_language_schema(self) -> None:
         """Generate language schema."""
         self.LANGUAGE_DATA_SCHEMA = {
-            vol.Required(CONF_LANGUAGE): LanguageSelector(
+            probatio.Required(CONF_LANGUAGE): LanguageSelector(
                 LanguageSelectorConfig(
                     languages=[
                         option.language
@@ -199,6 +218,11 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
             ),
         }
+
+    @callback
+    def _save_token(self, auth_data: CookidooAuthData) -> None:
+        """Keep the tokens the library hands us during the validation requests."""
+        self.token = asdict(auth_data)
 
     async def validate_input(
         self,
@@ -222,14 +246,21 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
                 await get_localization_options(country=data_input[CONF_COUNTRY].lower())
             )[0].language  # Pick any language to test login
 
-        cookidoo = await cookidoo_from_config_data(self.hass, data_input)
+        # Only this attempt's tokens may reach the entry: a login that yields
+        # none leaves _save_token uncalled, and an earlier attempt may have
+        # stored a pair, for another account in a reauth
+        self.token = {}
+        cookidoo = await cookidoo_from_config_data(
+            self.hass, data_input, on_auth_data_update=self._save_token
+        )
         try:
             await cookidoo.login()
             user_info = await cookidoo.get_user_info()
             self.user_uuid = user_info.id
             if language_input:
                 await cookidoo.get_additional_items()
-        except CookidooRequestException:
+        except CookidooRequestException, CookidooParseException:
+            # login() scrapes the CIAM login page, so it can also fail to parse it
             errors["base"] = "cannot_connect"
         except CookidooAuthException:
             errors["base"] = "invalid_auth"

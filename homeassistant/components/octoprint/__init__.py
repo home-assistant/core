@@ -3,8 +3,8 @@
 import logging
 
 import aiohttp
+import probatio
 from pyoctoprintapi import OctoprintClient
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
@@ -37,13 +37,13 @@ _LOGGER = logging.getLogger(__name__)
 def has_all_unique_names(value):
     """Validate that printers have an unique name."""
     names = [util_slugify(printer["name"]) for printer in value]
-    vol.Schema(vol.Unique())(names)
+    probatio.Schema(probatio.Unique())(names)
     return value
 
 
 def ensure_valid_path(value):
     """Validate the path, ensuring it starts and ends with a /."""
-    vol.Schema(cv.string)(value)
+    probatio.Schema(cv.string)(value)
     if value[0] != "/":
         value = f"/{value}"
     if value[-1] != "/":
@@ -67,12 +67,12 @@ BINARY_SENSOR_TYPES = [
     "Printing Error",
 ]
 
-BINARY_SENSOR_SCHEMA = vol.Schema(
+BINARY_SENSOR_SCHEMA = probatio.Schema(
     {
-        vol.Optional(
+        probatio.Optional(
             CONF_MONITORED_CONDITIONS, default=list(BINARY_SENSOR_TYPES)
-        ): vol.All(cv.ensure_list, [vol.In(BINARY_SENSOR_TYPES)]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        ): probatio.All(cv.ensure_list, [probatio.In(BINARY_SENSOR_TYPES)]),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -84,38 +84,42 @@ SENSOR_TYPES = [
     "Time Elapsed",
 ]
 
-SENSOR_SCHEMA = vol.Schema(
+SENSOR_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(
+            CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
+        ): probatio.All(cv.ensure_list, [probatio.In(SENSOR_TYPES)]),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
+CONFIG_SCHEMA = probatio.Schema(
+    probatio.All(
         cv.deprecated(DOMAIN),
         {
-            DOMAIN: vol.All(
+            DOMAIN: probatio.All(
                 cv.ensure_list,
                 [
-                    vol.Schema(
+                    probatio.Schema(
                         {
-                            vol.Required(CONF_API_KEY): cv.string,
-                            vol.Required(CONF_HOST): cv.string,
-                            vol.Optional(CONF_SSL, default=False): cv.boolean,
-                            vol.Optional(CONF_PORT, default=80): cv.port,
-                            vol.Optional(CONF_PATH, default="/"): ensure_valid_path,
+                            probatio.Required(CONF_API_KEY): cv.string,
+                            probatio.Required(CONF_HOST): cv.string,
+                            probatio.Optional(CONF_SSL, default=False): cv.boolean,
+                            probatio.Optional(CONF_PORT, default=80): cv.port,
+                            probatio.Optional(
+                                CONF_PATH, default="/"
+                            ): ensure_valid_path,
                             # Following values are not longer used in the configuration
                             # of the integration and are here for historical purposes
-                            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                            vol.Optional(
+                            probatio.Optional(
+                                CONF_NAME, default=DEFAULT_NAME
+                            ): cv.string,
+                            probatio.Optional(
                                 CONF_NUMBER_OF_TOOLS, default=0
                             ): cv.positive_int,
-                            vol.Optional(CONF_BED, default=False): cv.boolean,
-                            vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-                            vol.Optional(
+                            probatio.Optional(CONF_BED, default=False): cv.boolean,
+                            probatio.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+                            probatio.Optional(
                                 CONF_BINARY_SENSORS, default={}
                             ): BINARY_SENSOR_SCHEMA,
                         }
@@ -125,7 +129,7 @@ CONFIG_SCHEMA = vol.Schema(
             )
         },
     ),
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

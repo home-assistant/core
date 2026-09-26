@@ -1,6 +1,8 @@
 """Tests for intent timers."""
 
 import asyncio
+from collections.abc import Callable
+import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -31,6 +33,9 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+
+DELAYED_COMMAND = "turn on the lights"
+DELAYED_COMMAND_ERROR = "Sorry, I am not aware of any device called lights"
 
 
 @pytest.fixture
@@ -1524,6 +1529,75 @@ async def test_start_timer_with_conversation_command(
         await hass.async_block_till_done()
         mock_converse.assert_called_once()
         assert mock_converse.call_args.args[1] == test_command
+
+
+def _delayed_command_acted() -> intent.IntentResponse:
+    """Return the response of a delayed command that acted."""
+    return intent.IntentResponse(language="en")
+
+
+def _delayed_command_failed() -> intent.IntentResponse:
+    """Return the response of a delayed command that could not act."""
+    response = intent.IntentResponse(language="en")
+    response.async_set_error(
+        intent.IntentResponseErrorCode.NO_VALID_TARGETS, DELAYED_COMMAND_ERROR
+    )
+    return response
+
+
+@pytest.mark.usefixtures("init_components")
+@pytest.mark.parametrize(
+    ("make_response", "expected_warnings"),
+    [
+        pytest.param(_delayed_command_acted, [], id="command_acted"),
+        pytest.param(
+            _delayed_command_failed,
+            [
+                f"Delayed command failed: command={DELAYED_COMMAND},"
+                f" code=no_valid_targets, response={DELAYED_COMMAND_ERROR}"
+            ],
+            id="command_failed",
+        ),
+    ],
+)
+async def test_start_timer_conversation_command_result_logged(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    make_response: Callable[[], intent.IntentResponse],
+    expected_warnings: list[str],
+) -> None:
+    """Test that a delayed command which could not act is logged.
+
+    Nothing listens to the response of a delayed command, so an error is
+    otherwise invisible.
+    """
+    with patch(
+        "homeassistant.components.conversation.async_converse",
+        return_value=conversation.ConversationResult(response=make_response()),
+    ):
+        result = await intent.async_handle(
+            hass,
+            "test",
+            intent.INTENT_START_TIMER,
+            {
+                "seconds": {"value": 0},
+                "conversation_command": {"value": DELAYED_COMMAND},
+            },
+            device_id="test_device",
+            conversation_agent_id="test_agent",
+        )
+
+        assert result.response_type is intent.IntentResponseType.ACTION_DONE
+
+        # The delayed command runs in a background task
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert [
+        record.getMessage()
+        for record in caplog.records
+        if record.name == "homeassistant.components.intent.timers"
+        and record.levelno == logging.WARNING
+    ] == expected_warnings
 
 
 async def test_start_timer_with_sentence_trigger_validation(

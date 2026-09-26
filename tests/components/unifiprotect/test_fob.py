@@ -634,3 +634,56 @@ async def test_fob_added_at_runtime(
         )
         == 5
     )
+
+
+async def test_fob_added_after_setup_in_hybrid(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A fob paired after setup gets its entities in hybrid mode too.
+
+    The private bootstrap has no store for fobs, so the adopt path never sees
+    one; discovery goes through the public add signal in both modes. A
+    re-delivered frame must not add a second time.
+    """
+    ufp.api.has_public_bootstrap = True
+    pb = _make_public_bootstrap(None)
+    ufp.api.public_bootstrap = pb
+    ufp.api.update_public = AsyncMock(return_value=pb)
+
+    await init_entry(hass, ufp, [])
+    assert entity_registry.async_get(BATTERY_SENSOR) is None
+
+    fob = _make_fob()
+    pb.fobs = {fob.id: fob}
+    msg = public_device_ws_message(fob)
+    msg.action = WSAction.ADD
+    assert ufp.devices_ws_subscription is not None
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(BATTERY_SENSOR) is not None
+    count = len(
+        [
+            entry
+            for entry in entity_registry.entities.values()
+            if entry.unique_id.startswith(FOB_MAC)
+        ]
+    )
+
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert "already exists" not in caplog.text
+    assert (
+        len(
+            [
+                entry
+                for entry in entity_registry.entities.values()
+                if entry.unique_id.startswith(FOB_MAC)
+            ]
+        )
+        == count
+    )

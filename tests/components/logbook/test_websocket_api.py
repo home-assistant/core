@@ -6,6 +6,7 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import ANY, patch
 
+import attr
 from freezegun import freeze_time
 import pytest
 
@@ -93,7 +94,9 @@ async def _async_mock_logbook_platform_with_broken_describe(
     logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
 
 
-async def _async_mock_logbook_platform(hass: HomeAssistant) -> None:
+async def _async_mock_logbook_platform(
+    hass: HomeAssistant, domain: str = "test", event_name: str = "mock_event"
+) -> None:
     class MockLogbookPlatform:
         """Mock a logbook platform."""
 
@@ -114,9 +117,9 @@ async def _async_mock_logbook_platform(hass: HomeAssistant) -> None:
                     "message": event.data.get("message", "is on fire"),
                 }
 
-            async_describe_event("test", "mock_event", async_describe_test_event)
+            async_describe_event(domain, event_name, async_describe_test_event)
 
-    logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
+    logbook._process_logbook_platform(hass, domain, MockLogbookPlatform)
 
 
 async def _async_mock_entity_with_broken_logbook_platform(
@@ -579,6 +582,75 @@ async def test_get_events_with_device_ids(
     assert results[4]["entity_id"] == "light.kitchen"
     assert results[4]["state"] == "off"
     assert isinstance(results[4]["when"], float)
+
+
+async def test_get_events_with_composite_device_id(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test logbook get_events for a pre-migration composite device id.
+
+    The composite device spans two config entries with different domains, so the
+    external logbook events of both domains must be returned. A composite reports
+    only one of the two as its config_entry_id, so the union of its config entries
+    is what makes both domains interesting.
+    """
+    composite_id = "composite00000000000000000000ab"
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
+        ]
+    )
+
+    entry_a = MockConfigEntry(domain="test_a")
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="test_b")
+    entry_b.add_to_hass(hass)
+    await _async_mock_logbook_platform(hass, "test_a", "mock_event_a")
+    await _async_mock_logbook_platform(hass, "test_b", "mock_event_b")
+
+    device_a = device_registry.async_get_or_create(
+        config_entry_id=entry_a.entry_id, identifiers={("test_a", "0123")}
+    )
+    device_b = device_registry.async_get_or_create(
+        config_entry_id=entry_b.entry_id, identifiers={("test_b", "0123")}
+    )
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry._devices[device_a.id] = attr.evolve(
+        device_a, composite_device_id=composite_id
+    )
+    device_registry._devices[device_b.id] = attr.evolve(
+        device_b, composite_device_id=composite_id
+    )
+    assert device_registry.async_get(composite_id).is_composite_device is True
+
+    # No entity_ids are requested, so the composite device is the only route by which
+    # either domain can become interesting
+    hass.bus.async_fire("mock_event_a", {"device_id": composite_id})
+    hass.bus.async_fire("mock_event_b", {"device_id": composite_id})
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "logbook/get_events",
+            "start_time": now.isoformat(),
+            "device_ids": [composite_id],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 1
+
+    results = response["result"]
+    assert len(results) == 2
+    assert {result["domain"] for result in results} == {"test_a", "test_b"}
+    assert {result["message"] for result in results} == {"is on fire"}
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)

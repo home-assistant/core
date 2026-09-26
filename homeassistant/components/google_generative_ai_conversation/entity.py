@@ -32,8 +32,7 @@ from google.genai.types import (
     Tool,
     ToolListUnion,
 )
-from probatio import to_openapi
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -206,8 +205,8 @@ def _format_schema(schema: dict[str, Any]) -> Schema:
 
     if result.get("enum") and result.get("type") != "STRING":
         # enum is only allowed for STRING type. This is safe as long as the schema
-        # contains vol.Coerce for the respective type, for example:
-        # vol.All(vol.Coerce(int), vol.In([1, 2, 3]))
+        # contains probatio.Coerce for the respective type, for example:
+        # probatio.All(probatio.Coerce(int), probatio.In([1, 2, 3]))
         result["type"] = "STRING"
         result["enum"] = [str(item) for item in result["enum"]]
 
@@ -227,7 +226,7 @@ def _format_tool(
 
     if tool.parameters.schema:
         parameters = _format_schema(
-            to_openapi(tool.parameters, custom_serializer=custom_serializer)
+            probatio.to_openapi(tool.parameters, custom_serializer=custom_serializer)
         )
     else:
         parameters = None
@@ -272,7 +271,12 @@ def _create_google_tool_response_parts(
     return [
         Part.from_function_response(
             name=tool_result.tool_name,
-            response=_validate_tool_results(tool_result.tool_result),
+            response=_validate_tool_results(
+                {
+                    "data": tool_result.result.data,
+                    "error": tool_result.result.error,
+                }
+            ),
         )
         for tool_result in parts
     ]
@@ -573,7 +577,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
     async def _async_handle_chat_log(
         self,
         chat_log: conversation.ChatLog,
-        structure: vol.Schema | None = None,
+        structure: probatio.Schema | None = None,
         default_max_tokens: int | None = None,
         max_iterations: int = MAX_TOOL_ITERATIONS,
     ) -> None:
@@ -665,7 +669,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         if structure:
             generate_content_config.response_mime_type = "application/json"
             generate_content_config.response_schema = _format_schema(
-                to_openapi(
+                probatio.to_openapi(
                     structure,
                     custom_serializer=(
                         chat_log.llm_api.custom_serializer

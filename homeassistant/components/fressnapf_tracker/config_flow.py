@@ -9,7 +9,7 @@ from fressnapftracker import (
     FressnapfTrackerInvalidPhoneNumberError,
     FressnapfTrackerInvalidTokenError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -24,14 +24,14 @@ from .const import CONF_PHONE_NUMBER, CONF_SMS_CODE, CONF_USER_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PHONE_NUMBER): str,
+        probatio.Required(CONF_PHONE_NUMBER): str,
     }
 )
-STEP_SMS_CODE_DATA_SCHEMA = vol.Schema(
+STEP_SMS_CODE_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_SMS_CODE): str,
+        probatio.Required(CONF_SMS_CODE): str,
     }
 )
 

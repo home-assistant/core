@@ -12,7 +12,7 @@ from plugwise.exceptions import (
     ResponseError,
     UnsupportedDeviceError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -46,22 +46,22 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SMILE_RECONF_SCHEMA = vol.Schema(
+SMILE_RECONF_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 
 
-def smile_user_schema(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
+def smile_user_schema(discovery_info: ZeroconfServiceInfo | None) -> probatio.Schema:
     """Generate base schema for gateways."""
-    schema = vol.Schema({vol.Required(CONF_PASSWORD): str})
+    schema = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
 
     if not discovery_info:
         schema = schema.extend(
             {
-                vol.Required(CONF_HOST): str,
-                vol.Required(CONF_USERNAME, default=SMILE): vol.In(
+                probatio.Required(CONF_HOST): str,
+                probatio.Required(CONF_USERNAME, default=SMILE): probatio.In(
                     {SMILE: FLOW_SMILE, STRETCH: FLOW_STRETCH}
                 ),
             }

@@ -2,8 +2,8 @@
 
 from typing import Any, override
 
+import probatio
 import pysesame2
-import voluptuous as vol
 
 from homeassistant.components.lock import (
     PLATFORM_SCHEMA as LOCK_PLATFORM_SCHEMA,
@@ -17,7 +17,9 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTR_SERIAL_NO = "serial"
 
-PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend({vol.Required(CONF_API_KEY): cv.string})
+PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
+    {probatio.Required(CONF_API_KEY): cv.string}
+)
 
 
 def setup_platform(

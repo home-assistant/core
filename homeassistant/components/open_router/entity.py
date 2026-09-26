@@ -22,8 +22,7 @@ from openai.types.chat import (
 from openai.types.chat.chat_completion_message_function_tool_call_param import Function
 from openai.types.shared_params import FunctionDefinition, ResponseFormatJSONSchema
 from openai.types.shared_params.response_format_json_schema import JSONSchema
-from probatio import to_openapi
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -33,51 +32,32 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
+from homeassistant.util import slugify
 
 from . import OpenRouterConfigEntry
 from .const import CONF_WEB_SEARCH, DOMAIN, LOGGER
+from .schema import adjust_schema
 
 MAX_TOOL_ITERATIONS = 10
 
 
-def _adjust_schema(schema: dict[str, Any]) -> None:
-    """Adjust the schema to be compatible with OpenRouter API."""
-    if schema["type"] == "object":
-        if "properties" not in schema:
-            return
-
-        if "required" not in schema:
-            schema["required"] = []
-
-        for prop, prop_info in schema["properties"].items():
-            _adjust_schema(prop_info)
-            if prop not in schema["required"]:
-                prop_info["type"] = [prop_info["type"], "null"]
-                schema["required"].append(prop)
-
-    elif schema["type"] == "array":
-        if "items" not in schema:
-            return
-
-        _adjust_schema(schema["items"])
-
-
 def _format_structured_output(
-    name: str, schema: vol.Schema, llm_api: llm.APIInstance | None
+    name: str, schema: probatio.Schema, llm_api: llm.APIInstance | None
 ) -> JSONSchema:
     """Format the schema to be compatible with OpenRouter API."""
     result: JSONSchema = {
-        "name": name,
+        "name": slugify(name)[:64] or "response",
         "strict": True,
     }
-    result_schema = to_openapi(
+    result_schema = probatio.to_openapi(
         schema,
         custom_serializer=(
             llm_api.custom_serializer if llm_api else llm.selector_serializer
         ),
+        openapi_version="3.1.0",
     )
 
-    _adjust_schema(result_schema)
+    adjust_schema(result_schema)
 
     result["schema"] = result_schema
     return result
@@ -89,7 +69,9 @@ def _format_tool(
 ) -> ChatCompletionFunctionToolParam:
     """Format tool specification."""
     unsupported_keys = {"oneOf", "anyOf", "allOf"}
-    schema = to_openapi(tool.parameters, custom_serializer=custom_serializer)
+    schema = probatio.to_openapi(
+        tool.parameters, custom_serializer=custom_serializer, openapi_version="3.1.0"
+    )
     schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
 
     tool_spec = FunctionDefinition(
@@ -110,7 +92,9 @@ def _convert_content_to_chat_message(
         return ChatCompletionToolMessageParam(
             role="tool",
             tool_call_id=content.tool_call_id,
-            content=json_dumps(content.tool_result),
+            content=json_dumps(
+                {"data": content.result.data, "error": content.result.error}
+            ),
         )
 
     role: Literal["user", "assistant", "system"] = content.role
@@ -229,13 +213,13 @@ class OpenRouterEntity(Entity):
         self,
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
-        structure: vol.Schema | None = None,
+        structure: probatio.Schema | None = None,
     ) -> None:
         """Generate an answer for the chat log."""
 
         model = self.model
 
-        extra_body: dict[str, Any] = {"require_parameters": True}
+        extra_body: dict[str, Any] = {"provider": {"require_parameters": True}}
 
         tools: list[ChatCompletionFunctionToolParam | dict[str, Any]] = []
         if chat_log.llm_api:

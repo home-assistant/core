@@ -5,6 +5,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from reolink_aio.api import ALLOWED_SPECIAL_CHARS
 from reolink_aio.baichuan import DEFAULT_BC_PORT
 from reolink_aio.exceptions import (
@@ -14,7 +15,6 @@ from reolink_aio.exceptions import (
     LoginPrivacyModeError,
     ReolinkError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -73,9 +73,9 @@ class ReolinkOptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_PROTOCOL,
                         default=self.config_entry.options[CONF_PROTOCOL],
                     ): selector.SelectSelector(
@@ -341,24 +341,24 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                     options=DEFAULT_OPTIONS,
                 )
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_USERNAME, default=self._username): str,
-                vol.Required(CONF_PASSWORD, default=self._password): str,
+                probatio.Required(CONF_USERNAME, default=self._username): str,
+                probatio.Required(CONF_PASSWORD, default=self._password): str,
             }
         )
         if self._host is None or self.source == SOURCE_RECONFIGURE or errors:
             data_schema = data_schema.extend(
                 {
-                    vol.Required(CONF_HOST, default=self._host): str,
+                    probatio.Required(CONF_HOST, default=self._host): str,
                 }
             )
         if errors:
             data_schema = data_schema.extend(
                 {
-                    vol.Optional(CONF_PORT): cv.port,
-                    vol.Required(CONF_USE_HTTPS, default=False): bool,
-                    vol.Required(CONF_BC_PORT, default=DEFAULT_BC_PORT): cv.port,
+                    probatio.Optional(CONF_PORT): cv.port,
+                    probatio.Required(CONF_USE_HTTPS, default=False): bool,
+                    probatio.Required(CONF_BC_PORT, default=DEFAULT_BC_PORT): cv.port,
                 }
             )
 

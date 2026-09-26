@@ -6,6 +6,7 @@ from decimal import Decimal
 import logging
 from typing import Any
 
+import probatio
 import sqlalchemy
 from sqlalchemy import lambda_stmt
 from sqlalchemy.exc import SQLAlchemyError
@@ -13,7 +14,6 @@ from sqlalchemy.orm import Session, scoped_session, sessionmaker
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.util import LRUCache
 import sqlparse
-import voluptuous as vol
 
 from homeassistant.components.recorder import SupportedDialect, get_instance
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -51,7 +51,7 @@ def validate_sql_select(value: Template) -> Template:
         assert value.hass
         check_and_render_sql_query(value.hass, value)
     except (TemplateError, InvalidSqlQuery) as err:
-        raise vol.Invalid(str(err)) from err
+        raise probatio.Invalid(str(err)) from err
     return value
 
 

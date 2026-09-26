@@ -10,8 +10,8 @@ from typing import Any, TypedDict, override
 
 from aiohttp import hdrs, web, web_urldispatcher
 import jinja2
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components import onboarding, websocket_api
@@ -94,7 +94,7 @@ VALUE_NO_THEME = "none"
 PRIMARY_COLOR = "primary-color"
 
 
-LEGACY_THEME_SCHEMA = vol.Any(
+LEGACY_THEME_SCHEMA = probatio.Any(
     # Legacy theme scheme
     {cv.string: cv.string},
     # New extended schema with mode support
@@ -102,24 +102,32 @@ LEGACY_THEME_SCHEMA = vol.Any(
         # Theme variables that apply to all modes
         cv.string: cv.string,
         # Mode specific theme variables
-        vol.Optional(CONF_THEMES_MODES): vol.Schema(
+        probatio.Optional(CONF_THEMES_MODES): probatio.Schema(
             {
-                vol.Optional(CONF_THEMES_LIGHT): vol.Schema({cv.string: cv.string}),
-                vol.Optional(CONF_THEMES_DARK): vol.Schema({cv.string: cv.string}),
+                probatio.Optional(CONF_THEMES_LIGHT): probatio.Schema(
+                    {cv.string: cv.string}
+                ),
+                probatio.Optional(CONF_THEMES_DARK): probatio.Schema(
+                    {cv.string: cv.string}
+                ),
             }
         ),
     },
 )
 
-THEME_SCHEMA = vol.Schema(
+THEME_SCHEMA = probatio.Schema(
     {
         # Theme variables that apply to all modes
         cv.string: cv.string,
         # Mode specific theme variables
-        vol.Optional(CONF_THEMES_MODES): vol.All(
+        probatio.Optional(CONF_THEMES_MODES): probatio.All(
             {
-                vol.Optional(CONF_THEMES_LIGHT): vol.Schema({cv.string: cv.string}),
-                vol.Optional(CONF_THEMES_DARK): vol.Schema({cv.string: cv.string}),
+                probatio.Optional(CONF_THEMES_LIGHT): probatio.Schema(
+                    {cv.string: cv.string}
+                ),
+                probatio.Optional(CONF_THEMES_DARK): probatio.Schema(
+                    {cv.string: cv.string}
+                ),
             },
             cv.has_at_least_one_key(CONF_THEMES_LIGHT, CONF_THEMES_DARK),
         ),
@@ -136,34 +144,36 @@ def _validate_themes(themes: dict) -> dict[str, Any]:
 
         try:
             validated_themes[theme_name] = THEME_SCHEMA(theme)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             _LOGGER.error("Theme %s is invalid: %s", theme_name, err)
 
     return validated_themes
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_FRONTEND_REPO): cv.isdir,
-                vol.Inclusive(CONF_DEVELOPMENT_PR, "development_pr"): cv.positive_int,
-                vol.Inclusive(CONF_GITHUB_TOKEN, "development_pr"): cv.string,
-                vol.Optional(CONF_THEMES): vol.All(dict, _validate_themes),
-                vol.Optional(CONF_EXTRA_MODULE_URL): vol.All(
+                probatio.Optional(CONF_FRONTEND_REPO): cv.isdir,
+                probatio.Inclusive(
+                    CONF_DEVELOPMENT_PR, "development_pr"
+                ): cv.positive_int,
+                probatio.Inclusive(CONF_GITHUB_TOKEN, "development_pr"): cv.string,
+                probatio.Optional(CONF_THEMES): probatio.All(dict, _validate_themes),
+                probatio.Optional(CONF_EXTRA_MODULE_URL): probatio.All(
                     cv.ensure_list, [cv.string]
                 ),
-                vol.Optional(CONF_EXTRA_JS_URL_ES5): vol.All(
+                probatio.Optional(CONF_EXTRA_JS_URL_ES5): probatio.All(
                     cv.ensure_list, [cv.string]
                 ),
                 # We no longer use these options.
-                vol.Optional(CONF_EXTRA_HTML_URL): cv.match_all,
-                vol.Optional(CONF_EXTRA_HTML_URL_ES5): cv.match_all,
-                vol.Optional(CONF_JS_VERSION): cv.match_all,
+                probatio.Optional(CONF_EXTRA_HTML_URL): cv.match_all,
+                probatio.Optional(CONF_EXTRA_HTML_URL_ES5): cv.match_all,
+                probatio.Optional(CONF_JS_VERSION): cv.match_all,
             },
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 SERVICE_SET_THEME = "set_theme"
@@ -656,7 +666,7 @@ def _validate_selected_theme(theme: str) -> str:
         return theme
     hass = async_get_hass()
     if theme not in hass.data[DATA_THEMES]:
-        raise vol.Invalid(f"Theme {theme} not found")
+        raise probatio.Invalid(f"Theme {theme} not found")
     return theme
 
 
@@ -745,7 +755,7 @@ async def _async_setup_themes(
 
         try:
             new_themes = _validate_themes(new_themes)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             raise HomeAssistantError(f"Failed to reload themes: {err}") from err
 
         hass.data[DATA_THEMES] = new_themes
@@ -763,11 +773,15 @@ async def _async_setup_themes(
         DOMAIN,
         SERVICE_SET_THEME,
         set_theme,
-        vol.All(
+        probatio.All(
             {
-                vol.Optional(CONF_NAME): _validate_selected_theme,
-                vol.Exclusive(CONF_NAME_DARK, "dark_modes"): _validate_selected_theme,
-                vol.Exclusive(CONF_MODE, "dark_modes"): vol.Any("dark", "light"),
+                probatio.Optional(CONF_NAME): _validate_selected_theme,
+                probatio.Exclusive(
+                    CONF_NAME_DARK, "dark_modes"
+                ): _validate_selected_theme,
+                probatio.Exclusive(CONF_MODE, "dark_modes"): probatio.Any(
+                    "dark", "light"
+                ),
             },
             cv.has_at_least_one_key(CONF_NAME, CONF_NAME_DARK),
         ),
@@ -930,10 +944,10 @@ class ManifestJSONView(HomeAssistantView):
 @websocket_api.websocket_command(
     {
         "type": "frontend/get_icons",
-        vol.Required("category"): vol.In(
+        probatio.Required("category"): probatio.In(
             {"conditions", "entity", "entity_component", "services", "triggers"}
         ),
-        vol.Optional("integration"): vol.All(cv.ensure_list, [str]),
+        probatio.Optional("integration"): probatio.All(cv.ensure_list, [str]),
     }
 )
 @websocket_api.async_response
@@ -1007,10 +1021,10 @@ def websocket_get_themes(
 @websocket_api.websocket_command(
     {
         "type": "frontend/get_translations",
-        vol.Required("language"): str,
-        vol.Required("category"): str,
-        vol.Optional("integration"): vol.All(cv.ensure_list, [str]),
-        vol.Optional("config_flow"): bool,
+        probatio.Required("language"): str,
+        probatio.Required("category"): str,
+        probatio.Optional("integration"): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional("config_flow"): bool,
     }
 )
 @websocket_api.async_response
@@ -1070,12 +1084,12 @@ def websocket_subscribe_extra_js(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "frontend/update_panel",
-        vol.Required("url_path"): str,
-        vol.Optional("title"): vol.Any(cv.string, None),
-        vol.Optional("icon"): vol.Any(cv.icon, None),
-        vol.Optional("require_admin"): vol.Any(cv.boolean, None),
-        vol.Optional("show_in_sidebar"): vol.Any(cv.boolean, None),
+        probatio.Required("type"): "frontend/update_panel",
+        probatio.Required("url_path"): str,
+        probatio.Optional("title"): probatio.Any(cv.string, None),
+        probatio.Optional("icon"): probatio.Any(cv.icon, None),
+        probatio.Optional("require_admin"): probatio.Any(cv.boolean, None),
+        probatio.Optional("show_in_sidebar"): probatio.Any(cv.boolean, None),
     }
 )
 @websocket_api.require_admin

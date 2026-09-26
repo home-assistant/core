@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -44,51 +44,53 @@ VALID_ENDPOINTS = [
 ]
 
 
-ALEXA_ENTITY_SCHEMA = vol.Schema(
+ALEXA_ENTITY_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_DESCRIPTION): cv.string,
-        vol.Optional(CONF_DISPLAY_CATEGORIES): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_DESCRIPTION): cv.string,
+        probatio.Optional(CONF_DISPLAY_CATEGORIES): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
     }
 )
 
-SMART_HOME_SCHEMA = vol.Schema(
+SMART_HOME_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_ENDPOINT): vol.All(vol.Lower, vol.In(VALID_ENDPOINTS)),
-        vol.Optional(CONF_CLIENT_ID): cv.string,
-        vol.Optional(CONF_CLIENT_SECRET): cv.string,
-        vol.Optional(CONF_LOCALE, default=DEFAULT_LOCALE): vol.In(
+        probatio.Optional(CONF_ENDPOINT): probatio.All(
+            probatio.Lower, probatio.In(VALID_ENDPOINTS)
+        ),
+        probatio.Optional(CONF_CLIENT_ID): cv.string,
+        probatio.Optional(CONF_CLIENT_SECRET): cv.string,
+        probatio.Optional(CONF_LOCALE, default=DEFAULT_LOCALE): probatio.In(
             CONF_SUPPORTED_LOCALES
         ),
-        vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
-        vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ALEXA_ENTITY_SCHEMA},
+        probatio.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
+        probatio.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ALEXA_ENTITY_SCHEMA},
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: {
             CONF_FLASH_BRIEFINGS: {
-                vol.Required(CONF_PASSWORD): cv.string,
-                cv.string: vol.All(
+                probatio.Required(CONF_PASSWORD): cv.string,
+                cv.string: probatio.All(
                     cv.ensure_list,
                     [
                         {
-                            vol.Optional(CONF_UID): cv.string,
-                            vol.Required(CONF_TITLE): cv.template,
-                            vol.Optional(CONF_AUDIO): cv.template,
-                            vol.Required(CONF_TEXT, default=""): cv.template,
-                            vol.Optional(CONF_DISPLAY_URL): cv.template,
+                            probatio.Optional(CONF_UID): cv.string,
+                            probatio.Required(CONF_TITLE): cv.template,
+                            probatio.Optional(CONF_AUDIO): cv.template,
+                            probatio.Required(CONF_TEXT, default=""): cv.template,
+                            probatio.Optional(CONF_DISPLAY_URL): cv.template,
                         }
                     ],
                 ),
             },
-            # vol.Optional here would mean we couldn't distinguish between an empty
+            # probatio.Optional here would mean we couldn't distinguish between an empty
             # smart_home: and none at all.
-            CONF_SMART_HOME: vol.Any(SMART_HOME_SCHEMA, None),
+            CONF_SMART_HOME: probatio.Any(SMART_HOME_SCHEMA, None),
         }
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

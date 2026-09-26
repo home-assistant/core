@@ -7,12 +7,12 @@ import logging
 import sys
 from typing import Any, cast
 
+import probatio
 from pycarwings2 import CarwingsError, Leaf, Session
 from pycarwings2.responses import (
     CarwingsLatestBatteryStatusResponse,
     CarwingsLatestClimateControlStatusResponse,
 )
-import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall
@@ -51,36 +51,42 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             cv.ensure_list,
             [
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_USERNAME): cv.string,
-                        vol.Required(CONF_PASSWORD): cv.string,
-                        vol.Required(CONF_REGION): vol.In(CONF_VALID_REGIONS),
-                        vol.Optional(CONF_INTERVAL, default=DEFAULT_INTERVAL): (
-                            vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))
+                        probatio.Required(CONF_USERNAME): cv.string,
+                        probatio.Required(CONF_PASSWORD): cv.string,
+                        probatio.Required(CONF_REGION): probatio.In(CONF_VALID_REGIONS),
+                        probatio.Optional(CONF_INTERVAL, default=DEFAULT_INTERVAL): (
+                            probatio.All(
+                                cv.time_period, probatio.Clamp(min=MIN_UPDATE_INTERVAL)
+                            )
                         ),
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_CHARGING_INTERVAL, default=DEFAULT_CHARGING_INTERVAL
                         ): (
-                            vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))
+                            probatio.All(
+                                cv.time_period, probatio.Clamp(min=MIN_UPDATE_INTERVAL)
+                            )
                         ),
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_CLIMATE_INTERVAL, default=DEFAULT_CLIMATE_INTERVAL
                         ): (
-                            vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))
+                            probatio.All(
+                                cv.time_period, probatio.Clamp(min=MIN_UPDATE_INTERVAL)
+                            )
                         ),
-                        vol.Optional(CONF_FORCE_MILES, default=False): cv.boolean,
+                        probatio.Optional(CONF_FORCE_MILES, default=False): cv.boolean,
                     }
                 )
             ],
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
@@ -90,8 +96,8 @@ SERVICE_UPDATE_LEAF = "update"
 SERVICE_START_CHARGE_LEAF = "start_charge"
 ATTR_VIN = "vin"
 
-UPDATE_LEAF_SCHEMA = vol.Schema({vol.Required(ATTR_VIN): cv.string})
-START_CHARGE_LEAF_SCHEMA = vol.Schema({vol.Required(ATTR_VIN): cv.string})
+UPDATE_LEAF_SCHEMA = probatio.Schema({probatio.Required(ATTR_VIN): cv.string})
+START_CHARGE_LEAF_SCHEMA = probatio.Schema({probatio.Required(ATTR_VIN): cv.string})
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:

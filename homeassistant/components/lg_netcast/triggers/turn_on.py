@@ -1,6 +1,6 @@
 """LG Netcast TV device turn on trigger."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -24,12 +24,14 @@ from ..helpers import async_get_device_entry_by_device_id
 
 PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
 
-TRIGGER_SCHEMA = vol.All(
+TRIGGER_SCHEMA = probatio.All(
     cv.TRIGGER_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_PLATFORM): PLATFORM_TYPE,
-            vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+            probatio.Required(CONF_PLATFORM): PLATFORM_TYPE,
+            probatio.Optional(ATTR_DEVICE_ID): probatio.All(
+                cv.ensure_list, [cv.string]
+            ),
+            probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids,
         },
     ),
     cv.has_at_least_one_key(ATTR_ENTITY_ID, ATTR_DEVICE_ID),

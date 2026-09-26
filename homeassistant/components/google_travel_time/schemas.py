@@ -1,6 +1,6 @@
 """Schemas for the Google Travel Time integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_LANGUAGE, CONF_MODE
 from homeassistant.helpers.selector import (
@@ -97,21 +97,21 @@ TIME_TYPE_SELECTOR = SelectSelector(
     )
 )
 
-_SERVICE_BASE_SCHEMA = vol.Schema(
+_SERVICE_BASE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): ConfigEntrySelector(
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): ConfigEntrySelector(
             {"integration": DOMAIN}
         ),
-        vol.Required(CONF_ORIGIN): TextSelector(),
-        vol.Required(CONF_DESTINATION): TextSelector(),
-        vol.Optional(CONF_UNITS, default=UNITS_METRIC): UNITS_SELECTOR,
-        vol.Optional(CONF_LANGUAGE): LANGUAGE_SELECTOR,
+        probatio.Required(CONF_ORIGIN): TextSelector(),
+        probatio.Required(CONF_DESTINATION): TextSelector(),
+        probatio.Optional(CONF_UNITS, default=UNITS_METRIC): UNITS_SELECTOR,
+        probatio.Optional(CONF_LANGUAGE): LANGUAGE_SELECTOR,
     }
 )
 
 SERVICE_GET_TRAVEL_TIMES_SCHEMA = _SERVICE_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_MODE, default="driving"): SelectSelector(
+        probatio.Optional(CONF_MODE, default="driving"): SelectSelector(
             SelectSelectorConfig(
                 options=TRAVEL_MODES_WITHOUT_TRANSIT,
                 sort=True,
@@ -119,19 +119,19 @@ SERVICE_GET_TRAVEL_TIMES_SCHEMA = _SERVICE_BASE_SCHEMA.extend(
                 translation_key=CONF_MODE,
             )
         ),
-        vol.Optional(CONF_AVOID): AVOID_SELECTOR,
-        vol.Optional(CONF_TRAFFIC_MODEL): TRAFFIC_MODEL_SELECTOR,
-        vol.Optional(CONF_DEPARTURE_TIME): TimeSelector(),
+        probatio.Optional(CONF_AVOID): AVOID_SELECTOR,
+        probatio.Optional(CONF_TRAFFIC_MODEL): TRAFFIC_MODEL_SELECTOR,
+        probatio.Optional(CONF_DEPARTURE_TIME): TimeSelector(),
     }
 )
 
 SERVICE_GET_TRANSIT_TIMES_SCHEMA = _SERVICE_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_TRANSIT_MODE): TRANSIT_MODE_SELECTOR,
-        vol.Optional(
+        probatio.Optional(CONF_TRANSIT_MODE): TRANSIT_MODE_SELECTOR,
+        probatio.Optional(
             CONF_TRANSIT_ROUTING_PREFERENCE
         ): TRANSIT_ROUTING_PREFERENCE_SELECTOR,
-        vol.Exclusive(CONF_DEPARTURE_TIME, "time"): TimeSelector(),
-        vol.Exclusive(CONF_ARRIVAL_TIME, "time"): TimeSelector(),
+        probatio.Exclusive(CONF_DEPARTURE_TIME, "time"): TimeSelector(),
+        probatio.Exclusive(CONF_ARRIVAL_TIME, "time"): TimeSelector(),
     }
 )

@@ -9,8 +9,8 @@ from hatasmota.utils import (
     get_topic_tele_state,
     get_topic_tele_will,
 )
+from probatio import MultipleInvalid
 import pytest
-from voluptuous import MultipleInvalid
 
 from homeassistant.components import fan
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX

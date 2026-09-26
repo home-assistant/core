@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import exceptions
 from homeassistant.const import CONF_FOR, CONF_PLATFORM, CONF_VALUE_TEMPLATE
@@ -31,9 +31,9 @@ _LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = IF_ACTION_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): "template",
-        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_FOR): cv.positive_time_period_template,
+        probatio.Required(CONF_PLATFORM): "template",
+        probatio.Required(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_FOR): cv.positive_time_period_template,
     }
 )
 
@@ -140,7 +140,7 @@ async def async_attach_trigger(
             period: timedelta = cv.positive_time_period(
                 template.render_complex(time_delta, period_variables)
             )
-        except (exceptions.TemplateError, vol.Invalid) as ex:
+        except (exceptions.TemplateError, probatio.Invalid) as ex:
             _LOGGER.error(
                 "Error rendering '%s' for template: %s", trigger_info["name"], ex
             )

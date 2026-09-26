@@ -4,9 +4,9 @@ from http import HTTPStatus
 import logging
 from typing import Any, override
 
+import probatio
 from requests.exceptions import HTTPError
 from todoist_api_python.api_async import TodoistAPIAsync
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
@@ -18,9 +18,9 @@ _LOGGER = logging.getLogger(__name__)
 
 SETTINGS_URL = "https://app.todoist.com/app/settings/integrations/developer"
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TOKEN): str,
+        probatio.Required(CONF_TOKEN): str,
     }
 )
 

@@ -12,8 +12,8 @@ from uuid import uuid4
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonsOptions, Discovery
 import aiohttp
+from probatio import InInvalid
 import pytest
-from voluptuous import InInvalid
 from zwave_js_server.exceptions import ConnectionFailed, FailedCommand
 from zwave_js_server.model.node import Node
 from zwave_js_server.version import VersionInfo

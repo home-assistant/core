@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
@@ -30,8 +30,8 @@ DEFAULT_NAME = "Light Switch"
 
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),
     }
 )
 

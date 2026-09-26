@@ -3,8 +3,8 @@
 from typing import Any
 from unittest.mock import patch
 
+from probatio import Invalid
 import pytest
-from voluptuous import Invalid
 
 from homeassistant import config_entries
 from homeassistant.components.random import async_setup_entry

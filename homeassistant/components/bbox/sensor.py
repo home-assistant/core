@@ -3,9 +3,9 @@
 from datetime import timedelta
 import logging
 
+import probatio
 import pybbox
 import requests
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -80,10 +80,10 @@ SENSOR_KEYS: list[str] = [desc.key for desc in (*SENSOR_TYPES, *SENSOR_TYPES_UPT
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_MONITORED_VARIABLES): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)]
+        probatio.Required(CONF_MONITORED_VARIABLES): probatio.All(
+            cv.ensure_list, [probatio.In(SENSOR_KEYS)]
         ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 

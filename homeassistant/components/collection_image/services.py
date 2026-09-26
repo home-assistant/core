@@ -2,7 +2,7 @@
 
 from enum import StrEnum
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -61,7 +61,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         CollectionImageService.SELECT_NEXT,
         entity_domain=IMAGE_DOMAIN,
-        schema={vol.Optional(CollectionImageServiceArgument.WRAP): cv.boolean},
+        schema={probatio.Optional(CollectionImageServiceArgument.WRAP): cv.boolean},
         func="get_next_image",
     )
     service.async_register_platform_entity_service(
@@ -69,6 +69,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         CollectionImageService.SELECT_PREVIOUS,
         entity_domain=IMAGE_DOMAIN,
-        schema={vol.Optional(CollectionImageServiceArgument.WRAP): cv.boolean},
+        schema={probatio.Optional(CollectionImageServiceArgument.WRAP): cv.boolean},
         func="get_previous_image",
     )

@@ -7,7 +7,7 @@ import logging
 from typing import override
 
 from openevsehttp.__main__ import OpenEVSE
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -18,8 +18,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    ATTR_CONNECTIONS,
-    ATTR_SERIAL_NUMBER,
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
     PERCENTAGE,
@@ -37,17 +35,16 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .const import DOMAIN, INTEGRATION_TITLE
-from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
+from .coordinator import OpenEVSEConfigEntry
+from .entity import OpenEVSEEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -387,9 +384,9 @@ SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_MONITORED_VARIABLES, default=["status"]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)]
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_MONITORED_VARIABLES, default=["status"]): probatio.All(
+            cv.ensure_list, [probatio.In(SENSOR_KEYS)]
         ),
     }
 )
@@ -458,33 +455,10 @@ async def async_setup_entry(
     )
 
 
-class OpenEVSESensor(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], SensorEntity):
+class OpenEVSESensor(OpenEVSEEntity, SensorEntity):
     """Implementation of an OpenEVSE sensor."""
 
-    _attr_has_entity_name = True
     entity_description: OpenEVSESensorDescription
-
-    def __init__(
-        self,
-        coordinator: OpenEVSEDataUpdateCoordinator,
-        description: OpenEVSESensorDescription,
-        identifier: str,
-        unique_id: str | None,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{identifier}-{description.key}"
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, identifier)},
-            manufacturer="OpenEVSE",
-        )
-        if unique_id:
-            self._attr_device_info[ATTR_CONNECTIONS] = {
-                (CONNECTION_NETWORK_MAC, unique_id)
-            }
-            self._attr_device_info[ATTR_SERIAL_NUMBER] = unique_id
 
     @property
     @override

@@ -7,7 +7,7 @@ from typing import Any, Final, override
 from flux_led.const import MultiColorEffects
 from flux_led.protocol import MusicMode
 from flux_led.utils import rgbcw_brightness, rgbcw_to_rgbwc, rgbw_brightness
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -82,49 +82,61 @@ SERVICE_SET_ZONES: Final = "set_zones"
 SERVICE_SET_MUSIC_MODE: Final = "set_music_mode"
 
 CUSTOM_EFFECT_DICT: VolDictType = {
-    vol.Required(CONF_COLORS): vol.All(
+    probatio.Required(CONF_COLORS): probatio.All(
         cv.ensure_list,
-        vol.Length(min=1, max=16),
-        [vol.All(vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte)))],
+        probatio.Length(min=1, max=16),
+        [
+            probatio.All(
+                probatio.Coerce(tuple),
+                probatio.ExactSequence((cv.byte, cv.byte, cv.byte)),
+            )
+        ],
     ),
-    vol.Optional(CONF_SPEED_PCT, default=50): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=100)
+    probatio.Optional(CONF_SPEED_PCT, default=50): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=0, max=100)
     ),
-    vol.Optional(CONF_TRANSITION, default=TRANSITION_GRADUAL): vol.All(
-        cv.string, vol.In([TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE])
+    probatio.Optional(CONF_TRANSITION, default=TRANSITION_GRADUAL): probatio.All(
+        cv.string, probatio.In([TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE])
     ),
 }
 
 SET_MUSIC_MODE_DICT: VolDictType = {
-    vol.Optional(ATTR_SENSITIVITY, default=100): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=100)
+    probatio.Optional(ATTR_SENSITIVITY, default=100): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=0, max=100)
     ),
-    vol.Optional(ATTR_BRIGHTNESS, default=100): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=100)
+    probatio.Optional(ATTR_BRIGHTNESS, default=100): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=0, max=100)
     ),
-    vol.Optional(ATTR_EFFECT, default=1): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=16)
+    probatio.Optional(ATTR_EFFECT, default=1): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=0, max=16)
     ),
-    vol.Optional(ATTR_LIGHT_SCREEN, default=False): bool,
-    vol.Optional(ATTR_FOREGROUND_COLOR): vol.All(
-        vol.Coerce(tuple), vol.ExactSequence((cv.byte,) * 3)
+    probatio.Optional(ATTR_LIGHT_SCREEN, default=False): bool,
+    probatio.Optional(ATTR_FOREGROUND_COLOR): probatio.All(
+        probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 3)
     ),
-    vol.Optional(ATTR_BACKGROUND_COLOR): vol.All(
-        vol.Coerce(tuple), vol.ExactSequence((cv.byte,) * 3)
+    probatio.Optional(ATTR_BACKGROUND_COLOR): probatio.All(
+        probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 3)
     ),
 }
 
 SET_ZONES_DICT: VolDictType = {
-    vol.Required(CONF_COLORS): vol.All(
+    probatio.Required(CONF_COLORS): probatio.All(
         cv.ensure_list,
-        vol.Length(min=1, max=2048),
-        [vol.All(vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte)))],
+        probatio.Length(min=1, max=2048),
+        [
+            probatio.All(
+                probatio.Coerce(tuple),
+                probatio.ExactSequence((cv.byte, cv.byte, cv.byte)),
+            )
+        ],
     ),
-    vol.Optional(CONF_SPEED_PCT, default=50): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=100)
+    probatio.Optional(CONF_SPEED_PCT, default=50): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=0, max=100)
     ),
-    vol.Optional(CONF_EFFECT, default=MultiColorEffects.STATIC.name.lower()): vol.All(
-        cv.string, vol.In([effect.name.lower() for effect in MultiColorEffects])
+    probatio.Optional(
+        CONF_EFFECT, default=MultiColorEffects.STATIC.name.lower()
+    ): probatio.All(
+        cv.string, probatio.In([effect.name.lower() for effect in MultiColorEffects])
     ),
 }
 

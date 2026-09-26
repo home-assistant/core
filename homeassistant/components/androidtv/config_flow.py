@@ -5,7 +5,7 @@ import os
 from typing import Any, override
 
 from androidtv import state_detection_rules_validator
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -86,10 +86,12 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Show the setup form to the user."""
         host = user_input.get(CONF_HOST, "") if user_input else ""
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_HOST, default=host): str,
-                vol.Required(CONF_DEVICE_CLASS, default=DEVICE_AUTO): SelectSelector(
+                probatio.Required(CONF_HOST, default=host): str,
+                probatio.Required(
+                    CONF_DEVICE_CLASS, default=DEVICE_AUTO
+                ): SelectSelector(
                     SelectSelectorConfig(
                         options=[
                             SelectOptionDict(value=k, label=v)
@@ -98,13 +100,13 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
                         translation_key="device_class",
                     )
                 ),
-                vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Required(CONF_MORE_OPTIONS): section(
-                    vol.Schema(
+                probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                probatio.Required(CONF_MORE_OPTIONS): section(
+                    probatio.Schema(
                         {
-                            vol.Optional(CONF_ADBKEY): str,
-                            vol.Optional(CONF_ADB_SERVER_IP): str,
-                            vol.Optional(
+                            probatio.Optional(CONF_ADBKEY): str,
+                            probatio.Optional(CONF_ADB_SERVER_IP): str,
+                            probatio.Optional(
                                 CONF_ADB_SERVER_PORT,
                                 default=DEFAULT_ADB_SERVER_PORT,
                             ): cv.port,
@@ -251,40 +253,40 @@ class OptionsFlowHandler(OptionsFlow):
         rules = [RULES_NEW_ID, *self._state_det_rules]
         options = self.config_entry.options
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(CONF_APPS): SelectSelector(
+                probatio.Optional(CONF_APPS): SelectSelector(
                     SelectSelectorConfig(options=apps, mode=SelectSelectorMode.DROPDOWN)
                 ),
-                vol.Optional(
+                probatio.Optional(
                     CONF_GET_SOURCES,
                     default=options.get(CONF_GET_SOURCES, DEFAULT_GET_SOURCES),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_EXCLUDE_UNNAMED_APPS,
                     default=options.get(
                         CONF_EXCLUDE_UNNAMED_APPS, DEFAULT_EXCLUDE_UNNAMED_APPS
                     ),
                 ): bool,
-                vol.Required(
+                probatio.Required(
                     CONF_SCREENCAP_INTERVAL,
                     default=options.get(
                         CONF_SCREENCAP_INTERVAL, DEFAULT_SCREENCAP_INTERVAL
                     ),
-                ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=15)),
-                vol.Optional(
+                ): probatio.All(probatio.Coerce(int), probatio.Clamp(min=0, max=15)),
+                probatio.Optional(
                     CONF_TURN_OFF_COMMAND,
                     description={
                         "suggested_value": options.get(CONF_TURN_OFF_COMMAND, "")
                     },
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_TURN_ON_COMMAND,
                     description={
                         "suggested_value": options.get(CONF_TURN_ON_COMMAND, "")
                     },
                 ): str,
-                vol.Optional(CONF_STATE_DETECTION_RULES): SelectSelector(
+                probatio.Optional(CONF_STATE_DETECTION_RULES): SelectSelector(
                     SelectSelectorConfig(
                         options=rules, mode=SelectSelectorMode.DROPDOWN
                     )
@@ -316,16 +318,18 @@ class OptionsFlowHandler(OptionsFlow):
     def _async_apps_form(self, app_id: str) -> ConfigFlowResult:
         """Return configuration form for apps."""
         app_schema = {
-            vol.Optional(
+            probatio.Optional(
                 CONF_APP_NAME,
                 description={"suggested_value": self._apps.get(app_id, "")},
             ): str,
         }
         if app_id == APPS_NEW_ID:
-            data_schema = vol.Schema({**app_schema, vol.Optional(CONF_APP_ID): str})
+            data_schema = probatio.Schema(
+                {**app_schema, probatio.Optional(CONF_APP_ID): str}
+            )
         else:
-            data_schema = vol.Schema(
-                {**app_schema, vol.Optional(CONF_APP_DELETE, default=False): bool}
+            data_schema = probatio.Schema(
+                {**app_schema, probatio.Optional(CONF_APP_DELETE, default=False): bool}
             )
 
         return self.async_show_form(
@@ -367,17 +371,23 @@ class OptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Return configuration form for detection rules."""
         rule_schema = {
-            vol.Optional(
+            probatio.Optional(
                 CONF_RULE_VALUES, default=self._state_det_rules.get(rule_id)
             ): ObjectSelector()
         }
         if rule_id == RULES_NEW_ID:
-            data_schema = vol.Schema(
-                {vol.Optional(CONF_RULE_ID, default=default_id): str, **rule_schema}
+            data_schema = probatio.Schema(
+                {
+                    probatio.Optional(CONF_RULE_ID, default=default_id): str,
+                    **rule_schema,
+                }
             )
         else:
-            data_schema = vol.Schema(
-                {**rule_schema, vol.Optional(CONF_RULE_DELETE, default=False): bool}
+            data_schema = probatio.Schema(
+                {
+                    **rule_schema,
+                    probatio.Optional(CONF_RULE_DELETE, default=False): bool,
+                }
             )
 
         return self.async_show_form(

@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from aiosmtplib import SMTP, SMTPAuthenticationError, SMTPException, SMTPTimeoutError
-import voluptuous as vol
+import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
@@ -65,9 +65,9 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_TIMEOUT): vol.All(
+        probatio.Optional(CONF_TIMEOUT): probatio.All(
             NumberSelector(
                 NumberSelectorConfig(
                     min=1,
@@ -77,60 +77,60 @@ OPTIONS_SCHEMA = vol.Schema(
                     mode=NumberSelectorMode.BOX,
                 )
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
-        vol.Optional(CONF_REPLY_TO): TextSelector(
+        probatio.Optional(CONF_REPLY_TO): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.EMAIL,
                 autocomplete="email",
             ),
         ),
-        vol.Optional(CONF_REPLY_TO_NAME): cv.string,
+        probatio.Optional(CONF_REPLY_TO_NAME): cv.string,
     }
 )
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_SENDER): TextSelector(
+        probatio.Required(CONF_SENDER): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.EMAIL,
                 autocomplete="email",
             ),
         ),
-        vol.Optional(CONF_SENDER_NAME): cv.string,
-        vol.Required(CONF_SERVER, default=DEFAULT_HOST): cv.string,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Required(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION): SelectSelector(
+        probatio.Optional(CONF_SENDER_NAME): cv.string,
+        probatio.Required(CONF_SERVER, default=DEFAULT_HOST): cv.string,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION): SelectSelector(
             SelectSelectorConfig(
                 options=ENCRYPTION_OPTIONS,
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key="encryption",
             )
         ),
-        vol.Optional(CONF_USERNAME): TextSelector(
+        probatio.Optional(CONF_USERNAME): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 autocomplete="username",
             ),
         ),
-        vol.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
             ),
         ),
-        vol.Required(CONF_VERIFY_SSL, default=True): cv.boolean,
+        probatio.Required(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_USERNAME): TextSelector(
+        probatio.Optional(CONF_USERNAME): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 autocomplete="username",
             ),
         ),
-        vol.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -187,7 +187,7 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=STEP_USER_DATA_SCHEMA.extend(
                     {
-                        vol.Required(SECTION_OPTIONS): data_entry_flow.section(
+                        probatio.Required(SECTION_OPTIONS): data_entry_flow.section(
                             OPTIONS_SCHEMA,
                             {"collapsed": True},
                         ),
@@ -359,10 +359,10 @@ class RecipientSubentryFlowHandler(ConfigSubentryFlow):
             return result
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Required(CONF_RECIPIENT): TextSelector(
+                    probatio.Optional(CONF_NAME): cv.string,
+                    probatio.Required(CONF_RECIPIENT): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.EMAIL,
                             autocomplete="email",
@@ -396,9 +396,9 @@ class RecipientSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(CONF_RECIPIENT): TextSelector(
+                        probatio.Required(CONF_RECIPIENT): TextSelector(
                             TextSelectorConfig(
                                 type=TextSelectorType.EMAIL,
                                 autocomplete="email",

@@ -2,8 +2,8 @@
 
 from datetime import timedelta
 
+import probatio
 from unifi_access_api import UnifiAccessError
-import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -28,14 +28,14 @@ LOCK_RULE_OPTIONS = [
     "lock_early",
 ]
 
-SERVICE_SET_LOCK_RULE_SCHEMA = vol.Schema(
+SERVICE_SET_LOCK_RULE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(ATTR_RULE): vol.In(LOCK_RULE_OPTIONS),
-        vol.Optional(ATTR_INTERVAL): vol.All(
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_RULE): probatio.In(LOCK_RULE_OPTIONS),
+        probatio.Optional(ATTR_INTERVAL): probatio.All(
             cv.time_period,
             cv.positive_timedelta,
-            vol.Range(
+            probatio.Range(
                 min=timedelta(minutes=MIN_LOCK_RULE_INTERVAL),
                 max=timedelta(minutes=MAX_LOCK_RULE_INTERVAL),
             ),

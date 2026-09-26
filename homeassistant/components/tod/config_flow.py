@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import selector
@@ -14,16 +14,16 @@ from homeassistant.helpers.schema_config_entry_flow import (
 
 from .const import CONF_AFTER_TIME, CONF_BEFORE_TIME, DOMAIN
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_AFTER_TIME): selector.TimeSelector(),
-        vol.Required(CONF_BEFORE_TIME): selector.TimeSelector(),
+        probatio.Required(CONF_AFTER_TIME): selector.TimeSelector(),
+        probatio.Required(CONF_BEFORE_TIME): selector.TimeSelector(),
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME): selector.TextSelector(),
+        probatio.Required(CONF_NAME): selector.TextSelector(),
     }
 ).extend(OPTIONS_SCHEMA.schema)
 

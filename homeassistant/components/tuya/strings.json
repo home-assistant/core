@@ -5,6 +5,10 @@
       "login_error": "Login error ({code}): {msg}"
     },
     "step": {
+      "reauth_confirm": {
+        "description": "Your Smart Life or Tuya Smart account needs to be reauthenticated.\n\nSelect **Submit** to get a QR code to scan with the app.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "reauth_user_code": {
         "data": {
           "user_code": "User code"
@@ -891,14 +895,26 @@
       "oxydo_reduction_potential": {
         "name": "Oxydo reduction potential"
       },
+      "phase_a_apparent_power": {
+        "name": "Phase A apparent power"
+      },
       "phase_a_current": {
         "name": "Phase A current"
       },
       "phase_a_power": {
         "name": "Phase A power"
       },
+      "phase_a_power_factor": {
+        "name": "Phase A power factor"
+      },
+      "phase_a_reactive_power": {
+        "name": "Phase A reactive power"
+      },
       "phase_a_voltage": {
         "name": "Phase A voltage"
+      },
+      "phase_b_apparent_power": {
+        "name": "Phase B apparent power"
       },
       "phase_b_current": {
         "name": "Phase B current"
@@ -906,14 +922,29 @@
       "phase_b_power": {
         "name": "Phase B power"
       },
+      "phase_b_power_factor": {
+        "name": "Phase B power factor"
+      },
+      "phase_b_reactive_power": {
+        "name": "Phase B reactive power"
+      },
       "phase_b_voltage": {
         "name": "Phase B voltage"
+      },
+      "phase_c_apparent_power": {
+        "name": "Phase C apparent power"
       },
       "phase_c_current": {
         "name": "Phase C current"
       },
       "phase_c_power": {
         "name": "Phase C power"
+      },
+      "phase_c_power_factor": {
+        "name": "Phase C power factor"
+      },
+      "phase_c_reactive_power": {
+        "name": "Phase C reactive power"
       },
       "phase_c_voltage": {
         "name": "Phase C voltage"
@@ -1042,8 +1073,14 @@
           "level_3": "[%key:common::state::full%]"
         }
       },
+      "water_once": {
+        "name": "Session water usage"
+      },
       "water_time": {
         "name": "Water usage duration"
+      },
+      "water_total": {
+        "name": "Total water usage"
       },
       "wind_chill_index_temperature": {
         "name": "Wind chill index"
@@ -1058,6 +1095,9 @@
       }
     },
     "switch": {
+      "alarm_push_notifications": {
+        "name": "Alarm push notifications"
+      },
       "anion": {
         "name": "Anion"
       },
@@ -1120,6 +1160,9 @@
       },
       "ionizer": {
         "name": "Ionizer"
+      },
+      "keypad_sound": {
+        "name": "Keypad sound"
       },
       "motion_alarm": {
         "name": "Motion alarm"

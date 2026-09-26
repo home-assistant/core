@@ -2,8 +2,8 @@
 
 from typing import Any, override
 
+import probatio
 from technove import Station as TechnoVEStation, TechnoVE, TechnoVEError
-import voluptuous as vol
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import (
@@ -64,7 +64,7 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-        data_schema = vol.Schema({vol.Required(CONF_HOST): str})
+        data_schema = probatio.Schema({probatio.Required(CONF_HOST): str})
         if self.source == SOURCE_RECONFIGURE:
             data_schema = self.add_suggested_values_to_schema(
                 data_schema,

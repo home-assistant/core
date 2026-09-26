@@ -2,7 +2,7 @@
 
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, STATE_OFF
 from homeassistant.core import HomeAssistant
@@ -10,13 +10,12 @@ from homeassistant.helpers import config_validation as cv, intent
 
 from . import (
     ATTR_HUMIDITY,
-    DOMAIN,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
     SERVICE_TURN_ON,
     HumidifierEntityFeature,
 )
-from .const import HumidifierEntityCapabilityAttribute
+from .const import DOMAIN, HumidifierEntityCapabilityAttribute
 
 INTENT_HUMIDITY = "HassHumidifierSetpoint"
 INTENT_MODE = "HassHumidifierMode"
@@ -34,8 +33,10 @@ class HumidityHandler(intent.IntentHandler):
     intent_type = INTENT_HUMIDITY
     description = "Set desired humidity level"
     slot_schema = {
-        vol.Required("name"): intent.non_empty_string,
-        vol.Required("humidity"): vol.All(vol.Coerce(int), vol.Range(0, 100)),
+        probatio.Required("name"): intent.non_empty_string,
+        probatio.Required("humidity"): probatio.All(
+            probatio.Coerce(int), probatio.Range(0, 100)
+        ),
     }
     platforms = {DOMAIN}
 
@@ -90,8 +91,8 @@ class SetModeHandler(intent.IntentHandler):
     intent_type = INTENT_MODE
     description = "Set humidifier mode"
     slot_schema = {
-        vol.Required("name"): intent.non_empty_string,
-        vol.Required("mode"): cv.string,
+        probatio.Required("name"): intent.non_empty_string,
+        probatio.Required("mode"): cv.string,
     }
     platforms = {DOMAIN}
 

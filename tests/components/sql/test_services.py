@@ -4,9 +4,8 @@ from pathlib import Path
 import sqlite3
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
-from voluptuous import MultipleInvalid
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.sql.const import DOMAIN
@@ -184,7 +183,7 @@ async def test_query_service_invalid_query_not_select(
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    with pytest.raises(vol.Invalid, match="SQL query must be of type SELECT"):
+    with pytest.raises(probatio.Invalid, match="SQL query must be of type SELECT"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_QUERY,
@@ -202,7 +201,9 @@ async def test_query_service_sqlalchemy_error(
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    with pytest.raises(MultipleInvalid, match="SQL query is empty or unknown type"):
+    with pytest.raises(
+        probatio.MultipleInvalid, match="SQL query is empty or unknown type"
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_QUERY,

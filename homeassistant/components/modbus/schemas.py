@@ -1,6 +1,6 @@
-"""Voluptuous schemas for the Modbus integration."""
+"""Probatio schemas for the Modbus integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -162,33 +162,37 @@ from .validators import (
     struct_validator,
 )
 
-BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string})
+BASE_SCHEMA = probatio.Schema(
+    {probatio.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string}
+)
 
 
-BASE_COMPONENT_SCHEMA = vol.Schema(
+BASE_COMPONENT_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_ADDRESS): cv.positive_int,
-        vol.Exclusive(CONF_DEVICE_ADDRESS, "slave_addr"): cv.positive_int,
-        vol.Exclusive(CONF_SLAVE, "slave_addr"): cv.positive_int,
-        vol.Optional(
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Required(CONF_ADDRESS): cv.positive_int,
+        probatio.Exclusive(CONF_DEVICE_ADDRESS, "slave_addr"): cv.positive_int,
+        probatio.Exclusive(CONF_SLAVE, "slave_addr"): cv.positive_int,
+        probatio.Optional(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
         ): cv.positive_int,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
 
 BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
-        vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+        probatio.Optional(
+            CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING
+        ): probatio.In(
             [
                 CALL_TYPE_REGISTER_HOLDING,
                 CALL_TYPE_REGISTER_INPUT,
             ]
         ),
-        vol.Optional(CONF_COUNT): cv.positive_int,
-        vol.Optional(CONF_DATA_TYPE, default=DataType.INT16): vol.In(
+        probatio.Optional(CONF_COUNT): cv.positive_int,
+        probatio.Optional(CONF_DATA_TYPE, default=DataType.INT16): probatio.In(
             [
                 DataType.INT16,
                 DataType.INT32,
@@ -203,15 +207,15 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                 DataType.CUSTOM,
             ]
         ),
-        vol.Optional(CONF_STRUCTURE): cv.string,
-        vol.Optional(CONF_SCALE): vol.All(
-            vol.Coerce(float), lambda v: not_zero_value(v, "Scale cannot be zero.")
+        probatio.Optional(CONF_STRUCTURE): cv.string,
+        probatio.Optional(CONF_SCALE): probatio.All(
+            probatio.Coerce(float), lambda v: not_zero_value(v, "Scale cannot be zero.")
         ),
-        vol.Optional(CONF_OFFSET): vol.Coerce(float),
-        vol.Optional(CONF_PRECISION): cv.positive_int,
-        vol.Optional(
+        probatio.Optional(CONF_OFFSET): probatio.Coerce(float),
+        probatio.Optional(CONF_PRECISION): cv.positive_int,
+        probatio.Optional(
             CONF_SWAP,
-        ): vol.In(
+        ): probatio.In(
             [
                 CONF_SWAP_BYTE,
                 CONF_SWAP_WORD,
@@ -224,7 +228,9 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
 
 BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
-        vol.Optional(CONF_WRITE_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+        probatio.Optional(
+            CONF_WRITE_TYPE, default=CALL_TYPE_REGISTER_HOLDING
+        ): probatio.In(
             [
                 CALL_TYPE_REGISTER_HOLDING,
                 CALL_TYPE_COIL,
@@ -232,12 +238,12 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                 CALL_TYPE_X_REGISTER_HOLDINGS,
             ]
         ),
-        vol.Optional(CONF_COMMAND_OFF, default=0x00): cv.positive_int,
-        vol.Optional(CONF_COMMAND_ON, default=0x01): cv.positive_int,
-        vol.Optional(CONF_VERIFY): vol.Maybe(
+        probatio.Optional(CONF_COMMAND_OFF, default=0x00): cv.positive_int,
+        probatio.Optional(CONF_COMMAND_ON, default=0x01): cv.positive_int,
+        probatio.Optional(CONF_VERIFY): probatio.Maybe(
             {
-                vol.Optional(CONF_ADDRESS): cv.positive_int,
-                vol.Optional(CONF_INPUT_TYPE): vol.In(
+                probatio.Optional(CONF_ADDRESS): cv.positive_int,
+                probatio.Optional(CONF_INPUT_TYPE): probatio.In(
                     [
                         CALL_TYPE_REGISTER_HOLDING,
                         CALL_TYPE_DISCRETE,
@@ -247,108 +253,118 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                         CALL_TYPE_X_REGISTER_HOLDINGS,
                     ]
                 ),
-                vol.Optional(CONF_STATE_OFF): vol.All(
+                probatio.Optional(CONF_STATE_OFF): probatio.All(
                     cv.ensure_list, [cv.positive_int]
                 ),
-                vol.Optional(CONF_STATE_ON): vol.All(cv.ensure_list, [cv.positive_int]),
-                vol.Optional(CONF_DELAY, default=0): cv.positive_int,
+                probatio.Optional(CONF_STATE_ON): probatio.All(
+                    cv.ensure_list, [cv.positive_int]
+                ),
+                probatio.Optional(CONF_DELAY, default=0): cv.positive_int,
             }
         ),
     }
 )
 
 
-CLIMATE_SCHEMA = vol.All(
+CLIMATE_SCHEMA = probatio.All(
     BASE_STRUCT_SCHEMA.extend(
         {
-            vol.Required(CONF_TARGET_TEMP): hvac_fixedsize_reglist_validator,
-            vol.Optional(CONF_TARGET_TEMP_WRITE_REGISTERS, default=False): cv.boolean,
-            vol.Optional(CONF_MAX_TEMP, default=35): vol.Coerce(int),
-            vol.Optional(CONF_MIN_TEMP, default=5): vol.Coerce(int),
-            vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
-            vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
-            vol.Exclusive(CONF_HVAC_ONOFF_COIL, "hvac_onoff_type"): cv.positive_int,
-            vol.Exclusive(CONF_HVAC_ONOFF_REGISTER, "hvac_onoff_type"): cv.positive_int,
-            vol.Optional(CONF_CURRENT_TEMP_SCALE): vol.All(
-                vol.Coerce(float),
+            probatio.Required(CONF_TARGET_TEMP): hvac_fixedsize_reglist_validator,
+            probatio.Optional(
+                CONF_TARGET_TEMP_WRITE_REGISTERS, default=False
+            ): cv.boolean,
+            probatio.Optional(CONF_MAX_TEMP, default=35): probatio.Coerce(int),
+            probatio.Optional(CONF_MIN_TEMP, default=5): probatio.Coerce(int),
+            probatio.Optional(CONF_STEP, default=0.5): probatio.Coerce(float),
+            probatio.Optional(
+                CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT
+            ): cv.string,
+            probatio.Exclusive(
+                CONF_HVAC_ONOFF_COIL, "hvac_onoff_type"
+            ): cv.positive_int,
+            probatio.Exclusive(
+                CONF_HVAC_ONOFF_REGISTER, "hvac_onoff_type"
+            ): cv.positive_int,
+            probatio.Optional(CONF_CURRENT_TEMP_SCALE): probatio.All(
+                probatio.Coerce(float),
                 lambda v: not_zero_value(
                     v, "Current temperature scale cannot be zero."
                 ),
             ),
-            vol.Optional(CONF_TARGET_TEMP_SCALE): vol.All(
-                vol.Coerce(float),
+            probatio.Optional(CONF_TARGET_TEMP_SCALE): probatio.All(
+                probatio.Coerce(float),
                 lambda v: not_zero_value(v, "Target temperature scale cannot be zero."),
             ),
-            vol.Optional(CONF_CURRENT_TEMP_OFFSET): vol.Coerce(float),
-            vol.Optional(CONF_TARGET_TEMP_OFFSET): vol.Coerce(float),
-            vol.Optional(
+            probatio.Optional(CONF_CURRENT_TEMP_OFFSET): probatio.Coerce(float),
+            probatio.Optional(CONF_TARGET_TEMP_OFFSET): probatio.Coerce(float),
+            probatio.Optional(
                 CONF_HVAC_ON_VALUE, default=DEFAULT_HVAC_ON_VALUE
             ): cv.positive_int,
-            vol.Optional(
+            probatio.Optional(
                 CONF_HVAC_OFF_VALUE, default=DEFAULT_HVAC_OFF_VALUE
             ): cv.positive_int,
-            vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
-            vol.Optional(CONF_HVAC_MODE_REGISTER): vol.Maybe(
+            probatio.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
+            probatio.Optional(CONF_HVAC_MODE_REGISTER): probatio.Maybe(
                 {
                     CONF_ADDRESS: cv.positive_int,
                     CONF_HVAC_MODE_VALUES: {
-                        vol.Optional(CONF_HVAC_MODE_OFF): vol.Any(
+                        probatio.Optional(CONF_HVAC_MODE_OFF): probatio.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
-                        vol.Optional(CONF_HVAC_MODE_HEAT): vol.Any(
+                        probatio.Optional(CONF_HVAC_MODE_HEAT): probatio.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
-                        vol.Optional(CONF_HVAC_MODE_COOL): vol.Any(
+                        probatio.Optional(CONF_HVAC_MODE_COOL): probatio.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
-                        vol.Optional(CONF_HVAC_MODE_HEAT_COOL): vol.Any(
+                        probatio.Optional(CONF_HVAC_MODE_HEAT_COOL): probatio.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
-                        vol.Optional(CONF_HVAC_MODE_AUTO): vol.Any(
+                        probatio.Optional(CONF_HVAC_MODE_AUTO): probatio.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
-                        vol.Optional(CONF_HVAC_MODE_DRY): vol.Any(
+                        probatio.Optional(CONF_HVAC_MODE_DRY): probatio.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
-                        vol.Optional(CONF_HVAC_MODE_FAN_ONLY): vol.Any(
+                        probatio.Optional(CONF_HVAC_MODE_FAN_ONLY): probatio.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
                     },
-                    vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
+                    probatio.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
                 }
             ),
-            vol.Optional(CONF_HVAC_ACTION_REGISTER): vol.Maybe(
+            probatio.Optional(CONF_HVAC_ACTION_REGISTER): probatio.Maybe(
                 {
                     CONF_ADDRESS: cv.positive_int,
                     CONF_HVAC_ACTION_VALUES: {
-                        vol.Optional(CONF_HVAC_ACTION_COOLING): vol.Any(
+                        probatio.Optional(CONF_HVAC_ACTION_COOLING): probatio.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
-                        vol.Optional(CONF_HVAC_ACTION_DEFROSTING): vol.Any(
+                        probatio.Optional(CONF_HVAC_ACTION_DEFROSTING): probatio.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
-                        vol.Optional(CONF_HVAC_ACTION_DRYING): vol.Any(
+                        probatio.Optional(CONF_HVAC_ACTION_DRYING): probatio.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
-                        vol.Optional(CONF_HVAC_ACTION_FAN): vol.Any(
+                        probatio.Optional(CONF_HVAC_ACTION_FAN): probatio.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
-                        vol.Optional(CONF_HVAC_ACTION_HEATING): vol.Any(
+                        probatio.Optional(CONF_HVAC_ACTION_HEATING): probatio.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
-                        vol.Optional(CONF_HVAC_ACTION_IDLE): vol.Any(
+                        probatio.Optional(CONF_HVAC_ACTION_IDLE): probatio.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
-                        vol.Optional(CONF_HVAC_ACTION_OFF): vol.Any(
+                        probatio.Optional(CONF_HVAC_ACTION_OFF): probatio.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
-                        vol.Optional(CONF_HVAC_ACTION_PREHEATING): vol.Any(
+                        probatio.Optional(CONF_HVAC_ACTION_PREHEATING): probatio.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
                     },
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING
-                    ): vol.In(
+                    ): probatio.In(
                         [
                             CALL_TYPE_REGISTER_HOLDING,
                             CALL_TYPE_REGISTER_INPUT,
@@ -356,36 +372,46 @@ CLIMATE_SCHEMA = vol.All(
                     ),
                 }
             ),
-            vol.Optional(CONF_FAN_MODE_REGISTER): vol.Maybe(
-                vol.All(
+            probatio.Optional(CONF_FAN_MODE_REGISTER): probatio.Maybe(
+                probatio.All(
                     {
-                        vol.Required(CONF_ADDRESS): register_int_list_validator,
+                        probatio.Required(CONF_ADDRESS): register_int_list_validator,
                         CONF_FAN_MODE_VALUES: {
-                            vol.Optional(CONF_FAN_MODE_ON): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_OFF): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_AUTO): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_LOW): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_MEDIUM): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_HIGH): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_TOP): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_MIDDLE): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_FOCUS): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_DIFFUSE): cv.positive_int,
+                            probatio.Optional(CONF_FAN_MODE_ON): cv.positive_int,
+                            probatio.Optional(CONF_FAN_MODE_OFF): cv.positive_int,
+                            probatio.Optional(CONF_FAN_MODE_AUTO): cv.positive_int,
+                            probatio.Optional(CONF_FAN_MODE_LOW): cv.positive_int,
+                            probatio.Optional(CONF_FAN_MODE_MEDIUM): cv.positive_int,
+                            probatio.Optional(CONF_FAN_MODE_HIGH): cv.positive_int,
+                            probatio.Optional(CONF_FAN_MODE_TOP): cv.positive_int,
+                            probatio.Optional(CONF_FAN_MODE_MIDDLE): cv.positive_int,
+                            probatio.Optional(CONF_FAN_MODE_FOCUS): cv.positive_int,
+                            probatio.Optional(CONF_FAN_MODE_DIFFUSE): cv.positive_int,
                         },
                     },
                     duplicate_fan_mode_validator,
                 ),
             ),
-            vol.Optional(CONF_SWING_MODE_REGISTER): vol.Maybe(
-                vol.All(
+            probatio.Optional(CONF_SWING_MODE_REGISTER): probatio.Maybe(
+                probatio.All(
                     {
-                        vol.Required(CONF_ADDRESS): register_int_list_validator,
+                        probatio.Required(CONF_ADDRESS): register_int_list_validator,
                         CONF_SWING_MODE_VALUES: {
-                            vol.Optional(CONF_SWING_MODE_SWING_ON): cv.positive_int,
-                            vol.Optional(CONF_SWING_MODE_SWING_OFF): cv.positive_int,
-                            vol.Optional(CONF_SWING_MODE_SWING_HORIZ): cv.positive_int,
-                            vol.Optional(CONF_SWING_MODE_SWING_VERT): cv.positive_int,
-                            vol.Optional(CONF_SWING_MODE_SWING_BOTH): cv.positive_int,
+                            probatio.Optional(
+                                CONF_SWING_MODE_SWING_ON
+                            ): cv.positive_int,
+                            probatio.Optional(
+                                CONF_SWING_MODE_SWING_OFF
+                            ): cv.positive_int,
+                            probatio.Optional(
+                                CONF_SWING_MODE_SWING_HORIZ
+                            ): cv.positive_int,
+                            probatio.Optional(
+                                CONF_SWING_MODE_SWING_VERT
+                            ): cv.positive_int,
+                            probatio.Optional(
+                                CONF_SWING_MODE_SWING_BOTH
+                            ): cv.positive_int,
                         },
                     },
                     duplicate_swing_mode_validator,
@@ -398,65 +424,65 @@ CLIMATE_SCHEMA = vol.All(
 
 COVERS_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
-        vol.Optional(
+        probatio.Optional(
             CONF_INPUT_TYPE,
             default=CALL_TYPE_REGISTER_HOLDING,
-        ): vol.In(
+        ): probatio.In(
             [
                 CALL_TYPE_REGISTER_HOLDING,
                 CALL_TYPE_COIL,
             ]
         ),
-        vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_STATE_CLOSED, default=0): cv.positive_int,
-        vol.Optional(CONF_STATE_CLOSING, default=3): cv.positive_int,
-        vol.Optional(CONF_STATE_OPEN, default=1): cv.positive_int,
-        vol.Optional(CONF_STATE_OPENING, default=2): cv.positive_int,
-        vol.Optional(CONF_STATUS_REGISTER): cv.positive_int,
-        vol.Optional(
+        probatio.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_STATE_CLOSED, default=0): cv.positive_int,
+        probatio.Optional(CONF_STATE_CLOSING, default=3): cv.positive_int,
+        probatio.Optional(CONF_STATE_OPEN, default=1): cv.positive_int,
+        probatio.Optional(CONF_STATE_OPENING, default=2): cv.positive_int,
+        probatio.Optional(CONF_STATUS_REGISTER): cv.positive_int,
+        probatio.Optional(
             CONF_STATUS_REGISTER_TYPE,
             default=CALL_TYPE_REGISTER_HOLDING,
-        ): vol.In([CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]),
+        ): probatio.In([CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]),
     }
 )
 
 SWITCH_SCHEMA = BASE_SWITCH_SCHEMA.extend(
     {
-        vol.Optional(CONF_DEVICE_CLASS): SWITCH_DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_DEVICE_CLASS): SWITCH_DEVICE_CLASSES_SCHEMA,
     }
 )
 
 LIGHT_SCHEMA = BASE_SWITCH_SCHEMA.extend(
     {
-        vol.Optional(CONF_BRIGHTNESS_REGISTER): cv.positive_int,
-        vol.Optional(CONF_COLOR_TEMP_REGISTER): cv.positive_int,
-        vol.Optional(CONF_MIN_TEMP): cv.positive_int,
-        vol.Optional(CONF_MAX_TEMP): cv.positive_int,
+        probatio.Optional(CONF_BRIGHTNESS_REGISTER): cv.positive_int,
+        probatio.Optional(CONF_COLOR_TEMP_REGISTER): cv.positive_int,
+        probatio.Optional(CONF_MIN_TEMP): cv.positive_int,
+        probatio.Optional(CONF_MAX_TEMP): cv.positive_int,
     }
 )
 
 FAN_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
 
-SENSOR_SCHEMA = vol.All(
+SENSOR_SCHEMA = probatio.All(
     BASE_STRUCT_SCHEMA.extend(
         {
-            vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-            vol.Exclusive(CONF_VIRTUAL_COUNT, "vir_sen_count"): cv.positive_int,
-            vol.Exclusive(CONF_SLAVE_COUNT, "vir_sen_count"): cv.positive_int,
-            vol.Optional(CONF_MIN_VALUE): vol.Coerce(float),
-            vol.Optional(CONF_MAX_VALUE): vol.Coerce(float),
-            vol.Optional(CONF_NAN_VALUE): nan_validator,
-            vol.Optional(CONF_ZERO_SUPPRESS): cv.positive_float,
+            probatio.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+            probatio.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
+            probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+            probatio.Exclusive(CONF_VIRTUAL_COUNT, "vir_sen_count"): cv.positive_int,
+            probatio.Exclusive(CONF_SLAVE_COUNT, "vir_sen_count"): cv.positive_int,
+            probatio.Optional(CONF_MIN_VALUE): probatio.Coerce(float),
+            probatio.Optional(CONF_MAX_VALUE): probatio.Coerce(float),
+            probatio.Optional(CONF_NAN_VALUE): nan_validator,
+            probatio.Optional(CONF_ZERO_SUPPRESS): cv.positive_float,
         }
     ),
 )
 
 BINARY_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
-        vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_COIL): vol.In(
+        probatio.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_COIL): probatio.In(
             [
                 CALL_TYPE_COIL,
                 CALL_TYPE_DISCRETE,
@@ -464,74 +490,74 @@ BINARY_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                 CALL_TYPE_REGISTER_INPUT,
             ]
         ),
-        vol.Exclusive(CONF_VIRTUAL_COUNT, "vir_bin_count"): cv.positive_int,
-        vol.Exclusive(CONF_SLAVE_COUNT, "vir_bin_count"): cv.positive_int,
+        probatio.Exclusive(CONF_VIRTUAL_COUNT, "vir_bin_count"): cv.positive_int,
+        probatio.Exclusive(CONF_SLAVE_COUNT, "vir_bin_count"): cv.positive_int,
     }
 )
 
-MODBUS_SCHEMA = vol.Schema(
+MODBUS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
-        vol.Optional(CONF_DELAY, default=0): cv.positive_int,
-        vol.Optional(CONF_MSG_WAIT): cv.positive_int,
-        vol.Optional(CONF_BINARY_SENSORS): vol.All(
+        probatio.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string,
+        probatio.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
+        probatio.Optional(CONF_DELAY, default=0): cv.positive_int,
+        probatio.Optional(CONF_MSG_WAIT): cv.positive_int,
+        probatio.Optional(CONF_BINARY_SENSORS): probatio.All(
             cv.ensure_list, [BINARY_SENSOR_SCHEMA]
         ),
-        vol.Optional(CONF_CLIMATES): vol.All(
-            cv.ensure_list, [vol.All(CLIMATE_SCHEMA, struct_validator)]
+        probatio.Optional(CONF_CLIMATES): probatio.All(
+            cv.ensure_list, [probatio.All(CLIMATE_SCHEMA, struct_validator)]
         ),
-        vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
-        vol.Optional(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHT_SCHEMA]),
-        vol.Optional(CONF_SENSORS): vol.All(
-            cv.ensure_list, [vol.All(SENSOR_SCHEMA, struct_validator)]
+        probatio.Optional(CONF_COVERS): probatio.All(cv.ensure_list, [COVERS_SCHEMA]),
+        probatio.Optional(CONF_LIGHTS): probatio.All(cv.ensure_list, [LIGHT_SCHEMA]),
+        probatio.Optional(CONF_SENSORS): probatio.All(
+            cv.ensure_list, [probatio.All(SENSOR_SCHEMA, struct_validator)]
         ),
-        vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
-        vol.Optional(CONF_FANS): vol.All(cv.ensure_list, [FAN_SCHEMA]),
+        probatio.Optional(CONF_SWITCHES): probatio.All(cv.ensure_list, [SWITCH_SCHEMA]),
+        probatio.Optional(CONF_FANS): probatio.All(cv.ensure_list, [FAN_SCHEMA]),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 SERIAL_SCHEMA = MODBUS_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): SERIAL,
-        vol.Required(CONF_BAUDRATE): cv.positive_int,
-        vol.Required(CONF_BYTESIZE): vol.Any(5, 6, 7, 8),
-        vol.Required(CONF_METHOD): vol.Any("rtu", "ascii"),
-        vol.Required(CONF_PORT): cv.string,
-        vol.Required(CONF_PARITY): vol.Any("E", "O", "N"),
-        vol.Required(CONF_STOPBITS): vol.Any(1, 2),
+        probatio.Required(CONF_TYPE): SERIAL,
+        probatio.Required(CONF_BAUDRATE): cv.positive_int,
+        probatio.Required(CONF_BYTESIZE): probatio.Any(5, 6, 7, 8),
+        probatio.Required(CONF_METHOD): probatio.Any("rtu", "ascii"),
+        probatio.Required(CONF_PORT): cv.string,
+        probatio.Required(CONF_PARITY): probatio.Any("E", "O", "N"),
+        probatio.Required(CONF_STOPBITS): probatio.Any(1, 2),
     }
 )
 
 ETHERNET_SCHEMA = MODBUS_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT): cv.port,
-        vol.Required(CONF_TYPE): vol.Any(TCP, UDP, RTUOVERTCP),
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_PORT): cv.port,
+        probatio.Required(CONF_TYPE): probatio.Any(TCP, UDP, RTUOVERTCP),
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             cv.ensure_list,
             [
-                vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
+                probatio.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
             ],
         ),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 # Per-platform schema for a single entity config, used to validate the entity
 # lists stored in a device subentry.
 PLATFORM_SCHEMAS: dict[Platform, VolSchemaType] = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_SCHEMA,
-    Platform.CLIMATE: vol.All(CLIMATE_SCHEMA, struct_validator),
+    Platform.CLIMATE: probatio.All(CLIMATE_SCHEMA, struct_validator),
     Platform.COVER: COVERS_SCHEMA,
     Platform.FAN: FAN_SCHEMA,
     Platform.LIGHT: LIGHT_SCHEMA,
-    Platform.SENSOR: vol.All(SENSOR_SCHEMA, struct_validator),
+    Platform.SENSOR: probatio.All(SENSOR_SCHEMA, struct_validator),
     Platform.SWITCH: SWITCH_SCHEMA,
 }

@@ -7,7 +7,7 @@ import logging
 from typing import Any, cast
 
 import aiohttp
-import voluptuous as vol
+import probatio
 from zwave_js_server.const import (
     LOG_LEVEL_MAP,
     CommandClass,
@@ -480,7 +480,7 @@ def get_zwave_value_from_config(node: ZwaveNode, config: ConfigType) -> ZwaveVal
         property_key,
     )
     if value_id not in node.values:
-        raise vol.Invalid(f"Value {value_id} can't be found on node {node}")
+        raise probatio.Invalid(f"Value {value_id} can't be found on node {node}")
     return node.values[value_id]
 
 
@@ -544,7 +544,7 @@ def remove_keys_with_empty_values(config: ConfigType) -> ConfigType:
 
 
 def check_type_schema_map(
-    schema_map: dict[str, vol.Schema],
+    schema_map: dict[str, probatio.Schema],
 ) -> Callable[[ConfigType], ConfigType]:
     """Check type specific schema against config."""
 
@@ -566,7 +566,7 @@ def copy_available_params(
 
 def get_value_state_schema(
     value: ZwaveValue,
-) -> VolSchemaType | vol.Coerce | vol.In | None:
+) -> VolSchemaType | probatio.Coerce | probatio.In | None:
     """Return device automation schema for a config entry."""
     if isinstance(value, ConfigurationValue):
         min_ = value.metadata.min
@@ -575,22 +575,26 @@ def get_value_state_schema(
             ConfigurationValueType.RANGE,
             ConfigurationValueType.MANUAL_ENTRY,
         ):
-            return vol.All(vol.Coerce(int), vol.Range(min=min_, max=max_))
+            return probatio.All(
+                probatio.Coerce(int), probatio.Range(min=min_, max=max_)
+            )
 
         if value.configuration_value_type == ConfigurationValueType.BOOLEAN:
-            return vol.Coerce(bool)
+            return probatio.Coerce(bool)
 
         if value.configuration_value_type == ConfigurationValueType.ENUMERATED:
-            return vol.In({str(int(k)): v for k, v in value.metadata.states.items()})
+            return probatio.In(
+                {str(int(k)): v for k, v in value.metadata.states.items()}
+            )
 
         return None
 
     if value.metadata.states:
-        return vol.In({str(int(k)): v for k, v in value.metadata.states.items()})
+        return probatio.In({str(int(k)): v for k, v in value.metadata.states.items()})
 
-    return vol.All(
-        vol.Coerce(int),
-        vol.Range(min=value.metadata.min, max=value.metadata.max),
+    return probatio.All(
+        probatio.Coerce(int),
+        probatio.Range(min=value.metadata.min, max=value.metadata.max),
     )
 
 

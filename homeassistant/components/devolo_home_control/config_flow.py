@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -13,8 +13,8 @@ from . import configure_mydevolo
 from .const import DOMAIN, SUPPORTED_MODEL_TYPES
 from .exceptions import CredentialsInvalid, UuidChanged
 
-DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_USERNAME): str, probatio.Required(CONF_PASSWORD): str}
 )
 
 
@@ -78,10 +78,12 @@ class DevoloHomeControlFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initiated by reauthentication."""
         errors: dict[str, str] = {}
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_USERNAME, default=self.init_data[CONF_USERNAME]): str,
-                vol.Required(CONF_PASSWORD): str,
+                probatio.Required(
+                    CONF_USERNAME, default=self.init_data[CONF_USERNAME]
+                ): str,
+                probatio.Required(CONF_PASSWORD): str,
             }
         )
 

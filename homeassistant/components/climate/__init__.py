@@ -5,8 +5,8 @@ import functools as ft
 import logging
 from typing import Any, Literal, final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -107,16 +107,20 @@ DEFAULT_MAX_HUMIDITY = 99
 
 CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE, ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH]
 
-SET_TEMPERATURE_SCHEMA = vol.All(
+SET_TEMPERATURE_SCHEMA = probatio.All(
     cv.has_at_least_one_key(
         ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW
     ),
     cv.make_entity_service_schema(
         {
-            vol.Exclusive(ATTR_TEMPERATURE, "temperature"): vol.Coerce(float),
-            vol.Inclusive(ATTR_TARGET_TEMP_HIGH, "temperature"): vol.Coerce(float),
-            vol.Inclusive(ATTR_TARGET_TEMP_LOW, "temperature"): vol.Coerce(float),
-            vol.Optional(ATTR_HVAC_MODE): vol.Coerce(HVACMode),
+            probatio.Exclusive(ATTR_TEMPERATURE, "temperature"): probatio.Coerce(float),
+            probatio.Inclusive(ATTR_TARGET_TEMP_HIGH, "temperature"): probatio.Coerce(
+                float
+            ),
+            probatio.Inclusive(ATTR_TARGET_TEMP_LOW, "temperature"): probatio.Coerce(
+                float
+            ),
+            probatio.Optional(ATTR_HVAC_MODE): probatio.Coerce(HVACMode),
         }
     ),
 )
@@ -151,12 +155,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_SET_HVAC_MODE,
-        {vol.Required(ATTR_HVAC_MODE): vol.Coerce(HVACMode)},
+        {probatio.Required(ATTR_HVAC_MODE): probatio.Coerce(HVACMode)},
         "async_handle_set_hvac_mode_service",
     )
     component.async_register_entity_service(
         SERVICE_SET_PRESET_MODE,
-        {vol.Required(ATTR_PRESET_MODE): cv.string},
+        {probatio.Required(ATTR_PRESET_MODE): cv.string},
         "async_handle_set_preset_mode_service",
         [ClimateEntityFeature.PRESET_MODE],
     )
@@ -171,25 +175,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_SET_HUMIDITY,
-        {vol.Required(ATTR_HUMIDITY): vol.Coerce(int)},
+        {probatio.Required(ATTR_HUMIDITY): probatio.Coerce(int)},
         async_service_humidity_set,
         [ClimateEntityFeature.TARGET_HUMIDITY],
     )
     component.async_register_entity_service(
         SERVICE_SET_FAN_MODE,
-        {vol.Required(ATTR_FAN_MODE): cv.string},
+        {probatio.Required(ATTR_FAN_MODE): cv.string},
         "async_handle_set_fan_mode_service",
         [ClimateEntityFeature.FAN_MODE],
     )
     component.async_register_entity_service(
         SERVICE_SET_SWING_MODE,
-        {vol.Required(ATTR_SWING_MODE): cv.string},
+        {probatio.Required(ATTR_SWING_MODE): cv.string},
         "async_handle_set_swing_mode_service",
         [ClimateEntityFeature.SWING_MODE],
     )
     component.async_register_entity_service(
         SERVICE_SET_SWING_HORIZONTAL_MODE,
-        {vol.Required(ATTR_SWING_HORIZONTAL_MODE): cv.string},
+        {probatio.Required(ATTR_SWING_HORIZONTAL_MODE): cv.string},
         "async_handle_set_swing_horizontal_mode_service",
         [ClimateEntityFeature.SWING_HORIZONTAL_MODE],
     )

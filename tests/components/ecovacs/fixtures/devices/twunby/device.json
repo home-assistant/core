@@ -1,0 +1,29 @@
+{
+  "did": "8516fbb1-17f1-4194-0000003",
+  "name": "E1234567890000000005",
+  "class": "twunby",
+  "resource": "NHl7",
+  "company": "eco-ng",
+  "bindTs": 1734792100300,
+  "service": {
+    "jmq": "jmq-ngiot-eu.dc.ww.ecouser.net",
+    "mqs": "api-ngiot.dc-eu.ww.ecouser.net"
+  },
+  "deviceName": "DEEBOT T90 PRO OMNI",
+  "icon": "https://portal-ww.ecouser.net/api/pim/file/get/0000003",
+  "ota": true,
+  "UILogicId": "shakespeare_ww_h_shakespeareh5",
+  "materialNo": "110-2522-0200",
+  "pid": "0000003",
+  "product_category": "DEEBOT",
+  "model": "SHAKESPEARE_AM_BLK",
+  "updateInfo": {
+    "needUpdate": false,
+    "changeLog": ""
+  },
+  "nick": "T90 PRO OMNI",
+  "homeId": "1234567890abcdef12345678",
+  "homeSort": 3,
+  "status": 1,
+  "otaUpgrade": {}
+}

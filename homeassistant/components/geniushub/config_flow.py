@@ -7,7 +7,7 @@ from typing import Any, override
 
 import aiohttp
 from geniushubclient import GeniusService
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
@@ -17,18 +17,18 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CLOUD_API_SCHEMA = vol.Schema(
+CLOUD_API_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TOKEN): str,
+        probatio.Required(CONF_TOKEN): str,
     }
 )
 
 
-LOCAL_API_SCHEMA = vol.Schema(
+LOCAL_API_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 

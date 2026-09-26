@@ -3,8 +3,7 @@
 import logging
 from typing import TYPE_CHECKING
 
-import voluptuous as vol
-from voluptuous import All, Range
+import probatio
 
 from homeassistant.const import (
     ATTR_ID,
@@ -133,14 +132,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_NAVIGATE_ATTR_GPS_REQUEST,
         navigate_gps_request,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_GPS): {
-                    vol.Required(CONF_LATITUDE): cv.latitude,
-                    vol.Required(CONF_LONGITUDE): cv.longitude,
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_GPS): {
+                    probatio.Required(CONF_LATITUDE): cv.latitude,
+                    probatio.Required(CONF_LONGITUDE): cv.longitude,
                 },
-                vol.Optional(ATTR_ORDER): cv.positive_int,
+                probatio.Optional(ATTR_ORDER): cv.positive_int,
             }
         ),
     )
@@ -172,11 +171,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SET_SCHEDULED_CHARGING,
         set_scheduled_charging,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_ENABLE): bool,
-                vol.Optional(ATTR_TIME): str,
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_ENABLE): bool,
+                probatio.Optional(ATTR_TIME): str,
             }
         ),
     )
@@ -241,16 +240,16 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SET_SCHEDULED_DEPARTURE,
         set_scheduled_departure,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Optional(ATTR_ENABLE): bool,
-                vol.Optional(ATTR_PRECONDITIONING_ENABLED): bool,
-                vol.Optional(ATTR_PRECONDITIONING_WEEKDAYS): bool,
-                vol.Optional(ATTR_DEPARTURE_TIME): str,
-                vol.Optional(ATTR_OFF_PEAK_CHARGING_ENABLED): bool,
-                vol.Optional(ATTR_OFF_PEAK_CHARGING_WEEKDAYS): bool,
-                vol.Optional(ATTR_END_OFF_PEAK_TIME): str,
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Optional(ATTR_ENABLE): bool,
+                probatio.Optional(ATTR_PRECONDITIONING_ENABLED): bool,
+                probatio.Optional(ATTR_PRECONDITIONING_WEEKDAYS): bool,
+                probatio.Optional(ATTR_DEPARTURE_TIME): str,
+                probatio.Optional(ATTR_OFF_PEAK_CHARGING_ENABLED): bool,
+                probatio.Optional(ATTR_OFF_PEAK_CHARGING_WEEKDAYS): bool,
+                probatio.Optional(ATTR_END_OFF_PEAK_TIME): str,
             }
         ),
     )
@@ -270,11 +269,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_VALET_MODE,
         valet_mode,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_ENABLE): cv.boolean,
-                vol.Required(ATTR_PIN): All(cv.positive_int, Range(min=1000, max=9999)),
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_ENABLE): cv.boolean,
+                probatio.Required(ATTR_PIN): probatio.All(
+                    cv.positive_int, probatio.Range(min=1000, max=9999)
+                ),
             }
         ),
     )
@@ -298,11 +299,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SPEED_LIMIT,
         speed_limit,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_ENABLE): cv.boolean,
-                vol.Required(ATTR_PIN): All(cv.positive_int, Range(min=1000, max=9999)),
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_ENABLE): cv.boolean,
+                probatio.Required(ATTR_PIN): probatio.All(
+                    cv.positive_int, probatio.Range(min=1000, max=9999)
+                ),
             }
         ),
     )
@@ -331,10 +334,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_TIME_OF_USE,
         time_of_use,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_TOU_SETTINGS): dict,
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_TOU_SETTINGS): dict,
             }
         ),
         description_placeholders={
@@ -399,20 +402,20 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_ADD_CHARGE_SCHEDULE,
         add_charge_schedule,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_DAYS_OF_WEEK): cv.ensure_list,
-                vol.Required(ATTR_ENABLE): cv.boolean,
-                vol.Optional(ATTR_LOCATION): {
-                    vol.Required(CONF_LATITUDE): cv.latitude,
-                    vol.Required(CONF_LONGITUDE): cv.longitude,
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_DAYS_OF_WEEK): cv.ensure_list,
+                probatio.Required(ATTR_ENABLE): cv.boolean,
+                probatio.Optional(ATTR_LOCATION): {
+                    probatio.Required(CONF_LATITUDE): cv.latitude,
+                    probatio.Required(CONF_LONGITUDE): cv.longitude,
                 },
-                vol.Optional(ATTR_START_TIME): cv.time,
-                vol.Optional(ATTR_END_TIME): cv.time,
-                vol.Optional(ATTR_ONE_TIME): cv.boolean,
-                vol.Optional(ATTR_ID): cv.positive_int,
-                vol.Optional(ATTR_NAME): cv.string,
+                probatio.Optional(ATTR_START_TIME): cv.time,
+                probatio.Optional(ATTR_END_TIME): cv.time,
+                probatio.Optional(ATTR_ONE_TIME): cv.boolean,
+                probatio.Optional(ATTR_ID): cv.positive_int,
+                probatio.Optional(ATTR_NAME): cv.string,
             }
         ),
     )
@@ -437,10 +440,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_REMOVE_CHARGE_SCHEDULE,
         remove_charge_schedule,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_ID): cv.positive_int,
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_ID): cv.positive_int,
             }
         ),
     )
@@ -495,19 +498,19 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_ADD_PRECONDITION_SCHEDULE,
         add_precondition_schedule,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_DAYS_OF_WEEK): cv.ensure_list,
-                vol.Required(ATTR_ENABLE): cv.boolean,
-                vol.Optional(ATTR_LOCATION): {
-                    vol.Required(CONF_LATITUDE): cv.latitude,
-                    vol.Required(CONF_LONGITUDE): cv.longitude,
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_DAYS_OF_WEEK): cv.ensure_list,
+                probatio.Required(ATTR_ENABLE): cv.boolean,
+                probatio.Optional(ATTR_LOCATION): {
+                    probatio.Required(CONF_LATITUDE): cv.latitude,
+                    probatio.Required(CONF_LONGITUDE): cv.longitude,
                 },
-                vol.Required(ATTR_PRECONDITION_TIME): cv.time,
-                vol.Optional(ATTR_ID): cv.positive_int,
-                vol.Optional(ATTR_ONE_TIME): cv.boolean,
-                vol.Optional(ATTR_NAME): cv.string,
+                probatio.Required(ATTR_PRECONDITION_TIME): cv.time,
+                probatio.Optional(ATTR_ID): cv.positive_int,
+                probatio.Optional(ATTR_ONE_TIME): cv.boolean,
+                probatio.Optional(ATTR_NAME): cv.string,
             }
         ),
     )
@@ -532,10 +535,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_REMOVE_PRECONDITION_SCHEDULE,
         remove_precondition_schedule,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_ID): cv.positive_int,
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_ID): cv.positive_int,
             }
         ),
     )

@@ -298,6 +298,13 @@ class ThermostatEntity(ClimateEntity):
             ) from err
 
     @override
+    async def async_turn_on(self) -> None:
+        """Turn the entity on."""
+        if self.hvac_mode != HVACMode.OFF:
+            return
+        await super().async_turn_on()
+
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         hvac_mode = self.hvac_mode

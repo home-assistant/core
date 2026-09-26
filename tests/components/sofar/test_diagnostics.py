@@ -1,9 +1,10 @@
-"""Test the Sofar Inverter Modbus diagnostics."""
+"""Tests for the Sofar diagnostics."""
 
 from unittest.mock import patch
 
 from modbus_connection.mock import MockModbusConnection
 from syrupy.assertion import SnapshotAssertion
+from syrupy.matchers import path_type
 
 from homeassistant.core import HomeAssistant
 
@@ -21,7 +22,11 @@ async def test_diagnostics(
     """Test generating diagnostics for a config entry."""
     diag = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
 
-    assert diag == snapshot
+    assert diag == snapshot(
+        matcher=path_type(
+            {r"^link\.stats\.(median|p95|slowest)$": (float,)}, regex=True
+        )
+    )
 
 
 async def test_diagnostics_includes_active_faults(

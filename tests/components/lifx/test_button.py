@@ -1,131 +1,115 @@
-"""Tests for button platform."""
+"""Tests for the LIFX button platform."""
 
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import call, patch
 
+from lifx import HSBK, LifxError, Light, LightWaveform
 import pytest
 
-from homeassistant.components import lifx
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.lifx.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
-from . import (
-    DEFAULT_ENTRY_TITLE,
-    IP_ADDRESS,
-    SERIAL,
-    _mocked_bulb,
-    _patch_config_flow_try_connect,
-    _patch_device,
-    _patch_discovery,
-)
-
-from tests.common import MockConfigEntry
+from . import SERIAL, async_setup_lifx_entry
+from .helpers import create_mock_light
 
 
 @pytest.fixture(autouse=True)
-def mock_lifx_coordinator_sleep():
-    """Mock out lifx coordinator sleeps."""
+def patch_lifx_identify_delay() -> Any:
+    """Set the identify flash delay to zero."""
     with patch("homeassistant.components.lifx.coordinator.LIFX_IDENTIFY_DELAY", 0):
         yield
 
 
-async def test_button_restart(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+@pytest.fixture
+async def loaded_device(hass: HomeAssistant) -> Light:
+    """Set up a typed LIFX entry and return its device."""
+    device = create_mock_light()
+    device.state.power = 65535
+    await async_setup_lifx_entry(hass, device)
+    return device
+
+
+@pytest.mark.parametrize(
+    ("key", "method", "expected_args", "expected_kwargs"),
+    [
+        pytest.param("restart", "set_reboot", (), {}, id="restart"),
+        pytest.param(
+            "identify",
+            "set_waveform_optional",
+            (HSBK(0, 0, 1, 3500),),
+            {"period": 1.0, "cycles": 3, "waveform": LightWaveform.SINE},
+            id="identify",
+        ),
+    ],
+)
+async def test_button_press(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    loaded_device: Light,
+    key: str,
+    method: str,
+    expected_args: tuple[Any, ...],
+    expected_kwargs: dict[str, Any],
 ) -> None:
-    """Test that a bulb can be restarted."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=DEFAULT_ENTRY_TITLE,
-        data={CONF_HOST: IP_ADDRESS},
-        unique_id=SERIAL,
-    )
-    config_entry.add_to_hass(hass)
-    bulb = _mocked_bulb()
-    with (
-        _patch_discovery(device=bulb),
-        _patch_config_flow_try_connect(device=bulb),
-        _patch_device(device=bulb),
-    ):
-        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
-        await hass.async_block_till_done()
-
-    unique_id = f"{SERIAL}_restart"
-    entity_id = "button.my_group_my_bulb_restart"
-
+    """Test that each button press awaits its public device method."""
+    entity_id = f"button.my_group_my_bulb_{key}"
     entity = entity_registry.async_get(entity_id)
     assert entity
     assert not entity.disabled
-    assert entity.unique_id == unique_id
+    assert entity.unique_id == f"{SERIAL}_{key}"
 
     await hass.services.async_call(
         BUTTON_DOMAIN, "press", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
 
-    bulb.set_reboot.assert_called_once()
+    getattr(loaded_device, method).assert_awaited_once_with(
+        *expected_args, **expected_kwargs
+    )
 
 
-async def test_button_identify(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+async def test_identify_powers_a_dark_bulb_on_and_off(
+    hass: HomeAssistant, loaded_device: Light
 ) -> None:
-    """Test that a bulb can be identified."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=DEFAULT_ENTRY_TITLE,
-        data={CONF_HOST: IP_ADDRESS},
-        unique_id=SERIAL,
-    )
-    config_entry.add_to_hass(hass)
-    bulb = _mocked_bulb()
-    with (
-        _patch_discovery(device=bulb),
-        _patch_config_flow_try_connect(device=bulb),
-        _patch_device(device=bulb),
-    ):
-        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
-        await hass.async_block_till_done()
-
-    unique_id = f"{SERIAL}_identify"
-    entity_id = "button.my_group_my_bulb_identify"
-
-    entity = entity_registry.async_get(entity_id)
-    assert entity
-    assert not entity.disabled
-    assert entity.unique_id == unique_id
+    """Test identifying a powered-off bulb turns it on so the flash is visible."""
+    loaded_device.state.power = 0
 
     await hass.services.async_call(
-        BUTTON_DOMAIN, "press", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        BUTTON_DOMAIN,
+        "press",
+        {ATTR_ENTITY_ID: "button.my_group_my_bulb_identify"},
+        blocking=True,
     )
 
-    assert len(bulb.set_power.calls) == 2
+    loaded_device.set_waveform_optional.assert_awaited_once()
+    assert loaded_device.set_power.await_args_list == [
+        call(True, duration=1.0),
+        call(False, duration=1.0),
+    ]
 
-    waveform_call_dict = bulb.set_waveform_optional.calls[0][1]
-    waveform_call_dict.pop("callb")
-    assert waveform_call_dict == {
-        "rapid": False,
-        "value": {
-            "transient": True,
-            "color": [0, 0, 1, 3500],
-            "skew_ratio": 0,
-            "period": 1000,
-            "cycles": 3,
-            "waveform": 1,
-            "set_hue": True,
-            "set_saturation": True,
-            "set_brightness": True,
-            "set_kelvin": True,
-        },
-    }
 
-    bulb.set_power.reset_mock()
-    bulb.set_waveform_optional.reset_mock()
-    bulb.power_level = 65535
+@pytest.mark.parametrize(
+    ("key", "method"),
+    [
+        pytest.param("restart", "set_reboot", id="restart"),
+        pytest.param("identify", "set_waveform_optional", id="identify"),
+    ],
+)
+async def test_button_library_error_becomes_home_assistant_error(
+    hass: HomeAssistant,
+    loaded_device: Light,
+    key: str,
+    method: str,
+) -> None:
+    """Test a library failure surfaces as a Home Assistant error."""
+    getattr(loaded_device, method).side_effect = LifxError("device unreachable")
 
-    await hass.services.async_call(
-        BUTTON_DOMAIN, "press", {ATTR_ENTITY_ID: entity_id}, blocking=True
-    )
-
-    assert len(bulb.set_waveform_optional.calls) == 1
-    assert len(bulb.set_power.calls) == 0
+    with pytest.raises(HomeAssistantError, match="device unreachable"):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            "press",
+            {ATTR_ENTITY_ID: f"button.my_group_my_bulb_{key}"},
+            blocking=True,
+        )

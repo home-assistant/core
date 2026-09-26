@@ -44,8 +44,8 @@ from aioesphomeapi import (
 )
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.esphome.config_flow import PROBE_NOISE_PSK
@@ -1102,7 +1102,7 @@ async def test_esphome_device_service_call_with_validation_error(
 
     # Register a service that validates input
     async def _mock_service(call: ServiceCall) -> None:
-        raise vol.Invalid("Invalid input provided")
+        raise probatio.Invalid("Invalid input provided")
 
     hass.services.async_register(DOMAIN, "validate_test", _mock_service)
 

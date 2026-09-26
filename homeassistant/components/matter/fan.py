@@ -270,9 +270,13 @@ class MatterFan(MatterEntity, FanEntity):
         # does not leave a stale speed_count / percentage_step.
         self._attr_speed_count = 100
         if feature_map & FanControlFeature.kMultiSpeed:
-            self._attr_speed_count = int(
+            speed_max = int(
                 self.get_matter_attribute_value(clusters.FanControl.Attributes.SpeedMax)
             )
+            # the step size divides by the speed count, so a device reporting
+            # no speeds keeps the default
+            if speed_max > 0:
+                self._attr_speed_count = speed_max
         if feature_map & FanControlFeature.kRocking:
             # NOTE: the Matter model allows that a device can have multiple/different
             # rock directions while HA doesn't allow this in the entity model.

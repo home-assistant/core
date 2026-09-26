@@ -4,8 +4,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 import pycfdns
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
@@ -19,31 +19,35 @@ from .helpers import get_zone_id
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_TOKEN): str,
+        probatio.Required(CONF_API_TOKEN): str,
     }
 )
 
 
-def _zone_schema(zones: list[pycfdns.ZoneModel] | None = None) -> vol.Schema:
+def _zone_schema(zones: list[pycfdns.ZoneModel] | None = None) -> probatio.Schema:
     """Zone selection schema."""
     zones_list = []
 
     if zones is not None:
         zones_list = [zones["name"] for zones in zones]
 
-    return vol.Schema({vol.Required(CONF_ZONE): vol.In(zones_list)})
+    return probatio.Schema({probatio.Required(CONF_ZONE): probatio.In(zones_list)})
 
 
-def _records_schema(records: list[pycfdns.RecordModel] | None = None) -> vol.Schema:
+def _records_schema(
+    records: list[pycfdns.RecordModel] | None = None,
+) -> probatio.Schema:
     """Zone records selection schema."""
     records_dict = {}
 
     if records:
         records_dict = {name["name"]: name["name"] for name in records}
 
-    return vol.Schema({vol.Required(CONF_RECORDS): cv.multi_select(records_dict)})
+    return probatio.Schema(
+        {probatio.Required(CONF_RECORDS): cv.multi_select(records_dict)}
+    )
 
 
 async def _validate_input(

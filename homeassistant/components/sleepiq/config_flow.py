@@ -4,8 +4,13 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-from asyncsleepiq import AsyncSleepIQ, SleepIQLoginException, SleepIQTimeoutException
-import voluptuous as vol
+from asyncsleepiq import (
+    AsyncSleepIQ,
+    SleepIQConnectionException,
+    SleepIQLoginException,
+    SleepIQTimeoutException,
+)
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -62,13 +67,13 @@ class SleepIQFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_USERNAME,
                         default=user_input.get(CONF_USERNAME),
                     ): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
@@ -100,7 +105,7 @@ class SleepIQFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_PASSWORD): str}),
             errors=errors,
             description_placeholders={
                 CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
@@ -116,6 +121,8 @@ async def try_connection(hass: HomeAssistant, user_input: dict[str, Any]) -> str
     gateway = AsyncSleepIQ(client_session=client_session)
     try:
         await gateway.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+    except SleepIQConnectionException:
+        return "cannot_connect"
     except SleepIQLoginException:
         return "invalid_auth"
     except SleepIQTimeoutException:

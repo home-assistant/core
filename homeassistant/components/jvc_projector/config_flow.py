@@ -10,7 +10,7 @@ from jvcprojector import (
     command as cmd,
 )
 from jvcprojector.projector import DEFAULT_PORT
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
@@ -65,11 +65,11 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-                    vol.Optional(CONF_PASSWORD): str,
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    probatio.Optional(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
@@ -106,7 +106,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Optional(CONF_PASSWORD): str}),
+            data_schema=probatio.Schema({probatio.Optional(CONF_PASSWORD): str}),
             errors=errors,
         )
 

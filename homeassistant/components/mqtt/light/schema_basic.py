@@ -4,7 +4,7 @@ from collections.abc import Callable
 import logging
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -160,68 +160,70 @@ VALUE_TEMPLATE_KEYS = [
 PLATFORM_SCHEMA_MODERN_BASIC = (
     MQTT_RW_SCHEMA.extend(
         {
-            vol.Optional(CONF_BRIGHTNESS_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): valid_publish_topic,
-            vol.Optional(
+            probatio.Optional(CONF_BRIGHTNESS_COMMAND_TEMPLATE): cv.template,
+            probatio.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): valid_publish_topic,
+            probatio.Optional(
                 CONF_BRIGHTNESS_SCALE, default=DEFAULT_BRIGHTNESS_SCALE
-            ): vol.All(vol.Coerce(int), vol.Range(min=1)),
-            vol.Optional(CONF_BRIGHTNESS_STATE_TOPIC): valid_subscribe_topic,
-            vol.Optional(CONF_BRIGHTNESS_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_COLOR_MODE_STATE_TOPIC): valid_subscribe_topic,
-            vol.Optional(CONF_COLOR_MODE_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_COLOR_TEMP_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_COLOR_TEMP_COMMAND_TOPIC): valid_publish_topic,
-            vol.Optional(CONF_COLOR_TEMP_STATE_TOPIC): valid_subscribe_topic,
-            vol.Optional(CONF_COLOR_TEMP_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_COLOR_TEMP_KELVIN, default=False): cv.boolean,
-            vol.Optional(CONF_EFFECT_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_EFFECT_COMMAND_TOPIC): valid_publish_topic,
-            vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_EFFECT_STATE_TOPIC): valid_subscribe_topic,
-            vol.Optional(CONF_EFFECT_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_HS_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_HS_COMMAND_TOPIC): valid_publish_topic,
-            vol.Optional(CONF_HS_STATE_TOPIC): valid_subscribe_topic,
-            vol.Optional(CONF_HS_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
-            vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
-            vol.Optional(CONF_MAX_KELVIN): cv.positive_int,
-            vol.Optional(CONF_MIN_KELVIN): cv.positive_int,
-            vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-            vol.Optional(CONF_ON_COMMAND_TYPE, default=DEFAULT_ON_COMMAND_TYPE): vol.In(
-                VALUES_ON_COMMAND_TYPE
+            ): probatio.All(probatio.Coerce(int), probatio.Range(min=1)),
+            probatio.Optional(CONF_BRIGHTNESS_STATE_TOPIC): valid_subscribe_topic,
+            probatio.Optional(CONF_BRIGHTNESS_VALUE_TEMPLATE): cv.template,
+            probatio.Optional(CONF_COLOR_MODE_STATE_TOPIC): valid_subscribe_topic,
+            probatio.Optional(CONF_COLOR_MODE_VALUE_TEMPLATE): cv.template,
+            probatio.Optional(CONF_COLOR_TEMP_COMMAND_TEMPLATE): cv.template,
+            probatio.Optional(CONF_COLOR_TEMP_COMMAND_TOPIC): valid_publish_topic,
+            probatio.Optional(CONF_COLOR_TEMP_STATE_TOPIC): valid_subscribe_topic,
+            probatio.Optional(CONF_COLOR_TEMP_VALUE_TEMPLATE): cv.template,
+            probatio.Optional(CONF_COLOR_TEMP_KELVIN, default=False): cv.boolean,
+            probatio.Optional(CONF_EFFECT_COMMAND_TEMPLATE): cv.template,
+            probatio.Optional(CONF_EFFECT_COMMAND_TOPIC): valid_publish_topic,
+            probatio.Optional(CONF_EFFECT_LIST): probatio.All(
+                cv.ensure_list, [cv.string]
             ),
-            vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-            vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-            vol.Optional(CONF_RGB_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_RGB_COMMAND_TOPIC): valid_publish_topic,
-            vol.Optional(CONF_RGB_STATE_TOPIC): valid_subscribe_topic,
-            vol.Optional(CONF_RGB_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_RGBW_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_RGBW_COMMAND_TOPIC): valid_publish_topic,
-            vol.Optional(CONF_RGBW_STATE_TOPIC): valid_subscribe_topic,
-            vol.Optional(CONF_RGBW_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_RGBWW_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_RGBWW_COMMAND_TOPIC): valid_publish_topic,
-            vol.Optional(CONF_RGBWW_STATE_TOPIC): valid_subscribe_topic,
-            vol.Optional(CONF_RGBWW_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_WHITE_COMMAND_TOPIC): valid_publish_topic,
-            vol.Optional(CONF_WHITE_SCALE, default=DEFAULT_WHITE_SCALE): vol.All(
-                vol.Coerce(int), vol.Range(min=1)
-            ),
-            vol.Optional(CONF_XY_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_XY_COMMAND_TOPIC): valid_publish_topic,
-            vol.Optional(CONF_XY_STATE_TOPIC): valid_subscribe_topic,
-            vol.Optional(CONF_XY_VALUE_TEMPLATE): cv.template,
+            probatio.Optional(CONF_EFFECT_STATE_TOPIC): valid_subscribe_topic,
+            probatio.Optional(CONF_EFFECT_VALUE_TEMPLATE): cv.template,
+            probatio.Optional(CONF_HS_COMMAND_TEMPLATE): cv.template,
+            probatio.Optional(CONF_HS_COMMAND_TOPIC): valid_publish_topic,
+            probatio.Optional(CONF_HS_STATE_TOPIC): valid_subscribe_topic,
+            probatio.Optional(CONF_HS_VALUE_TEMPLATE): cv.template,
+            probatio.Optional(CONF_MAX_MIREDS): cv.positive_int,
+            probatio.Optional(CONF_MIN_MIREDS): cv.positive_int,
+            probatio.Optional(CONF_MAX_KELVIN): cv.positive_int,
+            probatio.Optional(CONF_MIN_KELVIN): cv.positive_int,
+            probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+            probatio.Optional(
+                CONF_ON_COMMAND_TYPE, default=DEFAULT_ON_COMMAND_TYPE
+            ): probatio.In(VALUES_ON_COMMAND_TYPE),
+            probatio.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+            probatio.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+            probatio.Optional(CONF_RGB_COMMAND_TEMPLATE): cv.template,
+            probatio.Optional(CONF_RGB_COMMAND_TOPIC): valid_publish_topic,
+            probatio.Optional(CONF_RGB_STATE_TOPIC): valid_subscribe_topic,
+            probatio.Optional(CONF_RGB_VALUE_TEMPLATE): cv.template,
+            probatio.Optional(CONF_RGBW_COMMAND_TEMPLATE): cv.template,
+            probatio.Optional(CONF_RGBW_COMMAND_TOPIC): valid_publish_topic,
+            probatio.Optional(CONF_RGBW_STATE_TOPIC): valid_subscribe_topic,
+            probatio.Optional(CONF_RGBW_VALUE_TEMPLATE): cv.template,
+            probatio.Optional(CONF_RGBWW_COMMAND_TEMPLATE): cv.template,
+            probatio.Optional(CONF_RGBWW_COMMAND_TOPIC): valid_publish_topic,
+            probatio.Optional(CONF_RGBWW_STATE_TOPIC): valid_subscribe_topic,
+            probatio.Optional(CONF_RGBWW_VALUE_TEMPLATE): cv.template,
+            probatio.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
+            probatio.Optional(CONF_WHITE_COMMAND_TOPIC): valid_publish_topic,
+            probatio.Optional(
+                CONF_WHITE_SCALE, default=DEFAULT_WHITE_SCALE
+            ): probatio.All(probatio.Coerce(int), probatio.Range(min=1)),
+            probatio.Optional(CONF_XY_COMMAND_TEMPLATE): cv.template,
+            probatio.Optional(CONF_XY_COMMAND_TOPIC): valid_publish_topic,
+            probatio.Optional(CONF_XY_STATE_TOPIC): valid_subscribe_topic,
+            probatio.Optional(CONF_XY_VALUE_TEMPLATE): cv.template,
         },
     )
     .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
-DISCOVERY_SCHEMA_BASIC = vol.All(
-    PLATFORM_SCHEMA_MODERN_BASIC.extend({}, extra=vol.REMOVE_EXTRA),
+DISCOVERY_SCHEMA_BASIC = probatio.All(
+    PLATFORM_SCHEMA_MODERN_BASIC.extend({}, extra=probatio.REMOVE_EXTRA),
 )
 
 

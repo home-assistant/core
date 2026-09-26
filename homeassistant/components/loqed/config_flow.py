@@ -6,7 +6,7 @@ from typing import Any, override
 
 import aiohttp
 from loqedAPI import cloud_loqed, loqed
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -116,9 +116,9 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show userform to user."""
-        user_data_schema = vol.Schema(
+        user_data_schema = probatio.Schema(
             {
-                vol.Required(CONF_API_TOKEN): str,
+                probatio.Required(CONF_API_TOKEN): str,
             }
         )
 
@@ -214,9 +214,9 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="pick_lock",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required("lock_id"): vol.In(lock_options),
+                    probatio.Required("lock_id"): probatio.In(lock_options),
                 }
             ),
         )

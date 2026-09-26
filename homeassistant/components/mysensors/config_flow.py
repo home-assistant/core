@@ -8,7 +8,7 @@ from awesomeversion import (
     AwesomeVersionStrategy,
     AwesomeVersionStrategyException,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.mqtt import (
     DOMAIN as MQTT_DOMAIN,
@@ -42,13 +42,13 @@ DEFAULT_BAUD_RATE = 115200
 DEFAULT_TCP_PORT = 5003
 DEFAULT_VERSION = "1.4"
 
-_PORT_SELECTOR = vol.All(
+_PORT_SELECTOR = probatio.All(
     selector.NumberSelector(
         selector.NumberSelectorConfig(
             min=1, max=65535, mode=selector.NumberSelectorMode.BOX
         ),
     ),
-    vol.Coerce(int),
+    probatio.Coerce(int),
 )
 
 
@@ -56,19 +56,19 @@ def is_persistence_file(value: str) -> str:
     """Validate that persistence file path ends in either .pickle or .json."""
     if value.endswith((".json", ".pickle")):
         return value
-    raise vol.Invalid(f"{value} does not end in either `.json` or `.pickle`")
+    raise probatio.Invalid(f"{value} does not end in either `.json` or `.pickle`")
 
 
 def _get_schema_common(user_input: dict[str, str]) -> dict:
     """Create a schema with options common to all gateway types."""
     return {
-        vol.Required(
+        probatio.Required(
             CONF_VERSION,
             description={
                 "suggested_value": user_input.get(CONF_VERSION, DEFAULT_VERSION)
             },
         ): str,
-        vol.Optional(CONF_PERSISTENCE_FILE): str,
+        probatio.Optional(CONF_PERSISTENCE_FILE): str,
     }
 
 
@@ -154,10 +154,10 @@ class MySensorsConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         user_input = user_input or {}
         schema: VolDictType = {
-            vol.Required(
+            probatio.Required(
                 CONF_DEVICE, default=user_input.get(CONF_DEVICE, "/dev/ttyACM0")
             ): str,
-            vol.Required(
+            probatio.Required(
                 CONF_BAUD_RATE,
                 default=user_input.get(CONF_BAUD_RATE, DEFAULT_BAUD_RATE),
             ): cv.positive_int,
@@ -165,7 +165,7 @@ class MySensorsConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         schema.update(_get_schema_common(user_input))
 
         return self.async_show_form(
-            step_id="gw_serial", data_schema=vol.Schema(schema), errors=errors
+            step_id="gw_serial", data_schema=probatio.Schema(schema), errors=errors
         )
 
     async def async_step_gw_tcp(
@@ -182,17 +182,17 @@ class MySensorsConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         user_input = user_input or {}
         schema: VolDictType = {
-            vol.Required(
+            probatio.Required(
                 CONF_DEVICE, default=user_input.get(CONF_DEVICE, "127.0.0.1")
             ): str,
-            vol.Optional(
+            probatio.Optional(
                 CONF_TCP_PORT, default=user_input.get(CONF_TCP_PORT, DEFAULT_TCP_PORT)
             ): _PORT_SELECTOR,
         }
         schema.update(_get_schema_common(user_input))
 
         return self.async_show_form(
-            step_id="gw_tcp", data_schema=vol.Schema(schema), errors=errors
+            step_id="gw_tcp", data_schema=probatio.Schema(schema), errors=errors
         )
 
     def _check_topic_exists(self, topic: str) -> bool:
@@ -219,7 +219,7 @@ class MySensorsConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
             try:
                 valid_subscribe_topic(user_input[CONF_TOPIC_IN_PREFIX])
-            except vol.Invalid:
+            except probatio.Invalid:
                 errors[CONF_TOPIC_IN_PREFIX] = "invalid_subscribe_topic"
             else:
                 if self._check_topic_exists(user_input[CONF_TOPIC_IN_PREFIX]):
@@ -227,7 +227,7 @@ class MySensorsConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
             try:
                 valid_publish_topic(user_input[CONF_TOPIC_OUT_PREFIX])
-            except vol.Invalid:
+            except probatio.Invalid:
                 errors[CONF_TOPIC_OUT_PREFIX] = "invalid_publish_topic"
             if not errors:
                 if (
@@ -244,18 +244,20 @@ class MySensorsConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         user_input = user_input or {}
         schema: VolDictType = {
-            vol.Required(
+            probatio.Required(
                 CONF_TOPIC_IN_PREFIX, default=user_input.get(CONF_TOPIC_IN_PREFIX, "")
             ): str,
-            vol.Required(
+            probatio.Required(
                 CONF_TOPIC_OUT_PREFIX, default=user_input.get(CONF_TOPIC_OUT_PREFIX, "")
             ): str,
-            vol.Required(CONF_RETAIN, default=user_input.get(CONF_RETAIN, True)): bool,
+            probatio.Required(
+                CONF_RETAIN, default=user_input.get(CONF_RETAIN, True)
+            ): bool,
         }
         schema.update(_get_schema_common(user_input))
 
         return self.async_show_form(
-            step_id="gw_mqtt", data_schema=vol.Schema(schema), errors=errors
+            step_id="gw_mqtt", data_schema=probatio.Schema(schema), errors=errors
         )
 
     @callback
@@ -288,7 +290,7 @@ class MySensorsConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(
                     verification_func, user_input[CONF_DEVICE]
                 )
-            except vol.Invalid:
+            except probatio.Invalid:
                 errors[CONF_DEVICE] = (
                     "invalid_ip"
                     if gw_type == CONF_GATEWAY_TYPE_TCP
@@ -297,7 +299,7 @@ class MySensorsConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if CONF_PERSISTENCE_FILE in user_input:
             try:
                 is_persistence_file(user_input[CONF_PERSISTENCE_FILE])
-            except vol.Invalid:
+            except probatio.Invalid:
                 errors[CONF_PERSISTENCE_FILE] = "invalid_persistence_file"
             else:
                 real_persistence_path = user_input[CONF_PERSISTENCE_FILE] = (

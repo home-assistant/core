@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_STATE, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -36,16 +36,18 @@ from .const import (
 from .modbus import ModbusHub, async_modbus_setup
 
 
-def _write_service_schema(attr: str, validator: Callable[[Any], Any]) -> vol.Schema:
+def _write_service_schema(
+    attr: str, validator: Callable[[Any], Any]
+) -> probatio.Schema:
     """Return the schema shared by the write actions."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
-            vol.Exclusive(ATTR_SLAVE, "unit"): cv.positive_int,
-            vol.Exclusive(ATTR_UNIT, "unit"): cv.positive_int,
-            vol.Required(ATTR_ADDRESS): cv.positive_int,
-            vol.Required(attr): vol.Any(
-                cv.positive_int, vol.All(cv.ensure_list, [validator])
+            probatio.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
+            probatio.Exclusive(ATTR_SLAVE, "unit"): cv.positive_int,
+            probatio.Exclusive(ATTR_UNIT, "unit"): cv.positive_int,
+            probatio.Required(ATTR_ADDRESS): cv.positive_int,
+            probatio.Required(attr): probatio.Any(
+                cv.positive_int, probatio.All(cv.ensure_list, [validator])
             ),
         }
     )
@@ -121,9 +123,12 @@ async def _async_reload_config(call: ServiceCall) -> None:
     reload_config = await async_integration_yaml_config(hass, DOMAIN)
     if not reload_config:
         LOGGER.debug("Modbus not present anymore")
+        hubs.clear()
         return
     LOGGER.debug("Modbus reloading")
-    await async_modbus_setup(hass, reload_config)
+    # Setup replaces the hubs only once it has new ones to replace them with
+    if not await async_modbus_setup(hass, reload_config):
+        hubs.clear()
 
 
 @callback
@@ -146,5 +151,5 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_STOP,
         _async_stop_hub,
-        schema=vol.Schema({vol.Required(ATTR_HUB): cv.string}),
+        schema=probatio.Schema({probatio.Required(ATTR_HUB): cv.string}),
     )
