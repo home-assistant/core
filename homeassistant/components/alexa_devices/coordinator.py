@@ -21,6 +21,7 @@ from aioamazondevices.structures import (
     AmazonListItem,
     AmazonMediaState,
     AmazonSaveDataConfig,
+    AmazonSchedule,
     AmazonVocalRecord,
     AmazonVolumeState,
 )
@@ -183,6 +184,10 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         self._media_states: dict[str, AmazonMediaState] = {}
         self.api.on_media_state_event.append(self.media_state_event_handler)
         self.api.on_media_state_event.freeze()
+
+        self._notifications: dict[str, dict[str, AmazonSchedule]] = {}
+        self.api.on_notification_event.append(self.notification_event_handler)
+        self.api.on_notification_event.freeze()
 
     @override
     async def _async_update_data(self) -> dict[str, AmazonDevice]:
@@ -374,6 +379,11 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         """Vocal records of devices."""
         return self._vocal_records
 
+    async def sync_notifications(self) -> None:
+        """Sync notifications."""
+        async with alexa_config_entry_errors():
+            await self.api.sync_notifications()
+
     async def sync_media_state(self) -> None:
         """Sync media state."""
         async with alexa_config_entry_errors():
@@ -402,3 +412,15 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
     def volume_states(self) -> dict[str, AmazonVolumeState]:
         """Volumes of devices."""
         return self._volume_states
+
+    async def notification_event_handler(
+        self, notifications: dict[str, dict[str, AmazonSchedule]]
+    ) -> None:
+        """Handle pushed notification events."""
+        self._notifications = notifications
+        self.async_update_listeners()
+
+    @property
+    def notifications(self) -> dict[str, dict[str, AmazonSchedule]]:
+        """Notifications of devices."""
+        return self._notifications
