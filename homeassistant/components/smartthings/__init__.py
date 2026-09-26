@@ -4,6 +4,8 @@ from collections.abc import Callable
 import contextlib
 from copy import deepcopy
 from dataclasses import dataclass
+from datetime import datetime
+from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
@@ -56,7 +58,9 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     BINARY_SENSOR_ATTRIBUTES_TO_CAPABILITIES,
@@ -68,6 +72,8 @@ from .const import (
     MAIN,
     OLD_DATA,
     SENSOR_ATTRIBUTES_TO_CAPABILITIES,
+    SIGNAL_DEVICE_STATUS_REFRESHED,
+    STATUS_REFRESH_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -120,6 +126,38 @@ PLATFORMS = [
     Platform.VALVE,
     Platform.WATER_HEATER,
 ]
+
+
+async def _async_refresh_device_status(
+    hass: HomeAssistant, entry: SmartThingsConfigEntry, _now: datetime
+) -> None:
+    """Reconcile cached device status and availability with the API.
+
+    The event stream can stop delivering updates without failing, leaving
+    entities on their last known value, so pull the authoritative state back
+    periodically. Status and health are refreshed independently: one failing
+    endpoint must not discard the other's result.
+    """
+    client = entry.runtime_data.client
+    for device_id, device in entry.runtime_data.devices.items():
+        refreshed = False
+        try:
+            device.status = process_status(await client.get_device_status(device_id))
+        except SmartThingsError as err:
+            _LOGGER.debug("Could not refresh status of %s: %s", device_id, err)
+        else:
+            refreshed = True
+        try:
+            health = await client.get_device_health(device_id)
+        except SmartThingsError as err:
+            _LOGGER.debug("Could not refresh health of %s: %s", device_id, err)
+        else:
+            device.online = health.state == HealthStatus.ONLINE
+            refreshed = True
+        if refreshed:
+            async_dispatcher_send(
+                hass, SIGNAL_DEVICE_STATUS_REFRESHED.format(device_id)
+            )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) -> bool:
@@ -281,6 +319,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     entry.async_on_unload(
         client.add_unspecified_device_event_listener(handle_button_press)
+    )
+
+    entry.async_on_unload(
+        async_track_time_interval(
+            hass,
+            partial(_async_refresh_device_status, hass, entry),
+            STATUS_REFRESH_INTERVAL,
+        )
     )
 
     async def _handle_shutdown(_: Event) -> None:

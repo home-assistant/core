@@ -3,6 +3,7 @@
 from dataclasses import replace
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pysmartthings import (
     Attribute,
     Capability,
@@ -13,6 +14,7 @@ from pysmartthings import (
     SmartThingsSinkError,
     Subscription,
 )
+from pysmartthings.models import HealthStatus
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -30,10 +32,16 @@ from homeassistant.components.smartthings.const import (
     CONF_SUBSCRIPTION_ID,
     DOMAIN,
     SCOPES,
+    STATUS_REFRESH_INTERVAL,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
@@ -47,12 +55,14 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from . import (
     DEVICE_FIXTURES,
     get_device_response,
+    get_device_status,
     get_fixture_name,
+    set_attribute_value,
     setup_integration,
     trigger_update,
 )
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
 
 
 async def test_fixtures() -> None:
@@ -934,3 +944,99 @@ async def test_3_3_migration_no_old_data(
     mock_smartthings.get_installed_app.assert_not_called()
     mock_smartthings.delete_installed_app.assert_not_called()
     mock_smartthings.delete_smart_app.assert_not_called()
+
+
+@pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])
+async def test_periodic_status_refresh(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a missed device event is reconciled by the periodic refresh."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_ON
+
+    # The API knows the switch is off, but no event is ever delivered for it.
+    devices.get_device_status.return_value = get_device_status(
+        "c2c_arlo_pro_3_switch"
+    ).components
+    set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "off")
+
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_ON
+
+    freezer.tick(STATUS_REFRESH_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_OFF
+
+
+@pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])
+async def test_periodic_status_refresh_error(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failing refresh keeps the last known state."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_ON
+
+    devices.get_device_status.side_effect = SmartThingsConnectionError
+
+    freezer.tick(STATUS_REFRESH_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_ON
+
+
+@pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])
+async def test_periodic_health_refresh(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a missed health event is reconciled by the periodic refresh."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_ON
+
+    devices.get_device_health.return_value.state = HealthStatus.OFFLINE
+
+    freezer.tick(STATUS_REFRESH_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_UNAVAILABLE
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])
+async def test_periodic_health_refresh_error(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failing health call still applies the refreshed status."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_ON
+
+    devices.get_device_status.return_value = get_device_status(
+        "c2c_arlo_pro_3_switch"
+    ).components
+    set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "off")
+    devices.get_device_health.side_effect = SmartThingsConnectionError
+
+    freezer.tick(STATUS_REFRESH_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_OFF
