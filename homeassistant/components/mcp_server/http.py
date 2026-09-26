@@ -97,7 +97,7 @@ def _entry_llm_api_ids(
     hass: HomeAssistant, entry: MCPServerConfigEntry
 ) -> str | list[str]:
     """Return the LLM APIs served by the config entry."""
-    if entry.data.get(CONF_ALL_LLM_APIS):
+    if entry.data[CONF_ALL_LLM_APIS]:
         return [api.id for api in llm.async_get_apis(hass)]
     api_ids: str | list[str] = entry.data[CONF_LLM_HASS_API]
     return api_ids

@@ -35,7 +35,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "All LLM APIs"
     assert len(mock_setup_entry.mock_calls) == 1
-    assert result["minor_version"] == 2
+    assert result["minor_version"] == 3
     assert result["data"] == {
         CONF_ALL_LLM_APIS: True,
         CONF_LLM_HASS_API: [],

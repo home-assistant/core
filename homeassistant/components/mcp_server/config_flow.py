@@ -89,7 +89,7 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Model Context Protocol Server."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @staticmethod
     @callback
@@ -129,6 +129,7 @@ class ModelContextServerProtocolOptionsFlow(OptionsFlow):
         """Handle the options step."""
         errors: dict[str, str] = {}
         llm_apis = _llm_api_names(self.hass)
+        # A disabled config entry has not migrated yet
         current_all = self.config_entry.data.get(CONF_ALL_LLM_APIS, False)
         current = _selected_llm_apis(self.config_entry, llm_apis)
         if user_input is not None:
