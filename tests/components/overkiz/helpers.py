@@ -15,6 +15,8 @@ from pyoverkiz.models import (
     EventState,
     ExecutionRegisteredEvent,
     ExecutionStateChangedEvent,
+    GatewayAliveEvent,
+    GatewayDownEvent,
 )
 
 from homeassistant.components.overkiz.const import UPDATE_INTERVAL
@@ -122,6 +124,16 @@ def execution_state_changed_event(
         new_state=new_state,
         old_state=old_state,
     )
+
+
+def gateway_down_event(gateway_id: str) -> GatewayDownEvent:
+    """Build a GATEWAY_DOWN event for the given gateway."""
+    return GatewayDownEvent(name=EventName.GATEWAY_DOWN, gateway_id=gateway_id)
+
+
+def gateway_alive_event(gateway_id: str) -> GatewayAliveEvent:
+    """Build a GATEWAY_ALIVE event for the given gateway."""
+    return GatewayAliveEvent(name=EventName.GATEWAY_ALIVE, gateway_id=gateway_id)
 
 
 async def async_deliver_events(

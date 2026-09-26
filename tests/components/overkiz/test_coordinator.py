@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 
 from aiohttp import ClientConnectorError, ServerDisconnectedError
 from freezegun.api import FrozenDateTimeFactory
+from pyoverkiz.enums import OverkizState
 from pyoverkiz.exceptions import (
     InvalidEventListenerIdError,
     MaintenanceError,
@@ -14,7 +15,7 @@ from pyoverkiz.exceptions import (
     TooManyConcurrentRequestsError,
     TooManyRequestsError,
 )
-from pyoverkiz.models import Command
+from pyoverkiz.models import Command, Setup
 import pytest
 
 from homeassistant.components.overkiz.const import (
@@ -36,7 +37,10 @@ from .helpers import (
     async_deliver_events,
     device_created_event,
     device_removed_event,
+    device_state_changed_event,
     execution_registered_event,
+    gateway_alive_event,
+    gateway_down_event,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -526,3 +530,98 @@ async def test_stateless_recovery_restores_default_interval(
     await hass.async_block_till_done()
 
     assert coordinator.update_interval == UPDATE_INTERVAL
+
+
+async def test_gateway_down_marks_its_entities_unavailable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """An unreachable gateway takes its devices' entities down with it.
+
+    The server keeps answering for those devices out of its cache, so nothing
+    in the device payload changes and only the gateway event reveals it.
+    """
+    await setup_overkiz_integration(fixture=POOL_PUMP.fixture)
+
+    assert hass.states.get(POOL_PUMP.entity_id).state != STATE_UNAVAILABLE
+
+    await async_deliver_events(
+        hass, freezer, mock_client, [gateway_down_event(MAIN_GATEWAY_ID)]
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state == STATE_UNAVAILABLE
+
+    await async_deliver_events(
+        hass, freezer, mock_client, [gateway_alive_event(MAIN_GATEWAY_ID)]
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state != STATE_UNAVAILABLE
+
+
+async def test_state_from_device_clears_its_gateway(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Traffic from a device proves the gateway that carried it is back.
+
+    GATEWAY_ALIVE is otherwise the only way out, so a missed one would strand
+    every entity on that gateway until the config entry reloads.
+    """
+    await setup_overkiz_integration(fixture=POOL_PUMP.fixture)
+
+    await async_deliver_events(
+        hass, freezer, mock_client, [gateway_down_event(MAIN_GATEWAY_ID)]
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state == STATE_UNAVAILABLE
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                POOL_PUMP.device_url,
+                [{"name": OverkizState.CORE_ON_OFF.value, "type": 3, "value": "on"}],
+            )
+        ],
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state != STATE_UNAVAILABLE
+
+
+async def test_gateway_already_down_at_setup_marks_its_entities_unavailable(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """A gateway down before setup has no event left to announce it."""
+
+    def mark_gateways_down(setup: Setup) -> None:
+        for gateway in setup.gateways:
+            gateway.alive = False
+
+    await setup_overkiz_integration(
+        fixture=POOL_PUMP.fixture, mutate=mark_gateways_down
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_gateway_down_leaves_other_gateways_alone(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Only the devices hosted by the downed gateway go unavailable."""
+    await setup_overkiz_integration(fixture=POOL_PUMP.fixture)
+
+    await async_deliver_events(
+        hass, freezer, mock_client, [gateway_down_event("0000-0000-0000")]
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state != STATE_UNAVAILABLE
