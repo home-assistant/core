@@ -4,18 +4,21 @@ from collections.abc import Callable, Coroutine, Mapping
 import logging
 from typing import Any, Concatenate, override
 
+from bleak.exc import BleakError
 import switchbot
 from switchbot import Switchbot, SwitchbotDevice, SwitchbotOperationError
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothCoordinatorEntity,
 )
 from homeassistant.const import ATTR_CONNECTIONS
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.start import async_at_started
 
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import SwitchbotDataUpdateCoordinator
@@ -94,6 +97,58 @@ class SwitchbotEntity(
         Only used by the generic entity update service.
         """
         await self._device.update()
+
+
+class SwitchbotConnectionPolledEntity(SwitchbotEntity):
+    """Entity whose value has to be read from the device over a connection.
+
+    Reading needs an active connection, which is slow and frequently
+    impossible while Home Assistant is still starting up and competing for the
+    Bluetooth adapter, so the first read is deferred until startup is over.
+    """
+
+    _attr_should_poll = True
+    _attr_entity_registry_enabled_default = False
+
+    async def _async_read_value(self) -> None:
+        """Read the value from the device into the entity attributes."""
+        raise NotImplementedError
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks and read the value once startup is over."""
+        await super().async_added_to_hass()
+        self.async_on_remove(async_at_started(self.hass, self._async_hass_started))
+
+    @callback
+    def _async_hass_started(self, _hass: HomeAssistant) -> None:
+        """Read the value now that startup is no longer in the way."""
+        # A background task so a stuck connect is cancelled when the entry
+        # unloads instead of holding up shutdown.
+        self.coordinator.config_entry.async_create_background_task(
+            self.hass,
+            self.async_update_ha_state(force_refresh=True),
+            f"switchbot read {self.entity_id}",
+        )
+
+    @override
+    async def async_update(self) -> None:
+        """Read the value from the device."""
+        if not bluetooth.async_ble_device_from_address(
+            self.hass, self._address, connectable=True
+        ):
+            _LOGGER.debug("No connectable path to %s, skipping update", self._address)
+            return
+        try:
+            await self._async_read_value()
+        except SwitchbotOperationError, BleakError:
+            _LOGGER.debug(
+                "Failed to read %s from %s",
+                self.entity_id,
+                self._address,
+                exc_info=True,
+            )
+            return
 
 
 def exception_handler[_EntityT: SwitchbotEntity, **_P](
