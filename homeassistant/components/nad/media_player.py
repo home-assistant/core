@@ -40,8 +40,31 @@ CONF_MAX_VOLUME = "max_volume"
 CONF_VOLUME_STEP = "volume_step"  # for NADReceiverTCP
 CONF_SOURCE_DICT = "sources"  # for NADReceiver
 
-# Max value based on a C658 with an MDC HDM-2 card installed
-SOURCE_DICT_SCHEMA = probatio.Schema({probatio.Range(min=1, max=12): cv.string})
+
+# Receivers use either numeric source IDs or exact tokens such as "OPT 2".
+# Keep numeric keys as integers so they match nad_receiver's source replies.
+def source_token(value: str) -> str:
+    """Validate a named source without changing its protocol representation."""
+    if (
+        not isinstance(value, str)
+        or not value.strip()
+        or value != value.strip()
+    ):
+        raise probatio.Invalid(
+            "expected a nonempty source token without surrounding whitespace"
+        )
+    try:
+        int(value)
+    except ValueError:
+        return value
+    # Numeric replies are converted to integers by nad_receiver.
+    raise probatio.Invalid("use an integer YAML key for numeric sources")
+
+
+# Max value based on a C658 with an MDC HDM-2 card installed. Fall back to string based value if non-numeric.
+SOURCE_DICT_SCHEMA = probatio.Schema(
+    {probatio.Any(probatio.Range(min=1, max=12), source_token): cv.string}
+)
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
