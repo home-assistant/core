@@ -3107,6 +3107,75 @@ async def test_platform_state_fail_to_add_rollback_raises(
     assert "Failed to add entity" in caplog.text
 
 
+async def test_platform_state_fail_to_add_runs_will_remove(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the integration removal hook runs when a partial add is rolled back.
+
+    Resources set up by async_added_to_hass that are not registered via
+    async_on_remove (e.g. MQTT topic subscriptions) must be torn down by
+    async_will_remove_from_hass when adding the entity fails.
+    """
+    entry = entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="test"
+    )
+    assert entry.entity_id == "test.test"
+
+    class MockEntity(entity.Entity):
+        _attr_unique_id = "5678"
+        will_remove_called = False
+
+        async def async_added_to_hass(self) -> None:
+            # A resource set up here would not be registered via async_on_remove.
+            raise ValueError("Failed to add entity")
+
+        async def async_will_remove_from_hass(self) -> None:
+            self.will_remove_called = True
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity()
+    await platform.async_add_entities([ent])
+
+    assert ent.will_remove_called
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
+    assert ent.hass is None
+    assert ent.platform is None
+    assert "test.test" not in platform.entities
+    assert hass.states.async_available("test.test")
+    assert "test.test" not in entity.entity_sources(hass)
+
+
+async def test_platform_state_fail_to_add_skips_will_remove_if_not_started(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the integration removal hook is skipped when the add hook never ran.
+
+    If async_internal_added_to_hass fails, async_added_to_hass never starts, so
+    async_will_remove_from_hass must not be called.
+    """
+    entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="test"
+    )
+
+    class MockEntity(entity.Entity):
+        _attr_unique_id = "5678"
+        will_remove_called = False
+
+        async def async_internal_added_to_hass(self) -> None:
+            raise ValueError("Failed internal add")
+
+        async def async_will_remove_from_hass(self) -> None:
+            self.will_remove_called = True
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity()
+    await platform.async_add_entities([ent])
+
+    assert not ent.will_remove_called
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
+    assert ent.hass is None
+
+
 async def test_platform_state_write_from_init(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
