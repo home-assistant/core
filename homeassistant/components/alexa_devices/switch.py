@@ -4,8 +4,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, override
 
-from aioamazondevices.structures import AmazonDevice
-
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SwitchEntity,
@@ -43,6 +41,40 @@ def _communication_is_on(
     )
 
 
+def _dnd_is_available(
+    coordinator: AmazonDevicesCoordinator,
+    serial_num: str,
+    entity_description_key: str,
+) -> bool:
+    """Return if the DND state is known."""
+    return serial_num in coordinator.dnd_states
+
+
+def _announcements_is_available(
+    coordinator: AmazonDevicesCoordinator,
+    serial_num: str,
+    entity_description_key: str,
+) -> bool:
+    """Return if the announcements setting is known and communications are enabled."""
+    settings = coordinator.data[serial_num].communication_settings
+    return (
+        settings.get(entity_description_key) is not None
+        and settings.get("communications") != "OFF"
+    )
+
+
+def _communications_is_available(
+    coordinator: AmazonDevicesCoordinator,
+    serial_num: str,
+    entity_description_key: str,
+) -> bool:
+    """Return if the communications setting is known."""
+    return (
+        coordinator.data[serial_num].communication_settings.get(entity_description_key)
+        is not None
+    )
+
+
 def _update_dnd_state(
     coordinator: AmazonDevicesCoordinator,
     serial_num: str,
@@ -70,11 +102,7 @@ class AmazonSwitchEntityDescription(SwitchEntityDescription):
     """Alexa Devices switch entity description."""
 
     is_on_fn: Callable[[AmazonDevicesCoordinator, str, str], bool]
-    is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
-        device.online
-        and (sensor := device.sensors.get(key)) is not None
-        and sensor.error is False
-    )
+    is_available_fn: Callable[[AmazonDevicesCoordinator, str, str], bool]
     method: str
     update_state_fn: Callable[[AmazonDevicesCoordinator, str, str, bool], None]
 
@@ -83,7 +111,7 @@ DND_SWITCH: Final = AmazonSwitchEntityDescription(
     key="dnd",
     translation_key="do_not_disturb",
     is_on_fn=_dnd_is_on,
-    is_available_fn=lambda device, _: device.online,
+    is_available_fn=_dnd_is_available,
     method="set_do_not_disturb",
     update_state_fn=_update_dnd_state,
 )
@@ -93,11 +121,7 @@ COMMUNICATION_SWITCHES: Final = (
         translation_key="announcements",
         entity_category=EntityCategory.CONFIG,
         is_on_fn=_communication_is_on,
-        is_available_fn=lambda device, key: (
-            device.online
-            and device.communication_settings.get(key) is not None
-            and device.communication_settings.get("communications") != "OFF"
-        ),
+        is_available_fn=_announcements_is_available,
         method="set_announcement_status",
         update_state_fn=_update_communication_state,
     ),
@@ -106,9 +130,7 @@ COMMUNICATION_SWITCHES: Final = (
         translation_key="communications",
         entity_category=EntityCategory.CONFIG,
         is_on_fn=_communication_is_on,
-        is_available_fn=lambda device, key: (
-            device.online and device.communication_settings.get(key) is not None
-        ),
+        is_available_fn=_communications_is_available,
         method="set_communication_status",
         update_state_fn=_update_communication_state,
     ),
@@ -221,9 +243,6 @@ class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
     @override
     def available(self) -> bool:
         """Return if entity is available."""
-        return (
-            self.entity_description.is_available_fn(
-                self.device, self.entity_description.key
-            )
-            and super().available
+        return super().available and self.entity_description.is_available_fn(
+            self.coordinator, self.device.serial_number, self.entity_description.key
         )
