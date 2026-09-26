@@ -3,7 +3,13 @@
 import logging
 from typing import Any, NoReturn, override
 
-from mitsubishi_comfort import FanSpeed, IndoorUnit, Mode, VaneDirection
+from mitsubishi_comfort import (
+    CloudIndoorUnit,
+    FanSpeed,
+    IndoorUnit,
+    Mode,
+    VaneDirection,
+)
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
@@ -77,7 +83,7 @@ async def async_setup_entry(
     async_add_entities(
         MitsubishiComfortClimate(coordinator)
         for coordinator in coordinators.values()
-        if isinstance(coordinator.device, IndoorUnit)
+        if isinstance(coordinator.device, (IndoorUnit, CloudIndoorUnit))
     )
 
 
@@ -116,6 +122,8 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
     def hvac_action(self) -> HVACAction | None:
         """Return the current HVAC action."""
         mode = self._effective_mode
+        if isinstance(self._device, CloudIndoorUnit) and mode != "off":
+            return None
         if mode and self._device.status.standby:
             return HVACAction.IDLE
         return _MODE_TO_ACTION.get(mode) if mode else None
@@ -230,10 +238,10 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.FAN_MODE
-            | ClimateEntityFeature.TURN_OFF
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_OFF
         )
+        if self._device.supported_fan_speeds:
+            features |= ClimateEntityFeature.FAN_MODE
         if Mode.AUTO in self._device.supported_modes:
             features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         if self._device.supported_vane_directions:
@@ -255,7 +263,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         if lib_mode is None:
             _LOGGER.debug("Ignoring unsupported HVAC mode %s", hvac_mode)
             return
-        result = await self._device.set_mode(lib_mode)
+        result = await self.coordinator.async_command(self._device.set_mode(lib_mode))
         if not result.success:
             self._command_failed("set_hvac_mode_failed")
         self._optimistic[_OPT_MODE] = result.value
@@ -269,7 +277,9 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         failed = False
 
         if ATTR_TARGET_TEMP_HIGH in kwargs:
-            result = await self._device.set_cool_setpoint(kwargs[ATTR_TARGET_TEMP_HIGH])
+            result = await self.coordinator.async_command(
+                self._device.set_cool_setpoint(kwargs[ATTR_TARGET_TEMP_HIGH])
+            )
             if result.success:
                 self._optimistic[_OPT_COOL_SETPOINT] = result.value
                 wrote = True
@@ -277,7 +287,9 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
                 failed = True
 
         if ATTR_TARGET_TEMP_LOW in kwargs:
-            result = await self._device.set_heat_setpoint(kwargs[ATTR_TARGET_TEMP_LOW])
+            result = await self.coordinator.async_command(
+                self._device.set_heat_setpoint(kwargs[ATTR_TARGET_TEMP_LOW])
+            )
             if result.success:
                 self._optimistic[_OPT_HEAT_SETPOINT] = result.value
                 wrote = True
@@ -287,14 +299,18 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
             if mode in ("cool", "autoCool"):
-                result = await self._device.set_cool_setpoint(temp)
+                result = await self.coordinator.async_command(
+                    self._device.set_cool_setpoint(temp)
+                )
                 if result.success:
                     self._optimistic[_OPT_COOL_SETPOINT] = result.value
                     wrote = True
                 else:
                     failed = True
             elif mode in ("heat", "autoHeat"):
-                result = await self._device.set_heat_setpoint(temp)
+                result = await self.coordinator.async_command(
+                    self._device.set_heat_setpoint(temp)
+                )
                 if result.success:
                     self._optimistic[_OPT_HEAT_SETPOINT] = result.value
                     wrote = True
@@ -320,7 +336,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         if speed is None:
             _LOGGER.debug("Ignoring unsupported fan mode %s", fan_mode)
             return
-        result = await self._device.set_fan_speed(speed)
+        result = await self.coordinator.async_command(self._device.set_fan_speed(speed))
         if not result.success:
             self._command_failed("set_fan_mode_failed")
         self._optimistic[_OPT_FAN_SPEED] = result.value
@@ -333,7 +349,9 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         if direction is None:
             _LOGGER.debug("Ignoring unsupported swing mode %s", swing_mode)
             return
-        result = await self._device.set_vane_direction(direction)
+        result = await self.coordinator.async_command(
+            self._device.set_vane_direction(direction)
+        )
         if not result.success:
             self._command_failed("set_swing_mode_failed")
         self._optimistic[_OPT_VANE_DIRECTION] = result.value

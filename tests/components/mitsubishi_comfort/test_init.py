@@ -97,15 +97,7 @@ async def test_setup_entry_no_address_loads_and_registers(
     issue_registry: ir.IssueRegistry,
     mock_cloud_account: AsyncMock,
 ) -> None:
-    """Test setup with no known LAN address loads and registers the device.
-
-    The cloud returns each device's credentials but never its LAN IP. Without a
-    resolved address the device cannot be polled, so it creates no entity — but
-    it is registered with its MAC so "registered_devices" DHCP discovery can
-    supply the IP and reload the entry. Setup must not retry (which would hammer
-    the cloud API) since retrying can never resolve the address. The missing
-    address is surfaced as a repair issue rather than failing silently.
-    """
+    """Use cloud control while offering an address repair for local control."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
@@ -117,14 +109,14 @@ async def test_setup_entry_no_address_loads_and_registers(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert not er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    assert er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     assert device_registry.async_get_device_by_connection(
         (dr.CONNECTION_NETWORK_MAC, dr.format_mac(MOCK_MAC)), entry.entry_id
     )
     issue = issue_registry.async_get_issue(DOMAIN, f"missing_address_{entry.entry_id}")
     assert issue
     assert issue.is_fixable
-    assert issue.severity is ir.IssueSeverity.ERROR
+    assert issue.severity is ir.IssueSeverity.WARNING
     assert issue.data == {"entry_id": entry.entry_id}
 
 
@@ -279,7 +271,7 @@ async def test_setup_entry_prunes_stale_addresses(
     assert entry.data[CONF_ADDRESSES] == {dr.format_mac(MOCK_MAC): MOCK_ADDRESS}
 
 
-async def test_setup_entry_skips_incomplete_devices(
+async def test_setup_entry_uses_cloud_for_incomplete_devices(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
@@ -288,15 +280,7 @@ async def test_setup_entry_skips_incomplete_devices(
     mock_setup_integration: tuple[AsyncMock, MagicMock],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test setup skips devices the cloud returned incomplete data for.
-
-    Without a password and cryptoSerial the local API cannot be authenticated,
-    and without a MAC the device cannot be keyed in the address cache, so the
-    device is skipped (no coordinator, no entity) and the gap is logged. Any
-    recovered field is still cached — discover_devices() consumes them
-    independently, and the password in particular may never be returned by
-    the throttled Socket.IO fetch again.
-    """
+    """Use cloud for missing secrets or MACs while retaining partial credentials."""
     incomplete_info = DeviceInfo(
         serial="SERIAL002",
         label="Bedroom",
@@ -331,12 +315,10 @@ async def test_setup_entry_skips_incomplete_devices(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL001")
-    assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL002") is None
-    assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL003") is None
-    assert (
-        "The cloud returned incomplete local connection data for 2 device(s):"
-        " Attic, Bedroom" in caplog.text
-    )
+    assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL002")
+    assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL003")
+    assert "Using cloud control for Bedroom" in caplog.text
+    assert "Using cloud control for Attic" in caplog.text
     assert mock_config_entry.data[CONF_CREDENTIALS] == {
         "SERIAL001": {
             "password": "dGVzdHBhc3M=",
@@ -574,6 +556,7 @@ async def test_remove_never_loaded_entry_clears_missing_address_issue(
         ),
     }
     mock_device.update_status.side_effect = DeviceConnectionError("boom")
+    mock_account.get_device_details.side_effect = DeviceConnectionError("boom")
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

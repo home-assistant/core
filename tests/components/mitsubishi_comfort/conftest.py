@@ -161,6 +161,26 @@ def mock_cloud_account(mock_device_info: DeviceInfo) -> Generator[AsyncMock]:
         account.discover_devices.return_value = {"SERIAL001": mock_device_info}
         account.get_passwords_via_websocket.return_value = {}
         account.user_id = "user-12345"
+        account.get_device_details.return_value = {
+            "connected": True,
+            "operationMode": "cool",
+            "roomTemp": 23.5,
+            "spCool": 24.0,
+            "spHeat": 21.0,
+            "fanSpeed": "auto",
+            "airDirection": "auto",
+        }
+        account.get_device_profile.return_value = {
+            "hasModeCool": True,
+            "hasModeHeat": True,
+            "hasModeAuto": True,
+            "hasVaneDir": True,
+            "hasFanSpeedAuto": True,
+            "numberOfFanSpeeds": 5,
+            "minimumSetPoints": {"cool": 18, "heat": 16},
+            "maximumSetPoints": {"cool": 30, "heat": 28},
+        }
+        account.get_device_status.return_value = {}
         yield account
 
 
