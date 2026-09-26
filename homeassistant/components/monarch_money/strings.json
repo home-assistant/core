@@ -38,6 +38,9 @@
       },
 
       "balance": { "name": "Balance" },
+      "budget_actual": { "name": "Budget actual" },
+      "budget_planned": { "name": "Budget planned" },
+      "budget_remaining": { "name": "Budget remaining" },
       "owner": {
         "name": "Owner"
       },
