@@ -3,16 +3,12 @@
 from typing import Any
 from unittest.mock import patch
 
-from bluetti_modbus_lib.devices.getter import get_device
+from bluetti_modbus_lib import get_device
 from modbus_connection import AcknowledgeError, ModbusTimeoutError
 from modbus_connection.exceptions import IllegalDataAddressError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 
-from homeassistant.components.bluetti_modbus.const import (
-    CONF_UNIT_ID,
-    DEVICE_TYPE_BALCO260,
-    DOMAIN,
-)
+from homeassistant.components.bluetti_modbus.const import CONF_UNIT_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -199,7 +195,7 @@ async def test_user_flow_probes_only_the_fields_setup_reads(
     hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
 ) -> None:
     """A register setup leaves out of its read plan is not read by the probe either."""
-    fault = get_device(DEVICE_TYPE_BALCO260).get_field("d_inverter_fault")
+    fault = get_device("balco260").get_field("d_inverter_fault")
     assert fault is not None
     mock_modbus_unit.fail_read(fault.address, IllegalDataAddressError())
 

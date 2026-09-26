@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import override
 
-from bluetti_modbus_lib.base_devices.bluetti_device import BluettiDevice
+from bluetti_modbus_lib import Balco260
 from modbus_connection.exceptions import ModbusError
 
 from homeassistant.config_entries import ConfigEntry
@@ -31,7 +31,7 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self,
         hass: HomeAssistant,
         entry: BluettiModbusConfigEntry,
-        device: BluettiDevice,
+        device: Balco260,
     ) -> None:
         """Initialize the coordinator."""
         self.device = device
