@@ -258,7 +258,7 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
                 if self._data_type != DataType.CUSTOM:
                     v_result.append(str(v_temp))
                 else:
-                    v_result.append(str(v_temp) if v_temp is not None else "0")
+                    v_result.append(str(v_temp) if v_temp is not None else "None")
             return ",".join(map(str, v_result))
 
         # Apply scale, precision, limits to floats and ints
