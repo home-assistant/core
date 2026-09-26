@@ -1039,6 +1039,8 @@
       'missing_code_warnings': list([
         'None',
       ]),
+      'unknown_program_ids': dict({
+      }),
     }),
   })
 # ---
@@ -1237,7 +1239,8 @@
       'missing_code_warnings': list([
         'None',
       ]),
-      'programs': 'Not implemented',
+      'unknown_program_ids': list([
+      ]),
     }),
   })
 # ---
