@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
-from typing import ClassVar, override
+from typing import override
 
 from httpx import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.client import XboxLiveClient
@@ -17,6 +17,7 @@ from pythonxbox.api.provider.smartglass.models import (
     SmartglassConsoleStatus,
 )
 from pythonxbox.api.provider.titlehub.models import Title
+from pythonxbox.common.exceptions import RateLimitExceededException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -43,6 +44,7 @@ class XboxData:
 
     presence: dict[str, Person] = field(default_factory=dict)
     title_info: dict[str, Title] = field(default_factory=dict)
+    achievement_totals: dict[str, int] = field(default_factory=dict)
 
 
 @dataclass
@@ -193,7 +195,18 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
 
     config_entry: XboxConfigEntry
     _update_interval = timedelta(seconds=30)
-    title_data: ClassVar[dict[str, Title]] = {}
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: XboxConfigEntry,
+        client: XboxLiveClient,
+    ) -> None:
+        """Initialize."""
+        super().__init__(hass, config_entry, client)
+
+        self.title_data: dict[str, Title] = {}
+        self.achievement_totals: dict[str, int] = {}
 
     @override
     async def update_data(self) -> XboxData:
@@ -226,6 +239,13 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
                     and presence_detail.title_id
                     == self.title_data[person.xuid].title_id
                 ):
+                    # Nothing below runs again for an unchanged title, so a
+                    # previously failed achievement lookup is retried here.
+                    await self.update_achievement_total(
+                        person.xuid,
+                        presence_detail.title_id,
+                        self.title_data[person.xuid],
+                    )
                     continue
                 try:
                     title = await self.client.titlehub.get_title_info_by_xuid(
@@ -236,10 +256,47 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
                         continue
                     raise
                 self.title_data[person.xuid] = title.titles[0]
+                self.achievement_totals.pop(person.xuid, None)
+                await self.update_achievement_total(
+                    person.xuid, presence_detail.title_id, title.titles[0]
+                )
             else:
                 self.title_data.pop(person.xuid, None)
+                self.achievement_totals.pop(person.xuid, None)
             person.last_seen_date_time_utc = self.last_seen_timestamp(person)
-        return XboxData(presence_data, self.title_data)
+        return XboxData(presence_data, self.title_data, self.achievement_totals)
+
+    async def update_achievement_total(
+        self, xuid: str, title_id: str, title: Title
+    ) -> None:
+        """Retrieve the real achievement total for a title."""
+
+        # Titlehub reports a total of 0 for Xbox One titles as soon as a single
+        # achievement has been unlocked, which renders the sensor attribute as
+        # "57 / 0". The achievements API still knows the real total. Xbox 360
+        # titles are unaffected and are skipped by this check.
+        if (
+            xuid in self.achievement_totals
+            or title.achievement is None
+            or title.achievement.total_achievements
+        ):
+            return
+
+        try:
+            progress = (
+                await self.client.achievements.get_achievements_xboxone_gameprogress(
+                    xuid, title_id
+                )
+            )
+        except (HTTPStatusError, RateLimitExceededException, RequestError) as e:
+            # Leave the total unset so the next update tries again.
+            _LOGGER.debug(
+                "Unable to retrieve achievement total for %s: %s", title_id, e
+            )
+            return
+
+        # A zero is recorded as well, to stop the retry above.
+        self.achievement_totals[xuid] = progress.paging_info.total_records
 
     def last_seen_timestamp(self, person: Person) -> datetime | None:
         """Returns the most recent of two timestamps."""
