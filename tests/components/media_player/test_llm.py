@@ -1,6 +1,7 @@
 """Tests for the media_player LLM tools platform."""
 
 from typing import Any
+from unittest.mock import ANY
 
 import probatio
 import pytest
@@ -245,7 +246,8 @@ async def test_search_media(
                     "media_content_type": "album",
                     "media_content_id": "library://album/2",
                 },
-            ]
+            ],
+            "instruction": ANY,
         }
     )
     assert len(search_calls) == 1
@@ -281,27 +283,33 @@ async def test_search_media_invalid_media_class(hass: HomeAssistant) -> None:
     assert not search_calls
 
 
-async def test_play_media(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "media",
+    [
+        pytest.param(
+            {"media_content_id": "library://album/2", "media_content_type": "album"},
+            id="search_result",
+        ),
+        pytest.param(
+            {
+                "media_content_id": "https://example.com/stream.mp3",
+                "media_content_type": "music",
+            },
+            id="url",
+        ),
+    ],
+)
+async def test_play_media(hass: HomeAssistant, media: dict[str, str]) -> None:
     """Test the play tool plays the chosen item on the player."""
     play_calls = async_mock_service(hass, DOMAIN, SERVICE_PLAY_MEDIA)
 
     result = await _async_call_tool(
-        hass,
-        "media_player__play_media",
-        {
-            "media_content_id": "library://album/2",
-            "media_content_type": "album",
-            "name": "Test media_player",
-        },
+        hass, "media_player__play_media", {**media, "name": "Test media_player"}
     )
 
     assert result == llm.ToolResult(data={"success": True})
     assert len(play_calls) == 1
-    assert play_calls[0].data == {
-        "entity_id": ENTITY_ID,
-        "media_content_id": "library://album/2",
-        "media_content_type": "album",
-    }
+    assert play_calls[0].data == {"entity_id": ENTITY_ID, **media}
 
 
 async def test_blank_target_values_omitted(hass: HomeAssistant) -> None:

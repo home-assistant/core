@@ -8,12 +8,7 @@ from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers import (
-    area_registry as ar,
-    config_validation as cv,
-    device_registry as dr,
-    intent,
-)
+from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.llm import (
     LLM_API_ASSIST,
     IntentTool,
@@ -22,7 +17,9 @@ from homeassistant.helpers.llm import (
     ToolAnnotations,
     ToolInput,
     ToolResult,
+    async_get_match_preferences,
 )
+from homeassistant.util.json import JsonValueType
 
 from .browse_media import SearchMedia
 from .const import (
@@ -116,16 +113,7 @@ def _async_match_player(
         features=SEARCH_PLAY_FEATURES,
         single_target=True,
     )
-    preferences = intent.MatchTargetsPreferences()
-    if (
-        llm_context.device_id
-        and (device := dr.async_get(hass).async_get(llm_context.device_id))
-        and (area_id := dr.async_get_effective_area_id(hass, device))
-        and (area := ar.async_get(hass).async_get_area(area_id))
-    ):
-        preferences = intent.MatchTargetsPreferences(
-            area_id=area.id, floor_id=area.floor_id
-        )
+    preferences = async_get_match_preferences(hass, llm_context)
     result = intent.async_match_targets(hass, constraints, preferences)
     if not result.is_match:
         raise intent.MatchFailedError(
@@ -139,12 +127,7 @@ class MediaSearchTool(Tool):
 
     name = "media_player__search_media"
     title = "Search media"
-    description = (
-        "Searches a media player for media and returns the playable items. "
-        "Pick the item that best matches the request. "
-        "Play it with the play media tool on the same media player: "
-        "pass the same name, area and floor as this search."
-    )
+    description = "Searches a media player for media and returns the playable items."
     parameters = probatio.Schema(
         {
             probatio.Required(
@@ -185,18 +168,26 @@ class MediaSearchTool(Tool):
             return_response=True,
         )
         search_media = cast(dict[str, SearchMedia], service_result)[entity_id]
+        results: list[JsonValueType] = [
+            {
+                "title": item.title,
+                "media_class": item.media_class,
+                ATTR_MEDIA_CONTENT_TYPE: item.media_content_type,
+                ATTR_MEDIA_CONTENT_ID: item.media_content_id,
+            }
+            for item in search_media.result
+            if item.can_play
+        ]
+        if not results:
+            return ToolResult(data={"results": results})
         return ToolResult(
             data={
-                "results": [
-                    {
-                        "title": item.title,
-                        "media_class": item.media_class,
-                        ATTR_MEDIA_CONTENT_TYPE: item.media_content_type,
-                        ATTR_MEDIA_CONTENT_ID: item.media_content_id,
-                    }
-                    for item in search_media.result
-                    if item.can_play
-                ]
+                "results": results,
+                "instruction": (
+                    "Pick the result that best matches the request. Call the play "
+                    "media tool with its media_content_id and media_content_type, "
+                    "and with the same name, area and floor as this search."
+                ),
             }
         )
 
@@ -207,18 +198,21 @@ class MediaPlayTool(Tool):
     name = "media_player__play_media"
     title = "Play media"
     description = (
-        "Plays a media item that the search media tool returned. "
-        "Pass the same name, area and floor as the search."
+        "Plays a media item that the search media tool returned, or a URL. "
+        "For a search result, pass the same name, area and floor as the search."
     )
     parameters = probatio.Schema(
         {
             probatio.Required(
                 ATTR_MEDIA_CONTENT_ID,
-                description="The media_content_id of the search result",
+                description="The media_content_id of the search result, or a URL",
             ): cv.string,
             probatio.Required(
                 ATTR_MEDIA_CONTENT_TYPE,
-                description="The media_content_type of the search result",
+                description=(
+                    "The media_content_type of the search result. "
+                    "Use music to play an audio URL."
+                ),
             ): cv.string,
             **TARGET_SCHEMA,
         }
