@@ -1,8 +1,10 @@
 """Test the media browser interface."""
 
+import json
 from unittest.mock import MagicMock
 
 import pytest
+from spotifyaio import Playlist, Track
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import BrowseError
@@ -14,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from . import setup_integration
 from .conftest import SCOPES
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_load_fixture
 
 
 @pytest.mark.usefixtures("setup_credentials")
@@ -135,6 +137,49 @@ async def test_browsing(
         f"spotify://{mock_config_entry.entry_id}/{media_content_id}",
     )
     assert response.as_dict() == snapshot
+
+
+@pytest.mark.usefixtures("setup_credentials")
+@pytest.mark.parametrize(
+    "name",
+    [
+        pytest.param("Don't Stop", id="apostrophe"),
+        pytest.param('The "Blue" Album', id="double-quotes"),
+        pytest.param('Don\'t Stop "Now"', id="mixed-quotes"),
+        pytest.param('Don\'t Stop \\ "Now"', id="backslash"),
+        pytest.param("L\u2019été 音楽", id="unicode"),
+    ],
+)
+async def test_playlist_names_preserve_special_characters(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    name: str,
+) -> None:
+    """Test JSON parsing, setup and browsing preserve playlist, track and album names."""
+    playlist_data = json.loads(await async_load_fixture(hass, "playlist.json", DOMAIN))
+    playlist_data["name"] = name
+    track_data = playlist_data["tracks"]["items"][0]["track"]
+    track_data["name"] = name
+    track_data["album"]["name"] = name
+    playlist = Playlist.from_json(json.dumps(playlist_data))
+    mock_spotify.return_value.get_playlist.return_value = playlist
+
+    await setup_integration(hass, mock_config_entry)
+    assert (state := hass.states.get("media_player.spotify_spotify_1"))
+    assert state.attributes["media_playlist"] == name
+
+    response = await async_browse_media(
+        hass,
+        "spotify://playlist",
+        f"spotify://{mock_config_entry.entry_id}/{playlist.uri}",
+    )
+    assert response.title == name
+    assert response.children
+    assert response.children[0].title == name
+    track = playlist.items.items[0].track
+    assert isinstance(track, Track)
+    assert track.album.name == name
 
 
 @pytest.mark.parametrize("media_content_id", ["artist", None])
