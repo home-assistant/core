@@ -40,6 +40,8 @@ MOCK_ENCRYPTION_DATA = {
     CONF_ENCRYPTION_KEY: "mock-encryption-key",
 }
 
+MOCK_INPUTS = ["TV", "HDMI1", "HDMI2"]
+
 MOCK_DEVICE_INFO = {
     ATTR_FRIENDLY_NAME: DEFAULT_NAME,
     ATTR_MANUFACTURER: DEFAULT_MANUFACTURER,
@@ -85,6 +87,14 @@ def get_mock_remote(
     mock_remote.send_key = Mock()
 
     mock_remote.get_volume = Mock(return_value=100)
+
+    mock_remote.list_inputs = Mock(return_value=list(MOCK_INPUTS))
+    mock_remote.get_input = Mock(return_value=MOCK_INPUTS[0])
+
+    def set_input(input_name, timeout=5):
+        mock_remote.get_input.return_value = input_name
+
+    mock_remote.set_input = Mock(side_effect=set_input)
 
     return mock_remote
 
