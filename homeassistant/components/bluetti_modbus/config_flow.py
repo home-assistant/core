@@ -2,7 +2,8 @@
 
 from typing import Any, override
 
-from modbus_connection import ModbusError, ModbusTcpParams
+from bluetti_modbus_lib import BluettiModbusConnectionError
+from modbus_connection import AcknowledgeError, ModbusTcpParams, ServerDeviceBusyError
 import probatio
 
 from homeassistant.components.modbus import async_get_temporary_unit
@@ -95,21 +96,14 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
                 device = restricted_device(unit)
                 await device.async_update_with_retry()
         except HomeAssistantError:
-            # The address is already claimed by another entry with different
-            # link settings, which one shared connection cannot honour - a
-            # deterministic conflict, not a transient connection failure, so
-            # tell the user to fix it rather than to retry.
+            # Claimed by another entry with link settings one shared connection
+            # cannot honour; retrying won't help.
             return {"base": "link_settings_in_use"}, None
-        except ModbusError, TimeoutError:
-            # TimeoutError: async_update_with_retry()'s own internal budget
-            # (see its docstring) can expire without ever raising a
-            # ModbusError - a slow device, not a protocol-level failure, but
-            # the same "can't connect right now" outcome from here.
+        except BluettiModbusConnectionError, AcknowledgeError, ServerDeviceBusyError:
             return {"base": "cannot_connect"}, None
 
         serial = device.values.get("d_serial")
         if not serial:
-            # 0 isn't a real Balco260 serial - the same "can't identify
-            # this device" outcome as one that didn't answer at all.
+            # 0 isn't a real Balco260 serial.
             return {"base": "cannot_connect"}, None
         return {}, str(serial)

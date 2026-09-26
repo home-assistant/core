@@ -3,8 +3,8 @@
 from dataclasses import dataclass
 from typing import override
 
-from bluetti_modbus_lib import Balco260
-from modbus_connection.exceptions import ModbusError
+from bluetti_modbus_lib import Balco260, BluettiModbusConnectionError
+from modbus_connection import AcknowledgeError, ServerDeviceBusyError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -45,14 +45,15 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     @override
     async def _async_update_data(self) -> None:
-        """Poll the device.
-
-        A transient device-busy response is already retried once by
-        ``async_update_with_retry()`` itself; only a real failure reaches here.
-        """
+        """Poll the device."""
+        # A device still busy after the library's own retry is raised unwrapped.
         try:
             await self.device.async_update_with_retry()
-        except (ModbusError, TimeoutError) as err:
+        except (
+            BluettiModbusConnectionError,
+            AcknowledgeError,
+            ServerDeviceBusyError,
+        ) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
