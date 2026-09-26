@@ -289,11 +289,10 @@ class HomeAssistantHTTP:
         self.app[KEY_HASS] = self.hass
         self.app["hass"] = self.hass  # For backwards compatibility
 
-        # Order matters, security filters middleware needs to go first,
-        # forwarded middleware needs to go second.
-        setup_security_filter(self.app)
-
+        # Resolve the client address before the security filter logs blocked requests.
         async_setup_forwarded(self.app, use_x_forwarded_for, self.trusted_proxies)
+
+        setup_security_filter(self.app)
 
         setup_request_context(self.app, current_request)
 
