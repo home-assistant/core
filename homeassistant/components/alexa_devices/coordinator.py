@@ -1,7 +1,7 @@
 """Support for Alexa Devices."""
 
 from asyncio import Lock
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager
 from datetime import timedelta
 from pathlib import Path
@@ -184,6 +184,10 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         self.api.on_media_state_event.append(self.media_state_event_handler)
         self.api.on_media_state_event.freeze()
 
+        self._dnd_states: dict[str, bool] = {}
+        self.api.on_dnd_event.append(self.dnd_event_handler)
+        self.api.on_dnd_event.freeze()
+
     @override
     async def _async_update_data(self) -> dict[str, AmazonDevice]:
         """Update device data."""
@@ -216,9 +220,18 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             ) from err
         else:
             current_devices = set(data.keys())
+            device_list_changed = current_devices != self.previous_devices
             if stale_devices := self.previous_devices - current_devices:
                 await self._async_remove_device_stale(stale_devices)
             self.previous_devices = current_devices
+
+            # self.data is None only on the first refresh: previous_devices may
+            # already equal current_devices there if the device registry
+            # persisted them from an earlier run, so device_list_changed alone
+            # cannot be relied on to catch a fresh start (in-memory state is
+            # always empty then, regardless of what the registry remembers).
+            if self.data is None or device_list_changed:
+                await self._async_sync_on_device_list_change()
 
             current_routines = {
                 f"{slugify(self.config_entry.unique_id)}-{slugify(routine)}"
@@ -238,6 +251,18 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
 
             return data
 
+    async def _async_sync_on_device_list_change(self) -> None:
+        """Sync per-device state on first refresh and after the device list changes."""
+        for sync_call in (self.sync_dnd_state, self.sync_media_state):
+            try:
+                await sync_call()
+            except ConfigEntryNotReady as err:
+                LOGGER.warning(
+                    "Sync failed for %s: %s. Data may be missing or incomplete until updates are pushed by Amazon",
+                    sync_call.__name__,
+                    err,
+                )
+
     async def _async_remove_device_stale(
         self,
         stale_devices: set[str],
@@ -255,6 +280,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             )
             if device:
                 device_registry.async_remove_device(device.id)
+            self._dnd_states.pop(serial_num, None)
 
     async def _async_remove_routine_stale(
         self,
@@ -402,3 +428,22 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
     def volume_states(self) -> dict[str, AmazonVolumeState]:
         """Volumes of devices."""
         return self._volume_states
+
+    async def sync_dnd_state(self) -> None:
+        """Sync dnd state."""
+        async with alexa_config_entry_errors():
+            await self.api.sync_dnd_state()
+
+    async def dnd_event_handler(self, dnd_states: dict[str, bool]) -> None:
+        """Handle pushed dnd events."""
+        self._dnd_states.update(dnd_states)
+        self.async_update_listeners()
+
+    def set_dnd_state(self, serial_num: str, state: bool) -> None:
+        """Set the local DND state; caller writes its own state, so listeners aren't notified."""
+        self._dnd_states[serial_num] = state
+
+    @property
+    def dnd_states(self) -> Mapping[str, bool]:
+        """DND states of devices."""
+        return self._dnd_states
