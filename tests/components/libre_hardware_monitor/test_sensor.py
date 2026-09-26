@@ -24,8 +24,27 @@ from homeassistant.components.libre_hardware_monitor.const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    UnitOfConductivity,
+    UnitOfDataRate,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfFrequency,
+    UnitOfInformation,
+    UnitOfPower,
+    UnitOfSoundPressure,
+    UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolumeFlowRate,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -46,6 +65,166 @@ async def test_sensors_are_created(
     await init_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("sensor_type", "lhm_unit", "expected_device_class", "expected_unit"),
+    [
+        pytest.param(
+            SensorType.VOLTAGE,
+            "V",
+            SensorDeviceClass.VOLTAGE,
+            UnitOfElectricPotential.VOLT,
+            id="voltage",
+        ),
+        pytest.param(
+            SensorType.CURRENT,
+            "A",
+            SensorDeviceClass.CURRENT,
+            UnitOfElectricCurrent.AMPERE,
+            id="current",
+        ),
+        pytest.param(
+            SensorType.POWER,
+            "W",
+            SensorDeviceClass.POWER,
+            UnitOfPower.WATT,
+            id="power",
+        ),
+        pytest.param(
+            SensorType.CLOCK,
+            "MHz",
+            SensorDeviceClass.FREQUENCY,
+            UnitOfFrequency.MEGAHERTZ,
+            id="clock",
+        ),
+        pytest.param(
+            SensorType.FREQUENCY,
+            "Hz",
+            SensorDeviceClass.FREQUENCY,
+            UnitOfFrequency.HERTZ,
+            id="frequency",
+        ),
+        pytest.param(
+            SensorType.TEMPERATURE,
+            "°C",
+            SensorDeviceClass.TEMPERATURE,
+            UnitOfTemperature.CELSIUS,
+            id="temperature",
+        ),
+        pytest.param(
+            SensorType.FLOW,
+            "L/h",
+            SensorDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+            id="flow",
+        ),
+        pytest.param(
+            SensorType.DATA,
+            "GB",
+            SensorDeviceClass.DATA_SIZE,
+            UnitOfInformation.GIGABYTES,
+            id="data",
+        ),
+        pytest.param(
+            SensorType.SMALL_DATA,
+            "MB",
+            SensorDeviceClass.DATA_SIZE,
+            UnitOfInformation.MEGABYTES,
+            id="small_data",
+        ),
+        pytest.param(
+            SensorType.THROUGHPUT,
+            "B/s",
+            SensorDeviceClass.DATA_RATE,
+            UnitOfDataRate.KIBIBYTES_PER_SECOND,
+            id="throughput",
+        ),
+        pytest.param(
+            SensorType.TIMESPAN,
+            "s",
+            SensorDeviceClass.DURATION,
+            UnitOfTime.SECONDS,
+            id="timespan",
+        ),
+        pytest.param(
+            SensorType.ENERGY,
+            "mWh",
+            SensorDeviceClass.ENERGY_STORAGE,
+            UnitOfEnergy.MILLIWATT_HOUR,
+            id="energy",
+        ),
+        pytest.param(
+            SensorType.NOISE,
+            "dBA",
+            SensorDeviceClass.SOUND_PRESSURE,
+            UnitOfSoundPressure.WEIGHTED_DECIBEL_A,
+            id="noise",
+        ),
+        pytest.param(
+            SensorType.CONDUCTIVITY,
+            # LHM uses the micro sign, HA normalizes it to the greek mu
+            "\u00b5S/cm",
+            SensorDeviceClass.CONDUCTIVITY,
+            UnitOfConductivity.MICROSIEMENS_PER_CM,
+            id="conductivity",
+        ),
+        pytest.param(
+            SensorType.HUMIDITY,
+            "%",
+            SensorDeviceClass.HUMIDITY,
+            PERCENTAGE,
+            id="humidity",
+        ),
+        pytest.param(SensorType.FACTOR, None, None, None, id="factor_unmapped"),
+        pytest.param(None, None, None, None, id="unknown_type"),
+    ],
+)
+async def test_sensor_device_class_mapping(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    sensor_type: SensorType | None,
+    lhm_unit: str | None,
+    expected_device_class: SensorDeviceClass | None,
+    expected_unit: str | None,
+) -> None:
+    """Test every LHM sensor type gets the expected device class and unit."""
+    sensor_id = "gpu-nvidia-0-test-0"
+    mock_lhm_client.get_data.return_value = replace(
+        mock_lhm_client.get_data.return_value,
+        sensor_data=MappingProxyType(
+            {
+                sensor_id: LibreHardwareMonitorSensorData(
+                    name="Test",
+                    value="42.0",
+                    type=sensor_type,
+                    min="40.0",
+                    max="44.0",
+                    unit=lhm_unit,
+                    device_id="gpu-nvidia-0",
+                    device_name="NVIDIA GeForce RTX 4080 SUPER",
+                    device_type="NVIDIA",
+                    sensor_id=sensor_id,
+                )
+            }
+        ),
+    )
+
+    await init_integration(hass, mock_config_entry)
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{mock_config_entry.entry_id}_{sensor_id}"
+    )
+    assert entity_id
+
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == expected_device_class
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == expected_unit
 
 
 @pytest.mark.parametrize(
@@ -141,8 +320,8 @@ async def test_sensor_invalid_auth_during_startup(
         (
             "gaming_pc_nvidia_geforce_rtx_4080_super_gpu_pcie_tx_throughput",
             "gpu-nvidia-0-throughput-1",
-            "792150000.0",
-            "773584.0",
+            "811161600.0",
+            "792150.0",
         ),
     ],
 )
