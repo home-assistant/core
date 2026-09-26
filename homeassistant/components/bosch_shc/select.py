@@ -22,7 +22,6 @@ PARALLEL_UPDATES = 1
 class SHCSelectEntityDescription[_DeviceT: SHCDevice](SelectEntityDescription):
     """Describes a SHC select entity."""
 
-    unique_id_suffix: str
     current_option_fn: Callable[[_DeviceT, Sequence[str] | None], str | None]
     select_option_fn: Callable[[_DeviceT, str], Coroutine[Any, Any, None]]
 
@@ -44,15 +43,13 @@ async def _siren_select_option(device: SHCOutdoorSiren, option: str) -> None:
 
 
 SIREN_SOUND_LEVEL = "siren_sound_level"
-_SIREN_SOUND_LEVEL_OPTIONS = ["low", "medium", "high"]
 
 SELECT_TYPES: dict[str, SHCSelectEntityDescription] = {
     SIREN_SOUND_LEVEL: SHCSelectEntityDescription[SHCOutdoorSiren](
         key=SIREN_SOUND_LEVEL,
         translation_key=SIREN_SOUND_LEVEL,
         entity_category=EntityCategory.CONFIG,
-        options=_SIREN_SOUND_LEVEL_OPTIONS,
-        unique_id_suffix="sound_level",
+        options=["low", "medium", "high"],
         current_option_fn=_siren_current_option,
         select_option_fn=_siren_select_option,
     ),
@@ -102,7 +99,7 @@ class SHCSelect[_DeviceT: SHCDevice](SHCEntity, SelectEntity):
         super().__init__(
             hass=hass, device=device, parent_id=parent_id, entry_id=entry_id
         )
-        self._attr_unique_id = f"{device.serial}_{description.unique_id_suffix}"
+        self._attr_unique_id = f"{device.serial}_{description.key}"
 
     @property
     @override
