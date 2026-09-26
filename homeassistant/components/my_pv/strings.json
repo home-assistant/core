@@ -60,13 +60,13 @@
   "entity": {
     "number": {
       "ww1boost": {
-        "name": "Boost Target Temperature"
+        "name": "Boost target temperature"
       },
       "ww_boost_h": {
-        "name": "Minimum Hysteresis"
+        "name": "Minimum hysteresis"
       },
       "ww_targ_h": {
-        "name": "Maximum Hysteresis"
+        "name": "Maximum hysteresis"
       }
     }
   },
