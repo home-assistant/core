@@ -10,6 +10,7 @@
   "loggers": ["pyneosol"],
   "quality_scale": "bronze",
   "requirements": ["pyneosol==1.1.0"],
+  "single_config_entry": true,
   "usb": [
     {
       "known_devices": ["MAI-DONGLE868-1A"],
