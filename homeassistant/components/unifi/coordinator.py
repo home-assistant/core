@@ -82,7 +82,11 @@ class UnifiDataUpdateCoordinator[HandlerT: UnifiApiHandler](
                 )
             raise UpdateFailed(str(err)) from err
 
-        if self.update_interval is not None:
+        if self.update_interval is not None and isinstance(self._handler, APIHandler):
+            # A classic handler without a websocket can idle while empty, as
+            # its items rarely change. The Integration API has no websocket,
+            # so its handlers keep polling: the first client to connect to an
+            # empty site would otherwise go unnoticed for ten minutes.
             self.update_interval = (
                 POLL_INTERVAL if self._handler.items() else IDLE_POLL_INTERVAL
             )
