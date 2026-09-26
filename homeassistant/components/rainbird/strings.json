@@ -39,6 +39,11 @@
         "name": "Rainsensor"
       }
     },
+    "button": {
+      "run_program": {
+        "name": "Run {program}"
+      }
+    },
     "number": {
       "rain_delay": {
         "name": "Rain delay"

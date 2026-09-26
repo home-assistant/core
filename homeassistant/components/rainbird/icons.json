@@ -5,6 +5,11 @@
         "default": "mdi:water"
       }
     },
+    "button": {
+      "run_program": {
+        "default": "mdi:sprinkler-variant"
+      }
+    },
     "calendar": {
       "calendar": {
         "default": "mdi:sprinkler"
