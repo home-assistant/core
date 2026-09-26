@@ -27,16 +27,16 @@
   "entity": {
     "sensor": {
       "probe_battery": {
-        "name": "Probe battery"
+        "name": "Probe {slot} battery"
       },
       "probe_rssi": {
-        "name": "Probe RSSI"
+        "name": "Probe {slot} RSSI"
       },
       "probe_temperature": {
-        "name": "Probe temperature"
+        "name": "Probe {slot} temperature"
       },
       "probe_voltage": {
-        "name": "Probe voltage"
+        "name": "Probe {slot} voltage"
       },
       "relay_battery": {
         "name": "Relay battery"
