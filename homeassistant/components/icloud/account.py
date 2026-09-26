@@ -175,17 +175,23 @@ class IcloudAccount:
         api_devices = {}
         try:
             api_devices = self.api.devices
-            # Since pyicloud 2.3.0 device reads are cache-only and the library
-            # requests an active locate from Apple only at service creation, so
-            # explicitly refresh with locate=True to get a fresh GPS fix on
-            # every poll instead of Apple's cached location.
-            api_devices.refresh(locate=True)
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Unknown iCloud error: %s", err)
             self._fetch_interval = 2
             dispatcher_send(self.hass, self.signal_device_update)
             self._schedule_next_fetch()
             return
+
+        # Since pyicloud 2.3.0 device reads are cache-only and the library
+        # requests an active locate from Apple only at service creation, so
+        # explicitly refresh with locate=True to get a fresh GPS fix on
+        # every poll instead of Apple's cached location.
+        try:
+            api_devices.refresh(locate=True)
+        except Exception as err:  # noqa: BLE001
+            # Best effort: the devices read below still carry whichever fixes
+            # iCloud already held, which beats skipping the poll altogether.
+            _LOGGER.debug("Could not request an iCloud location refresh: %s", err)
 
         # Gets devices infos
         new_device = False
@@ -216,7 +222,12 @@ class IcloudAccount:
                 new_device = True
 
         if (
-            DEVICE_STATUS_CODES.get(list(api_devices)[0][DEVICE_STATUS]) == "pending"
+            # A locate that did not go through leaves whatever iCloud had,
+            # which can be nothing at all, and indexing that would end the
+            # poll here without arming the next one.
+            api_devices
+            and DEVICE_STATUS_CODES.get(list(api_devices)[0][DEVICE_STATUS])
+            == "pending"
             and not self._retried_fetch
         ):
             _LOGGER.debug("Pending devices, trying again in 15s")

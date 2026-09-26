@@ -174,3 +174,75 @@ async def test_setup_success_with_devices(
     # only locates at service creation, so the account has to ask for it)
     assert mock_icloud_service.devices.refresh_calls == [True]
     assert "device1" in account.devices
+
+
+async def test_a_failed_locate_does_not_cost_the_poll(
+    hass: HomeAssistant,
+    mock_store: Mock,
+    mock_icloud_service: MagicMock,
+) -> None:
+    """Test that the devices are still read when the locate request fails.
+
+    Locating is best effort. iCloud still holds whichever fixes it had, and
+    reading those beats leaving the account with nothing at all until the
+    next poll comes round.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    account = IcloudAccount(
+        hass,
+        MOCK_CONFIG[CONF_USERNAME],
+        MOCK_CONFIG[CONF_PASSWORD],
+        mock_store,
+        MOCK_CONFIG[CONF_WITH_FAMILY],
+        MOCK_CONFIG[CONF_MAX_INTERVAL],
+        MOCK_CONFIG[CONF_GPS_ACCURACY_THRESHOLD],
+        config_entry,
+    )
+
+    mock_icloud_service.devices.refresh = Mock(side_effect=Exception("locate failed"))
+
+    with patch.object(account, "_schedule_next_fetch"):
+        account.setup()
+
+    assert "device1" in account.devices
+
+
+async def test_a_failed_locate_with_no_devices_still_schedules_the_next_poll(
+    hass: HomeAssistant,
+    mock_store: Mock,
+    mock_icloud_service: MagicMock,
+) -> None:
+    """Test that an empty device list after a failed locate is not indexed.
+
+    Carrying on past a failed locate means reaching the pending-device check
+    with whatever iCloud had, which can be nothing. Indexing that ends the
+    poll before it arms the next one, leaving the account stopped.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    account = IcloudAccount(
+        hass,
+        MOCK_CONFIG[CONF_USERNAME],
+        MOCK_CONFIG[CONF_PASSWORD],
+        mock_store,
+        MOCK_CONFIG[CONF_WITH_FAMILY],
+        MOCK_CONFIG[CONF_MAX_INTERVAL],
+        MOCK_CONFIG[CONF_GPS_ACCURACY_THRESHOLD],
+        config_entry,
+    )
+
+    mock_icloud_service.devices = MockDevicesContainer(USER_INFO, [])
+    mock_icloud_service.devices.refresh = Mock(side_effect=Exception("locate failed"))
+
+    with patch.object(account, "_schedule_next_fetch") as schedule:
+        account.setup()
+
+    assert account.devices == {}
+    assert schedule.called
