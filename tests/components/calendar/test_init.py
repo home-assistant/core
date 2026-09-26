@@ -761,6 +761,42 @@ async def test_websocket_handle_subscribe_calendar_events(
     assert events[0]["recurrence_id"] == "20260415"
 
 
+async def test_websocket_subscribers_share_one_fetch(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entities: list[MockCalendarEntity],
+) -> None:
+    """Test subscribers watching the same range share a single event fetch."""
+    entity = test_entities[0]
+    start = dt_util.now()
+    end = start + timedelta(days=1)
+
+    for _ in range(3):
+        client = await hass_ws_client(hass)
+        await client.send_json_auto_id(
+            {
+                "type": "calendar/event/subscribe",
+                "entity_id": "calendar.calendar_1",
+                "start": start.isoformat(),
+                "end": end.isoformat(),
+            }
+        )
+        assert (await client.receive_json())["success"]
+        assert (await client.receive_json())["type"] == "event"
+
+    entity.async_get_events.reset_mock()
+
+    entity.create_event(
+        start=start + timedelta(hours=2),
+        end=start + timedelta(hours=3),
+        summary="New Event",
+    )
+    entity.async_write_ha_state()
+    await hass.async_block_till_done()
+
+    assert entity.async_get_events.call_count == 1
+
+
 async def test_websocket_subscribe_updates_on_state_change(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
