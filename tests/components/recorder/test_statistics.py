@@ -4602,6 +4602,376 @@ async def test_get_statistics_service_missing_mandatory_keys(
         )
 
 
+@pytest.mark.freeze_time("2024-03-15 14:17:00+00:00")
+@pytest.mark.usefixtures("recorder_mock")
+async def test_statistics_during_period_fills_current_hour_from_short_term(
+    hass: HomeAssistant,
+) -> None:
+    """Fill the unfinished current hour from short-term stats for hour and day."""
+    await hass.config.async_set_time_zone("UTC")
+    statistic_id = "sensor.total_energy_import"
+    metadata = {
+        "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
+        "name": "Total imported energy",
+        "source": "recorder",
+        "statistic_id": statistic_id,
+        "unit_class": "energy",
+        "unit_of_measurement": "kWh",
+    }
+    hour_12 = dt_util.parse_datetime("2024-03-15 12:00:00+00:00")
+    hour_13 = dt_util.parse_datetime("2024-03-15 13:00:00+00:00")
+    hour_14 = dt_util.parse_datetime("2024-03-15 14:00:00+00:00")
+    day_start = dt_util.parse_datetime("2024-03-15 00:00:00+00:00")
+    day_end = dt_util.parse_datetime("2024-03-16 00:00:00+00:00")
+    assert hour_12 and hour_13 and hour_14 and day_start and day_end
+
+    async_import_statistics(
+        hass,
+        metadata,
+        (
+            {"start": hour_12, "last_reset": None, "state": 10.0, "sum": 10.0},
+            {"start": hour_13, "last_reset": None, "state": 20.0, "sum": 20.0},
+        ),
+    )
+    await async_wait_recording_done(hass)
+
+    metadata_id = get_metadata(hass, statistic_ids={statistic_id})[statistic_id][0]
+    with session_scope(hass=hass) as session:
+        for minutes, state, sum_ in (
+            (0, 25.0, 25.0),
+            (5, 30.0, 30.0),
+            (10, 35.0, 35.0),
+        ):
+            session.add(
+                StatisticsShortTerm.from_stats(
+                    metadata_id,
+                    {
+                        "start": hour_14 + timedelta(minutes=minutes),
+                        "last_reset": None,
+                        "state": state,
+                        "sum": sum_,
+                    },
+                )
+            )
+    await async_wait_recording_done(hass)
+
+    hour_stats = statistics_during_period(
+        hass,
+        day_start,
+        period="hour",
+        statistic_ids={statistic_id},
+        types={"sum", "state"},
+    )
+    assert hour_stats == {
+        statistic_id: [
+            {
+                "start": process_timestamp(hour_12).timestamp(),
+                "end": process_timestamp(hour_12 + timedelta(hours=1)).timestamp(),
+                "state": pytest.approx(10.0),
+                "sum": pytest.approx(10.0),
+            },
+            {
+                "start": process_timestamp(hour_13).timestamp(),
+                "end": process_timestamp(hour_13 + timedelta(hours=1)).timestamp(),
+                "state": pytest.approx(20.0),
+                "sum": pytest.approx(20.0),
+            },
+            {
+                "start": process_timestamp(hour_14).timestamp(),
+                "end": process_timestamp(hour_14 + timedelta(hours=1)).timestamp(),
+                "state": pytest.approx(35.0),
+                "sum": pytest.approx(35.0),
+            },
+        ]
+    }
+
+    day_stats = statistics_during_period(
+        hass,
+        day_start,
+        period="day",
+        statistic_ids={statistic_id},
+        types={"sum", "state"},
+    )
+    assert day_stats == {
+        statistic_id: [
+            {
+                "start": process_timestamp(day_start).timestamp(),
+                "end": process_timestamp(day_end).timestamp(),
+                "state": pytest.approx(35.0),
+                "sum": pytest.approx(35.0),
+            }
+        ]
+    }
+
+    # Historical range ending before the current hour must not include it.
+    past_stats = statistics_during_period(
+        hass,
+        day_start,
+        end_time=hour_14,
+        period="hour",
+        statistic_ids={statistic_id},
+        types={"sum"},
+    )
+    assert past_stats == {
+        statistic_id: [
+            {
+                "start": process_timestamp(hour_12).timestamp(),
+                "end": process_timestamp(hour_12 + timedelta(hours=1)).timestamp(),
+                "sum": pytest.approx(10.0),
+            },
+            {
+                "start": process_timestamp(hour_13).timestamp(),
+                "end": process_timestamp(hour_13 + timedelta(hours=1)).timestamp(),
+                "sum": pytest.approx(20.0),
+            },
+        ]
+    }
+
+    # Mid-hour start must not synthesize a bucket that starts before start_time.
+    mid_hour_start = hour_14 + timedelta(minutes=30)
+    mid_hour_stats = statistics_during_period(
+        hass,
+        mid_hour_start,
+        period="hour",
+        statistic_ids={statistic_id},
+        types={"sum"},
+    )
+    assert mid_hour_stats == {}
+
+    # Mixed mean+change requests still get a partial energy sum/change row;
+    # mean/min/max stay omitted on that row so mean sensors are not skewed.
+    co2_id = "sensor.co2_intensity"
+    async_import_statistics(
+        hass,
+        {
+            "has_sum": False,
+            "mean_type": StatisticMeanType.ARITHMETIC,
+            "name": "CO2 intensity",
+            "source": "recorder",
+            "statistic_id": co2_id,
+            "unit_class": None,
+            "unit_of_measurement": "gCO2eq/kWh",
+        },
+        (
+            {
+                "start": hour_12,
+                "mean": 40.0,
+                "min": 40.0,
+                "max": 40.0,
+            },
+            {
+                "start": hour_13,
+                "mean": 50.0,
+                "min": 50.0,
+                "max": 50.0,
+            },
+        ),
+    )
+    await async_wait_recording_done(hass)
+
+    mean_and_change = statistics_during_period(
+        hass,
+        day_start,
+        period="hour",
+        statistic_ids={statistic_id, co2_id},
+        types={"mean", "change"},
+    )
+    assert mean_and_change[statistic_id] == [
+        {
+            "start": process_timestamp(hour_12).timestamp(),
+            "end": process_timestamp(hour_12 + timedelta(hours=1)).timestamp(),
+            "mean": None,
+            "change": pytest.approx(10.0),
+        },
+        {
+            "start": process_timestamp(hour_13).timestamp(),
+            "end": process_timestamp(hour_13 + timedelta(hours=1)).timestamp(),
+            "mean": None,
+            "change": pytest.approx(10.0),
+        },
+        {
+            "start": process_timestamp(hour_14).timestamp(),
+            "end": process_timestamp(hour_14 + timedelta(hours=1)).timestamp(),
+            "change": pytest.approx(15.0),
+        },
+    ]
+    assert [row["start"] for row in mean_and_change[co2_id]] == [
+        process_timestamp(hour_12).timestamp(),
+        process_timestamp(hour_13).timestamp(),
+    ]
+
+
+@pytest.mark.freeze_time("2024-03-15 00:12:00+00:00")
+@pytest.mark.usefixtures("recorder_mock")
+async def test_statistics_during_period_current_hour_only_short_term(
+    hass: HomeAssistant,
+) -> None:
+    """Return a partial current hour when only short-term rows exist yet."""
+    await hass.config.async_set_time_zone("UTC")
+    statistic_id = "sensor.total_energy_import"
+    metadata = {
+        "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
+        "name": "Total imported energy",
+        "source": "recorder",
+        "statistic_id": statistic_id,
+        "unit_class": "energy",
+        "unit_of_measurement": "kWh",
+    }
+    # Seed metadata via a previous-day hourly row, then only short-term for today.
+    yesterday_hour = dt_util.parse_datetime("2024-03-14 23:00:00+00:00")
+    hour_0 = dt_util.parse_datetime("2024-03-15 00:00:00+00:00")
+    day_end = dt_util.parse_datetime("2024-03-16 00:00:00+00:00")
+    assert yesterday_hour and hour_0 and day_end
+    day_start = hour_0
+
+    async_import_statistics(
+        hass,
+        metadata,
+        ({"start": yesterday_hour, "last_reset": None, "state": 5.0, "sum": 5.0},),
+    )
+    await async_wait_recording_done(hass)
+
+    metadata_id = get_metadata(hass, statistic_ids={statistic_id})[statistic_id][0]
+    with session_scope(hass=hass) as session:
+        session.add(
+            StatisticsShortTerm.from_stats(
+                metadata_id,
+                {
+                    "start": hour_0,
+                    "last_reset": None,
+                    "state": 8.0,
+                    "sum": 8.0,
+                },
+            )
+        )
+        session.add(
+            StatisticsShortTerm.from_stats(
+                metadata_id,
+                {
+                    "start": hour_0 + timedelta(minutes=5),
+                    "last_reset": None,
+                    "state": 11.0,
+                    "sum": 11.0,
+                },
+            )
+        )
+    await async_wait_recording_done(hass)
+
+    hour_stats = statistics_during_period(
+        hass,
+        day_start,
+        period="hour",
+        statistic_ids={statistic_id},
+        types={"sum", "change"},
+    )
+    assert hour_stats == {
+        statistic_id: [
+            {
+                "start": process_timestamp(hour_0).timestamp(),
+                "end": process_timestamp(hour_0 + timedelta(hours=1)).timestamp(),
+                "sum": pytest.approx(11.0),
+                "change": pytest.approx(6.0),
+            }
+        ]
+    }
+
+    day_stats = statistics_during_period(
+        hass,
+        day_start,
+        period="day",
+        statistic_ids={statistic_id},
+        types={"sum", "change"},
+    )
+    assert day_stats == {
+        statistic_id: [
+            {
+                "start": process_timestamp(day_start).timestamp(),
+                "end": process_timestamp(day_end).timestamp(),
+                "sum": pytest.approx(11.0),
+                "change": pytest.approx(6.0),
+            }
+        ]
+    }
+
+
+@pytest.mark.freeze_time("2024-11-03 04:17:00+00:00")
+@pytest.mark.usefixtures("recorder_mock")
+async def test_statistics_during_period_partial_hour_on_dst_fallback_day(
+    hass: HomeAssistant,
+) -> None:
+    """Day reduce must flush a lone partial hour on a 25-hour fall-back day."""
+    await hass.config.async_set_time_zone("America/New_York")
+    statistic_id = "sensor.total_energy_import"
+    metadata = {
+        "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
+        "name": "Total imported energy",
+        "source": "recorder",
+        "statistic_id": statistic_id,
+        "unit_class": "energy",
+        "unit_of_measurement": "kWh",
+    }
+    # Local midnight on the fall-back day (EDT); +24h would still be Nov 3.
+    hour_0 = dt_util.parse_datetime("2024-11-03 04:00:00+00:00")
+    day_end = dt_util.parse_datetime("2024-11-04 05:00:00+00:00")
+    yesterday_hour = dt_util.parse_datetime("2024-11-03 03:00:00+00:00")
+    assert hour_0 and day_end and yesterday_hour
+    day_start = hour_0
+
+    async_import_statistics(
+        hass,
+        metadata,
+        ({"start": yesterday_hour, "last_reset": None, "state": 5.0, "sum": 5.0},),
+    )
+    await async_wait_recording_done(hass)
+
+    metadata_id = get_metadata(hass, statistic_ids={statistic_id})[statistic_id][0]
+    with session_scope(hass=hass) as session:
+        session.add(
+            StatisticsShortTerm.from_stats(
+                metadata_id,
+                {
+                    "start": hour_0,
+                    "last_reset": None,
+                    "state": 8.0,
+                    "sum": 8.0,
+                },
+            )
+        )
+        session.add(
+            StatisticsShortTerm.from_stats(
+                metadata_id,
+                {
+                    "start": hour_0 + timedelta(minutes=5),
+                    "last_reset": None,
+                    "state": 11.0,
+                    "sum": 11.0,
+                },
+            )
+        )
+    await async_wait_recording_done(hass)
+
+    day_stats = statistics_during_period(
+        hass,
+        day_start,
+        period="day",
+        statistic_ids={statistic_id},
+        types={"sum", "change"},
+    )
+    assert day_stats == {
+        statistic_id: [
+            {
+                "start": process_timestamp(day_start).timestamp(),
+                "end": process_timestamp(day_end).timestamp(),
+                "sum": pytest.approx(11.0),
+                "change": pytest.approx(6.0),
+            }
+        ]
+    }
+
+
 # The STATISTIC_UNIT_TO_UNIT_CONVERTER keys are sorted to ensure that pytest runs are
 # consistent and avoid `different tests were collected between gw0 and gw1`
 @pytest.mark.parametrize(
