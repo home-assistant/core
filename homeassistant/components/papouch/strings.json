@@ -1,0 +1,91 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This device is already configured, you can delete it from the integration and configure it again.",
+      "mode_is_missing": "The device didn't provide its current mode",
+      "unsupported_device": "This device is unsupported.",
+      "web_mode_required": "The integration requires the device to be in web mode to function."
+    },
+    "create_entry": {
+      "default": "The device has been successfully configured."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the device.",
+      "invalid_auth": "The password you provided is invalid, try a different one.",
+      "invalid_ip_format": "Invalid IPv4 address format."
+    },
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "data": {
+          "ip_address": "IPv4 address",
+          "password": "Password (optional)",
+          "port": "HTTP Port"
+        },
+        "data_description": {
+          "ip_address": "Enter the IPv4 address of your device.",
+          "password": "Leave blank if your device does not require authentication.",
+          "port": "The HTTP port of the device. Default is 80."
+        },
+        "title": "Add a new device"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "batt_custom": {
+        "name": "{name} battery"
+      },
+      "co2_custom": {
+        "name": "{name} CO2"
+      },
+      "counter_custom": {
+        "name": "Counter {name}"
+      },
+      "dew_point": {
+        "name": "Dew Point"
+      },
+      "dew_point_custom": {
+        "name": "{name} dew point"
+      },
+      "humidity_custom": {
+        "name": "{name} humidity"
+      },
+      "pressure_custom": {
+        "name": "{name} pressure"
+      },
+      "rain_custom": {
+        "name": "{name} rainfall"
+      },
+      "rssi_custom": {
+        "name": "{name} signal strength"
+      },
+      "temperature_custom": {
+        "name": "{name} temperature"
+      },
+      "wind_direction_custom": {
+        "name": "{name} wind direction"
+      },
+      "wind_speed_custom": {
+        "name": "{name} wind speed"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to connect to device."
+    },
+    "cannot_connect_device": {
+      "message": "Failed to connect to device {name} ({location})."
+    },
+    "command_failed": {
+      "message": "Failed to execute command {cmd} on {name}."
+    },
+    "invalid_auth": {
+      "message": "Invalid password of device {name} ({location})"
+    },
+    "unsupported_device": {
+      "message": "Device {name} ({location}) is unsupported."
+    }
+  }
+}
