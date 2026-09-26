@@ -45,11 +45,7 @@ CONF_SOURCE_DICT = "sources"  # for NADReceiver
 # Keep numeric keys as integers so they match nad_receiver's source replies.
 def source_token(value: str) -> str:
     """Validate a named source without changing its protocol representation."""
-    if (
-        not isinstance(value, str)
-        or not value.strip()
-        or value != value.strip()
-    ):
+    if not isinstance(value, str) or not value.strip() or value != value.strip():
         raise probatio.Invalid(
             "expected a nonempty source token without surrounding whitespace"
         )
