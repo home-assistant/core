@@ -45,6 +45,8 @@ async def test_disabled_sensors(
 
     for entity_id in (
         "sensor.indi_allsky_binning_mode",
+        "sensor.indi_allsky_camera_id",
+        "sensor.indi_allsky_exposure_creation_time",
         "sensor.indi_allsky_filename",
         "sensor.indi_allsky_gain",
     ):
@@ -77,6 +79,20 @@ async def test_sensor_updates(
         platform="indi_allsky",
         unique_id=f"{mock_config_entry.entry_id}_binmode",
         suggested_object_id="indi_allsky_binning_mode",
+        disabled_by=None,
+    )
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform="indi_allsky",
+        unique_id=f"{mock_config_entry.entry_id}_camera_id",
+        suggested_object_id="indi_allsky_camera_id",
+        disabled_by=None,
+    )
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform="indi_allsky",
+        unique_id=f"{mock_config_entry.entry_id}_create_date",
+        suggested_object_id="indi_allsky_exposure_creation_time",
         disabled_by=None,
     )
     entity_registry.async_get_or_create(
@@ -129,8 +145,16 @@ async def test_sensor_updates(
     assert state is not None
     assert state.state == "0.0"
 
+    state = hass.states.get("sensor.indi_allsky_camera_id")
+    assert state is not None
+    assert state.state == "1"
+
+    state = hass.states.get("sensor.indi_allsky_exposure_creation_time")
+    assert state is not None
+    assert state.state == "2026-08-13T22:53:41+00:00"
+
     for callback in mock_indi_allsky_client.callbacks.get("exposure_complete", []):
-        callback(replace(mock_exposure_data, temp=12.5))
+        callback(replace(mock_exposure_data, temp=12.5, adu=512.0, hfr=2.4))
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.indi_allsky_camera_sensor_temperature")
