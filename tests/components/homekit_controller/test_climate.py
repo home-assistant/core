@@ -13,7 +13,8 @@ from aiohomekit.model.characteristics import (
     SwingModeValues,
     TargetHeaterCoolerStateValues,
 )
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
+import pytest
 
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
@@ -794,6 +795,111 @@ async def test_heater_cooler_respect_supported_op_modes_2(
     )
     state = await helper.poll_and_get_state()
     assert state.attributes["hvac_modes"] == ["heat", "cool", "off"]
+
+
+def create_heater_cooler_service_auto(accessory: Accessory) -> Service:
+    """Define AUTO heater-cooler characteristics without any thresholds."""
+    service = accessory.add_service(ServicesTypes.HEATER_COOLER)
+
+    char = service.add_char(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
+    char.value = TargetHeaterCoolerStateValues.AUTOMATIC
+
+    char = service.add_char(CharacteristicsTypes.CURRENT_HEATER_COOLER_STATE)
+    char.value = 0
+
+    char = service.add_char(CharacteristicsTypes.ACTIVE)
+    char.value = 1
+
+    char = service.add_char(CharacteristicsTypes.TEMPERATURE_CURRENT)
+    char.value = 25
+
+    char = service.add_char(CharacteristicsTypes.SWING_MODE)
+    char.value = 0
+
+    char = service.add_char(CharacteristicsTypes.ROTATION_SPEED)
+    char.value = 100
+
+    return service
+
+
+def create_heater_cooler_service_auto_heating_threshold(
+    accessory: Accessory,
+) -> None:
+    """Define AUTO heater-cooler characteristics with a heating threshold only."""
+    service = create_heater_cooler_service_auto(accessory)
+    char = service.add_char(CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD)
+    char.minValue = 15.55556
+    char.maxValue = 46.11111
+    char.value = 37.77777
+
+
+def create_heater_cooler_service_auto_cooling_threshold(
+    accessory: Accessory,
+) -> None:
+    """Define AUTO heater-cooler characteristics with a cooling threshold only."""
+    service = create_heater_cooler_service_auto(accessory)
+    char = service.add_char(CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD)
+    char.minValue = 10.0
+    char.maxValue = 30.0
+    char.value = 20.0
+
+
+def create_heater_cooler_service_auto_both_thresholds(
+    accessory: Accessory,
+) -> None:
+    """Define AUTO heater-cooler characteristics with both thresholds."""
+    service = create_heater_cooler_service_auto(accessory)
+    char = service.add_char(CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD)
+    char.minValue = 15.55556
+    char.maxValue = 46.11111
+    char.value = 37.77777
+    char = service.add_char(CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD)
+    char.minValue = 10.0
+    char.maxValue = 30.0
+    char.value = 20.0
+
+
+@pytest.mark.parametrize(
+    ("create_service", "expected_min_temp", "expected_max_temp"),
+    [
+        pytest.param(
+            create_heater_cooler_service_auto_heating_threshold,
+            15.55556,
+            46.11111,
+            id="heating_threshold_only",
+        ),
+        pytest.param(
+            create_heater_cooler_service_auto_cooling_threshold,
+            10.0,
+            30.0,
+            id="cooling_threshold_only",
+        ),
+        pytest.param(
+            create_heater_cooler_service_auto_both_thresholds,
+            15.55556,
+            46.11111,
+            id="both_thresholds_prefers_heating",
+        ),
+        pytest.param(
+            create_heater_cooler_service_auto,
+            7,
+            35,
+            id="no_thresholds_uses_defaults",
+        ),
+    ],
+)
+async def test_heater_cooler_auto_uses_declared_threshold_range(
+    hass: HomeAssistant,
+    get_next_aid: Callable[[], int],
+    create_service: Callable[[Accessory], None],
+    expected_min_temp: float,
+    expected_max_temp: float,
+) -> None:
+    """Test that AUTO mode reports the device's declared threshold range."""
+    helper = await setup_test_component(hass, get_next_aid(), create_service)
+    state = await helper.poll_and_get_state()
+    assert state.attributes["min_temp"] == expected_min_temp
+    assert state.attributes["max_temp"] == expected_max_temp
 
 
 async def test_heater_cooler_change_thermostat_state(

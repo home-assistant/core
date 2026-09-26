@@ -364,6 +364,15 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
                 ].minValue
                 or DEFAULT_MIN_TEMP
             )
+        if state == TargetHeaterCoolerStateValues.AUTOMATIC:
+            # AUTO-mode devices may only declare a single threshold (e.g. a
+            # mixing valve with just a heating threshold).
+            for characteristic in (
+                CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD,
+                CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD,
+            ):
+                if self.service.has(characteristic):
+                    return self.service[characteristic].minValue or DEFAULT_MIN_TEMP
         return super().min_temp
 
     @property
@@ -389,6 +398,15 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
                 ].maxValue
                 or DEFAULT_MAX_TEMP
             )
+        if state == TargetHeaterCoolerStateValues.AUTOMATIC:
+            # AUTO-mode devices may only declare a single threshold (e.g. a
+            # mixing valve with just a heating threshold).
+            for characteristic in (
+                CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD,
+                CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD,
+            ):
+                if self.service.has(characteristic):
+                    return self.service[characteristic].maxValue or DEFAULT_MAX_TEMP
         return super().max_temp
 
     @property
