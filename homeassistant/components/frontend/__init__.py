@@ -565,7 +565,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     local = hass.config.path("www")
     if await hass.async_add_executor_job(os.path.isdir, local):
-        static_paths_configs.append(StaticPathConfig("/local", local, not is_dev))
+        # ``/local`` serves the user-owned ``www`` directory, where symlinks to
+        # files elsewhere on the install (a common way to serve files managed
+        # outside HA) must keep resolving instead of 404ing as an escape attempt.
+        static_paths_configs.append(
+            StaticPathConfig("/local", local, not is_dev, follow_symlinks=True)
+        )
 
     await hass.http.async_register_static_paths(static_paths_configs)
     # Shopping list panel was replaced by todo panel in 2023.11

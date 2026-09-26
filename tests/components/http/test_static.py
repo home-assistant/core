@@ -63,3 +63,46 @@ async def test_async_register_static_paths(
     assert resp.status == HTTPStatus.OK
     resp = await client.get("/something_else/__init__.py")
     assert resp.status == HTTPStatus.OK
+
+
+async def test_static_resource_follow_symlinks(
+    hass: HomeAssistant, mock_http_client: TestClient, tmp_path: Path
+) -> None:
+    """Test a static path with follow_symlinks serves files linked outside it."""
+    served = tmp_path / "www"
+    served.mkdir()
+    (served / "inside.js").write_text("// inside", encoding="utf-8")
+
+    # Target lives outside the served directory, like files managed by another
+    # tool that a user symlinks into their www directory.
+    outside = tmp_path / "managed" / "outside.js"
+    outside.parent.mkdir()
+    outside.write_text("// outside", encoding="utf-8")
+    (served / "linked.js").symlink_to(outside)
+
+    resource = CachingStaticResource("/local", served, follow_symlinks=True)
+    hass.http.app.router.register_resource(resource)
+
+    resp = await mock_http_client.get("/local/inside.js")
+    assert resp.status == HTTPStatus.OK
+    resp = await mock_http_client.get("/local/linked.js")
+    assert resp.status == HTTPStatus.OK
+
+
+async def test_static_resource_symlink_escape_blocked(
+    hass: HomeAssistant, mock_http_client: TestClient, tmp_path: Path
+) -> None:
+    """Test a static path without follow_symlinks still blocks symlink escapes."""
+    served = tmp_path / "www"
+    served.mkdir()
+
+    outside = tmp_path / "secret" / "outside.js"
+    outside.parent.mkdir()
+    outside.write_text("// secret", encoding="utf-8")
+    (served / "linked.js").symlink_to(outside)
+
+    resource = CachingStaticResource("/local", served)
+    hass.http.app.router.register_resource(resource)
+
+    resp = await mock_http_client.get("/local/linked.js")
+    assert resp.status == HTTPStatus.NOT_FOUND
