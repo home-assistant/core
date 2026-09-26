@@ -11233,7 +11233,8 @@ async def test_async_dismiss_discovery_flows(
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=_service_info("other._tcp.local."),
         )
-        pending = await manager.flow.async_init(
+        # Matches, and the user has not touched it, so this is the one dismissed
+        await manager.flow.async_init(
             "comp",
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=_service_info("test._tcp.local."),
@@ -11252,11 +11253,9 @@ async def test_async_dismiss_discovery_flows(
             lambda service_info: service_info.name == "test._tcp.local.",
         )
 
-    assert sorted(flow["flow_id"] for flow in manager.flow.async_progress()) == sorted(
-        [untouched["flow_id"], pairing["flow_id"]]
-    )
-    assert pending["flow_id"] not in {
-        flow["flow_id"] for flow in manager.flow.async_progress()
+    assert {flow["flow_id"] for flow in manager.flow.async_progress()} == {
+        untouched["flow_id"],
+        pairing["flow_id"],
     }
 
 
