@@ -37,7 +37,7 @@ def client_auth(
 ) -> tuple[dict[str, Any], dict[str, str]]:
     """Return the token request body and headers that authenticate the client."""
 
-    if method == "client_secret_basic" and client_secret:
+    if method == "client_secret_basic" and client_secret is not None:
         # RFC 6749 section 2.3.1 requires form encoding before base64.
         credentials = (
             f"{quote_plus(client_id, safe='')}:{quote_plus(client_secret, safe='')}"
