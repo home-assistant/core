@@ -1,0 +1,10 @@
+{
+  "domain": "airlino",
+  "name": "AirLino",
+  "codeowners": ["@Philipp-E"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/airlino",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "zeroconf": ["_dockset._tcp.local."]
+}

@@ -1,0 +1,53 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured",
+      "cannot_connect": "Failed to connect",
+      "not_airlino": "Discovered device is not a supported AirLino",
+      "unknown": "Unexpected error"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up the AirLino device named `{name}`?",
+        "title": "Confirm setup"
+      },
+      "user": {
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        },
+        "description": "Set up your AirLino device. The host is the IP address or hostname of the device on your network."
+      }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "AirLino command failed: {err}"
+    },
+    "device_unavailable": {
+      "message": "{entity_id} is not available and cannot be added to the multiroom group."
+    },
+    "entity_not_found": {
+      "message": "{entity_id} is not a known AirLino media player."
+    },
+    "https_unsupported": {
+      "message": "AirLino cannot play HTTPS streams: the device cannot verify SSL certificates. Use an HTTP stream URL instead."
+    },
+    "media_type_unsupported": {
+      "message": "Media type {media_type} is not supported by AirLino; only URL playback is supported."
+    },
+    "multiroom_receiver_control": {
+      "message": "This AirLino is part of a multiroom group and follows the master. Only volume control is available; ungroup it to control it directly."
+    },
+    "play_failed": {
+      "message": "AirLino failed to play the stream: {error}"
+    },
+    "sender_uuid_missing": {
+      "message": "Could not start multiroom: the AirLino did not report a sender UUID."
+    }
+  }
+}
