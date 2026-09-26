@@ -1,13 +1,217 @@
 {
+  "common": {
+    "availability_description": "Defines a template to get the `available` state of the entity, see [Template integration documentation]({docs_url_availability}). If omitted will default to `available` if the last resource update was successful.",
+    "availability_section": "Availability Options",
+    "config_entry_not_loaded": "The configuration entry for this resource is not loaded, unable to create an entity until the entry is loaded.",
+    "force_update": "Force Update",
+    "force_update_description": "If enabled, state changes will be reported even if the value is the same as the previous value. See RESTful Sensor [Force update]({docs_url_restful_sensor_force_update}).",
+    "icon": "Icon",
+    "icon_description": "Defines a template for the icon of the entity.",
+    "picture": "Picture",
+    "picture_description": "Defines a template for the picture of the entity.",
+    "value_template": "Value Template",
+    "value_template_description": "Defines a [template]({docs_url_template_data_processing}) to extract the value. `value` or `value_json` can be used."
+  },
+  "config": {
+    "abort": {
+      "already_configured": "This resource is already configured."
+    },
+    "error": {
+      "codec not found": "Encoding not supported",
+      "credentials_missing": "Username and password are both required",
+      "endpoint_error": "Error communicating with resource: {error_message}",
+      "invalid url": "Invalid URL",
+      "template_error": "Error rendering template: {error_message}"
+    },
+    "initiate_flow": {
+      "user": "Add RESTful Resource"
+    },
+    "step": {
+      "subentries_menu": {
+        "description": "Select a type of entity to create for the resource `{entry_title}`.",
+        "menu_options": {
+          "binary_sensor": "[%key:component::binary_sensor::title%]",
+          "none": "None, create RESTful resource only",
+          "sensor": "[%key:component::sensor::title%]"
+        }
+      },
+      "user": {
+        "data": {
+          "encoding": "Encoding",
+          "headers": "HTTP Headers",
+          "method": "HTTP Method",
+          "name": "[%key:common::config_flow::data::name%]",
+          "params": "Query Parameters",
+          "payload": "Request Payload",
+          "resource": "Resource",
+          "timeout": "Timeout (seconds)"
+        },
+        "data_description": {
+          "encoding": "The character encoding to use if none provided in the header of the response.",
+          "name": "The title of the resource entity.",
+          "payload": "The request body payload to send with the request, typically json, supports templates.",
+          "resource": "A resource or endpoint that contains the value, supports templates."
+        },
+        "description": "Configure a RESTful resource to be used in Home Assistant.",
+        "sections": {
+          "authentication": {
+            "data": {
+              "authentication": "Authentication",
+              "password": "[%key:common::config_flow::data::password%]",
+              "username": "[%key:common::config_flow::data::username%]"
+            },
+            "name": "Authentication Options"
+          },
+          "ssl_section": {
+            "data": {
+              "ssl_cipher_list": "SSL Cipher List",
+              "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+            },
+            "data_description": {
+              "ssl_cipher_list": "A list of SSL ciphers to accept from this endpoint."
+            },
+            "name": "SSL Options"
+          }
+        },
+        "title": "RESTful Resource"
+      }
+    }
+  },
+  "config_subentries": {
+    "binary_sensor": {
+      "abort": {
+        "config_entry_not_loaded": "[%key:component::rest::common::config_entry_not_loaded%]",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "[%key:component::binary_sensor::title%]",
+      "initiate_flow": {
+        "user": "Add binary sensor"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "availability": "[%key:component::template::common::availability%]",
+            "device_class": "[%key:component::template::common::device_class%]",
+            "force_update": "[%key:component::rest::common::force_update%]",
+            "icon": "[%key:component::rest::common::icon%]",
+            "name": "[%key:common::config_flow::data::name%]",
+            "picture": "[%key:component::rest::common::picture%]",
+            "value_template": "[%key:component::rest::common::value_template%]"
+          },
+          "data_description": {
+            "availability": "[%key:component::rest::common::availability_description%]",
+            "force_update": "[%key:component::rest::common::force_update_description%]",
+            "icon": "[%key:component::rest::common::icon_description%]",
+            "name": "Name of the RESTful binary sensor, supports templates.",
+            "picture": "[%key:component::rest::common::picture_description%]",
+            "value_template": "[%key:component::rest::common::value_template_description%]"
+          },
+          "description": "Configure a binary sensor using the `{entry_title}` resource",
+          "title": "RESTful binary sensor"
+        }
+      }
+    },
+    "sensor": {
+      "abort": {
+        "config_entry_not_loaded": "[%key:component::rest::common::config_entry_not_loaded%]"
+      },
+      "entry_type": "[%key:component::sensor::title%]",
+      "error": {
+        "invalid_result": "[%key:component::rest::exceptions::invalid_result::message%]",
+        "no_json": "[%key:component::rest::exceptions::no_json::message%]",
+        "parse_error": "[%key:component::rest::exceptions::parse_error::message%]",
+        "state_class_validation_error": "{state_class_validation_error_message}",
+        "unit_validation_error": "{unit_validation_error_message}",
+        "xml_parse_error": "REST result could not be parsed as XML: {xml_parse_error_message}"
+      },
+      "initiate_flow": {
+        "user": "Add sensor"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "availability": "[%key:component::template::common::availability%]",
+            "device_class": "[%key:component::template::common::device_class%]",
+            "force_update": "[%key:component::rest::common::force_update%]",
+            "icon": "[%key:component::rest::common::icon%]",
+            "json_attributes": "JSON Attributes",
+            "json_attributes_path": "JSON Attributes Path",
+            "name": "[%key:common::config_flow::data::name%]",
+            "picture": "[%key:component::rest::common::picture%]",
+            "state_class": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]",
+            "unit_of_measurement": "[%key:component::template::common::unit_of_measurement%]",
+            "value_template": "[%key:component::rest::common::value_template%]"
+          },
+          "data_description": {
+            "availability": "[%key:component::rest::common::availability_description%]",
+            "force_update": "[%key:component::rest::common::force_update_description%]",
+            "icon": "[%key:component::rest::common::icon_description%]",
+            "json_attributes_path": "A [JSONPath]({docs_url_jsonpath}) that references the location of the JSON attributes in the JSON content.",
+            "name": "Name of the RESTful sensor, supports templates.",
+            "picture": "[%key:component::rest::common::picture_description%]",
+            "unit_of_measurement": "[%key:component::template::config::step::sensor::data_description::unit_of_measurement%]",
+            "value_template": "[%key:component::rest::common::value_template_description%]"
+          },
+          "description": "Configure a sensor using the `{entry_title}` resource",
+          "title": "RESTful sensor"
+        }
+      }
+    }
+  },
   "exceptions": {
+    "endpoint_error": {
+      "message": "Error communicating with resource: {error_message}"
+    },
     "error_communicating": {
       "message": "Error communicating with {resource}"
+    },
+    "invalid_result": {
+      "message": "JSON @ \"{json_path}\" was not a dictionary or list with a dictionary @ the 0th element"
+    },
+    "no_json": {
+      "message": "Expected REST result was empty"
+    },
+    "parse_error": {
+      "message": "REST result could not be parsed as JSON: {parse_error_message}"
     },
     "turn_off_failed": {
       "message": "Failed to turn off {resource}"
     },
     "turn_on_failed": {
       "message": "Failed to turn on {resource}"
+    }
+  },
+  "selector": {
+    "authentication": {
+      "options": {
+        "basic": "Basic",
+        "digest": "Digest"
+      }
+    },
+    "headers": {
+      "fields": {
+        "key": "HTTP Header",
+        "value": "Header Value"
+      }
+    },
+    "json_attributes": {
+      "fields": {
+        "item": {
+          "description": "A key to extract from a JSON dictionary result and then set as a sensor attribute. If the endpoint returns XML with the text/xml, application/xml or application/xhtml+xml content type, it will automatically be converted to JSON (see integration documentation for details).",
+          "name": "JSON Attribute"
+        }
+      }
+    },
+    "params": {
+      "fields": {
+        "key": "Query Parameter",
+        "value": "Parameter Value"
+      }
+    },
+    "sensor_unit_of_measurement": {
+      "options": {
+        "none": "No unit of measurement"
+      }
     }
   },
   "services": {

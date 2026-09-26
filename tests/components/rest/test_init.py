@@ -2,12 +2,15 @@
 
 from datetime import timedelta
 import ssl
+from typing import Any
 from unittest.mock import patch
 
+from aiohttp import ClientError
 import pytest
 
 from homeassistant import config as hass_config
 from homeassistant.components.rest.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PACKAGES,
@@ -18,6 +21,8 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
+
+from .conftest import async_setup_entry
 
 from tests.common import (
     assert_setup_component,
@@ -545,3 +550,19 @@ async def test_setup_minimum_payload_template(
     assert hass.states.get("sensor.sensor2").state == "2"
     assert hass.states.get("binary_sensor.binary_sensor1").state == "on"
     assert hass.states.get("binary_sensor.binary_sensor2").state == "off"
+
+
+async def test_setup_entry_bad_resource(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    get_config_entry_data: dict[str, Any],
+) -> None:
+    """Test setup entry with resource."""
+    aioclient_mock.get("http://localhost", exc=ClientError("client error"))
+
+    entry = await async_setup_entry(hass, get_config_entry_data)
+
+    await hass.async_block_till_done()
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "endpoint_error"
+    assert "client error" in entry.reason
