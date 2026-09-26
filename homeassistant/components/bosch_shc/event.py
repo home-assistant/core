@@ -139,10 +139,26 @@ class SmokeDetectorEvent(SHCEntity, EventEntity):
     ]
     _device: SHCSmokeDetector
 
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device: SHCSmokeDetector,
+        parent_id: str,
+        entry_id: str,
+    ) -> None:
+        """Initialize the smoke detector alarm event entity."""
+        super().__init__(
+            hass=hass, device=device, parent_id=parent_id, entry_id=entry_id
+        )
+        # Dedup guard: Alarm replays the current state on unrelated
+        # long-poll updates for the same device, same as LatestMotion above.
+        self._last_fired_state = ""
+
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to SHC events."""
         await super().async_added_to_hass()
+        self._last_fired_state = self._device.alarmstate.name.lower()
         for service in self._device.device_services:
             if service.id == "Alarm":
                 service.register_event(self._device.id, self._event_callback)
@@ -158,9 +174,11 @@ class SmokeDetectorEvent(SHCEntity, EventEntity):
 
     def _event_callback(self) -> None:
         """Handle an Alarm update from the SHC polling thread."""
-        self.hass.loop.call_soon_threadsafe(
-            self._dispatch_event, self._device.alarmstate.name.lower()
-        )
+        alarm_state = self._device.alarmstate.name.lower()
+        if alarm_state == self._last_fired_state:
+            return
+        self._last_fired_state = alarm_state
+        self.hass.loop.call_soon_threadsafe(self._dispatch_event, alarm_state)
 
     @callback
     def _dispatch_event(self, alarm_state: str) -> None:

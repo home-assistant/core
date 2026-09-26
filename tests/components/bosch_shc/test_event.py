@@ -232,6 +232,63 @@ async def test_smoke_detector_fires_on_alarm(
     [{"smoke_detectors": [smoke_detector_device()]}],
     indirect=True,
 )
+async def test_smoke_detector_dedup_guard(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A phantom replay of the same alarm state does not refire the event."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.smoke_detectors[0]
+    alarm_service = device.device_services[0]
+
+    device.alarmstate = AlarmService.State.PRIMARY_ALARM
+    alarm_service._event_callbacks[device.id]()
+    await hass.async_block_till_done()
+    first_state = hass.states.get("event.smoke_detector")
+    assert first_state is not None
+
+    alarm_service._event_callbacks[device.id]()
+    await hass.async_block_till_done()
+    second_state = hass.states.get("event.smoke_detector")
+    assert second_state is not None
+    assert second_state.last_changed == first_state.last_changed
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "smoke_detectors": [
+                smoke_detector_device(alarmstate=AlarmService.State.PRIMARY_ALARM)
+            ]
+        }
+    ],
+    indirect=True,
+)
+async def test_smoke_detector_no_replay_on_startup(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A pre-existing alarm state is not replayed as a new event on startup."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.smoke_detectors[0]
+    alarm_service = device.device_services[0]
+
+    alarm_service._event_callbacks[device.id]()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("event.smoke_detector")
+    assert state is not None
+    assert state.state == "unknown"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"smoke_detectors": [smoke_detector_device()]}],
+    indirect=True,
+)
 async def test_smoke_detector_unregisters_callback_on_unload(
     hass: HomeAssistant,
     mock_session: MagicMock,
