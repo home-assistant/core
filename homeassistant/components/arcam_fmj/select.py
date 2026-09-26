@@ -16,6 +16,7 @@ from .entity import ArcamFmjEntity, convert_exception
 PARALLEL_UPDATES = 1
 
 _DEFAULT_ROOM_EQ_NAMES = ("EQ1", "EQ2", "EQ3")
+_ROOM_EQ_MODES = (RoomEqMode.EQ1, RoomEqMode.EQ2, RoomEqMode.EQ3)
 
 ROOM_EQ_DESCRIPTION = SelectEntityDescription(
     key="room_equalization",
@@ -36,6 +37,20 @@ def _room_eq_names(coordinator: ArcamFmjCoordinator) -> tuple[str, ...]:
             )
         )
         + _DEFAULT_ROOM_EQ_NAMES[len(names) :]
+    )
+
+
+def _room_eq_options(
+    coordinator: ArcamFmjCoordinator,
+) -> tuple[tuple[RoomEqMode, str], ...]:
+    """Return uniquely labelled Room EQ profile options."""
+    return tuple(
+        (mode, f"{mode.name}: {name}")
+        for mode, name in zip(
+            _ROOM_EQ_MODES,
+            _room_eq_names(coordinator),
+            strict=True,
+        )
     )
 
 
@@ -64,7 +79,10 @@ class ArcamFmjRoomEqSelect(ArcamFmjEntity, SelectEntity):
     @override
     def options(self) -> list[str]:
         """Return available room-EQ options."""
-        options = ["Off", *_room_eq_names(self.coordinator)]
+        options = [
+            "Off",
+            *(option for _mode, option in _room_eq_options(self.coordinator)),
+        ]
         if self.coordinator.state.get_room_equalization() == RoomEqMode.NOT_CALCULATED:
             options.append("Not calculated")
         return options
@@ -76,9 +94,8 @@ class ArcamFmjRoomEqSelect(ArcamFmjEntity, SelectEntity):
         mode = self.coordinator.state.get_room_equalization()
         if mode is None:
             return None
-        if mode in (RoomEqMode.EQ1, RoomEqMode.EQ2, RoomEqMode.EQ3):
-            index = mode.value - RoomEqMode.EQ1.value
-            return _room_eq_names(self.coordinator)[index]
+        if mode in _ROOM_EQ_MODES:
+            return dict(_room_eq_options(self.coordinator))[mode]
         return {
             RoomEqMode.OFF: "Off",
             RoomEqMode.NOT_CALCULATED: "Not calculated",
@@ -92,18 +109,19 @@ class ArcamFmjRoomEqSelect(ArcamFmjEntity, SelectEntity):
         if option == "Off":
             mode = RoomEqMode.OFF
         elif option == "Not calculated":
-            mode = RoomEqMode.NOT_CALCULATED
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_room_equalization",
+                translation_placeholders={"room_equalization": option},
+            )
         else:
-            available_names = _room_eq_names(self.coordinator)
             mode = next(
                 (
                     profile_mode
-                    for profile_mode, profile_name in zip(
-                        (RoomEqMode.EQ1, RoomEqMode.EQ2, RoomEqMode.EQ3),
-                        available_names,
-                        strict=False,
+                    for profile_mode, profile_option in _room_eq_options(
+                        self.coordinator
                     )
-                    if profile_name == option
+                    if profile_option == option
                 ),
                 None,
             )
