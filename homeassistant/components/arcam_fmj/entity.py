@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 import functools
 from typing import Any, override
 
-from arcam.fmj import ConnectionFailed
+from arcam.fmj.errors import ConnectionFailed
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityDescription

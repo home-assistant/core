@@ -557,6 +557,7 @@ def make_public_light(
             lds.pir_sensitivity if pir_sensitivity is None else pir_sensitivity
         ),
     )
+    public.last_motion_dt = PublicLight.last_motion_dt.fget(public)
     return public
 
 
@@ -677,9 +678,10 @@ def make_public_camera(
         if hdr_type is None
         else hdr_type
     )
+    public.hdr_mode_display = PublicCamera.hdr_mode_display.fget(public)
     flags = camera.feature_flags
     public.has_package_camera = flags.has_package_camera
-    # Spec'd so a private-only flag (e.g. ``has_highfps``) reads as absent.
+    # Spec'd so a private-only flag reads as absent.
     public.feature_flags = Mock(spec=PublicCameraFeatureFlags)
     public.feature_flags.support_full_hd_snapshot = flags.support_full_hd_snapshot
     public.feature_flags.has_hdr = flags.has_hdr
@@ -690,6 +692,10 @@ def make_public_camera(
     public.feature_flags.smart_detect_types = list(flags.smart_detect_types)
     public.feature_flags.smart_detect_audio_types = list(
         flags.smart_detect_audio_types or []
+    )
+    # Derived from the mirrored video modes with the library's own logic.
+    public.feature_flags.has_highfps = PublicCameraFeatureFlags.has_highfps.fget(
+        public.feature_flags
     )
     # The capability gate runs the library's own logic on the mirrored flags.
     public.can_detect = Mock(side_effect=partial(PublicCamera.can_detect, public))
