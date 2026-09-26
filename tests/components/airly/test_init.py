@@ -1,8 +1,10 @@
 """Test init of Airly integration."""
 
+from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock
 
+from airly.exceptions import AirlyError
 from airly.measurements import Measurement
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -10,7 +12,7 @@ import pytest
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_DOMAIN
 from homeassistant.components.airly.const import CONF_USE_NEAREST, DOMAIN
 from homeassistant.components.airly.coordinator import set_update_interval
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -69,16 +71,44 @@ async def test_async_setup_entry_with_nearest(
     assert state.state == "4.37"
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        ConnectionError,
+        AirlyError(HTTPStatus.INTERNAL_SERVER_ERROR, {"message": "Server error"}),
+    ],
+)
 async def test_config_not_ready(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_airly_client: MagicMock,
+    exception: Exception,
 ) -> None:
     """Test for setup failure if connection to Airly is missing."""
-    mock_airly_client.create_measurements_session_point.return_value.update.side_effect = ConnectionError()
+    mock_airly_client.create_measurements_session_point.return_value.update.side_effect = exception
 
     await init_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_config_auth_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_airly_client: MagicMock,
+) -> None:
+    """Test that a reauth flow is started when the API key is invalid."""
+    mock_airly_client.create_measurements_session_point.return_value.update.side_effect = AirlyError(
+        HTTPStatus.UNAUTHORIZED, {"message": "Invalid authentication credentials"}
+    )
+
+    await init_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+    assert flows[0]["step_id"] == "reauth_confirm"
 
 
 @pytest.mark.usefixtures("mock_airly_client")
