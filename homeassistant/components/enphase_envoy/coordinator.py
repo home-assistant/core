@@ -135,8 +135,9 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         if not fresh:
             if not self.manual_token:
-                self.hass.async_create_background_task(
-                    self._async_try_refresh_token(), f"{name} token refresh"
+                # create config entry task so it will be canceled on unload
+                self.config_entry.async_create_background_task(
+                    self.hass, self._async_try_refresh_token(), f"{name} token refresh"
                 )
                 return
 
@@ -190,8 +191,9 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @callback
     def _async_refresh_firmware(self, now: datetime.datetime) -> None:
         """Proactively check for firmware changes in Envoy."""
-        self.hass.async_create_background_task(
-            self._async_try_refresh_firmware(), "{name} firmware refresh"
+        # create config entry task so it will be canceled on unload
+        self.config_entry.async_create_background_task(
+            self.hass, self._async_try_refresh_firmware(), "{name} firmware refresh"
         )
 
     async def _async_try_refresh_firmware(self) -> None:
@@ -203,6 +205,12 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # just try again next time
             _LOGGER.debug("%s: Error reading firmware: %s", err, self.name)
             return
+        except RuntimeError as err:
+            # Don't raise on session closed next runs will try again
+            if "Session is closed" in str(err):
+                _LOGGER.debug("Client is closed when reading firmware: %s", self.name)
+                return
+            raise
         if (current_firmware := self.envoy_firmware) and current_firmware != (
             new_firmware := self.envoy.firmware
         ):
@@ -232,15 +240,27 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @callback
     def _async_verify_mac(self, now: datetime.datetime) -> None:
         """Verify Envoy active interface mac address in background."""
-        self.hass.async_create_background_task(
-            self._async_fetch_and_compare_mac(), "{name} verify envoy mac address"
+        # create config entry task so it will be canceled on unload
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self._async_fetch_and_compare_mac(),
+            "{name} verify envoy mac address",
         )
 
     async def _async_fetch_and_compare_mac(self) -> None:
         """Get Envoy interface information and update mac in device connections."""
-        interface: (
-            EnvoyInterfaceInformation | None
-        ) = await self.envoy.interface_settings()
+        try:
+            interface: (
+                EnvoyInterfaceInformation | None
+            ) = await self.envoy.interface_settings()
+        except RuntimeError as err:
+            # We may get session is closed if we still run at unload
+            if "Session is closed" in str(err):
+                _LOGGER.debug(
+                    "Client is closed when reading interface information: %s", self.name
+                )
+                return
+            raise
         if interface is None:
             _LOGGER.debug("%s: interface information returned None", self.name)
             return
@@ -294,6 +314,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.async_cancel_token_refresh()
         if not isinstance(self.envoy.auth, EnvoyTokenAuth):
             return
+        # this is the timer that creates a background task when firing
         self._cancel_token_refresh = async_track_time_interval(
             self.hass,
             self._async_refresh_token_if_needed,
@@ -416,21 +437,21 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @callback
     def async_cancel_token_refresh(self) -> None:
-        """Cancel token refresh."""
+        """Cancel token refresh timer."""
         if self._cancel_token_refresh:
             self._cancel_token_refresh()
             self._cancel_token_refresh = None
 
     @callback
     def async_cancel_firmware_refresh(self) -> None:
-        """Cancel firmware refresh."""
+        """Cancel firmware refresh timer."""
         if self._cancel_firmware_refresh:
             self._cancel_firmware_refresh()
             self._cancel_firmware_refresh = None
 
     @callback
     def async_cancel_mac_verification(self) -> None:
-        """Cancel mac verification."""
+        """Cancel mac verification delayed starter."""
         if self._cancel_mac_verification:
             self._cancel_mac_verification()
             self._cancel_mac_verification = None
