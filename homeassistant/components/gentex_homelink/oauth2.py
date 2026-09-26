@@ -1,21 +1,17 @@
 """API for homelink bound to Home Assistant OAuth."""
 
-from json import JSONDecodeError
-import logging
 import time
-from typing import cast, override
+from typing import override
 
-from aiohttp import ClientError, ClientSession
+from aiohttp import ClientSession
 from homelink.auth.abstract_auth import AbstractAuth
 from homelink.settings import COGNITO_CLIENT_ID
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.oauth2 import async_token_request
 
 from .const import OAUTH2_TOKEN_URL
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class SRPAuthImplementation(config_entry_oauth2_flow.AbstractOAuth2Implementation):
@@ -57,41 +53,18 @@ class SRPAuthImplementation(config_entry_oauth2_flow.AbstractOAuth2Implementatio
             "expires_at": (time.time() + tokens["AuthenticationResult"]["ExpiresIn"]),
         }
 
-    async def _token_request(self, data: dict) -> dict:
-        """Make a token request."""
-        session = async_get_clientsession(self.hass)
-
-        data["client_id"] = self.client_id
-
-        _LOGGER.debug("Sending token request to %s", OAUTH2_TOKEN_URL)
-        resp = await session.post(OAUTH2_TOKEN_URL, data=data)
-        if resp.status >= 400:
-            try:
-                error_response = await resp.json()
-            except ClientError, JSONDecodeError:
-                error_response = {}
-                error_code = error_response.get("error", "unknown")
-                error_description = error_response.get(
-                    "error_description", "unknown error"
-                )
-                _LOGGER.error(
-                    "Token request for %s failed (%s): %s",
-                    self.domain,
-                    error_code,
-                    error_description,
-                )
-        resp.raise_for_status()
-        return cast(dict, await resp.json())
-
     @override
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh tokens."""
-        new_token = await self._token_request(
+        new_token = await async_token_request(
+            self.hass,
+            OAUTH2_TOKEN_URL,
             {
                 "grant_type": "refresh_token",
                 "client_id": self.client_id,
                 "refresh_token": token["refresh_token"],
-            }
+            },
+            domain=self.domain,
         )
         return {**token, **new_token}
 
