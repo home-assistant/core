@@ -1,0 +1,38 @@
+name: Quality scale reviewer (trigger)
+
+# Stage 1 of the Quality scale reviewer pipeline.
+#
+# This workflow exists only to trigger stage 2 (the agentic workflow defined in
+# `quality-scale-reviewer.md`) through `workflow_run`: `workflow_run` cannot
+# filter on pull request paths, types, or draft state, and a `pull_request` run
+# from a fork gets no secrets. It runs the pull request's own copy of this file
+# with no permissions, so nothing it does is trusted. Stage 2 resolves the pull
+# request from `workflow_run.head_sha` and collects everything it needs itself.
+
+# yamllint disable-line rule:truthy
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+    branches-ignore:
+      - master
+    paths:
+      - "homeassistant/components/**"
+      - "tests/components/**"
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  trigger:
+    name: Trigger the quality scale review
+    if: ${{ !github.event.pull_request.draft }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Report the pull request
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: echo "Triggering the quality scale review of pull request ${PR_NUMBER}"
