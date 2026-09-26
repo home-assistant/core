@@ -1,9 +1,9 @@
 """Test Snooz fan entity."""
 
 from datetime import timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, PropertyMock, patch
 
-from pysnooz.api import SnoozDeviceState, UnknownSnoozState
+from pysnooz import SnoozDeviceState, UnknownSnoozState
 from pysnooz.commands import SnoozCommandResult, SnoozCommandResultStatus
 from pysnooz.testing import MockSnoozDevice
 import pytest
@@ -29,8 +29,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import SnoozFixture, create_mock_snooz, create_mock_snooz_config_entry
-
-from tests.components.bluetooth import generate_ble_device
 
 
 async def test_turn_on(hass: HomeAssistant, snooz_fan_entity_id: str) -> None:
@@ -200,13 +198,7 @@ async def test_restore_state(
     assert state.state == STATE_UNAVAILABLE
 
     # reload entry
-    with (
-        patch("homeassistant.components.snooz.SnoozDevice", return_value=device),
-        patch(
-            "homeassistant.components.snooz.async_ble_device_from_address",
-            return_value=generate_ble_device(device.address, device.name),
-        ),
-    ):
+    with patch("homeassistant.components.snooz.SnoozDevice", return_value=device):
         await hass.config_entries.async_setup(entry.entry_id)
 
     # should match last known state
@@ -232,13 +224,7 @@ async def test_restore_unknown_state(
     assert state.state == STATE_UNAVAILABLE
 
     # reload entry
-    with (
-        patch("homeassistant.components.snooz.SnoozDevice", return_value=device),
-        patch(
-            "homeassistant.components.snooz.async_ble_device_from_address",
-            return_value=generate_ble_device(device.address, device.name),
-        ),
-    ):
+    with patch("homeassistant.components.snooz.SnoozDevice", return_value=device):
         await hass.config_entries.async_setup(entry.entry_id)
 
     # should match last known state
@@ -257,14 +243,19 @@ async def test_command_results(
     mock_execute.return_value = SnoozCommandResult(
         SnoozCommandResultStatus.SUCCESSFUL, timedelta()
     )
-    mock_connected_snooz.device.state = SnoozDeviceState(on=True, volume=56)
 
-    await hass.services.async_call(
-        fan.DOMAIN,
-        fan.SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: [snooz_fan_entity_id]},
-        blocking=True,
-    )
+    with patch.object(
+        MockSnoozDevice,
+        "state",
+        new_callable=PropertyMock,
+        return_value=SnoozDeviceState(on=True, volume=56),
+    ):
+        await hass.services.async_call(
+            fan.DOMAIN,
+            fan.SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: [snooz_fan_entity_id]},
+            blocking=True,
+        )
 
     state = hass.states.get(snooz_fan_entity_id)
     assert state.state == STATE_ON
@@ -273,14 +264,19 @@ async def test_command_results(
     mock_execute.return_value = SnoozCommandResult(
         SnoozCommandResultStatus.CANCELLED, timedelta()
     )
-    mock_connected_snooz.device.state = SnoozDeviceState(on=False, volume=15)
 
-    await hass.services.async_call(
-        fan.DOMAIN,
-        fan.SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: [snooz_fan_entity_id]},
-        blocking=True,
-    )
+    with patch.object(
+        MockSnoozDevice,
+        "state",
+        new_callable=PropertyMock,
+        return_value=SnoozDeviceState(on=False, volume=15),
+    ):
+        await hass.services.async_call(
+            fan.DOMAIN,
+            fan.SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: [snooz_fan_entity_id]},
+            blocking=True,
+        )
 
     # the device state shouldn't be written when cancelled
     state = hass.states.get(snooz_fan_entity_id)

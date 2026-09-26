@@ -57,7 +57,8 @@ async def async_setup_platform(
                 LawnMowerActivity.DOCKED,
                 LawnMowerEntityFeature.DOCK
                 | LawnMowerEntityFeature.PAUSE
-                | LawnMowerEntityFeature.START_MOWING,
+                | LawnMowerEntityFeature.START_MOWING
+                | LawnMowerEntityFeature.STOP,
             ),
             DemoLawnMower(
                 "kitchen_sink_mower_006",
@@ -66,6 +67,12 @@ async def async_setup_platform(
                 LawnMowerEntityFeature.DOCK
                 | LawnMowerEntityFeature.PAUSE
                 | LawnMowerEntityFeature.START_MOWING,
+            ),
+            DemoLawnMower(
+                "kitchen_sink_mower_007",
+                "Mower can stop",
+                LawnMowerActivity.MOWING,
+                LawnMowerEntityFeature.STOP | LawnMowerEntityFeature.START_MOWING,
             ),
         ]
     )
@@ -112,4 +119,10 @@ class DemoLawnMower(LawnMowerEntity):
     async def async_pause(self) -> None:
         """Pause mower."""
         self._attr_activity = LawnMowerActivity.PAUSED
+        self.async_write_ha_state()
+
+    @override
+    async def async_stop(self) -> None:
+        """Stop mower."""
+        self._attr_activity = LawnMowerActivity.IDLE
         self.async_write_ha_state()

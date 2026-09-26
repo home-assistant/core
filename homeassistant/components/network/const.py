@@ -2,7 +2,7 @@
 
 from typing import Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.helpers import config_validation as cv
 
@@ -19,10 +19,10 @@ MDNS_TARGET_IP: Final = "224.0.0.251"
 PUBLIC_TARGET_IP: Final = "8.8.8.8"
 IPV4_BROADCAST_ADDR: Final = "255.255.255.255"
 
-NETWORK_CONFIG_SCHEMA = vol.Schema(
+NETWORK_CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(
+        probatio.Optional(
             ATTR_CONFIGURED_ADAPTERS, default=DEFAULT_CONFIGURED_ADAPTERS
-        ): vol.Schema(vol.All(cv.ensure_list, [cv.string])),
+        ): probatio.Schema(probatio.All(cv.ensure_list, [cv.string])),
     }
 )

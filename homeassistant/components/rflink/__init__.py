@@ -4,9 +4,9 @@ import asyncio
 from collections import defaultdict
 import logging
 
+import probatio
 from rflink.protocol import create_rflink_connection
 from serial import SerialException
-import voluptuous as vol
 
 from homeassistant.const import (
     CONF_COMMAND,
@@ -72,60 +72,63 @@ SERVICE_SEND_COMMAND = "send_command"
 
 SIGNAL_EVENT = "rflink_event"
 
-BINARY_SENSOR_PS = vol.Schema(
+BINARY_SENSOR_PS = probatio.Schema(
     BINARY_SENSOR_PLATFORM,
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-COVER_PS = vol.Schema(
+COVER_PS = probatio.Schema(
     COVER_PLATFORM,
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-LIGHT_PS = vol.Schema(
+LIGHT_PS = probatio.Schema(
     LIGHT_PLATFORM,
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-SENSOR_PS = vol.Schema(
+SENSOR_PS = probatio.Schema(
     SENSOR_PLATFORM,
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-SWITCH_PS = vol.Schema(
+SWITCH_PS = probatio.Schema(
     SWITCH_PLATFORM,
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_PORT): vol.Any(cv.port, cv.string),
-                vol.Optional(CONF_HOST): cv.string,
-                vol.Optional(CONF_WAIT_FOR_ACK, default=True): cv.boolean,
-                vol.Optional(
+                probatio.Required(CONF_PORT): probatio.Any(cv.port, cv.string),
+                probatio.Optional(CONF_HOST): cv.string,
+                probatio.Optional(CONF_WAIT_FOR_ACK, default=True): cv.boolean,
+                probatio.Optional(
                     CONF_KEEPALIVE_IDLE, default=DEFAULT_TCP_KEEPALIVE_IDLE_TIMER
                 ): int,
-                vol.Optional(
+                probatio.Optional(
                     CONF_RECONNECT_INTERVAL, default=DEFAULT_RECONNECT_INTERVAL
                 ): int,
-                vol.Optional(CONF_IGNORE_DEVICES, default=[]): vol.All(
+                probatio.Optional(CONF_IGNORE_DEVICES, default=[]): probatio.All(
                     cv.ensure_list, [cv.string]
                 ),
-                vol.Optional(Platform.BINARY_SENSOR.value): BINARY_SENSOR_PS,
-                vol.Optional(Platform.COVER.value): COVER_PS,
-                vol.Optional(Platform.LIGHT.value): LIGHT_PS,
-                vol.Optional(Platform.SENSOR.value): SENSOR_PS,
-                vol.Optional(Platform.SWITCH.value): SWITCH_PS,
+                probatio.Optional(Platform.BINARY_SENSOR.value): BINARY_SENSOR_PS,
+                probatio.Optional(Platform.COVER.value): COVER_PS,
+                probatio.Optional(Platform.LIGHT.value): LIGHT_PS,
+                probatio.Optional(Platform.SENSOR.value): SENSOR_PS,
+                probatio.Optional(Platform.SWITCH.value): SWITCH_PS,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-SEND_COMMAND_SCHEMA = vol.Schema(
-    {vol.Required(CONF_DEVICE_ID): cv.string, vol.Required(CONF_COMMAND): cv.string}
+SEND_COMMAND_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_DEVICE_ID): cv.string,
+        probatio.Required(CONF_COMMAND): cv.string,
+    }
 )
 
 ALLOWED_PLATFORMS = [

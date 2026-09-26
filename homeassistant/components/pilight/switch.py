@@ -1,6 +1,6 @@
 """Support for switching devices via Pilight to on and off."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -15,7 +15,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .entity import SWITCHES_SCHEMA, PilightBaseDevice
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_SWITCHES): vol.Schema({cv.string: SWITCHES_SCHEMA})}
+    {probatio.Required(CONF_SWITCHES): probatio.Schema({cv.string: SWITCHES_SCHEMA})}
 )
 
 

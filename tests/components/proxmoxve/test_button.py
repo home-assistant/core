@@ -176,9 +176,9 @@ async def test_snapshot_button(
 
     # Proxmox validates the name as a `pve-configid` of at most 40 characters:
     # two or more, starting with a letter, then only [A-Za-z0-9_-]
-    name = method_mock.call_args.kwargs["name"]
-    assert len(name) <= 40
-    assert re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]+", name)
+    snapname = method_mock.call_args.kwargs["snapname"]
+    assert len(snapname) <= 40
+    assert re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]+", snapname)
 
 
 @pytest.mark.parametrize(

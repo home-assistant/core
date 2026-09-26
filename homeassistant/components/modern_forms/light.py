@@ -4,7 +4,7 @@ from typing import Any, override
 
 from aiomodernforms.const import LIGHT_POWER_OFF, LIGHT_POWER_ON
 from aiomodernforms.models import Light
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -56,8 +56,8 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_LIGHT_SLEEP_TIMER,
         {
-            vol.Required(ATTR_SLEEP_TIME): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=1440)
+            probatio.Required(ATTR_SLEEP_TIME): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=1, max=1440)
             ),
         },
         "async_set_light_sleep_timer",

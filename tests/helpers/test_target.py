@@ -1104,7 +1104,7 @@ async def test_target_trickle_down_to_splits(
     split_a = next(
         d
         for d in device_registry.async_get_devices_for_composite_device_id(COMPOSITE_ID)
-        if entry_a.entry_id in d.config_entries
+        if d.config_entry_id == entry_a.entry_id
     )
     child = device_registry.async_get_or_create_child(
         config_entry_id=entry_a.entry_id,
@@ -1262,21 +1262,28 @@ async def test_extract_label_with_child_devices(
     hass: HomeAssistant,
     child_device_setup: dict[str, str],
 ) -> None:
-    """Test labels are not inherited by child devices when targeting.
+    """Test a labeled parent device expands to its child devices when targeting.
 
-    A labeled parent targets only the parent and its own entities; a labeled child
-    targets only that child. This mirrors dr.async_entries_for_label, which
-    documents that labels are never inherited from the parent.
+    Labels are not inherited by child devices, but a labeled parent is targeted like
+    a directly targeted device, so its children are included. A labeled child
+    targets only that child.
     """
     ids = child_device_setup
 
-    # The label is on the parent; it does not expand to the child devices, and only
-    # the parent's own entities are indirectly referenced.
     selected = target.async_extract_referenced_entity_ids(
         hass, target.TargetSelection({"label_id": "strip-label"})
     )
-    assert selected.referenced_devices == {ids["parent"]}
-    assert selected.indirectly_referenced == {ids["strip_switch"]}
+    assert selected.referenced_devices == {
+        ids["parent"],
+        ids["outlet_1"],
+        ids["outlet_2"],
+    }
+    assert selected.indirectly_referenced == {
+        ids["strip_switch"],
+        ids["outlet_1_switch"],
+        ids["outlet_2_switch"],
+        ids["outlet_1_energy"],
+    }
 
     # A label on a child device targets only the child device
     selected = target.async_extract_referenced_entity_ids(

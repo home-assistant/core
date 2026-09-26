@@ -1,6 +1,5 @@
 """Test pi_hole component."""
 
-import logging
 from unittest.mock import ANY, AsyncMock
 
 from hole.exceptions import HoleError
@@ -23,6 +22,7 @@ from homeassistant.const import (
     CONF_SSL,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import (
     API_KEY,
@@ -289,7 +289,7 @@ async def test_setup_name_from_entry_title(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.my_hole_ads_blocked").name == "My Hole Ads blocked"
 
 
-async def test_switch(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+async def test_switch(hass: HomeAssistant) -> None:
     """Test Pi-hole switch."""
     mocked_hole = _create_mocked_hole()
     entry = MockConfigEntry(
@@ -322,23 +322,29 @@ async def test_switch(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> 
 
         # Failed calls
         mocked_hole.instances[-1].enable = AsyncMock(side_effect=HoleError("Error1"))
-        await hass.services.async_call(
-            switch.DOMAIN,
-            switch.SERVICE_TURN_ON,
-            {"entity_id": SWITCH_ENTITY_ID},
-            blocking=True,
-        )
-        mocked_hole.instances[-1].disable = AsyncMock(side_effect=HoleError("Error2"))
-        await hass.services.async_call(
-            switch.DOMAIN,
-            switch.SERVICE_TURN_OFF,
-            {"entity_id": SWITCH_ENTITY_ID},
-            blocking=True,
-        )
-        errors = [x for x in caplog.records if x.levelno == logging.ERROR]
+        with pytest.raises(HomeAssistantError) as enable_error:
+            await hass.services.async_call(
+                switch.DOMAIN,
+                switch.SERVICE_TURN_ON,
+                {"entity_id": SWITCH_ENTITY_ID},
+                blocking=True,
+            )
 
-        assert errors[-2].message == "Unable to enable Pi-hole: Error1"
-        assert errors[-1].message == "Unable to disable Pi-hole: Error2"
+        mocked_hole.instances[-1].disable = AsyncMock(side_effect=HoleError("Error2"))
+        with pytest.raises(HomeAssistantError) as disable_error:
+            await hass.services.async_call(
+                switch.DOMAIN,
+                switch.SERVICE_TURN_OFF,
+                {"entity_id": SWITCH_ENTITY_ID},
+                blocking=True,
+            )
+
+    assert enable_error.value.translation_domain == pi_hole.DOMAIN
+    assert enable_error.value.translation_key == "enable_failed"
+    assert enable_error.value.translation_placeholders == {"error": "Error1"}
+    assert disable_error.value.translation_domain == pi_hole.DOMAIN
+    assert disable_error.value.translation_key == "disable_failed"
+    assert disable_error.value.translation_placeholders == {"error": "Error2"}
 
 
 async def test_disable_service_call(hass: HomeAssistant) -> None:

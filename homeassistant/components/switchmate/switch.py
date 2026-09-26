@@ -3,8 +3,8 @@
 from datetime import timedelta
 from typing import Any, override
 
+import probatio
 from switchmate import Switchmate
-import voluptuous as vol
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -23,9 +23,9 @@ SCAN_INTERVAL = timedelta(minutes=30)
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_MAC): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_FLIP_ON_OFF, default=False): cv.boolean,
+        probatio.Required(CONF_MAC): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_FLIP_ON_OFF, default=False): cv.boolean,
     }
 )
 

@@ -6,7 +6,7 @@ from typing import Any, override
 
 from blinkpy.auth import Auth, BlinkTwoFARequiredError, LoginError, TokenRefreshFailed
 from blinkpy.blinkpy import Blink, BlinkSetupError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -85,10 +85,10 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
@@ -116,8 +116,8 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="2fa",
-            data_schema=vol.Schema(
-                {vol.Optional(CONF_PIN): vol.All(str, vol.Length(min=1))}
+            data_schema=probatio.Schema(
+                {probatio.Optional(CONF_PIN): probatio.All(str, probatio.Length(min=1))}
             ),
             errors=errors,
         )
@@ -147,12 +147,12 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry = self._get_reauth_entry()
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_USERNAME, default=config_entry.data[CONF_USERNAME]
                     ): str,
-                    vol.Required(
+                    probatio.Required(
                         CONF_PASSWORD, default=config_entry.data[CONF_PASSWORD]
                     ): str,
                 }
@@ -180,12 +180,12 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry = self._get_reconfigure_entry()
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_USERNAME, default=config_entry.data[CONF_USERNAME]
                     ): str,
-                    vol.Required(
+                    probatio.Required(
                         CONF_PASSWORD, default=config_entry.data[CONF_PASSWORD]
                     ): str,
                 }

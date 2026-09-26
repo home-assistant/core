@@ -5,7 +5,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Final
 
 from bsblan import BSBLANError, DaySchedule, DHWSchedule, TimeSlot
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -44,23 +44,23 @@ _DAY_NAME_SLOT_ATTR_PAIRS: tuple[tuple[str, str], ...] = (
 
 
 # Schema for a single time slot
-_SLOT_SCHEMA = vol.Schema(
+_SLOT_SCHEMA = probatio.Schema(
     {
-        vol.Required("start_time"): cv.time,
-        vol.Required("end_time"): cv.time,
+        probatio.Required("start_time"): cv.time,
+        probatio.Required("end_time"): cv.time,
     }
 )
 
 
-_WEEKLY_SCHEDULE_FIELDS: Final[dict[vol.Marker, Any]] = {
-    vol.Optional(slot_attr): vol.All(cv.ensure_list, [_SLOT_SCHEMA])
+_WEEKLY_SCHEDULE_FIELDS: Final[dict[probatio.Marker, Any]] = {
+    probatio.Optional(slot_attr): probatio.All(cv.ensure_list, [_SLOT_SCHEMA])
     for _, slot_attr in _DAY_NAME_SLOT_ATTR_PAIRS
 }
 
 
-SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA = vol.Schema(
+SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
         **_WEEKLY_SCHEDULE_FIELDS,
     }
 )
@@ -127,7 +127,7 @@ def _build_weekly_schedule_days(
 
 def _resolve_config_entry(
     service_call: ServiceCall,
-) -> tuple[BSBLanConfigEntry, dr.DeviceEntry]:
+) -> tuple[BSBLanConfigEntry, dr.AnyDeviceEntry]:
     """Resolve device_id from a service call into a loaded BSBLAN config entry."""
     config_entry: BSBLanConfigEntry
     device, config_entry = service.async_get_device_and_config_entry(
@@ -136,12 +136,12 @@ def _resolve_config_entry(
     return config_entry, device
 
 
-def _device_name(device_entry: dr.DeviceEntry) -> str:
+def _device_name(device_entry: dr.AnyDeviceEntry) -> str:
     """Return the best available display name for a device."""
     return device_entry.name_by_user or device_entry.name or device_entry.id
 
 
-def _ensure_water_heater_device(device_entry: dr.DeviceEntry) -> None:
+def _ensure_water_heater_device(device_entry: dr.AnyDeviceEntry) -> None:
     """Validate the service targets the water heater sub-device."""
     for domain, identifier in device_entry.identifiers:
         if domain == DOMAIN and identifier.endswith("-water-heater"):
@@ -186,9 +186,9 @@ async def async_sync_time(service_call: ServiceCall) -> None:
     )
 
 
-SYNC_TIME_SCHEMA = vol.Schema(
+SYNC_TIME_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
     }
 )
 

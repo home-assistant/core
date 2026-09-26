@@ -2,12 +2,12 @@
 
 from datetime import timedelta
 
+import probatio
 from pyportainer import (
     PortainerAuthenticationError,
     PortainerConnectionError,
     PortainerTimeoutError,
 )
-import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -28,24 +28,24 @@ ATTR_PULL_IMAGE = "pull_image"
 ATTR_CONTAINER_DEVICE_ID = "container_device_id"
 
 SERVICE_PRUNE_IMAGES = "prune_images"
-SERVICE_PRUNE_IMAGES_SCHEMA = vol.Schema(
+SERVICE_PRUNE_IMAGES_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Optional(ATTR_DATE_UNTIL): vol.All(
-            cv.time_period, vol.Range(min=timedelta(minutes=1))
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Optional(ATTR_DATE_UNTIL): probatio.All(
+            cv.time_period, probatio.Range(min=timedelta(minutes=1))
         ),
-        vol.Optional(ATTR_DANGLING): cv.boolean,
+        probatio.Optional(ATTR_DANGLING): cv.boolean,
     },
 )
 
 SERVICE_RECREATE_CONTAINER = "recreate_container"
-SERVICE_RECREATE_CONTAINER_SCHEMA = vol.Schema(
+SERVICE_RECREATE_CONTAINER_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONTAINER_DEVICE_ID): cv.string,
-        vol.Optional(ATTR_TIMEOUT): vol.All(
-            cv.time_period, vol.Range(min=timedelta(minutes=1))
+        probatio.Required(ATTR_CONTAINER_DEVICE_ID): cv.string,
+        probatio.Optional(ATTR_TIMEOUT): probatio.All(
+            cv.time_period, probatio.Range(min=timedelta(minutes=1))
         ),
-        vol.Optional(ATTR_PULL_IMAGE): cv.boolean,
+        probatio.Optional(ATTR_PULL_IMAGE): cv.boolean,
     }
 )
 
@@ -53,7 +53,7 @@ SERVICE_RECREATE_CONTAINER_SCHEMA = vol.Schema(
 @callback
 def _async_get_device_and_entry(
     call: ServiceCall, device_id: str
-) -> tuple[dr.DeviceEntry, PortainerConfigEntry]:
+) -> tuple[dr.AnyDeviceEntry, PortainerConfigEntry]:
     """Resolve and validate the device and Portainer config entry for a device ID."""
     entry: PortainerConfigEntry
     device, entry = service.async_get_device_and_config_entry(
@@ -64,7 +64,7 @@ def _async_get_device_and_entry(
 
 @callback
 def _async_get_endpoint_id(
-    device: dr.DeviceEntry,
+    device: dr.AnyDeviceEntry,
     config_entry: PortainerConfigEntry,
 ) -> int:
     """Get the endpoint ID from a device entry."""
@@ -85,7 +85,7 @@ def _async_get_endpoint_id(
 
 @callback
 def _async_get_container_and_endpoint_ids(
-    device: dr.DeviceEntry,
+    device: dr.AnyDeviceEntry,
     config_entry: PortainerConfigEntry,
 ) -> tuple[int, str]:
     """Get the endpoint ID and container ID from a container device entry."""

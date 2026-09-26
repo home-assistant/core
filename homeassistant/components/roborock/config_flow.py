@@ -6,6 +6,7 @@ import logging
 from typing import Any, override
 from urllib.parse import urlparse
 
+import probatio
 from roborock.data import UserData
 from roborock.exceptions import (
     RoborockAccountDoesNotExist,
@@ -16,7 +17,6 @@ from roborock.exceptions import (
     RoborockUrlException,
 )
 from roborock.web_api import RoborockApiClient
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -97,10 +97,10 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_REGION, default=REGION_AUTO): SelectSelector(
+                    probatio.Required(CONF_USERNAME): str,
+                    probatio.Required(CONF_REGION, default=REGION_AUTO): SelectSelector(
                         SelectSelectorConfig(
                             options=REGION_OPTIONS,
                             mode=SelectSelectorMode.DROPDOWN,
@@ -135,9 +135,9 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="custom_url",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_ROBOROCK_SERVER_URL,
                         default=(
                             user_input[CONF_ROBOROCK_SERVER_URL]
@@ -207,7 +207,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="code",
-            data_schema=vol.Schema({vol.Required(CONF_ENTRY_CODE): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_ENTRY_CODE): str}),
             errors=errors,
         )
 
@@ -302,7 +302,7 @@ class RoborockOptionsFlowHandler(OptionsFlowWithReload):
         data_schema = {}
         for drawable, default_value in DEFAULT_DRAWABLES.items():
             data_schema[
-                vol.Required(
+                probatio.Required(
                     drawable.value,
                     default=self.config_entry.options.get(DRAWABLES, {}).get(
                         drawable, default_value
@@ -310,24 +310,24 @@ class RoborockOptionsFlowHandler(OptionsFlowWithReload):
                 )
             ] = bool
         data_schema[
-            vol.Required(
+            probatio.Required(
                 CONF_SHOW_BACKGROUND,
                 default=self.config_entry.options.get(CONF_SHOW_BACKGROUND, False),
             )
         ] = bool
         data_schema[
-            vol.Required(
+            probatio.Required(
                 CONF_SHOW_ROOMS,
                 default=self.config_entry.options.get(CONF_SHOW_ROOMS, True),
             )
         ] = bool
         data_schema[
-            vol.Required(
+            probatio.Required(
                 CONF_SHOW_WALLS,
                 default=self.config_entry.options.get(CONF_SHOW_WALLS, True),
             )
         ] = bool
         return self.async_show_form(
             step_id=DRAWABLES,
-            data_schema=vol.Schema(data_schema),
+            data_schema=probatio.Schema(data_schema),
         )

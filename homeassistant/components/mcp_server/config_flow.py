@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -46,11 +46,11 @@ def _selected_llm_apis(entry: ConfigEntry, llm_apis: dict[str, str]) -> list[str
     return [api_id for api_id in api_ids if api_id in llm_apis]
 
 
-def _llm_api_schema(llm_apis: dict[str, str], default: list[str]) -> vol.Schema:
+def _llm_api_schema(llm_apis: dict[str, str], default: list[str]) -> probatio.Schema:
     """Return the schema for selecting LLM APIs."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(
+            probatio.Optional(
                 CONF_LLM_HASS_API,
                 default=default,
             ): SelectSelector(
@@ -71,11 +71,13 @@ def _llm_api_schema(llm_apis: dict[str, str], default: list[str]) -> vol.Schema:
 
 def _options_schema(
     llm_apis: dict[str, str], default: list[str], require_admin: bool
-) -> vol.Schema:
+) -> probatio.Schema:
     """Return the schema for the options flow."""
     return _llm_api_schema(llm_apis, default).extend(
         {
-            vol.Required(CONF_REQUIRE_ADMIN, default=require_admin): BooleanSelector(),
+            probatio.Required(
+                CONF_REQUIRE_ADMIN, default=require_admin
+            ): BooleanSelector(),
         }
     )
 

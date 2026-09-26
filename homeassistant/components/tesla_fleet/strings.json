@@ -3,8 +3,7 @@
     "abort": {
       "already_configured": "Configuration updated for profile.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "reauth_account_mismatch": "The reauthentication account does not match the original account",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_account_mismatch": "The reauthentication account does not match the original account"
     },
     "create_entry": {
       "default": "Successfully authenticated with Tesla."

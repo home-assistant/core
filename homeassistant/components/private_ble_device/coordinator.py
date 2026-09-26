@@ -1,9 +1,7 @@
 """Central manager for tracking devices with random but resolvable MAC addresses."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from collections.abc import Callable
 import logging
-from typing import cast
 
 from bluetooth_data_tools import get_cipher_for_irk, resolve_private_address
 from cryptography.hazmat.primitives.ciphers import Cipher
@@ -12,7 +10,7 @@ from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import PRIVATE_BLE_DEVICE_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -241,11 +239,9 @@ def async_get_coordinator(hass: HomeAssistant) -> PrivateDevicesCoordinator:
     mac addresses with an IRK involves AES operations. We don't want to
     duplicate that work.
     """
-    if existing := hass.data.get(DOMAIN):
-        return cast(PrivateDevicesCoordinator, existing)
+    if (existing := hass.data.get(PRIVATE_BLE_DEVICE_DATA)) is not None:
+        return existing
 
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    pdm = hass.data[DOMAIN] = PrivateDevicesCoordinator(hass)
+    coordinator = hass.data[PRIVATE_BLE_DEVICE_DATA] = PrivateDevicesCoordinator(hass)
 
-    return pdm
+    return coordinator

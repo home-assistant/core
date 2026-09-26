@@ -4,8 +4,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from pymta import LINE_TO_FEED, BusFeed, MTAFeedError, SubwayFeed
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -93,9 +93,9 @@ class MTAConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_API_KEY): TextSelector(
+                    probatio.Optional(CONF_API_KEY): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }
@@ -131,9 +131,9 @@ class SubwaySubentryFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_LINE): SelectSelector(
+                    probatio.Required(CONF_LINE): SelectSelector(
                         SelectSelectorConfig(
                             options=line_options,
                             mode=SelectSelectorMode.DROPDOWN,
@@ -193,9 +193,9 @@ class SubwaySubentryFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="stop",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_STOP_ID): SelectSelector(
+                    probatio.Required(CONF_STOP_ID): SelectSelector(
                         SelectSelectorConfig(
                             options=stop_options,
                             mode=SelectSelectorMode.DROPDOWN,
@@ -273,9 +273,9 @@ class BusSubentryFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ROUTE): TextSelector(),
+                    probatio.Required(CONF_ROUTE): TextSelector(),
                 }
             ),
             errors=errors,
@@ -321,9 +321,9 @@ class BusSubentryFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="stop",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_STOP_ID): SelectSelector(
+                    probatio.Required(CONF_STOP_ID): SelectSelector(
                         SelectSelectorConfig(
                             options=stop_options,
                             mode=SelectSelectorMode.DROPDOWN,

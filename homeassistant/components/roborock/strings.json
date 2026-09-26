@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "Wrong account: Please authenticate with the right account."
     },
     "error": {
@@ -731,6 +730,12 @@
     },
     "invalid_fan_speed": {
       "message": "Invalid fan speed: {fan_speed}"
+    },
+    "invalid_q10_coordinate": {
+      "message": "Coordinates ({x}, {y}) are not valid for this vacuum"
+    },
+    "invalid_q10_zone": {
+      "message": "The zone coordinates are not valid for this vacuum"
     },
     "invalid_user_agreement": {
       "message": "User agreement must be accepted again. Open your Roborock app and accept the agreement."

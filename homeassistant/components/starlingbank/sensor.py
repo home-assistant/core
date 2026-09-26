@@ -4,9 +4,9 @@ from datetime import timedelta
 import logging
 from typing import override
 
+import probatio
 import requests
 from starlingbank import StarlingAccount
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -32,19 +32,19 @@ DEFAULT_ACCOUNT_NAME = "Starling"
 
 SCAN_INTERVAL = timedelta(seconds=180)
 
-ACCOUNT_SCHEMA = vol.Schema(
+ACCOUNT_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ACCESS_TOKEN): cv.string,
-        vol.Optional(CONF_BALANCE_TYPES, default=BALANCE_TYPES): vol.All(
-            cv.ensure_list, [vol.In(BALANCE_TYPES)]
+        probatio.Required(CONF_ACCESS_TOKEN): cv.string,
+        probatio.Optional(CONF_BALANCE_TYPES, default=BALANCE_TYPES): probatio.All(
+            cv.ensure_list, [probatio.In(BALANCE_TYPES)]
         ),
-        vol.Optional(CONF_NAME, default=DEFAULT_ACCOUNT_NAME): cv.string,
-        vol.Optional(CONF_SANDBOX, default=DEFAULT_SANDBOX): cv.boolean,
+        probatio.Optional(CONF_NAME, default=DEFAULT_ACCOUNT_NAME): cv.string,
+        probatio.Optional(CONF_SANDBOX, default=DEFAULT_SANDBOX): cv.boolean,
     }
 )
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_ACCOUNTS): vol.Schema([ACCOUNT_SCHEMA])}
+    {probatio.Required(CONF_ACCOUNTS): probatio.Schema([ACCOUNT_SCHEMA])}
 )
 
 

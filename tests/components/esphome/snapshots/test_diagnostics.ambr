@@ -84,6 +84,7 @@
       'device_info': dict({
         'api_encryption_provisionable': False,
         'api_encryption_supported': False,
+        'api_outgoing_connection_supported': False,
         'area': dict({
           'area_id': 0,
           'name': '',

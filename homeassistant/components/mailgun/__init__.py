@@ -6,7 +6,7 @@ import json
 import logging
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
@@ -25,17 +25,17 @@ DEFAULT_SANDBOX = False
 
 MESSAGE_RECEIVED = f"{DOMAIN}_message_received"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(DOMAIN): vol.Schema(
+        probatio.Optional(DOMAIN): probatio.Schema(
             {
-                vol.Required(CONF_API_KEY): cv.string,
-                vol.Required(CONF_DOMAIN): cv.string,
-                vol.Optional(CONF_SANDBOX, default=DEFAULT_SANDBOX): cv.boolean,
+                probatio.Required(CONF_API_KEY): cv.string,
+                probatio.Required(CONF_DOMAIN): cv.string,
+                probatio.Optional(CONF_SANDBOX, default=DEFAULT_SANDBOX): cv.boolean,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

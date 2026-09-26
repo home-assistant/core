@@ -13,7 +13,7 @@ from hassil.util import (
     PUNCTUATION_START,
     PUNCTUATION_START_WORD,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_COMMAND, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant
@@ -42,7 +42,7 @@ def has_no_punctuation(value: list[str]) -> list[str]:
             or PUNCTUATION_START_WORD.search(sentence)
             or PUNCTUATION_END_WORD.search(sentence)
         ):
-            raise vol.Invalid("sentence should not contain punctuation")
+            raise probatio.Invalid("sentence should not contain punctuation")
 
     return value
 
@@ -58,26 +58,26 @@ def is_valid_sentence(value: list[str]) -> list[str]:
         try:
             parse_sentence(sentence)
         except ParseError as err:
-            raise vol.Invalid(f"invalid sentence: {err}") from err
+            raise probatio.Invalid(f"invalid sentence: {err}") from err
     return value
 
 
 def has_one_non_empty_item(value: list[str]) -> list[str]:
     """Validate result has at least one item."""
     if len(value) < 1:
-        raise vol.Invalid("at least one sentence is required")
+        raise probatio.Invalid("at least one sentence is required")
 
     for sentence in value:
         if not sentence:
-            raise vol.Invalid(f"sentence too short: '{sentence}'")
+            raise probatio.Invalid(f"sentence too short: '{sentence}'")
 
     return value
 
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): DOMAIN,
-        vol.Required(CONF_COMMAND): vol.All(
+        probatio.Required(CONF_PLATFORM): DOMAIN,
+        probatio.Required(CONF_COMMAND): probatio.All(
             cv.ensure_list,
             [cv.string],
             has_one_non_empty_item,

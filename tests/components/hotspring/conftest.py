@@ -107,13 +107,13 @@ def device_fixture() -> Spa:
         boost_active=False,
         salt_value=12,
     )
-    spa.jets = [
-        Jet(jet_id=1, speed=JetSpeed.OFF, is_enabled=True, on_seconds=0),
-        Jet(jet_id=2, speed=JetSpeed.OFF, is_enabled=True, on_seconds=0),
-    ]
+    spa.jets = {
+        1: Jet(jet_id=1, speed=JetSpeed.OFF, is_enabled=True, on_seconds=0),
+        2: Jet(jet_id=2, speed=JetSpeed.OFF, is_enabled=True, on_seconds=0),
+    }
     spa.blower = Blower(is_enabled=False, is_on=False)
-    spa.light_zones = [
-        LightZone(
+    spa.light_zones = {
+        1: LightZone(
             zone_id=1,
             is_enabled=True,
             is_on=False,
@@ -122,7 +122,7 @@ def device_fixture() -> Spa:
             intensity=0,
             loop_speed=0,
         ),
-    ]
+    }
     spa.logo_light = LogoLight(brightness=BrightnessLevel.LEVEL_1)
     spa.clean_cycle = CleanCycle(is_enabled=False, vanishing_act=False)
     spa.spa_lock = SpaLock(is_locked=False)
@@ -134,9 +134,11 @@ def device_fixture() -> Spa:
         sensor_life_percentage=100.0,
         installed=False,
     )
-    spa.energy_savings = [
-        EnergySaving(schedule_id=1, mode=0, start_hour=0, start_minute=0, duration=0),
-    ]
+    spa.energy_savings = {
+        1: EnergySaving(
+            schedule_id=1, mode=0, start_hour=0, start_minute=0, duration=0
+        ),
+    }
     spa.connection_status = ConnectionStatus(spa_connected=True)
     spa.diagnostics = Diagnostics(
         spa_failure_state=SpaFailureState.OK,

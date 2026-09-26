@@ -84,7 +84,7 @@ async def test_tcp_host_is_normalized(hass: HomeAssistant) -> None:
 
 
 async def test_maximum_unit(hass: HomeAssistant) -> None:
-    """Test the maximum Modbus unit ID is accepted."""
+    """Test the maximum Flexit unit ID is accepted."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -93,16 +93,16 @@ async def test_maximum_unit(hass: HomeAssistant) -> None:
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {**TCP_USER_INPUT, CONF_UNIT: 247}
+        result["flow_id"], {**TCP_USER_INPUT, CONF_UNIT: 31}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_UNIT] == 247
+    assert result["data"][CONF_UNIT] == 31
 
 
-@pytest.mark.parametrize("unit", [0, 248])
+@pytest.mark.parametrize("unit", [0, 32])
 async def test_unit_out_of_range(hass: HomeAssistant, unit: int) -> None:
-    """Test unit IDs outside the Modbus address range are rejected."""
+    """Test unit IDs outside the Flexit address range are rejected."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )

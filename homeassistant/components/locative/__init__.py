@@ -4,7 +4,7 @@ from http import HTTPStatus
 import logging
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
@@ -41,20 +41,20 @@ def _id(value: str) -> str:
 def _validate_test_mode(obj: dict) -> dict:
     """Validate that id is provided outside of test mode."""
     if ATTR_ID not in obj and obj[ATTR_TRIGGER] != "test":
-        raise vol.Invalid("Location id not specified")
+        raise probatio.Invalid("Location id not specified")
     return obj
 
 
-WEBHOOK_SCHEMA = vol.All(
-    vol.Schema(
+WEBHOOK_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Required(ATTR_LATITUDE): cv.latitude,
-            vol.Required(ATTR_LONGITUDE): cv.longitude,
-            vol.Required(ATTR_DEVICE_ID): cv.string,
-            vol.Required(ATTR_TRIGGER): cv.string,
-            vol.Optional(ATTR_ID): vol.All(cv.string, _id),
+            probatio.Required(ATTR_LATITUDE): cv.latitude,
+            probatio.Required(ATTR_LONGITUDE): cv.longitude,
+            probatio.Required(ATTR_DEVICE_ID): cv.string,
+            probatio.Required(ATTR_TRIGGER): cv.string,
+            probatio.Optional(ATTR_ID): probatio.All(cv.string, _id),
         },
-        extra=vol.ALLOW_EXTRA,
+        extra=probatio.ALLOW_EXTRA,
     ),
     _validate_test_mode,
 )
@@ -66,7 +66,7 @@ async def handle_webhook(
     """Handle incoming webhook from Locative."""
     try:
         data = WEBHOOK_SCHEMA(dict(await request.post()))
-    except vol.MultipleInvalid as error:
+    except probatio.MultipleInvalid as error:
         return web.Response(
             text=error.error_message, status=HTTPStatus.UNPROCESSABLE_ENTITY
         )

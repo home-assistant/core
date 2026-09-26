@@ -5,8 +5,8 @@ import logging
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.timer import (
     ATTR_FINISHES_AT,
@@ -325,7 +325,7 @@ async def test_time_remaining_trigger_validation(hass: HomeAssistant) -> None:
     )
 
     # Missing remaining option
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await async_validate_trigger_config(
             hass,
             [

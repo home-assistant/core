@@ -204,6 +204,7 @@ async def test_reauthentication(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"]["account"] == "spotify_1"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 

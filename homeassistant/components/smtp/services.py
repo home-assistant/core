@@ -1,6 +1,6 @@
 """Service registration for SMTP integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
@@ -24,24 +24,24 @@ from .const import (
 
 SERVICE_SEND_MESSAGE_SCHEMA = cv.make_entity_service_schema(
     {
-        vol.Optional(ATTR_TITLE): cv.string,
-        vol.Required(ATTR_MESSAGE): cv.string,
-        vol.Optional(ATTR_HTML): cv.string,
-        vol.Optional(ATTR_ATTACHMENTS): vol.All(
+        probatio.Optional(ATTR_TITLE): cv.string,
+        probatio.Required(ATTR_MESSAGE): cv.string,
+        probatio.Optional(ATTR_HTML): cv.string,
+        probatio.Optional(ATTR_ATTACHMENTS): probatio.All(
             cv.ensure_list,
             [
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(ATTR_MEDIA_SOURCE): MediaSelector(
+                        probatio.Required(ATTR_MEDIA_SOURCE): MediaSelector(
                             {"accept": ["*"]}
                         ),
-                        vol.Optional(ATTR_FILENAME): cv.string,
-                        vol.Optional(ATTR_CONTENT_ID): cv.string,
+                        probatio.Optional(ATTR_FILENAME): cv.string,
+                        probatio.Optional(ATTR_CONTENT_ID): cv.string,
                     }
                 )
             ],
         ),
-        vol.Optional(ATTR_PRIORITY): vol.In(
+        probatio.Optional(ATTR_PRIORITY): probatio.In(
             ["highest", "high", "normal", "low", "lowest"]
         ),
     }

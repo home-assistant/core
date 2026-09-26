@@ -5,23 +5,21 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
 import logging
-from typing import Any, cast, override
+import operator
+from typing import Any, override
 
 from uiprotect.data import (
     NVR,
     Camera,
+    Fob,
+    FobAwayState,
     Light,
     ModelType,
     ProtectAdoptableDeviceModel,
     ProtectDeviceModel,
     Sensor,
 )
-from uiprotect.data.public_devices import (
-    PublicDeviceModel,
-    PublicLight,
-    SensorFeatureCapability,
-)
-from uiprotect.utils import convert_to_datetime
+from uiprotect.data.public_devices import PublicDeviceModel, SensorFeatureCapability
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -42,6 +40,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
@@ -52,6 +51,7 @@ from .entity import (
     ProtectDeviceEntity,
     ProtectEntityDescription,
     ProtectEventMixin,
+    ProtectFobEntity,
     ProtectNVREntity,
     T,
     async_all_device_entities,
@@ -93,11 +93,6 @@ class ProtectSensorEventEntityDescription(
     ProtectEventMixin[T], SensorEntityDescription
 ):
     """Describes UniFi Protect Sensor entity."""
-
-
-def _get_last_motion_public(obj: PublicDeviceModel) -> datetime | None:
-    # Public API reports last motion as a JS epoch (ms); private side a datetime.
-    return convert_to_datetime(cast(PublicLight, obj).last_motion)
 
 
 def _get_uptime(obj: ProtectDeviceModel) -> datetime | None:
@@ -321,8 +316,8 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         native_unit_of_measurement=LIGHT_LUX,
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
-        ufp_value="stats.light.value",
-        ufp_enabled="is_light_sensor_enabled",
+        ufp_public_value="stats.light.value",
+        ufp_public_enabled_fn=operator.attrgetter("is_light_sensor_enabled"),
         ufp_capability=SensorFeatureCapability.LIGHT,
     ),
     ProtectSensorEntityDescription(
@@ -330,8 +325,8 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        ufp_value="stats.humidity.value",
-        ufp_enabled="is_humidity_sensor_enabled",
+        ufp_public_value="stats.humidity.value",
+        ufp_public_enabled_fn=operator.attrgetter("is_humidity_sensor_enabled"),
         ufp_capability=SensorFeatureCapability.HUMIDITY,
     ),
     ProtectSensorEntityDescription(
@@ -339,8 +334,8 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        ufp_value="stats.temperature.value",
-        ufp_enabled="is_temperature_sensor_enabled",
+        ufp_public_value="stats.temperature.value",
+        ufp_public_enabled_fn=operator.attrgetter("is_temperature_sensor_enabled"),
         ufp_capability=SensorFeatureCapability.TEMPERATURE,
     ),
     ProtectSensorEntityDescription[Sensor](
@@ -354,7 +349,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="door_last_trip_time",
         translation_key="last_open",
         device_class=SensorDeviceClass.TIMESTAMP,
-        ufp_value="open_status_changed_at",
+        ufp_public_value="open_status_changed_at_dt",
         ufp_capability=SensorFeatureCapability.OPEN,
         entity_registry_enabled_default=False,
     ),
@@ -362,7 +357,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="motion_last_trip_time",
         translation_key="last_motion_detected",
         device_class=SensorDeviceClass.TIMESTAMP,
-        ufp_value="motion_detected_at",
+        ufp_public_value="motion_detected_at_dt",
         ufp_capability=SensorFeatureCapability.MOTION,
         entity_registry_enabled_default=False,
     ),
@@ -371,7 +366,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         translation_key="last_tampering_detected",
         ufp_capability=SensorFeatureCapability.TAMPER,
         device_class=SensorDeviceClass.TIMESTAMP,
-        ufp_value="tampering_detected_at",
+        ufp_public_value="tampering_detected_at_dt",
         entity_registry_enabled_default=False,
     ),
     ProtectSensorEntityDescription(
@@ -518,7 +513,7 @@ LIGHT_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="motion_last_trip_time",
         translation_key="last_motion_detected",
         device_class=SensorDeviceClass.TIMESTAMP,
-        ufp_public_value_fn=_get_last_motion_public,
+        ufp_public_value="last_motion_dt",
         entity_registry_enabled_default=False,
     ),
     ProtectSensorEntityDescription(
@@ -591,6 +586,91 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
 }
 
 
+def _fob_battery_level(fob: Fob) -> int | None:
+    """Return the key fob battery percentage, if it has been reported."""
+    if (battery := fob.wireless_connection_state.battery_status) is not None:
+        return battery.percentage
+    return None
+
+
+def _fob_signal_strength(fob: Fob) -> int | None:
+    """Return the key fob Bluetooth signal strength, if it has been reported."""
+    if (signal := fob.wireless_connection_state.signal_state) is not None:
+        return signal.signal_strength
+    return None
+
+
+def _fob_status(fob: Fob) -> str | None:
+    """Return the key fob presence state.
+
+    ``FobAwayState`` carries an ``UNKNOWN`` member that the library coerces
+    unrecognized wire values into; map it to ``None`` (unknown state) rather
+    than a value the enum sensor's ``options`` do not list.
+    """
+    if (away_state := fob.away_state) is FobAwayState.UNKNOWN:
+        return None
+    return away_state.value.lower()
+
+
+@dataclass(frozen=True, kw_only=True)
+class ProtectFobSensorEntityDescription(SensorEntityDescription):
+    """Describes a UniFi Protect key fob sensor entity."""
+
+    value_fn: Callable[[Fob], int | str | None]
+
+
+FOB_SENSORS: tuple[ProtectFobSensorEntityDescription, ...] = (
+    ProtectFobSensorEntityDescription(
+        key="battery_level",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_fob_battery_level,
+    ),
+    ProtectFobSensorEntityDescription(
+        key="signal_strength",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_fob_signal_strength,
+    ),
+    ProtectFobSensorEntityDescription(
+        key="status",
+        translation_key="fob_status",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=["online", "recently_seen", "no_recent_heartbeat", "device_lost"],
+        value_fn=_fob_status,
+    ),
+)
+
+
+class ProtectFobSensor(ProtectFobEntity, SensorEntity):
+    """A sensor entity for a UniFi Protect key fob (Public API)."""
+
+    entity_description: ProtectFobSensorEntityDescription
+    _fob_state_attrs = ("_attr_available", "_attr_native_value")
+
+    def __init__(
+        self,
+        data: ProtectData,
+        fob: Fob,
+        description: ProtectFobSensorEntityDescription,
+    ) -> None:
+        """Initialize the key fob sensor."""
+        self.entity_description = description
+        self._attr_unique_id = f"{fob.mac}_{description.key}"
+        super().__init__(data, fob)
+
+    @callback
+    @override
+    def _async_update_from_fob(self, fob: Fob) -> None:
+        self._attr_native_value = self.entity_description.value_fn(fob)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
@@ -598,6 +678,34 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors for UniFi Protect integration."""
     data = entry.runtime_data
+
+    @callback
+    def _add_new_public_device(device: PublicDeviceModel) -> None:
+        if isinstance(device, Fob):
+            async_add_entities(
+                ProtectFobSensor(data, device, description)
+                for description in FOB_SENSORS
+            )
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
+    )
+
+    # The public bootstrap is primed only with an API key and supported NVR
+    # firmware; without it there are no fobs to expose.
+    api = data.api
+    if api.has_public_bootstrap:
+        async_add_entities(
+            ProtectFobSensor(data, fob, description)
+            for fob in api.public_bootstrap.fobs.values()
+            for description in FOB_SENSORS
+        )
+
+    # Everything below is driven by the private bootstrap, which public-only
+    # entries do not have.
+    if api.is_public_only:
+        return
+
     async_remove_unsupported_sense_entities(hass, Platform.SENSOR, data, SENSE_SENSORS)
 
     @callback

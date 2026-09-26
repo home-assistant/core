@@ -46,7 +46,10 @@ async def test_outlet_power_sensors_on_child_devices(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the outlet power sensors are placed on child devices of the power strip."""
-    for entity_id in ("sensor.outlet_1_power", "sensor.outlet_2_power"):
+    for entity_id in (
+        "sensor.power_strip_with_2_sockets_outlet_1_power",
+        "sensor.power_strip_with_2_sockets_outlet_2_power",
+    ):
         entity_entry = entity_registry.async_get(entity_id)
         assert entity_entry is not None
         child_device = device_registry.async_get(entity_entry.device_id)

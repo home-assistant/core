@@ -12,7 +12,7 @@ from ssl import SSLContext
 from typing import TYPE_CHECKING, Any, override
 
 import aiosmtplib
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -26,6 +26,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigSubentry
 from homeassistant.const import (
+    APPLICATION_NAME,
     CONF_DEBUG,
     CONF_PASSWORD,
     CONF_PORT,
@@ -35,6 +36,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     Platform,
+    __version__,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -61,6 +63,8 @@ from .const import (
     ATTR_PRIORITY,
     CONF_ENCRYPTION,
     CONF_ENTRY,
+    CONF_REPLY_TO,
+    CONF_REPLY_TO_NAME,
     CONF_SENDER_NAME,
     CONF_SERVER,
     DEFAULT_DEBUG,
@@ -90,19 +94,21 @@ RETRIES = 2
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_RECIPIENT): vol.All(cv.ensure_list, [vol.Email()]),
-        vol.Required(CONF_SENDER): vol.Email(),
-        vol.Optional(CONF_SERVER, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION): vol.In(
+        probatio.Required(CONF_RECIPIENT): probatio.All(
+            cv.ensure_list, [probatio.Email()]
+        ),
+        probatio.Required(CONF_SENDER): probatio.Email(),
+        probatio.Optional(CONF_SERVER, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        probatio.Optional(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION): probatio.In(
             ENCRYPTION_OPTIONS
         ),
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SENDER_NAME): cv.string,
-        vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        probatio.Optional(CONF_USERNAME): cv.string,
+        probatio.Optional(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_SENDER_NAME): cv.string,
+        probatio.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
 
@@ -299,7 +305,17 @@ class MailNotifyEntity(NotifyEntity):
             "To",
             email.utils.formataddr((self._subentry.title, self._subentry.unique_id)),
         )
+
+        if reply_to := self._entry.options.get(CONF_REPLY_TO):
+            msg.add_header(
+                "Reply-To",
+                email.utils.formataddr(
+                    (self._entry.options.get(CONF_REPLY_TO_NAME), reply_to)
+                ),
+            )
+
         msg.add_header("X-Mailer", "Home Assistant")
+        msg.add_header("User-Agent", f"{APPLICATION_NAME}/{__version__}")
         msg.add_header("Date", email.utils.format_datetime(dt_util.now()))
         msg.add_header("Message-Id", email.utils.make_msgid())
 

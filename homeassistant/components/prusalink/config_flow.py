@@ -6,9 +6,9 @@ from typing import Any, override
 
 from awesomeversion import AwesomeVersion, AwesomeVersionException
 from httpx import HTTPError, InvalidURL
+import probatio
 from pyprusalink import PrusaLink
 from pyprusalink.types import InvalidAuth, VersionInfo
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -21,13 +21,13 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
         # "maker" is currently hardcoded in the firmware
         # https://github.com/prusa3d/Prusa-Firmware-Buddy/blob/bfb0ffc745ee6546e7efdba618d0e7c0f4c909cd/lib/WUI/wui_api.h#L19
-        vol.Required(CONF_USERNAME, default="maker"): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME, default="maker"): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 

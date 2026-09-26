@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from http import HTTPStatus
 import logging
 from typing import Any, Concatenate, override
 
@@ -191,15 +190,16 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
     @override
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
-        try:
-            await self.client.smartglass.wake_up(self._console.id)
-        except HTTPStatusError as e:
-            if e.response.status_code == HTTPStatus.NOT_FOUND:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="turn_on_failed",
-                ) from e
-            raise
+        if (
+            err := await self.client.smartglass.wake_up(self._console.id)
+        ).status.error_code != "OK":
+            _LOGGER.debug(
+                "Xbox error: %s (%s)", err.status.error_message, err.status.error_code
+            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="turn_on_failed",
+            )
 
     @exception_handler
     @override

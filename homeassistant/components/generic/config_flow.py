@@ -12,7 +12,7 @@ from typing import Any, cast, override
 from aiohttp import web
 from httpx import HTTPStatusError, RequestError, TimeoutException
 import PIL.Image
-import voluptuous as vol
+import probatio
 import yarl
 
 from homeassistant.components import websocket_api
@@ -104,7 +104,7 @@ class InvalidStreamException(HomeAssistantError):
 
 def build_schema(
     is_options_flow: bool = False,
-) -> vol.Schema:
+) -> probatio.Schema:
     """Create schema for camera config setup."""
     rtsp_options = [
         SelectOptionDict(
@@ -115,34 +115,34 @@ def build_schema(
     ]
 
     advanced_section = {
-        vol.Required(CONF_FRAMERATE): vol.All(
-            vol.Range(min=0, min_included=False), cv.positive_float
+        probatio.Required(CONF_FRAMERATE): probatio.All(
+            probatio.Range(min=0, min_included=False), cv.positive_float
         ),
-        vol.Required(CONF_VERIFY_SSL): bool,
-        vol.Optional(CONF_RTSP_TRANSPORT): SelectSelector(
+        probatio.Required(CONF_VERIFY_SSL): bool,
+        probatio.Optional(CONF_RTSP_TRANSPORT): SelectSelector(
             SelectSelectorConfig(
                 options=rtsp_options,
                 mode=SelectSelectorMode.DROPDOWN,
             )
         ),
-        vol.Optional(CONF_AUTHENTICATION): vol.In(
+        probatio.Optional(CONF_AUTHENTICATION): probatio.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
     }
     spec = {
-        vol.Optional(CONF_STREAM_SOURCE): str,
-        vol.Optional(CONF_STILL_IMAGE_URL): str,
-        vol.Optional(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD): str,
-        vol.Required(SECTION_ADVANCED): section(
-            vol.Schema(advanced_section), {"collapsed": True}
+        probatio.Optional(CONF_STREAM_SOURCE): str,
+        probatio.Optional(CONF_STILL_IMAGE_URL): str,
+        probatio.Optional(CONF_USERNAME): str,
+        probatio.Optional(CONF_PASSWORD): str,
+        probatio.Required(SECTION_ADVANCED): section(
+            probatio.Schema(advanced_section), {"collapsed": True}
         ),
     }
     if is_options_flow:
-        advanced_section[vol.Optional(CONF_LIMIT_REFETCH_TO_URL_CHANGE)] = bool
-        advanced_section[vol.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS)] = bool
+        advanced_section[probatio.Optional(CONF_LIMIT_REFETCH_TO_URL_CHANGE)] = bool
+        advanced_section[probatio.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS)] = bool
 
-    return vol.Schema(spec)
+    return probatio.Schema(spec)
 
 
 def get_image_type(image: bytes) -> str | None:
@@ -347,7 +347,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         hass = self.hass
         if user_input:
-            # Secondary validation because serialised vol can't
+            # Secondary validation because serialised probatio can't
             # seem to handle this complexity:
             if not user_input.get(CONF_STILL_IMAGE_URL) and not user_input.get(
                 CONF_STREAM_SOURCE
@@ -400,9 +400,9 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         register_still_preview(self.hass)
         return self.async_show_form(
             step_id="user_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_CONFIRMED_OK, default=False): bool,
+                    probatio.Required(CONF_CONFIRMED_OK, default=False): bool,
                 }
             ),
             errors=None,
@@ -433,7 +433,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
         hass = self.hass
 
         if user_input:
-            # Secondary validation because serialised vol can't
+            # Secondary validation because serialised probatio can't
             # seem to handle this complexity:
             if not user_input.get(CONF_STILL_IMAGE_URL) and not user_input.get(
                 CONF_STREAM_SOURCE
@@ -495,9 +495,9 @@ class GenericOptionsFlowHandler(OptionsFlow):
         register_still_preview(self.hass)
         return self.async_show_form(
             step_id="user_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_CONFIRMED_OK, default=False): bool,
+                    probatio.Required(CONF_CONFIRMED_OK, default=False): bool,
                 }
             ),
             errors=None,
@@ -549,10 +549,10 @@ class CameraImagePreview(HomeAssistantView):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "generic_camera/start_preview",
-        vol.Required("flow_id"): str,
-        vol.Optional("flow_type"): vol.Any("config_flow", "options_flow"),
-        vol.Optional("user_input"): dict,
+        probatio.Required("type"): "generic_camera/start_preview",
+        probatio.Required("flow_id"): str,
+        probatio.Optional("flow_type"): probatio.Any("config_flow", "options_flow"),
+        probatio.Optional("user_input"): dict,
     }
 )
 @websocket_api.async_response

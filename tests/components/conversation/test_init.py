@@ -3,9 +3,9 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import (
@@ -207,7 +207,7 @@ async def test_agent_id_validator_invalid_agent(
     hass: HomeAssistant, init_components
 ) -> None:
     """Test validating agent id."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         conversation.agent_id_validator("invalid_agent")
 
     conversation.agent_id_validator(conversation.HOME_ASSISTANT_AGENT)

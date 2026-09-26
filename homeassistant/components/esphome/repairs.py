@@ -2,7 +2,7 @@
 
 from typing import cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.core import HomeAssistant
@@ -56,7 +56,7 @@ class DeviceConflictRepair(ESPHomeRepair):
         if user_input is None:
             return self.async_show_form(
                 step_id="migrate",
-                data_schema=vol.Schema({}),
+                data_schema=probatio.Schema({}),
             )
         entry_id = self.entry_id
         await async_replace_device(self.hass, entry_id, self.stored_mac, self.mac)
@@ -70,7 +70,7 @@ class DeviceConflictRepair(ESPHomeRepair):
         if user_input is None:
             return self.async_show_form(
                 step_id="manual",
-                data_schema=vol.Schema({}),
+                data_schema=probatio.Schema({}),
             )
         self.hass.config_entries.async_schedule_reload(self.entry_id)
         return self.async_create_entry(data={})

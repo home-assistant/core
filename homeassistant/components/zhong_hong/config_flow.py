@@ -3,7 +3,7 @@
 from functools import partial
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from zhong_hong_hvac.hub import ZhongHongGateway
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -19,11 +19,11 @@ from .const import (
     LOGGER,
 )
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(
             CONF_GATEWAY_ADDRESS, default=DEFAULT_GATEWAY_ADDRESS
         ): cv.positive_int,
     }
@@ -75,8 +75,8 @@ class ZhongHongConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             # A gateway is identified by the endpoint it is reached on and the
-            # address it answers to, all three of which are needed to talk
-            # to it.
+            # address it answers to, all three of which the coordinator needs
+            # to talk to it.
             self._async_abort_entries_match(
                 {
                     CONF_HOST: user_input[CONF_HOST],

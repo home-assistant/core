@@ -4,6 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any, override
 
+import probatio
 from pyezvizapi.client import EzvizClient
 from pyezvizapi.exceptions import (
     AuthTestResultFailed,
@@ -13,7 +14,6 @@ from pyezvizapi.exceptions import (
     PyEzvizError,
 )
 from pyezvizapi.test_cam_rtsp import TestRTSPAuth
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -203,11 +203,11 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                     options=DEFAULT_OPTIONS,
                 )
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Required(CONF_URL, default=EU_URL): vol.In(
+                probatio.Required(CONF_USERNAME): str,
+                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(CONF_URL, default=EU_URL): probatio.In(
                     [EU_URL, RUSSIA_URL, CONF_CUSTOMIZE]
                 ),
             }
@@ -256,9 +256,9 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                     options=DEFAULT_OPTIONS,
                 )
 
-        data_schema_custom_url = vol.Schema(
+        data_schema_custom_url = probatio.Schema(
             {
-                vol.Required(CONF_URL, default=EU_URL): str,
+                probatio.Required(CONF_URL, default=EU_URL): str,
             }
         )
 
@@ -308,10 +308,10 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
-        discovered_camera_schema = vol.Schema(
+        discovered_camera_schema = probatio.Schema(
             {
-                vol.Required(CONF_USERNAME, default=DEFAULT_CAMERA_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
+                probatio.Required(CONF_USERNAME, default=DEFAULT_CAMERA_USERNAME): str,
+                probatio.Required(CONF_PASSWORD): str,
             }
         )
 
@@ -375,10 +375,12 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=auth_data,
                 )
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_USERNAME, default=entry.title): vol.In([entry.title]),
-                vol.Required(CONF_PASSWORD): str,
+                probatio.Required(CONF_USERNAME, default=entry.title): probatio.In(
+                    [entry.title]
+                ),
+                probatio.Required(CONF_PASSWORD): str,
             }
         )
 
@@ -399,15 +401,15 @@ class EzvizOptionsFlowHandler(OptionsFlowWithReload):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        options = vol.Schema(
+        options = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_TIMEOUT,
                     default=self.config_entry.options.get(
                         CONF_TIMEOUT, DEFAULT_TIMEOUT
                     ),
                 ): int,
-                vol.Optional(
+                probatio.Optional(
                     CONF_FFMPEG_ARGUMENTS,
                     default=self.config_entry.options.get(
                         CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS

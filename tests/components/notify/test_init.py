@@ -3,8 +3,8 @@
 import copy
 from unittest.mock import MagicMock
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import notify
 from homeassistant.components.notify import (
@@ -125,7 +125,7 @@ async def test_send_message_service(
     entity.send_message_mock_calls.reset_mock()
 
     # Test schema: `None` message fails
-    with pytest.raises(vol.Invalid) as exc:
+    with pytest.raises(probatio.Invalid) as exc:
         await hass.services.async_call(
             notify.DOMAIN,
             notify.SERVICE_SEND_MESSAGE,
@@ -135,7 +135,7 @@ async def test_send_message_service(
     entity.send_message_mock_calls.assert_not_called()
 
     # Test schema: No message fails
-    with pytest.raises(vol.Invalid) as exc:
+    with pytest.raises(probatio.Invalid) as exc:
         await hass.services.async_call(
             notify.DOMAIN, notify.SERVICE_SEND_MESSAGE, {"entity_id": "notify.test"}
         )

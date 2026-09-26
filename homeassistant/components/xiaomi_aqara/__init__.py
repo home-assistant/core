@@ -1,10 +1,10 @@
 """Support for Xiaomi Gateways."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
+from dataclasses import dataclass, field
 import logging
 
-import voluptuous as vol
+import probatio
 from xiaomi_gateway import AsyncXiaomiGatewayMulticast, XiaomiGateway
 
 from homeassistant.components import persistent_notification
@@ -17,20 +17,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
-from .const import (
-    CONF_INTERFACE,
-    CONF_KEY,
-    CONF_SID,
-    DEFAULT_DISCOVERY_RETRY,
-    DOMAIN,
-    KEY_SETUP_LOCK,
-    KEY_UNSUB_STOP,
-    LISTENER_KEY,
-)
+from .const import CONF_INTERFACE, CONF_KEY, CONF_SID, DEFAULT_DISCOVERY_RETRY, DOMAIN
 
 type XiaomiAqaraConfigEntry = ConfigEntry[XiaomiGateway]
 
@@ -55,19 +47,23 @@ SERVICE_STOP_RINGTONE = "stop_ringtone"
 SERVICE_ADD_DEVICE = "add_device"
 SERVICE_REMOVE_DEVICE = "remove_device"
 
-SERVICE_SCHEMA_PLAY_RINGTONE = vol.Schema(
+SERVICE_SCHEMA_PLAY_RINGTONE = probatio.Schema(
     {
-        vol.Required(ATTR_RINGTONE_ID): vol.All(
-            vol.Coerce(int), vol.NotIn([9, 14, 15, 16, 17, 18, 19])
+        probatio.Required(ATTR_RINGTONE_ID): probatio.All(
+            probatio.Coerce(int), probatio.NotIn([9, 14, 15, 16, 17, 18, 19])
         ),
-        vol.Optional(ATTR_RINGTONE_VOL): vol.All(
-            vol.Coerce(int), vol.Clamp(min=0, max=100)
+        probatio.Optional(ATTR_RINGTONE_VOL): probatio.All(
+            probatio.Coerce(int), probatio.Clamp(min=0, max=100)
         ),
     }
 )
 
-SERVICE_SCHEMA_REMOVE_DEVICE = vol.Schema(
-    {vol.Required(ATTR_DEVICE_ID): vol.All(cv.string, vol.Length(min=14, max=14))}
+SERVICE_SCHEMA_REMOVE_DEVICE = probatio.Schema(
+    {
+        probatio.Required(ATTR_DEVICE_ID): probatio.All(
+            cv.string, probatio.Length(min=14, max=14)
+        )
+    }
 )
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -112,7 +108,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         gateway: XiaomiGateway = call.data[ATTR_GW_MAC]
         gateway.write_to_hub(gateway.sid, remove_device=device_id)
 
-    gateway_only_schema = _add_gateway_to_schema(hass, vol.Schema({}))
+    gateway_only_schema = _add_gateway_to_schema(hass, probatio.Schema({}))
 
     hass.services.register(
         DOMAIN,
@@ -139,10 +135,24 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+@dataclass
+class XiaomiAqaraData:
+    """Multicast listener shared by every gateway."""
+
+    setup_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    multicast: AsyncXiaomiGatewayMulticast | None = None
+    unsub_stop: CALLBACK_TYPE | None = None
+
+
+# One multicast listener serves every gateway, so it is shared between config
+# entries rather than owned by any one of them.
+XIAOMI_AQARA_DATA: HassKey[XiaomiAqaraData] = HassKey(DOMAIN)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: XiaomiAqaraConfigEntry) -> bool:
     """Set up the xiaomi aqara components from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    setup_lock = hass.data[DOMAIN].setdefault(KEY_SETUP_LOCK, asyncio.Lock())
+    if (data := hass.data.get(XIAOMI_AQARA_DATA)) is None:
+        data = hass.data[XIAOMI_AQARA_DATA] = XiaomiAqaraData()
 
     # Connect to Xiaomi Aqara Gateway
     xiaomi_gateway = await hass.async_add_executor_job(
@@ -157,12 +167,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: XiaomiAqaraConfigEntry) 
     )
     entry.runtime_data = xiaomi_gateway
 
-    async with setup_lock:
-        if LISTENER_KEY not in hass.data[DOMAIN]:
+    async with data.setup_lock:
+        if (multicast := data.multicast) is None:
             multicast = AsyncXiaomiGatewayMulticast(
                 interface=entry.data[CONF_INTERFACE]
             )
-            hass.data[DOMAIN][LISTENER_KEY] = multicast
+            data.multicast = multicast
 
             # start listining for local pushes (only once)
             await multicast.start_listen()
@@ -174,10 +184,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: XiaomiAqaraConfigEntry) 
                 _LOGGER.debug("Shutting down Xiaomi Gateway Listener")
                 multicast.stop_listen()
 
-            unsub = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_xiaomi)
-            hass.data[DOMAIN][KEY_UNSUB_STOP] = unsub
+            data.unsub_stop = hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, stop_xiaomi
+            )
 
-    multicast = hass.data[DOMAIN][LISTENER_KEY]
     multicast.register_gateway(entry.data[CONF_HOST], xiaomi_gateway.multicast_callback)
     _LOGGER.debug(
         "Gateway with host '%s' connected, listening for broadcasts",
@@ -219,17 +229,22 @@ async def async_unload_entry(
 
     if not hass.config_entries.async_loaded_entries(DOMAIN):
         # No gateways left, stop Xiaomi socket
-        unsub_stop = hass.data[DOMAIN].pop(KEY_UNSUB_STOP)
-        unsub_stop()
+        data = hass.data[XIAOMI_AQARA_DATA]
+        if data.unsub_stop is not None:
+            data.unsub_stop()
+            data.unsub_stop = None
         _LOGGER.debug("Shutting down Xiaomi Gateway Listener")
-        multicast = hass.data[DOMAIN].pop(LISTENER_KEY)
-        multicast.stop_listen()
+        if data.multicast is not None:
+            data.multicast.stop_listen()
+            data.multicast = None
 
     return unload_ok
 
 
-def _add_gateway_to_schema(hass: HomeAssistant, schema: vol.Schema) -> vol.Schema:
-    """Extend a voluptuous schema with a gateway validator."""
+def _add_gateway_to_schema(
+    hass: HomeAssistant, schema: probatio.Schema
+) -> probatio.Schema:
+    """Extend a probatio schema with a gateway validator."""
 
     def gateway(sid: str) -> XiaomiGateway:
         """Convert sid to a gateway."""
@@ -240,7 +255,7 @@ def _add_gateway_to_schema(hass: HomeAssistant, schema: vol.Schema) -> vol.Schem
             if entry_gateway.sid == sid:
                 return entry_gateway
 
-        raise vol.Invalid(f"Unknown gateway sid {sid}")
+        raise probatio.Invalid(f"Unknown gateway sid {sid}")
 
     kwargs = {}
     gateways = [
@@ -251,4 +266,4 @@ def _add_gateway_to_schema(hass: HomeAssistant, schema: vol.Schema) -> vol.Schem
     if len(gateways) == 1:
         kwargs["default"] = gateways[0].sid
 
-    return schema.extend({vol.Required(ATTR_GW_MAC, **kwargs): gateway})
+    return schema.extend({probatio.Required(ATTR_GW_MAC, **kwargs): gateway})

@@ -15,6 +15,7 @@ from homeassistant.components.yoto.const import (
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
+    OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
@@ -151,7 +152,7 @@ async def test_setup_retries_when_implementation_missing(
 @pytest.mark.parametrize(
     "side_effect",
     [
-        aiohttp.ClientError("boom"),
+        OAuth2TokenRequestConnectionError(domain=DOMAIN),
         OAuth2TokenRequestError(request_info=Mock(), domain=DOMAIN),
     ],
 )

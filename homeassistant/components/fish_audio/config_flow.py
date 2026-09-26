@@ -5,7 +5,7 @@ from typing import Any, override
 
 from fishaudio import AsyncFishAudio
 from fishaudio.exceptions import AuthenticationError, FishAudioError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_USER,
@@ -61,26 +61,26 @@ from .error import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_api_key_schema(default: str | None = None) -> vol.Schema:
+def get_api_key_schema(default: str | None = None) -> probatio.Schema:
     """Return the schema for API key input."""
-    return vol.Schema(
-        {vol.Required(CONF_API_KEY, default=default or vol.UNDEFINED): str}
+    return probatio.Schema(
+        {probatio.Required(CONF_API_KEY, default=default or probatio.UNDEFINED): str}
     )
 
 
-def get_filter_schema(options: dict[str, Any]) -> vol.Schema:
+def get_filter_schema(options: dict[str, Any]) -> probatio.Schema:
     """Return the schema for the filter step."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(CONF_TITLE, default=options.get(CONF_TITLE, "")): str,
-            vol.Optional(
+            probatio.Optional(CONF_TITLE, default=options.get(CONF_TITLE, "")): str,
+            probatio.Optional(
                 CONF_LANGUAGE, default=options.get(CONF_LANGUAGE, "Any")
             ): LanguageSelector(
                 LanguageSelectorConfig(
                     languages=TTS_SUPPORTED_LANGUAGES,
                 )
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_SORT_BY, default=options.get(CONF_SORT_BY, "task_count")
             ): SelectSelector(
                 SelectSelectorConfig(
@@ -89,7 +89,7 @@ def get_filter_schema(options: dict[str, Any]) -> vol.Schema:
                     translation_key="sort_by",
                 )
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_SELF_ONLY, default=options.get(CONF_SELF_ONLY, False)
             ): bool,
         }
@@ -99,11 +99,11 @@ def get_filter_schema(options: dict[str, Any]) -> vol.Schema:
 def get_model_selection_schema(
     options: dict[str, Any],
     model_options: list[SelectOptionDict],
-) -> vol.Schema:
+) -> probatio.Schema:
     """Return the schema for the model selection step."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(
+            probatio.Required(
                 CONF_VOICE_ID,
                 default=options.get(CONF_VOICE_ID, ""),
             ): SelectSelector(
@@ -113,7 +113,7 @@ def get_model_selection_schema(
                     custom_value=True,
                 )
             ),
-            vol.Required(
+            probatio.Required(
                 CONF_BACKEND,
                 default=options.get(CONF_BACKEND, "s2-pro"),
             ): SelectSelector(
@@ -124,7 +124,7 @@ def get_model_selection_schema(
                     mode=SelectSelectorMode.DROPDOWN,
                 )
             ),
-            vol.Required(
+            probatio.Required(
                 CONF_LATENCY,
                 default=options.get(CONF_LATENCY, "balanced"),
             ): SelectSelector(
@@ -136,7 +136,7 @@ def get_model_selection_schema(
                     mode=SelectSelectorMode.DROPDOWN,
                 )
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_SPEED,
                 default=options.get(CONF_SPEED, DEFAULT_SPEED),
             ): NumberSelector(
@@ -149,9 +149,9 @@ def get_model_selection_schema(
             ),
             # Name field is no longer allowed in config flow schemas
             # pylint: disable-next=home-assistant-config-flow-name-field
-            vol.Required(
+            probatio.Required(
                 CONF_NAME,
-                default=options.get(CONF_NAME) or vol.UNDEFINED,
+                default=options.get(CONF_NAME) or probatio.UNDEFINED,
             ): str,
         }
     )
@@ -362,6 +362,7 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
                     self._get_reconfigure_subentry(),
                     data=self.config_data,
                     unique_id=unique_id,
+                    reason="reconfigure_successful",
                 )
 
         return self.async_show_form(

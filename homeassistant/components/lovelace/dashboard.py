@@ -7,7 +7,7 @@ from pathlib import Path
 import time
 from typing import TYPE_CHECKING, Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.frontend import async_panel_exists
@@ -15,7 +15,7 @@ from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, storage
-from homeassistant.helpers.json import json_bytes, json_fragment
+from homeassistant.helpers.json import cached_json_fragment, json_fragment
 from homeassistant.util.yaml import Secrets, load_yaml_dict
 
 from .const import (
@@ -182,7 +182,7 @@ class LovelaceStorage(LovelaceConfig):
         """Build JSON representation of the config."""
         if self._data is None or self._data["config"] is None:
             raise ConfigNotFound
-        self._json_config = json_fragment(json_bytes(self._data["config"]))
+        self._json_config = cached_json_fragment(self._data["config"])
         return self._json_config
 
 
@@ -260,7 +260,7 @@ class LovelaceYAML(LovelaceConfig):
         except FileNotFoundError:
             raise ConfigNotFound from None
 
-        json = json_fragment(json_bytes(config))
+        json = cached_json_fragment(config)
         self._cache = (config, time.time(), json)
         return is_updated, config, json
 
@@ -276,8 +276,8 @@ def _config_info(mode: str, config: dict[str, Any]) -> dict[str, Any]:
 class DashboardsCollection(collection.DictStorageCollection):
     """Collection of dashboards."""
 
-    CREATE_SCHEMA = vol.Schema(STORAGE_DASHBOARD_CREATE_FIELDS)
-    UPDATE_SCHEMA = vol.Schema(STORAGE_DASHBOARD_UPDATE_FIELDS)
+    CREATE_SCHEMA = probatio.Schema(STORAGE_DASHBOARD_CREATE_FIELDS)
+    UPDATE_SCHEMA = probatio.Schema(STORAGE_DASHBOARD_UPDATE_FIELDS)
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the dashboards collection."""
@@ -293,7 +293,7 @@ class DashboardsCollection(collection.DictStorageCollection):
         allow_single_word = data.pop(CONF_ALLOW_SINGLE_WORD, False)
 
         if not allow_single_word and "-" not in url_path:
-            raise vol.Invalid("Url path needs to contain a hyphen (-)")
+            raise probatio.Invalid("Url path needs to contain a hyphen (-)")
 
         if async_panel_exists(self.hass, url_path):
             raise HomeAssistantError(

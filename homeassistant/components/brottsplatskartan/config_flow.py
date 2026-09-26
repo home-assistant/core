@@ -4,7 +4,7 @@ from typing import Any, override
 import uuid
 
 from brottsplatskartan import AREAS
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
@@ -12,12 +12,12 @@ from homeassistant.helpers import selector
 
 from .const import CONF_APP_ID, CONF_AREA, DEFAULT_NAME, DOMAIN
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_LOCATION): selector.LocationSelector(
+        probatio.Optional(CONF_LOCATION): selector.LocationSelector(
             selector.LocationSelectorConfig(radius=False, icon="")
         ),
-        vol.Optional(CONF_AREA): selector.SelectSelector(
+        probatio.Optional(CONF_AREA): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=AREAS,
                 mode=selector.SelectSelectorMode.DROPDOWN,

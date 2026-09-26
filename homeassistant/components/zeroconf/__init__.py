@@ -6,7 +6,7 @@ import logging
 import sys
 from typing import Any, cast
 
-import voluptuous as vol
+import probatio
 from zeroconf import InterfaceChoice, IPVersion
 from zeroconf.asyncio import AsyncServiceInfo
 
@@ -48,20 +48,20 @@ MAX_PROPERTY_VALUE_LEN = 230
 # Dns label max length
 MAX_NAME_LEN = 63
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             cv.deprecated(CONF_DEFAULT_INTERFACE),
             cv.deprecated(CONF_IPV6),
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Optional(CONF_DEFAULT_INTERFACE): cv.boolean,
-                    vol.Optional(CONF_IPV6, default=DEFAULT_IPV6): cv.boolean,
+                    probatio.Optional(CONF_DEFAULT_INTERFACE): cv.boolean,
+                    probatio.Optional(CONF_IPV6, default=DEFAULT_IPV6): cv.boolean,
                 }
             ),
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

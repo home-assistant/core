@@ -5,7 +5,7 @@ import re
 from typing import override
 
 from openwrt.ubus import Ubus
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -25,12 +25,12 @@ DHCP_SOFTWARES = ["dnsmasq", "odhcpd", "none"]
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_DHCP_SOFTWARE, default=DEFAULT_DHCP_SOFTWARE): vol.In(
-            DHCP_SOFTWARES
-        ),
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Optional(
+            CONF_DHCP_SOFTWARE, default=DEFAULT_DHCP_SOFTWARE
+        ): probatio.In(DHCP_SOFTWARES),
     }
 )
 

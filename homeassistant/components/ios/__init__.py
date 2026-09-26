@@ -1,11 +1,10 @@
 """Native Home Assistant iOS app component."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from http import HTTPStatus
-from typing import Any
+from typing import Any, cast
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
@@ -41,6 +40,7 @@ from .const import (
     CONF_ACTION_SHOW_IN_WATCH,
     CONF_ACTION_USE_CUSTOM_COLORS,
     DOMAIN,
+    IOS_DATA,
 )
 
 CONF_PUSH = "push"
@@ -93,61 +93,61 @@ PERMISSIONS = [ATTR_LOCATION_PERMISSION, ATTR_NOTIFICATIONS_PERMISSION]
 
 ATTR_DEVICES = "devices"
 
-PUSH_ACTION_SCHEMA = vol.Schema(
+PUSH_ACTION_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PUSH_ACTIONS_IDENTIFIER): vol.Upper,
-        vol.Required(CONF_PUSH_ACTIONS_TITLE): cv.string,
-        vol.Optional(
+        probatio.Required(CONF_PUSH_ACTIONS_IDENTIFIER): probatio.Upper,
+        probatio.Required(CONF_PUSH_ACTIONS_TITLE): cv.string,
+        probatio.Optional(
             CONF_PUSH_ACTIONS_ACTIVATION_MODE, default=ATTR_BACKGROUND
-        ): vol.In(ACTIVATION_MODES),
-        vol.Optional(
+        ): probatio.In(ACTIVATION_MODES),
+        probatio.Optional(
             CONF_PUSH_ACTIONS_AUTHENTICATION_REQUIRED, default=False
         ): cv.boolean,
-        vol.Optional(CONF_PUSH_ACTIONS_DESTRUCTIVE, default=False): cv.boolean,
-        vol.Optional(CONF_PUSH_ACTIONS_BEHAVIOR, default=ATTR_DEFAULT_BEHAVIOR): vol.In(
-            BEHAVIORS
-        ),
-        vol.Optional(CONF_PUSH_ACTIONS_TEXT_INPUT_BUTTON_TITLE): cv.string,
-        vol.Optional(CONF_PUSH_ACTIONS_TEXT_INPUT_PLACEHOLDER): cv.string,
+        probatio.Optional(CONF_PUSH_ACTIONS_DESTRUCTIVE, default=False): cv.boolean,
+        probatio.Optional(
+            CONF_PUSH_ACTIONS_BEHAVIOR, default=ATTR_DEFAULT_BEHAVIOR
+        ): probatio.In(BEHAVIORS),
+        probatio.Optional(CONF_PUSH_ACTIONS_TEXT_INPUT_BUTTON_TITLE): cv.string,
+        probatio.Optional(CONF_PUSH_ACTIONS_TEXT_INPUT_PLACEHOLDER): cv.string,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-PUSH_ACTION_LIST_SCHEMA = vol.All(cv.ensure_list, [PUSH_ACTION_SCHEMA])
+PUSH_ACTION_LIST_SCHEMA = probatio.All(cv.ensure_list, [PUSH_ACTION_SCHEMA])
 
-PUSH_CATEGORY_SCHEMA = vol.Schema(
+PUSH_CATEGORY_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PUSH_CATEGORIES_NAME): cv.string,
-        vol.Required(CONF_PUSH_CATEGORIES_IDENTIFIER): vol.Lower,
-        vol.Required(CONF_PUSH_CATEGORIES_ACTIONS): PUSH_ACTION_LIST_SCHEMA,
+        probatio.Required(CONF_PUSH_CATEGORIES_NAME): cv.string,
+        probatio.Required(CONF_PUSH_CATEGORIES_IDENTIFIER): probatio.Lower,
+        probatio.Required(CONF_PUSH_CATEGORIES_ACTIONS): PUSH_ACTION_LIST_SCHEMA,
     }
 )
 
-PUSH_CATEGORY_LIST_SCHEMA = vol.All(cv.ensure_list, [PUSH_CATEGORY_SCHEMA])
+PUSH_CATEGORY_LIST_SCHEMA = probatio.All(cv.ensure_list, [PUSH_CATEGORY_SCHEMA])
 
-ACTION_SCHEMA = vol.Schema(
+ACTION_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ACTION_NAME): cv.string,
-        vol.Optional(CONF_ACTION_BACKGROUND_COLOR): cv.string,
-        vol.Optional(CONF_ACTION_LABEL): {
-            vol.Optional(CONF_ACTION_LABEL_TEXT): cv.string,
-            vol.Optional(CONF_ACTION_LABEL_COLOR): cv.string,
+        probatio.Required(CONF_ACTION_NAME): cv.string,
+        probatio.Optional(CONF_ACTION_BACKGROUND_COLOR): cv.string,
+        probatio.Optional(CONF_ACTION_LABEL): {
+            probatio.Optional(CONF_ACTION_LABEL_TEXT): cv.string,
+            probatio.Optional(CONF_ACTION_LABEL_COLOR): cv.string,
         },
-        vol.Optional(CONF_ACTION_ICON): {
-            vol.Optional(CONF_ACTION_ICON_ICON): cv.string,
-            vol.Optional(CONF_ACTION_ICON_COLOR): cv.string,
+        probatio.Optional(CONF_ACTION_ICON): {
+            probatio.Optional(CONF_ACTION_ICON_ICON): cv.string,
+            probatio.Optional(CONF_ACTION_ICON_COLOR): cv.string,
         },
-        vol.Optional(CONF_ACTION_SHOW_IN_CARPLAY): cv.boolean,
-        vol.Optional(CONF_ACTION_SHOW_IN_WATCH): cv.boolean,
-        vol.Optional(CONF_ACTION_USE_CUSTOM_COLORS): cv.boolean,
+        probatio.Optional(CONF_ACTION_SHOW_IN_CARPLAY): cv.boolean,
+        probatio.Optional(CONF_ACTION_SHOW_IN_WATCH): cv.boolean,
+        probatio.Optional(CONF_ACTION_USE_CUSTOM_COLORS): cv.boolean,
     },
 )
 
-ACTION_LIST_SCHEMA = vol.All(cv.ensure_list, [ACTION_SCHEMA])
+ACTION_LIST_SCHEMA = probatio.All(cv.ensure_list, [ACTION_SCHEMA])
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             cv.deprecated(CONF_PUSH),
             {
                 CONF_PUSH: {CONF_PUSH_CATEGORIES: PUSH_CATEGORY_LIST_SCHEMA},
@@ -155,57 +155,59 @@ CONFIG_SCHEMA = vol.Schema(
             },
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-IDENTIFY_DEVICE_SCHEMA = vol.Schema(
+IDENTIFY_DEVICE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_NAME): cv.string,
-        vol.Required(ATTR_DEVICE_LOCALIZED_MODEL): cv.string,
-        vol.Required(ATTR_DEVICE_MODEL): cv.string,
-        vol.Required(ATTR_DEVICE_PERMANENT_ID): cv.string,
-        vol.Required(ATTR_DEVICE_SYSTEM_VERSION): cv.string,
-        vol.Required(ATTR_DEVICE_TYPE): cv.string,
-        vol.Required(ATTR_DEVICE_SYSTEM_NAME): cv.string,
+        probatio.Required(ATTR_DEVICE_NAME): cv.string,
+        probatio.Required(ATTR_DEVICE_LOCALIZED_MODEL): cv.string,
+        probatio.Required(ATTR_DEVICE_MODEL): cv.string,
+        probatio.Required(ATTR_DEVICE_PERMANENT_ID): cv.string,
+        probatio.Required(ATTR_DEVICE_SYSTEM_VERSION): cv.string,
+        probatio.Required(ATTR_DEVICE_TYPE): cv.string,
+        probatio.Required(ATTR_DEVICE_SYSTEM_NAME): cv.string,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-IDENTIFY_DEVICE_SCHEMA_CONTAINER = vol.All(dict, IDENTIFY_DEVICE_SCHEMA)
+IDENTIFY_DEVICE_SCHEMA_CONTAINER = probatio.All(dict, IDENTIFY_DEVICE_SCHEMA)
 
-IDENTIFY_APP_SCHEMA = vol.Schema(
+IDENTIFY_APP_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_APP_BUNDLE_IDENTIFIER): cv.string,
-        vol.Required(ATTR_APP_BUILD_NUMBER): cv.positive_int,
-        vol.Optional(ATTR_APP_VERSION_NUMBER): cv.string,
+        probatio.Required(ATTR_APP_BUNDLE_IDENTIFIER): cv.string,
+        probatio.Required(ATTR_APP_BUILD_NUMBER): cv.positive_int,
+        probatio.Optional(ATTR_APP_VERSION_NUMBER): cv.string,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-IDENTIFY_APP_SCHEMA_CONTAINER = vol.All(dict, IDENTIFY_APP_SCHEMA)
+IDENTIFY_APP_SCHEMA_CONTAINER = probatio.All(dict, IDENTIFY_APP_SCHEMA)
 
-IDENTIFY_BATTERY_SCHEMA = vol.Schema(
+IDENTIFY_BATTERY_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_BATTERY_LEVEL): cv.positive_int,
-        vol.Required(ATTR_BATTERY_STATE): vol.In(BATTERY_STATES),
+        probatio.Required(ATTR_BATTERY_LEVEL): cv.positive_int,
+        probatio.Required(ATTR_BATTERY_STATE): probatio.In(BATTERY_STATES),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-IDENTIFY_BATTERY_SCHEMA_CONTAINER = vol.All(dict, IDENTIFY_BATTERY_SCHEMA)
+IDENTIFY_BATTERY_SCHEMA_CONTAINER = probatio.All(dict, IDENTIFY_BATTERY_SCHEMA)
 
-IDENTIFY_SCHEMA = vol.Schema(
+IDENTIFY_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE): IDENTIFY_DEVICE_SCHEMA_CONTAINER,
-        vol.Required(ATTR_BATTERY): IDENTIFY_BATTERY_SCHEMA_CONTAINER,
-        vol.Required(ATTR_PUSH_TOKEN): cv.string,
-        vol.Required(ATTR_APP): IDENTIFY_APP_SCHEMA_CONTAINER,
-        vol.Required(ATTR_PERMISSIONS): vol.All(cv.ensure_list, [vol.In(PERMISSIONS)]),
-        vol.Required(ATTR_PUSH_ID): cv.string,
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Optional(ATTR_PUSH_SOUNDS): list,
+        probatio.Required(ATTR_DEVICE): IDENTIFY_DEVICE_SCHEMA_CONTAINER,
+        probatio.Required(ATTR_BATTERY): IDENTIFY_BATTERY_SCHEMA_CONTAINER,
+        probatio.Required(ATTR_PUSH_TOKEN): cv.string,
+        probatio.Required(ATTR_APP): IDENTIFY_APP_SCHEMA_CONTAINER,
+        probatio.Required(ATTR_PERMISSIONS): probatio.All(
+            cv.ensure_list, [probatio.In(PERMISSIONS)]
+        ),
+        probatio.Required(ATTR_PUSH_ID): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Optional(ATTR_PUSH_SOUNDS): list,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 CONFIGURATION_FILE = ".ios.conf"
@@ -217,7 +219,7 @@ def devices_with_push(hass: HomeAssistant) -> dict[str, str]:
     """Return a dictionary of push enabled targets."""
     return {
         device_name: device.get(ATTR_PUSH_ID)
-        for device_name, device in hass.data[DOMAIN][ATTR_DEVICES].items()
+        for device_name, device in hass.data[IOS_DATA][ATTR_DEVICES].items()
         if device.get(ATTR_PUSH_ID) is not None
     }
 
@@ -226,21 +228,21 @@ def enabled_push_ids(hass: HomeAssistant) -> list[str]:
     """Return a list of push enabled target push IDs."""
     return [
         device.get(ATTR_PUSH_ID)
-        for device in hass.data[DOMAIN][ATTR_DEVICES].values()
+        for device in hass.data[IOS_DATA][ATTR_DEVICES].values()
         if device.get(ATTR_PUSH_ID) is not None
     ]
 
 
 def devices(hass: HomeAssistant) -> dict[str, dict[str, Any]]:
     """Return a dictionary of all identified devices."""
-    return hass.data[DOMAIN][ATTR_DEVICES]  # type: ignore[no-any-return]
+    return hass.data[IOS_DATA][ATTR_DEVICES]
 
 
 def device_name_for_push_id(hass: HomeAssistant, push_id: str) -> str | None:
     """Return the device name for the push ID."""
-    for device_name, device in hass.data[DOMAIN][ATTR_DEVICES].items():
+    for device_name, device in hass.data[IOS_DATA][ATTR_DEVICES].items():
         if device.get(ATTR_PUSH_ID) is push_id:
-            return device_name  # type: ignore[no-any-return]
+            return device_name
     return None
 
 
@@ -248,8 +250,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the iOS component."""
     conf: ConfigType | None = config.get(DOMAIN)
 
-    ios_config = await hass.async_add_executor_job(
-        load_json_object, hass.config.path(CONFIGURATION_FILE)
+    ios_config = cast(
+        dict[str, dict[str, Any]],
+        await hass.async_add_executor_job(
+            load_json_object, hass.config.path(CONFIGURATION_FILE)
+        ),
     )
 
     if ios_config == {}:
@@ -260,7 +265,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     ios_config[CONF_USER] = conf_user
 
-    hass.data[DOMAIN] = ios_config
+    hass.data[IOS_DATA] = ios_config
 
     # No entry support for notify component yet
     discovery.load_platform(hass, Platform.NOTIFY, DOMAIN, {}, config)
@@ -282,8 +287,10 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     hass.http.register_view(iOSIdentifyDeviceView(hass.config.path(CONFIGURATION_FILE)))
-    hass.http.register_view(iOSPushConfigView(hass.data[DOMAIN][CONF_USER][CONF_PUSH]))
-    hass.http.register_view(iOSConfigView(hass.data[DOMAIN][CONF_USER]))
+    hass.http.register_view(
+        iOSPushConfigView(hass.data[IOS_DATA][CONF_USER][CONF_PUSH])
+    )
+    hass.http.register_view(iOSConfigView(hass.data[IOS_DATA][CONF_USER]))
 
     return True
 
@@ -341,12 +348,12 @@ class iOSIdentifyDeviceView(HomeAssistantView):
 
         device_id = data[ATTR_DEVICE_ID]
 
-        hass.data[DOMAIN][ATTR_DEVICES][device_id] = data
+        hass.data[IOS_DATA][ATTR_DEVICES][device_id] = data
 
         async_dispatcher_send(hass, f"{DOMAIN}.{device_id}", data)
 
         try:
-            save_json(self._config_path, hass.data[DOMAIN])
+            save_json(self._config_path, hass.data[IOS_DATA])
         except HomeAssistantError:
             return self.json_message(
                 "Error saving device.", HTTPStatus.INTERNAL_SERVER_ERROR

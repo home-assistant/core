@@ -6,7 +6,7 @@ from typing import Any, Final, override
 
 from aioswitcher.device import SwitcherBase
 from aioswitcher.device.tools import validate_token
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN, CONF_USERNAME
@@ -17,10 +17,10 @@ from .utils import async_discover_devices
 _LOGGER = logging.getLogger(__name__)
 
 
-CONFIG_SCHEMA: Final = vol.Schema(
+CONFIG_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_TOKEN): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_TOKEN): str,
     }
 )
 

@@ -1,6 +1,6 @@
 """Provides device automations for control of LG webOS TV."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
@@ -24,7 +24,7 @@ from .triggers.turn_on import (
 TRIGGER_TYPES = {TURN_ON_PLATFORM_TYPE}
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
+        probatio.Required(CONF_TYPE): probatio.In(TRIGGER_TYPES),
     }
 )
 

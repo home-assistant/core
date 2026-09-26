@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 from urllib.error import HTTPError, URLError
 
-import voluptuous as vol
+import probatio
 from youless_api import YoulessAPI
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -14,7 +14,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 
 
 class YoulessConfigFlow(ConfigFlow, domain=DOMAIN):

@@ -6,7 +6,7 @@ import logging
 from typing import Any
 import uuid
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
@@ -36,23 +36,29 @@ from .coordinator import TodoistConfigEntry, TodoistCoordinator, flatten_async_p
 
 _LOGGER = logging.getLogger(__name__)
 
-NEW_TASK_SERVICE_SCHEMA = vol.Schema(
+NEW_TASK_SERVICE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONTENT): cv.string,
-        vol.Optional(DESCRIPTION): cv.string,
-        vol.Optional(PROJECT_NAME, default="inbox"): vol.All(cv.string, vol.Lower),
-        vol.Optional(SECTION_NAME): vol.All(cv.string, vol.Lower),
-        vol.Optional(LABELS): cv.ensure_list_csv,
-        vol.Optional(ASSIGNEE): cv.string,
-        vol.Optional(PRIORITY): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
-        vol.Exclusive(DUE_DATE_STRING, "due_date"): cv.string,
-        vol.Optional(DUE_DATE_LANG): vol.All(cv.string, vol.In(DUE_DATE_VALID_LANGS)),
-        vol.Exclusive(DUE_DATE, "due_date"): cv.string,
-        vol.Exclusive(REMINDER_DATE_STRING, "reminder_date"): cv.string,
-        vol.Optional(REMINDER_DATE_LANG): vol.All(
-            cv.string, vol.In(DUE_DATE_VALID_LANGS)
+        probatio.Required(CONTENT): cv.string,
+        probatio.Optional(DESCRIPTION): cv.string,
+        probatio.Optional(PROJECT_NAME, default="inbox"): probatio.All(
+            cv.string, probatio.Lower
         ),
-        vol.Exclusive(REMINDER_DATE, "reminder_date"): cv.string,
+        probatio.Optional(SECTION_NAME): probatio.All(cv.string, probatio.Lower),
+        probatio.Optional(LABELS): cv.ensure_list_csv,
+        probatio.Optional(ASSIGNEE): cv.string,
+        probatio.Optional(PRIORITY): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1, max=4)
+        ),
+        probatio.Exclusive(DUE_DATE_STRING, "due_date"): cv.string,
+        probatio.Optional(DUE_DATE_LANG): probatio.All(
+            cv.string, probatio.In(DUE_DATE_VALID_LANGS)
+        ),
+        probatio.Exclusive(DUE_DATE, "due_date"): cv.string,
+        probatio.Exclusive(REMINDER_DATE_STRING, "reminder_date"): cv.string,
+        probatio.Optional(REMINDER_DATE_LANG): probatio.All(
+            cv.string, probatio.In(DUE_DATE_VALID_LANGS)
+        ),
+        probatio.Exclusive(REMINDER_DATE, "reminder_date"): cv.string,
     }
 )
 

@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -57,24 +57,24 @@ from .schemas import (
     UNITS_SELECTOR,
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_DESTINATION): cv.string,
-        vol.Required(CONF_ORIGIN): cv.string,
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_DESTINATION): cv.string,
+        probatio.Required(CONF_ORIGIN): cv.string,
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_LANGUAGE): LANGUAGE_SELECTOR,
-        vol.Optional(CONF_AVOID): AVOID_SELECTOR,
-        vol.Optional(CONF_TRAFFIC_MODEL): TRAFFIC_MODEL_SELECTOR,
-        vol.Optional(CONF_TRANSIT_MODE): TRANSIT_MODE_SELECTOR,
-        vol.Optional(
+        probatio.Optional(CONF_LANGUAGE): LANGUAGE_SELECTOR,
+        probatio.Optional(CONF_AVOID): AVOID_SELECTOR,
+        probatio.Optional(CONF_TRAFFIC_MODEL): TRAFFIC_MODEL_SELECTOR,
+        probatio.Optional(CONF_TRANSIT_MODE): TRANSIT_MODE_SELECTOR,
+        probatio.Optional(
             CONF_TRANSIT_ROUTING_PREFERENCE
         ): TRANSIT_ROUTING_PREFERENCE_SELECTOR,
-        vol.Required(CONF_MODE): SelectSelector(
+        probatio.Required(CONF_MODE): SelectSelector(
             SelectSelectorConfig(
                 options=TRAVEL_MODES,
                 sort=True,
@@ -82,9 +82,9 @@ OPTIONS_SCHEMA = vol.Schema(
                 translation_key=CONF_MODE,
             )
         ),
-        vol.Required(CONF_UNITS): UNITS_SELECTOR,
-        vol.Required(CONF_TIME_TYPE): TIME_TYPE_SELECTOR,
-        vol.Optional(CONF_TIME): TimeSelector(),
+        probatio.Required(CONF_UNITS): UNITS_SELECTOR,
+        probatio.Required(CONF_TIME_TYPE): TIME_TYPE_SELECTOR,
+        probatio.Optional(CONF_TIME): TimeSelector(),
     }
 )
 

@@ -5,7 +5,7 @@ import logging
 import re
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import text
 from homeassistant.components.text import TextEntity, TextEntityCapabilityAttribute
@@ -62,34 +62,36 @@ MQTT_TEXT_ATTRIBUTES_BLOCKED = frozenset(
 def valid_text_size_configuration(config: ConfigType) -> ConfigType:
     """Validate that the text length configuration is valid, throws if it isn't."""
     if config[CONF_MIN] > config[CONF_MAX]:
-        raise vol.Invalid("text length min must be <= max")
+        raise probatio.Invalid("text length min must be <= max")
     if config[CONF_MAX] > MAX_LENGTH_STATE_STATE:
-        raise vol.Invalid(f"max text length must be <= {MAX_LENGTH_STATE_STATE}")
+        raise probatio.Invalid(f"max text length must be <= {MAX_LENGTH_STATE_STATE}")
 
     return config
 
 
 _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
-        vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_MAX, default=MAX_LENGTH_STATE_STATE): cv.positive_int,
-        vol.Optional(CONF_MIN, default=0): cv.positive_int,
-        vol.Optional(CONF_MODE, default=text.TextMode.TEXT): vol.In(
+        probatio.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_MAX, default=MAX_LENGTH_STATE_STATE): cv.positive_int,
+        probatio.Optional(CONF_MIN, default=0): cv.positive_int,
+        probatio.Optional(CONF_MODE, default=text.TextMode.TEXT): probatio.In(
             [text.TextMode.TEXT, text.TextMode.PASSWORD]
         ),
-        vol.Optional(CONF_PATTERN): cv.is_regex,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_PATTERN): cv.is_regex,
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 
-DISCOVERY_SCHEMA = vol.All(
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+DISCOVERY_SCHEMA = probatio.All(
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=probatio.REMOVE_EXTRA),
     valid_text_size_configuration,
 )
 
-PLATFORM_SCHEMA_MODERN = vol.All(_PLATFORM_SCHEMA_BASE, valid_text_size_configuration)
+PLATFORM_SCHEMA_MODERN = probatio.All(
+    _PLATFORM_SCHEMA_BASE, valid_text_size_configuration
+)
 
 
 async def async_setup_entry(

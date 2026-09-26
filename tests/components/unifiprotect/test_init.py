@@ -25,10 +25,7 @@ from homeassistant.components.unifiprotect.const import (
     PLATFORMS,
     PUBLIC_ONLY_PLATFORMS,
 )
-from homeassistant.components.unifiprotect.data import (
-    ProtectData,
-    async_ufp_instance_for_config_entry_ids,
-)
+from homeassistant.components.unifiprotect.data import ProtectData
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -472,61 +469,6 @@ async def test_remove_config_entry_device_rejects_child_device(
         == "Failed to remove device entry, rejected by integration"
     )
     assert device_registry.async_get(child_device.id)
-
-
-@pytest.mark.parametrize(
-    ("mock_entries", "expected_result"),
-    [
-        pytest.param(
-            [
-                MockConfigEntry(
-                    domain=DOMAIN,
-                    entry_id="1",
-                    data={},
-                ),
-                MockConfigEntry(
-                    domain="other_domain",
-                    entry_id="2",
-                    data={},
-                ),
-            ],
-            "mock_api_instance_1",
-            id="one_matching_domain",
-        ),
-        pytest.param(
-            [
-                MockConfigEntry(
-                    domain="other_domain",
-                    entry_id="1",
-                    data={},
-                ),
-                MockConfigEntry(
-                    domain="other_domain",
-                    entry_id="2",
-                    data={},
-                ),
-            ],
-            None,
-            id="no_matching_domain",
-        ),
-    ],
-)
-async def test_async_ufp_instance_for_config_entry_ids(
-    hass: HomeAssistant,
-    mock_entries: list[MockConfigEntry],
-    expected_result: str | None,
-) -> None:
-    """Test async_ufp_instance_for_config_entry_ids with various configs."""
-
-    for index, entry in enumerate(mock_entries):
-        entry.add_to_hass(hass)
-        entry.runtime_data = Mock(api=f"mock_api_instance_{index + 1}")
-
-    entry_ids = {entry.entry_id for entry in mock_entries}
-
-    result = async_ufp_instance_for_config_entry_ids(hass, entry_ids)
-
-    assert result == expected_result
 
 
 @pytest.mark.parametrize("mock_user_can_write_nvr", [True], indirect=True)

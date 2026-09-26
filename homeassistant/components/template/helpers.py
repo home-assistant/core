@@ -4,8 +4,8 @@ from collections.abc import Callable
 import logging
 from typing import Any
 
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant.components import blueprint
 from homeassistant.config_entries import ConfigEntry
@@ -143,8 +143,8 @@ async def validate_actions_and_conditions_config(
     """
 
     def _humanize(err: Exception, data: Any) -> str:
-        """Humanize vol.Invalid, stringify other exceptions."""
-        if isinstance(err, vol.Invalid):
+        """Humanize probatio.Invalid, stringify other exceptions."""
+        if isinstance(err, probatio.Invalid):
             return humanize_error(data, err)
         return str(err)
 
@@ -154,7 +154,7 @@ async def validate_actions_and_conditions_config(
             config[CONF_CONDITIONS] = await async_validate_conditions_config(
                 hass, condition_config
             )
-        except (vol.Invalid, HomeAssistantError) as err:
+        except (probatio.Invalid, HomeAssistantError) as err:
             if not breadcrumb:
                 breadcrumb = _get_config_breadcrumbs(config)
             _LOGGER.error(
@@ -173,7 +173,7 @@ async def validate_actions_and_conditions_config(
                 config[script_option] = await async_validate_actions_config(
                     hass, script_config
                 )
-            except (vol.Invalid, HomeAssistantError) as err:
+            except (probatio.Invalid, HomeAssistantError) as err:
                 if not breadcrumb:
                     breadcrumb = _get_config_breadcrumbs(config)
                 _LOGGER.error(
@@ -260,7 +260,7 @@ async def async_setup_template_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     state_entity_cls: type[TemplateEntity],
-    config_schema: vol.Schema | vol.All,
+    config_schema: probatio.Schema | probatio.All,
     replace_value_template: bool = False,
     script_options: tuple[str, ...] | None = None,
 ) -> None:
@@ -288,7 +288,7 @@ def async_setup_template_preview[T: TemplateEntity](
     name: str,
     config: ConfigType,
     state_entity_cls: type[T],
-    schema: vol.Schema | vol.All,
+    schema: probatio.Schema | probatio.All,
     replace_value_template: bool = False,
 ) -> T:
     """Setup the Template preview."""

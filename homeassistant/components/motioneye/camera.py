@@ -21,7 +21,7 @@ from motioneye_client.const import (
     KEY_TEXT_OVERLAY_RIGHT,
     KEY_TEXT_OVERLAY_TIMESTAMP,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.mjpeg import (
     CONF_MJPEG_URL,
@@ -58,7 +58,7 @@ from .entity import MotionEyeEntity
 
 PLATFORMS = [Platform.CAMERA]
 
-SCHEMA_TEXT_OVERLAY = vol.In(
+SCHEMA_TEXT_OVERLAY = probatio.In(
     [
         KEY_TEXT_OVERLAY_DISABLED,
         KEY_TEXT_OVERLAY_TIMESTAMP,
@@ -66,14 +66,14 @@ SCHEMA_TEXT_OVERLAY = vol.In(
         KEY_TEXT_OVERLAY_CAMERA_NAME,
     ]
 )
-SCHEMA_SERVICE_SET_TEXT = vol.Schema(
-    vol.All(
+SCHEMA_SERVICE_SET_TEXT = probatio.Schema(
+    probatio.All(
         cv.make_entity_service_schema(
             {
-                vol.Optional(KEY_TEXT_OVERLAY_LEFT): SCHEMA_TEXT_OVERLAY,
-                vol.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT): cv.string,
-                vol.Optional(KEY_TEXT_OVERLAY_RIGHT): SCHEMA_TEXT_OVERLAY,
-                vol.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT): cv.string,
+                probatio.Optional(KEY_TEXT_OVERLAY_LEFT): SCHEMA_TEXT_OVERLAY,
+                probatio.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT): cv.string,
+                probatio.Optional(KEY_TEXT_OVERLAY_RIGHT): SCHEMA_TEXT_OVERLAY,
+                probatio.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT): cv.string,
             },
         ),
         cv.has_at_least_one_key(
@@ -123,7 +123,7 @@ async def async_setup_entry(
     )
     platform.async_register_entity_service(
         SERVICE_ACTION,
-        {vol.Required(CONF_ACTION): cv.string},
+        {probatio.Required(CONF_ACTION): cv.string},
         "async_request_action",
     )
     platform.async_register_entity_service(

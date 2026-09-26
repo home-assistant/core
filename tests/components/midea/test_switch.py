@@ -4,10 +4,12 @@ from collections.abc import Callable
 from unittest.mock import patch
 
 from midealocal.const import DeviceType
+from midealocal.devices.a1 import DeviceAttributes as A1Attributes
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
 from midealocal.devices.c3 import DeviceAttributes as C3Attributes
 from midealocal.devices.cc import DeviceAttributes as CCAttributes
 from midealocal.devices.cf import DeviceAttributes as CFAttributes
+from midealocal.devices.dc import DeviceAttributes as DCAttributes
 from midealocal.exceptions import SocketException
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -104,6 +106,14 @@ async def _assert_service_call(
         ),
         pytest.param(
             DummyDevice(
+                DeviceType.A1,
+                attributes={A1Attributes.pump: False},
+                capabilities={"pump": True},
+            ),
+            id="a1",
+        ),
+        pytest.param(
+            DummyDevice(
                 DeviceType.CC,
                 attributes={
                     CCAttributes.power: True,
@@ -124,6 +134,10 @@ async def _assert_service_call(
         pytest.param(
             DummyDevice(DeviceType.C2, attributes={"child_lock": True}),
             id="c2",
+        ),
+        pytest.param(
+            DummyDevice(DeviceType.DC, attributes={DCAttributes.ai_switch: False}),
+            id="dc",
         ),
     ],
 )
@@ -183,6 +197,40 @@ async def test_ac_switch_services(
     )
 
 
+async def test_dc_ai_switch_services(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test DC ai_switch service calls reach the device."""
+    device = DummyDevice(
+        DeviceType.DC,
+        attributes={DCAttributes.ai_switch: False},
+    )
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry, device)
+
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_ai_switch"]
+
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == "off"
+
+    await _assert_service_call(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_TURN_ON,
+        [("set_attribute", DCAttributes.ai_switch, True)],
+        device,
+    )
+    await _assert_service_call(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_TURN_OFF,
+        [("set_attribute", DCAttributes.ai_switch, False)],
+        device,
+    )
+
+
 CHILD_LOCK_DEVICE_TYPES = [
     DeviceType.X34,
     DeviceType.A1,
@@ -226,6 +274,65 @@ async def test_child_lock_switch_created_and_services(
         [("set_attribute", "child_lock", True)],
         device,
     )
+
+
+async def test_a1_pump_services(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test the A1 dehumidifier pump switch."""
+    device = DummyDevice(
+        DeviceType.A1,
+        attributes={A1Attributes.pump: False},
+        capabilities={"pump": True},
+    )
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry, device)
+
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_pump"]
+
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == "off"
+
+    await _assert_service_call(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_TURN_ON,
+        [("set_attribute", A1Attributes.pump, True)],
+        device,
+    )
+    await hass.async_block_till_done()
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == "on"
+
+    await _assert_service_call(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_TURN_OFF,
+        [("set_attribute", A1Attributes.pump, False)],
+        device,
+    )
+    await hass.async_block_till_done()
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == "off"
+
+
+async def test_a1_pump_not_created_without_capability(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test that unsupported A1 pump switches are not created."""
+    device = DummyDevice(
+        DeviceType.A1,
+        attributes={A1Attributes.pump: False},
+        capabilities={"pump": False},
+    )
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry, device)
+
+    assert f"{TEST_DEVICE_ID}_pump" not in entity_entries(hass, config_entry)
 
 
 async def test_switch_unknown_when_attribute_becomes_non_bool(

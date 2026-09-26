@@ -52,7 +52,7 @@ async def test_config_flow(
 
 
 def get_suggested(schema, key):
-    """Get suggested value for key in voluptuous schema."""
+    """Get suggested value for key in probatio schema."""
     for k in schema:
         if k == key:
             if k.description is None or "suggested_value" not in k.description:

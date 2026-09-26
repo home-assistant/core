@@ -7,7 +7,7 @@ import logging
 from typing import Any, override
 
 from greencell_client.utils import GreencellUtils
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
@@ -168,9 +168,9 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="select",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_SERIAL_NUMBER): vol.In(
+                    probatio.Required(CONF_SERIAL_NUMBER): probatio.In(
                         list(self._discovered.keys())
                     )
                 }

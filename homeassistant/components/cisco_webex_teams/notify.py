@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from webexpythonsdk import ApiError, WebexAPI, exceptions
 
 from homeassistant.components.notify import (
@@ -21,7 +21,10 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ROOM_ID = "room_id"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_TOKEN): cv.string, vol.Required(CONF_ROOM_ID): cv.string}
+    {
+        probatio.Required(CONF_TOKEN): cv.string,
+        probatio.Required(CONF_ROOM_ID): cv.string,
+    }
 )
 
 

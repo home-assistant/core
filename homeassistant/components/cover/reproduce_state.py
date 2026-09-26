@@ -22,11 +22,11 @@ from homeassistant.util.enum import try_parse_enum
 from . import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DOMAIN,
     CoverEntityFeature,
     CoverEntityStateAttribute,
     CoverState,
 )
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

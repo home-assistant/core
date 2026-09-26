@@ -1,14 +1,12 @@
 """Component to interface with locks that can be controlled remotely."""
 
 from datetime import timedelta
-from enum import IntFlag
 import functools as ft
 import logging
 import re
 from typing import TYPE_CHECKING, Any, final, override
 
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
@@ -24,13 +22,18 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
-from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN, LockEntityStateAttribute, LockState
+from .const import (
+    DATA_COMPONENT,
+    DOMAIN,
+    LockEntityFeature,
+    LockEntityStateAttribute,
+    LockState,
+)
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[LockEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -40,16 +43,6 @@ ATTR_CHANGED_BY = "changed_by"
 CONF_DEFAULT_CODE = "default_code"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
-LOCK_SERVICE_SCHEMA = cv.make_entity_service_schema(
-    {vol.Optional(ATTR_CODE): cv.string}
-)
-
-
-class LockEntityFeature(IntFlag):
-    """Supported features of the lock entity."""
-
-    OPEN = 1
 
 
 PROP_TO_ATTR = {
@@ -68,18 +61,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await component.async_setup(config)
 
-    component.async_register_entity_service(
-        SERVICE_UNLOCK, LOCK_SERVICE_SCHEMA, "async_handle_unlock_service"
-    )
-    component.async_register_entity_service(
-        SERVICE_LOCK, LOCK_SERVICE_SCHEMA, "async_handle_lock_service"
-    )
-    component.async_register_entity_service(
-        SERVICE_OPEN,
-        LOCK_SERVICE_SCHEMA,
-        "async_handle_open_service",
-        [LockEntityFeature.OPEN],
-    )
+    async_setup_services(hass)
 
     return True
 

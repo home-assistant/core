@@ -5,10 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyscorpiontrack import ScorpionTrackConnectionError, ScorpionTrackShare
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.scorpiontrack.const import DEFAULT_SCAN_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_NOT_HOME, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -32,14 +33,14 @@ async def test_device_tracker_state(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_removed_vehicle_becomes_unavailable(
+async def test_removed_vehicle_removes_tracker(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_share: ScorpionTrackShare,
     mock_scorpiontrack_client: AsyncMock,
 ) -> None:
-    """Test a tracker becomes unavailable if its vehicle leaves the share."""
+    """Test a tracker is removed if its vehicle leaves the share."""
     await setup_integration(hass, mock_config_entry)
 
     mock_scorpiontrack_client.async_get_share.return_value = replace(
@@ -49,9 +50,7 @@ async def test_removed_vehicle_becomes_unavailable(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("device_tracker.ab12_cde")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert hass.states.get("device_tracker.ab12_cde") is None
 
 
 async def test_connection_error_makes_tracker_unavailable(
@@ -75,14 +74,20 @@ async def test_connection_error_makes_tracker_unavailable(
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_new_vehicles_after_setup_do_not_add_tracker_entities(
+@pytest.mark.parametrize(
+    ("latitude", "expected_state"),
+    [(51.5074, STATE_NOT_HOME), (None, STATE_UNAVAILABLE)],
+)
+async def test_new_vehicle_tracker_availability(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_share: ScorpionTrackShare,
     mock_scorpiontrack_client: AsyncMock,
+    latitude: float | None,
+    expected_state: str,
 ) -> None:
-    """Vehicles that appear later should wait for a future dynamic-device PR."""
+    """Test a newly discovered tracker still requires coordinates."""
     await setup_integration(hass, mock_config_entry)
 
     new_vehicle = replace(
@@ -91,6 +96,7 @@ async def test_new_vehicles_after_setup_do_not_add_tracker_entities(
         name="Tiguan",
         registration="EF34 ABC",
         model="Tiguan",
+        position=replace(mock_share.vehicles[0].position, latitude=latitude),
     )
     mock_scorpiontrack_client.async_get_share.return_value = replace(
         mock_share, vehicles=(*mock_share.vehicles, new_vehicle)
@@ -99,4 +105,6 @@ async def test_new_vehicles_after_setup_do_not_add_tracker_entities(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.ef34_abc") is None
+    state = hass.states.get("device_tracker.ef34_abc")
+    assert state is not None
+    assert state.state == expected_state

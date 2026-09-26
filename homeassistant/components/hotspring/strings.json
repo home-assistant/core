@@ -3,7 +3,6 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "sna_device": "The discovered device is a Spa Network Adapter (SNA). Only the Home Network Adapter (HNA) can be configured.",
       "unique_id_mismatch": "The MAC address does not match the configured device. Please ensure you reconfigure against the same device."
     },
@@ -44,6 +43,26 @@
     "number": {
       "target_temperature": {
         "name": "Target temperature"
+      }
+    },
+    "select": {
+      "heating_mode": {
+        "name": "Heating mode",
+        "state": {
+          "auto_saver": "Auto saver",
+          "auto_with_boost": "Auto with boost",
+          "chill": "Chill",
+          "heat_saver": "Heat saver",
+          "heat_with_boost": "Heat with boost"
+        }
+      },
+      "jet": {
+        "name": "Jet {jet}",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "off": "[%key:common::state::off%]"
+        }
       }
     },
     "sensor": {

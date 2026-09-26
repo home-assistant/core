@@ -3,7 +3,6 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unique_id_mismatch": "The reauthorized account does not match the original Yoto account. Please log in with the same account."
     },
     "create_entry": {
@@ -81,9 +80,9 @@
     },
     "sensor": {
       "card_insertion_state": {
-        "name": "Card slot",
+        "name": "Content source",
         "state": {
-          "none": "Empty",
+          "none": "None",
           "physical": "Physical card",
           "remote": "Remote",
           "streaming": "Streaming"

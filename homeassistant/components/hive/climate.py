@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from apyhiveapi import Hive
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import (
     PRESET_BOOST,
@@ -70,12 +70,12 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_BOOST_HEATING_ON,
         {
-            vol.Required(ATTR_TIME_PERIOD): vol.All(
+            probatio.Required(ATTR_TIME_PERIOD): probatio.All(
                 cv.time_period,
                 cv.positive_timedelta,
                 lambda td: td.total_seconds() // 60,
             ),
-            vol.Optional(ATTR_TEMPERATURE, default="25.0"): vol.Coerce(float),
+            probatio.Optional(ATTR_TEMPERATURE, default="25.0"): probatio.Coerce(float),
         },
         "async_heating_boost_on",
     )

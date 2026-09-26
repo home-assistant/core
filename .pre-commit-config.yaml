@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.5
+    rev: v0.16.8
     hooks:
       - id: ruff-check
         args:
@@ -18,7 +18,7 @@ repos:
         exclude_types: [csv, json, html]
         exclude: ^tests/fixtures/|homeassistant/generated/|tests/components/.*/snapshots/
   - repo: https://github.com/zizmorcore/zizmor-pre-commit
-    rev: v1.29.0
+    rev: v1.30.1
     hooks:
       - id: zizmor
         args:
@@ -95,7 +95,7 @@ repos:
         pass_filenames: false
         language: script
         types: [text]
-        files: ^(AGENTS\.md|\.claude/skills/(?!github-pr-reviewer/).+/SKILL\.md|\.github/copilot-instructions\.md|script/gen_copilot_instructions\.py)$
+        files: ^(AGENTS\.md|\.github/copilot-instructions\.md|script/gen_copilot_instructions\.py)$
       - id: hassfest
         name: hassfest
         entry: script/run-in-env.sh python3 -m script.hassfest

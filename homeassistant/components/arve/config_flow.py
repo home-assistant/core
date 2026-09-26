@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from asyncarve import Arve, ArveConnectionError, ArveCustomer
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_SECRET
@@ -45,10 +45,10 @@ class ArveConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ACCESS_TOKEN): str,
-                    vol.Required(CONF_CLIENT_SECRET): str,
+                    probatio.Required(CONF_ACCESS_TOKEN): str,
+                    probatio.Required(CONF_CLIENT_SECRET): str,
                 }
             ),
             errors=errors,

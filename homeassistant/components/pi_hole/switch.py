@@ -4,14 +4,15 @@ import logging
 from typing import Any, override
 
 from hole.exceptions import HoleError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import SERVICE_DISABLE, SERVICE_DISABLE_ATTR_DURATION
+from .const import DOMAIN, SERVICE_DISABLE, SERVICE_DISABLE_ATTR_DURATION
 from .coordinator import PiHoleConfigEntry
 from .entity import PiHoleEntity
 
@@ -41,7 +42,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_DISABLE,
         {
-            vol.Required(SERVICE_DISABLE_ATTR_DURATION): vol.All(
+            probatio.Required(SERVICE_DISABLE_ATTR_DURATION): probatio.All(
                 cv.time_period_str, cv.positive_timedelta
             ),
         },
@@ -78,9 +79,12 @@ class PiHoleSwitch(PiHoleEntity, SwitchEntity):
         try:
             await self.api.enable()
             await self.async_update()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HoleError as err:
-            _LOGGER.error("Unable to enable Pi-hole: %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="enable_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -101,6 +105,9 @@ class PiHoleSwitch(PiHoleEntity, SwitchEntity):
         try:
             await self.api.disable(duration_seconds)
             await self.async_update()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HoleError as err:
-            _LOGGER.error("Unable to disable Pi-hole: %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="disable_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err

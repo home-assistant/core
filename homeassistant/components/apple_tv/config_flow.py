@@ -8,12 +8,12 @@ import logging
 from random import randrange
 from typing import Any, Self, override
 
+import probatio
 from pyatv import exceptions, pair, scan
 from pyatv.const import DeviceModel, PairingRequirement, Protocol
 from pyatv.convert import model_str, protocol_str
 from pyatv.helpers import get_unique_id
 from pyatv.interface import BaseConfig, PairingHandler
-import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
@@ -42,15 +42,15 @@ _LOGGER = logging.getLogger(__name__)
 
 DEVICE_INPUT = "device_input"
 
-INPUT_PIN_SCHEMA = vol.Schema({vol.Required(CONF_PIN, default=""): cv.string})
+INPUT_PIN_SCHEMA = probatio.Schema({probatio.Required(CONF_PIN, default=""): cv.string})
 
 DEFAULT_START_OFF = False
 
 DISCOVERY_AGGREGATION_TIME = 15  # seconds
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_START_OFF, default=DEFAULT_START_OFF): bool,
+        probatio.Optional(CONF_START_OFF, default=DEFAULT_START_OFF): bool,
     }
 )
 OPTIONS_FLOW = {
@@ -202,7 +202,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(DEVICE_INPUT): str}),
+            data_schema=probatio.Schema({probatio.Required(DEVICE_INPUT): str}),
             errors=errors,
         )
 

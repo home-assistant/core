@@ -2,8 +2,8 @@
 
 from typing import Any, override
 
+import probatio
 from pyemoncms import EmoncmsClient
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -125,11 +125,11 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_URL): str,
-                        vol.Required(CONF_API_KEY): str,
-                        vol.Required(
+                        probatio.Required(CONF_URL): str,
+                        probatio.Required(CONF_API_KEY): str,
+                        probatio.Required(
                             SYNC_MODE, default=SYNC_MODE_MANUAL
                         ): SelectSelector(
                             SelectSelectorConfig(
@@ -168,9 +168,9 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         return self.async_show_form(
             step_id="choose_feeds",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_ONLY_INCLUDE_FEEDID,
                         default=include_only_feeds,
                     ): selector({"select": self.dropdown}),
@@ -208,10 +208,10 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_URL): str,
-                        vol.Required(CONF_API_KEY): str,
+                        probatio.Required(CONF_URL): str,
+                        probatio.Required(CONF_API_KEY): str,
                     }
                 ),
                 user_input or reconfig_entry.data,
@@ -262,9 +262,9 @@ class EmoncmsOptionsFlow(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_ONLY_INCLUDE_FEEDID, default=include_only_feeds
                     ): selector({"select": dropdown}),
                 }

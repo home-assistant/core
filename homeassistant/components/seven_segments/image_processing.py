@@ -7,7 +7,7 @@ import subprocess
 from typing import override
 
 from PIL import Image
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
@@ -36,15 +36,15 @@ DEFAULT_BINARY = "ssocr"
 
 PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_EXTRA_ARGUMENTS, default=""): cv.string,
-        vol.Optional(CONF_DIGITS): cv.positive_int,
-        vol.Optional(CONF_HEIGHT, default=0): cv.positive_int,
-        vol.Optional(CONF_SSOCR_BIN, default=DEFAULT_BINARY): cv.string,
-        vol.Optional(CONF_THRESHOLD, default=0): cv.positive_int,
-        vol.Optional(CONF_ROTATE, default=0): cv.positive_int,
-        vol.Optional(CONF_WIDTH, default=0): cv.positive_int,
-        vol.Optional(CONF_X_POS, default=0): cv.string,
-        vol.Optional(CONF_Y_POS, default=0): cv.positive_int,
+        probatio.Optional(CONF_EXTRA_ARGUMENTS, default=""): cv.string,
+        probatio.Optional(CONF_DIGITS): cv.positive_int,
+        probatio.Optional(CONF_HEIGHT, default=0): cv.positive_int,
+        probatio.Optional(CONF_SSOCR_BIN, default=DEFAULT_BINARY): cv.string,
+        probatio.Optional(CONF_THRESHOLD, default=0): cv.positive_int,
+        probatio.Optional(CONF_ROTATE, default=0): cv.positive_int,
+        probatio.Optional(CONF_WIDTH, default=0): cv.positive_int,
+        probatio.Optional(CONF_X_POS, default=0): cv.string,
+        probatio.Optional(CONF_Y_POS, default=0): cv.positive_int,
     }
 )
 

@@ -31,8 +31,8 @@ from awesomeversion import (
     AwesomeVersionException,
     AwesomeVersionStrategy,
 )
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from . import generated
 from .const import Platform
@@ -45,7 +45,7 @@ from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
 from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
-from .helpers.json import json_bytes, json_fragment
+from .helpers.json import cached_json_fragment, json_fragment
 from .helpers.typing import UNDEFINED, UndefinedType
 from .util.async_ import create_eager_task
 from .util.hass_dict import HassKey
@@ -379,22 +379,22 @@ async def async_get_config_flows(
 class ComponentProtocol(Protocol):
     """Define the format of an integration."""
 
-    CONFIG_SCHEMA: vol.Schema
+    CONFIG_SCHEMA: probatio.Schema
     DOMAIN: str
 
     async def async_setup_entry(
         self, hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up a config entry."""
 
     async def async_unload_entry(
         self, hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Unload a config entry."""
 
     async def async_migrate_entry(
         self, hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Migrate an old config entry."""
 
     async def async_remove_entry(
@@ -798,7 +798,7 @@ class Integration:
     @cached_property
     def manifest_json_fragment(self) -> json_fragment:
         """Return manifest as a JSON fragment."""
-        return json_fragment(json_bytes(self.manifest))
+        return cached_json_fragment(self.manifest)
 
     @cached_property
     def name(self) -> str:

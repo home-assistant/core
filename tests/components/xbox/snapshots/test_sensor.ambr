@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[sensor.erics273_follower-entry]
+# name: test_sensors[sensor.erics273_followers-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15,7 +15,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.erics273_follower',
+    'entity_id': 'sensor.erics273_followers',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -23,12 +23,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Follower',
+    'object_id_base': 'Followers',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Follower',
+    'original_name': 'Followers',
     'platform': 'xbox',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -38,15 +38,15 @@
     'unit_of_measurement': 'people',
   })
 # ---
-# name: test_sensors[sensor.erics273_follower-state]
+# name: test_sensors[sensor.erics273_followers-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Follower',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Followers',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'people',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.erics273_follower',
+    'entity_id': 'sensor.erics273_followers',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -357,24 +357,25 @@
 # name: test_sensors[sensor.erics273_now_playing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'achievements': None,
-      'developer': None,
+      'achievements': '57 / 121',
+      'developer': 'Mojang Studios',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://store-images.s-microsoft.com/image/apps.11144.13851379342944008.b2fc5ef4-8c3f-4b02-8c42-1e88e52dd0f1.6a2c9c4f-1a34-4a3f-9a2e-0f3a5a07a6bd',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Now playing',
-      'gamerscore': None,
-      'genres': None,
-      'min_age': None,
-      'platform': None,
-      'progress': None,
-      'publisher': None,
-      'release_date': None,
-      'short_description': None,
+      'gamerscore': '1105 / 2500',
+      'genres': 'Action & adventure, Family & kids',
+      'min_age': 7,
+      'platform': 'Xbox One',
+      'progress': '44 %',
+      'publisher': 'Xbox Game Studios',
+      'release_date': datetime.date(2017, 9, 19),
+      'short_description': 'Explore infinite worlds and build everything from the simplest of homes to the grandest of castles.',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.erics273_now_playing',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Minecraft',
   })
 # ---
 # name: test_sensors[sensor.erics273_party_join_restrictions-entry]
@@ -484,10 +485,10 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Last seen 17h ago: Home',
+    'state': 'Minecraft',
   })
 # ---
-# name: test_sensors[sensor.gsr_ae_follower-entry]
+# name: test_sensors[sensor.gsr_ae_followers-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -503,7 +504,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.gsr_ae_follower',
+    'entity_id': 'sensor.gsr_ae_followers',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -511,12 +512,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Follower',
+    'object_id_base': 'Followers',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Follower',
+    'original_name': 'Followers',
     'platform': 'xbox',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -526,15 +527,15 @@
     'unit_of_measurement': 'people',
   })
 # ---
-# name: test_sensors[sensor.gsr_ae_follower-state]
+# name: test_sensors[sensor.gsr_ae_followers-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Follower',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Followers',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'people',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.gsr_ae_follower',
+    'entity_id': 'sensor.gsr_ae_followers',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -976,7 +977,7 @@
     'state': 'Last seen 49m ago: Xbox App',
   })
 # ---
-# name: test_sensors[sensor.ikken_hissatsuu_follower-entry]
+# name: test_sensors[sensor.ikken_hissatsuu_followers-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -992,7 +993,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.ikken_hissatsuu_follower',
+    'entity_id': 'sensor.ikken_hissatsuu_followers',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1000,12 +1001,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Follower',
+    'object_id_base': 'Followers',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Follower',
+    'original_name': 'Followers',
     'platform': 'xbox',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1015,15 +1016,15 @@
     'unit_of_measurement': 'people',
   })
 # ---
-# name: test_sensors[sensor.ikken_hissatsuu_follower-state]
+# name: test_sensors[sensor.ikken_hissatsuu_followers-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Follower',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Followers',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'people',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ikken_hissatsuu_follower',
+    'entity_id': 'sensor.ikken_hissatsuu_followers',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

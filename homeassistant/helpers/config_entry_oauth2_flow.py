@@ -23,7 +23,7 @@ from aiohttp import ClientError, ClientResponseError, client, hdrs, web
 from habluetooth import BluetoothServiceInfoBleak
 import jwt
 from multidict import CIMultiDict
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant import config_entries
@@ -548,11 +548,13 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
 
         return self.async_show_form(
             step_id="pick_implementation",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         "implementation", default=list(implementations)[0]
-                    ): vol.In({key: impl.name for key, impl in implementations.items()})
+                    ): probatio.In(
+                        {key: impl.name for key, impl in implementations.items()}
+                    )
                 }
             ),
         )

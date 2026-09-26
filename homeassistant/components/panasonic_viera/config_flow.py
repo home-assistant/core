@@ -6,7 +6,7 @@ from typing import Any, override
 from urllib.error import URLError
 
 from panasonic_viera import TV_TYPE_ENCRYPTED, RemoteControl, SOAPError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
@@ -86,9 +86,9 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_HOST,
                         default=self._data[CONF_HOST]
                         if self._data[CONF_HOST] is not None
@@ -96,7 +96,7 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
                     ): str,
                     # Name field is no longer allowed in config flow schemas
                     # pylint: disable-next=home-assistant-config-flow-name-field
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_NAME,
                         default=self._data[CONF_NAME]
                         if self._data[CONF_NAME] is not None
@@ -156,7 +156,7 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="pairing",
-            data_schema=vol.Schema({vol.Required(CONF_PIN): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_PIN): str}),
             errors=errors,
         )
 

@@ -3,7 +3,7 @@
 import asyncio
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -21,7 +21,7 @@ from .entity import YardianZoneEntity
 
 SERVICE_START_IRRIGATION = "start_irrigation"
 SERVICE_SCHEMA_START_IRRIGATION: VolDictType = {
-    vol.Required("duration"): cv.positive_int,
+    probatio.Required("duration"): cv.positive_int,
 }
 
 

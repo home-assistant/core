@@ -2,8 +2,8 @@
 
 from typing import cast
 
+import probatio
 from pyoctoprintapi import OctoprintClient
-import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICE_ID, CONF_PORT, CONF_PROFILE_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -12,12 +12,12 @@ from homeassistant.helpers import config_validation as cv, service
 from .const import CONF_BAUDRATE, DOMAIN, SERVICE_CONNECT
 from .coordinator import OctoprintConfigEntry
 
-SERVICE_CONNECT_SCHEMA = vol.Schema(
+SERVICE_CONNECT_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_DEVICE_ID): cv.string,
-        vol.Optional(CONF_PROFILE_NAME): cv.string,
-        vol.Optional(CONF_PORT): cv.string,
-        vol.Optional(CONF_BAUDRATE): cv.positive_int,
+        probatio.Required(CONF_DEVICE_ID): cv.string,
+        probatio.Optional(CONF_PROFILE_NAME): cv.string,
+        probatio.Optional(CONF_PORT): cv.string,
+        probatio.Optional(CONF_BAUDRATE): cv.positive_int,
     }
 )
 

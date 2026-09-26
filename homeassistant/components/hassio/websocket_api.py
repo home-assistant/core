@@ -5,7 +5,7 @@ from numbers import Number
 import re
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
@@ -42,9 +42,9 @@ from .exceptions import HassioNotReadyError
 from .handler import HassioAPIError
 from .update_helper import update_addon, update_core
 
-SCHEMA_WEBSOCKET_EVENT = vol.Schema(
-    {vol.Required(ATTR_WS_EVENT): cv.string},
-    extra=vol.ALLOW_EXTRA,
+SCHEMA_WEBSOCKET_EVENT = probatio.Schema(
+    {probatio.Required(ATTR_WS_EVENT): cv.string},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 # Endpoints needed for ingress can't require admin because
@@ -75,7 +75,7 @@ def async_load_websocket_api(hass: HomeAssistant) -> None:
 
 @callback
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required(WS_TYPE): WS_TYPE_SUBSCRIBE})
+@websocket_api.websocket_command({probatio.Required(WS_TYPE): WS_TYPE_SUBSCRIBE})
 def websocket_subscribe(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
@@ -96,8 +96,8 @@ def websocket_subscribe(
 @websocket_api.ws_require_user(only_supervisor=True)
 @websocket_api.websocket_command(
     {
-        vol.Required(WS_TYPE): WS_TYPE_EVENT,
-        vol.Required(ATTR_DATA): SCHEMA_WEBSOCKET_EVENT,
+        probatio.Required(WS_TYPE): WS_TYPE_EVENT,
+        probatio.Required(ATTR_DATA): SCHEMA_WEBSOCKET_EVENT,
     }
 )
 def websocket_supervisor_event(
@@ -110,12 +110,12 @@ def websocket_supervisor_event(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(WS_TYPE): WS_TYPE_API,
-        vol.Required(ATTR_ENDPOINT): cv.string,
-        vol.Required(ATTR_METHOD): cv.string,
-        vol.Optional(ATTR_DATA): dict,
-        vol.Optional(ATTR_PARAMS): dict,
-        vol.Optional(ATTR_TIMEOUT): vol.Any(Number, None),
+        probatio.Required(WS_TYPE): WS_TYPE_API,
+        probatio.Required(ATTR_ENDPOINT): cv.string,
+        probatio.Required(ATTR_METHOD): cv.string,
+        probatio.Optional(ATTR_DATA): dict,
+        probatio.Optional(ATTR_PARAMS): dict,
+        probatio.Optional(ATTR_TIMEOUT): probatio.Any(Number, None),
     }
 )
 @websocket_api.async_response
@@ -164,9 +164,9 @@ async def websocket_supervisor_api(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(WS_TYPE): "hassio/update/addon",
-        vol.Required("addon"): str,
-        vol.Required("backup"): bool,
+        probatio.Required(WS_TYPE): "hassio/update/addon",
+        probatio.Required("addon"): str,
+        probatio.Required("backup"): bool,
     }
 )
 @websocket_api.async_response
@@ -202,8 +202,8 @@ async def websocket_update_addon(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(WS_TYPE): "hassio/update/core",
-        vol.Required("backup"): bool,
+        probatio.Required(WS_TYPE): "hassio/update/core",
+        probatio.Required("backup"): bool,
     }
 )
 @websocket_api.async_response
@@ -217,7 +217,9 @@ async def websocket_update_core(
 
 @callback
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "hassio/update/config/info"})
+@websocket_api.websocket_command(
+    {probatio.Required("type"): "hassio/update/config/info"}
+)
 def websocket_update_config_info(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
@@ -231,10 +233,12 @@ def websocket_update_config_info(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hassio/update/config/update",
-        vol.Optional("add_on_backup_before_update"): bool,
-        vol.Optional("add_on_backup_retain_copies"): vol.All(int, vol.Range(min=1)),
-        vol.Optional("core_backup_before_update"): bool,
+        probatio.Required("type"): "hassio/update/config/update",
+        probatio.Optional("add_on_backup_before_update"): bool,
+        probatio.Optional("add_on_backup_retain_copies"): probatio.All(
+            int, probatio.Range(min=1)
+        ),
+        probatio.Optional("core_backup_before_update"): bool,
     }
 )
 def websocket_update_config_update(

@@ -14,7 +14,7 @@ from datetime import datetime
 import secrets
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -68,7 +68,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @callback
-@websocket_api.websocket_command({vol.Required("type"): "map_tiles/access_token"})
+@websocket_api.websocket_command({probatio.Required("type"): "map_tiles/access_token"})
 def ws_access_token(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,

@@ -1,11 +1,12 @@
 """Select for Midea."""
 
 from dataclasses import dataclass
-from typing import override
+from typing import cast, override
 
 from midealocal.const import DeviceType
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -106,6 +107,7 @@ SELECTS: list[MideaSelectEntityDescription] = [
         translation_key="screen_display",
         models=[DeviceType.FC, DeviceType.FD],
         options_attribute="screen_displays",
+        entity_category=EntityCategory.CONFIG,
     ),
 ]
 
@@ -145,7 +147,9 @@ class MideaSelect(MideaEntity, SelectEntity):
     @override
     def options(self) -> list[str]:
         """Return the list of valid options."""
-        return getattr(self._device, self.entity_description.options_attribute)
+        return cast(
+            list[str], getattr(self._device, self.entity_description.options_attribute)
+        )
 
     @property
     @override

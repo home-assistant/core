@@ -2,19 +2,13 @@
 
 import logging
 
-from aiohttp import ClientError
 from pybotvac import Account
 from pybotvac.exceptions import NeatoException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
@@ -55,12 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NeatoConfigEntry) -> boo
     implementation = await async_get_config_entry_implementation(hass, entry)
 
     session = OAuth2Session(hass, entry, implementation)
-    try:
-        await session.async_ensure_token_valid()
-    except OAuth2TokenRequestReauthError as ex:
-        raise ConfigEntryAuthFailed from ex
-    except (OAuth2TokenRequestError, ClientError) as ex:
-        raise ConfigEntryNotReady from ex
+    await session.async_ensure_token_valid()
 
     neato_session = api.ConfigEntryAuth(hass, entry, implementation)
     hub = NeatoHub(hass, Account(neato_session))

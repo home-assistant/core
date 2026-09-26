@@ -149,8 +149,6 @@ async def async_firewall_policy_control_fn(
     policy = hub.api.firewall_policies[obj_id].raw
     policy["enabled"] = target
     await hub.api.request(FirewallPolicyUpdateRequest.create(policy))
-    # Update the policies so the UI is updated appropriately
-    await hub.api.firewall_policies.update()
 
 
 @callback
@@ -460,10 +458,7 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
                 translation_domain=DOMAIN,
                 translation_key="action_request_failed",
             ) from err
-        if coordinator := self.hub.entity_loader.get_data_update_coordinator(
-            self.entity_description.api_handler_fn(self.api)
-        ):
-            await coordinator.async_request_refresh()
+        await self.async_refresh_after_control()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -475,10 +470,7 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
                 translation_domain=DOMAIN,
                 translation_key="action_request_failed",
             ) from err
-        if coordinator := self.hub.entity_loader.get_data_update_coordinator(
-            self.entity_description.api_handler_fn(self.api)
-        ):
-            await coordinator.async_request_refresh()
+        await self.async_refresh_after_control()
 
     @callback
     @override

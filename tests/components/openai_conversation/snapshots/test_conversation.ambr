@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_code_interpreter
+# name: test_code_interpreter[completed]
   list([
     dict({
       'content': 'Please use the python tool to calculate square root of 55555',
@@ -7,15 +7,109 @@
       'type': 'message',
     }),
     dict({
-      'arguments': '{"code":"import math\\nmath.sqrt(55555)","container":"cntr_A"}',
-      'call_id': 'ci_A',
-      'name': 'code_interpreter',
-      'type': 'function_call',
+      'code': '''
+        import math
+        math.sqrt(55555)
+      ''',
+      'container_id': 'cntr_A',
+      'id': 'ci_A',
+      'outputs': list([
+        dict({
+          'logs': '''
+            235.70108188126758
+  
+          ''',
+          'type': 'logs',
+        }),
+      ]),
+      'status': 'completed',
+      'type': 'code_interpreter_call',
     }),
     dict({
-      'call_id': 'ci_A',
-      'output': '{"output":[{"logs":"235.70108188126758\\n","type":"logs"}]}',
-      'type': 'function_call_output',
+      'content': 'I’ve calculated it with Python: the square root of 55555 is approximately 235.70108188126758.',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'Thank you!',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'You are welcome!',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+  ])
+# ---
+# name: test_code_interpreter[failed]
+  list([
+    dict({
+      'content': 'Please use the python tool to calculate square root of 55555',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'code': '''
+        import math
+        math.sqrt(55555)
+      ''',
+      'container_id': 'cntr_A',
+      'id': 'ci_A',
+      'outputs': list([
+        dict({
+          'logs': '''
+            235.70108188126758
+  
+          ''',
+          'type': 'logs',
+        }),
+      ]),
+      'status': 'failed',
+      'type': 'code_interpreter_call',
+    }),
+    dict({
+      'content': 'I’ve calculated it with Python: the square root of 55555 is approximately 235.70108188126758.',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'Thank you!',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'You are welcome!',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+  ])
+# ---
+# name: test_code_interpreter[incomplete]
+  list([
+    dict({
+      'content': 'Please use the python tool to calculate square root of 55555',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'code': '''
+        import math
+        math.sqrt(55555)
+      ''',
+      'container_id': 'cntr_A',
+      'id': 'ci_A',
+      'outputs': list([
+        dict({
+          'logs': '''
+            235.70108188126758
+  
+          ''',
+          'type': 'logs',
+        }),
+      ]),
+      'status': 'incomplete',
+      'type': 'code_interpreter_call',
     }),
     dict({
       'content': 'I’ve calculated it with Python: the square root of 55555 is approximately 235.70108188126758.',
@@ -62,27 +156,30 @@
     dict({
       'agent_id': 'conversation.openai_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': dict({
+          'data': dict({
+            'failed': list([
+            ]),
+            'success': list([
+            ]),
+          }),
+          'response_type': 'action_done',
+          'speech': dict({
+            'plain': dict({
+              'extra_data': None,
+              'speech': '12:00 PM',
+            }),
+          }),
+          'speech_slots': dict({
+            'time': datetime.time(12, 0),
+          }),
+        }),
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'mock-tool-call-id',
       'tool_name': 'HassGetCurrentTime',
-      'tool_result': dict({
-        'data': dict({
-          'failed': list([
-          ]),
-          'success': list([
-          ]),
-        }),
-        'response_type': 'action_done',
-        'speech': dict({
-          'plain': dict({
-            'extra_data': None,
-            'speech': '12:00 PM',
-          }),
-        }),
-        'speech_slots': dict({
-          'time': datetime.time(12, 0),
-        }),
-      }),
     }),
     dict({
       'agent_id': 'conversation.openai_conversation',
@@ -138,10 +235,13 @@
     dict({
       'agent_id': 'conversation.openai_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'value1',
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'call_call_1',
       'tool_name': 'test_tool',
-      'tool_result': 'value1',
     }),
     dict({
       'agent_id': 'conversation.openai_conversation',
@@ -164,10 +264,13 @@
     dict({
       'agent_id': 'conversation.openai_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'value2',
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'call_call_2',
       'tool_name': 'test_tool',
-      'tool_result': 'value2',
     }),
     dict({
       'agent_id': 'conversation.openai_conversation',
@@ -195,7 +298,7 @@
     }),
     dict({
       'call_id': 'mock-tool-call-id',
-      'output': '{"speech":{"plain":{"speech":"12:00 PM","extra_data":null}},"response_type":"action_done","speech_slots":{"time":"12:00:00"},"data":{"success":[],"failed":[]}}',
+      'output': '{"data":{"speech":{"plain":{"speech":"12:00 PM","extra_data":null}},"response_type":"action_done","speech_slots":{"time":"12:00:00"},"data":{"success":[],"failed":[]}},"error":false}',
       'type': 'function_call_output',
     }),
     dict({
@@ -231,7 +334,7 @@
     }),
     dict({
       'call_id': 'call_call_1',
-      'output': '"value1"',
+      'output': '{"data":"value1","error":false}',
       'type': 'function_call_output',
     }),
     dict({
@@ -242,7 +345,7 @@
     }),
     dict({
       'call_id': 'call_call_2',
-      'output': '"value2"',
+      'output': '{"data":"value2","error":false}',
       'type': 'function_call_output',
     }),
     dict({
@@ -281,10 +384,13 @@
     dict({
       'agent_id': 'conversation.openai_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'value1',
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'call_call_1',
       'tool_name': 'test_tool',
-      'tool_result': 'value1',
     }),
     dict({
       'agent_id': 'conversation.openai_conversation',
@@ -299,12 +405,45 @@
 # ---
 # name: test_model_args[subentry_options0]
   dict({
+    'max_output_tokens': 3000,
+    'model': 'gpt-4o-mini',
+    'service_tier': 'auto',
+    'store': False,
+    'stream': True,
+    'temperature': 1.0,
+    'top_p': 1.0,
+  })
+# ---
+# name: test_model_args[subentry_options1]
+  dict({
+    'include': list([
+      'reasoning.encrypted_content',
+    ]),
+    'max_output_tokens': 3000,
+    'model': 'gpt-5.5',
+    'prompt_cache_retention': '24h',
+    'reasoning': dict({
+      'effort': 'low',
+      'summary': 'auto',
+    }),
+    'service_tier': 'auto',
+    'store': False,
+    'stream': True,
+    'text': dict({
+      'verbosity': 'medium',
+    }),
+  })
+# ---
+# name: test_model_args[subentry_options2]
+  dict({
     'include': list([
       'reasoning.encrypted_content',
     ]),
     'max_output_tokens': 3000,
     'model': 'gpt-5.6-sol',
-    'prompt_cache_retention': '24h',
+    'prompt_cache_options': dict({
+      'ttl': '30m',
+    }),
     'reasoning': dict({
       'effort': 'low',
       'mode': 'pro',
@@ -315,6 +454,96 @@
     'stream': True,
     'text': dict({
       'verbosity': 'medium',
+    }),
+  })
+# ---
+# name: test_model_args[subentry_options3]
+  dict({
+    'include': list([
+      'reasoning.encrypted_content',
+    ]),
+    'max_output_tokens': 3000,
+    'model': 'gpt-5.6-sol',
+    'prompt_cache_options': dict({
+      'ttl': '30m',
+    }),
+    'reasoning': dict({
+      'effort': 'none',
+      'summary': 'auto',
+    }),
+    'service_tier': 'auto',
+    'store': False,
+    'stream': True,
+    'temperature': 0.5,
+    'text': dict({
+      'verbosity': 'medium',
+    }),
+    'top_p': 0.9,
+  })
+# ---
+# name: test_model_args[subentry_options4]
+  dict({
+    'include': list([
+      'reasoning.encrypted_content',
+    ]),
+    'max_output_tokens': 3000,
+    'model': 'gpt-6-astra',
+    'prompt_cache_options': dict({
+      'ttl': '30m',
+    }),
+    'reasoning': dict({
+      'effort': 'low',
+      'summary': 'auto',
+    }),
+    'service_tier': 'auto',
+    'store': False,
+    'stream': True,
+    'text': dict({
+      'verbosity': 'medium',
+    }),
+  })
+# ---
+# name: test_model_args[subentry_options5]
+  dict({
+    'include': list([
+      'reasoning.encrypted_content',
+    ]),
+    'max_output_tokens': 3000,
+    'model': 'gpt-6-astra',
+    'prompt_cache_options': dict({
+      'ttl': '30m',
+    }),
+    'reasoning': dict({
+      'effort': 'max',
+      'mode': 'pro',
+      'summary': 'detailed',
+    }),
+    'service_tier': 'auto',
+    'store': False,
+    'stream': True,
+    'text': dict({
+      'verbosity': 'low',
+    }),
+  })
+# ---
+# name: test_model_args[subentry_options6]
+  dict({
+    'include': list([
+      'reasoning.encrypted_content',
+    ]),
+    'max_output_tokens': 3000,
+    'model': 'gpt-6-astra',
+    'prompt_cache_options': dict({
+      'ttl': '30m',
+    }),
+    'reasoning': dict({
+      'effort': 'high',
+    }),
+    'service_tier': 'auto',
+    'store': False,
+    'stream': True,
+    'text': dict({
+      'verbosity': 'high',
     }),
   })
 # ---

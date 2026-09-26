@@ -7,6 +7,7 @@ import pytest
 from satel_integra import (
     SatelConnectFailedError,
     SatelConnectionInitializationError,
+    SatelMonitoringStartError,
     SatelPanelBusyError,
     SatelUnexpectedResponseError,
 )
@@ -265,3 +266,21 @@ async def test_setup_exceptions(
     mock_satel.connect.side_effect = exception
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is expected_state
+
+
+async def test_monitoring_start_error(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup is retried when monitoring fails to start."""
+    mock_satel.start.side_effect = SatelMonitoringStartError
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.reason == (
+        "Connected to the alarm panel, but the panel did not confirm the request to start sending status updates"
+    )
+    mock_satel.start.assert_awaited_once_with(enable_monitoring=True)
+    mock_satel.read_panel_info.assert_not_awaited()

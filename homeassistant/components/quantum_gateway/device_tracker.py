@@ -2,9 +2,9 @@
 
 from typing import override
 
+import probatio
 from quantum_gateway import QuantumGatewayScanner
 from requests.exceptions import RequestException
-import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -20,9 +20,9 @@ from .const import DEFAULT_HOST, LOGGER
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_SSL, default=True): cv.boolean,
-        vol.Required(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_SSL, default=True): cv.boolean,
+        probatio.Required(CONF_PASSWORD): cv.string,
     }
 )
 

@@ -1,9 +1,10 @@
-"""Test the Sofar Inverter Modbus diagnostics."""
+"""Tests for the Sofar diagnostics."""
 
 from unittest.mock import patch
 
 from modbus_connection.mock import MockModbusConnection
 from syrupy.assertion import SnapshotAssertion
+from syrupy.matchers import path_type
 
 from homeassistant.core import HomeAssistant
 
@@ -21,7 +22,11 @@ async def test_diagnostics(
     """Test generating diagnostics for a config entry."""
     diag = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
 
-    assert diag == snapshot
+    assert diag == snapshot(
+        matcher=path_type(
+            {r"^link\.stats\.(median|p95|slowest)$": (float,)}, regex=True
+        )
+    )
 
 
 async def test_diagnostics_includes_active_faults(
@@ -60,3 +65,21 @@ async def test_diagnostics_redacts_serial_number(
     holding = diag["raw"]["holding"]
     for address in range(0x0445, 0x044C):
         assert str(address) not in holding
+
+
+async def test_diagnostics_decodes_address_masks(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_connection: MockModbusConnection,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test a mask is assembled from four registers, most significant first."""
+    holding = mock_connection.for_unit(1).holding
+    holding[0x0400] = 0x0001
+    holding[0x0401] = 0x0002
+    holding[0x0402] = 0x0003
+    holding[0x0403] = 0x0004
+
+    diag = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+
+    assert diag["address_masks"]["1024"] == 0x0001000200030004

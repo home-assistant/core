@@ -2,7 +2,7 @@
 
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
@@ -48,59 +48,59 @@ def validate_name(config):
     return config
 
 
-DEVICE_SCHEMA = vol.Schema(
+DEVICE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ID): cv.positive_int,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_NOTE): cv.string,
-        vol.Optional(CONF_POSITION): cv.string,
+        probatio.Required(CONF_ID): cv.positive_int,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_NOTE): cv.string,
+        probatio.Optional(CONF_POSITION): cv.string,
     }
 )
 
 SWITCH_SCHEMA = DEVICE_SCHEMA.extend(
     {
-        vol.Optional(CONF_OFF_ID, default=0): cv.positive_int,
-        vol.Optional(CONF_ON_ID, default=0): cv.positive_int,
+        probatio.Optional(CONF_OFF_ID, default=0): cv.positive_int,
+        probatio.Optional(CONF_ON_ID, default=0): cv.positive_int,
     }
 )
 
 BINARY_SENSOR_SCHEMA = DEVICE_SCHEMA.extend(
     {
-        vol.Optional(CONF_INVERTING, default=False): cv.boolean,
-        vol.Optional(CONF_TYPE): DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_INVERTING, default=False): cv.boolean,
+        probatio.Optional(CONF_TYPE): DEVICE_CLASSES_SCHEMA,
     }
 )
 
 LIGHT_SCHEMA = DEVICE_SCHEMA.extend(
     {
-        vol.Optional(CONF_DIMMABLE, default=False): cv.boolean,
-        vol.Optional(CONF_OFF_ID, default=0): cv.positive_int,
-        vol.Optional(CONF_ON_ID, default=0): cv.positive_int,
+        probatio.Optional(CONF_DIMMABLE, default=False): cv.boolean,
+        probatio.Optional(CONF_OFF_ID, default=0): cv.positive_int,
+        probatio.Optional(CONF_ON_ID, default=0): cv.positive_int,
     }
 )
 
 SENSOR_SCHEMA = DEVICE_SCHEMA.extend(
-    {vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string}
+    {probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string}
 )
 
-IHC_SCHEMA = vol.Schema(
+IHC_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_URL): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_AUTOSETUP, default=True): cv.boolean,
-        vol.Optional(CONF_BINARY_SENSOR, default=[]): vol.All(
-            cv.ensure_list, [vol.All(BINARY_SENSOR_SCHEMA, validate_name)]
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_URL): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Optional(CONF_AUTOSETUP, default=True): cv.boolean,
+        probatio.Optional(CONF_BINARY_SENSOR, default=[]): probatio.All(
+            cv.ensure_list, [probatio.All(BINARY_SENSOR_SCHEMA, validate_name)]
         ),
-        vol.Optional(CONF_INFO, default=True): cv.boolean,
-        vol.Optional(CONF_LIGHT, default=[]): vol.All(
-            cv.ensure_list, [vol.All(LIGHT_SCHEMA, validate_name)]
+        probatio.Optional(CONF_INFO, default=True): cv.boolean,
+        probatio.Optional(CONF_LIGHT, default=[]): probatio.All(
+            cv.ensure_list, [probatio.All(LIGHT_SCHEMA, validate_name)]
         ),
-        vol.Optional(CONF_SENSOR, default=[]): vol.All(
-            cv.ensure_list, [vol.All(SENSOR_SCHEMA, validate_name)]
+        probatio.Optional(CONF_SENSOR, default=[]): probatio.All(
+            cv.ensure_list, [probatio.All(SENSOR_SCHEMA, validate_name)]
         ),
-        vol.Optional(CONF_SWITCH, default=[]): vol.All(
-            cv.ensure_list, [vol.All(SWITCH_SCHEMA, validate_name)]
+        probatio.Optional(CONF_SWITCH, default=[]): probatio.All(
+            cv.ensure_list, [probatio.All(SWITCH_SCHEMA, validate_name)]
         ),
     }
 )

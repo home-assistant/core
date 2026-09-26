@@ -93,14 +93,14 @@ async def test_ignition_binary_sensor_availability(
     assert state.state == expected_state
 
 
-async def test_removed_vehicle_makes_ignition_binary_sensor_unavailable(
+async def test_removed_vehicle_removes_ignition_binary_sensor(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_share: ScorpionTrackShare,
     mock_scorpiontrack_client: AsyncMock,
 ) -> None:
-    """Test ignition becomes unavailable if its vehicle leaves the share."""
+    """Test ignition is removed if its vehicle leaves the share."""
     await setup_integration(hass, mock_config_entry)
 
     mock_scorpiontrack_client.async_get_share.return_value = replace(
@@ -110,9 +110,7 @@ async def test_removed_vehicle_makes_ignition_binary_sensor_unavailable(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_ID) is None
 
 
 async def test_ignition_binary_sensor_uses_existing_vehicle_device(

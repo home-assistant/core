@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
@@ -20,21 +20,21 @@ from .const import (
     SVC_SET_ZONE_OVERRIDE,
 )
 
-SET_ZONE_MODE_SCHEMA = vol.Schema(
+SET_ZONE_MODE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_ZONE_MODE): vol.In(["off", "timer", "footprint"]),
+        probatio.Required(ATTR_ENTITY_ID): cv.entity_id,
+        probatio.Required(ATTR_ZONE_MODE): probatio.In(["off", "timer", "footprint"]),
     }
 )
-SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
+SET_ZONE_OVERRIDE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_TEMPERATURE): vol.All(
-            vol.Coerce(float), vol.Range(min=4, max=28)
+        probatio.Required(ATTR_ENTITY_ID): cv.entity_id,
+        probatio.Required(ATTR_TEMPERATURE): probatio.All(
+            probatio.Coerce(float), probatio.Range(min=4, max=28)
         ),
-        vol.Optional(ATTR_DURATION): vol.All(
+        probatio.Optional(ATTR_DURATION): probatio.All(
             cv.time_period,
-            vol.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
+            probatio.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
         ),
     }
 )

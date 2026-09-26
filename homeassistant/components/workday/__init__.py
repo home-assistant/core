@@ -4,7 +4,7 @@ from datetime import timedelta
 from typing import cast
 
 from holidays import DateLike, HolidayBase
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -47,7 +47,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_CHECK_DATE,
         entity_domain=BINARY_SENSOR_DOMAIN,
-        schema={vol.Required(CHECK_DATE): cv.date},
+        schema={probatio.Required(CHECK_DATE): cv.date},
         func="check_date",
         supports_response=SupportsResponse.ONLY,
     )

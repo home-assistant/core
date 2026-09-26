@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TYPE
@@ -35,9 +35,11 @@ class SeasonConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_TYPE, default=TYPE_ASTRONOMICAL): SelectSelector(
+                    probatio.Required(
+                        CONF_TYPE, default=TYPE_ASTRONOMICAL
+                    ): SelectSelector(
                         SelectSelectorConfig(
                             translation_key="season_type",
                             mode=SelectSelectorMode.LIST,

@@ -4,8 +4,7 @@ from http import HTTPStatus
 from typing import Any, Generic, TypeVar
 
 from aiohttp import web
-from probatio import to_field_list
-import voluptuous as vol
+import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.components.http import HomeAssistantView
@@ -51,7 +50,7 @@ class _BaseFlowManagerView(HomeAssistantView, Generic[_FlowManagerT, _FlowResult
         if (schema := result["data_schema"]) is None:
             data["data_schema"] = []
         else:
-            data["data_schema"] = to_field_list(
+            data["data_schema"] = probatio.to_field_list(
                 schema, custom_serializer=cv.custom_serializer
             )
         return data
@@ -61,11 +60,11 @@ class FlowManagerIndexView(_BaseFlowManagerView[_FlowManagerT, _FlowResultT]):
     """View to create config flows."""
 
     @RequestDataValidator(
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required("handler"): str,
+                probatio.Required("handler"): str,
             },
-            extra=vol.ALLOW_EXTRA,
+            extra=probatio.ALLOW_EXTRA,
         )
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
@@ -113,7 +112,7 @@ class FlowManagerResourceView(_BaseFlowManagerView[_FlowManagerT, _FlowResultT])
 
         return self.json(result)
 
-    @RequestDataValidator(vol.Schema(dict), allow_empty=True)
+    @RequestDataValidator(probatio.Schema(dict), allow_empty=True)
     async def post(
         self, request: web.Request, data: dict[str, Any], flow_id: str
     ) -> web.Response:

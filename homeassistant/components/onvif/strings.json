@@ -4,8 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "no_h264": "There were no H.264 streams available. Check the profile configuration on your device.",
-      "no_mac": "Could not configure unique ID for ONVIF device.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "no_mac": "Could not configure unique ID for ONVIF device."
     },
     "error": {
       "auth_failed": "Could not authenticate: {error}",

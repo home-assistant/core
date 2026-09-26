@@ -111,6 +111,9 @@ async def test_rear_seat_heater_configurations(
     """
     metadata = deepcopy(METADATA)
     metadata["vehicles"][VEHICLE_VIN]["config"] = config
+    # Rear seat heaters are polling-only, so the vehicle must be a polling
+    # vehicle for them to be created at all.
+    metadata["vehicles"][VEHICLE_VIN]["polling"] = True
     mock_metadata.return_value = metadata
 
     entry = await setup_platform(hass, [Platform.SELECT])

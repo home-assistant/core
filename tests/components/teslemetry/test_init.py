@@ -1,6 +1,10 @@
 """Test the Teslemetry init."""
 
+import asyncio
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from copy import deepcopy
+from datetime import timedelta
 import logging
 import time
 from types import MappingProxyType
@@ -8,23 +12,28 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientResponseError
 from aiopowerwall import PowerwallError
+from bleak.exc import BleakError
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import (
+    BluetoothCommandFailed,
+    BluetoothTransportError,
+    BluetoothUnconfirmedCommand,
     Forbidden,
     InsufficientCredits,
     InvalidResponse,
     InvalidToken,
     LoginRequired,
+    PrivateKeyError,
     RateLimited,
     SubscriptionRequired,
     TeslaFleetError,
 )
-from tesla_fleet_api.tesla import EnergySiteRouter
-from tesla_fleet_api.teslemetry import EnergySite
+from tesla_fleet_api.tesla import EnergySiteRouter, VehicleRouter
+from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from teslemetry_stream import TeslemetryStreamAuthenticationError
 
 from homeassistant.components.teslemetry import (
@@ -35,17 +44,19 @@ from homeassistant.components.teslemetry import (
 from homeassistant.components.teslemetry.const import (
     CLIENT_ID,
     CONF_SITE_ID,
+    CONF_VIN,
     DOMAIN,
     SUBENTRY_TYPE_ENERGY_SITE,
+    SUBENTRY_TYPE_VEHICLE,
 )
 
 # Coordinator constants
 from homeassistant.components.teslemetry.coordinator import (
-    ENERGY_HISTORY_INTERVAL,
     INSUFFICIENT_CREDITS_RETRY_AFTER,
     METADATA_INTERVAL,
     VEHICLE_INTERVAL,
 )
+from homeassistant.components.teslemetry.helpers import async_get_ble_parent
 from homeassistant.components.teslemetry.models import TeslemetryData
 from homeassistant.components.teslemetry.oauth import TeslemetryImplementation
 from homeassistant.config_entries import (
@@ -54,6 +65,7 @@ from homeassistant.config_entries import (
     ConfigSubentryData,
 )
 from homeassistant.const import (
+    CONF_ADDRESS,
     CONF_HOST,
     CONF_PASSWORD,
     STATE_OFF,
@@ -76,7 +88,6 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from . import mock_config_entry, setup_platform
 from .const import (
     CONFIG_V1,
-    ENERGY_HISTORY,
     LIVE_STATUS,
     METADATA,
     METADATA_NOSCOPE,
@@ -199,10 +210,6 @@ async def test_vehicle_stream(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
-    state = hass.states.get("binary_sensor.test_user_present")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
     mock_add_listener.send(
         {
             "vin": VEHICLE_DATA_ALT["response"]["vin"],
@@ -214,10 +221,6 @@ async def test_vehicle_stream(
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test_status")
-    assert state is not None
-    assert state.state == STATE_ON
-
-    state = hass.states.get("binary_sensor.test_user_present")
     assert state is not None
     assert state.state == STATE_ON
 
@@ -647,42 +650,6 @@ async def test_live_status_coordinator_retry_exceptions(
     assert entry.state is ConfigEntryState.LOADED
 
 
-@pytest.mark.parametrize(("exception", "expected_retry_after"), RETRY_EXCEPTIONS)
-async def test_energy_history_coordinator_retry_exceptions(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_energy_history: AsyncMock,
-    exception: TeslaFleetError,
-    expected_retry_after: float,
-) -> None:
-    """Test energy history coordinator raises UpdateFailed with retry_after."""
-    call_count = 0
-
-    def energy_history_side_effect(*args, **kwargs):
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            raise exception  # First call raises exception
-        return ENERGY_HISTORY  # Subsequent calls succeed
-
-    mock_energy_history.side_effect = energy_history_side_effect
-
-    entry = await setup_platform(hass)
-    assert entry.state is ConfigEntryState.LOADED
-    # Energy history doesn't have first_refresh during setup
-    assert call_count == 0
-
-    # Trigger first coordinator refresh - this will raise the exception
-    freezer.tick(ENERGY_HISTORY_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # API was called exactly once (no manual retry loop)
-    assert call_count == 1
-    # Entry stays loaded - UpdateFailed with retry_after doesn't break the entry
-    assert entry.state is ConfigEntryState.LOADED
-
-
 async def test_live_status_auth_error(
     hass: HomeAssistant,
 ) -> None:
@@ -890,11 +857,7 @@ async def test_vehicle_polling_stops_when_all_entities_disabled(
     keep_one_enabled: bool,
     expected_polled: bool,
 ) -> None:
-    """Test the vehicle coordinator stops polling once every entity is disabled.
-
-    With no listeners left, core unschedules the coordinator so the charged
-    vehicle_data poll stops entirely; a single enabled entity keeps it running.
-    """
+    """Test the vehicle coordinator stops polling once every entity is disabled."""
     vin = "LRW3F7EK4NC700000"
     entry = await setup_platform(hass, [Platform.SENSOR])
 
@@ -922,6 +885,97 @@ async def test_vehicle_polling_stops_when_all_entities_disabled(
     await hass.async_block_till_done()
 
     assert (mock_vehicle_data.call_count > 0) is expected_polled
+
+
+@pytest.mark.parametrize(
+    ("polling", "has_polling_only"),
+    [
+        (True, True),
+        (None, True),
+        (False, False),
+    ],
+    ids=["polling", "unknown_polling", "streaming"],
+)
+async def test_polling_only_entities_require_metadata(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_metadata: AsyncMock,
+    polling: bool | None,
+    has_polling_only: bool,
+) -> None:
+    """Create a polling-only entity unless the vehicle is explicitly stream-only.
+
+    A null polling flag is unknown, not stream-only, so its entities are kept.
+    """
+    vin = "LRW3F7EK4NC700000"
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][vin]["polling"] = polling
+    mock_metadata.return_value = metadata
+
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+
+    # is_user_present is a polling-only binary sensor (no streaming source).
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR, DOMAIN, f"{vin}-vehicle_state_is_user_present"
+        )
+        is not None
+    ) is has_polling_only
+    # A feature with a streaming source exists regardless of the polling flags.
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR, DOMAIN, f"{vin}-state"
+        )
+        is not None
+    )
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_streaming_vehicle_coordinator_never_polls(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A plain streaming vehicle is never polled."""
+    await setup_platform(hass, [Platform.BINARY_SENSOR])
+
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_vehicle_data.call_count == 0
+
+
+async def test_stale_polling_only_entity_removed_on_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Prune a polling-only entity when its vehicle no longer qualifies."""
+    vin = "LRW3F7EK4NC700000"
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+
+    # Left over from before the vehicle stopped qualifying for polling.
+    stale = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{vin}-vehicle_state_is_user_present",
+        config_entry=entry,
+    )
+
+    with patch(
+        "homeassistant.components.teslemetry.PLATFORMS", [Platform.BINARY_SENSOR]
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Default metadata is a plain streaming vehicle, which no longer qualifies.
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR, DOMAIN, stale.unique_id
+        )
+        is None
+    )
 
 
 async def test_energy_site_version_update(
@@ -984,33 +1038,6 @@ async def test_live_status_coordinator_refresh_error(
     assert entry.state is ConfigEntryState.LOADED
 
     await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
-    await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.LOADED
-
-
-@pytest.mark.parametrize(
-    "side_effect",
-    [
-        [InvalidToken],
-        [TeslaFleetError],
-        [ENERGY_HISTORY, {"response": {}}],
-    ],
-)
-async def test_energy_history_coordinator_refresh_errors(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_energy_history: AsyncMock,
-    side_effect: list,
-) -> None:
-    """Test energy history coordinator handles errors during refresh."""
-    mock_energy_history.side_effect = side_effect
-
-    entry = await setup_platform(hass)
-    assert entry.state is ConfigEntryState.LOADED
-
-    freezer.tick(ENERGY_HISTORY_INTERVAL)
-    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
@@ -1138,13 +1165,7 @@ def _oauth_session(hass: HomeAssistant, entry: MockConfigEntry) -> OAuth2Session
 async def test_get_access_token_dead_token_during_setup_triggers_auth_failed(
     hass: HomeAssistant,
 ) -> None:
-    """A dead/revoked refresh token during setup must raise ConfigEntryAuthFailed.
-
-    OAuth servers commonly report a dead refresh token with a non-401 status
-    (e.g. 400 invalid_grant). Only recognizing status 401 let this fall
-    through to ConfigEntryNotReady, which retries setup indefinitely without
-    ever prompting the user to reauthenticate.
-    """
+    """A dead/revoked refresh token during setup must raise ConfigEntryAuthFailed."""
     mock_entry = mock_config_entry()
     mock_entry.add_to_hass(hass)
     mock_entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
@@ -1188,10 +1209,7 @@ async def test_get_access_token_rate_limited_during_setup_is_not_fatal(
 async def test_get_access_token_dead_token_after_setup_starts_reauth(
     hass: HomeAssistant,
 ) -> None:
-    """Test a token dying after setup (re)starts reauth without tearing down.
-
-    The coordinator handles the rest once the exception is re-raised.
-    """
+    """Test a token dying after setup (re)starts reauth without tearing down."""
     mock_entry = mock_config_entry()
     mock_entry.add_to_hass(hass)
     mock_entry.mock_state(hass, ConfigEntryState.LOADED)
@@ -1345,12 +1363,7 @@ async def test_energy_site_cloud_without_powerwall(hass: HomeAssistant) -> None:
 async def test_energy_site_subentry_without_credentials_uses_cloud(
     hass: HomeAssistant,
 ) -> None:
-    """A subentry that exists but is not yet paired resolves to the cloud API.
-
-    A site whose subentry was created but has no gateway host/password stored
-    keeps that subentry_id (so it stays opted in) while falling back to the
-    plain cloud API rather than building an EnergySiteRouter.
-    """
+    """A subentry that exists but is not yet paired resolves to the cloud API."""
     entry = mock_config_entry()
     paired = MockConfigEntry(
         domain=entry.domain,
@@ -1397,6 +1410,10 @@ async def test_no_subentry_created_at_setup(hass: HomeAssistant) -> None:
         pytest.param(OSError("disk gone"), id="os_error"),
         pytest.param(ValueError("bad key"), id="value_error"),
         pytest.param(PowerwallError("client boom"), id="powerwall_error"),
+        pytest.param(
+            PrivateKeyError("malformed", "Not a valid PEM private key"),
+            id="private_key_error",
+        ),
     ],
 )
 async def test_local_control_failure_falls_back_to_cloud(
@@ -1404,12 +1421,7 @@ async def test_local_control_failure_falls_back_to_cloud(
     local_error: Exception,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A failure resolving a paired site's local gateway falls back to cloud.
-
-    Local control is opt-in per site, so one site's bad local config must leave
-    the entry loaded with cloud functionality intact rather than tearing the
-    whole integration down.
-    """
+    """A failure resolving a paired site's local gateway falls back to cloud."""
     entry = _entry_with_powerwall()
     entry.add_to_hass(hass)
 
@@ -1436,20 +1448,29 @@ async def test_local_control_failure_falls_back_to_cloud(
     )
 
 
-async def test_local_control_encrypted_key_falls_back_to_cloud(
+@pytest.mark.parametrize(
+    "rsa_key_error",
+    [
+        # PrivateKeyError is the wrapped existing-key-file failure shape.
+        pytest.param(
+            PrivateKeyError("encrypted", "Private key file is encrypted"),
+            id="private_key_error",
+        ),
+    ],
+)
+async def test_local_control_key_load_failure_falls_back_to_cloud(
     hass: HomeAssistant,
+    rsa_key_error: Exception,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Fall back to cloud control when RSA key loading reports an encrypted PEM."""
+    """Fall back to cloud control when RSA key loading fails on an existing file."""
     entry = _entry_with_powerwall()
     entry.add_to_hass(hass)
 
     with (
         patch(
             "homeassistant.components.teslemetry.Teslemetry.get_rsa_private_key",
-            side_effect=TypeError(
-                "Password was not given but private key is encrypted"
-            ),
+            side_effect=rsa_key_error,
         ),
         patch("homeassistant.components.teslemetry.PLATFORMS", []),
         caplog.at_level(logging.WARNING),
@@ -1468,13 +1489,7 @@ async def test_local_control_encrypted_key_falls_back_to_cloud(
 async def test_local_control_unexpected_typeerror_is_not_swallowed(
     hass: HomeAssistant,
 ) -> None:
-    """A TypeError outside the key load is a real bug and must not degrade silently.
-
-    ``_LOCAL_CONTROL_ERRORS`` deliberately excludes TypeError: only the key
-    loader's encrypted-PEM TypeError is converted to ValueError. A TypeError
-    from anywhere else in the resolve path (here, client construction) must
-    fail setup rather than silently falling back to cloud control.
-    """
+    """A TypeError outside the key load is a real bug and must not degrade silently."""
     entry = _entry_with_powerwall()
     entry.add_to_hass(hass)
 
@@ -1680,11 +1695,7 @@ async def test_stale_cleanup_preserves_pairing_without_energy_scope(
 
 
 async def test_update_listener_ignores_token_refresh(hass: HomeAssistant) -> None:
-    """An entry update that only changes token data must not reload the entry.
-
-    OAuth token refreshes call async_update_entry with new token data on every
-    expiry; reloading on those would needlessly drop the stream and re-fetch.
-    """
+    """An entry update that only changes token data must not reload the entry."""
     entry = mock_config_entry()
     entry.add_to_hass(hass)
     with patch("homeassistant.components.teslemetry.PLATFORMS", []):
@@ -1738,6 +1749,7 @@ def test_stream_topic_allowlist() -> None:
         "live_status",
         "site_info",
         "tariff_content_v2",
+        "energy_totals",
     ]
 
 
@@ -1747,18 +1759,22 @@ async def test_energy_stream_no_recurring_rest_polling(
     mock_live_status: AsyncMock,
     mock_site_info: AsyncMock,
 ) -> None:
-    """The live/info REST cold reads happen once and do not recur."""
-    await setup_platform(hass, [Platform.SENSOR])
+    """The live/info REST cold reads happen once, and history never reads at all."""
+    with patch(
+        "tesla_fleet_api.tesla.energysite.EnergySite.energy_history"
+    ) as mock_energy_history:
+        await setup_platform(hass, [Platform.SENSOR])
+        assert mock_live_status.call_count == 1
+        assert mock_site_info.call_count == 1
+
+        # Advancing well past the old poll intervals triggers no REST reads.
+        freezer.tick(timedelta(minutes=5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
     assert mock_live_status.call_count == 1
     assert mock_site_info.call_count == 1
-
-    # Advancing well past the old 30-second poll intervals triggers no REST reads.
-    freezer.tick(ENERGY_HISTORY_INTERVAL * 2)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert mock_live_status.call_count == 1
-    assert mock_site_info.call_count == 1
+    mock_energy_history.assert_not_called()
 
 
 async def test_energy_stream_unload_unsubscribes_and_closes_stream(
@@ -1768,6 +1784,7 @@ async def test_energy_stream_unload_unsubscribes_and_closes_stream(
     live_unsub = MagicMock()
     info_unsub = MagicMock()
     tariff_unsub = MagicMock()
+    totals_unsub = MagicMock()
 
     with (
         patch(
@@ -1782,6 +1799,10 @@ async def test_energy_stream_unload_unsubscribes_and_closes_stream(
             "teslemetry_stream.TeslemetryStreamEnergySite.listen_TariffContentV2",
             return_value=tariff_unsub,
         ),
+        patch(
+            "teslemetry_stream.TeslemetryStreamEnergySite.listen_EnergyTotals",
+            return_value=totals_unsub,
+        ),
         patch("teslemetry_stream.TeslemetryStream.close") as mock_close,
     ):
         entry = await setup_platform(hass, [Platform.SENSOR])
@@ -1793,6 +1814,7 @@ async def test_energy_stream_unload_unsubscribes_and_closes_stream(
     live_unsub.assert_called_once()
     info_unsub.assert_called_once()
     tariff_unsub.assert_called_once()
+    totals_unsub.assert_called_once()
     mock_close.assert_called_once()
 
 
@@ -1838,3 +1860,660 @@ async def test_energy_stream_disconnect_marks_unavailable_and_recovers(
         for flow in hass.config_entries.flow.async_progress()
         if flow["handler"] == DOMAIN
     ]
+
+
+VIN = "LRW3F7EK4NC700000"
+ADDRESS = "AA:BB:CC:DD:EE:FF"
+CLOUD_RESULT = {"response": {"result": True, "reason": "cloud"}}
+BLE_RESULT = {"response": {"result": True, "reason": "bluetooth"}}
+
+
+def _entry_with_ble() -> MockConfigEntry:
+    """Return a config entry whose vehicle subentry is already BLE-paired."""
+    entry = mock_config_entry()
+    return MockConfigEntry(
+        domain=entry.domain,
+        version=entry.version,
+        minor_version=entry.minor_version,
+        unique_id=entry.unique_id,
+        data=dict(entry.data),
+        subentries_data=[
+            ConfigSubentryData(
+                subentry_type=SUBENTRY_TYPE_VEHICLE,
+                unique_id=VIN,
+                title="Test",
+                data={CONF_VIN: VIN, CONF_ADDRESS: ADDRESS},
+            )
+        ],
+    )
+
+
+async def test_vehicle_router_with_bluetooth(hass: HomeAssistant) -> None:
+    """A BLE-paired vehicle wraps its cloud API in a VehicleRouter."""
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = MagicMock()
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    vehicle = entry.runtime_data.vehicles[0]
+    assert isinstance(vehicle.api, VehicleRouter)
+    # Avoid replaying ambiguous commands or keeping the vehicle awake.
+    mock_parent.return_value.vehicles.createBluetooth.assert_called_once_with(
+        VIN,
+        confirmation="verify",
+        raise_unconfirmed=False,
+        keepalive_interval=None,
+    )
+
+
+async def test_vehicle_cloud_without_bluetooth(hass: HomeAssistant) -> None:
+    """A vehicle without a paired address keeps the plain cloud API."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.teslemetry.PLATFORMS", []):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    vehicle = entry.runtime_data.vehicles[0]
+    assert isinstance(vehicle.api, Vehicle)
+    assert not isinstance(vehicle.api, VehicleRouter)
+
+
+@pytest.mark.parametrize(
+    "key_error",
+    [
+        pytest.param(OSError("disk gone"), id="os_error"),
+        pytest.param(ValueError("bad key"), id="value_error"),
+        # A raw TypeError only escapes the key create/generation path now.
+        pytest.param(
+            TypeError("unexpected keyword argument"),
+            id="typeerror",
+        ),
+        # PrivateKeyError is the wrapped existing-key-file shape; it must degrade too.
+        pytest.param(
+            PrivateKeyError("unreadable", "Could not read private key file"),
+            id="private_key_unreadable",
+        ),
+        pytest.param(
+            PrivateKeyError("malformed", "Not a valid PEM private key"),
+            id="private_key_malformed",
+        ),
+        pytest.param(
+            PrivateKeyError("encrypted", "Private key file is encrypted"),
+            id="private_key_encrypted",
+        ),
+        pytest.param(
+            PrivateKeyError("wrong_type", "Not an EllipticCurvePrivateKey"),
+            id="private_key_wrong_type",
+        ),
+    ],
+)
+async def test_vehicle_bluetooth_key_load_falls_back_to_cloud(
+    hass: HomeAssistant,
+    key_error: Exception,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A vehicle whose Bluetooth key fails to load degrades to cloud control."""
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+        caplog.at_level(logging.WARNING),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock(side_effect=key_error)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    vehicle = entry.runtime_data.vehicles[0]
+    assert isinstance(vehicle.api, Vehicle)
+    assert not isinstance(vehicle.api, VehicleRouter)
+    # The rest of the account is unaffected: the energy site still loads.
+    assert len(entry.runtime_data.energysites) == 1
+    assert "falling back to cloud control" in caplog.text
+    assert any(
+        record.levelname == "WARNING" and VIN in record.message
+        for record in caplog.records
+    )
+
+
+async def test_vehicle_bluetooth_key_load_recovers_on_reload(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A vehicle degraded to cloud by a key-load failure regains BLE control on reload."""
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+        caplog.at_level(logging.WARNING),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock(
+            side_effect=OSError("disk gone")
+        )
+        mock_parent.return_value.vehicles.createBluetooth.return_value = MagicMock()
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert not isinstance(entry.runtime_data.vehicles[0].api, VehicleRouter)
+        assert "falling back to cloud control" in caplog.text
+
+        # The key becomes readable again; a reload must restore local Bluetooth control.
+        mock_parent.return_value.get_private_key = AsyncMock()
+        caplog.clear()
+
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert isinstance(entry.runtime_data.vehicles[0].api, VehicleRouter)
+    assert "falling back to cloud control" not in caplog.text
+
+
+@asynccontextmanager
+async def _paired_entry(
+    hass: HomeAssistant, ble_lookup: MagicMock
+) -> AsyncIterator[tuple[VehicleRouter, AsyncMock, AsyncMock]]:
+    """Set up a BLE-paired entry, yielding its router and both backends."""
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+    bluetooth_vehicle = AsyncMock()
+    bluetooth_vehicle.set_device = MagicMock()
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            ble_lookup,
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = (
+            bluetooth_vehicle
+        )
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        router = entry.runtime_data.vehicles[0].api
+        cloud = AsyncMock(return_value=CLOUD_RESULT)
+        router.secondary.flash_lights = cloud
+        yield router, bluetooth_vehicle, cloud
+
+
+async def test_vehicle_bluetooth_out_of_range(hass: HomeAssistant) -> None:
+    """A paired vehicle out of range still gets a router, and skips Bluetooth."""
+    async with _paired_entry(hass, MagicMock(return_value=None)) as (
+        router,
+        bluetooth_vehicle,
+        cloud,
+    ):
+        assert isinstance(router, VehicleRouter)
+
+        assert await router.flash_lights() == CLOUD_RESULT
+
+        cloud.assert_awaited_once()
+        bluetooth_vehicle.flash_lights.assert_not_called()
+
+
+async def test_vehicle_router_resumes_bluetooth_when_vehicle_returns(
+    hass: HomeAssistant,
+) -> None:
+    """A vehicle away at setup routes locally again once it comes home."""
+    ble_lookup = MagicMock(return_value=None)
+
+    async with _paired_entry(hass, ble_lookup) as (router, bluetooth_vehicle, cloud):
+        bluetooth_vehicle.flash_lights.return_value = BLE_RESULT
+
+        assert await router.flash_lights() == CLOUD_RESULT
+        bluetooth_vehicle.flash_lights.assert_not_called()
+
+        ble_lookup.return_value = MagicMock()
+
+        assert await router.flash_lights() == BLE_RESULT
+        bluetooth_vehicle.flash_lights.assert_awaited_once()
+        cloud.assert_awaited_once()
+
+
+async def test_vehicle_router_falls_back_when_vehicle_leaves(
+    hass: HomeAssistant,
+) -> None:
+    """A vehicle in range at setup routes to cloud once it drives away."""
+    ble_lookup = MagicMock(return_value=MagicMock())
+
+    async with _paired_entry(hass, ble_lookup) as (router, bluetooth_vehicle, cloud):
+        bluetooth_vehicle.flash_lights.return_value = BLE_RESULT
+
+        assert await router.flash_lights() == BLE_RESULT
+        cloud.assert_not_called()
+
+        ble_lookup.return_value = None
+
+        assert await router.flash_lights() == CLOUD_RESULT
+        cloud.assert_awaited_once()
+        bluetooth_vehicle.flash_lights.assert_awaited_once()
+
+
+async def test_vehicle_router_refreshes_device_handle(hass: HomeAssistant) -> None:
+    """Each command refreshes the BLE handle from the cache before connecting."""
+    first_device = MagicMock()
+    second_device = MagicMock()
+    ble_lookup = MagicMock(return_value=first_device)
+
+    async with _paired_entry(hass, ble_lookup) as (router, bluetooth_vehicle, _cloud):
+        await router.flash_lights()
+        bluetooth_vehicle.set_device.assert_called_once_with(first_device)
+
+        ble_lookup.return_value = second_device
+        await router.flash_lights()
+
+        bluetooth_vehicle.set_device.assert_called_with(second_device)
+
+
+async def test_vehicle_router_fails_over_on_stale_cache_hit(
+    hass: HomeAssistant,
+) -> None:
+    """A cache entry outliving the vehicle costs one failed attempt, not a failure."""
+    async with _paired_entry(hass, MagicMock(return_value=MagicMock())) as (
+        router,
+        bluetooth_vehicle,
+        cloud,
+    ):
+        bluetooth_vehicle.flash_lights.side_effect = BluetoothTransportError()
+
+        assert await router.flash_lights() == CLOUD_RESULT
+
+        bluetooth_vehicle.flash_lights.assert_awaited_once()
+        cloud.assert_awaited_once()
+
+
+async def test_vehicle_paired_but_never_seen(hass: HomeAssistant) -> None:
+    """A paired vehicle never seen by Bluetooth is built without a device handle."""
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            MagicMock(return_value=None),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = AsyncMock()
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        "device"
+        not in mock_parent.return_value.vehicles.createBluetooth.call_args.kwargs
+    )
+
+
+@pytest.mark.parametrize(
+    "disconnect_error",
+    [None, BleakError("boom")],
+    ids=["clean", "error_swallowed"],
+)
+async def test_unload_disconnects_bluetooth(
+    hass: HomeAssistant, disconnect_error: Exception | None
+) -> None:
+    """Unloading a routed entry disconnects its Bluetooth backend, errors and all."""
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+    bluetooth_vehicle = AsyncMock()
+    bluetooth_vehicle.disconnect = AsyncMock(side_effect=disconnect_error)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = (
+            bluetooth_vehicle
+        )
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert isinstance(entry.runtime_data.vehicles[0].api, VehicleRouter)
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    bluetooth_vehicle.disconnect.assert_awaited_once()
+
+
+async def test_unload_never_connected_bluetooth(hass: HomeAssistant) -> None:
+    """Unloading a paired vehicle that was never in range does not raise."""
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+    bluetooth_vehicle = AsyncMock()
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = (
+            bluetooth_vehicle
+        )
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    bluetooth_vehicle.disconnect.assert_awaited_once()
+
+
+async def test_unload_disconnect_timeout(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A hung Bluetooth disconnect cannot block unload past the timeout."""
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+    bluetooth_vehicle = AsyncMock()
+    never_set = asyncio.Event()
+
+    async def _hang(*args: object, **kwargs: object) -> None:
+        await never_set.wait()
+
+    bluetooth_vehicle.disconnect = AsyncMock(side_effect=_hang)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+        patch("homeassistant.components.teslemetry.BLE_DISCONNECT_TIMEOUT", 0),
+        caplog.at_level(logging.WARNING),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = (
+            bluetooth_vehicle
+        )
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    bluetooth_vehicle.disconnect.assert_awaited_once()
+    assert "timed out after 0s" in caplog.text
+
+
+async def test_unload_disconnect_instant_timeout(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A TimeoutError raised by disconnect() itself is not mistaken for the deadline."""
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+    bluetooth_vehicle = AsyncMock()
+    bluetooth_vehicle.disconnect = AsyncMock(side_effect=TimeoutError("device busy"))
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+        caplog.at_level(logging.WARNING),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = (
+            bluetooth_vehicle
+        )
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    bluetooth_vehicle.disconnect.assert_awaited_once()
+    assert "Error disconnecting Bluetooth for" in caplog.text
+    assert "device busy" in caplog.text
+    assert "timed out after" not in caplog.text
+
+
+async def test_ble_parent_shared_and_cached(hass: HomeAssistant) -> None:
+    """The BLE parent (holding the private key) is created once and reused."""
+    with patch(
+        "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+    ) as mock_parent:
+        mock_parent.return_value.get_private_key = AsyncMock()
+        first = await async_get_ble_parent(hass)
+        second = await async_get_ble_parent(hass)
+
+    assert first is second
+    mock_parent.assert_called_once()
+    mock_parent.return_value.get_private_key.assert_awaited_once()
+
+
+async def test_ble_parent_concurrent_first_init(hass: HomeAssistant) -> None:
+    """Concurrent first-time callers still create and load the key exactly once."""
+
+    async def _get_private_key(path: str) -> None:
+        await asyncio.sleep(0)
+
+    with patch(
+        "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+    ) as mock_parent:
+        mock_parent.return_value.get_private_key = AsyncMock(
+            side_effect=_get_private_key
+        )
+        parents = await asyncio.gather(*(async_get_ble_parent(hass) for _ in range(5)))
+
+    assert all(parent is parents[0] for parent in parents)
+    mock_parent.assert_called_once()
+    mock_parent.return_value.get_private_key.assert_awaited_once()
+
+
+async def test_router_does_not_fail_over_on_unconfirmed() -> None:
+    """An unconfirmed BLE command is never replayed on the cloud backend."""
+    bluetooth = AsyncMock()
+    bluetooth.actuate_trunk = AsyncMock(side_effect=BluetoothUnconfirmedCommand())
+    cloud = AsyncMock()
+    cloud.actuate_trunk = AsyncMock(return_value={"response": {"result": True}})
+    router = VehicleRouter(bluetooth, cloud)
+
+    with pytest.raises(BluetoothUnconfirmedCommand):
+        await router.actuate_trunk()
+
+    cloud.actuate_trunk.assert_not_called()
+
+
+async def test_router_fails_over_on_command_failed() -> None:
+    """A command proven not to have applied over BLE fails over to the cloud."""
+    bluetooth = AsyncMock()
+    bluetooth.actuate_trunk = AsyncMock(side_effect=BluetoothCommandFailed())
+    cloud = AsyncMock()
+    cloud.actuate_trunk = AsyncMock(return_value={"response": {"result": True}})
+    router = VehicleRouter(bluetooth, cloud)
+
+    result = await router.actuate_trunk()
+
+    assert result == {"response": {"result": True}}
+    bluetooth.actuate_trunk.assert_awaited_once()
+    cloud.actuate_trunk.assert_awaited_once()
+
+
+async def _setup_paired_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up an entry whose only account vehicle is already BLE-paired."""
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = AsyncMock()
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    return entry
+
+
+async def test_subentry_removal_reloads(hass: HomeAssistant) -> None:
+    """Removing a vehicle subentry reloads once; later updates do not re-schedule."""
+    entry = await _setup_paired_entry(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        assert hass.config_entries.async_remove_subentry(entry, subentry_id)
+        await hass.async_block_till_done()
+
+        # A later entry update before the reload runs must not re-schedule it.
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, "marker": True}
+        )
+        await hass.async_block_till_done()
+
+    mock_reload.assert_called_once_with(entry.entry_id)
+
+
+async def test_subentry_removal_keeps_vehicle_device_and_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Removing a vehicle subentry leaves the cloud vehicle device and entities intact."""
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = AsyncMock()
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, VIN), entry.entry_id
+    )
+    assert device is not None
+    # The device and its entities belong to the parent entry, never the subentry.
+    assert device.config_subentry_id is None
+    entities_before = er.async_entries_for_device(
+        entity_registry, device.id, include_disabled_entities=True
+    )
+    assert entities_before
+    assert all(entity.config_subentry_id is None for entity in entities_before)
+    unique_ids_before = {entity.unique_id for entity in entities_before}
+
+    # Patch the reload so only the subentry removal itself is exercised here.
+    with patch.object(hass.config_entries, "async_schedule_reload"):
+        assert hass.config_entries.async_remove_subentry(entry, subentry_id)
+        await hass.async_block_till_done()
+
+    # The vehicle device and every entity on it survive the removal.
+    device_after = device_registry.async_get_device_by_identifier(
+        (DOMAIN, VIN), entry.entry_id
+    )
+    assert device_after is not None
+    assert device_after.id == device.id
+    entities_after = er.async_entries_for_device(
+        entity_registry, device_after.id, include_disabled_entities=True
+    )
+    assert {entity.unique_id for entity in entities_after} == unique_ids_before
+
+
+async def test_no_subentry_auto_created_at_setup(hass: HomeAssistant) -> None:
+    """Setup never auto-creates a Bluetooth subentry for account vehicles."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.teslemetry.PLATFORMS", []):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+
+
+async def test_user_subentry_persists_across_reload(hass: HomeAssistant) -> None:
+    """A paired vehicle subentry survives a reload even if its vehicle leaves the account."""
+    entry = await _setup_paired_entry(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
+
+    # The vehicle drops off the account, so setup builds no vehicle for it, yet
+    # the user-added subentry (with its stored credentials) must not be removed.
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Teslemetry.products",
+            return_value={"response": []},
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+    assert len(subentries) == 1
+    assert subentries[0].subentry_id == subentry_id
+    assert subentries[0].data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}

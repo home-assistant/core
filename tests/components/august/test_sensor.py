@@ -3,12 +3,7 @@
 from typing import Any
 
 from homeassistant import core as ha
-from homeassistant.const import (
-    ATTR_ENTITY_PICTURE,
-    ATTR_UNIT_OF_MEASUREMENT,
-    PERCENTAGE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import PERCENTAGE, STATE_UNKNOWN, EntityStateAttribute
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -84,7 +79,10 @@ async def test_create_lock_with_linked_keypad(
         "sensor.front_front_door_lock_keypad_battery"
     )
     assert keypad_battery_state.state == "62"
-    assert keypad_battery_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert (
+        keypad_battery_state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT]
+        == PERCENTAGE
+    )
     entry = entity_registry.async_get("sensor.front_front_door_lock_keypad_battery")
     assert entry
     assert entry.unique_id == "5bc65c24e6ef2a263e1450a8_linked_keypad_battery"
@@ -111,7 +109,10 @@ async def test_create_lock_with_low_battery_linked_keypad(
 
     keypad_battery_state = states.get("sensor.front_front_door_lock_keypad_battery")
     assert keypad_battery_state.state == "10"
-    assert keypad_battery_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert (
+        keypad_battery_state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT]
+        == PERCENTAGE
+    )
     entry = entity_registry.async_get("sensor.front_front_door_lock_keypad_battery")
     assert entry
     assert entry.unique_id == "5bc65c24e6ef2a263e1450a8_linked_keypad_battery"
@@ -339,7 +340,7 @@ async def test_restored_state(
             "keypad": False,
             "tag": True,
             "autorelock": False,
-            ATTR_ENTITY_PICTURE: "image.png",
+            EntityStateAttribute.ENTITY_PICTURE: "image.png",
         },
     )
 
@@ -362,4 +363,4 @@ async def test_restored_state(
     state = hass.states.get(entity_id)
     assert state.state == "Tag Unlock"
     assert state.attributes["method"] == "tag"
-    assert state.attributes[ATTR_ENTITY_PICTURE] == "image.png"
+    assert state.attributes[EntityStateAttribute.ENTITY_PICTURE] == "image.png"
