@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyneosol import Action, TransportError
+from pyneosol import Action, ProtocolError, TransportError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -72,19 +72,34 @@ async def test_commands(
     assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
 
 
+@pytest.mark.parametrize(
+    ("exception", "open_calls"),
+    [
+        pytest.param(TransportError("link died"), 2, id="link-lost"),
+        pytest.param(ProtocolError("garbled answer"), 1, id="link-up"),
+    ],
+)
 async def test_command_failure(
-    hass: HomeAssistant, mock_dongle: MagicMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_dongle_class: MagicMock,
+    mock_dongle: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    open_calls: int,
 ) -> None:
     """Test a transmission failure surfaces as a translated error."""
     await setup_integration(hass, mock_config_entry)
-    mock_dongle.send.side_effect = TransportError("link died")
+    mock_dongle.send.side_effect = exception
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
         )
+    await hass.async_block_till_done()
 
     assert err.value.translation_key == "send_failed"
+    # Only a lost link needs the port reopened, which the entry reload does.
+    assert mock_dongle_class.open.call_count == open_calls
 
 
 async def test_dropped_channel_becomes_unavailable(

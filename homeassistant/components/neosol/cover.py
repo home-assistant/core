@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from pyneosol import Action, NeosolError
+from pyneosol import Action, NeosolError, TransportError
 
 from homeassistant.components.cover import (
     CoverDeviceClass,
@@ -54,6 +54,12 @@ class NeosolCover(NeosolEntity, CoverEntity):
         try:
             await self.coordinator.dongle.send(self.channel, action)
         except NeosolError as err:
+            if isinstance(err, TransportError):
+                # Only reopening the port recovers a lost link, so reload now rather
+                # than wait for the next poll to notice.
+                self.hass.config_entries.async_schedule_reload(
+                    self.coordinator.config_entry.entry_id
+                )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="send_failed",
