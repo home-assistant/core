@@ -1252,6 +1252,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/nederlandse_spoorwegen/ @YarmoM @heindrichpaul
 /homeassistant/components/neopool/ @svasek
 /tests/components/neopool/ @svasek
+/homeassistant/components/neosol/ @bbayszczak
+/tests/components/neosol/ @bbayszczak
 /homeassistant/components/ness_alarm/ @nickw444 @poshy163
 /tests/components/ness_alarm/ @nickw444 @poshy163
 /homeassistant/components/nest/ @allenporter
