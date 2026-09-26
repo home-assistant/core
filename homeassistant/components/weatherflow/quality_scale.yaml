@@ -96,7 +96,7 @@ rules:
   test-coverage:
     status: todo
     comment: |
-      There are no tests for the event platform entities, nor for
+      There are no tests for event entities firing, nor for
       async_unload_entry / device removal behaviour.
 
   # Gold

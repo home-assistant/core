@@ -5,8 +5,13 @@ from typing import override
 
 from pyweatherflowudp.device import EVENT_RAIN_START, EVENT_STRIKE, WeatherFlowDevice
 
-from homeassistant.components.event import EventEntity, EventEntityDescription
+from homeassistant.components.event import (
+    DOMAIN as EVENT_DOMAIN,
+    EventEntity,
+    EventEntityDescription,
+)
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -20,6 +25,7 @@ class WeatherFlowEventEntityDescription(EventEntityDescription):
     """Describes a WeatherFlow event entity."""
 
     wf_event: str
+    device_attr: str
     event_types: list[str]
 
 
@@ -29,12 +35,14 @@ EVENT_DESCRIPTIONS: list[WeatherFlowEventEntityDescription] = [
         translation_key="precip_start_event",
         event_types=["precipitation_start"],
         wf_event=EVENT_RAIN_START,
+        device_attr="last_rain_start_event",
     ),
     WeatherFlowEventEntityDescription(
         key="lightning_strike_event",
         translation_key="lightning_strike_event",
         event_types=["lightning_strike"],
         wf_event=EVENT_STRIKE,
+        device_attr="last_lightning_strike_event",
     ),
 ]
 
@@ -49,10 +57,17 @@ async def async_setup_entry(
     @callback
     def async_add_events(device: WeatherFlowDevice) -> None:
         LOGGER.debug("Adding events for %s", device)
-        async_add_entities(
-            WeatherFlowEventEntity(device, description)
-            for description in EVENT_DESCRIPTIONS
-        )
+        entity_registry = er.async_get(hass)
+        entities: list[WeatherFlowEventEntity] = []
+        for description in EVENT_DESCRIPTIONS:
+            if hasattr(device, description.device_attr):
+                entities.append(WeatherFlowEventEntity(device, description))
+            elif entity_id := entity_registry.async_get_entity_id(
+                EVENT_DOMAIN, DOMAIN, f"{device.serial_number}_{description.key}"
+            ):
+                # The device never sends this event, so the entity could never fire.
+                entity_registry.async_remove(entity_id)
+        async_add_entities(entities)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
