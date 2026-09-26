@@ -87,6 +87,8 @@ class AutomowerLawnMowerEntity(AutomowerBaseEntity, LawnMowerEntity):
             or mower_attributes.mower.activity in DOCKED_ACTIVITIES
         ):
             return LawnMowerActivity.DOCKED
+        if mower_attributes.mower.state is MowerStates.STOPPED:
+            return LawnMowerActivity.IDLE
         if mower_attributes.mower.state in MowerStates.IN_OPERATION:
             return LawnMowerActivity.MOWING
         return LawnMowerActivity.ERROR
