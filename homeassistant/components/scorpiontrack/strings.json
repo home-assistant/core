@@ -1,7 +1,9 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This shared location is already configured."
+      "already_configured": "This shared location is already configured.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_share": "This link belongs to a different shared location. Add it as a new integration entry instead."
     },
     "error": {
       "cannot_connect": "The ScorpionTrack share could not be reached right now.",
@@ -10,6 +12,16 @@
       "unknown": "An unexpected error occurred."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "share_token": "Share URL or token"
+        },
+        "data_description": {
+          "share_token": "Paste the full ScorpionTrack shared-location URL or just the token itself."
+        },
+        "description": "Enter a link for the same shared location. A different share must be added as a new integration entry.",
+        "title": "Update a ScorpionTrack share"
+      },
       "user": {
         "data": {
           "share_token": "Share URL or token"
