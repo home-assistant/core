@@ -9,6 +9,7 @@
     "icon_description": "Defines a template for the icon of the entity.",
     "picture": "Picture",
     "picture_description": "Defines a template for the picture of the entity.",
+    "template_error": "Error rendering template: {error_message}",
     "value_template": "Value Template",
     "value_template_description": "Defines a [template]({docs_url_template_data_processing}) to extract the value. `value` or `value_json` can be used."
   },
@@ -21,7 +22,7 @@
       "credentials_missing": "Username and password are both required",
       "endpoint_error": "Error communicating with resource: {error_message}",
       "invalid url": "Invalid URL",
-      "template_error": "Error rendering template: {error_message}"
+      "template_error": "[%key:component::rest::common::template_error%]"
     },
     "initiate_flow": {
       "user": "Add RESTful Resource"
@@ -173,6 +174,9 @@
     },
     "parse_error": {
       "message": "REST result could not be parsed as JSON: {parse_error_message}"
+    },
+    "template_error": {
+      "message": "[%key:component::rest::common::template_error%]"
     },
     "turn_off_failed": {
       "message": "Failed to turn off {resource}"

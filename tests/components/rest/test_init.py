@@ -14,6 +14,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PACKAGES,
+    CONF_PAYLOAD,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     UnitOfInformation,
@@ -566,3 +567,19 @@ async def test_setup_entry_bad_resource(
     assert entry.state == ConfigEntryState.SETUP_RETRY
     assert entry.error_reason_translation_key == "endpoint_error"
     assert "client error" in entry.reason
+
+
+async def test_setup_entry_template_error(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    get_config_entry_data: dict[str, Any],
+) -> None:
+    """Test setup entry with resource."""
+    entry = await async_setup_entry(
+        hass,
+        get_config_entry_data | {CONF_PAYLOAD: '{"bad_template": "{{ 1 / 0}}"}'},
+    )
+
+    await hass.async_block_till_done()
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "template_error"
