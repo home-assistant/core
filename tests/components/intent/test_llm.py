@@ -1,11 +1,17 @@
 """Tests for the intent LLM tools platform (generic intents)."""
 
+import probatio
 import pytest
 
 from homeassistant.components import llm as llm_component
+from homeassistant.components.button import ButtonDeviceClass
+from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import llm as intent_llm
 from homeassistant.components.intent.timers import async_register_timer_handler
+from homeassistant.components.media_player import MediaPlayerDeviceClass
+from homeassistant.components.switch import SwitchDeviceClass
+from homeassistant.components.valve import ValveDeviceClass
 from homeassistant.const import SERVICE_TURN_ON
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import intent, llm
@@ -49,6 +55,24 @@ async def test_generic_intents_exposed(hass: HomeAssistant) -> None:
     names = await _tool_names(hass)
     assert "intent__HassTurnOn" in names
     assert "intent__HassTurnOff" in names
+
+
+async def test_device_class_enum_has_a_stable_order(hass: HomeAssistant) -> None:
+    """Test the device class enum has a stable order."""
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
+    tool = next(tool for tool in result.tools if tool.name == "intent__HassTurnOn")
+    schema = probatio.to_openapi(tool.parameters)
+    assert schema["properties"]["device_class"]["items"]["enum"] == [
+        device_class.value
+        for device_class_enum in (
+            ButtonDeviceClass,
+            CoverDeviceClass,
+            MediaPlayerDeviceClass,
+            SwitchDeviceClass,
+            ValveDeviceClass,
+        )
+        for device_class in device_class_enum
+    ]
 
 
 async def test_turn_on_uses_domain_when_name_blank(hass: HomeAssistant) -> None:
