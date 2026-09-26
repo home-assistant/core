@@ -243,21 +243,46 @@ async def test_repair_flow_no_deprecated_models(
     ],
 )
 @pytest.mark.parametrize(
-    ("model", "thinking_effort", "expected_effort"),
+    ("model", "thinking_effort", "expected_options"),
     [
-        pytest.param("claude-opus-5-5", "none", "low", id="opus_5_5"),
-        pytest.param("claude-fable-5", "none", "low", id="fable_5"),
-        pytest.param("claude-fable-5-1", "none", "low", id="fable_5_1"),
+        pytest.param("claude-opus-5-5", "none", {}, id="opus_5_5"),
+        pytest.param("claude-fable-5", "none", {}, id="fable_5"),
+        pytest.param("claude-fable-5-1", "none", {}, id="fable_5_1"),
+        pytest.param("claude-opus-5-5-20260921", "none", {}, id="versioned_opus_5_5"),
         pytest.param(
-            "claude-opus-5-5-20260921", "none", "low", id="versioned_opus_5_5"
+            "claude-opus-5-5",
+            "high",
+            {CONF_THINKING_EFFORT: "high"},
+            id="adaptive_effort",
         ),
-        pytest.param("claude-opus-5-5", "high", "high", id="adaptive_effort"),
-        pytest.param("claude-opus-4-6", "none", "none", id="optional_thinking"),
         pytest.param(
-            "claude-opus-4-6-20260204", "none", "none", id="versioned_optional_thinking"
+            "claude-opus-4-6",
+            "none",
+            {CONF_THINKING_EFFORT: "none"},
+            id="optional_thinking",
         ),
-        pytest.param("claude-opus-4-5", "none", "none", id="nonadaptive_effort"),
-        pytest.param("claude-haiku-4-5", "none", "none", id="no_effort_support"),
+        pytest.param(
+            "claude-opus-4-6-20260204",
+            "none",
+            {CONF_THINKING_EFFORT: "none"},
+            id="versioned_optional_thinking",
+        ),
+        pytest.param("claude-opus-4-5", "none", {}, id="nonadaptive_effort"),
+        pytest.param(
+            "claude-opus-4-5-20251101", "none", {}, id="versioned_nonadaptive_effort"
+        ),
+        pytest.param(
+            "claude-opus-4-5",
+            "high",
+            {CONF_THINKING_EFFORT: "high"},
+            id="valid_nonadaptive_effort",
+        ),
+        pytest.param(
+            "claude-haiku-4-5",
+            "none",
+            {CONF_THINKING_EFFORT: "none"},
+            id="no_effort_support",
+        ),
     ],
 )
 async def test_repair_flow_thinking_effort(
@@ -266,9 +291,9 @@ async def test_repair_flow_thinking_effort(
     available_models: list[ModelInfo],
     model: str,
     thinking_effort: str,
-    expected_effort: str,
+    expected_options: dict[str, str],
 ) -> None:
-    """Repair incompatible disabled thinking while preserving valid effort settings."""
+    """Remove incompatible thinking effort while preserving valid effort settings."""
     entry = _make_entry(
         hass,
         title="Claude",
@@ -318,8 +343,8 @@ async def test_repair_flow_thinking_effort(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert _get_subentry(entry, "conversation").data == {
         CONF_CHAT_MODEL: model,
-        CONF_THINKING_EFFORT: expected_effort,
         CONF_MAX_TOKENS: 4096,
+        **expected_options,
     }
 
 
@@ -450,9 +475,8 @@ async def test_repair_flow_model_lookup_error(
         "retirement_date": "February 19th, 2026",
     }
     assert _get_subentry(entry, "conversation").data == {
-        **conversation_data,
         CONF_CHAT_MODEL: "claude-opus-5-5",
-        CONF_THINKING_EFFORT: "low",
+        CONF_MAX_TOKENS: 4096,
     }
     assert _get_subentry(entry, "ai_task_data").data == task_data
     assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None

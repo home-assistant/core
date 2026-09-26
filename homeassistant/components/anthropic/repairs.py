@@ -20,7 +20,6 @@ from homeassistant.helpers.selector import (
 from .const import (
     CONF_CHAT_MODEL,
     CONF_THINKING_EFFORT,
-    DEFAULT,
     DOMAIN,
     THINKING_EFFORT_NONE_SUPPORTED_MODELS,
 )
@@ -216,11 +215,14 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
                 )
             if (
                 model_info.capabilities
-                and model_info.capabilities.thinking.types.adaptive.supported
+                and (
+                    model_info.capabilities.thinking.types.adaptive.supported
+                    or model_info.capabilities.effort.supported
+                )
                 and model_alias(model_info.id)
                 not in THINKING_EFFORT_NONE_SUPPORTED_MODELS
             ):
-                updated_data[CONF_THINKING_EFFORT] = DEFAULT[CONF_THINKING_EFFORT]
+                updated_data.pop(CONF_THINKING_EFFORT)
 
         self.hass.config_entries.async_update_subentry(
             entry,
