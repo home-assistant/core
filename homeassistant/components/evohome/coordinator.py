@@ -86,6 +86,14 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         """Set up the coordinator.
 
         Fetch the user information, and the configuration of their locations.
+
+        The hierarchy of objects is as follows:
+            Installation (of a User Account)
+            └── 0-many Locations
+                └── 0-1 Gateway (although schema is 0-many)
+                    └── 0-1 Controller (although schema is 0-many)
+                        ├── 1-many Zones (max 16, although schema is 0-many)
+                        └── 0-1 DHW
         """
 
         try:
@@ -103,6 +111,15 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
                     Unable to continue. Fix any configuration errors and restart HA
                 """
             ) from err
+
+        if not self.loc.gateways or not self.loc.gateways[0].systems:
+            raise UpdateFailed(
+                f"""
+                    Config error: the location at 'location_idx' = {self.loc_idx}
+                    has no gateway/system available (this is not currently supported).
+                    Unable to continue. Fix any configuration errors and restart HA
+                """
+            )
 
         self.tcs = self.loc.gateways[0].systems[0]
 
