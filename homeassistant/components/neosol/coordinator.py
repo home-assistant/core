@@ -64,11 +64,8 @@ class NeosolCoordinator(DataUpdateCoordinator[dict[int, Channel]]):
         try:
             channels = await self.dongle.used_channels()
         except TransportError as err:
-            # The serial link is gone, typically an unplugged dongle. The transport
-            # cannot recover on its own, only reopening the port does. Reloading is what
-            # reopens it, but only once the entry is up: during setup the retry that
-            # ConfigEntryNotReady triggers already does the same, and scheduling a reload
-            # from there would restart the setup in a loop.
+            # Only reopening the port recovers the link. During setup, the retry that
+            # ConfigEntryNotReady triggers already does it, and a reload would loop.
             if self.config_entry.state is ConfigEntryState.LOADED:
                 self.hass.config_entries.async_schedule_reload(
                     self.config_entry.entry_id
