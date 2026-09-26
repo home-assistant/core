@@ -1,0 +1,33 @@
+is_before:
+  target:
+    entity: &entity_filters
+      - domain: datetime
+      - domain: sensor
+        device_class: timestamp
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        automation_behavior:
+          mode: condition
+    reference:
+      required: true
+      selector:
+        choose:
+          translation_key: reference
+          choices:
+            now:
+              selector:
+                constant:
+                  translation_key: now
+                  value: now
+            entity:
+              selector:
+                entity:
+                  filter: *entity_filters
+    reference_offset:
+      selector:
+        duration:
+          enable_day: true
+          allow_negative: true
