@@ -37,7 +37,10 @@ from aiohomeconnect.model.program import (
 from aiohomeconnect.model.setting import SettingConstraints
 import pytest
 
-from homeassistant.components.home_connect.const import DOMAIN
+from homeassistant.components.home_connect.const import (
+    DOMAIN,
+    PROGRAMS_TRANSLATION_KEYS_MAP,
+)
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
@@ -419,6 +422,60 @@ async def test_select_program_functionality(
     )
     await hass.async_block_till_done()
     assert hass.states.is_state(entity_id, STATE_UNKNOWN)
+
+
+@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+async def test_select_program_static_mapping(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test the static mapping functionality at select program entities.
+
+    HotAir program is an option given by the API, but the API sends
+    a 3DHotAir which is not in the given options, but as stated by
+    Home Connect team, they are equivalent.
+    """
+    entity_id = "select.oven_active_program"
+    expected_program = "cooking_oven_program_heating_mode_hot_air"
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state != expected_program
+    options = state.attributes[ATTR_OPTIONS]
+    assert expected_program in options
+    assert (
+        PROGRAMS_TRANSLATION_KEYS_MAP[ProgramKey.COOKING_OVEN_HEATING_MODE_3D_HOT_AIR]
+        not in options
+    )
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                            raw_key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=ProgramKey.COOKING_OVEN_HEATING_MODE_3D_HOT_AIR,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+    assert hass.states.is_state(entity_id, expected_program)
 
 
 @pytest.mark.parametrize(
