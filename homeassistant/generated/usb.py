@@ -45,7 +45,9 @@ USB = [
         "vid": "0572",
     },
     {
+        "description": "*keeloq*",
         "domain": "neosol",
+        "manufacturer": "*profalux*",
         "pid": "0003",
         "vid": "10C4",
     },

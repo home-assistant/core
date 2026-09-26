@@ -13,7 +13,9 @@
   "single_config_entry": true,
   "usb": [
     {
+      "description": "*keeloq*",
       "known_devices": ["MAI-DONGLE868-1A"],
+      "manufacturer": "*profalux*",
       "pid": "0003",
       "vid": "10C4"
     }
