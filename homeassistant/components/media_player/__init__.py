@@ -3,7 +3,6 @@
 import asyncio
 import collections
 from collections.abc import Callable
-from contextlib import suppress
 import datetime as dt
 from enum import StrEnum
 import functools as ft
@@ -11,6 +10,7 @@ from functools import lru_cache
 import hashlib
 from http import HTTPStatus
 import logging
+import re
 import secrets
 from typing import Any, Final, Required, TypedDict, final, override
 from urllib.parse import quote, urlparse
@@ -1462,7 +1462,10 @@ async def websocket_search_media(
     connection.send_result(msg["id"], result)
 
 
-_FETCH_TIMEOUT = aiohttp.ClientTimeout(total=10)
+# 30s total; SoundCloud's artwork CDN occasionally exceeds 10s under load,
+# and a truncated short read here was the original symptom that motivated this
+# proxy hardening. Granular connect/read timeouts would be a follow-up.
+_FETCH_TIMEOUT = aiohttp.ClientTimeout(total=30)
 
 
 def _image_response_appears_complete(
@@ -1482,28 +1485,92 @@ def _image_response_appears_complete(
         return True
 
 
+# Matches the userinfo of any URL in free text, e.g. user:pass in
+# scheme://user:pass@host, so credentials in URLs the request redaction does
+# not know about (such as redirect targets) can be masked.
+_URL_USERINFO_RE = re.compile(r"(?<=://)[^/@\s]+(?=@)")
+
+
+def _redact_credentials(url: str) -> str:
+    """Return url with any user/password replaced by placeholders."""
+    # An unparsable URL can raise here while handling InvalidUrlClientError
+    # for that same URL; it must not escalate the logged failure into a 500.
+    try:
+        parts = URL(url)
+    except ValueError:
+        return "[malformed URL redacted]"
+    if parts.user is not None:
+        parts = parts.with_user("xxxx")
+    if parts.password is not None:
+        parts = parts.with_password("xxxxxxxx")
+    return str(parts)
+
+
+def _redact_credentials_in_text(text: str, url: str) -> str:
+    """Redact credentials of any URL appearing in text.
+
+    aiohttp exceptions can embed the request URL in their message, in either
+    raw (percent-encoded) or decoded form, so both variants are replaced.
+    Redirect errors stringify the redirect target instead, whose credentials
+    are unrelated to the request URL, so the userinfo of every URL in the
+    text is masked as well.
+    """
+    try:
+        parts = URL(url)
+    except ValueError:
+        # The userinfo of an unparsable URL cannot be identified, so drop
+        # the text rather than risk leaking credentials through it.
+        return "[text redacted: malformed URL]"
+    replacements = [
+        (password, "xxxxxxxx")
+        for password in (parts.raw_password, parts.password)
+        if password is not None and password != ""
+    ] + [
+        (user, "xxxx")
+        for user in (parts.raw_user, parts.user)
+        if user is not None and user != ""
+    ]
+    # Longest first, so a secret that is a prefix of another cannot mangle it
+    for secret, placeholder in sorted(
+        replacements, key=lambda r: len(r[0]), reverse=True
+    ):
+        text = text.replace(secret, placeholder)
+    return _URL_USERINFO_RE.sub("xxxx:xxxxxxxx", text)
+
+
 async def async_fetch_image(
     logger: logging.Logger, hass: HomeAssistant, url: str
 ) -> tuple[bytes | None, str | None]:
     """Retrieve an image."""
-    content, content_type = (None, None)
     websession = async_get_clientsession(hass)
-    with suppress(TimeoutError):
-        response = await websession.get(url, timeout=_FETCH_TIMEOUT)
-        if response.status == HTTPStatus.OK:
+    try:
+        async with websession.get(url, timeout=_FETCH_TIMEOUT) as response:
+            if response.status != HTTPStatus.OK:
+                logger.warning(
+                    "Error retrieving proxied image from %s: HTTP %d",
+                    _redact_credentials(url),
+                    response.status,
+                )
+                return None, None
             body = await response.read()
-            if _image_response_appears_complete(response, body):
-                content = body
-                if content_type := response.headers.get(CONTENT_TYPE):
-                    content_type = content_type.split(";")[0]
-
-    if content is None:
-        url_parts = URL(url)
-        if url_parts.user is not None:
-            url_parts = url_parts.with_user("xxxx")
-        if url_parts.password is not None:
-            url_parts = url_parts.with_password("xxxxxxxx")
-        url = str(url_parts)
-        logger.warning("Error retrieving proxied image from %s", url)
-
-    return content, content_type
+            if not _image_response_appears_complete(response, body):
+                logger.warning(
+                    "Discarding truncated image from %s "
+                    "(received %d of %s bytes, content-type %s)",
+                    _redact_credentials(url),
+                    len(body),
+                    response.headers.get(CONTENT_LENGTH),
+                    response.headers.get(CONTENT_TYPE),
+                )
+                return None, None
+            ct_header = response.headers.get(CONTENT_TYPE)
+            content_type = ct_header.split(";")[0] if ct_header else None
+            return body, content_type
+    except (TimeoutError, aiohttp.ClientError) as err:
+        logger.warning(
+            "Error retrieving proxied image from %s: %s",
+            _redact_credentials(url),
+            # str(TimeoutError()) is empty; fall back to the exception type
+            _redact_credentials_in_text(str(err), url) or type(err).__name__,
+        )
+        return None, None
