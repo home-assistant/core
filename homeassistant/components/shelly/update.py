@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Final, cast, override
+from typing import TYPE_CHECKING, Any, Final, cast, override
 
 from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
@@ -22,11 +22,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
+    BTHOME_DEVICE_IDENTIFIER,
     CONF_SLEEP_PERIOD,
     DOMAIN,
     LOGGER,
     OTA_BEGIN,
     OTA_ERROR,
+    OTA_MSG_UPDATING,
     OTA_PROGRESS,
     OTA_SUCCESS,
 )
@@ -39,8 +41,14 @@ from .entity import (
     ShellySleepingRpcAttributeEntity,
     async_setup_entry_rest,
     async_setup_entry_rpc,
+    rpc_call,
 )
-from .utils import get_device_entry_gen, get_release_url
+from .utils import (
+    get_blu_trv_device_info,
+    get_device_entry_gen,
+    get_release_url,
+    get_version_from_fw_id,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -51,6 +59,13 @@ class RpcUpdateDescription(RpcEntityDescription, UpdateEntityDescription):
 
     latest_version: Callable[[dict], Any]
     beta: bool
+
+
+@dataclass(frozen=True, kw_only=True)
+class RpcBluTrvUpdateDescription(RpcEntityDescription, UpdateEntityDescription):
+    """Class to describe a RPC BLU TRV update."""
+
+    latest_version: Callable[[str], str | None]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -165,6 +180,129 @@ class RpcLoraAddOnUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
             )
 
 
+class RpcBluTrvUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
+    """Represent a RPC BLU TRV update entity."""
+
+    _attr_supported_features = (
+        UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+    )
+    entity_description: RpcBluTrvUpdateDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcBluTrvUpdateDescription,
+    ) -> None:
+        """Initialize update entity."""
+        super().__init__(coordinator, key, attribute, description)
+
+        config = coordinator.device.config[key]
+        self._attr_device_info = get_blu_trv_device_info(
+            coordinator.hass,
+            coordinator.config_entry.entry_id,
+            config,
+            config["addr"],
+            coordinator.mac,
+            coordinator.device.status[key].get("fw_ver"),
+        )
+
+        update_coordinator = coordinator.config_entry.runtime_data.rpc_blu_trv_update
+
+        if TYPE_CHECKING:
+            assert update_coordinator
+
+        self._update_coordinator = update_coordinator
+        self._ota_component = f"{BTHOME_DEVICE_IDENTIFIER}:{self._id}"
+        self._ota_in_progress = False
+        self._ota_progress_percentage: int | None = None
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self._update_coordinator.async_add_listener(self._update_callback)
+        )
+        self.async_on_remove(
+            self.coordinator.async_subscribe_ota_events(self._ota_progress_callback)
+        )
+
+    @callback
+    def _ota_progress_callback(self, event: dict[str, Any]) -> None:
+        """Handle BLU TRV OTA progress."""
+        if not self._ota_in_progress or event.get("component") != self._ota_component:
+            return
+
+        event_type = event["event"]
+        if event_type == OTA_BEGIN:
+            self._ota_progress_percentage = 0
+        elif event_type == OTA_PROGRESS:
+            # Both OTA phases count from 0 to 100, map them onto the first and the
+            # second half of the progress bar
+            offset = 50 if event["msg"] == OTA_MSG_UPDATING else 0
+            self._ota_progress_percentage = offset + event["progress_percent"] // 2
+        elif event_type in (OTA_ERROR, OTA_SUCCESS):
+            self._ota_in_progress = False
+            self._ota_progress_percentage = None
+
+        self.async_write_ha_state()
+
+    @property
+    @override
+    def in_progress(self) -> bool:
+        """Update installation in progress."""
+        return self._ota_in_progress
+
+    @property
+    @override
+    def update_percentage(self) -> int | None:
+        """Update installation progress."""
+        return self._ota_progress_percentage
+
+    @property
+    @override
+    def installed_version(self) -> str | None:
+        """Version currently in use."""
+        return cast(str | None, self.status.get(self.entity_description.sub_key))
+
+    @property
+    @override
+    def latest_version(self) -> str | None:
+        """Latest version available for install."""
+        if (firmware := self._update_coordinator.available_firmware) is None:
+            return self.installed_version
+
+        return (
+            self.entity_description.latest_version(firmware) or self.installed_version
+        )
+
+    @rpc_call
+    @override
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
+    ) -> None:
+        """Install the latest firmware version."""
+        LOGGER.info(
+            "Starting OTA update of BLU TRV %s from '%s' to '%s'",
+            self.entity_id,
+            self.installed_version,
+            self.latest_version,
+        )
+
+        if TYPE_CHECKING:
+            assert self._id is not None
+
+        self._ota_in_progress = True
+
+        try:
+            await self.coordinator.device.blu_trv_update_firmware(self._id)
+        finally:
+            self._ota_in_progress = False
+            self._ota_progress_percentage = None
+
+
 RPC_UPDATES: Final = {
     "fwupdate": RpcUpdateDescription(
         key="sys",
@@ -193,6 +331,14 @@ RPC_UPDATES: Final = {
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
         entity_class=RpcLoraAddOnUpdateEntity,
+    ),
+    "blutrv_fwupdate": RpcBluTrvUpdateDescription(
+        key="blutrv",
+        sub_key="fw_ver",
+        latest_version=get_version_from_fw_id,
+        device_class=UpdateDeviceClass.FIRMWARE,
+        entity_category=EntityCategory.CONFIG,
+        entity_class=RpcBluTrvUpdateEntity,
     ),
 }
 

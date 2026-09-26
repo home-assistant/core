@@ -1,12 +1,15 @@
 """Tests for Shelly update platform."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
+from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_PLUS_2PM
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.shelly.const import (
+    BLU_TRV_UPDATE_CHECK_INTERVAL,
     DOMAIN,
     GEN1_RELEASE_URL,
     GEN2_BETA_RELEASE_URL,
@@ -44,8 +47,9 @@ from . import (
     register_device,
     register_entity,
 )
+from .conftest import MOCK_BLU_TRV_AVAILABLE_FIRMWARE
 
-from tests.common import mock_restore_cache
+from tests.common import async_fire_time_changed, mock_restore_cache
 
 
 @pytest.fixture(autouse=True)
@@ -998,6 +1002,321 @@ async def test_rpc_update_auth_error(
         UPDATE_DOMAIN,
         SERVICE_INSTALL,
         {ATTR_ENTITY_ID: "update.test_name_firmware"},
+        blocking=True,
+    )
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == entry.entry_id
+
+
+@pytest.mark.parametrize("model", [MODEL_BLU_GATEWAY_G3, MODEL_PLUS_2PM])
+async def test_blu_trv_update(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    entity_registry: EntityRegistry,
+    model: str,
+) -> None:
+    """Test BLU TRV update entity on any device hosting a BLU TRV."""
+    entity_id = "update.trv_name_firmware"
+
+    await init_integration(hass, 3, model=model)
+
+    mock_blu_trv.blu_trv_check_for_updates.assert_called_once_with()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v1.2.10"
+    assert state.attributes[ATTR_LATEST_VERSION] == "v1.3.0"
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+    )
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-blutrv:200-blutrv_fwupdate"
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_blu_trv.blu_trv_update_firmware.assert_called_once_with(200)
+
+
+async def test_blu_trv_update_progress(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test BLU TRV update entity progress reporting."""
+    entity_id = "update.trv_name_firmware"
+    ota_events = [
+        {"component": "bthomedevice:200", "event": "ota_begin", "msg": "Downloading"},
+        {
+            "component": "bthomedevice:200",
+            "event": "ota_progress",
+            "msg": "Downloading",
+            "progress_percent": 39,
+        },
+        {
+            "component": "bthomedevice:200",
+            "event": "ota_progress",
+            "msg": "Downloading",
+            "progress_percent": 80,
+        },
+        {
+            "component": "bthomedevice:200",
+            "event": "ota_progress",
+            "msg": "Updating",
+            "progress_percent": 0,
+        },
+        {
+            "component": "bthomedevice:200",
+            "event": "ota_progress",
+            "msg": "Updating",
+            "progress_percent": 100,
+        },
+        {"component": "bthomedevice:200", "event": "ota_success", "msg": "Success"},
+    ]
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+
+    progress: list[tuple[bool, int | None]] = []
+
+    async def _update_firmware(trv_id: int) -> None:
+        """Report OTA progress while the call is pending."""
+        for event in ota_events:
+            inject_rpc_device_event(
+                monkeypatch, mock_blu_trv, {"events": [event], "ts": 1789992654.77}
+            )
+            assert (state := hass.states.get(entity_id))
+            progress.append(
+                (
+                    state.attributes[ATTR_IN_PROGRESS],
+                    state.attributes[ATTR_UPDATE_PERCENTAGE],
+                )
+            )
+
+    mock_blu_trv.blu_trv_update_firmware.side_effect = _update_firmware
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert progress == [
+        (True, 0),
+        (True, 19),
+        (True, 40),
+        (True, 50),
+        (True, 100),
+        (False, None),
+    ]
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+
+
+async def test_blu_trv_update_shared_firmware_check(
+    hass: HomeAssistant, mock_blu_trv: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that one firmware check serves every BLU TRV paired with the host."""
+    monkeypatch.setitem(mock_blu_trv.status["blutrv:201"], "fw_ver", "v1.2.10")
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    mock_blu_trv.blu_trv_check_for_updates.assert_called_once_with()
+
+    for entity_id in ("update.trv_name_firmware", "update.trv_201_firmware"):
+        assert (state := hass.states.get(entity_id))
+        assert state.state == STATE_ON
+        assert state.attributes[ATTR_LATEST_VERSION] == "v1.3.0"
+
+
+async def test_blu_trv_update_without_firmware_version(
+    hass: HomeAssistant, entity_registry: EntityRegistry
+) -> None:
+    """Test no update entity for a BLU TRV that does not report its firmware."""
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    assert hass.states.get("update.trv_201_firmware") is None
+    assert entity_registry.async_get("update.trv_201_firmware") is None
+
+
+@pytest.mark.parametrize("fw_id", ["20241224-101010/v1.2.10@aabbccdd", "1.11.0"])
+async def test_blu_trv_update_no_update_available(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_blu_trv: Mock,
+    fw_id: str,
+) -> None:
+    """Test BLU TRV update entity when no newer firmware is available."""
+    entity_id = "update.trv_name_firmware"
+
+    mock_blu_trv.blu_trv_check_for_updates.return_value = fw_id
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v1.2.10"
+    assert state.attributes[ATTR_LATEST_VERSION] == "v1.2.10"
+
+    mock_blu_trv.blu_trv_check_for_updates.return_value = (
+        MOCK_BLU_TRV_AVAILABLE_FIRMWARE
+    )
+
+    freezer.tick(timedelta(seconds=BLU_TRV_UPDATE_CHECK_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_LATEST_VERSION] == "v1.3.0"
+
+
+@pytest.mark.parametrize("exc", [DeviceConnectionError, RpcCallError(-1, "error")])
+async def test_blu_trv_update_check_errors(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_blu_trv: Mock,
+    exc: Exception,
+) -> None:
+    """Test BLU TRV update entity when checking for updates fails."""
+    entity_id = "update.trv_name_firmware"
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    mock_blu_trv.blu_trv_check_for_updates.side_effect = exc
+
+    freezer.tick(timedelta(seconds=BLU_TRV_UPDATE_CHECK_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v1.2.10"
+    assert state.attributes[ATTR_LATEST_VERSION] == "v1.3.0"
+
+
+async def test_blu_trv_update_check_device_disconnected(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_blu_trv: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test that a disconnected host device is not asked for updates."""
+    entity_id = "update.trv_name_firmware"
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    mock_blu_trv.blu_trv_check_for_updates.reset_mock()
+    monkeypatch.setattr(mock_blu_trv, "connected", False)
+
+    freezer.tick(timedelta(seconds=BLU_TRV_UPDATE_CHECK_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_blu_trv.blu_trv_check_for_updates.assert_not_called()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_LATEST_VERSION] == "v1.3.0"
+
+
+async def test_blu_trv_update_check_auth_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_blu_trv: Mock,
+) -> None:
+    """Test BLU TRV update check authentication error."""
+    entry = await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    mock_blu_trv.blu_trv_check_for_updates.side_effect = InvalidAuthError
+
+    freezer.tick(timedelta(seconds=BLU_TRV_UPDATE_CHECK_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == entry.entry_id
+
+
+@pytest.mark.parametrize(
+    ("exc", "error"),
+    [
+        (
+            DeviceConnectionError,
+            "Device communication error occurred while calling action for"
+            " update.trv_name_firmware of Test name",
+        ),
+        (
+            RpcCallError(-1, "error"),
+            "RPC call error occurred while calling action for"
+            " update.trv_name_firmware of Test name",
+        ),
+    ],
+)
+async def test_blu_trv_update_install_errors(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    exc: Exception,
+    error: str,
+) -> None:
+    """Test BLU TRV update entity install connection/call errors."""
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    mock_blu_trv.blu_trv_update_firmware.side_effect = exc
+
+    with pytest.raises(HomeAssistantError, match=error):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: "update.trv_name_firmware"},
+            blocking=True,
+        )
+
+
+async def test_blu_trv_update_install_auth_error(
+    hass: HomeAssistant, mock_blu_trv: Mock
+) -> None:
+    """Test BLU TRV update entity install authentication error."""
+    entry = await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    mock_blu_trv.blu_trv_update_firmware.side_effect = InvalidAuthError
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: "update.trv_name_firmware"},
         blocking=True,
     )
 

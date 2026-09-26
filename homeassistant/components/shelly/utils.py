@@ -60,6 +60,7 @@ from .const import (
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
+    FW_ID_VERSION_PATTERN,
     GEN1_RELEASE_URL,
     GEN2_BETA_RELEASE_URL,
     GEN2_RELEASE_URL,
@@ -556,6 +557,14 @@ def mac_address_from_name(name: str) -> str | None:
         return None
 
     return mac.upper()
+
+
+def get_version_from_fw_id(fw_id: str) -> str | None:
+    """Return the version part of a Shelly firmware ID."""
+    if match := FW_ID_VERSION_PATTERN.search(fw_id):
+        return match["version"]
+
+    return None
 
 
 def get_release_url(gen: int, model: str, beta: bool) -> str | None:
