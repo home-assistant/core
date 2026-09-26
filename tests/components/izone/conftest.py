@@ -58,6 +58,8 @@ def create_mock_controller(
     controller.is_ipower = False
     controller.mode = Controller.Mode.COOL
     controller.temp_setpoint = 24.0
+    controller.control_setpoint_owner = None
+    controller.control_setpoint = None
     controller.temp_return = 22.0
     controller.temp_supply = 16.0
     controller.temp_min = 15.0
@@ -140,12 +142,13 @@ def create_mock_zone(
     name: str = "Zone",
     temp_current: float | None = 22.5,
     temp_setpoint: float = 24.0,
+    zone_type: Zone.Type = Zone.Type.AUTO,
 ) -> Mock:
     """Create a mock Zone with configurable parameters."""
     zone = Mock(spec=Zone)
     zone.index = index
     zone.name = name
-    zone.type = Zone.Type.AUTO
+    zone.type = zone_type
     zone.mode = Zone.Mode.AUTO
     zone.temp_current = temp_current
     zone.temp_setpoint = temp_setpoint
@@ -157,7 +160,7 @@ def create_mock_zone(
         "Id": 0,
         "Index": index,
         "Name": name,
-        "Type": "auto",
+        "Type": zone_type.value,
         "Mode": "auto",
         "SetPoint": temp_setpoint,
         "Temp": temp_current if temp_current is not None else 0,

@@ -47,6 +47,7 @@ _IZONE_FAN_TO_HA = {
 }
 
 ATTR_AIRFLOW = "airflow"
+ATTR_CONTROL_ZONE_SOURCE = "control_zone_source"
 
 IZONE_SERVICE_AIRFLOW_MIN = "airflow_min"
 IZONE_SERVICE_AIRFLOW_MAX = "airflow_max"
@@ -99,32 +100,13 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
         controller = coordinator.controller
         self._unknown_fan_logged = False
         self._unknown_mode_logged = False
+        self._unexpected_control_zone_logged = False
 
         self._attr_supported_features = (
             ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.TURN_OFF
             | ClimateEntityFeature.TURN_ON
         )
-
-        # Typically, iZone will automatically set the controller's target
-        # temperature; but there are situations where Home Assistant should be
-        # allowed to set it:
-        #
-        # 1. The controller is in RAS mode (i.e., not in master/slave mode).
-        # 2. The controller is in master mode, but the control zone is set to
-        #    zone 13 (i.e., the master unit itself), or an invalid zone
-        #    (greater than the total number of zones). In this case, the
-        #    master unit is controlling the temperature directly.
-        # 3. Any of the zones do not have a temperature sensor
-        if (
-            controller.ras_mode == "RAS"
-            or (
-                controller.ras_mode == "master"
-                and controller.zone_ctrl > controller.zones_total
-            )
-            or any(zone.temp_current is None for zone in controller.zones)
-        ):
-            self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
         self._state_to_pizone = {
             HVACMode.COOL: Controller.Mode.COOL,
@@ -155,9 +137,23 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
 
     @property
     @override
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return supported features.
+
+        TARGET_TEMPERATURE follows live ownership: writable only when the
+        controller owns the unit target (return-air / unit CTS). When a zone
+        owns control, omit it so a late set cannot race onto the wrong zone.
+        """
+        features = self._attr_supported_features
+        if self.controller.control_setpoint_owner is self.controller:
+            return features | ClimateEntityFeature.TARGET_TEMPERATURE
+        return features
+
+    @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the optional state attributes."""
-        return {
+        data: dict[str, Any] = {
             "supply_temperature": show_temp(
                 self.hass,
                 self.supply_temperature,
@@ -182,6 +178,25 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
                 PRECISION_HALVES,
             ),
         }
+        # Same idea as person.source: which zone climate is driving the unit.
+        if (source := self.control_zone_source) is not None:
+            data[ATTR_CONTROL_ZONE_SOURCE] = source
+        return data
+
+    @property
+    def control_zone_source(self) -> str | None:
+        """Return the zone climate entity_id driving the unit, if any.
+
+        Omitted when the controller owns control (unit return-air sensor) or
+        when no matching zone owner exists.
+        """
+        owner = self.controller.control_setpoint_owner
+        if not isinstance(owner, Zone):
+            return None
+        zone_device = self.zones.get(owner)
+        if zone_device is None:
+            return None
+        return zone_device.entity_id
 
     @property
     @override
@@ -235,21 +250,53 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
     @property
     @override
     def current_temperature(self) -> float | None:
-        """Return the current temperature."""
+        """Return the current temperature.
+
+        Follows the active control zone's room sensor when an AUTO zone owns
+        control; otherwise the unit return-air (or supply in free air / eco).
+
+        A non-climate (CONST/OPCL) control zone, or an AUTO zone without a
+        room reading, is unexpected device behaviour — report unknown and log
+        once so it can be investigated.
+        """
         if self.controller.free_air:
             return self.controller.temp_supply
+        owner = self.controller.control_setpoint_owner
+        if isinstance(owner, Zone):
+            if owner.type is Zone.Type.AUTO and owner.temp_current is not None:
+                return owner.temp_current
+            if not self._unexpected_control_zone_logged:
+                _LOGGER.error(
+                    "Unexpected iZone control zone on controller %s: "
+                    "zone index %s type %s temp %s; current temperature "
+                    "unavailable. The bridge is not expected to select a "
+                    "non-climate zone (or an AUTO zone without a room sensor) "
+                    "as CtrlZone. Please open an issue at "
+                    "https://github.com/home-assistant/core/issues "
+                    "and attach diagnostics",
+                    self.controller.device_uid,
+                    owner.index,
+                    owner.type.value,
+                    owner.temp_current,
+                )
+                self._unexpected_control_zone_logged = True
+            return None
         return self.controller.temp_return
 
+    def _active_control_zone(self) -> Zone | None:
+        """Return the pizone zone currently driving the unit, if any."""
+        if self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
+            return None
+        owner = self.controller.control_setpoint_owner
+        return owner if isinstance(owner, Zone) else None
+
     @property
-    def control_zone_name(self):
+    def control_zone_name(self) -> str | None:
         """Return the zone that currently controls the AC unit.
 
         Only relevant if target temp not set by controller.
         """
-        if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
-            return None
-        zone_ctrl = self.controller.zone_ctrl
-        zone = next((z for z in self.zones.values() if z.zone_index == zone_ctrl), None)
+        zone = self._active_control_zone()
         if zone is None:
             return None
         return zone.name
@@ -260,13 +307,9 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
 
         Only relevant if target temp not set by controller.
         """
-        if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
+        if self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             return None
-        zone_ctrl = self.controller.zone_ctrl
-        zone = next((z for z in self.zones.values() if z.zone_index == zone_ctrl), None)
-        if zone is None:
-            return None
-        return zone.target_temperature
+        return self.controller.control_setpoint
 
     @property
     @override
@@ -275,9 +318,9 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
 
         Either from control zone or master unit.
         """
-        if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
+        if self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             return self.controller.temp_setpoint
-        return self.control_zone_setpoint
+        return self.controller.control_setpoint
 
     @property
     def supply_temperature(self) -> float | None:
