@@ -105,10 +105,13 @@ async def test_diagnostics_inverter_unreachable(
     error_name: str,
 ) -> None:
     """Test diagnostics still download when the inverter stops answering."""
-    mock_connection.for_unit(1).fail_requests(error)
+    unit = mock_connection.for_unit(1)
+    unit.fail_requests(error)
+    unit.read_events.clear()
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
 
     assert diag["read_error"] == error_name
     assert diag["raw"] is None
     assert diag["address_masks"] is None
+    assert len(unit.read_events) == 1
