@@ -13,10 +13,41 @@
       'datetime_str': '2024-01-01T00:00:00',
       'timestamp': 1704067200,
       'values': dict({
+        '0.0.0': '**REDACTED**',
+        '0.2.0': dict({
+          'name': 'Firmware Revision',
+          'unit': '',
+          'value': 10203,
+        }),
+        '1.6.0': dict({
+          'name': 'Maximum Demand',
+          'unit': 'kW',
+          'value': 4.21,
+        }),
+        '1.7.0': dict({
+          'name': 'Import Power',
+          'unit': 'W',
+          'value': 1480.2,
+        }),
         '1.8.0': dict({
           'name': 'Total Import',
           'unit': 'kWh',
           'value': 12345.678,
+        }),
+        '1.8.3': dict({
+          'name': 'Import Tariff 3',
+          'unit': 'kWh',
+          'value': 823.11,
+        }),
+        '10.7.0': dict({
+          'name': 'Apparent Power Export',
+          'unit': 'VA',
+          'value': 14.1,
+        }),
+        '12.7.0': dict({
+          'name': 'Voltage Average',
+          'unit': 'V',
+          'value': 230.4,
         }),
         '13.7.0': dict({
           'name': 'Power Factor',
@@ -28,15 +59,55 @@
           'unit': 'Hz',
           'value': 50.01,
         }),
+        '140.7.0': dict({
+          'name': 'Internal Frequency',
+          'unit': 'Hz',
+          'value': 49.99,
+        }),
+        '15.7.0': dict({
+          'name': 'Absolute Power',
+          'unit': 'W',
+          'value': 1467.7,
+        }),
+        '15.8.0': dict({
+          'name': 'Absolute Energy',
+          'unit': 'kWh',
+          'value': 13580.245,
+        }),
         '16.7.0': dict({
           'name': 'Active Power',
           'unit': 'W',
           'value': 1500.5,
         }),
+        '2.7.0': dict({
+          'name': 'Export Power',
+          'unit': 'W',
+          'value': 12.5,
+        }),
         '2.8.0': dict({
           'name': 'Total Export',
           'unit': 'kWh',
           'value': 1234.567,
+        }),
+        '21.7.0': dict({
+          'name': 'Import Power L1',
+          'unit': 'W',
+          'value': 500.1,
+        }),
+        '23.7.0': dict({
+          'name': 'Reactive Power L1',
+          'unit': 'var',
+          'value': 120.4,
+        }),
+        '3.7.0': dict({
+          'name': 'Reactive Power',
+          'unit': 'var',
+          'value': 231.7,
+        }),
+        '3.8.0': dict({
+          'name': 'Reactive Import',
+          'unit': 'kvarh',
+          'value': 245.891,
         }),
         '31.7.0': dict({
           'name': 'Current L1',
@@ -47,6 +118,67 @@
           'name': 'Voltage L1',
           'unit': 'V',
           'value': 230.1,
+        }),
+        '4.7.0': dict({
+          'name': 'Reactive Power Export',
+          'unit': 'var',
+          'value': 12.4,
+        }),
+        '4.8.0': dict({
+          'name': 'Reactive Export',
+          'unit': 'kvarh',
+          'value': 87.316,
+        }),
+        '5.8.0': dict({
+          'name': 'Reactive QI',
+          'unit': 'kvarh',
+          'value': 101.532,
+        }),
+        '5.8.1': dict({
+          'name': 'Reactive QI Tariff 1',
+          'unit': 'kvarh',
+          'value': 55.217,
+        }),
+        '6.8.0': dict({
+          'name': 'Reactive QII',
+          'unit': 'kvarh',
+          'value': 23.114,
+        }),
+        '7.8.0': dict({
+          'name': 'Reactive QIII',
+          'unit': 'kvarh',
+          'value': 5.871,
+        }),
+        '8.8.0': dict({
+          'name': 'Reactive QIV',
+          'unit': 'kvarh',
+          'value': 44.209,
+        }),
+        '9.7.0': dict({
+          'name': 'Apparent Power',
+          'unit': 'VA',
+          'value': 1502.3,
+        }),
+        '91.7.0': dict({
+          'name': 'Neutral Current',
+          'unit': 'A',
+          'value': 0.42,
+        }),
+        '94.91.0': dict({
+          'name': 'Status Word',
+          'unit': '',
+          'value': '0x0182',
+        }),
+        '94.91.1': dict({
+          'name': '',
+          'unit': '',
+          'value': 3,
+        }),
+        '96.1.0': '**REDACTED**',
+        '96.5.0': dict({
+          'name': 'Operating Status',
+          'unit': '',
+          'value': 386,
         }),
       }),
     }),
