@@ -1,6 +1,6 @@
 """Config flow for the Template integration."""
 
-from collections.abc import Callable, Coroutine, Mapping
+from collections.abc import Callable, Mapping
 from functools import partial
 from typing import Any, cast, override
 
@@ -40,15 +40,13 @@ from homeassistant.helpers.schema_config_entry_flow import (
 
 from . import validators as tcv
 from .alarm_control_panel import (
-    CONF_ARM_AWAY_ACTION,
-    CONF_ARM_CUSTOM_BYPASS_ACTION,
-    CONF_ARM_HOME_ACTION,
-    CONF_ARM_NIGHT_ACTION,
-    CONF_ARM_VACATION_ACTION,
     CONF_CODE_ARM_REQUIRED,
     CONF_CODE_FORMAT,
     CONF_DISARM_ACTION,
     CONF_TRIGGER_ACTION,
+    STATE_NAME_ACTION_KEYS,
+    STATE_NAME_ACTIONS,
+    STATE_NAME_KEYS,
     TemplateCodeFormat,
     async_create_preview_alarm_control_panel,
 )
@@ -176,11 +174,15 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
         schema |= {
             probatio.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
             probatio.Optional(CONF_DISARM_ACTION): selector.ActionSelector(),
-            probatio.Optional(CONF_ARM_AWAY_ACTION): selector.ActionSelector(),
-            probatio.Optional(CONF_ARM_CUSTOM_BYPASS_ACTION): selector.ActionSelector(),
-            probatio.Optional(CONF_ARM_HOME_ACTION): selector.ActionSelector(),
-            probatio.Optional(CONF_ARM_NIGHT_ACTION): selector.ActionSelector(),
-            probatio.Optional(CONF_ARM_VACATION_ACTION): selector.ActionSelector(),
+        }
+        for state, action_key in STATE_NAME_ACTIONS.items():
+            schema |= {
+                probatio.Optional(action_key): selector.ActionSelector(),
+                probatio.Optional(
+                    STATE_NAME_KEYS[state],
+                ): selector.TextSelector(),
+            }
+        schema |= {
             probatio.Optional(CONF_TRIGGER_ACTION): selector.ActionSelector(),
             probatio.Optional(
                 CONF_CODE_ARM_REQUIRED, default=True
@@ -547,10 +549,7 @@ def _validate_state_class(options: dict[str, Any]) -> None:
 
 def validate_user_input(
     template_type: str,
-) -> Callable[
-    [SchemaCommonFlowHandler, dict[str, Any]],
-    Coroutine[Any, Any, dict[str, Any]],
-]:
+) -> Callable:
     """Do post validation of user input.
 
     For sensors: Validate unit of measurement.
@@ -561,7 +560,6 @@ def validate_user_input(
         _: SchemaCommonFlowHandler,
         user_input: dict[str, Any],
     ) -> dict[str, Any]:
-        """Add template type to user input."""
         if template_type == Platform.SENSOR:
             _validate_unit(user_input)
             _validate_state_class(user_input)
@@ -569,6 +567,10 @@ def validate_user_input(
             tcv.requires_option(CONF_TARGET_TEMPERATURE, SET_TEMPERATURE_ACTION)(
                 user_input
             )
+        if template_type == Platform.ALARM_CONTROL_PANEL:
+            for state_key, action_key in STATE_NAME_ACTION_KEYS.items():
+                if not user_input.get(action_key):
+                    user_input.pop(state_key, None)
         return {"template_type": template_type} | user_input
 
     return _validate_user_input

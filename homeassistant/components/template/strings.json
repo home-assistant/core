@@ -27,6 +27,11 @@
           "device_id": "[%key:common::config_flow::data::device%]",
           "disarm": "Actions on disarm",
           "name": "[%key:common::config_flow::data::name%]",
+          "state_name_away": "Friendly name for away",
+          "state_name_custom_bypass": "Friendly name for custom bypass",
+          "state_name_home": "Friendly name for home",
+          "state_name_night": "Friendly name for night",
+          "state_name_vacation": "Friendly name for vacation",
           "trigger": "Actions on trigger",
           "value_template": "[%key:component::template::common::state%]"
         },
@@ -674,6 +679,11 @@
           "code_format": "[%key:component::template::common::code_format%]",
           "device_id": "[%key:common::config_flow::data::device%]",
           "disarm": "[%key:component::template::config::step::alarm_control_panel::data::disarm%]",
+          "state_name_away": "[%key:component::template::config::step::alarm_control_panel::data::state_name_away%]",
+          "state_name_custom_bypass": "[%key:component::template::config::step::alarm_control_panel::data::state_name_custom_bypass%]",
+          "state_name_home": "[%key:component::template::config::step::alarm_control_panel::data::state_name_home%]",
+          "state_name_night": "[%key:component::template::config::step::alarm_control_panel::data::state_name_night%]",
+          "state_name_vacation": "[%key:component::template::config::step::alarm_control_panel::data::state_name_vacation%]",
           "trigger": "[%key:component::template::config::step::alarm_control_panel::data::trigger%]",
           "value_template": "[%key:component::template::common::state%]"
         },

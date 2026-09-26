@@ -55,6 +55,35 @@ CONF_CODE_ARM_REQUIRED = "code_arm_required"
 CONF_CODE_FORMAT = "code_format"
 CONF_DISARM_ACTION = "disarm"
 CONF_TRIGGER_ACTION = "trigger"
+CONF_STATE_NAME_PREFIX = "state_name_"
+
+ATTR_STATE_NAMES = "state_names"
+
+STATE_NAME_ACTIONS: dict[AlarmControlPanelState, str] = {
+    AlarmControlPanelState.ARMED_AWAY: CONF_ARM_AWAY_ACTION,
+    AlarmControlPanelState.ARMED_CUSTOM_BYPASS: CONF_ARM_CUSTOM_BYPASS_ACTION,
+    AlarmControlPanelState.ARMED_HOME: CONF_ARM_HOME_ACTION,
+    AlarmControlPanelState.ARMED_NIGHT: CONF_ARM_NIGHT_ACTION,
+    AlarmControlPanelState.ARMED_VACATION: CONF_ARM_VACATION_ACTION,
+}
+
+STATE_NAME_SUFFIXES: dict[AlarmControlPanelState, str] = {
+    AlarmControlPanelState.ARMED_AWAY: "away",
+    AlarmControlPanelState.ARMED_CUSTOM_BYPASS: "custom_bypass",
+    AlarmControlPanelState.ARMED_HOME: "home",
+    AlarmControlPanelState.ARMED_NIGHT: "night",
+    AlarmControlPanelState.ARMED_VACATION: "vacation",
+}
+
+STATE_NAME_KEYS: dict[AlarmControlPanelState, str] = {
+    state: f"{CONF_STATE_NAME_PREFIX}{suffix}"
+    for state, suffix in STATE_NAME_SUFFIXES.items()
+}
+
+STATE_NAME_ACTION_KEYS: dict[str, str] = {
+    STATE_NAME_KEYS[state]: action_key
+    for state, action_key in STATE_NAME_ACTIONS.items()
+}
 
 
 class TemplateCodeFormat(Enum):
@@ -91,6 +120,7 @@ ALARM_CONTROL_PANEL_COMMON_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_DISARM_ACTION): cv.SCRIPT_SCHEMA,
         probatio.Optional(CONF_STATE): cv.template,
         probatio.Optional(CONF_TRIGGER_ACTION): cv.SCRIPT_SCHEMA,
+        **{probatio.Optional(key): cv.string for key in STATE_NAME_KEYS.values()},
     }
 )
 
@@ -180,6 +210,13 @@ class AbstractTemplateAlarmControlPanel(
 
         self._attr_code_arm_required: bool = self._config[CONF_CODE_ARM_REQUIRED]
         self._attr_code_format = self._config[CONF_CODE_FORMAT].value
+
+        self._attr_state_names: dict[AlarmControlPanelState, str] = {
+            state: state_name
+            for state, key in STATE_NAME_KEYS.items()
+            if (state_name := self._config.get(key)) is not None
+            and self._config.get(STATE_NAME_ACTIONS[state]) is not None
+        }
 
         self.setup_state_template(
             "_attr_alarm_state",
@@ -280,6 +317,17 @@ class AbstractTemplateAlarmControlPanel(
             code=code,
         )
 
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes, merging in configured friendly state names."""
+        attrs = dict(self._attr_extra_state_attributes or {})
+        if self._attr_state_names:
+            attrs[ATTR_STATE_NAMES] = {
+                state.value: name for state, name in self._attr_state_names.items()
+            }
+        return attrs
+
     @override
     def restore_last_state_state(self, last_state: State) -> bool:
         """Restore the state from the last state."""
@@ -325,3 +373,14 @@ class TriggerAlarmControlPanelEntity(TriggerEntity, AbstractTemplateAlarmControl
         TriggerEntity.__init__(self, hass, coordinator, config)
         self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
         AbstractTemplateAlarmControlPanel.__init__(self, name)
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes, merging in configured friendly state names."""
+        attrs = dict(self._attr_extra_state_attributes or {})
+        if self._attr_state_names:
+            attrs[ATTR_STATE_NAMES] = {
+                state.value: name for state, name in self._attr_state_names.items()
+            }
+        return attrs

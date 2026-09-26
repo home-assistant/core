@@ -909,3 +909,75 @@ async def test_attributes_template_with_blocked_attributes(
 
     error = f"Unsupported attribute(s) found for {TEST_PANEL.entity_id}: {attribute}"
     assert error in caplog.text
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    "panel_config",
+    [
+        {
+            **ARM_HOME_ACTION,
+            **ARM_AWAY_ACTION,
+            "state_name_home": "Family home",
+            "state_name_away": "Away only",
+        }
+    ],
+)
+@pytest.mark.usefixtures("setup_panel")
+async def test_state_names_attribute(hass: HomeAssistant) -> None:
+    """Test that configured friendly state names are exposed as an attribute."""
+    state = hass.states.get(TEST_PANEL.entity_id)
+    assert state.attributes["state_names"] == {
+        AlarmControlPanelState.ARMED_HOME: "Family home",
+        AlarmControlPanelState.ARMED_AWAY: "Away only",
+    }
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize("panel_config", [ARM_HOME_ACTION])
+@pytest.mark.usefixtures("setup_panel")
+async def test_state_names_attribute_absent_when_not_configured(
+    hass: HomeAssistant,
+) -> None:
+    """No friendly names configured -> no state_names attribute at all."""
+    state = hass.states.get(TEST_PANEL.entity_id)
+    assert "state_names" not in state.attributes
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    "panel_config",
+    [
+        {
+            **ARM_AWAY_ACTION,
+            "state_name_away": "Away only",
+            # No arm_home action configured, but a friendly name for it is
+            # present anyway: it must not leak into the exposed attribute.
+            "state_name_home": "Should not appear",
+        }
+    ],
+)
+@pytest.mark.usefixtures("setup_panel")
+async def test_state_names_ignored_without_matching_action(
+    hass: HomeAssistant,
+) -> None:
+    """A friendly name without its arm action must not be exposed."""
+    state = hass.states.get(TEST_PANEL.entity_id)
+    assert state.attributes["state_names"] == {
+        AlarmControlPanelState.ARMED_AWAY: "Away only",
+    }
+    assert AlarmControlPanelState.ARMED_HOME not in state.attributes.get(
+        "state_names", {}
+    )
