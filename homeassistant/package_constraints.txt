@@ -55,7 +55,7 @@ Pillow==12.3.0
 probatio==0.12.1
 propcache==0.5.4
 psutil-home-assistant==0.0.1
-PyJWT==2.13.0
+PyJWT==2.14.0
 pymicro-vad==1.0.1
 PyNaCl==1.6.2
 pyopenssl==26.4.0
