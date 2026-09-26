@@ -14,6 +14,49 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 TOKEN_URL = "https://example.com/token"
 
 
+@pytest.mark.parametrize(
+    ("client_secret", "method", "expected_body", "expected_headers"),
+    [
+        pytest.param(
+            "s:cr&t",
+            "client_secret_basic",
+            {"grant_type": "refresh_token"},
+            # base64 of "my%20client:s%3Acr%26t"
+            {"Authorization": "Basic bXklMjBjbGllbnQ6cyUzQWNyJTI2dA=="},
+            id="basic",
+        ),
+        pytest.param(
+            "secret",
+            "client_secret_post",
+            {
+                "grant_type": "refresh_token",
+                "client_id": "my client",
+                "client_secret": "secret",
+            },
+            {},
+            id="post",
+        ),
+        pytest.param(
+            None,
+            "client_secret_basic",
+            {"grant_type": "refresh_token", "client_id": "my client"},
+            {},
+            id="public-client",
+        ),
+    ],
+)
+def test_client_auth(
+    client_secret: str | None,
+    method: oauth2.ClientAuthMethod,
+    expected_body: dict[str, str],
+    expected_headers: dict[str, str],
+) -> None:
+    """Test the client authenticates with exactly one method."""
+    assert oauth2.client_auth(
+        {"grant_type": "refresh_token"}, "my client", client_secret, method
+    ) == (expected_body, expected_headers)
+
+
 def test_build_authorize_url_keeps_endpoint_query() -> None:
     """Test the endpoint query survives and extra parameters come last."""
     url = oauth2.build_authorize_url(
