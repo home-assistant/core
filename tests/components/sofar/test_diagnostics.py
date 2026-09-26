@@ -1,14 +1,19 @@
 """Tests for the Sofar diagnostics."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
+from modbus_connection import ModbusConnectionError, ModbusError, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.matchers import path_type
 
+from homeassistant.components.sofar.const import SETTINGS_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
@@ -83,3 +88,38 @@ async def test_diagnostics_decodes_address_masks(
     diag = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
 
     assert diag["address_masks"]["1024"] == 0x0001000200030004
+
+
+@pytest.mark.parametrize(
+    ("error", "error_name"),
+    [
+        pytest.param(ModbusTimeoutError("silent"), "ModbusTimeoutError", id="timeout"),
+        pytest.param(
+            ModbusConnectionError("gone"), "ModbusConnectionError", id="link_lost"
+        ),
+    ],
+)
+async def test_diagnostics_inverter_unreachable(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_connection: MockModbusConnection,
+    init_integration: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    error: ModbusError,
+    error_name: str,
+) -> None:
+    """Test diagnostics still download when the inverter stops answering."""
+    mock_connection.for_unit(1).fail_requests(error)
+    freezer.tick(timedelta(seconds=SETTINGS_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    diag = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+
+    assert diag["read_error"] == error_name
+    assert diag["raw"] is None
+    assert diag["address_masks"] is None
+    assert diag["coordinator_errors"] == {
+        "readings": error_name,
+        "settings": error_name,
+    }
