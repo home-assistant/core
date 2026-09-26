@@ -89,10 +89,9 @@ class MotionDetectorEvent(SHCEntity, EventEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Unregister the LatestMotion event callback."""
         await super().async_will_remove_from_hass()
-        # register_event() has no public unsubscribe counterpart.
         for service in self._device.device_services:
             if service.id == "LatestMotion":
-                service._event_callbacks.pop(self._device.id, None)  # noqa: SLF001
+                service.unregister_event(self._device.id)
 
     def _event_callback(self) -> None:
         """Handle a LatestMotion update from the SHC polling thread."""
