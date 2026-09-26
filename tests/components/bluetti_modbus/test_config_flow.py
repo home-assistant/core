@@ -35,10 +35,10 @@ from tests.common import MockConfigEntry
 TITLE = "Balco260"
 
 
-def _user_input(unit_id: int = UNIT_ID) -> dict[str, Any]:
+def _user_input(host: str = HOST, unit_id: int = UNIT_ID) -> dict[str, Any]:
     """Form input for the user step."""
     return {
-        CONF_HOST: HOST,
+        CONF_HOST: host,
         CONF_PORT: PORT,
         CONF_UNIT_ID: unit_id,
     }
@@ -273,20 +273,29 @@ async def test_user_flow_probes_only_the_fields_setup_reads(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    ("host", "unit_id"),
+    [
+        pytest.param("5.6.7.8", UNIT_ID, id="other_address"),
+        pytest.param(HOST, 2, id="other_device_id"),
+    ],
+)
 async def test_user_flow_rejects_the_same_serial_at_a_different_endpoint(
     hass: HomeAssistant,
     mock_modbus_connection: MockModbusConnection,
     mock_config_entry: MockConfigEntry,
+    host: str,
+    unit_id: int,
 ) -> None:
-    """The same device answering at a different address/unit id still aborts."""
+    """The same device answering at a different address or device ID aborts."""
     mock_config_entry.add_to_hass(hass)
-    seed_unit(mock_modbus_connection.for_unit(2))  # same default SERIAL
+    seed_unit(mock_modbus_connection.for_unit(unit_id))
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], _user_input(unit_id=2)
+        result["flow_id"], _user_input(host=host, unit_id=unit_id)
     )
 
     assert result["type"] is FlowResultType.ABORT
