@@ -457,10 +457,6 @@ class FakeLatestMotionService:
         """Register a callback for the given device id."""
         self._event_callbacks[event] = callback
 
-    def unregister_event(self, event: str) -> None:
-        """Unregister the callback for the given device id."""
-        self._event_callbacks.pop(event, None)
-
     def subscribe_callback(self, entity_id: str, callback: Any) -> None:
         """No-op: SHCEntity subscribes to every device service's generic callback."""
 
