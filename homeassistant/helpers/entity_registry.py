@@ -32,6 +32,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     Event,
     HomeAssistant,
     callback,
@@ -47,7 +48,13 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
-from . import area_registry as ar, device_registry as dr, floor_registry as fr, storage
+from . import (
+    area_registry as ar,
+    device_registry as dr,
+    floor_registry as fr,
+    issue_registry as ir,
+    storage,
+)
 from .device_registry import (
     EVENT_DEVICE_REGISTRY_UPDATED,
     EventDeviceRegistryUpdatedData,
@@ -1220,6 +1227,16 @@ def _validate_item(
         )
 
 
+@callback
+def _has_own_area_without_own_name(hass: HomeAssistant, entry: RegistryEntry) -> bool:
+    """Return if an entity has an area of its own but no name of its own."""
+    return (
+        entry.area_id is not None
+        and entry.device_id is not None
+        and not async_get_unprefixed_name(hass, entry)
+    )
+
+
 class EntityRegistry(BaseRegistry):
     """Class to hold a registry of entities."""
 
@@ -1686,6 +1703,9 @@ class EntityRegistry(BaseRegistry):
             platform=entity.platform,
             unique_id=entity.unique_id,
         )
+        ir.async_delete_issue(
+            self.hass, HOMEASSISTANT_DOMAIN, _own_area_without_own_name_issue_id(entity)
+        )
         self.hass.bus.async_fire_internal(
             EVENT_ENTITY_REGISTRY_UPDATED,
             _EventEntityRegistryUpdatedData_CreateRemove(
@@ -1978,7 +1998,6 @@ class EntityRegistry(BaseRegistry):
             if split_entity_id(new_entity_id)[0] != split_entity_id(entity_id)[0]:
                 raise ValueError("New entity ID should be same domain")
 
-            self.entities.pop(entity_id)
             entity_id = new_values["entity_id"] = new_entity_id
             old_values["entity_id"] = old.entity_id
 
@@ -2022,7 +2041,20 @@ class EntityRegistry(BaseRegistry):
             )
             new_values["original_name_unprefixed"] = original_name_unprefixed
 
-        new = self.entities[entity_id] = attr.evolve(old, **new_values)
+        new = attr.evolve(old, **new_values)
+
+        # Only user edits are rejected, integration updates surface as a repair issue
+        if (
+            "area_id" in new_values or "name" in new_values
+        ) and _has_own_area_without_own_name(self.hass, new):
+            raise ValueError(
+                "An entity without a name of its own cannot have an area of its own, "
+                "set the area on its device instead"
+            )
+
+        if entity_id != old.entity_id:
+            self.entities.pop(old.entity_id)
+        self.entities[entity_id] = new
 
         self.async_schedule_save()
 
@@ -2190,6 +2222,7 @@ class EntityRegistry(BaseRegistry):
 
         _async_setup_cleanup(self.hass, self)
         _async_setup_entity_restore(self.hass, self)
+        _async_setup_own_area_without_own_name_issues(self.hass, self)
 
         data = await self._store.async_load()
         entities = EntityRegistryItems(self.hass)
@@ -2742,6 +2775,89 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
             entry.write_unavailable_state(hass)
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _write_unavailable_states)
+
+
+_OWN_AREA_WITHOUT_OWN_NAME_ISSUE = "entity_own_area_without_own_name"
+_OWN_AREA_WITHOUT_OWN_NAME_ISSUE_FIELDS = {
+    "area_id",
+    "device_id",
+    "entity_id",
+    "has_entity_name",
+    "name",
+    "original_name",
+}
+
+
+def _own_area_without_own_name_issue_id(entry: RegistryEntry) -> str:
+    """Return the issue ID of an entry, keyed on its stable ID."""
+    return f"{_OWN_AREA_WITHOUT_OWN_NAME_ISSUE}_{entry.id}"
+
+
+@callback
+def _async_setup_own_area_without_own_name_issues(
+    hass: HomeAssistant, registry: EntityRegistry
+) -> None:
+    """Report entities with an area of their own but no name of their own.
+
+    Removals are handled directly by the registry, since the remove event lacks
+    the entry ID.
+    """
+
+    @callback
+    def _async_create_issue(entry: RegistryEntry) -> None:
+        ir.async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            _own_area_without_own_name_issue_id(entry),
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=_OWN_AREA_WITHOUT_OWN_NAME_ISSUE,
+            translation_placeholders={
+                "entity_id": entry.entity_id,
+                "entity_settings_url": (
+                    f"/config/devices/device/{entry.device_id}"
+                    f"?more-info-entity-id={entry.entity_id}&more-info-view=settings"
+                ),
+            },
+        )
+
+    @callback
+    def _relevant_changes_filter(event_data: Mapping[str, Any]) -> bool:
+        if event_data["action"] == "create":
+            return True
+        if event_data["action"] != "update":
+            return False
+        return not _OWN_AREA_WITHOUT_OWN_NAME_ISSUE_FIELDS.isdisjoint(
+            event_data["changes"]
+        )
+
+    @callback
+    def _handle_registry_update(event: Event[EventEntityRegistryUpdatedData]) -> None:
+        if (entry := registry.async_get(event.data["entity_id"])) is None:
+            return
+        if _has_own_area_without_own_name(hass, entry):
+            _async_create_issue(entry)
+        else:
+            ir.async_delete_issue(
+                hass, HOMEASSISTANT_DOMAIN, _own_area_without_own_name_issue_id(entry)
+            )
+
+    hass.bus.async_listen(
+        EVENT_ENTITY_REGISTRY_UPDATED,
+        _handle_registry_update,
+        event_filter=_relevant_changes_filter,
+    )
+
+    if hass.is_running:
+        return
+
+    @callback
+    def _async_create_issues(_: Event) -> None:
+        for entry in registry.entities.values():
+            if _has_own_area_without_own_name(hass, entry):
+                _async_create_issue(entry)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_create_issues)
 
 
 async def async_migrate_entries(

@@ -119,12 +119,14 @@ def target_todo_lists(
         area_id=area_list_one.id,
         labels={label_both.label_id, label_list_one.label_id},
         device_id=device_list_one.id,
+        name="List one",
     )
     entity_registry.async_update_entity(
         TODO_ENTITY_ID2,
         area_id=area_list_two.id,
         labels={label_both.label_id, label_list_two.label_id},
         device_id=device_list_two.id,
+        name="List two",
     )
 
 

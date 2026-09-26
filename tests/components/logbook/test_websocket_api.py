@@ -61,11 +61,11 @@ from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
 
 
 def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:
-    """Return listeners without final write listeners."""
+    """Return listeners without core startup and final write listeners."""
     return {
         key: value
         for key, value in listeners.items()
-        if key != EVENT_HOMEASSISTANT_FINAL_WRITE
+        if key not in (EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_FINAL_WRITE)
     }
 
 
@@ -1266,10 +1266,6 @@ async def test_subscribe_unsubscribe_logbook_stream(
     await async_wait_recording_done(hass)
     websocket_client = await hass_ws_client()
     init_listeners = hass.bus.async_listeners()
-    init_listeners = {
-        **init_listeners,
-        EVENT_HOMEASSISTANT_START: init_listeners[EVENT_HOMEASSISTANT_START] - 1,
-    }
     await websocket_client.send_json(
         {"id": 7, "type": "logbook/event_stream", "start_time": now.isoformat()}
     )

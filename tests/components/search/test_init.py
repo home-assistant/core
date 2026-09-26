@@ -108,6 +108,7 @@ async def test_search(
         suggested_object_id="wled segment 2",
         config_entry=wled_config_entry,
         device_id=wled_device.id,
+        original_name="Segment 2",
     )
     entity_registry.async_update_entity(
         wled_segment_2_entity.entity_id, area_id=bedroom_area.id
