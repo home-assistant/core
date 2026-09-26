@@ -864,8 +864,8 @@ def create_heater_cooler_service_auto_both_thresholds(
     [
         pytest.param(
             create_heater_cooler_service_auto_heating_threshold,
-            15.55556,
-            46.11111,
+            15.6,
+            46.1,
             id="heating_threshold_only",
         ),
         pytest.param(
@@ -876,8 +876,8 @@ def create_heater_cooler_service_auto_both_thresholds(
         ),
         pytest.param(
             create_heater_cooler_service_auto_both_thresholds,
-            15.55556,
-            46.11111,
+            15.6,
+            46.1,
             id="both_thresholds_prefers_heating",
         ),
         pytest.param(
