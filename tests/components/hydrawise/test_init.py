@@ -5,11 +5,13 @@ from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
+from pydrawise import APIError, NotAuthorizedError
 from pydrawise.schema import Controller, User, Zone
 import pytest
 
 from homeassistant.components.hydrawise.const import DOMAIN, MAIN_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -17,15 +19,76 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.mark.parametrize("side_effect", [ClientError, APIError("unavailable")])
 async def test_connect_retry(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_pydrawise: AsyncMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pydrawise: AsyncMock,
+    side_effect: Exception,
 ) -> None:
     """Test that a connection error triggers a retry."""
-    mock_pydrawise.get_user.side_effect = ClientError
+    mock_pydrawise.get_user.side_effect = side_effect
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_auth_error_starts_reauth(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_pydrawise: AsyncMock
+) -> None:
+    """Test that an authorization error during setup starts a reauth flow."""
+    mock_pydrawise.get_user.side_effect = NotAuthorizedError("HTTP 401")
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert any(mock_config_entry.async_get_active_flows(hass, {"reauth"}))
+
+
+async def test_update_api_error(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    mock_pydrawise: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that an API error during a refresh is an update failure, not unexpected."""
+    assert hass.states.get("binary_sensor.zone_one_watering").state != STATE_UNAVAILABLE
+
+    mock_pydrawise.get_user.side_effect = APIError("{'message': 'unavailable'}")
+    freezer.tick(MAIN_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("binary_sensor.zone_one_watering").state == STATE_UNAVAILABLE
+    assert "Unexpected error fetching hydrawise data" not in caplog.text
+    assert (
+        "Error communicating with the Hydrawise API: {'message': 'unavailable'}"
+        in caplog.text
+    )
+
+    mock_pydrawise.get_user.side_effect = None
+    freezer.tick(MAIN_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("binary_sensor.zone_one_watering").state != STATE_UNAVAILABLE
+
+
+async def test_update_auth_error_starts_reauth(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    mock_pydrawise: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that an authorization error during a refresh starts a reauth flow."""
+    mock_pydrawise.get_user.side_effect = NotAuthorizedError("HTTP 401")
+    freezer.tick(MAIN_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert any(mock_added_config_entry.async_get_active_flows(hass, {"reauth"}))
 
 
 async def test_update_version(

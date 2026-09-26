@@ -1,17 +1,19 @@
 """DataUpdateCoordinator for the Hydrawise integration."""
 
-from collections.abc import Callable, Iterable
+from collections.abc import AsyncIterator, Callable, Iterable
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from typing import override
 
-from pydrawise import HydrawiseBase
+from pydrawise import APIError, HydrawiseBase, NotAuthorizedError
 from pydrawise.schema import Controller, ControllerWaterUseSummary, Sensor, User, Zone
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import now
 
 from .const import (
@@ -52,6 +54,23 @@ class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator[HydrawiseData]):
 
     api: HydrawiseBase
     config_entry: HydrawiseConfigEntry
+
+    @asynccontextmanager
+    async def _handle_api_errors(self) -> AsyncIterator[None]:
+        """Translate pydrawise errors into coordinator errors."""
+        try:
+            yield
+        except NotAuthorizedError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
+        except APIError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
 
 class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
@@ -95,15 +114,16 @@ class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
         # Don't fetch zones. We'll fetch them for each controller later.
         # This is to prevent 502 errors in some cases.
         # See: https://github.com/home-assistant/core/issues/120128
-        data = HydrawiseData(user=await self.api.get_user(fetch_zones=False))
-        for controller in data.user.controllers:
-            data.controllers[controller.id] = controller
-            controller.zones = await self.api.get_zones(controller)
-            for zone in controller.zones:
-                data.zones[zone.id] = zone
-                data.zone_id_to_controller[zone.id] = controller
-            for sensor in controller.sensors:
-                data.sensors[sensor.id] = sensor
+        async with self._handle_api_errors():
+            data = HydrawiseData(user=await self.api.get_user(fetch_zones=False))
+            for controller in data.user.controllers:
+                data.controllers[controller.id] = controller
+                controller.zones = await self.api.get_zones(controller)
+                for zone in controller.zones:
+                    data.zones[zone.id] = zone
+                    data.zone_id_to_controller[zone.id] = controller
+                for sensor in controller.sensors:
+                    data.sensors[sensor.id] = sensor
         return data
 
     @callback
@@ -221,12 +241,15 @@ class HydrawiseWaterUseDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
     async def _async_update_data(self) -> HydrawiseData:
         """Fetch the latest data from Hydrawise."""
         daily_water_summary: dict[int, ControllerWaterUseSummary] = {}
-        for controller in self._main_coordinator.data.controllers.values():
-            daily_water_summary[controller.id] = await self.api.get_water_use_summary(
-                controller,
-                now().replace(hour=0, minute=0, second=0, microsecond=0),
-                now(),
-            )
+        async with self._handle_api_errors():
+            for controller in self._main_coordinator.data.controllers.values():
+                daily_water_summary[
+                    controller.id
+                ] = await self.api.get_water_use_summary(
+                    controller,
+                    now().replace(hour=0, minute=0, second=0, microsecond=0),
+                    now(),
+                )
         main_data = self._main_coordinator.data
         return HydrawiseData(
             user=main_data.user,

@@ -73,6 +73,14 @@
       }
     }
   },
+  "exceptions": {
+    "api_error": {
+      "message": "Error communicating with the Hydrawise API: {error}"
+    },
+    "invalid_auth": {
+      "message": "Authentication with the Hydrawise API failed"
+    }
+  },
   "services": {
     "resume": {
       "description": "Resumes an irrigation zone's automatic watering schedule.",
