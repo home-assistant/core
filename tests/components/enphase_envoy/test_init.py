@@ -844,7 +844,7 @@ async def test_coordinator_interface_information_session_is_closed(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    # verify no device found message in log
+    # verify client is closed message is in log
     assert "Client is closed when reading interface information" in caplog.text
 
 
