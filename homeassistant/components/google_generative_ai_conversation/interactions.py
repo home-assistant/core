@@ -1,8 +1,9 @@
 """Interactions API support for the Google Generative AI Conversation integration."""
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
+from google.genai import interactions
 from google.genai.types import HarmCategory, SafetySetting
 import probatio
 
@@ -32,27 +33,26 @@ def format_tools_for_interactions(
     *,
     custom_serializer: Callable[[Any], Any] | None = None,
     enable_google_search: bool = False,
-) -> list[dict[str, Any]]:
+) -> list[interactions.Tool]:
     """Format tools for the Gemini Interactions API."""
-    formatted_tools: list[dict[str, Any]] = []
+    formatted_tools: list[interactions.Tool] = []
 
     if tools:
         serializer = custom_serializer or llm.selector_serializer
         formatted_tools.extend(
-            {
-                "type": "function",
-                "name": tool.name,
-                "description": tool.description,
-                "parameters": probatio.to_openapi(
+            interactions.Function(
+                name=tool.name,
+                description=tool.description,
+                parameters=probatio.to_openapi(
                     tool.parameters,
                     custom_serializer=serializer,
                 ),
-            }
+            )
             for tool in tools
         )
 
     if enable_google_search:
-        formatted_tools.append({"type": "google_search"})
+        formatted_tools.append(interactions.GoogleSearch())
 
     return formatted_tools
 
@@ -61,20 +61,20 @@ def format_response_format(
     structure: probatio.Schema | None,
     *,
     custom_serializer: Callable[[Any], Any] | None = None,
-) -> dict[str, Any] | None:
+) -> interactions.TextResponseFormat | None:
     """Format structured output response_format for the Gemini Interactions API."""
     if not structure:
         return None
 
     serializer = custom_serializer or llm.selector_serializer
-    return {
-        "type": "text",
-        "mime_type": "application/json",
-        "schema": probatio.to_openapi(
+    return interactions.TextResponseFormat(
+        type="text",
+        mime_type="application/json",
+        schema_=probatio.to_openapi(
             structure,
             custom_serializer=serializer,
         ),
-    }
+    )
 
 
 def create_safety_settings(options: Mapping[str, Any]) -> list[SafetySetting]:
@@ -114,8 +114,8 @@ def build_interaction_request(
     input_content: Any,
     options: Mapping[str, Any] | None = None,
     system_instruction: str | None = None,
-    tools: list[dict[str, Any]] | None = None,
-    response_format: dict[str, Any] | None = None,
+    tools: Sequence[interactions.Tool] | None = None,
+    response_format: interactions.TextResponseFormat | None = None,
     safety_settings: list[SafetySetting] | None = None,
     default_max_tokens: int | None = None,
     stream: bool = True,
