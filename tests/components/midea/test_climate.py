@@ -671,7 +671,7 @@ async def test_base_set_temperature_without_target_noop(
 
     device.calls.clear()
     assert entity is not None
-    entity.set_temperature()
+    await entity.async_set_temperature()
     assert device.calls == []
 
 
