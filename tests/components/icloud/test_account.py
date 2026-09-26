@@ -1,5 +1,6 @@
 """Tests for the iCloud account."""
 
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -16,7 +17,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.storage import Store
 
-from .const import DEVICE, MOCK_CONFIG, USER_INFO, USERNAME
+from .const import (
+    DEVICE,
+    DEVICE_WITHOUT_BATTERY,
+    DEVICE_WITHOUT_LOCATION,
+    DEVICE_WITHOUT_LOCATION_OR_BATTERY,
+    LOCATION,
+    MOCK_CONFIG,
+    USER_INFO,
+    USERNAME,
+)
 
 from tests.common import MockConfigEntry
 
@@ -164,7 +174,10 @@ async def test_setup_success_with_devices(
     )
 
     with patch.object(account, "_schedule_next_fetch"):
-        account.setup()
+        # As the integration does. _determine_interval reaches the state
+        # machine through run_callback_threadsafe, which refuses to run on
+        # the event loop.
+        await hass.async_add_executor_job(account.setup)
 
     assert account.api is not None
     assert account.owner_fullname == "user name"
@@ -174,3 +187,113 @@ async def test_setup_success_with_devices(
     # only locates at service creation, so the account has to ask for it)
     assert mock_icloud_service.devices.refresh_calls == [True]
     assert "device1" in account.devices
+
+
+def _build_account(hass: HomeAssistant, mock_store: Mock) -> IcloudAccount:
+    """Return an account for a config entry added to hass."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+    return IcloudAccount(
+        hass,
+        MOCK_CONFIG[CONF_USERNAME],
+        MOCK_CONFIG[CONF_PASSWORD],
+        mock_store,
+        MOCK_CONFIG[CONF_WITH_FAMILY],
+        MOCK_CONFIG[CONF_MAX_INTERVAL],
+        MOCK_CONFIG[CONF_GPS_ACCURACY_THRESHOLD],
+        config_entry,
+    )
+
+
+async def _set_up_with(
+    hass: HomeAssistant, mock_store: Mock, device: dict[str, Any]
+) -> IcloudAccount:
+    """Set an account up against a single device."""
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService"
+    ) as service_mock:
+        service = service_mock.return_value
+        service.requires_2fa = False
+        service.devices = MockDevicesContainer(USER_INFO, [MockAppleDevice(device)])
+
+        account = _build_account(hass, mock_store)
+        with patch.object(account, "_schedule_next_fetch"):
+            await hass.async_add_executor_job(account.setup)
+
+    return account
+
+
+@pytest.mark.parametrize(
+    ("device", "is_kept"),
+    [
+        pytest.param(DEVICE, True, id="battery_and_location"),
+        pytest.param(DEVICE_WITHOUT_BATTERY, True, id="location_but_no_battery"),
+        pytest.param(DEVICE_WITHOUT_LOCATION, True, id="battery_but_no_location"),
+        pytest.param(DEVICE_WITHOUT_LOCATION_OR_BATTERY, False, id="neither"),
+    ],
+)
+async def test_a_device_is_kept_when_either_signal_is_usable(
+    hass: HomeAssistant,
+    mock_store: Mock,
+    device: dict[str, Any],
+    is_kept: bool,
+) -> None:
+    """Test that a device is dropped only when it reports neither signal.
+
+    The account feeds both the tracker platform and the battery sensors, and
+    each skips what it cannot use, so a device with only one of the two is
+    still worth keeping. Filtering on the battery alone dropped a located
+    device that reports none; filtering on the location alone would take the
+    battery sensor away from a device that is not sharing one.
+    """
+    account = await _set_up_with(hass, mock_store, device)
+
+    assert (device["id"] in account.devices) is is_kept
+
+
+async def test_a_device_without_battery_still_reports_its_location(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test that a device iCloud reports no battery for gets its coordinates.
+
+    Reading the location used to sit inside the battery block, so letting such
+    a device through on its own would have tracked it with no coordinates.
+    """
+    account = await _set_up_with(hass, mock_store, DEVICE_WITHOUT_BATTERY)
+
+    device = account.devices[DEVICE_WITHOUT_BATTERY["id"]]
+    assert device.location == LOCATION
+    assert device.battery_level is None
+
+
+async def test_a_device_gaining_a_battery_is_announced_again(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test that a battery arriving later still creates the battery sensor.
+
+    A device kept for its location alone is added without one, and the sensor
+    platform only builds from the new-device signal. Without announcing the
+    device again the battery it starts reporting would go unnoticed until
+    Home Assistant restarts.
+    """
+    account = await _set_up_with(hass, mock_store, DEVICE_WITHOUT_BATTERY)
+    device = account.devices[DEVICE_WITHOUT_BATTERY["id"]]
+    assert device.battery_level is None
+
+    with patch("homeassistant.components.icloud.account.dispatcher_send") as dispatcher:
+        device.update(
+            {
+                **DEVICE_WITHOUT_BATTERY,
+                "batteryStatus": "NotCharging",
+                "batteryLevel": 0.4,
+            }
+        )
+
+    assert device.battery_level == 40
+    assert account.signal_device_new in [
+        call.args[1] for call in dispatcher.call_args_list
+    ]

@@ -194,10 +194,22 @@ class IcloudAccount:
             device_id = status[DEVICE_ID]
             device_name = status[DEVICE_NAME]
 
-            if (
-                status[DEVICE_BATTERY_STATUS] == "Unknown"
-                or status.get(DEVICE_BATTERY_LEVEL) is None
-            ):
+            # Being locatable is what makes a device worth tracking, and
+            # iCloud reports no battery for one that is asleep or has none to
+            # report. Either on its own is worth keeping: the account feeds
+            # the tracker platform and the battery sensors, and each skips
+            # what it cannot use. Only a device reporting neither is of no
+            # use to either.
+            device_location = status[DEVICE_LOCATION]
+            has_location = (
+                bool(device_location)
+                and device_location.get(DEVICE_LOCATION_LATITUDE) is not None
+            )
+            has_battery = (
+                status[DEVICE_BATTERY_STATUS] != "Unknown"
+                and status.get(DEVICE_BATTERY_LEVEL) is not None
+            )
+            if not has_location and not has_battery:
                 continue
 
             if self._devices.get(device_id) is not None:
@@ -429,18 +441,25 @@ class IcloudDevice:
         self._attrs[ATTR_BATTERY_STATUS] = self._battery_status
         device_battery_level = self._status.get(DEVICE_BATTERY_LEVEL, 0)
         if self._battery_status != "Unknown" and device_battery_level is not None:
+            if self._battery_level is None:
+                # The battery sensor is created from the new-device signal,
+                # and a device kept for its location alone was added without
+                # one. Nothing else reports that it has a battery now.
+                dispatcher_send(self._account.hass, self._account.signal_device_new)
             self._battery_level = int(device_battery_level * 100)
             self._attrs[ATTR_BATTERY] = self._battery_level
             self._attrs[ATTR_LOW_POWER_MODE] = self._status[DEVICE_LOW_POWER_MODE]
 
-            if (
-                self._status[DEVICE_LOCATION]
-                and self._status[DEVICE_LOCATION][DEVICE_LOCATION_LATITUDE]
-            ):
-                location = self._status[DEVICE_LOCATION]
-                if self._location is None:
-                    dispatcher_send(self._account.hass, self._account.signal_device_new)
-                self._location = location
+        # Deliberately not nested under the battery block above: a device
+        # iCloud reports no battery for still has a location worth reading.
+        if (
+            self._status[DEVICE_LOCATION]
+            and self._status[DEVICE_LOCATION][DEVICE_LOCATION_LATITUDE] is not None
+        ):
+            location = self._status[DEVICE_LOCATION]
+            if self._location is None:
+                dispatcher_send(self._account.hass, self._account.signal_device_new)
+            self._location = location
 
     def play_sound(self) -> None:
         """Play sound on the device."""
