@@ -1,0 +1,233 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "link_settings_in_use": "This address is already in use by another entry with different Modbus link settings.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_device": "The device at this address does not report itself as a BLUETTI Balco 260, the only supported model."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "Device ID"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your BLUETTI power station.",
+          "port": "The TCP port the device listens on for Modbus requests. The BLUETTI default is 502.",
+          "unit_id": "The Modbus device ID of the power station. The BLUETTI default is 1."
+        },
+        "description": "Connect to your BLUETTI power station over Modbus to monitor it locally."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "ac_1_o_c": {
+        "name": "AC output current"
+      },
+      "ac_1_o_v": {
+        "name": "AC output voltage"
+      },
+      "ac_o_e_total": {
+        "name": "Total AC output energy"
+      },
+      "ac_o_p_total": {
+        "name": "AC output power"
+      },
+      "b_c": {
+        "name": "Battery current"
+      },
+      "b_c_total": {
+        "name": "Total battery current"
+      },
+      "b_cell_count": {
+        "name": "Cell count"
+      },
+      "b_cycle_count": {
+        "name": "Battery cycle count"
+      },
+      "b_i_e": {
+        "name": "Total battery charged energy"
+      },
+      "b_ntc_count": {
+        "name": "Temperature sensor count"
+      },
+      "b_o_e": {
+        "name": "Total battery discharged energy"
+      },
+      "b_soc": {
+        "name": "Battery SoC"
+      },
+      "b_soh": {
+        "name": "Battery SoH"
+      },
+      "b_type": {
+        "name": "Battery type"
+      },
+      "b_v": {
+        "name": "Battery voltage"
+      },
+      "b_v_total": {
+        "name": "Total battery voltage"
+      },
+      "d_inverter_1_c": {
+        "name": "Inverter current"
+      },
+      "d_inverter_1_v": {
+        "name": "Inverter voltage"
+      },
+      "d_inverter_status": {
+        "name": "Inverter status",
+        "state": {
+          "abnormal_off_grid": "Off-grid (abnormal)",
+          "grid_connected_charging": "Grid-connected (charging)",
+          "grid_connected_discharging": "Grid-connected (discharging)",
+          "grid_connected_load": "Grid-connected (load)",
+          "grid_connected_operation": "Grid-connected",
+          "inverter_fault": "Fault",
+          "off_grid": "Off-grid",
+          "stop": "Stopped"
+        }
+      },
+      "d_inverter_total": {
+        "name": "Total inverter power"
+      },
+      "d_inverter_type": {
+        "name": "Inverter type"
+      },
+      "d_num_inverters": {
+        "name": "Inverter count"
+      },
+      "g_1_i_c": {
+        "name": "Grid current"
+      },
+      "g_1_i_v": {
+        "name": "Grid voltage"
+      },
+      "g_i_e_total": {
+        "name": "Total grid import energy"
+      },
+      "g_i_f": {
+        "name": "Grid frequency"
+      },
+      "g_i_p_total": {
+        "name": "Grid input power"
+      },
+      "g_o_e_total": {
+        "name": "Total grid export energy"
+      },
+      "pv_1_i_c": {
+        "name": "PV 1 input current"
+      },
+      "pv_1_i_p": {
+        "name": "PV 1 input power"
+      },
+      "pv_1_i_type": {
+        "name": "PV 1 input type",
+        "state": {
+          "ac_pv": "AC PV",
+          "adapter": "Adapter",
+          "car": "Car",
+          "dc_pv": "DC PV",
+          "other": "Other",
+          "reserve": "Reserved"
+        }
+      },
+      "pv_1_i_v": {
+        "name": "PV 1 input voltage"
+      },
+      "pv_2_i_c": {
+        "name": "PV 2 input current"
+      },
+      "pv_2_i_p": {
+        "name": "PV 2 input power"
+      },
+      "pv_2_i_type": {
+        "name": "PV 2 input type",
+        "state": {
+          "ac_pv": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::ac_pv%]",
+          "adapter": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::adapter%]",
+          "car": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::car%]",
+          "dc_pv": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::dc_pv%]",
+          "other": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::other%]",
+          "reserve": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::reserve%]"
+        }
+      },
+      "pv_2_i_v": {
+        "name": "PV 2 input voltage"
+      },
+      "pv_3_i_c": {
+        "name": "PV 3 input current"
+      },
+      "pv_3_i_p": {
+        "name": "PV 3 input power"
+      },
+      "pv_3_i_type": {
+        "name": "PV 3 input type",
+        "state": {
+          "ac_pv": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::ac_pv%]",
+          "adapter": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::adapter%]",
+          "car": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::car%]",
+          "dc_pv": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::dc_pv%]",
+          "other": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::other%]",
+          "reserve": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::reserve%]"
+        }
+      },
+      "pv_3_i_v": {
+        "name": "PV 3 input voltage"
+      },
+      "pv_4_i_c": {
+        "name": "PV 4 input current"
+      },
+      "pv_4_i_p": {
+        "name": "PV 4 input power"
+      },
+      "pv_4_i_type": {
+        "name": "PV 4 input type",
+        "state": {
+          "ac_pv": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::ac_pv%]",
+          "adapter": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::adapter%]",
+          "car": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::car%]",
+          "dc_pv": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::dc_pv%]",
+          "other": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::other%]",
+          "reserve": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::reserve%]"
+        }
+      },
+      "pv_4_i_v": {
+        "name": "PV 4 input voltage"
+      },
+      "pv_ac_e": {
+        "name": "PV AC energy"
+      },
+      "pv_ac_p": {
+        "name": "PV AC power"
+      },
+      "pv_dc_count": {
+        "name": "DC PV input count"
+      },
+      "pv_i_e_total": {
+        "name": "Total PV input energy"
+      },
+      "pv_i_p_total": {
+        "name": "Total PV input power"
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the BLUETTI power station: {error}"
+    },
+    "link_settings_in_use": {
+      "message": "The device cannot be set up with these link settings: {error}"
+    },
+    "wrong_device": {
+      "message": "The device at this address is a different device than the one this entry was set up for."
+    }
+  }
+}
