@@ -663,7 +663,7 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectEventEntityDescription(
         key="vehicle",
         translation_key="vehicle",
-        ufp_required_field="feature_flags.smart_detect_types",
+        ufp_required_field="feature_flags.has_smart_detect",
         ufp_event_obj="last_smart_detect_event",
         event_types=[EVENT_TYPE_VEHICLE_DETECTED],
         entity_class=ProtectDeviceVehicleEventEntity,
@@ -687,7 +687,7 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectDetectionEventEntityDescription(
         key="smart_detection",
         translation_key="smart_detection",
-        ufp_required_field="feature_flags.smart_detect_types",
+        ufp_required_field="feature_flags.has_smart_detect",
         event_types=_SMART_OBJECT_EVENT_TYPES,
         ufp_public_event_types=_SMART_DETECT_EVENT_TYPES,
         include_event_source=True,

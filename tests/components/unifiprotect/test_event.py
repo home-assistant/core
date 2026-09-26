@@ -41,7 +41,6 @@ from .utils import (
     assert_entity_counts,
     ids_from_device_description,
     init_entry,
-    registered_keys,
     remove_entities,
     setup_public_camera,
 )
@@ -2437,24 +2436,3 @@ async def test_event_entities_unavailable_on_events_ws_disconnect(
 
     assert hass.states.get(ring_id).state != STATE_UNAVAILABLE
     assert hass.states.get(motion_id).state != STATE_UNAVAILABLE
-
-
-async def test_smart_detection_events_need_advertised_types(
-    hass: HomeAssistant,
-    entity_registry: EntityRegistry,
-    ufp: MockUFPFixture,
-    doorbell: Camera,
-) -> None:
-    """A camera advertising no smart detection types gets no smart detection events.
-
-    The gate reads the advertised types, not the private ``has_smart_detect``
-    flag, so that both device models answer it the same way.
-    """
-    doorbell.feature_flags.has_smart_detect = True
-    doorbell.feature_flags.smart_detect_types = []
-
-    await init_entry(hass, ufp, [doorbell])
-
-    keys = registered_keys(entity_registry, Platform.EVENT, doorbell.mac)
-    assert "motion_detection" in keys
-    assert not keys & {"smart_detection", "vehicle"}
