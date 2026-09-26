@@ -1,0 +1,596 @@
+# serializer version: 1
+# name: test_code_interpreter[completed]
+  list([
+    dict({
+      'content': 'Please use the python tool to calculate square root of 55555',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'code': '''
+        import math
+        math.sqrt(55555)
+      ''',
+      'container_id': 'cntr_A',
+      'id': 'ci_A',
+      'outputs': list([
+        dict({
+          'type': 'logs',
+        }),
+      ]),
+      'status': 'completed',
+      'type': 'code_interpreter_call',
+    }),
+    dict({
+      'content': 'I’ve calculated it with Python: the square root of 55555 is approximately 235.70108188126758.',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'Thank you!',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'You are welcome!',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+  ])
+# ---
+# name: test_code_interpreter[failed]
+  list([
+    dict({
+      'content': 'Please use the python tool to calculate square root of 55555',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'code': '''
+        import math
+        math.sqrt(55555)
+      ''',
+      'container_id': 'cntr_A',
+      'id': 'ci_A',
+      'outputs': list([
+        dict({
+          'type': 'logs',
+        }),
+      ]),
+      'status': 'failed',
+      'type': 'code_interpreter_call',
+    }),
+    dict({
+      'content': 'I’ve calculated it with Python: the square root of 55555 is approximately 235.70108188126758.',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'Thank you!',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'You are welcome!',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+  ])
+# ---
+# name: test_code_interpreter[incomplete]
+  list([
+    dict({
+      'content': 'Please use the python tool to calculate square root of 55555',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'code': '''
+        import math
+        math.sqrt(55555)
+      ''',
+      'container_id': 'cntr_A',
+      'id': 'ci_A',
+      'outputs': list([
+        dict({
+          'type': 'logs',
+        }),
+      ]),
+      'status': 'incomplete',
+      'type': 'code_interpreter_call',
+    }),
+    dict({
+      'content': 'I’ve calculated it with Python: the square root of 55555 is approximately 235.70108188126758.',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'Thank you!',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'You are welcome!',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+  ])
+# ---
+# name: test_function_call
+  list([
+    dict({
+      'attachments': None,
+      'content': 'What time is it?',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.azure_openai_conversation',
+      'content': None,
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
+        dict({
+          'external': True,
+          'id': 'mock-tool-call-id',
+          'tool_args': dict({
+          }),
+          'tool_name': 'HassGetCurrentTime',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.azure_openai_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': dict({
+          'data': dict({
+            'failed': list([
+            ]),
+            'success': list([
+            ]),
+          }),
+          'response_type': 'action_done',
+          'speech': dict({
+            'plain': dict({
+              'extra_data': None,
+              'speech': '12:00 PM',
+            }),
+          }),
+          'speech_slots': dict({
+            'time': datetime.time(12, 0),
+          }),
+        }),
+        'error': False,
+      }),
+      'role': 'tool_result',
+      'tool_call_id': 'mock-tool-call-id',
+      'tool_name': 'HassGetCurrentTime',
+    }),
+    dict({
+      'agent_id': 'conversation.azure_openai_conversation',
+      'content': '12:00 PM',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+    dict({
+      'attachments': None,
+      'content': 'Please call the test function',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.azure_openai_conversation',
+      'content': None,
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': 'Thinking',
+      'tool_calls': None,
+    }),
+    dict({
+      'agent_id': 'conversation.azure_openai_conversation',
+      'content': None,
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': ResponseReasoningItem(id='rs_A', summary=[], type='reasoning', content=None, encrypted_content='AAABBB', status=None),
+      'role': 'assistant',
+      'thinking_content': 'Thinking more',
+      'tool_calls': None,
+    }),
+    dict({
+      'agent_id': 'conversation.azure_openai_conversation',
+      'content': None,
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
+        dict({
+          'external': False,
+          'id': 'call_call_1',
+          'tool_args': dict({
+            'param1': 'call1',
+          }),
+          'tool_name': 'test_tool',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.azure_openai_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'value1',
+        'error': False,
+      }),
+      'role': 'tool_result',
+      'tool_call_id': 'call_call_1',
+      'tool_name': 'test_tool',
+    }),
+    dict({
+      'agent_id': 'conversation.azure_openai_conversation',
+      'content': None,
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
+        dict({
+          'external': False,
+          'id': 'call_call_2',
+          'tool_args': dict({
+            'param1': 'call2',
+          }),
+          'tool_name': 'test_tool',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.azure_openai_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'value2',
+        'error': False,
+      }),
+      'role': 'tool_result',
+      'tool_call_id': 'call_call_2',
+      'tool_name': 'test_tool',
+    }),
+    dict({
+      'agent_id': 'conversation.azure_openai_conversation',
+      'content': 'Cool',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_function_call.1
+  list([
+    dict({
+      'content': 'What time is it?',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'arguments': '{}',
+      'call_id': 'mock-tool-call-id',
+      'name': 'HassGetCurrentTime',
+      'type': 'function_call',
+    }),
+    dict({
+      'call_id': 'mock-tool-call-id',
+      'output': '{"data":{"speech":{"plain":{"speech":"12:00 PM","extra_data":null}},"response_type":"action_done","speech_slots":{"time":"12:00:00"},"data":{"success":[],"failed":[]}},"error":false}',
+      'type': 'function_call_output',
+    }),
+    dict({
+      'content': '12:00 PM',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'Please call the test function',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'encrypted_content': 'AAABBB',
+      'id': 'rs_A',
+      'summary': list([
+        dict({
+          'text': 'Thinking',
+          'type': 'summary_text',
+        }),
+        dict({
+          'text': 'Thinking more',
+          'type': 'summary_text',
+        }),
+      ]),
+      'type': 'reasoning',
+    }),
+    dict({
+      'arguments': '{"param1":"call1"}',
+      'call_id': 'call_call_1',
+      'name': 'test_tool',
+      'type': 'function_call',
+    }),
+    dict({
+      'call_id': 'call_call_1',
+      'output': '{"data":"value1","error":false}',
+      'type': 'function_call_output',
+    }),
+    dict({
+      'arguments': '{"param1":"call2"}',
+      'call_id': 'call_call_2',
+      'name': 'test_tool',
+      'type': 'function_call',
+    }),
+    dict({
+      'call_id': 'call_call_2',
+      'output': '{"data":"value2","error":false}',
+      'type': 'function_call_output',
+    }),
+    dict({
+      'content': 'Cool',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+  ])
+# ---
+# name: test_function_call_without_reasoning
+  list([
+    dict({
+      'attachments': None,
+      'content': 'Please call the test function',
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.azure_openai_conversation',
+      'content': None,
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
+        dict({
+          'external': False,
+          'id': 'call_call_1',
+          'tool_args': dict({
+            'param1': 'call1',
+          }),
+          'tool_name': 'test_tool',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.azure_openai_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'value1',
+        'error': False,
+      }),
+      'role': 'tool_result',
+      'tool_call_id': 'call_call_1',
+      'tool_name': 'test_tool',
+    }),
+    dict({
+      'agent_id': 'conversation.azure_openai_conversation',
+      'content': 'Cool',
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_model_args[basic-family]
+  dict({
+    'max_output_tokens': 3000,
+    'model': 'basic-deployment',
+    'store': False,
+    'stream': True,
+    'temperature': 1.0,
+    'top_p': 1.0,
+  })
+# ---
+# name: test_model_args[gpt6-default]
+  dict({
+    'include': list([
+      'reasoning.encrypted_content',
+    ]),
+    'max_output_tokens': 3000,
+    'model': 'gpt6-default-deployment',
+    'prompt_cache_options': dict({
+      'ttl': '30m',
+    }),
+    'reasoning': dict({
+      'effort': 'low',
+      'summary': 'auto',
+    }),
+    'store': False,
+    'stream': True,
+    'text': dict({
+      'verbosity': 'medium',
+    }),
+  })
+# ---
+# name: test_model_args[gpt6-pro]
+  dict({
+    'include': list([
+      'reasoning.encrypted_content',
+    ]),
+    'max_output_tokens': 3000,
+    'model': 'gpt6-pro-deployment',
+    'prompt_cache_options': dict({
+      'ttl': '30m',
+    }),
+    'reasoning': dict({
+      'effort': 'max',
+      'mode': 'pro',
+      'summary': 'detailed',
+    }),
+    'store': False,
+    'stream': True,
+    'text': dict({
+      'verbosity': 'low',
+    }),
+  })
+# ---
+# name: test_model_args[gpt6-summary-off]
+  dict({
+    'include': list([
+      'reasoning.encrypted_content',
+    ]),
+    'max_output_tokens': 3000,
+    'model': 'gpt6-summary-off-deployment',
+    'prompt_cache_options': dict({
+      'ttl': '30m',
+    }),
+    'reasoning': dict({
+      'effort': 'high',
+    }),
+    'store': False,
+    'stream': True,
+    'text': dict({
+      'verbosity': 'high',
+    }),
+  })
+# ---
+# name: test_model_args[pro-mode]
+  dict({
+    'include': list([
+      'reasoning.encrypted_content',
+    ]),
+    'max_output_tokens': 3000,
+    'model': 'gpt56-pro-deployment',
+    'prompt_cache_options': dict({
+      'ttl': '30m',
+    }),
+    'reasoning': dict({
+      'effort': 'low',
+      'mode': 'pro',
+      'summary': 'auto',
+    }),
+    'store': False,
+    'stream': True,
+    'text': dict({
+      'verbosity': 'medium',
+    }),
+  })
+# ---
+# name: test_model_args[reasoning-verbosity-cache24]
+  dict({
+    'include': list([
+      'reasoning.encrypted_content',
+    ]),
+    'max_output_tokens': 3000,
+    'model': 'gpt55-deployment',
+    'prompt_cache_retention': '24h',
+    'reasoning': dict({
+      'effort': 'low',
+      'summary': 'auto',
+    }),
+    'store': False,
+    'stream': True,
+    'text': dict({
+      'verbosity': 'medium',
+    }),
+  })
+# ---
+# name: test_model_args[sampling-none]
+  dict({
+    'include': list([
+      'reasoning.encrypted_content',
+    ]),
+    'max_output_tokens': 3000,
+    'model': 'gpt56-sampling-deployment',
+    'prompt_cache_options': dict({
+      'ttl': '30m',
+    }),
+    'reasoning': dict({
+      'effort': 'none',
+      'summary': 'auto',
+    }),
+    'store': False,
+    'stream': True,
+    'temperature': 0.5,
+    'text': dict({
+      'verbosity': 'medium',
+    }),
+    'top_p': 0.9,
+  })
+# ---
+# name: test_web_search[False]
+  list([
+    dict({
+      'content': "What's on the latest news?",
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'action': dict({
+        'query': 'query',
+        'type': 'search',
+      }),
+      'id': 'ws_A',
+      'status': 'completed',
+      'type': 'web_search_call',
+    }),
+    dict({
+      'content': 'Home Assistant now supports ChatGPT Search in Assist.',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'Thank you!',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'You are welcome!',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+  ])
+# ---
+# name: test_web_search[True]
+  list([
+    dict({
+      'content': "What's on the latest news?",
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'action': dict({
+        'query': 'query',
+        'type': 'search',
+      }),
+      'id': 'ws_A',
+      'status': 'completed',
+      'type': 'web_search_call',
+    }),
+    dict({
+      'content': 'Home Assistant now supports ChatGPT Search in Assist ([release notes](https://www.home-assistant.io/blog/categories/release-notes/)).',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'Thank you!',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'You are welcome!',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+  ])
+# ---

@@ -96,6 +96,7 @@ FLOWS = {
         "azure_data_explorer",
         "azure_devops",
         "azure_event_hub",
+        "azure_openai",
         "azure_storage",
         "backblaze_b2",
         "baf",

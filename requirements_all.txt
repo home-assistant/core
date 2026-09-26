@@ -1821,6 +1821,7 @@ open-garage==0.3.1
 # homeassistant.components.open_meteo
 open-meteo==0.3.2
 
+# homeassistant.components.azure_openai
 # homeassistant.components.cloud
 # homeassistant.components.litellm
 # homeassistant.components.llama_cpp
