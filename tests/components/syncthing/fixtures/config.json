@@ -9,6 +9,10 @@
     {
       "deviceID": "YZXABCD-ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW",
       "name": "This Device"
+    },
+    {
+      "deviceID": "ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW-XYZABCD",
+      "name": "Test Device"
     }
   ]
 }
