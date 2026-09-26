@@ -2,7 +2,7 @@
 
 import asyncio
 from functools import cache
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from aiohasupervisor.models import InterfaceMethod
 from matter_server.client import MatterClient
@@ -38,13 +38,22 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.helpers.typing import ConfigType
 
 from .adapter import MatterAdapter
-from .addon import get_addon_manager
+from .addon import async_enable_ble_proxy, get_addon_manager
 from .api import async_register_api
-from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON, DOMAIN, LOGGER
+from .ble_discovery import MatterBleAdvertisement
+from .const import (
+    CONF_ADDON_BLE_PROXY,
+    CONF_ADDON_BLUETOOTH_ADAPTER_ID,
+    CONF_INTEGRATION_CREATED_ADDON,
+    CONF_USE_ADDON,
+    DOMAIN,
+    LOGGER,
+)
 from .discovery import SUPPORTED_PLATFORMS
 from .helpers import (
     MatterConfigEntry,
     MatterEntryData,
+    ble_commissioning_available,
     get_matter,
     get_node_from_device_entry,
     node_from_ha_device_id,
@@ -230,6 +239,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
             setup_error = listen_err
 
     if setup_error is None:
+        if "bluetooth" in hass.config.components and ble_commissioning_available(
+            server_info, ble_proxy
+        ):
+            _async_rediscover_commissionable_devices(hass)
         return True
 
     await hass.config_entries.async_unload_platforms(entry, SUPPORTED_PLATFORMS)
@@ -242,6 +255,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
         await matter_client.disconnect()
     finally:
         raise ConfigEntryNotReady(setup_error) from setup_error
+
+
+@callback
+def _async_rediscover_commissionable_devices(hass: HomeAssistant) -> None:
+    """Surface commissionable devices seen before a server was available."""
+    from homeassistant.components import bluetooth  # noqa: PLC0415
+
+    for service_info in bluetooth.async_discovered_service_info(hass):
+        if MatterBleAdvertisement.from_service_info(service_info) is not None:
+            bluetooth.async_rediscover_address(hass, service_info.address)
 
 
 def _derive_ble_proxy_url(matter_ws_url: str) -> str | None:
@@ -460,6 +483,28 @@ async def _async_ensure_addon_running(
             translation_domain=DOMAIN,
             translation_key="addon_not_running",
         )
+
+    await _async_ensure_addon_ble_proxy(hass, addon_manager, addon_info.options)
+
+
+async def _async_ensure_addon_ble_proxy(
+    hass: HomeAssistant, addon_manager: AddonManager, options: dict[str, Any]
+) -> None:
+    """Turn on the add-on BLE proxy so discovered devices can be commissioned."""
+    if (
+        "bluetooth" not in hass.config.components
+        or options.get(CONF_ADDON_BLE_PROXY)
+        # A local adapter is configured; the proxy is mutually exclusive with it.
+        or options.get(CONF_ADDON_BLUETOOTH_ADAPTER_ID) is not None
+    ):
+        return
+    if not await async_enable_ble_proxy(addon_manager, options):
+        return
+    addon_manager.async_schedule_restart_addon(catch_error=True)
+    raise ConfigEntryNotReady(
+        translation_domain=DOMAIN,
+        translation_key="addon_ble_proxy_enabling",
+    )
 
 
 @callback

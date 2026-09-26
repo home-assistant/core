@@ -2,10 +2,11 @@
 
 import asyncio
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import InterfaceMethod, PartialBackupOptions
+from aiohasupervisor.models import AddonsOptions, InterfaceMethod, PartialBackupOptions
 from matter_server.client.exceptions import (
     CannotConnect,
     NotConnected,
@@ -31,10 +32,12 @@ from .common import (
     FIXTURES,
     create_node_from_fixture,
     load_and_parse_node_fixture,
+    matter_ble_service_info,
     setup_integration_with_node_fixture,
 )
 
-from tests.common import MockConfigEntry, mock_component
+from tests.common import MockConfigEntry
+from tests.components.bluetooth import inject_bluetooth_service_info_bleak
 from tests.typing import WebSocketGenerator
 
 
@@ -52,29 +55,6 @@ def ble_proxy_connect_timeout_fixture() -> Generator[int]:
         "homeassistant.components.matter.BLE_PROXY_CONNECT_TIMEOUT", new=0
     ) as timeout:
         yield timeout
-
-
-@pytest.fixture(name="mock_bluetooth_loaded")
-def mock_bluetooth_loaded_fixture(hass: HomeAssistant) -> None:
-    """Mark the bluetooth integration as loaded for the BLE proxy gate."""
-    mock_component(hass, "bluetooth")
-
-
-@pytest.fixture(name="mock_ble_proxy")
-def mock_ble_proxy_fixture() -> Generator[tuple[MagicMock, MagicMock]]:
-    """Stub the BLE proxy created inside async_setup_entry.
-
-    Yields `(proxy, factory)` so tests can assert both the proxy lifecycle
-    (`connect`/`disconnect`) and the arguments passed to `create_matter_ble_proxy`.
-    """
-    proxy = MagicMock()
-    proxy.connect = AsyncMock()
-    proxy.disconnect = AsyncMock()
-    with patch(
-        "homeassistant.components.matter.ble_proxy.create_matter_ble_proxy",
-        return_value=proxy,
-    ) as factory:
-        yield proxy, factory
 
 
 @pytest.fixture(name="listen_ready_timeout")
@@ -1220,3 +1200,125 @@ async def test_ble_proxy_skipped_when_url_underivable(
     proxy.connect.assert_not_awaited()
     assert entry.runtime_data.ble_proxy is None
     assert "BLE proxy will not be used" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("bluetooth_enabled", "expected_steps"),
+    [
+        pytest.param(True, ["bluetooth_confirm"], id="server_bluetooth"),
+        pytest.param(False, [], id="no_server_bluetooth"),
+    ],
+)
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_rediscover_commissionable_devices_on_load(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    bluetooth_enabled: bool,
+    expected_steps: list[str],
+) -> None:
+    """Commissionable devices seen before setup are discovered once loaded."""
+    matter_client.server_info.bluetooth_enabled = bluetooth_enabled
+    inject_bluetooth_service_info_bleak(hass, matter_ble_service_info())
+    await hass.async_block_till_done(wait_background_tasks=True)
+    # Creating the entry aborts the discovery that offered to set up Matter.
+    (setup_flow,) = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert setup_flow["step_id"] == "manual"
+    hass.config_entries.flow.async_abort(setup_flow["flow_id"])
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert [
+        flow["step_id"]
+        for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    ] == expected_steps
+
+
+@pytest.mark.usefixtures("addon_installed", "addon_running", "mock_bluetooth_loaded")
+async def test_addon_ble_proxy_enabled_on_setup(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    restart_addon: AsyncMock,
+) -> None:
+    """The add-on BLE proxy is turned on once and the add-on restarted."""
+    addon_options["log_level"] = "info"
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "ws://host1:5581/ws", "use_addon": True}
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert set_addon_options.call_args == call(
+        "core_matter_server",
+        AddonsOptions(config={"log_level": "info", "ble_proxy": True}),
+    )
+    assert restart_addon.call_args == call("core_matter_server")
+
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+    assert set_addon_options.call_count == 1
+    assert restart_addon.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("options", "components"),
+    [
+        pytest.param({"ble_proxy": True}, {"bluetooth"}, id="already_enabled"),
+        pytest.param({"bluetooth_adapter_id": 0}, {"bluetooth"}, id="local_adapter"),
+        pytest.param({}, set(), id="bluetooth_not_loaded"),
+    ],
+)
+@pytest.mark.usefixtures("addon_installed", "addon_running", "matter_client")
+async def test_addon_ble_proxy_left_alone(
+    hass: HomeAssistant,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    restart_addon: AsyncMock,
+    options: dict[str, Any],
+    components: set[str],
+) -> None:
+    """The add-on options are not touched when the proxy is not applicable."""
+    addon_options.update(options)
+    hass.config.components.update(components)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "ws://host1:5581/ws", "use_addon": True}
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert set_addon_options.call_count == 0
+    assert restart_addon.call_count == 0
+
+
+@pytest.mark.parametrize("set_addon_options_side_effect", [SupervisorError("boom")])
+@pytest.mark.usefixtures(
+    "addon_installed", "addon_running", "mock_bluetooth_loaded", "matter_client"
+)
+async def test_addon_ble_proxy_enable_failure(
+    hass: HomeAssistant,
+    set_addon_options: AsyncMock,
+    restart_addon: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A Supervisor error enabling the proxy is logged and setup continues."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "ws://host1:5581/ws", "use_addon": True}
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert set_addon_options.call_count == 1
+    assert restart_addon.call_count == 0
+    assert "Failed to enable the Matter Server app BLE proxy" in caplog.text

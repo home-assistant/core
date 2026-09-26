@@ -6,12 +6,17 @@
       "addon_install_failed": "Failed to install the Matter Server app.",
       "addon_start_failed": "Failed to start the Matter Server app.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "bluetooth_not_supported": "The Matter server has no Bluetooth adapter or proxy available, so this device cannot be commissioned over Bluetooth.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "commission_successful": "The device was successfully added.",
+      "not_commissionable": "The discovered device is not in commissioning mode.",
+      "not_loaded": "The Matter integration is not loaded.",
       "not_matter_addon": "Discovered app is not the official Matter Server app.",
       "reconfiguration_successful": "Successfully reconfigured the Matter integration."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "commission_failed": "Failed to commission the device. Make sure the device is in pairing mode and the code is correct.",
       "invalid_server_version": "The Matter server is not the correct version",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -21,6 +26,16 @@
       "start_addon": "Please wait while the Matter Server app starts. This app is what powers Matter in Home Assistant. This may take some seconds."
     },
     "step": {
+      "bluetooth_confirm": {
+        "data": {
+          "code": "Pairing code"
+        },
+        "data_description": {
+          "code": "The 11 or 21 digit manual pairing code, or the QR code payload starting with MT:"
+        },
+        "description": "{name} was discovered over Bluetooth (vendor {vendor_id}, product {product_id}, discriminator {discriminator}). Enter its pairing code to add it to Home Assistant.",
+        "title": "Add Matter device"
+      },
       "hassio_confirm": {
         "title": "Set up the Matter integration with the Matter Server app"
       },
@@ -735,6 +750,9 @@
     }
   },
   "exceptions": {
+    "addon_ble_proxy_enabling": {
+      "message": "Restarting the Matter Server app to enable its Bluetooth proxy."
+    },
     "addon_not_installed": {
       "message": "The Matter Server app is not installed yet."
     },

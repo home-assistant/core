@@ -3,8 +3,11 @@
 import asyncio
 from typing import Any, override
 
+from bluetooth_data_tools import human_readable_name
+from home_assistant_bluetooth import BluetoothServiceInfoBleak
 from matter_server.client import MatterClient
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
+from matter_server.common.errors import MatterError
 import probatio
 
 from homeassistant.components.hassio import (
@@ -15,8 +18,8 @@ from homeassistant.components.hassio import (
 )
 from homeassistant.components.onboarding import async_is_onboarded
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_URL
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_CODE, CONF_URL
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
@@ -24,7 +27,8 @@ from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .addon import get_addon_manager
+from .addon import async_enable_ble_proxy, get_addon_manager
+from .ble_discovery import MatterBleAdvertisement, MatterBleDiscovery
 from .const import (
     ADDON_SLUG,
     CONF_INTEGRATION_CREATED_ADDON,
@@ -32,6 +36,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .helpers import ble_commissioning_available, get_matter
 
 ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 40
@@ -40,6 +45,7 @@ DEFAULT_TITLE = "Matter"
 ON_SUPERVISOR_SCHEMA = probatio.Schema(
     {probatio.Optional(CONF_USE_ADDON, default=True): bool}
 )
+BLUETOOTH_CONFIRM_SCHEMA = probatio.Schema({probatio.Required(CONF_CODE): str})
 
 
 def get_manual_schema(user_input: dict[str, Any]) -> probatio.Schema:
@@ -73,6 +79,7 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
         self.use_addon = False
+        self._ble: MatterBleDiscovery | None = None
 
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
@@ -114,6 +121,10 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
         """Install the Matter Server add-on."""
         addon_manager: AddonManager = get_addon_manager(self.hass)
         await addon_manager.async_schedule_install_addon()
+        # Supervisor merges the app defaults with the user options, so a fresh
+        # install has nothing to preserve.
+        if "bluetooth" in self.hass.config.components:
+            await async_enable_ble_proxy(addon_manager, {})
 
     async def _async_get_addon_discovery_info(self) -> dict:
         """Return add-on discovery info."""
@@ -240,13 +251,141 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
+        # Devices the user ignored own entries in this domain too, so only a
+        # real entry counts as the server being configured.
         if not async_is_onboarded(self.hass) and is_hassio(self.hass):
-            await self._async_handle_discovery_without_unique_id()
+            await self._async_handle_discovery_without_unique_id(include_ignore=False)
             self._running_in_background = True
             return await self.async_step_on_supervisor(
                 user_input={CONF_USE_ADDON: True}
             )
-        return await self._async_step_discovery_without_unique_id()
+        return await self._async_step_discovery_without_unique_id(include_ignore=False)
+
+    @override
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfoBleak
+    ) -> ConfigFlowResult:
+        """Handle a commissionable Matter device seen over Bluetooth."""
+        # Imported lazily; bluetooth is only an after dependency of Matter.
+        from homeassistant.components import bluetooth  # noqa: PLC0415
+
+        advertisement = MatterBleAdvertisement.from_service_info(discovery_info)
+        if advertisement is None:
+            # The matcher records only the FFF6 key, not its payload, so a later
+            # commissionable advertisement would otherwise never be discovered.
+            bluetooth.async_clear_address_from_match_history(
+                self.hass, discovery_info.address
+            )
+            return self.async_abort(reason="not_commissionable")
+
+        if self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, advertisement.unique_id
+        ):
+            # The user ignored this device.
+            return self.async_abort(reason="already_configured")
+
+        # Watch the device from here on, so every card this flow can show is
+        # dropped once the device stops advertising as commissionable.
+        self._ble = MatterBleDiscovery(
+            self.hass, advertisement, discovery_info.address, self._async_ble_stale
+        )
+        self._ble.async_start()
+
+        if not self._async_current_entries(include_ignore=False):
+            # No server to commission with; offer to set up the integration first.
+            return await self._async_step_discovery_without_unique_id(
+                include_ignore=False
+            )
+        if self.hass.config_entries.async_loaded_entries(DOMAIN):
+            matter = get_matter(self.hass)
+            if not ble_commissioning_available(
+                matter.matter_client.server_info,
+                matter.config_entry.runtime_data.ble_proxy,
+            ):
+                return self.async_abort(reason="bluetooth_not_supported")
+
+        await self.async_set_unique_id(advertisement.unique_id, raise_on_progress=False)
+        # Rediscovery of the same address keeps the existing card. A device that
+        # rotated its address gets a new card and the old one goes stale, and
+        # identical products with a colliding discriminator each keep a card.
+        if any(
+            flow["handler"] == DOMAIN
+            for flow in self.hass.config_entries.flow.async_progress_by_init_data_type(
+                BluetoothServiceInfoBleak,
+                lambda info: bool(info.address == discovery_info.address),
+            )
+        ):
+            raise AbortFlow(
+                "already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
+
+        name = discovery_info.name
+        if name == discovery_info.address:
+            # Nothing was advertised, so name it the way its pairing code reads.
+            name = f"Matter device {advertisement.discriminator}"
+        self.context["title_placeholders"] = {
+            "name": human_readable_name(None, name, discovery_info.address)
+        }
+        return await self.async_step_bluetooth_confirm()
+
+    @callback
+    def _async_ble_stale(self) -> None:
+        """Drop the discovery; the device stopped advertising as commissionable."""
+        # Never yank a card the user is working through.
+        if self.context.get("dismiss_protected"):
+            return
+        self.hass.config_entries.flow.async_abort(self.flow_id)
+
+    async def async_step_bluetooth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Commission the discovered device with a pairing code."""
+        assert self._ble is not None
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if not self.hass.config_entries.async_loaded_entries(DOMAIN):
+                return self.async_abort(reason="not_loaded")
+            matter = get_matter(self.hass)
+            # The server may have loaded, or lost its proxy, since discovery.
+            if not ble_commissioning_available(
+                matter.matter_client.server_info,
+                matter.config_entry.runtime_data.ble_proxy,
+            ):
+                return self.async_abort(reason="bluetooth_not_supported")
+            # The device stops advertising once the server connects to it.
+            self._ble.async_stop()
+            matter_client = matter.matter_client
+            try:
+                await matter_client.commission_with_code(
+                    user_input[CONF_CODE].strip(), network_only=False
+                )
+            except MatterError as err:
+                LOGGER.debug("Commissioning failed: %s", err)
+                errors["base"] = "commission_failed"
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_abort(reason="commission_successful")
+
+        return self.async_show_form(
+            step_id="bluetooth_confirm",
+            data_schema=BLUETOOTH_CONFIRM_SCHEMA,
+            errors=errors,
+            description_placeholders={
+                "name": self.context["title_placeholders"]["name"],
+                "vendor_id": f"0x{self._ble.advertisement.vendor_id:04X}",
+                "product_id": f"0x{self._ble.advertisement.product_id:04X}",
+                "discriminator": str(self._ble.advertisement.discriminator),
+            },
+        )
+
+    @callback
+    @override
+    def async_remove(self) -> None:
+        """Stop watching the discovered device when the flow ends."""
+        if self._ble is not None:
+            self._ble.async_stop()
 
     @override
     async def async_step_hassio(
@@ -322,7 +461,7 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return a config entry for the flow or abort if already configured."""
         assert self.ws_address is not None
 
-        if existing_config_entries := self._async_current_entries():
+        if existing_config_entries := self._async_current_entries(include_ignore=False):
             config_entry = existing_config_entries[0]
             self.hass.config_entries.async_update_entry(
                 config_entry,

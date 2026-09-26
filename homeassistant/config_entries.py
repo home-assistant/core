@@ -3409,12 +3409,18 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """Handle a flow initiated by the user."""
         return self.async_abort(reason="not_implemented")
 
-    async def _async_handle_discovery_without_unique_id(self) -> None:
+    async def _async_handle_discovery_without_unique_id(
+        self, include_ignore: bool | None = None
+    ) -> None:
         """Mark this flow discovered, without a unique identifier.
 
         If a flow initiated by discovery, doesn't have a unique ID, this can
         be used alternatively. It will ensure only 1 flow is started and only
         when the handler has no existing config entries.
+
+        `include_ignore` is passed to `_async_current_entries`, so a handler
+        whose ignored entries are not the thing being discovered can ask for
+        them to be excluded.
 
         It ensures that the discovery can be ignored by the user.
 
@@ -3424,7 +3430,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
             return
 
         # Abort if the handler has config entries already
-        if self._async_current_entries():
+        if self._async_current_entries(include_ignore):
             raise data_entry_flow.AbortFlow("already_configured")
 
         # Use a special unique id to differentiate
@@ -3438,10 +3444,10 @@ class ConfigFlow(ConfigEntryBaseFlow):
             )
 
     async def _async_step_discovery_without_unique_id(
-        self,
+        self, include_ignore: bool | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
-        await self._async_handle_discovery_without_unique_id()
+        await self._async_handle_discovery_without_unique_id(include_ignore)
         return await self.async_step_user()
 
     async def async_step_discovery(

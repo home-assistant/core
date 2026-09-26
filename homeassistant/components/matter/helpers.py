@@ -23,6 +23,19 @@ class MissingNode(HomeAssistantError):
     """Exception raised when we can't find a node."""
 
 
+def ble_commissioning_available(
+    server_info: ServerInfoMessage | None, ble_proxy: MatterBleProxy | None
+) -> bool:
+    """Return whether the server has a usable Bluetooth path to devices."""
+    # In proxy mode the server reports Bluetooth even when the proxy never
+    # connected, which leaves no path to the device.
+    return bool(
+        server_info
+        and server_info.bluetooth_enabled
+        and (not server_info.ble_proxy_enabled or ble_proxy is not None)
+    )
+
+
 @dataclass
 class MatterEntryData:
     """Hold Matter data for the config entry."""

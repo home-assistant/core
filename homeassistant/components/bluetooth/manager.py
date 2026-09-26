@@ -184,6 +184,9 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             BluetoothServiceInfoBleak,
             lambda service_info: bool(service_info.address == address),
         ):
+            # The device may stop advertising because the user is pairing it.
+            if flow.get("context", {}).get("dismiss_protected"):
+                continue
             self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
     @override
