@@ -285,7 +285,6 @@
         'live': dict({
           'backup_capable': True,
           'battery_power': 5060,
-          'energy_left': 38896.47368421053,
           'generator_power': 0,
           'grid_power': 0,
           'grid_services_active': False,
@@ -297,7 +296,6 @@
           'solar_power': 1185,
           'storm_mode_active': False,
           'timestamp': '2024-01-01T00:00:00+00:00',
-          'total_pack_energy': 40727,
           'wall_connectors': dict({
             'abd-123': dict({
               'din': 'abd-123',
