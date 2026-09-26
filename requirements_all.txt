@@ -47,7 +47,7 @@ Pillow==12.3.0
 PlexAPI==4.18.2
 
 # homeassistant.components.progettihwsw
-ProgettiHWSW==0.1.3
+ProgettiHWSW==0.1.4
 
 # homeassistant.components.cast
 PyChromecast==14.0.10
