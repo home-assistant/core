@@ -53,7 +53,7 @@ from .const import (
 
 # A command can fail because the device refused it (a priority lock, an open
 # door) or because the gateway never reached it. Only the latter says anything
-# about availability; the rest leave a reachable device reachable.
+# about availability.
 UNREACHABLE_FAILURE_TYPES = {
     FailureType.ACTUATORNOANSWER,
     FailureType.ACTUATORUNKNOWN,
@@ -331,28 +331,33 @@ async def on_execution_state_changed(
     executions = coordinator.executions.pop(event.exec_id)
     device_urls = {execution["device_url"] for execution in executions}
 
-    # The only place an unreachable device is reported. The server keeps
-    # answering for it and DeviceUnavailableEvent never fires, so without this
-    # the entity stays available and every command is silently dropped.
-    # The action queue merges concurrent action groups into one execution, and
-    # the failure it reports is execution-wide: nothing says which of the
-    # devices answered and which did not. Only a completion speaks for all of
-    # them, so leave a merged failure alone in either direction.
-    if event.new_state is ExecutionState.FAILED and len(device_urls) > 1:
+    # Completion is the only verdict that proves the gateway reached every
+    # device in the execution, so it is the only one that clears them.
+    if event.new_state is ExecutionState.COMPLETED:
+        coordinator.unreachable_devices.difference_update(device_urls)
         return
 
-    unreachable = (
-        event.new_state is ExecutionState.FAILED
-        and event.failure_type_code in UNREACHABLE_FAILURE_TYPES
-    )
+    # The action queue merges concurrent action groups into one execution, and
+    # the failure it reports is execution-wide: nothing says which of the
+    # devices answered and which did not.
+    if len(device_urls) > 1:
+        return
+
+    # A refusal proves the device answered, and an unclassified failure proves
+    # nothing at all. Neither is evidence of recovery, so a device stays as it
+    # was until it answers.
+    if event.failure_type_code not in UNREACHABLE_FAILURE_TYPES:
+        return
 
     for device_url in device_urls:
-        if not unreachable:
-            coordinator.unreachable_devices.discard(device_url)
         # A one-way protocol cannot acknowledge, so a failure there says
         # nothing about whether the device is reachable.
-        elif (device := coordinator.devices.get(device_url)) and (
+        if (device := coordinator.devices.get(device_url)) and (
             device.identifier.protocol is not Protocol.RTS
         ):
+            # The only place an unreachable device is reported. The server keeps
+            # answering for it and DeviceUnavailableEvent never fires, so
+            # without this the entity stays available and every command is
+            # silently dropped.
             LOGGER.debug("Device %s is unreachable: %s", device_url, event.failure_type)
             coordinator.unreachable_devices.add(device_url)

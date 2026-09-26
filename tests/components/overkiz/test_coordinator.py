@@ -839,6 +839,59 @@ async def test_refused_merged_command_keeps_an_unreachable_device_unavailable(
     assert hass.states.get(POOL_PUMP.entity_id).state != STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    "failure_type_code",
+    [None, FailureType.UNKNOWN, FailureType.INTERNAL_ERROR],
+)
+async def test_unprovable_failure_keeps_an_unreachable_device_unavailable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    failure_type_code: FailureType | None,
+) -> None:
+    """A failure that names no cause is not evidence the device answered.
+
+    Only the codes that prove contact may undo an earlier conclusion, so an
+    unclassified or absent one has to leave the device as it was.
+    """
+    await setup_overkiz_integration(fixture=POOL_PUMP.fixture)
+    await _async_command_pool_pump(hass)
+    await _async_command_pool_pump(hass)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                exec_id="exec-1",
+                new_state=ExecutionState.FAILED,
+                old_state=ExecutionState.IN_PROGRESS,
+                failure_type_code=FailureType.PEER_DOWN,
+            )
+        ],
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state == STATE_UNAVAILABLE
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                exec_id="exec-2",
+                new_state=ExecutionState.FAILED,
+                old_state=ExecutionState.IN_PROGRESS,
+                failure_type_code=failure_type_code,
+            )
+        ],
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state == STATE_UNAVAILABLE
+
+
 async def test_state_from_device_clears_unreachable(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
