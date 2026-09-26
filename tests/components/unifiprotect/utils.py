@@ -370,8 +370,8 @@ def make_public_sensor(
     never from real capture data. Each ``*`` override lets a test diverge from
     the private value. The mount-derived enablement properties are computed from
     the resolved mount type so a ``mount_type`` override stays consistent.
-    ``capabilities`` mimics the capability map of newer firmware; ``None`` (the
-    default) models older firmware without a map, where every entity is created.
+    ``capabilities`` is the sensor's capability map; ``None`` (the default)
+    advertises every capability.
     """
     public = Mock(spec=PublicSensor)
     public.id = sensor.id
@@ -391,12 +391,8 @@ def make_public_sensor(
         if is_tampering_detected is None
         else is_tampering_detected
     )
-    public.has_feature_flags = capabilities is not None
-    public.supports = Mock(
-        side_effect=lambda capability: (
-            capabilities is not None and capability in capabilities
-        )
-    )
+    caps = set(SensorFeatureCapability) if capabilities is None else capabilities
+    public.supports = Mock(side_effect=lambda capability: capability in caps)
     public.leak_settings = PublicSensorLeakSettings(
         is_internal_enabled=leak_internal_enabled,
         is_external_enabled=leak_external_enabled,
@@ -715,8 +711,8 @@ def setup_public_sensor(
 
     Lookups go through the real ``PublicBootstrap.get``; the mirror resolves
     against the private bootstrap at call time, so it is robust to ``init_entry``
-    regenerating device ids. ``capabilities`` is forwarded to the mirror to model
-    newer firmware with a capability map. Further keyword arguments are handed
+    regenerating device ids. ``capabilities`` is forwarded to the mirror as the
+    sensor's capability map. Further keyword arguments are handed
     to ``make_public_sensor``, so a test can diverge a mirrored value.
     """
     public_bootstrap = PublicBootstrap()
