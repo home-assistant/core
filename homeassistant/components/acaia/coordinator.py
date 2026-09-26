@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_IS_NEW_STYLE_SCALE
+from .const import CONF_IS_NEW_STYLE_SCALE, CONF_KEEP_CONNECTED
 
 SCAN_INTERVAL = timedelta(seconds=15)
 UPDATE_DEBOUNCE_TIME = 0.2
@@ -55,20 +55,46 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
             scanner=async_get_scanner(hass),
         )
 
+        # Acaia scales only run their own auto-off timer while nothing is
+        # connected over Bluetooth, so an integration that stays connected
+        # around the clock prevents the scale from ever sleeping on its own.
+        # Read from config entry options so the preference is in place
+        # before the first refresh, rather than racing a restored entity
+        # state that is only available once the switch platform loads.
+        self.keep_connected: bool = entry.options.get(CONF_KEEP_CONNECTED, True)
+
     @property
     def scale(self) -> AcaiaScale:
         """Return the scale object."""
         return self._scale
 
+    async def async_set_keep_connected(self, keep_connected: bool) -> None:
+        """Enable or disable keeping a persistent connection to the scale."""
+        self.keep_connected = keep_connected
+        self.hass.config_entries.async_update_entry(
+            self.config_entry,
+            options={**self.config_entry.options, CONF_KEEP_CONNECTED: keep_connected},
+        )
+        if keep_connected:
+            await self._async_ensure_connected()
+        elif self._scale.connected:
+            await self._scale.disconnect()
+
     @override
     async def _async_update_data(self) -> None:
         """Fetch data."""
 
-        # scale is already connected, return
+        if not self.keep_connected:
+            return
+
+        await self._async_ensure_connected()
+
+    async def _async_ensure_connected(self) -> None:
+        """Connect to the scale and set up its background tasks if needed."""
+
         if self._scale.connected:
             return
 
-        # scale is not connected, try to connect
         try:
             await self._scale.connect(setup_tasks=False)
         except (AcaiaDeviceNotFound, AcaiaError, TimeoutError) as ex:
