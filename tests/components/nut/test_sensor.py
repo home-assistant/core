@@ -1,5 +1,6 @@
 """The sensor tests for the nut platform."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
@@ -21,6 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, translation
+from homeassistant.util import dt as dt_util
 
 from .util import (
     _get_mock_nutclient,
@@ -28,7 +30,7 @@ from .util import (
     async_init_integration,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -209,6 +211,48 @@ async def test_unknown_state_sensors(hass: HomeAssistant) -> None:
         state2 = hass.states.get("sensor.ups1_status_data")
         assert state1.state == STATE_UNKNOWN
         assert state2.state == "OQ"
+
+
+async def test_null_variable_values(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test variables a NUT driver reports as a literal (null) count as absent."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "mock", CONF_PORT: "mock"},
+    )
+    entry.add_to_hass(hass)
+
+    mock_pynut = _get_mock_nutclient(
+        list_ups={"ups1": "UPS 1"},
+        list_vars={"battery.charger.status": "(null)", "battery.charge": "10"},
+    )
+
+    with patch(
+        "homeassistant.components.nut.AIONUTClient",
+        return_value=mock_pynut,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # no sensor for a variable the driver has no value for
+        assert (
+            entity_registry.async_get_entity_id(
+                Platform.SENSOR, DOMAIN, f"{entry.entry_id}_battery.charger.status"
+            )
+            is None
+        )
+        assert hass.states.get("sensor.ups1_battery_charge").state == "10"
+
+        # a value that goes missing later leaves its sensor unknown
+        mock_pynut.list_vars.return_value = {
+            "battery.charger.status": "charging",
+            "battery.charge": "(null)",
+        }
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=61))
+        await hass.async_block_till_done()
+
+        assert hass.states.get("sensor.ups1_battery_charge").state == STATE_UNKNOWN
 
 
 async def test_stale_options(
