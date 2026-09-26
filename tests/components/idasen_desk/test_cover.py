@@ -11,9 +11,11 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
+    CoverDeviceClass,
     CoverState,
 )
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
@@ -26,6 +28,17 @@ from homeassistant.exceptions import HomeAssistantError
 from . import UPDATE_DEBOUNCE_TIME, init_integration
 
 from tests.common import async_fire_time_changed
+
+
+async def test_cover_device_class(
+    hass: HomeAssistant, mock_desk_api: MagicMock
+) -> None:
+    """Test the desk is reported as a desk."""
+    await init_integration(hass)
+
+    state = hass.states.get("cover.test")
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.DESK
 
 
 async def test_cover_available(
