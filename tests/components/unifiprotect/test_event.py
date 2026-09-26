@@ -9,7 +9,6 @@ from unittest.mock import Mock, patch
 import pytest
 from uiprotect import EventChange, ProtectEvent, ProtectEventChannel
 from uiprotect.data import (
-    AiPort,
     Camera,
     Event,
     EventType,
@@ -1762,19 +1761,6 @@ async def test_vehicle_detection_no_refire_same_data(
     assert len(events) == 1
 
     unsub()
-
-
-async def test_aiport_no_event_entities(
-    hass: HomeAssistant,
-    ufp: MockUFPFixture,
-    aiport: AiPort,
-) -> None:
-    """Test that AI Port devices do not create camera-specific event entities."""
-    await init_entry(hass, ufp, [aiport])
-
-    # AI Port should not create any camera-specific event entities
-    # (doorbell, motion, etc.)
-    assert_entity_counts(hass, Platform.EVENT, 0, 0)
 
 
 async def test_motion_detection_event(

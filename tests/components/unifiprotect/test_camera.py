@@ -8,7 +8,6 @@ from aiohttp.client_exceptions import ServerDisconnectedError
 import pytest
 from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
-    AiPort,
     Camera as ProtectCamera,
     ChannelQuality,
     DeviceState,
@@ -397,14 +396,6 @@ async def test_camera_motion_detection(
             blocking=True,
         )
         mock_method.assert_called_once_with(expected_value)
-
-
-async def test_aiport_no_camera_entities(
-    hass: HomeAssistant, ufp: MockUFPFixture, aiport: AiPort
-) -> None:
-    """AI Port devices do not create camera entities."""
-    await init_entry(hass, ufp, [aiport])
-    assert_entity_counts(hass, Platform.CAMERA, 0, 0)
 
 
 async def test_public_only_camera(

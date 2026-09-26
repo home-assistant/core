@@ -996,44 +996,44 @@ async def test_switch_sense_capability_registry_cleanup(
     assert entity_registry.async_get(stale.entity_id) is None
 
 
-async def test_switch_sense_no_capability_map_creates_all(
+async def test_switch_sense_no_capability_map_creates_none(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     sensor_all: Sensor,
 ) -> None:
-    """Without a capability map (Protect below 7.2) every config switch is created."""
-    setup_public_sensor(ufp)
+    """A sensor without a capability map gets no capability-gated config switch."""
+    setup_public_sensor(ufp, capabilities=set())
     await init_entry(hass, ufp, [sensor_all])
 
-    for description in SENSE_SWITCHES:
-        _, entity_id = await ids_from_device_description(
-            hass, Platform.SWITCH, sensor_all, description
-        )
-        assert entity_registry.async_get(entity_id) is not None, description.key
+    gated = [desc for desc in SENSE_SWITCHES if desc.ufp_capability is not None]
+    assert gated
+    for description in gated:
+        assert (
+            entity_registry.async_get_entity_id(
+                Platform.SWITCH, DOMAIN, f"{sensor_all.mac}_{description.key}"
+            )
+            is None
+        ), description.key
 
 
-async def test_switch_sense_no_capability_map_keeps_existing(
+async def test_switch_sense_no_capability_map_removes_existing(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     sensor_all: Sensor,
 ) -> None:
-    """Without a capability map (Protect below 7.2) nothing is removed.
-
-    The console cannot say which capabilities it lacks, so an existing entity
-    must survive setup instead of being deleted on a guess.
-    """
+    """A switch created before its sensor reported no capability map is removed."""
     existing = entity_registry.async_get_or_create(
         Platform.SWITCH,
         DOMAIN,
         f"{sensor_all.mac}_motion",
         config_entry=ufp.entry,
     )
-    setup_public_sensor(ufp)
+    setup_public_sensor(ufp, capabilities=set())
     await init_entry(hass, ufp, [sensor_all], regenerate_ids=False)
 
-    assert entity_registry.async_get(existing.entity_id) is not None
+    assert entity_registry.async_get(existing.entity_id) is None
 
 
 # The five sense settings the public API exposes, with the public-mock override
