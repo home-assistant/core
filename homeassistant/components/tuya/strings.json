@@ -677,6 +677,9 @@
           "level_6": "Level 6"
         }
       },
+      "apparent_power": {
+        "name": "[%key:component::sensor::entity_component::apparent_power::name%]"
+      },
       "battery": {
         "name": "[%key:component::sensor::entity_component::battery::name%]"
       },
@@ -961,6 +964,9 @@
       "power": {
         "name": "[%key:component::sensor::entity_component::power::name%]"
       },
+      "power_factor": {
+        "name": "[%key:component::sensor::entity_component::power_factor::name%]"
+      },
       "precipitation_intensity": {
         "name": "[%key:component::sensor::entity_component::precipitation_intensity::name%]"
       },
@@ -972,6 +978,9 @@
       },
       "pv_channel_power": {
         "name": "PV channel {index} power"
+      },
+      "reactive_power": {
+        "name": "[%key:component::sensor::entity_component::reactive_power::name%]"
       },
       "remaining_time": {
         "name": "Remaining time"
