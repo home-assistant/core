@@ -28,26 +28,65 @@
   },
   "entity": {
     "sensor": {
+      "ambient_temperature": {
+        "name": "Ambient temperature"
+      },
       "binmode": {
         "name": "Binning mode"
       },
       "camera_sensor_temp": {
         "name": "Camera sensor temperature"
       },
+      "camera_sqm": {
+        "name": "Camera SQM"
+      },
+      "camera_sqm_adu": {
+        "name": "Camera SQM ADU"
+      },
+      "cpu_temperature": {
+        "name": "CPU temperature"
+      },
+      "device_sqm": {
+        "name": "Device SQM"
+      },
+      "dew_heater": {
+        "name": "Dew heater duty cycle"
+      },
+      "dewpoint": {
+        "name": "Dew point"
+      },
       "exposure": {
         "name": "Exposure time"
+      },
+      "fan_duty_cycle": {
+        "name": "Fan duty cycle"
       },
       "filename": {
         "name": "Filename"
       },
+      "frost_point": {
+        "name": "Frost point"
+      },
       "gain": {
         "name": "Gain"
+      },
+      "heat_index": {
+        "name": "Heat index"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "pressure": {
+        "name": "Pressure"
       },
       "sqm": {
         "name": "Sky quality"
       },
       "stars": {
         "name": "Stars"
+      },
+      "wind_direction": {
+        "name": "Wind direction"
       }
     }
   },

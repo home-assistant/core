@@ -3,7 +3,7 @@
 from dataclasses import replace
 from unittest.mock import AsyncMock, patch
 
-from aioindiallsky import ExposureData
+from aioindiallsky import ExposureData, SensorData
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -45,6 +45,7 @@ async def test_disabled_sensors(
 
     for entity_id in (
         "sensor.indi_allsky_binning_mode",
+        "sensor.indi_allsky_cpu_temperature",
         "sensor.indi_allsky_filename",
         "sensor.indi_allsky_gain",
     ):
@@ -53,8 +54,9 @@ async def test_disabled_sensors(
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     for entity_id in (
-        "sensor.indi_allsky_exposure_time",
         "sensor.indi_allsky_camera_sensor_temperature",
+        "sensor.indi_allsky_dew_heater_duty_cycle",
+        "sensor.indi_allsky_exposure_time",
         "sensor.indi_allsky_sky_quality",
         "sensor.indi_allsky_stars",
     ):
@@ -63,7 +65,7 @@ async def test_disabled_sensors(
         assert entry.disabled_by is None
 
 
-async def test_sensor_updates(
+async def test_exposure_sensor_updates(
     hass: HomeAssistant,
     mock_indi_allsky_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -71,7 +73,6 @@ async def test_sensor_updates(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor state values update on exposure_complete event."""
-    # Enable disabled sensors for testing
     entity_registry.async_get_or_create(
         domain="sensor",
         platform="indi_allsky",
@@ -136,3 +137,317 @@ async def test_sensor_updates(
     state = hass.states.get("sensor.indi_allsky_camera_sensor_temperature")
     assert state is not None
     assert state.state == "12.5"
+
+
+async def test_hardware_sensor_updates(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_sensor_data: SensorData,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test hardware sensor state values update on sensor_update event."""
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform="indi_allsky",
+        unique_id=f"{mock_config_entry.entry_id}_cpu_temperature",
+        suggested_object_id="indi_allsky_cpu_temperature",
+        disabled_by=None,
+    )
+
+    with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(mock_sensor_data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_ambient_temperature")
+    assert state is not None
+    assert state.state == "21.5"
+
+    state = hass.states.get("sensor.indi_allsky_humidity")
+    assert state is not None
+    assert state.state == "65.0"
+
+    state = hass.states.get("sensor.indi_allsky_pressure")
+    assert state is not None
+    assert state.state == "1013.25"
+
+    state = hass.states.get("sensor.indi_allsky_dew_heater_duty_cycle")
+    assert state is not None
+    assert state.state == "50.0"
+
+    state = hass.states.get("sensor.indi_allsky_dew_point")
+    assert state is not None
+    assert state.state == "14.8"
+
+    state = hass.states.get("sensor.indi_allsky_frost_point")
+    assert state is not None
+    assert state.state == "10.2"
+
+    state = hass.states.get("sensor.indi_allsky_fan_duty_cycle")
+    assert state is not None
+    assert state.state == "75.0"
+
+    state = hass.states.get("sensor.indi_allsky_heat_index")
+    assert state is not None
+    assert state.state == "22.1"
+
+    state = hass.states.get("sensor.indi_allsky_wind_direction")
+    assert state is not None
+    assert state.state == "180.0"
+
+    state = hass.states.get("sensor.indi_allsky_device_sqm")
+    assert state is not None
+    assert state.state == "21.4"
+
+    state = hass.states.get("sensor.indi_allsky_camera_sqm")
+    assert state is not None
+    assert state.state == "20.8"
+
+    state = hass.states.get("sensor.indi_allsky_camera_sqm_adu")
+    assert state is not None
+    assert state.state == "15000.0"
+
+    state = hass.states.get("sensor.indi_allsky_cpu_temperature")
+    assert state is not None
+    assert state.state == "45.2"
+
+
+async def test_hardware_sensor_fallback_updates(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test hardware sensor fallback resolution from raw_user and raw_temp slots."""
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform="indi_allsky",
+        unique_id=f"{mock_config_entry.entry_id}_cpu_temperature",
+        suggested_object_id="indi_allsky_cpu_temperature",
+        disabled_by=None,
+    )
+
+    with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    fallback_data = SensorData.from_dict(
+        {
+            "sensors": {},
+            "sensor_temp": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 57.5],
+            "sensor_user": [0, 0, 0, 0, 0, 0, 0, 0, 0, 12500.5],
+        }
+    )
+
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(fallback_data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_cpu_temperature")
+    assert state is not None
+    assert state.state == "57.5"
+
+    state = hass.states.get("sensor.indi_allsky_camera_sqm_adu")
+    assert state is not None
+    assert state.state == "12500.5"
+
+
+async def test_consecutive_sensor_updates_merging(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test consecutive sensor updates merge retaining previous values."""
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform="indi_allsky",
+        unique_id=f"{mock_config_entry.entry_id}_cpu_temperature",
+        suggested_object_id="indi_allsky_cpu_temperature",
+        disabled_by=None,
+    )
+
+    with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    first_update = SensorData.from_dict(
+        {
+            "sensors": {
+                "humidity": 65.0,
+            },
+            "sensor_user": [0, 0, 14.8],
+            "sensor_temp": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42.0],
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(first_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_humidity")
+    assert state is not None
+    assert state.state == "65.0"
+
+    state = hass.states.get("sensor.indi_allsky_dew_point")
+    assert state is not None
+    assert state.state == "14.8"
+
+    state = hass.states.get("sensor.indi_allsky_cpu_temperature")
+    assert state is not None
+    assert state.state == "42.0"
+
+    second_update = SensorData.from_dict(
+        {
+            "sensors": {
+                "humidity": 70.0,
+                "pressure": 1015.0,
+            },
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(second_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_humidity")
+    assert state is not None
+    assert state.state == "70.0"
+
+    state = hass.states.get("sensor.indi_allsky_pressure")
+    assert state is not None
+    assert state.state == "1015.0"
+
+    state = hass.states.get("sensor.indi_allsky_dew_point")
+    assert state is not None
+    assert state.state == "14.8"
+
+    state = hass.states.get("sensor.indi_allsky_cpu_temperature")
+    assert state is not None
+    assert state.state == "42.0"
+
+
+async def test_dynamic_hardware_sensor_discovery(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test dynamic discovery and metadata inference of custom hardware sensors."""
+    with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    dynamic_data = SensorData.from_dict(
+        {
+            "sensors": {
+                "sensor_a_temperature": {
+                    "name": "SHT4x (i2c) - SHT40 - Temperature",
+                    "value": 30.83,
+                    "unit": "°C",
+                    "device_class": "temperature",
+                },
+                "sensor_b_pressure": {
+                    "name": "Ecowitt API - Sensor B - Pressure",
+                    "value": 1017.27,
+                    "unit": "hPa",
+                    "device_class": "pressure",
+                },
+                "sensor_c_humidity": {
+                    "name": "DHT22 - Sensor C - Humidity",
+                    "value": 65.5,
+                    "unit": "%",
+                },
+                "sensor_d_lux": {
+                    "name": "TSL2561 Lux",
+                    "value": 150.0,
+                    "unit": "lx",
+                },
+                "sensor_e_status": {
+                    "name": "Hardware Status",
+                    "value": "Operational",
+                },
+                "sensor_f_no_unit_temp": {
+                    "name": "Generic Temperature Sensor",
+                    "value": 24.5,
+                },
+                "lamp_status": {
+                    "name": "Dome Lamp Status",
+                    "value": "Off",
+                },
+            }
+        }
+    )
+
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(dynamic_data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_sht4x_i2c_sht40_temperature")
+    assert state is not None
+    assert state.state == "30.83"
+    assert state.attributes.get("unit_of_measurement") == "°C"
+    assert state.attributes.get("device_class") == "temperature"
+
+    state = hass.states.get("sensor.indi_allsky_ecowitt_api_sensor_b_pressure")
+    assert state is not None
+    assert state.state == "1017.27"
+    assert state.attributes.get("unit_of_measurement") == "hPa"
+    assert state.attributes.get("device_class") == "pressure"
+
+    state = hass.states.get("sensor.indi_allsky_dht22_sensor_c_humidity")
+    assert state is not None
+    assert state.state == "65.5"
+    assert state.attributes.get("unit_of_measurement") == "%"
+
+    state = hass.states.get("sensor.indi_allsky_tsl2561_lux")
+    assert state is not None
+    assert state.state == "150.0"
+    assert state.attributes.get("unit_of_measurement") == "lx"
+    assert state.attributes.get("device_class") == "illuminance"
+
+    state = hass.states.get("sensor.indi_allsky_hardware_status")
+    assert state is not None
+    assert state.state == "Operational"
+    assert state.attributes.get("state_class") is None
+
+    # Verify sensor with no unit does not infer default unit or device class
+    state = hass.states.get("sensor.indi_allsky_generic_temperature_sensor")
+    assert state is not None
+    assert state.state == "24.5"
+    assert state.attributes.get("device_class") is None
+    assert state.attributes.get("unit_of_measurement") is None
+    assert state.attributes.get("state_class") is None
+
+    # Verify lamp_status does not incorrectly match 'amp' substring
+    state = hass.states.get("sensor.indi_allsky_dome_lamp_status")
+    assert state is not None
+    assert state.state == "Off"
+    assert state.attributes.get("device_class") is None
+    assert state.attributes.get("state_class") is None
+    assert state.attributes.get("unit_of_measurement") is None
+
+
+async def test_initial_sensor_fetch_preserved(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_sensor_data: SensorData,
+) -> None:
+    """Test initial sensor fetch result is preserved during setup before websocket stream."""
+
+    def _fetch_sensors_side_effect() -> bool:
+        for cb in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+            cb(mock_sensor_data)
+        return True
+
+    mock_indi_allsky_client.fetch_sensors.side_effect = _fetch_sensors_side_effect
+
+    with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    # Ambient temperature and dew point should be immediately present
+    state = hass.states.get("sensor.indi_allsky_ambient_temperature")
+    assert state is not None
+    assert state.state == "21.5"
+
+    state = hass.states.get("sensor.indi_allsky_dew_point")
+    assert state is not None
+    assert state.state == "14.8"
