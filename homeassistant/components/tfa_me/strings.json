@@ -1,0 +1,87 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This TFA.me station is already configured."
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the station.",
+      "invalid_ip_host": "Invalid IP or station ID.",
+      "invalid_response": "Invalid response from the station.",
+      "timeout_connect": "Timeout while connecting to the station.",
+      "unknown": "Unexpected error."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "ip_address": "IP address or station ID"
+        },
+        "data_description": {
+          "ip_address": "Enter the IP address or station ID of your TFA.me station"
+        },
+        "description": "Please enter the IP address or station ID of your TFA.me station.\n- 9-character hexadecimal station ID: 'XXX-XXX-XXX'\n- mDNS name: 'tfa-me-XXX-XXX-XXX.local'\n- To get the IP address: Press and hold the '+' button on your device for 5 seconds.",
+        "title": "Setup TFA.me station"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "humidity": {
+        "name": "Humidity"
+      },
+      "lowbatt": {
+        "name": "Battery status",
+        "state": {
+          "critical": "Critical",
+          "low": "Low",
+          "missing": "Missing/removed",
+          "ok": "OK"
+        }
+      },
+      "rssi": {
+        "name": "RSSI"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "temperature_probe": {
+        "name": "Temperature probe"
+      },
+      "wind_direction": {
+        "name": "Wind direction",
+        "state": {
+          "e": "E",
+          "ene": "ENE",
+          "ese": "ESE",
+          "n": "N",
+          "ne": "NE",
+          "nne": "NNE",
+          "nnw": "NNW",
+          "nw": "NW",
+          "s": "S",
+          "se": "SE",
+          "sse": "SSE",
+          "ssw": "SSW",
+          "sw": "SW",
+          "w": "W",
+          "wnw": "WNW",
+          "wsw": "WSW"
+        }
+      },
+      "wind_direction_deg": {
+        "name": "Wind direction (degrees)"
+      },
+
+      "wind_gust": {
+        "name": "Wind gust"
+      }
+    }
+  },
+  "exceptions": {
+    "connection_error": {
+      "message": "Failed to connect to the station."
+    },
+    "invalid_response_error": {
+      "message": "The station returned invalid data."
+    }
+  }
+}
