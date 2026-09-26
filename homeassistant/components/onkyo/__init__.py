@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -66,6 +66,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
         ) from exc
 
     manager = ReceiverManager(hass, entry, info)
+
+    # Registered here, so that the device is present even before any zone or
+    # feature of the receiver has announced itself.
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, info.identifier)},
+        name=info.model_name,
+        model_id=info.model_name,
+    )
 
     sources_store: dict[str, str] = entry.options[OPTION_INPUT_SOURCES]
     sources = {InputSource(k): v for k, v in sources_store.items()}

@@ -28,6 +28,7 @@ from .const import (
     ListeningMode,
     VolumeResolution,
 )
+from .entity import OnkyoEntity
 from .receiver import ReceiverManager
 from .util import get_meaning
 
@@ -51,6 +52,12 @@ SUPPORTED_FEATURES_VOLUME = (
     | MediaPlayerEntityFeature.VOLUME_MUTE
     | MediaPlayerEntityFeature.VOLUME_STEP
 )
+
+ZONE_TRANSLATION_KEYS = {
+    Zone.ZONE2: "zone2",
+    Zone.ZONE3: "zone3",
+    Zone.ZONE4: "zone4",
+}
 
 PLAYABLE_SOURCES = (
     InputSource.FM,
@@ -166,11 +173,8 @@ async def async_setup_entry(
     manager.callbacks.update.append(update_callback)
 
 
-class OnkyoMediaPlayer(MediaPlayerEntity):
+class OnkyoMediaPlayer(OnkyoEntity, MediaPlayerEntity):
     """Onkyo Receiver Media Player (one per each zone)."""
-
-    _attr_should_poll = False
-    _attr_has_entity_name = True
 
     _supports_volume: bool = False
     # None means no technical possibility of support
@@ -192,13 +196,14 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         sound_modes: dict[ListeningMode, str],
     ) -> None:
         """Initialize the Onkyo Receiver."""
-        self._manager = manager
+        super().__init__(manager)
         self._zone = zone
 
-        name = manager.info.model_name
-        identifier = manager.info.identifier
-        self._attr_name = f"{name}{' ' + ZONES[zone] if zone is not Zone.MAIN else ''}"
-        self._attr_unique_id = f"{identifier}_{zone.value}"
+        if zone is Zone.MAIN:
+            self._attr_name = None
+        else:
+            self._attr_translation_key = ZONE_TRANSLATION_KEYS[zone]
+        self._attr_unique_id = f"{manager.info.identifier}_{zone.value}"
 
         self._volume_resolution = volume_resolution
         self._max_volume = max_volume
@@ -246,12 +251,6 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Entity will be removed from hass."""
         self.cancel_tasks()
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self._manager.connected
 
     async def query_state(self) -> None:
         """Query the receiver for all the info, that we care about."""
