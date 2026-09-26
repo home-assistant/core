@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import logging
 from typing import override
 
-from aioindiallsky import ExposureData, IndiAllSkyClient, IndiAllSkyError
+from aioindiallsky import ExposureData, IndiAllSkyClient, IndiAllSkyError, MediaData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
@@ -25,6 +25,8 @@ class IndiAllSkyData:
     """Data model for INDI Allsky coordinator data."""
 
     exposure: ExposureData | None = None
+    latest_keogram: MediaData | None = None
+    latest_startrail: MediaData | None = None
 
 
 class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
@@ -42,11 +44,21 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
             session=async_get_clientsession(hass),
         )
         self.latest_exposure: ExposureData | None = None
+        self.latest_keogram: MediaData | None = None
+        self.latest_startrail: MediaData | None = None
 
-        unsub = self.client.register_callback(
+        unsub_exp = self.client.register_callback(
             "exposure_complete", self._handle_exposure_complete
         )
-        entry.async_on_unload(unsub)
+        unsub_keogram = self.client.register_callback(
+            "keogram_complete", self._handle_keogram_complete
+        )
+        unsub_startrail = self.client.register_callback(
+            "startrail_complete", self._handle_startrail_complete
+        )
+        entry.async_on_unload(unsub_exp)
+        entry.async_on_unload(unsub_keogram)
+        entry.async_on_unload(unsub_startrail)
         entry.async_on_unload(self.client.disconnect)
 
         super().__init__(
@@ -60,7 +72,35 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
     def _handle_exposure_complete(self, exposure: ExposureData) -> None:
         """Handle new exposure_complete event from WebSocket stream."""
         self.latest_exposure = exposure
-        self.async_set_updated_data(IndiAllSkyData(exposure=exposure))
+        self.async_set_updated_data(
+            IndiAllSkyData(
+                exposure=exposure,
+                latest_keogram=self.latest_keogram,
+                latest_startrail=self.latest_startrail,
+            )
+        )
+
+    def _handle_keogram_complete(self, media: MediaData) -> None:
+        """Handle new keogram_complete event from WebSocket stream."""
+        self.latest_keogram = media
+        self.async_set_updated_data(
+            IndiAllSkyData(
+                exposure=self.latest_exposure,
+                latest_keogram=media,
+                latest_startrail=self.latest_startrail,
+            )
+        )
+
+    def _handle_startrail_complete(self, media: MediaData) -> None:
+        """Handle new startrail_complete event from WebSocket stream."""
+        self.latest_startrail = media
+        self.async_set_updated_data(
+            IndiAllSkyData(
+                exposure=self.latest_exposure,
+                latest_keogram=self.latest_keogram,
+                latest_startrail=media,
+            )
+        )
 
     @override
     async def _async_update_data(self) -> IndiAllSkyData:
@@ -75,4 +115,8 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
                 translation_key="update_failed",
             ) from err
 
-        return IndiAllSkyData(exposure=self.latest_exposure)
+        return IndiAllSkyData(
+            exposure=self.latest_exposure,
+            latest_keogram=self.latest_keogram,
+            latest_startrail=self.latest_startrail,
+        )
