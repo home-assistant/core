@@ -42,8 +42,11 @@ from homeassistant.const import ATTR_COMMAND, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.helpers.typing import VolSchemaType
+from homeassistant.helpers.service import (
+    async_register_admin_service,
+    async_register_platform_entity_service,
+)
+from homeassistant.helpers.typing import VolDictType, VolSchemaType
 
 from .const import (
     ATTR_DURATION,
@@ -68,6 +71,10 @@ SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND = "issue_zigbee_cluster_command"
 SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND = "issue_zigbee_group_command"
 SERVICE_WARNING_DEVICE_SQUAWK = "warning_device_squawk"
 SERVICE_WARNING_DEVICE_WARN = "warning_device_warn"
+SERVICE_CLEAR_LOCK_USER_CODE = "clear_lock_user_code"
+SERVICE_DISABLE_LOCK_USER_CODE = "disable_lock_user_code"
+SERVICE_ENABLE_LOCK_USER_CODE = "enable_lock_user_code"
+SERVICE_SET_LOCK_USER_CODE = "set_lock_user_code"
 
 IEEE_SERVICE = "ieee_based_service"
 
@@ -402,6 +409,16 @@ async def _warning_device_warn(service: ServiceCall) -> None:
     )
 
 
+LOCK_CODE_SLOT_SCHEMA: VolDictType = {
+    probatio.Required("code_slot"): probatio.Coerce(int)
+}
+
+LOCK_SET_USER_CODE_SCHEMA: VolDictType = {
+    **LOCK_CODE_SLOT_SCHEMA,
+    probatio.Required("user_code"): cv.string,
+}
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the ZHA services."""
@@ -449,4 +466,27 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_WARNING_DEVICE_WARN,
         _warning_device_warn,
         schema=SERVICE_SCHEMAS[SERVICE_WARNING_DEVICE_WARN],
+    )
+
+    for service_name, func in (
+        (SERVICE_ENABLE_LOCK_USER_CODE, "async_enable_lock_user_code"),
+        (SERVICE_DISABLE_LOCK_USER_CODE, "async_disable_lock_user_code"),
+        (SERVICE_CLEAR_LOCK_USER_CODE, "async_clear_lock_user_code"),
+    ):
+        async_register_platform_entity_service(
+            hass,
+            DOMAIN,
+            service_name,
+            entity_domain=Platform.LOCK,
+            schema=LOCK_CODE_SLOT_SCHEMA,
+            func=func,
+        )
+
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_LOCK_USER_CODE,
+        entity_domain=Platform.LOCK,
+        schema=LOCK_SET_USER_CODE_SCHEMA,
+        func="async_set_lock_user_code",
     )
