@@ -965,10 +965,7 @@ async def test_convert_chat_log_to_interactions_steps_thought_with_signature(
     chat_log = conversation.ChatLog(hass, "test_conversation")
     chat_log.async_add_user_content(conversation.UserContent(content="What is 2+2?"))
 
-    thought_sig = (
-        "EuUSCuISAWkUfROUQtSdFAxbHyCEz9ttYVg3MCN1Opxxge6vZnWcDUyakfBipBz5fzX0Lg3e67t"
-        "dJp+asAxC2BuqWMtDTckCjWT+QJYLYhJHXsOvgdSj/lIK8BRiJWJ8BhV95l5vv6kV4KvQotEUk/"
-    )
+    thought_sig = "thought_sig_calc_123"
 
     chat_log.async_add_assistant_content_without_tools(
         conversation.AssistantContent(
