@@ -7,7 +7,13 @@ from pathlib import Path
 from typing import Any, Final, cast
 
 from aiohttp import ClientError
-from aiopowerwall import PowerwallClient, PowerwallEnergySite, PowerwallError
+from aiopowerwall import (
+    PowerwallClient,
+    PowerwallConnectionError,
+    PowerwallEnergySite,
+    PowerwallError,
+    PowerwallRateLimitError,
+)
 from bleak.exc import BleakError
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
@@ -21,6 +27,7 @@ from tesla_fleet_api.exceptions import (
 from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry import EnergySite, Teslemetry, Vehicle
+from tesla_fleet_api.teslemetry.energysite import TeslemetryEnergySite
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamAuthenticationError
 from teslemetry_stream.const import SseTopic
 
@@ -29,7 +36,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.bluetooth import async_ble_device_from_address
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigSubentry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_ADDRESS,
@@ -63,6 +70,7 @@ from .const import (
     CLIENT_ID,
     CONF_VIN,
     DOMAIN,
+    ISSUE_GATEWAY_NOT_FOUND,
     LOGGER,
     POWERWALL_KEY_FILE,
     RSA_PARENT_KEY,
@@ -78,7 +86,12 @@ from .coordinator import (
     TeslemetryMetadataCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
-from .helpers import async_get_ble_parent, async_update_device_sw_version, flatten
+from .helpers import (
+    async_get_ble_parent,
+    async_update_device_sw_version,
+    create_powerwall_client,
+    flatten,
+)
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
 from .services import async_setup_services
 
@@ -431,7 +444,7 @@ async def _async_resolve_local_control(
     entry: TeslemetryConfigEntry,
     battery: bool,
     site_id: int,
-    cloud_energy_site: EnergySite,
+    cloud_energy_site: TeslemetryEnergySite,
 ) -> tuple[bool, str | None, EnergySite | EnergySiteRouter]:
     """Resolve opt-in local control for an energy site."""
     # Only a battery/Powerwall gateway can pair for local (TEDAPI) control.
@@ -439,6 +452,7 @@ async def _async_resolve_local_control(
         return False, None, cloud_energy_site
     subentry_id = _find_energy_subentry_id(entry, site_id)
     if subentry_id is None:
+        ir.async_delete_issue(hass, DOMAIN, _gateway_issue_id(site_id))
         return True, None, cloud_energy_site
     # A local-gateway failure for one site must not tear down the integration.
     try:
@@ -456,28 +470,116 @@ async def _async_resolve_local_control(
     return True, subentry_id, api
 
 
+def _gateway_issue_id(site_id: int) -> str:
+    """Return the repair issue id for a site whose local gateway was not found."""
+    return f"{ISSUE_GATEWAY_NOT_FOUND}_{site_id}"
+
+
 async def _async_resolve_energy_site_api(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
     subentry_id: str,
-    cloud_energy_site: EnergySite,
+    cloud_energy_site: TeslemetryEnergySite,
 ) -> EnergySite | EnergySiteRouter:
     """Return the API an energy site's platforms should call."""
-    data = entry.subentries[subentry_id].data
-    host = data.get(CONF_HOST)
-    password = data.get(CONF_PASSWORD)
+    subentry = entry.subentries[subentry_id]
+    host = subentry.data.get(CONF_HOST)
+    password = subentry.data.get(CONF_PASSWORD)
     if not host or not password:
         return cloud_energy_site
 
     key_pem = await _async_get_rsa_key_pem(hass)
-    powerwall_client = PowerwallClient(
-        host=host,
-        gateway_password=password,
-        rsa_private_key_pem=key_pem,
-        session=async_get_clientsession(hass),
-    )
+    powerwall_client = create_powerwall_client(hass, host, password, key_pem)
+    try:
+        await powerwall_client.connect()
+    except PowerwallRateLimitError as err:
+        LOGGER.debug(
+            "Local gateway for energy site %s is rate limiting: %s",
+            cloud_energy_site.energy_site_id,
+            err,
+        )
+        ir.async_delete_issue(
+            hass, DOMAIN, _gateway_issue_id(cloud_energy_site.energy_site_id)
+        )
+    except PowerwallError as err:
+        # Another device may have taken the old address, so any refusal is a lead.
+        powerwall_client = await _async_rediscover_gateway(
+            hass, entry, subentry, powerwall_client, cloud_energy_site, key_pem, err
+        )
+    else:
+        ir.async_delete_issue(
+            hass, DOMAIN, _gateway_issue_id(cloud_energy_site.energy_site_id)
+        )
     local_energy_site = PowerwallEnergySite(powerwall_client)
     return EnergySiteRouter(local_energy_site, cloud_energy_site)
+
+
+async def _async_rediscover_gateway(
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    subentry: ConfigSubentry,
+    stale_client: PowerwallClient,
+    cloud_energy_site: TeslemetryEnergySite,
+    key_pem: bytes,
+    error: PowerwallError,
+) -> PowerwallClient:
+    """Return a client at the gateway's new address, or the stale client if not found."""
+    site_id = cloud_energy_site.energy_site_id
+    issue_id = _gateway_issue_id(site_id)
+    try:
+        host = await cloud_energy_site.find_gateway_address()
+    except (ClientError, TeslaFleetError) as err:
+        LOGGER.debug(
+            "Gateway address lookup failed for energy site %s: %s", site_id, err
+        )
+        host = None
+    if host == stale_client.host and not isinstance(error, PowerwallConnectionError):
+        # The cloud confirms the address, so the refusing device is the gateway itself.
+        LOGGER.warning(
+            "Local gateway for energy site %s refused the connection; "
+            "commands will fall back to cloud control: %s",
+            site_id,
+            error,
+        )
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+        return stale_client
+    if host and host != stale_client.host:
+        client = create_powerwall_client(
+            hass, host, subentry.data[CONF_PASSWORD], key_pem
+        )
+        try:
+            await client.connect()
+        except PowerwallError as err:
+            LOGGER.debug(
+                "Local gateway for energy site %s unreachable at %s: %s",
+                site_id,
+                host,
+                err,
+            )
+        else:
+            LOGGER.info("Local gateway for energy site %s moved to %s", site_id, host)
+            hass.config_entries.async_update_subentry(
+                entry, subentry, data={**subentry.data, CONF_HOST: host}
+            )
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
+            return client
+
+    LOGGER.warning(
+        "Local gateway for energy site %s could not be found; "
+        "commands will fall back to cloud control",
+        site_id,
+    )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=ISSUE_GATEWAY_NOT_FOUND,
+        translation_placeholders={"site": subentry.title},
+        data={"entry_id": entry.entry_id, "subentry_id": subentry.subentry_id},
+    )
+    return stale_client
 
 
 async def _async_vehicle_first_refresh(vehicle: TeslemetryVehicleData) -> None:
@@ -695,7 +797,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     (DOMAIN, c["din"]) for c in product["components"]["wall_connectors"]
                 }
 
-            energy_site = teslemetry.energySites.create(site_id)
+            energy_site = cast(
+                TeslemetryEnergySite, teslemetry.energySites.create(site_id)
+            )
             device = DeviceInfo(
                 identifiers={(DOMAIN, str(site_id))},
                 manufacturer="Tesla",

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast, override
 
 from aiohttp import ClientError
-from aiopowerwall import PowerwallAuthenticationError, PowerwallClient, PowerwallError
+from aiopowerwall import PowerwallAuthenticationError, PowerwallError
 from bleak.exc import BleakError
 import probatio
 from tesla_fleet_api.const import (
@@ -25,7 +25,6 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
     WhitelistOperationAttemptingToAddExistingKey,
 )
-from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from tesla_fleet_api.teslemetry import Teslemetry
 from tesla_fleet_api.teslemetry.energysite import AuthorizedClient, TeslemetryEnergySite
@@ -70,31 +69,16 @@ from .const import (
     SUBENTRY_TYPE_ENERGY_SITE,
     SUBENTRY_TYPE_VEHICLE,
 )
-from .helpers import async_get_ble_parent
-from .models import TeslemetryEnergyData
+from .helpers import (
+    PowerwallKeyRejectedError,
+    async_get_ble_parent,
+    async_verify_local_gateway,
+    cloud_energy_site,
+)
 
 
 class PowerwallLookupError(Exception):
     """Signal that the authorized-client lookup failed for a non-retryable reason."""
-
-
-class PowerwallKeyRejectedError(Exception):
-    """Signal that the gateway refused a v1r-signed read with our RSA key."""
-
-
-def _cloud_energy_site(energy_data: TeslemetryEnergyData) -> TeslemetryEnergySite:
-    """Return the cloud energy-site API for pairing.
-
-    Pairing always registers the key through the Teslemetry cloud; a paired
-    site's api is an EnergySiteRouter, so unwrap its cloud secondary rather
-    than routing to the local Powerwall primary.
-    """
-    return cast(
-        TeslemetryEnergySite,
-        energy_data.api.secondary
-        if isinstance(energy_data.api, EnergySiteRouter)
-        else energy_data.api,
-    )
 
 
 class OAuth2FlowHandler(
@@ -487,7 +471,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             self._site_id = energy_data.id
             self._site_name = energy_data.device.get("name") or "Energy Site"
             if abort := await self._prepare_energy_site(
-                _cloud_energy_site(energy_data)
+                cloud_energy_site(energy_data.api)
             ):
                 return abort
             return await self._async_begin_pairing()
@@ -525,7 +509,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         )
         if energy_data is None:
             return self.async_abort(reason="cannot_connect")
-        if abort := await self._prepare_energy_site(_cloud_energy_site(energy_data)):
+        if abort := await self._prepare_energy_site(cloud_energy_site(energy_data.api)):
             return abort
         return await self._async_begin_pairing()
 
@@ -651,24 +635,6 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             None,
         )
 
-    async def _verify_local_gateway(self, host: str, password: str) -> None:
-        """Prove the LAN connection and the RSA key against the gateway."""
-        if TYPE_CHECKING:
-            assert self._key_pem is not None
-            assert self._energy_site is not None
-        async with PowerwallClient(
-            host=host,
-            gateway_password=password,
-            rsa_private_key_pem=self._key_pem,
-            session=async_get_clientsession(self.hass),
-        ) as client:
-            await client.connect()
-            try:
-                # connect() passed the password, so a failure here is key rejection.
-                await client.get_status()
-            except PowerwallAuthenticationError as err:
-                raise PowerwallKeyRejectedError from err
-
     def _default_gateway_host(self) -> str:
         """Return the host to pre-fill on the credentials form, or "" for blank.
 
@@ -691,11 +657,14 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             if TYPE_CHECKING:
                 assert self._energy_site is not None
+                assert self._key_pem is not None
             host = user_input[CONF_HOST].strip()
             # The gateway accepts only the last 5 characters of the Wi-Fi password.
             password = user_input[CONF_PASSWORD].strip()[-5:]
             try:
-                await self._verify_local_gateway(host, password)
+                await async_verify_local_gateway(
+                    self.hass, host, password, self._key_pem
+                )
             except PowerwallKeyRejectedError as err:
                 LOGGER.debug("Powerwall rejected the signed read: %s", err.__cause__)
                 errors["base"] = "key_not_approved"
