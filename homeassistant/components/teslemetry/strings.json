@@ -104,6 +104,7 @@
         "timeout": "Timed out waiting for the vehicle to accept the key. Try again after approving the key on the vehicle's touchscreen."
       },
       "initiate_flow": {
+        "reconfigure": "Reconfigure local vehicle",
         "user": "Add local vehicle"
       },
       "progress": {
@@ -1297,6 +1298,26 @@
     }
   },
   "issues": {
+    "ble_key_rejected": {
+      "fix_flow": {
+        "abort": {
+          "bluetooth_not_available": "At least one Bluetooth adapter or remote Bluetooth proxy must be configured to re-approve the key over Bluetooth.",
+          "bluetooth_not_loaded": "Bluetooth control of this vehicle is not loaded, so its key cannot be checked. Make sure the Teslemetry integration is set up correctly, then try again.",
+          "reconfigure": "Continue re-approving the key in the vehicle's Bluetooth reconfiguration."
+        },
+        "error": {
+          "cannot_connect": "Could not reach {vehicle} over Bluetooth. Make sure it is within range of a Bluetooth adapter or proxy, then try again.",
+          "unknown": "[%key:common::config_flow::error::unknown%]"
+        },
+        "step": {
+          "confirm": {
+            "description": "{vehicle} has stopped accepting Home Assistant's Bluetooth key, so commands are being sent through the cloud instead. This usually means the key was removed from the vehicle's Locks screen.\n\nMake sure {vehicle} is within range of a Bluetooth adapter or proxy, then select **Submit** to check the key again. If the vehicle still rejects it, you will reconfigure the vehicle's Bluetooth connection and re-approve the key with your key card.",
+            "title": "[%key:component::teslemetry::issues::ble_key_rejected::title%]"
+          }
+        }
+      },
+      "title": "Re-approve the Bluetooth key for {vehicle}"
+    },
     "gateway_not_found": {
       "fix_flow": {
         "abort": {

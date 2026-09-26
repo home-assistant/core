@@ -26,6 +26,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import (
     BluetoothCommandFailed,
+    BluetoothTimeout,
     BluetoothTransportError,
     BluetoothUnconfirmedCommand,
     Forbidden,
@@ -33,10 +34,13 @@ from tesla_fleet_api.exceptions import (
     InvalidResponse,
     InvalidToken,
     LoginRequired,
+    NotOnWhitelistFault,
     PrivateKeyError,
     RateLimited,
     SubscriptionRequired,
     TeslaFleetError,
+    TeslaFleetMessageFaultKeychainIsFull,
+    TeslaFleetMessageFaultUnknownKeyId,
 )
 from tesla_fleet_api.tesla import EnergySiteRouter, VehicleRouter
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
@@ -52,6 +56,7 @@ from homeassistant.components.teslemetry.const import (
     CONF_SITE_ID,
     CONF_VIN,
     DOMAIN,
+    ISSUE_TYPE_BLE_KEY_REJECTED,
     SUBENTRY_TYPE_ENERGY_SITE,
     SUBENTRY_TYPE_VEHICLE,
 )
@@ -2146,6 +2151,7 @@ VIN = "LRW3F7EK4NC700000"
 ADDRESS = "AA:BB:CC:DD:EE:FF"
 CLOUD_RESULT = {"response": {"result": True, "reason": "cloud"}}
 BLE_RESULT = {"response": {"result": True, "reason": "bluetooth"}}
+BLE_KEY_REJECTED_ISSUE_ID = f"{ISSUE_TYPE_BLE_KEY_REJECTED}_{VIN}"
 
 
 def _entry_with_ble() -> MockConfigEntry:
@@ -2438,6 +2444,166 @@ async def test_vehicle_router_fails_over_on_stale_cache_hit(
 
         bluetooth_vehicle.flash_lights.assert_awaited_once()
         cloud.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    "key_error",
+    [
+        pytest.param(NotOnWhitelistFault(), id="not_on_whitelist"),
+        pytest.param(TeslaFleetMessageFaultUnknownKeyId(), id="unknown_key_id"),
+    ],
+)
+async def test_ble_key_rejected_raises_repair(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, key_error: TeslaFleetError
+) -> None:
+    """A key rejection over Bluetooth raises a repair and still reaches the cloud."""
+    async with _paired_entry(hass, MagicMock(return_value=MagicMock())) as (
+        router,
+        bluetooth_vehicle,
+        cloud,
+    ):
+        bluetooth_vehicle.flash_lights.side_effect = key_error
+
+        assert await router.flash_lights() == CLOUD_RESULT
+
+        cloud.assert_awaited_once()
+        # The cloud succeeding in the same call must not clear the repair.
+        issue = issue_registry.async_get_issue(DOMAIN, BLE_KEY_REJECTED_ISSUE_ID)
+        assert issue is not None
+        assert issue.translation_key == ISSUE_TYPE_BLE_KEY_REJECTED
+        assert issue.translation_placeholders == {"vehicle": "Test"}
+        assert issue.severity is ir.IssueSeverity.WARNING
+        assert issue.is_fixable
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+        subentry = next(iter(entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)))
+        assert issue.data == {
+            "issue_type": ISSUE_TYPE_BLE_KEY_REJECTED,
+            "entry_id": entry.entry_id,
+            "subentry_id": subentry.subentry_id,
+        }
+
+
+async def test_ble_key_rejected_repair_clears_on_bluetooth_success(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """A later command succeeding over Bluetooth clears the repair."""
+    async with _paired_entry(hass, MagicMock(return_value=MagicMock())) as (
+        router,
+        bluetooth_vehicle,
+        _cloud,
+    ):
+        bluetooth_vehicle.flash_lights.side_effect = NotOnWhitelistFault()
+        assert await router.flash_lights() == CLOUD_RESULT
+        assert issue_registry.async_get_issue(DOMAIN, BLE_KEY_REJECTED_ISSUE_ID)
+
+        bluetooth_vehicle.flash_lights.side_effect = None
+        bluetooth_vehicle.flash_lights.return_value = BLE_RESULT
+        assert await router.flash_lights() == BLE_RESULT
+
+        assert not issue_registry.async_get_issue(DOMAIN, BLE_KEY_REJECTED_ISSUE_ID)
+
+
+@pytest.mark.parametrize(
+    "ble_error",
+    [
+        pytest.param(BluetoothTimeout(), id="timeout"),
+        pytest.param(BluetoothTransportError(), id="transport"),
+        pytest.param(BluetoothCommandFailed(), id="command_failed"),
+        pytest.param(TeslaFleetMessageFaultKeychainIsFull(), id="keychain_full"),
+        pytest.param(BleakError("no route"), id="bleak"),
+    ],
+)
+async def test_ble_non_key_failure_raises_no_repair(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, ble_error: Exception
+) -> None:
+    """A Bluetooth failure that is not a key rejection fails over without a repair."""
+    async with _paired_entry(hass, MagicMock(return_value=MagicMock())) as (
+        router,
+        bluetooth_vehicle,
+        cloud,
+    ):
+        bluetooth_vehicle.flash_lights.side_effect = ble_error
+
+        assert await router.flash_lights() == CLOUD_RESULT
+
+        cloud.assert_awaited_once()
+        assert not issue_registry.async_get_issue(DOMAIN, BLE_KEY_REJECTED_ISSUE_ID)
+
+
+async def test_ble_key_rejected_ignores_cloud_rejection(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """A key rejection from the cloud backend is not a Bluetooth key rejection."""
+    async with _paired_entry(hass, MagicMock(return_value=None)) as (
+        router,
+        _bluetooth_vehicle,
+        cloud,
+    ):
+        cloud.side_effect = NotOnWhitelistFault()
+
+        with pytest.raises(NotOnWhitelistFault):
+            await router.flash_lights()
+
+        assert not issue_registry.async_get_issue(DOMAIN, BLE_KEY_REJECTED_ISSUE_ID)
+
+
+async def test_ble_key_rejected_handler_never_raises(hass: HomeAssistant) -> None:
+    """The router's error handler fails over on an unexpected error without raising."""
+    async with _paired_entry(hass, MagicMock(return_value=MagicMock())) as (
+        router,
+        bluetooth_vehicle,
+        cloud,
+    ):
+        bluetooth_vehicle.flash_lights.side_effect = ValueError("unexpected")
+        cloud.side_effect = InvalidResponse()
+
+        # Only the cloud's own error surfaces once both backends have been tried.
+        with pytest.raises(InvalidResponse):
+            await router.flash_lights()
+
+        bluetooth_vehicle.flash_lights.assert_awaited_once()
+        cloud.assert_awaited_once()
+
+
+async def test_ble_key_rejected_repair_clears_on_unload(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Unloading the entry clears the repair along with the router that raised it."""
+    async with _paired_entry(hass, MagicMock(return_value=MagicMock())) as (
+        router,
+        bluetooth_vehicle,
+        _cloud,
+    ):
+        bluetooth_vehicle.flash_lights.side_effect = NotOnWhitelistFault()
+        assert await router.flash_lights() == CLOUD_RESULT
+        assert issue_registry.async_get_issue(DOMAIN, BLE_KEY_REJECTED_ISSUE_ID)
+
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(DOMAIN, BLE_KEY_REJECTED_ISSUE_ID)
+
+
+async def test_ble_primary_listeners_register_synchronously(
+    hass: HomeAssistant,
+) -> None:
+    """The primary stays unwrapped, so its broadcast listeners register synchronously."""
+    async with _paired_entry(hass, MagicMock(return_value=MagicMock())) as (
+        router,
+        bluetooth_vehicle,
+        _cloud,
+    ):
+        unsubscribe = MagicMock()
+        bluetooth_vehicle.listen_vehicle_lock_state = MagicMock(
+            return_value=unsubscribe
+        )
+        callback = MagicMock()
+
+        # A wrapping primary would turn this into an unawaited coroutine.
+        assert router.primary is bluetooth_vehicle
+        assert router.primary.listen_vehicle_lock_state(callback) is unsubscribe
+        bluetooth_vehicle.listen_vehicle_lock_state.assert_called_once_with(callback)
 
 
 async def test_vehicle_paired_but_never_seen(hass: HomeAssistant) -> None:
