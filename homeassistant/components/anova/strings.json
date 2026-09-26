@@ -60,6 +60,22 @@
       "water_temperature": {
         "name": "Water temperature"
       }
+    },
+    "switch": {
+      "cook": {
+        "name": "Cook"
+      }
+    }
+  },
+  "exceptions": {
+    "start_cook_failed": {
+      "message": "Failed to start the cook"
+    },
+    "start_cook_unavailable": {
+      "message": "The cook cannot be started yet"
+    },
+    "stop_cook_failed": {
+      "message": "Failed to stop the cook"
     }
   }
 }

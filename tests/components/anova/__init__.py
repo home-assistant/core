@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from anova_wifi import APCUpdate, APCUpdateBinary, APCUpdateSensor
+from anova_wifi import APCUpdate, APCUpdateBinary, APCUpdateSensor, APCWifiDevice
 
 from homeassistant.components.anova.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -54,3 +54,13 @@ async def async_init_integration(
             await hass.async_block_till_done()
 
         return entry
+
+
+def get_device(entry: ConfigEntry) -> APCWifiDevice:
+    """Get the real APCWifiDevice backing the first coordinator on a set-up entry.
+
+    The anova_api/anova_api_cooking fixtures yield a throwaway AnovaApi
+    instance - the device actually used by the integration is only reachable
+    through the config entry's runtime_data after setup.
+    """
+    return entry.runtime_data.coordinators[0].anova_device
