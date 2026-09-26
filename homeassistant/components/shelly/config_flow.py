@@ -69,6 +69,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.util.network import is_ip_address
 
 from .ble_provisioning import (
     ProvisioningState,
@@ -96,7 +97,6 @@ from .utils import (
     get_model_name,
     get_rpc_device_wakeup_period,
     get_ws_context,
-    is_hostname,
     mac_address_from_name,
 )
 
@@ -722,7 +722,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         current_entry = await self.async_set_unique_id(mac)
         current_host = current_entry.data.get(CONF_HOST) if current_entry else None
         # A user-configured hostname must not be replaced by the resolved IP
-        keep_hostname = current_host is not None and is_hostname(current_host)
+        keep_hostname = current_host is not None and not is_ip_address(current_host)
         if current_entry and (current_host == host or keep_hostname):
             LOGGER.debug("async_reconnect_soon: host: %s, mac: %s", host, mac)
             await async_reconnect_soon(self.hass, current_entry)
