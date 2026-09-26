@@ -41,6 +41,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
@@ -671,6 +672,25 @@ class ProtectFobSensor(ProtectFobEntity, SensorEntity):
         self._attr_native_value = self.entity_description.value_fn(fob)
 
 
+@callback
+def _async_public_entities(
+    data: ProtectData, device: PublicDeviceModel
+) -> list[Entity]:
+    """Return the sensors for one public device."""
+    if isinstance(device, Fob):
+        return [
+            ProtectFobSensor(data, device, description) for description in FOB_SENSORS
+        ]
+    return list(
+        async_all_device_entities(
+            data,
+            ProtectDeviceSensor,
+            model_descriptions=_MODEL_DESCRIPTIONS,
+            public_device=device,
+        )
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
@@ -681,36 +701,36 @@ async def async_setup_entry(
 
     @callback
     def _add_new_public_device(device: PublicDeviceModel) -> None:
-        if isinstance(device, Fob):
-            async_add_entities(
-                ProtectFobSensor(data, device, description)
-                for description in FOB_SENSORS
-            )
+        async_add_entities(_async_public_entities(data, device))
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
     )
 
+    async_remove_unsupported_sense_entities(hass, Platform.SENSOR, data, SENSE_SENSORS)
+
+    entities: list[Entity] = []
     # The public bootstrap is primed only with an API key and supported NVR
     # firmware; without it there are no fobs to expose.
     api = data.api
     if api.has_public_bootstrap:
-        async_add_entities(
-            ProtectFobSensor(data, fob, description)
-            for fob in api.public_bootstrap.fobs.values()
-            for description in FOB_SENSORS
-        )
+        for fob in api.public_bootstrap.fobs.values():
+            entities.extend(_async_public_entities(data, fob))
 
-    # Everything below is driven by the private bootstrap, which public-only
-    # entries do not have.
     if api.is_public_only:
+        # The remaining sensors read the private bootstrap; the migrated ones
+        # are built from the public devices instead.
+        entities.extend(
+            async_all_device_entities(
+                data, ProtectDeviceSensor, model_descriptions=_MODEL_DESCRIPTIONS
+            )
+        )
+        async_add_entities(entities)
         return
-
-    async_remove_unsupported_sense_entities(hass, Platform.SENSOR, data, SENSE_SENSORS)
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        entities = async_all_device_entities(
+        device_entities = async_all_device_entities(
             data,
             ProtectDeviceSensor,
             all_descs=ALL_DEVICES_SENSORS,
@@ -723,18 +743,20 @@ async def async_setup_entry(
             and isinstance(device, Camera)
             and device.is_adopted_by_us
         ):
-            entities += _async_event_entities(data, ufp_device=device)
-        async_add_entities(entities)
+            device_entities += _async_event_entities(data, ufp_device=device)
+        async_add_entities(device_entities)
 
     data.async_subscribe_adopt(_add_new_device)
-    entities = async_all_device_entities(
-        data,
-        ProtectDeviceSensor,
-        all_descs=ALL_DEVICES_SENSORS,
-        model_descriptions=_MODEL_DESCRIPTIONS,
+    entities.extend(
+        async_all_device_entities(
+            data,
+            ProtectDeviceSensor,
+            all_descs=ALL_DEVICES_SENSORS,
+            model_descriptions=_MODEL_DESCRIPTIONS,
+        )
     )
-    entities += _async_event_entities(data)
-    entities += _async_nvr_entities(data)
+    entities.extend(_async_event_entities(data))
+    entities.extend(_async_nvr_entities(data))
 
     async_add_entities(entities)
 
