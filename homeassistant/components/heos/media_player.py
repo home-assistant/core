@@ -295,7 +295,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 self._clear_announcement_state()
                 self._announce_lock.release()
             raise
-        except (HeosError, ValueError):
+        except HeosError, ValueError:
             if self._announce_restore_state:
                 await self._restore_state()
             else:
