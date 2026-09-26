@@ -5,7 +5,7 @@ from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from unittest.mock import Mock, patch
 
-from aiohttp import ClientConnectorError
+from aiohttp import ClientConnectorError, ServerDisconnectedError
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.exceptions import (
     InvalidEventListenerIdError,
@@ -17,7 +17,13 @@ from pyoverkiz.exceptions import (
 from pyoverkiz.models import Command
 import pytest
 
-from homeassistant.components.overkiz.const import DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.overkiz.const import (
+    DOMAIN,
+    UPDATE_INTERVAL,
+    UPDATE_INTERVAL_ALL_ASSUMED_STATE,
+    UPDATE_INTERVAL_EXECUTION,
+    UPDATE_INTERVAL_RATE_LIMITED_MAX,
+)
 from homeassistant.components.overkiz.executor import OverkizExecutor
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
@@ -26,7 +32,12 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
-from .helpers import async_deliver_events, device_created_event, device_removed_event
+from .helpers import (
+    async_deliver_events,
+    device_created_event,
+    device_removed_event,
+    execution_registered_event,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -73,7 +84,6 @@ SECONDARY_GATEWAY_CHILD_URL = "io://1234-1234-8983/1959462"
     "exception",
     [
         TooManyConcurrentRequestsError("Too many concurrent requests"),
-        TooManyRequestsError("Too many requests"),
         MaintenanceError("Server is down for maintenance"),
         ServiceUnavailableError("Server is unavailable"),
         InvalidEventListenerIdError("Invalid event listener id"),
@@ -82,7 +92,6 @@ SECONDARY_GATEWAY_CHILD_URL = "io://1234-1234-8983/1959462"
     ],
     ids=[
         "too_many_concurrent_requests",
-        "too_many_requests",
         "maintenance",
         "service_unavailable",
         "invalid_event_listener_id",
@@ -317,3 +326,203 @@ async def test_water_heater_refreshes_are_debounced(
     await hass.async_block_till_done()
 
     assert mock_client.fetch_events.await_count == 2
+
+
+async def test_rate_limit_backs_off_and_recovers(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Being rate limited slows polling down; a successful fetch restores it."""
+    await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+
+    initial_state = hass.states.get(TEMPERATURE_SENSOR.entity_id)
+    assert initial_state.state != STATE_UNAVAILABLE
+
+    # First rate limited refresh: entities go unavailable and polling doubles.
+    mock_client.fetch_events.side_effect = TooManyRequestsError("Too many requests")
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == STATE_UNAVAILABLE
+
+    # Nothing is requested at the old cadence any more...
+    mock_client.fetch_events.reset_mock()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.fetch_events.call_count == 0
+
+    # ...only once twice the interval has passed, and that failure doubles again.
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.fetch_events.call_count == 1
+
+    # A successful fetch clears the back off and restores the default interval.
+    mock_client.fetch_events.side_effect = None
+    mock_client.fetch_events.return_value = []
+    freezer.tick(UPDATE_INTERVAL * 4)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == initial_state.state
+
+    mock_client.fetch_events.reset_mock()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.fetch_events.call_count == 1
+
+
+async def test_rate_limit_back_off_never_polls_faster_than_configured(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """An hourly hub is not sped up to the rate limit cap by backing off."""
+    entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+    coordinator = entry.runtime_data.coordinator
+    coordinator.set_update_interval(UPDATE_INTERVAL_ALL_ASSUMED_STATE)
+
+    mock_client.fetch_events.side_effect = TooManyRequestsError("Too many requests")
+    freezer.tick(UPDATE_INTERVAL_ALL_ASSUMED_STATE)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.update_interval >= UPDATE_INTERVAL_ALL_ASSUMED_STATE
+    assert coordinator.update_interval > UPDATE_INTERVAL_RATE_LIMITED_MAX
+
+
+async def test_rate_limit_recovery_restores_execution_polling(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Recovering while an execution is pending resumes the faster cadence."""
+    entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+    coordinator = entry.runtime_data.coordinator
+    coordinator.executions["exec-1"] = []
+
+    mock_client.fetch_events.side_effect = TooManyRequestsError("Too many requests")
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.update_interval > UPDATE_INTERVAL
+
+    mock_client.fetch_events.side_effect = None
+    mock_client.fetch_events.return_value = []
+    freezer.tick(coordinator.update_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.update_interval == UPDATE_INTERVAL_EXECUTION
+
+
+async def test_reconnect_clears_rate_limit_back_off(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Recovering through the reconnect path also restores the cadence."""
+    entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+    coordinator = entry.runtime_data.coordinator
+
+    mock_client.fetch_events.side_effect = TooManyRequestsError("Too many requests")
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.update_interval > UPDATE_INTERVAL
+
+    # A reconnect returns devices without ever reaching the event loop below it.
+    mock_client.fetch_events.side_effect = ServerDisconnectedError
+    freezer.tick(coordinator.update_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success
+    assert coordinator.update_interval == UPDATE_INTERVAL
+
+
+async def test_rate_limit_during_a_reconnect_backs_off(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A reconnect can be rate limited too, and has to back off like any refresh.
+
+    Retrying a login at the unchanged interval is what got us rate limited.
+    """
+    entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+    coordinator = entry.runtime_data.coordinator
+
+    mock_client.fetch_events.side_effect = ServerDisconnectedError
+    mock_client.login.side_effect = TooManyRequestsError("Too many requests")
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not coordinator.last_update_success
+    assert coordinator.update_interval == UPDATE_INTERVAL * 2
+
+
+async def test_execution_registered_elsewhere_polls_faster(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """An execution started outside Home Assistant also needs the faster cadence.
+
+    Its states change just as fast as one we asked for, and the event is the
+    only notice we get of it.
+    """
+    entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+    coordinator = entry.runtime_data.coordinator
+
+    assert coordinator.update_interval == UPDATE_INTERVAL
+
+    await async_deliver_events(
+        hass, freezer, mock_client, [execution_registered_event("exec-elsewhere")]
+    )
+
+    assert coordinator.update_interval == UPDATE_INTERVAL_EXECUTION
+
+
+async def test_stateless_recovery_restores_default_interval(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A stateless hub is not left backed off by a pending execution."""
+    entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+    coordinator = entry.runtime_data.coordinator
+    coordinator.is_stateless = True
+    coordinator.executions["exec-1"] = []
+
+    mock_client.fetch_events.side_effect = TooManyRequestsError("Too many requests")
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.update_interval > UPDATE_INTERVAL
+
+    mock_client.fetch_events.side_effect = None
+    mock_client.fetch_events.return_value = []
+    freezer.tick(coordinator.update_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.update_interval == UPDATE_INTERVAL
