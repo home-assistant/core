@@ -22,6 +22,7 @@ from homeassistant.components.threema.const import (
     DOMAIN,
     SUBENTRY_TYPE_RECIPIENT,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME, CONF_RECIPIENT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -754,3 +755,87 @@ async def test_subentry_duplicate_recipient(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reauth_flow_success_before_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_credentials: AsyncMock,
+) -> None:
+    """Test reauth updates the secret and reloads when never set up.
+
+    The entry has no update listener yet (setup never ran), so the
+    explicit `async_schedule_reload` path must do the reloading.
+    """
+    mock_config_entry.add_to_hass(hass)
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=mock_config_entry.data,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_SECRET: "new_api_secret"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_SECRET] == "new_api_secret"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (ThreemaAuthError("Invalid credentials"), "invalid_auth"),
+        (ThreemaConnectionError("Connection refused"), "cannot_connect"),
+        (RuntimeError("Unexpected"), "unknown"),
+    ],
+    ids=["invalid_auth", "cannot_connect", "unknown"],
+)
+async def test_reauth_flow_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_credentials: AsyncMock,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test reauthentication flow shows error and allows retry."""
+    mock_config_entry.add_to_hass(hass)
+    mock_credentials.side_effect = side_effect
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=mock_config_entry.data,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_SECRET: "wrong_secret"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
+
+    mock_credentials.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_SECRET: "correct_secret"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"

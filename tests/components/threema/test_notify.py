@@ -6,16 +6,22 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.threema.client import (
     ThreemaAuthError,
     ThreemaConnectionError,
     ThreemaSendError,
 )
-from homeassistant.components.threema.const import SUBENTRY_TYPE_RECIPIENT
-from homeassistant.config_entries import ConfigSubentryDataWithId
+from homeassistant.components.threema.const import (
+    CONF_API_SECRET,
+    DOMAIN,
+    SUBENTRY_TYPE_RECIPIENT,
+)
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentryDataWithId
 from homeassistant.const import CONF_RECIPIENT
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -243,3 +249,87 @@ async def test_send_message_error(
             },
             blocking=True,
         )
+
+
+async def test_send_message_auth_error_triggers_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_credentials: AsyncMock,
+    mock_send_message: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test ThreemaAuthError during send raises error and starts reauth flow."""
+    mock_send_message.side_effect = ThreemaAuthError("Token expired")
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    notify_entities = [e for e in entities if e.domain == NOTIFY_DOMAIN]
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            "send_message",
+            {
+                "entity_id": notify_entities[0].entity_id,
+                "message": "Hello!",
+            },
+            blocking=True,
+        )
+
+    # async_start_reauth() schedules a separate task; the service call
+    # above only waits for the notify handler itself, so the reauth flow
+    # may not be registered yet without waiting for pending tasks too.
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert any(
+        f["context"]["source"] == config_entries.SOURCE_REAUTH
+        and f["context"]["entry_id"] == mock_config_entry.entry_id
+        for f in flows
+    )
+
+
+async def test_reauth_flow_success_while_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_credentials: AsyncMock,
+    mock_send_message: AsyncMock,
+) -> None:
+    """Test reauth reloads via the update listener and applies the new secret.
+
+    The entry has an update listener registered (setup already ran), so
+    that listener must do the reloading, not an explicit one — and the
+    reloaded client must actually use the new secret afterwards.
+    """
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=mock_config_entry.data,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_SECRET: "new_api_secret"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_SECRET] == "new_api_secret"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data.api_secret == "new_api_secret"
