@@ -1,10 +1,4 @@
-"""Support for BLUETTI power stations over Modbus.
-
-The device is a Modbus device like any other: this integration does not own
-its connection, it borrows a ``ModbusUnit`` from the ``modbus`` integration,
-which shares one connection per device between everything talking to it, and
-hands that unit to the ``bluetti-modbus`` library.
-"""
+"""Support for BLUETTI power stations over Modbus."""
 
 from modbus_connection import ModbusTcpParams
 
