@@ -517,6 +517,25 @@
         }
       },
       "title": "An unknown adapter was detected"
+    },
+    "unmapped_enum_value": {
+      "fix_flow": {
+        "abort": {
+          "cannot_connect": "Cannot connect to {device_name}. Please try again later after confirming that your Z-Wave network is up and connected to Home Assistant.",
+          "issue_ignored": "Unmapped value repair for {device_name} ignored."
+        },
+        "step": {
+          "init": {
+            "description": "{device_name} reported a sensor value ({raw_value}) on {entity_id} that is not in the list of known states from its Z-Wave interview. The sensor will show as unknown until the metadata is refreshed.\n\nThis can happen when the device interview was incomplete or had a corrupted exchange, or when the device firmware reports values that were not declared during setup.\n\nRe-interviewing the device will refresh its metadata and should resolve the issue. The re-interview takes place in the background.\n\nNote: Battery-powered sleeping devices need to be woken up during re-interview for it to work. How to wake up the device is device-specific and is normally explained in the device manual.",
+            "menu_options": {
+              "confirm": "Re-interview device",
+              "ignore": "Ignore"
+            },
+            "title": "Unmapped sensor value: {device_name}"
+          }
+        }
+      },
+      "title": "Unmapped sensor value: {device_name}"
     }
   },
   "selector": {

@@ -48,7 +48,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from .common import (
@@ -1385,3 +1385,134 @@ async def test_energy_production_sensors(
 
         for attr in state_data.get("missing_attributes", []):
             assert attr not in state.attributes
+
+
+@pytest.mark.usefixtures("client", "lock_id_lock_as_id150")
+async def test_unmapped_enum_value_creates_repair(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    climate_adc_t3000: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that an unmapped config parameter value creates a repair."""
+    entity_id = "sensor.adc_t3000_power_source"
+    node = climate_adc_t3000
+
+    # Enable the disabled config parameter sensor and reload
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "C-Wire"
+
+    # Send value 99, which is not in states {"0": "Battery", "1": "C-Wire"}
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Configuration",
+                "commandClass": 112,
+                "endpoint": 0,
+                "property": 26,
+                "propertyName": "Power Source",
+                "newValue": 99,
+                "prevValue": 1,
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    matching = [
+        (domain, issue_id)
+        for (domain, issue_id) in issue_registry.issues
+        if domain == DOMAIN and "unmapped_enum_value" in issue_id
+    ]
+    assert len(matching) == 1
+
+
+@pytest.mark.usefixtures("client", "lock_id_lock_as_id150")
+async def test_unmapped_enum_value_cleared_after_mapped_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    climate_adc_t3000: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that the repair is cleared when the value resolves to a mapped state."""
+    entity_id = "sensor.adc_t3000_power_source"
+    node = climate_adc_t3000
+
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    # Trigger the repair with an unmapped value
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Configuration",
+                "commandClass": 112,
+                "endpoint": 0,
+                "property": 26,
+                "propertyName": "Power Source",
+                "newValue": 99,
+                "prevValue": 1,
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    matching = [
+        (d, iid)
+        for (d, iid) in issue_registry.issues
+        if d == DOMAIN and iid.startswith("unmapped_enum_value.")
+    ]
+    assert len(matching) == 1
+
+    # Send a mapped value (1 = "C-Wire") to clear the repair
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Configuration",
+                "commandClass": 112,
+                "endpoint": 0,
+                "property": 26,
+                "propertyName": "Power Source",
+                "newValue": 1,
+                "prevValue": 99,
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "C-Wire"
+
+    matching = [
+        (d, iid)
+        for (d, iid) in issue_registry.issues
+        if d == DOMAIN and iid.startswith("unmapped_enum_value.")
+    ]
+    assert len(matching) == 0
