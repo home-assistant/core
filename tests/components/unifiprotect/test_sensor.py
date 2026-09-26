@@ -888,8 +888,10 @@ async def test_public_only_sensor_light_end_to_end(
 ) -> None:
     """A public-only entry builds the migrated floodlight sensor.
 
-    ``paired_camera`` reads the private bootstrap, so it stays absent. The trip
-    timestamp is disabled by default, like its private counterpart.
+    ``paired_camera`` reads the private bootstrap, so it stays absent, and the
+    read-only mirrors of the writable sensitivity and light mode are skipped
+    because an API key can always write. The trip timestamp is disabled by
+    default, like its private counterpart.
     """
     public = make_public_light(light, last_motion_ms=to_js_time(utcnow()))
     ufp_public_only.api.public_bootstrap.lights[light.id] = public
@@ -898,7 +900,7 @@ async def test_public_only_sensor_light_end_to_end(
 
     keys = _sensor_keys(entity_registry, light.mac)
     assert "motion_last_trip_time" in keys
-    assert "paired_camera" not in keys
+    assert not keys & {"paired_camera", "sensitivity", "light_motion"}
 
     entity_id = entity_registry.async_get_entity_id(
         Platform.SENSOR, DOMAIN, f"{light.mac}_motion_last_trip_time"

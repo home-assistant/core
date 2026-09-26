@@ -309,9 +309,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="smart_obj_any",
         translation_key="object_detected",
-        # The public feature flags carry no has_smart_detect; the advertised
-        # types are the shared truth, like the audio sibling below and the
-        # smart detection events.
+        # The public feature flags carry no has_smart_detect.
         ufp_required_field="feature_flags.smart_detect_types",
         ufp_public_value="is_smart_currently_detected",
         ufp_event_driven=True,
