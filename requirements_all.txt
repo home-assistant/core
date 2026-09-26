@@ -3397,7 +3397,7 @@ victron-ble-ha-parser==0.7.0
 victron-mqtt==2026.9.5
 
 # homeassistant.components.victron_remote_monitoring
-victron-vrm==0.1.12
+victron-vrm==0.1.13
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.5.0
