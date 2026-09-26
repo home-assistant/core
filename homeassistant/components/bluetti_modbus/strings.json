@@ -7,6 +7,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "link_settings_in_use": "This address is already in use by another entry with different Modbus link settings.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
       "unsupported_device": "The device at this address does not report itself as a BLUETTI Balco 260, the only supported model."
     },
     "step": {

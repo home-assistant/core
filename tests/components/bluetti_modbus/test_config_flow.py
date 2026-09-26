@@ -93,6 +93,28 @@ async def test_user_flow_cannot_connect(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_user_flow_unexpected_error(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """An unexpected probe failure surfaces unknown, then the flow recovers."""
+    mock_modbus_unit.fail_requests(ValueError("unexpected"))
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    flow_id = result["flow_id"]
+    result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+    mock_modbus_unit.fail_requests(None)
+    result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_user_flow_rejects_a_zero_serial(
     hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
 ) -> None:

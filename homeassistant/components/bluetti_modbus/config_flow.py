@@ -1,5 +1,6 @@
 """Config flow to configure the BLUETTI Modbus integration."""
 
+import logging
 from typing import Any, override
 
 from modbus_connection import ModbusError, ModbusTcpParams
@@ -18,6 +19,8 @@ from homeassistant.helpers.selector import (
 
 from .const import CONF_UNIT_ID, DEFAULT_PORT, DEFAULT_UNIT_ID, DOMAIN, MODEL
 from .device import restricted_device
+
+_LOGGER = logging.getLogger(__name__)
 
 STEP_USER = probatio.Schema(
     {
@@ -100,6 +103,9 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
             return {"base": "link_settings_in_use"}, None
         except ModbusError:
             return {"base": "cannot_connect"}, None
+        except Exception:
+            _LOGGER.exception("Unexpected exception while probing the device")
+            return {"base": "unknown"}, None
 
         if device.values.get("d_inverter_type") != MODEL:
             return {"base": "unsupported_device"}, None
