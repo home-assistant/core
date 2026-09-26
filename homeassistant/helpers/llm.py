@@ -262,18 +262,21 @@ class APIInstance:
 @callback
 def report_untagged_tool(tool: Tool, domain: str) -> None:
     """Report a tool that does not record the integration providing it."""
-    while isinstance(tool, NamespacedTool):
-        tool = tool.tool
+    wrapped = [tool]
+    while isinstance(wrapped[-1], NamespacedTool):
+        wrapped.append(wrapped[-1].tool)
     frame.report_usage(
-        f"provides the LLM tool {tool.name} without an integration",
+        f"provides the LLM tool {wrapped[-1].name} without an integration",
         breaks_in_ha_version=TOOL_INTEGRATION_BREAKS_IN_HA_VERSION,
         core_behavior=frame.ReportBehavior.ERROR,
         core_integration_behavior=frame.ReportBehavior.ERROR,
         custom_integration_behavior=frame.ReportBehavior.LOG,
         integration_domain=domain,
     )
-    # Record the domain so the tool carries it until the requirement is enforced.
-    tool.integration = domain
+    # Record the domain on the tool and every wrapper around it, so it carries
+    # the integration until the requirement is enforced.
+    for entry in wrapped:
+        entry.integration = domain
 
 
 def _tool_integration_domain(tool: Tool) -> str | None:

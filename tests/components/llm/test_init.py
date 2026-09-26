@@ -234,6 +234,26 @@ async def test_get_tools_untagged_tool_reported_for_custom(
     assert tools[0].integration == "test"
 
 
+async def test_get_tools_untagged_wrapped_tool_reported_once(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a tool wrapper is tagged along with the tool it wraps."""
+    wrapper = llm.NamespacedTool("test", _StubTool("untagged", integration=None))
+    _mock_tools_platform(hass, "test", LLMTools(tools=[wrapper]), built_in=False)
+
+    assert await async_setup_component(hass, "llm", {})
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        await async_get_tools(hass, llm_context, "assist")
+
+    # The wrapper is tagged too, so the API instance does not report it again.
+    assert wrapper.integration == "test"
+    assert wrapper.tool.integration == "test"
+    assert caplog.text.count("without an integration") == 1
+
+
 async def test_get_tools_prefixed_tool_names_not_reported(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,
