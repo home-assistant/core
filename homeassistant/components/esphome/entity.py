@@ -4,7 +4,16 @@ from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
 import math
-from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar, cast, override
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Concatenate,
+    Generic,
+    Protocol,
+    TypeVar,
+    cast,
+    override,
+)
 
 from aioesphomeapi import (
     APIConnectionError,
@@ -43,6 +52,12 @@ from .entry_data import (
 from .enum_mapper import EsphomeEnumMapper
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class _StateWithMissingFlag(Protocol):
+    """A state message that can report having no value at all."""
+
+    missing_state: bool
 
 
 def get_temperature_unit(
@@ -485,6 +500,10 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
     _static_info: _InfoT
     _state: _StateT
     _has_state: bool = False
+    # Set by platforms whose state message carries a missing_state flag that
+    # covers every value the entity reports, rather than a single value the
+    # platform maps to None itself (as sensor and select do).
+    _missing_state_covers_entity: bool = False
     unique_id: str
 
     def __init__(
@@ -620,6 +639,13 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
         state_key = (self._static_info.device_id, self._key)
         if has_state := state_key in self._states:
             self._state = self._states[state_key]
+            if (
+                self._missing_state_covers_entity
+                and cast("_StateWithMissingFlag", self._state).missing_state
+            ):
+                # The device has no value for any part of this entity yet, which
+                # is the same thing as not having received a state at all.
+                has_state = False
         self._has_state = has_state
 
     @callback

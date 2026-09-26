@@ -22,6 +22,8 @@ PARALLEL_UPDATES = 0
 class EsphomeSwitch(EsphomeEntity[SwitchInfo, SwitchState], SwitchEntity):
     """A switch implementation for ESPHome."""
 
+    _missing_state_covers_entity = True
+
     @callback
     @override
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
