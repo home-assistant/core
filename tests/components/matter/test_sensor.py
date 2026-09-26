@@ -323,6 +323,7 @@ async def test_air_quality_sensor(
     state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_carbon_dioxide")
     assert state
     assert state.state == "678.0"
+    assert state.attributes["unit_of_measurement"] == "ppm"
 
     set_node_attribute(matter_node, 1, 1037, 0, 789)
     await trigger_subscription_callback(hass, matter_client)
@@ -331,11 +332,20 @@ async def test_air_quality_sensor(
     assert state
     assert state.state == "789.0"
 
+    # TVOC
+    state = hass.states.get(
+        "sensor.lightfi_aq1_air_quality_sensor_volatile_organic_compounds_parts"
+    )
+    assert state
+    assert state.state == "189.0"
+    assert state.attributes["unit_of_measurement"] == "ppb"
+
     # Nitrogen Dioxide
     state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_nitrogen_dioxide")
     assert state
     assert state.state == "0.0"
     assert state.attributes["device_class"] == "nitrogen_dioxide"
+    assert state.attributes["unit_of_measurement"] == "ppm"
 
     set_node_attribute(matter_node, 1, 1043, 0, 12.5)
     await trigger_subscription_callback(hass, matter_client)
@@ -348,6 +358,7 @@ async def test_air_quality_sensor(
     state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_pm1")
     assert state
     assert state.state == "3.0"
+    assert state.attributes["unit_of_measurement"] == "μg/m³"
 
     set_node_attribute(matter_node, 1, 1068, 0, 50)
     await trigger_subscription_callback(hass, matter_client)
@@ -384,6 +395,7 @@ async def test_air_quality_sensor(
     state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_radon_concentration")
     assert state
     assert state.state == "60.0"
+    assert state.attributes["unit_of_measurement"] == "Bq/m³"
 
     set_node_attribute(matter_node, 1, 1071, 0, 50)
     await trigger_subscription_callback(hass, matter_client)
@@ -438,6 +450,34 @@ async def test_tvoc_level_sensor(
     state = hass.states.get("sensor.mock_air_purifier_tvoc_level")
     assert state
     assert state.state == "unknown"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_air_purifier"])
+@pytest.mark.usefixtures("matter_node")
+async def test_tvoc_concentration_sensor_ugm3(hass: HomeAssistant) -> None:
+    """Test TVOC concentration sensor with µg/m³ unit and matching device class."""
+    state = hass.states.get("sensor.mock_air_purifier_volatile_organic_compounds")
+    assert state
+    assert state.state == "2.0"
+    assert state.attributes["device_class"] == "volatile_organic_compounds"
+    assert state.attributes["unit_of_measurement"] == "μg/m³"
+
+
+@pytest.mark.parametrize("node_fixture", ["air_quality_sensor"])
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        pytest.param({"1/1037/8": 1}, id="unit_rejected_by_device_class"),
+        pytest.param({"1/1037/8": 2}, id="unit_without_ha_equivalent"),
+    ],
+)
+@pytest.mark.usefixtures("matter_node")
+async def test_concentration_sensor_unit_fallback(hass: HomeAssistant) -> None:
+    """Test the statically defined unit is kept for unusable MeasurementUnits."""
+    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_carbon_dioxide")
+    assert state
+    assert state.attributes["device_class"] == "carbon_dioxide"
+    assert state.attributes["unit_of_measurement"] == "ppm"
 
 
 @pytest.mark.parametrize("node_fixture", ["silabs_dishwasher"])
