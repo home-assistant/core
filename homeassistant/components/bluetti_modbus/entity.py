@@ -22,12 +22,7 @@ def bluetti_modbus_device_info(
 
 
 class BluettiModbusEntity(CoordinatorEntity[BluettiModbusDataUpdateCoordinator]):
-    """Defines a BLUETTI Modbus entity.
-
-    The device reads a fixed register map decided at dev time (unlike the
-    cloud integration, whose sensors are named by whatever the BLUETTI cloud
-    API reports at runtime), so every entity here gets a real translation key.
-    """
+    """Defines a BLUETTI Modbus entity."""
 
     _attr_has_entity_name = True
 

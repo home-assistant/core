@@ -18,12 +18,7 @@ type BluettiModbusConfigEntry = ConfigEntry[BluettiModbusRuntimeData]
 
 
 class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[None]):
-    """Polls a BLUETTI power station over Modbus.
-
-    The device holds its decoded values on itself (``device.values``), so a
-    poll here refreshes that state in place rather than returning it - readers
-    go straight to ``coordinator.device`` once a refresh has succeeded.
-    """
+    """Polls a BLUETTI power station; its values are read from ``device.values``."""
 
     config_entry: BluettiModbusConfigEntry
 
