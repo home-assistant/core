@@ -559,10 +559,7 @@ class OpenAIBaseLLMEntity(Entity):
             model_args["reasoning"] = reasoning
             model_args["include"] = ["reasoning.encrypted_content"]
 
-        if (
-            not model_args["model"].startswith(("gpt-5", "gpt-6"))
-            or model_args["reasoning"]["effort"] == "none"  # type: ignore[index]
-        ):
+        if not model_args["model"].startswith("gpt-6") and (not model_args["model"].startswith("gpt-5") or model_args["reasoning"]["effort"] == "none"):
             model_args["top_p"] = options.get(CONF_TOP_P, RECOMMENDED_TOP_P)
             model_args["temperature"] = options.get(
                 CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
