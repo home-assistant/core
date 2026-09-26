@@ -92,8 +92,11 @@ async def test_caching_static_resource_no_cache_header_on_404(
     assert resp.status == HTTPStatus.NOT_FOUND
     assert CACHE_CONTROL not in resp.headers
 
-    # A file created after the 404 is served normally.
-    (tmp_path / "late.js").write_text("console.log('late');", encoding="utf-8")
-    resp = await mock_http_client.get("/static/late.js")
+    # A file created at the same path after the 404 is served normally,
+    # proving the miss was not retained in the response cache.
+    (tmp_path / "does-not-exist.js").write_text(
+        "console.log('late');", encoding="utf-8"
+    )
+    resp = await mock_http_client.get("/static/does-not-exist.js")
     assert resp.status == HTTPStatus.OK
     assert resp.headers[CACHE_CONTROL] == CACHE_HEADER
