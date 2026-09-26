@@ -20,7 +20,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import HOST, PORT, SERIAL, UNIT_ID, bluetti_data, seed_unit
+from .conftest import (
+    HOST,
+    PORT,
+    SERIAL,
+    SERIAL_ADDRESS,
+    UNIT_ID,
+    bluetti_data,
+    seed_unit,
+)
 
 from tests.common import MockConfigEntry
 
@@ -118,18 +126,23 @@ async def test_user_flow_unexpected_error(
 async def test_user_flow_rejects_a_zero_serial(
     hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
 ) -> None:
-    """A responder reporting serial 0 is not a real device identity."""
-    mock_modbus_unit.holding[50206] = 0  # d_serial's least-significant word
+    """A responder reporting serial 0 is rejected, then the flow recovers."""
+    mock_modbus_unit.holding[SERIAL_ADDRESS] = 0
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], _user_input()
-    )
+    flow_id = result["flow_id"]
+    result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_modbus_unit.holding[SERIAL_ADDRESS] = int(SERIAL)
+    result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_retries_a_transient_busy_response(
