@@ -8,18 +8,11 @@ from modbus_connection import ModbusError
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator
+from .coordinator import SofarConfigEntry
 
 TO_REDACT = {"serial_number"}
 
 _SERIAL_NUMBER_REGISTERS = range(0x0445, 0x044C)
-
-
-def _last_error(coordinator: SofarDataUpdateCoordinator) -> str | None:
-    """Return why a coordinator's last poll failed, if it did."""
-    if coordinator.last_update_success or (err := coordinator.last_exception) is None:
-        return None
-    return type(err.__cause__ or err).__name__
 
 
 async def async_get_config_entry_diagnostics(
@@ -46,10 +39,6 @@ async def async_get_config_entry_diagnostics(
             "readings_components": device.readings_components,
             "settings_components": device.settings_components,
             "active_faults": sorted(fault.key for fault in device.state.active_faults),
-            "coordinator_errors": {
-                "readings": _last_error(runtime_data.readings),
-                "settings": _last_error(runtime_data.settings),
-            },
             "address_masks": masks,
             "link": {
                 "tuning": asdict(runtime_data.tuner.tuning),

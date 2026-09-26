@@ -19,10 +19,6 @@
       '4352': 0,
       '4480': 0,
     }),
-    'coordinator_errors': dict({
-      'readings': None,
-      'settings': None,
-    }),
     'inverter_type': 1537,
     'link': dict({
       'stats': dict({
