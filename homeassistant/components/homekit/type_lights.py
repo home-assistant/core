@@ -37,12 +37,16 @@ from homeassistant.util.color import (
 )
 
 from .accessories import TYPES, HomeAccessory
+from .adaptive_lighting import ADAPTIVE_LIGHTING_CHARS, AdaptiveLightingController
 from .const import (
     CHAR_BRIGHTNESS,
     CHAR_COLOR_TEMPERATURE,
     CHAR_HUE,
     CHAR_ON,
     CHAR_SATURATION,
+    CONF_ADAPTIVE_LIGHTING,
+    CONF_MAX_COLOR_TEMP_KELVIN,
+    CONF_MIN_COLOR_TEMP_KELVIN,
     PROP_MAX_VALUE,
     PROP_MIN_VALUE,
     SERV_LIGHTBULB,
@@ -53,6 +57,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 CHANGE_COALESCE_TIME_WINDOW = 0.01
+
+# Characteristics that only describe colour, never on/off intent.
+COLOR_ONLY_CHARS = {CHAR_COLOR_TEMPERATURE, CHAR_HUE, CHAR_SATURATION}
 
 DEFAULT_MIN_COLOR_TEMP = 2000  # 500 mireds
 DEFAULT_MAX_COLOR_TEMP = 6500  # 153 mireds
@@ -106,6 +113,16 @@ class Light(HomeAccessory):
         ):
             self.chars.append(CHAR_COLOR_TEMPERATURE)
 
+        # Adaptive lighting transitions both brightness and colour temperature,
+        # so it is only offered when the light supports both.
+        self._adaptive_lighting_enabled = bool(
+            self.config.get(CONF_ADAPTIVE_LIGHTING)
+            and self.brightness_supported
+            and CHAR_COLOR_TEMPERATURE in self.chars
+        )
+        if self._adaptive_lighting_enabled:
+            self.chars.extend(ADAPTIVE_LIGHTING_CHARS)
+
         serv_light = self.add_preload_service(SERV_LIGHTBULB, self.chars)
         self.char_on = serv_light.configure_char(CHAR_ON, value=0)
 
@@ -117,14 +134,18 @@ class Light(HomeAccessory):
             self.char_brightness = serv_light.configure_char(CHAR_BRIGHTNESS, value=100)
 
         if CHAR_COLOR_TEMPERATURE in self.chars:
+            # Some bulbs report a wider range than the hardware accepts and go
+            # dark instead of clamping, so the range can be overridden per entity.
             min_mireds = color_temperature_kelvin_to_mired(
-                attributes.get(
+                self.config.get(CONF_MAX_COLOR_TEMP_KELVIN)
+                or attributes.get(
                     LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN,
                     DEFAULT_MAX_COLOR_TEMP,
                 )
             )
             max_mireds = color_temperature_kelvin_to_mired(
-                attributes.get(
+                self.config.get(CONF_MIN_COLOR_TEMP_KELVIN)
+                or attributes.get(
                     LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN,
                     DEFAULT_MIN_COLOR_TEMP,
                 )
@@ -146,11 +167,47 @@ class Light(HomeAccessory):
             self.char_hue = serv_light.configure_char(CHAR_HUE, value=0)
             self.char_saturation = serv_light.configure_char(CHAR_SATURATION, value=75)
 
+        self.adaptive_lighting: AdaptiveLightingController | None = None
+        if self._adaptive_lighting_enabled:
+            self.adaptive_lighting = AdaptiveLightingController(
+                self, serv_light, self.entity_id
+            )
+
         self.async_update_state(state)
         serv_light.setter_callback = self._set_chars
 
+    @override
+    @callback
+    def run(self) -> None:
+        """Start the accessory and resume a saved adaptive lighting schedule."""
+        super().run()
+        if self.adaptive_lighting:
+            self.adaptive_lighting.schedule_restore()
+
+    @callback
+    def async_set_adaptive_color_temperature(self, mireds: int) -> None:
+        """Apply a colour temperature computed from the transition curve."""
+        self._set_chars({CHAR_COLOR_TEMPERATURE: mireds})
+
     def _set_chars(self, char_values: dict[str, Any]) -> None:
         _LOGGER.debug("Light _set_chars: %s", char_values)
+        # The adaptive lighting characteristics share the light service, so a
+        # schedule written by the Home app arrives here too. The controller has
+        # already handled it through its own setter and it says nothing about
+        # brightness or colour; left in, it falls through to the SERVICE_TURN_ON
+        # default below and switches the light on by itself.
+        char_values = {
+            char: value
+            for char, value in char_values.items()
+            if char not in ADAPTIVE_LIGHTING_CHARS
+        }
+        if not char_values:
+            return
+        if self.adaptive_lighting and (
+            char_values.keys() & {CHAR_COLOR_TEMPERATURE, CHAR_HUE, CHAR_SATURATION}
+        ):
+            # HomeKit expects adaptive lighting to stop on a manual colour change.
+            self.adaptive_lighting.notify_manual_change()
         # Newest change always wins
         if CHAR_COLOR_TEMPERATURE in self._pending_events and (
             CHAR_SATURATION in char_values or CHAR_HUE in char_values
@@ -177,6 +234,20 @@ class Light(HomeAccessory):
         service = SERVICE_TURN_ON
         params: dict[str, Any] = {ATTR_ENTITY_ID: self.entity_id}
         has_on = CHAR_ON in char_values
+
+        # The Home app keeps writing the adaptive lighting curve to accessories
+        # that are off. With no CHAR_ON those writes fall through to the
+        # SERVICE_TURN_ON default below and switch the light on by itself; a
+        # colour only write is never a request to turn a light on.
+        if not has_on and char_values and not char_values.keys() - COLOR_ONLY_CHARS:
+            state = self.hass.states.get(self.entity_id)
+            if state is None or state.state != STATE_ON:
+                _LOGGER.debug(
+                    "%s: ignoring colour only write %s, the light is off",
+                    self.entity_id,
+                    char_values,
+                )
+                return
 
         if has_on:
             if not char_values[CHAR_ON]:

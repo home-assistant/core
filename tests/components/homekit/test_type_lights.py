@@ -339,6 +339,74 @@ async def test_light_color_temperature(
     assert events[-1].data[ATTR_VALUE] == "color temperature at 250"
 
 
+async def test_colour_only_write_does_not_turn_on_an_off_light(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """Test a colour only write is dropped while the light is off.
+
+    Adaptive lighting keeps sending colour temperature to accessories that are
+    off, and a write without the On characteristic would otherwise reach
+    light.turn_on and switch the light on by itself.
+    """
+    entity_id = "light.demo"
+
+    hass.states.async_set(
+        entity_id,
+        STATE_OFF,
+        {ATTR_SUPPORTED_COLOR_MODES: ["color_temp"], ATTR_COLOR_TEMP_KELVIN: 5263},
+    )
+    await hass.async_block_till_done()
+    acc = Light(hass, hk_driver, "Light", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    char_color_temp_iid = acc.char_color_temp.to_HAP()[HAP_REPR_IID]
+    char_on_iid = acc.char_on.to_HAP()[HAP_REPR_IID]
+
+    def set_chars(chars: list[dict]) -> None:
+        hk_driver.set_characteristics({HAP_REPR_CHARS: chars}, "mock_addr")
+
+    colour_write = {
+        HAP_REPR_AID: acc.aid,
+        HAP_REPR_IID: char_color_temp_iid,
+        HAP_REPR_VALUE: 250,
+    }
+
+    # A colour only write while the light is off is dropped.
+    set_chars([colour_write])
+    await _wait_for_light_coalesce(hass)
+    assert not call_turn_on
+    assert not events
+
+    # Asking for On in the same write still turns the light on.
+    set_chars(
+        [
+            {
+                HAP_REPR_AID: acc.aid,
+                HAP_REPR_IID: char_on_iid,
+                HAP_REPR_VALUE: 1,
+            },
+            colour_write,
+        ]
+    )
+    await _wait_for_light_coalesce(hass)
+    assert len(call_turn_on) == 1
+    assert call_turn_on[0].data[ATTR_COLOR_TEMP_KELVIN] == 4000
+
+    # And once the light is on, colour keeps being applied as before.
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {ATTR_SUPPORTED_COLOR_MODES: ["color_temp"], ATTR_COLOR_TEMP_KELVIN: 5263},
+    )
+    await hass.async_block_till_done()
+    set_chars([colour_write])
+    await _wait_for_light_coalesce(hass)
+    assert len(call_turn_on) == 2
+
+
 @pytest.mark.parametrize(
     "supported_color_modes",
     [["color_temp", "hs"], ["color_temp", "rgb"], ["color_temp", "xy"]],
