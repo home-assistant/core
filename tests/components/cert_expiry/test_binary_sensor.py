@@ -8,13 +8,14 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.cert_expiry.errors import ValidationFailure
+from homeassistant.components.cert_expiry.errors import NoCertificate
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
+from .const import HOST, PORT
 from .helpers import certificate_expiring, future_timestamp, static_datetime
 
 ENTITIES = (
@@ -171,7 +172,7 @@ async def test_setup_retry_when_handshake_fails(
         ),
         patch(
             "homeassistant.components.cert_expiry.coordinator.async_get_cert",
-            side_effect=ValidationFailure("no certificate"),
+            side_effect=NoCertificate(HOST, PORT),
         ),
     ):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)

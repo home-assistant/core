@@ -9,7 +9,7 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cert_expiry.const import DOMAIN
-from homeassistant.components.cert_expiry.errors import ValidationFailure
+from homeassistant.components.cert_expiry.errors import HandshakeFailed
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
@@ -71,7 +71,7 @@ async def test_config_entry_retries_when_handshake_fails(
 
     with patch(
         "homeassistant.components.cert_expiry.coordinator.async_get_cert",
-        side_effect=ValidationFailure("certificate error for sensitive.example.com"),
+        side_effect=HandshakeFailed(HOST, PORT, "handshake failed"),
     ):
         entry.add_to_hass(hass)
         assert not await hass.config_entries.async_setup(entry.entry_id)

@@ -13,7 +13,13 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cert_expiry.const import DOMAIN
-from homeassistant.components.cert_expiry.errors import ResolveFailed, ValidationFailure
+from homeassistant.components.cert_expiry.errors import (
+    CertExpiryException,
+    HandshakeFailed,
+    InvalidCertificate,
+    NoCertificate,
+    ResolveFailed,
+)
 from homeassistant.components.cert_expiry.sensor import DIAGNOSTIC_DESCRIPTIONS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE, Platform
@@ -64,14 +70,30 @@ async def test_async_setup_entry(
 
 
 @pytest.mark.parametrize(
-    "message",
+    ("error", "reason"),
     [
-        pytest.param("some error", id="bad_cert"),
-        pytest.param("No certificate found", id="empty_cert"),
+        pytest.param(
+            HandshakeFailed(HOST, PORT, "some error"),
+            "TLS handshake with example.com:443 failed: some error",
+            id="bad_cert",
+        ),
+        pytest.param(
+            NoCertificate(HOST, PORT),
+            "No certificate found for example.com:443",
+            id="empty_cert",
+        ),
+        pytest.param(
+            InvalidCertificate(HOST, PORT),
+            "Invalid certificate for example.com:443",
+            id="invalid_cert",
+        ),
     ],
 )
 async def test_async_setup_entry_validation_failure(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, message: str
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    error: CertExpiryException,
+    reason: str,
 ) -> None:
     """Test setup is retried, and no sensor is created, when certificate validation fails."""
     mock_config_entry.add_to_hass(hass)
@@ -79,13 +101,14 @@ async def test_async_setup_entry_validation_failure(
         patch("homeassistant.components.cert_expiry.PLATFORMS", [Platform.SENSOR]),
         patch(
             "homeassistant.components.cert_expiry.coordinator.async_get_cert",
-            side_effect=ValidationFailure(message),
+            side_effect=error,
         ),
     ):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.reason == reason
     assert hass.states.get(SENSOR_ENTITY_ID) is None
 
 
@@ -127,8 +150,11 @@ async def test_update_sensor(
 @pytest.mark.parametrize(
     "side_effect",
     [
-        pytest.param(ResolveFailed("cannot resolve"), id="resolve_failed"),
-        pytest.param(ValidationFailure("something bad"), id="validation_failure"),
+        pytest.param(ResolveFailed(HOST, PORT), id="resolve_failed"),
+        pytest.param(
+            HandshakeFailed(HOST, PORT, "something bad"),
+            id="validation_failure",
+        ),
         pytest.param(Exception(), id="unexpected_exception"),
     ],
 )
@@ -182,7 +208,7 @@ async def test_update_sensor_recovers_after_network_error(
     freezer.move_to(static_datetime() + timedelta(hours=24))
     with patch(
         "homeassistant.components.cert_expiry.coordinator.async_get_cert",
-        side_effect=ResolveFailed("cannot resolve"),
+        side_effect=ResolveFailed(HOST, PORT),
     ):
         async_fire_time_changed(hass)
         await hass.async_block_till_done()

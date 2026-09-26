@@ -8,7 +8,13 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.cert_expiry.const import DOMAIN
-from homeassistant.components.cert_expiry.errors import ResolveFailed
+from homeassistant.components.cert_expiry.errors import (
+    CertExpiryException,
+    ConnectionRefused,
+    ConnectionReset,
+    ConnectionTimeout,
+    ResolveFailed,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
@@ -136,8 +142,33 @@ async def test_setup_during_boot_failure_loads_unavailable(
     assert hass.states.get(SENSOR_ENTITY_ID).state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    ("error", "reason"),
+    [
+        pytest.param(
+            ResolveFailed(HOST, PORT),
+            "Cannot resolve hostname example.com",
+            id="resolve_failed",
+        ),
+        pytest.param(
+            ConnectionTimeout(HOST, PORT),
+            "Connection timeout with server example.com:443",
+            id="connection_timeout",
+        ),
+        pytest.param(
+            ConnectionRefused(HOST, PORT),
+            "Connection refused by server example.com:443",
+            id="connection_refused",
+        ),
+        pytest.param(
+            ConnectionReset(HOST, PORT),
+            "Connection reset by server example.com:443",
+            id="connection_reset",
+        ),
+    ],
+)
 async def test_setup_retries_on_connection_failure(
-    hass: HomeAssistant,
+    hass: HomeAssistant, error: CertExpiryException, reason: str
 ) -> None:
     """Test a connection failure during setup schedules a retry instead of loading."""
     entry = MockConfigEntry(
@@ -149,12 +180,13 @@ async def test_setup_retries_on_connection_failure(
 
     with patch(
         "homeassistant.components.cert_expiry.coordinator.async_get_cert",
-        side_effect=ResolveFailed("cannot resolve"),
+        side_effect=error,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.reason == reason
     assert hass.states.get(SENSOR_ENTITY_ID) is None
 
 
@@ -181,7 +213,7 @@ async def test_coordinator_refresh_fails_then_recovers(
     freezer.move_to(static_datetime() + timedelta(hours=13))
     with patch(
         "homeassistant.components.cert_expiry.coordinator.async_get_cert",
-        side_effect=ResolveFailed("cannot resolve"),
+        side_effect=ResolveFailed(HOST, PORT),
     ):
         async_fire_time_changed(hass)
         await hass.async_block_till_done()

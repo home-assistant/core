@@ -28,8 +28,10 @@ from .errors import (
     ConnectionRefused,
     ConnectionReset,
     ConnectionTimeout,
+    HandshakeFailed,
+    InvalidCertificate,
+    NoCertificate,
     ResolveFailed,
-    ValidationFailure,
 )
 
 
@@ -114,7 +116,7 @@ async def async_get_cert(
 
         cert = ssl_object.getpeercert(binary_form=True)
         if not cert:
-            raise ValidationFailure(f"No certificate found for: {host}:{port}")
+            raise NoCertificate(host, port)
 
         fullchain = [
             x509.load_der_x509_certificate(der)
@@ -130,21 +132,19 @@ async def async_get_cert(
             cipher_protocol=cipher_protocol,
         )
     except socket.gaierror as err:
-        raise ResolveFailed(f"Cannot resolve hostname: {host}") from err
+        raise ResolveFailed(host, port) from err
     except TimeoutError as err:
-        raise ConnectionTimeout(
-            f"Connection timeout with server: {host}:{port}"
-        ) from err
+        raise ConnectionTimeout(host, port) from err
     except ConnectionRefusedError as err:
-        raise ConnectionRefused(f"Connection refused by server: {host}:{port}") from err
+        raise ConnectionRefused(host, port) from err
     except ConnectionResetError as err:
-        raise ConnectionReset(f"Connection reset by server: {host}:{port}") from err
+        raise ConnectionReset(host, port) from err
     except ValueError as err:
-        raise ValidationFailure(f"Invalid certificate for: {host}:{port}") from err
+        raise InvalidCertificate(host, port) from err
     except ssl.SSLError as err:
-        raise ValidationFailure(str(err)) from err
+        raise HandshakeFailed(host, port, str(err)) from err
     except OSError as err:
-        raise ConnectionFailed(f"Connection failed with server: {host}:{port}") from err
+        raise ConnectionFailed(host, port) from err
 
 
 def _subject_name(host: str) -> DNSName | x509.IPAddress:

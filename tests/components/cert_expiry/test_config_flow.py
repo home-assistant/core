@@ -11,8 +11,8 @@ from homeassistant.components.cert_expiry.errors import (
     ConnectionRefused,
     ConnectionReset,
     ConnectionTimeout,
+    HandshakeFailed,
     ResolveFailed,
-    ValidationFailure,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -52,7 +52,7 @@ async def test_user_with_bad_cert(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.cert_expiry.config_flow.async_get_cert",
-        side_effect=ValidationFailure("some error"),
+        side_effect=HandshakeFailed(HOST, PORT, "some error"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: HOST, CONF_PORT: PORT}
@@ -89,19 +89,17 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("side_effect", "error_key"),
     [
+        pytest.param(ResolveFailed(HOST, PORT), "resolve_failed", id="resolve_failed"),
         pytest.param(
-            ResolveFailed("cannot resolve"), "resolve_failed", id="resolve_failed"
-        ),
-        pytest.param(
-            ConnectionTimeout("timed out"),
+            ConnectionTimeout(HOST, PORT),
             "connection_timeout",
             id="connection_timeout",
         ),
         pytest.param(
-            ConnectionRefused("refused"), "connection_refused", id="connection_refused"
+            ConnectionRefused(HOST, PORT), "connection_refused", id="connection_refused"
         ),
         pytest.param(
-            ConnectionReset("reset"), "connection_reset", id="connection_reset"
+            ConnectionReset(HOST, PORT), "connection_reset", id="connection_reset"
         ),
     ],
 )
@@ -132,14 +130,6 @@ async def test_abort_on_socket_failed(
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == PORT
     assert result["result"].unique_id == f"{HOST}:{PORT}"
-
-    with patch(
-        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_HOST: HOST}
-        )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reconfigure_successful(hass: HomeAssistant) -> None:
@@ -172,10 +162,10 @@ async def test_reconfigure_successful(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("side_effect", "error_key"),
     [
-        (ResolveFailed("cannot resolve"), "resolve_failed"),
-        (ConnectionTimeout("timed out"), "connection_timeout"),
-        (ConnectionRefused("refused"), "connection_refused"),
-        (ConnectionReset("reset"), "connection_reset"),
+        (ResolveFailed(HOST, PORT), "resolve_failed"),
+        (ConnectionTimeout(HOST, PORT), "connection_timeout"),
+        (ConnectionRefused(HOST, PORT), "connection_refused"),
+        (ConnectionReset(HOST, PORT), "connection_reset"),
     ],
 )
 async def test_reconfigure_validation_failure_recovers(

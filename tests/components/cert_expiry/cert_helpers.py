@@ -154,7 +154,7 @@ async def local_reset_server() -> AsyncGenerator[tuple[str, int]]:
 async def local_garbage_server() -> AsyncGenerator[tuple[str, int]]:
     """Start a local server that answers a handshake attempt with garbage bytes.
 
-    Used to exercise ValidationFailure via a genuine ssl.SSLError.
+    Used to exercise HandshakeFailed via a genuine ssl.SSLError.
     """
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

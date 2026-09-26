@@ -21,8 +21,8 @@ from homeassistant.components.cert_expiry.errors import (
     ConnectionRefused,
     ConnectionReset,
     ConnectionTimeout,
+    HandshakeFailed,
     ResolveFailed,
-    ValidationFailure,
 )
 from homeassistant.core import HomeAssistant
 
@@ -86,7 +86,7 @@ async def test_async_get_cert_handshake_parameters(hass: HomeAssistant) -> None:
         ),
         pytest.param(local_closed_port, ConnectionRefused, id="connection_refused"),
         pytest.param(local_reset_server, ConnectionReset, id="connection_reset"),
-        pytest.param(local_garbage_server, ValidationFailure, id="validation_failure"),
+        pytest.param(local_garbage_server, HandshakeFailed, id="handshake_failed"),
     ],
 )
 @pytest.mark.usefixtures("socket_enabled")
@@ -103,10 +103,12 @@ async def test_async_get_cert_errors(
 
 @pytest.mark.usefixtures("socket_enabled")
 async def test_async_get_cert_ssl_error_message(hass: HomeAssistant) -> None:
-    """An SSL error's description is carried as the ValidationFailure message."""
+    """An SSL error's description is carried on the HandshakeFailed error."""
     async with local_garbage_server() as (host, port):
-        with pytest.raises(ValidationFailure, match=r"\[SSL: WRONG_VERSION_NUMBER\]"):
+        with pytest.raises(HandshakeFailed) as exc_info:
             await async_get_cert(hass, host, port, timeout=0.2)
+
+    assert exc_info.value.error.startswith("[SSL: WRONG_VERSION_NUMBER]")
 
 
 async def test_async_get_cert_resolve_failed(

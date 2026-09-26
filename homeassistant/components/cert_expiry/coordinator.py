@@ -12,7 +12,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import client_context
 
 from .certs import CertificateInfo, HandshakePolicyVerifier, async_get_cert
-from .const import DEFAULT_PORT
+from .const import DEFAULT_PORT, DOMAIN
 from .errors import CertExpiryException
 
 _LOGGER = logging.getLogger(__name__)
@@ -110,7 +110,11 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[CertExpiryData]):
         try:
             result = await async_get_cert(self.hass, self.host, self.port)
         except CertExpiryException as err:
-            raise UpdateFailed(err.args[0]) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key=err.translation_key,
+                translation_placeholders=err.translation_placeholders,
+            ) from err
 
         verifier = self._verifier
         return CertExpiryData(

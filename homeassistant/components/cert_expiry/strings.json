@@ -99,5 +99,31 @@
       }
     }
   },
+  "exceptions": {
+    "connection_failed": {
+      "message": "Connection failed with server {host}:{port}"
+    },
+    "connection_refused": {
+      "message": "Connection refused by server {host}:{port}"
+    },
+    "connection_reset": {
+      "message": "Connection reset by server {host}:{port}"
+    },
+    "connection_timeout": {
+      "message": "Connection timeout with server {host}:{port}"
+    },
+    "handshake_failed": {
+      "message": "TLS handshake with {host}:{port} failed: {error}"
+    },
+    "invalid_certificate": {
+      "message": "Invalid certificate for {host}:{port}"
+    },
+    "no_certificate": {
+      "message": "No certificate found for {host}:{port}"
+    },
+    "resolve_failed": {
+      "message": "Cannot resolve hostname {host}"
+    }
+  },
   "title": "Certificate Expiry"
 }
