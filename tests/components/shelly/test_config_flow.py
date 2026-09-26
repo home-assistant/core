@@ -3060,6 +3060,11 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.AUTO
 
+    # Initial setup plus one reload per options change
+    await hass.async_block_till_done()
+    assert len(mock_rpc_device.initialize.mock_calls) == 5
+    assert entry.state is ConfigEntryState.LOADED
+
     await hass.config_entries.async_unload(entry.entry_id)
 
 
@@ -3143,6 +3148,43 @@ async def test_zeroconf_already_configured_triggers_refresh(
     )
     await hass.async_block_till_done()
     assert len(mock_rpc_device.initialize.mock_calls) == 2
+
+
+async def test_zeroconf_host_update_loaded_entry(
+    hass: HomeAssistant, mock_rpc_device: Mock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test zeroconf updating the host of a loaded entry reloads it without warning."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="AABBCCDDEEFF",
+        data={
+            CONF_HOST: "0.0.0.0",
+            CONF_GEN: 2,
+            CONF_SLEEP_PERIOD: 0,
+            CONF_MODEL: MODEL_1,
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(mock_rpc_device.initialize.mock_calls) == 1
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={"mac": "AABBCCDDEEFF", "type": MODEL_1, "auth": False},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "1.1.1.1"
+    assert len(mock_rpc_device.initialize.mock_calls) == 2
+    assert "has an update listener" not in caplog.text
 
 
 async def test_zeroconf_sleeping_device_not_triggers_refresh(
