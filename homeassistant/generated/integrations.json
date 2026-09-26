@@ -3349,6 +3349,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "immich_frames": {
+      "name": "Immich Frames",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "imou": {
       "name": "Imou",
       "integration_type": "hub",

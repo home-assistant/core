@@ -312,6 +312,7 @@ aiohue==4.9.0
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
+# homeassistant.components.immich_frames
 aioimmich==0.17.0
 
 # homeassistant.components.indi_allsky

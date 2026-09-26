@@ -1,0 +1,199 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This Immich frame is already configured.",
+      "immich_not_ready": "The Immich integration is not ready.",
+      "immich_required": "Set up the Immich integration first.",
+      "no_albums": "No Immich albums are available."
+    },
+    "error": {
+      "album_required": "Select at least one album.",
+      "album_unavailable": "One or more selected albums are no longer available.",
+      "albums_unavailable": "Immich albums could not be loaded.",
+      "assets_unavailable": "Immich photos could not be loaded.",
+      "immich_auth": "The Immich account rejected this request.",
+      "immich_not_ready": "The Immich integration is not ready.",
+      "immich_unavailable": "The selected Immich account is no longer available.",
+      "pairs_only_portrait_required": "Pairs-only mode requires portrait photos.",
+      "smart_query_required": "Enter keywords for the smart search."
+    },
+    "step": {
+      "album": {
+        "data": { "album_ids": "Albums" },
+        "data_description": {
+          "album_ids": "One or more albums used by this frame."
+        },
+        "title": "Choose albums"
+      },
+      "init": {
+        "data": {
+          "mode": "Portrait mode",
+          "orientation": "Orientation",
+          "pair_window_days": "Pairing window",
+          "screen_shape": "Screen shape",
+          "source": "Photo source",
+          "time_range": "Time range"
+        },
+        "title": "Configure Immich frame"
+      },
+      "reconfigure": {
+        "data": {
+          "source": "Photo source"
+        },
+        "data_description": {
+          "source": "Choose the library, albums, or keywords used for rotation."
+        },
+        "title": "Reconfigure Immich frame"
+      },
+      "smart": {
+        "data": { "smart_query": "Keywords" },
+        "data_description": {
+          "smart_query": "Describe the photos to show, such as beach sunset."
+        },
+        "title": "Choose keywords"
+      },
+      "user": {
+        "data": {
+          "immich_entry_id": "Immich account",
+          "source": "Photo source"
+        },
+        "data_description": {
+          "immich_entry_id": "The Immich account that supplies the photos.",
+          "source": "Choose the library, albums, or keywords used for rotation."
+        },
+        "description": "Choose an existing Immich account and photo source.",
+        "title": "Set up an Immich frame"
+      }
+    }
+  },
+  "entity": {
+    "image": {
+      "image": {
+        "name": "Image",
+        "state_attributes": {
+          "open_in_immich": { "name": "Open in Immich" }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": { "message": "Unable to connect to Immich." },
+    "immich_not_ready": { "message": "The Immich integration is not ready." },
+    "invalid_image": {
+      "message": "Immich returned an image that could not be rendered."
+    },
+    "no_photos": {
+      "message": "Immich has no available photos for this frame."
+    },
+    "unsupported_source": {
+      "message": "This photo source is not supported by the installed Immich client."
+    },
+    "upstream_error": {
+      "message": "Immich returned an error while loading this frame."
+    }
+  },
+  "options": {
+    "abort": {
+      "immich_not_ready": "The Immich integration is not ready.",
+      "no_albums": "No Immich albums are available."
+    },
+    "error": {
+      "album_required": "Select at least one album.",
+      "album_unavailable": "One or more selected albums are no longer available.",
+      "albums_unavailable": "Immich albums could not be loaded.",
+      "assets_unavailable": "Immich photos could not be loaded.",
+      "immich_auth": "The Immich account rejected this request.",
+      "immich_not_ready": "The Immich integration is not ready.",
+      "pairs_only_portrait_required": "Pairs-only mode requires portrait photos.",
+      "smart_query_required": "Enter keywords for the smart search."
+    },
+    "step": {
+      "album": {
+        "data": { "album_ids": "Albums" },
+        "data_description": {
+          "album_ids": "One or more albums used by this frame."
+        },
+        "title": "Choose albums"
+      },
+      "init": {
+        "data": {
+          "mode": "Portrait mode",
+          "orientation": "Orientation",
+          "pair_window_days": "Pairing window",
+          "photo_fit": "Photo fitting",
+          "screen_shape": "Screen shape",
+          "source": "Photo source",
+          "time_range": "Time range"
+        },
+        "data_description": {
+          "mode": "Allow single photos, paired photos, or pairs only.",
+          "orientation": "Limit candidates to a particular image orientation.",
+          "pair_window_days": "Maximum date difference between paired portraits.",
+          "photo_fit": "Crop photos or show the complete image with padding.",
+          "screen_shape": "Choose the exact output dimensions for the frame.",
+          "source": "Choose the library, albums, or keywords used for rotation.",
+          "time_range": "Only use photos from this rolling time range."
+        },
+        "title": "Configure Immich frame"
+      },
+      "smart": {
+        "data": { "smart_query": "Keywords" },
+        "data_description": {
+          "smart_query": "Describe the photos to show, such as beach sunset."
+        },
+        "title": "Choose keywords"
+      }
+    }
+  },
+  "selector": {
+    "mode": {
+      "options": {
+        "pairs": "Single and paired photos",
+        "pairs_only": "Paired portrait photos only",
+        "single": "Single photos only"
+      }
+    },
+    "orientation": {
+      "options": {
+        "any": "Mixed orientations",
+        "landscape": "Landscape photos only",
+        "portrait": "Portrait photos only",
+        "square": "Square photos only"
+      }
+    },
+    "photo_fit": {
+      "options": {
+        "crop": "Crop to frame",
+        "show_full": "Show full photo"
+      }
+    },
+    "screen_shape": {
+      "options": {
+        "landscape": "Landscape (1280 × 800)",
+        "portrait": "Portrait (800 × 1280)",
+        "square": "Square (720 × 720)"
+      }
+    },
+    "source": {
+      "options": {
+        "album": "Albums",
+        "all": "All photos",
+        "smart": "Keywords"
+      }
+    },
+    "time_range": {
+      "options": {
+        "1_month": "1 month",
+        "1_year": "1 year",
+        "2_years": "2 years",
+        "3_months": "3 months",
+        "3_years": "3 years",
+        "4_years": "4 years",
+        "5_years": "5 years",
+        "6_months": "6 months",
+        "10_years": "10 years",
+        "all_time": "All time"
+      }
+    }
+  }
+}
