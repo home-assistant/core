@@ -1,10 +1,12 @@
 """Tests for the Interactions API helpers in Google Generative AI Conversation."""
 
+import base64
+from pathlib import Path
 from typing import override
 from unittest.mock import AsyncMock, MagicMock
 
 from google.genai import interactions
-from google.genai.types import HarmCategory
+from google.genai.types import File, HarmCategory
 import probatio
 import pytest
 
@@ -30,6 +32,11 @@ from homeassistant.components.google_generative_ai_conversation.interactions imp
     build_interaction_request,
     convert_chat_log_to_interactions_steps,
     create_safety_settings,
+    extract_output_audio,
+    extract_output_image,
+    format_audio_response_format,
+    format_image_content,
+    format_image_response_format,
     format_response_format,
     format_tools_for_interactions,
     transform_interactions_stream,
@@ -1005,4 +1012,325 @@ async def test_convert_chat_log_to_interactions_steps_thought_with_signature(
     )
     assert steps[3] == interactions.UserInputStep(
         content=[interactions.TextContent(text="And what is 4+4?")]
+    )
+
+
+def test_format_image_content_uri() -> None:
+    """Test formatting image content via Files API URI reference."""
+    content = format_image_content(
+        uri="https://generativelanguage.googleapis.com/v1beta/files/file_abc123",
+        mime_type="image/jpeg",
+        resolution="high",
+    )
+    assert content == interactions.ImageContent(
+        type="image",
+        uri="https://generativelanguage.googleapis.com/v1beta/files/file_abc123",
+        mime_type="image/jpeg",
+        resolution="high",
+    )
+    assert (
+        content.uri
+        == "https://generativelanguage.googleapis.com/v1beta/files/file_abc123"
+    )
+    assert content.data is None
+
+
+def test_format_image_content_file() -> None:
+    """Test formatting image content via a File object reference."""
+    mock_file = File(
+        uri="https://generativelanguage.googleapis.com/v1beta/files/sample_img",
+        mime_type="image/png",
+    )
+    content = format_image_content(file=mock_file)
+    assert content == interactions.ImageContent(
+        type="image",
+        uri="https://generativelanguage.googleapis.com/v1beta/files/sample_img",
+        mime_type="image/png",
+    )
+    assert (
+        content.uri
+        == "https://generativelanguage.googleapis.com/v1beta/files/sample_img"
+    )
+    assert content.mime_type == "image/png"
+
+
+def test_format_image_content_inline_bytes() -> None:
+    """Test formatting image content via inline bytes."""
+    raw_bytes = b"sample_png_bytes"
+    expected_b64 = base64.b64encode(raw_bytes).decode("ascii")
+
+    content = format_image_content(data=raw_bytes, mime_type="image/png")
+    assert content == interactions.ImageContent(
+        type="image",
+        data=expected_b64,
+        mime_type="image/png",
+    )
+    assert content.data == expected_b64
+    assert content.uri is None
+
+
+def test_format_image_content_inline_str() -> None:
+    """Test formatting image content via inline base64 string."""
+    b64_str = "aW1hZ2VfZGF0YQ=="
+    content = format_image_content(data=b64_str, mime_type="image/webp")
+    assert content == interactions.ImageContent(
+        type="image",
+        data=b64_str,
+        mime_type="image/webp",
+    )
+    assert content.data == b64_str
+
+
+def test_format_image_content_validation() -> None:
+    """Test validation errors for format_image_content."""
+    with pytest.raises(ValueError, match="Cannot provide both"):
+        format_image_content(uri="https://example.com/img.jpg", data=b"bytes")
+
+    with pytest.raises(ValueError, match="Must provide either"):
+        format_image_content()
+
+
+def test_format_image_response_format() -> None:
+    """Test formatting ImageResponseFormat."""
+    default_fmt = format_image_response_format()
+    assert default_fmt == interactions.ImageResponseFormat(
+        type="image",
+        delivery="inline",
+    )
+
+    custom_fmt = format_image_response_format(
+        mime_type="image/jpeg",
+        aspect_ratio="16:9",
+        image_size="1K",
+        delivery="uri",
+    )
+    assert custom_fmt == interactions.ImageResponseFormat(
+        type="image",
+        mime_type="image/jpeg",
+        aspect_ratio="16:9",
+        image_size="1K",
+        delivery="uri",
+    )
+
+
+def test_format_audio_response_format() -> None:
+    """Test formatting AudioResponseFormat."""
+    default_fmt = format_audio_response_format()
+    assert default_fmt == interactions.AudioResponseFormat(
+        type="audio",
+        delivery="inline",
+    )
+
+    custom_fmt = format_audio_response_format(
+        mime_type="audio/wav",
+        delivery="inline",
+        sample_rate=24000,
+        bit_rate=128000,
+    )
+    assert custom_fmt == interactions.AudioResponseFormat(
+        type="audio",
+        mime_type="audio/wav",
+        delivery="inline",
+        sample_rate=24000,
+        bit_rate=128000,
+    )
+
+
+def test_extract_output_image_from_output_image() -> None:
+    """Test extracting output image directly from interaction.output_image."""
+    raw_bytes = b"fake_output_image_data"
+    b64_str = base64.b64encode(raw_bytes).decode("ascii")
+
+    interaction = interactions.Interaction(
+        id="int_img_1",
+        model="models/gemini-2.5-flash-image",
+        status="completed",
+        output_image=interactions.ImageContent(
+            data=b64_str,
+            mime_type="image/jpeg",
+        ),
+    )
+
+    image_bytes, mime_type = extract_output_image(interaction)
+    assert image_bytes == raw_bytes
+    assert mime_type == "image/jpeg"
+
+
+def test_extract_output_image_from_steps() -> None:
+    """Test extracting output image from interaction.steps."""
+    raw_bytes = b"fake_step_image_data"
+    b64_str = base64.b64encode(raw_bytes).decode("ascii")
+
+    interaction = interactions.Interaction(
+        id="int_img_step",
+        model="models/gemini-2.5-flash-image",
+        status="completed",
+        steps=[
+            interactions.ModelOutputStep(
+                content=[
+                    interactions.TextContent(text="Here is your image"),
+                    interactions.ImageContent(data=b64_str, mime_type="image/png"),
+                ]
+            )
+        ],
+    )
+
+    image_bytes, mime_type = extract_output_image(interaction)
+    assert image_bytes == raw_bytes
+    assert mime_type == "image/png"
+
+
+def test_extract_output_image_missing() -> None:
+    """Test extract_output_image raises ValueError when no image is present."""
+    interaction = interactions.Interaction(
+        id="int_no_img",
+        model="models/gemini-2.5-flash-image",
+        status="completed",
+        output_text="No image here",
+    )
+
+    with pytest.raises(ValueError, match="Interaction did not contain an output image"):
+        extract_output_image(interaction)
+
+
+def test_extract_output_audio_from_output_audio() -> None:
+    """Test extracting output audio directly from interaction.output_audio."""
+    raw_bytes = b"fake_output_audio_data"
+    b64_str = base64.b64encode(raw_bytes).decode("ascii")
+
+    interaction = interactions.Interaction(
+        id="int_aud_1",
+        model="models/gemini-2.5-flash-preview-tts",
+        status="completed",
+        output_audio=interactions.AudioContent(
+            data=b64_str,
+            mime_type="audio/wav",
+        ),
+    )
+
+    audio_bytes, mime_type = extract_output_audio(interaction)
+    assert audio_bytes == raw_bytes
+    assert mime_type == "audio/wav"
+
+
+def test_extract_output_audio_from_steps() -> None:
+    """Test extracting output audio from interaction.steps."""
+    raw_bytes = b"fake_step_audio_data"
+    b64_str = base64.b64encode(raw_bytes).decode("ascii")
+
+    interaction = interactions.Interaction(
+        id="int_aud_step",
+        model="models/gemini-2.5-flash-preview-tts",
+        status="completed",
+        steps=[
+            interactions.ModelOutputStep(
+                content=[
+                    interactions.AudioContent(data=b64_str, mime_type="audio/mp3"),
+                ]
+            )
+        ],
+    )
+
+    audio_bytes, mime_type = extract_output_audio(interaction)
+    assert audio_bytes == raw_bytes
+    assert mime_type == "audio/mp3"
+
+
+def test_extract_output_audio_missing() -> None:
+    """Test extract_output_audio raises ValueError when no audio is present."""
+    interaction = interactions.Interaction(
+        id="int_no_aud",
+        model="models/gemini-2.5-flash-preview-tts",
+        status="completed",
+        output_text="No audio here",
+    )
+
+    with pytest.raises(ValueError, match="Interaction did not contain output audio"):
+        extract_output_audio(interaction)
+
+
+def test_build_interaction_request_image_output_single_shot() -> None:
+    """Test building single-shot non-streaming request for image generation."""
+    image_fmt = format_image_response_format(aspect_ratio="1:1")
+    request = build_interaction_request(
+        model="models/gemini-2.5-flash-image",
+        input_content="A cozy cottage in the forest",
+        response_format=image_fmt,
+        stream=False,
+    )
+
+    assert request["model"] == "models/gemini-2.5-flash-image"
+    assert request["input"] == "A cozy cottage in the forest"
+    assert request["response_format"] == image_fmt
+    assert request["stream"] is False
+    assert request["store"] is False
+
+
+def test_build_interaction_request_audio_output_single_shot() -> None:
+    """Test building single-shot non-streaming request for TTS."""
+    audio_fmt = format_audio_response_format(mime_type="audio/wav")
+    request = build_interaction_request(
+        model="models/gemini-2.5-flash-preview-tts",
+        input_content="Good morning! The weather is sunny.",
+        response_format=audio_fmt,
+        stream=False,
+    )
+
+    assert request["model"] == "models/gemini-2.5-flash-preview-tts"
+    assert request["input"] == "Good morning! The weather is sunny."
+    assert request["response_format"] == audio_fmt
+    assert request["stream"] is False
+    assert request["store"] is False
+
+
+def test_build_interaction_request_multimodal_content_input() -> None:
+    """Test building request with multimodal Content sequence input."""
+    img_content = format_image_content(
+        uri="https://generativelanguage.googleapis.com/v1beta/files/test_file",
+        mime_type="image/jpeg",
+    )
+    txt_content = interactions.TextContent(text="What is in this picture?")
+
+    request = build_interaction_request(
+        model="gemini-3.8-flash",
+        input_content=[img_content, txt_content],
+        stream=False,
+    )
+
+    assert request["model"] == "gemini-3.8-flash"
+    assert request["input"] == [img_content, txt_content]
+    assert request["stream"] is False
+    assert request["store"] is False
+
+
+async def test_convert_chat_log_to_interactions_steps_with_image_attachment(
+    hass: HomeAssistant,
+    tmp_path: Path,
+) -> None:
+    """Test converting chat log with UserContent image attachment."""
+    img_file = tmp_path / "test.jpg"
+    img_file.write_bytes(b"image_content_123")
+    expected_b64 = base64.b64encode(b"image_content_123").decode("ascii")
+
+    chat_log = conversation.ChatLog(hass, "test_conversation")
+    chat_log.async_add_user_content(
+        conversation.UserContent(
+            content="Describe this image",
+            attachments=[
+                conversation.Attachment(
+                    media_content_id="image_attachment_1",
+                    mime_type="image/jpeg",
+                    path=img_file,
+                )
+            ],
+        )
+    )
+
+    steps = convert_chat_log_to_interactions_steps(chat_log)
+    assert len(steps) == 1
+    assert steps[0] == interactions.UserInputStep(
+        content=[
+            interactions.ImageContent(data=expected_b64, mime_type="image/jpeg"),
+            interactions.TextContent(text="Describe this image"),
+        ]
     )

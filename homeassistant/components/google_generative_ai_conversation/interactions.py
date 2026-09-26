@@ -1,15 +1,21 @@
 """Interactions API support for the Google Generative AI Conversation integration."""
 
+import base64
 from collections.abc import AsyncGenerator, AsyncIterator, Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 import datetime
 import json
-from typing import Any
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 from google.genai import interactions
 from google.genai.errors import APIError, ClientError
-from google.genai.types import HarmCategory, SafetySetting
+from google.genai.types import File, HarmCategory, SafetySetting
 import probatio
+
+if TYPE_CHECKING:
+    from google.genai._gaos.types.interactions.interaction import Interaction
+else:
+    Interaction = interactions.Interaction
 
 from homeassistant.components import conversation
 from homeassistant.exceptions import HomeAssistantError
@@ -85,6 +91,143 @@ def format_response_format(
     )
 
 
+def format_image_content(
+    *,
+    uri: str | None = None,
+    data: bytes | str | None = None,
+    file: File | None = None,
+    mime_type: str | None = None,
+    resolution: str | None = None,
+) -> interactions.ImageContent:
+    """Format image content for the Gemini Interactions API.
+
+    Supports both Files API references (via URI or File object) and inline bytes/base64 strings.
+    """
+    effective_uri = file.uri if file is not None else uri
+    effective_mime_type = (file.mime_type if file is not None else None) or mime_type
+
+    if effective_uri is not None and data is not None:
+        raise ValueError("Cannot provide both uri/file and data for image content")
+    if effective_uri is None and data is None:
+        raise ValueError("Must provide either uri, file, or data for image content")
+
+    b64_data: str | None = None
+    if data is not None:
+        b64_data = (
+            base64.b64encode(data).decode("ascii") if isinstance(data, bytes) else data
+        )
+
+    return interactions.ImageContent(
+        type="image",
+        uri=effective_uri,
+        data=b64_data,
+        mime_type=cast(interactions.ImageContentMimeType, effective_mime_type)
+        if effective_mime_type is not None
+        else None,
+        resolution=cast(interactions.MediaResolution, resolution)
+        if resolution is not None
+        else None,
+    )
+
+
+def format_image_response_format(
+    *,
+    mime_type: Literal["image/jpeg"] | None = None,
+    aspect_ratio: interactions.ImageResponseFormatAspectRatio | None = None,
+    image_size: interactions.ImageResponseFormatImageSize | None = None,
+    delivery: interactions.ImageResponseFormatDelivery | None = "inline",
+) -> interactions.ImageResponseFormat:
+    """Format image output response_format for the Gemini Interactions API."""
+    return interactions.ImageResponseFormat(
+        type="image",
+        mime_type=mime_type,
+        aspect_ratio=aspect_ratio,
+        image_size=image_size,
+        delivery=delivery,
+    )
+
+
+def format_audio_response_format(
+    *,
+    mime_type: interactions.AudioResponseFormatMimeType | None = None,
+    delivery: interactions.AudioResponseFormatDelivery | None = "inline",
+    sample_rate: int | None = None,
+    bit_rate: int | None = None,
+) -> interactions.AudioResponseFormat:
+    """Format audio output response_format for the Gemini Interactions API."""
+    return interactions.AudioResponseFormat(
+        type="audio",
+        mime_type=mime_type,
+        delivery=delivery,
+        sample_rate=sample_rate,
+        bit_rate=bit_rate,
+    )
+
+
+def extract_output_image(
+    interaction: Interaction,
+) -> tuple[bytes, str]:
+    """Extract raw image bytes and MIME type from an Interaction.
+
+    Checks both interaction.output_image and ModelOutputStep parts.
+    """
+    if (
+        interaction.output_image is not None
+        and interaction.output_image.data is not None
+    ):
+        return (
+            base64.b64decode(interaction.output_image.data),
+            interaction.output_image.mime_type or "image/jpeg",
+        )
+
+    if interaction.steps:
+        for step in interaction.steps:
+            if isinstance(step, interactions.ModelOutputStep) and step.content:
+                for content_part in step.content:
+                    if (
+                        isinstance(content_part, interactions.ImageContent)
+                        and content_part.data is not None
+                    ):
+                        return (
+                            base64.b64decode(content_part.data),
+                            content_part.mime_type or "image/jpeg",
+                        )
+
+    raise ValueError("Interaction did not contain an output image")
+
+
+def extract_output_audio(
+    interaction: Interaction,
+) -> tuple[bytes, str]:
+    """Extract raw audio bytes and MIME type from an Interaction.
+
+    Checks both interaction.output_audio and ModelOutputStep parts.
+    """
+    if (
+        interaction.output_audio is not None
+        and interaction.output_audio.data is not None
+    ):
+        return (
+            base64.b64decode(interaction.output_audio.data),
+            interaction.output_audio.mime_type or "audio/wav",
+        )
+
+    if interaction.steps:
+        for step in interaction.steps:
+            if isinstance(step, interactions.ModelOutputStep) and step.content:
+                for content_part in step.content:
+                    if (
+                        isinstance(content_part, interactions.AudioContent)
+                        and content_part.data is not None
+                    ):
+                        return (
+                            base64.b64decode(content_part.data),
+                            content_part.mime_type or "audio/wav",
+                        )
+
+    raise ValueError("Interaction did not contain output audio")
+
+
 def create_safety_settings(options: Mapping[str, Any]) -> list[SafetySetting]:
     """Create safety settings from integration options."""
     return [
@@ -119,11 +262,22 @@ def create_safety_settings(options: Mapping[str, Any]) -> list[SafetySetting]:
 def build_interaction_request(
     *,
     model: str,
-    input_content: str | Sequence[interactions.Step] | Sequence[interactions.StepParam],
+    input_content: (
+        str
+        | Sequence[interactions.Step]
+        | Sequence[interactions.StepParam]
+        | Sequence[interactions.Content]
+        | Sequence[interactions.ContentParam]
+    ),
     options: Mapping[str, Any] | None = None,
     system_instruction: str | None = None,
     tools: Sequence[interactions.Tool] | None = None,
-    response_format: interactions.TextResponseFormat | None = None,
+    response_format: (
+        interactions.InteractionResponseFormat
+        | interactions.ResponseFormat
+        | Sequence[interactions.ResponseFormat]
+        | None
+    ) = None,
     safety_settings: list[SafetySetting] | None = None,
     default_max_tokens: int | None = None,
     stream: bool = True,
@@ -192,9 +346,27 @@ def _validate_tool_results(value: Any) -> Any:
 def _convert_user_content_step(
     content: conversation.UserContent,
 ) -> interactions.UserInputStep:
-    """Convert UserContent into a UserInputStep."""
-    text = content.content or " "
-    return interactions.UserInputStep(content=[interactions.TextContent(text=text)])
+    """Convert UserContent into a UserInputStep, including any image attachments."""
+    step_content: list[interactions.Content] = []
+
+    if content.attachments:
+        for attachment in content.attachments:
+            if attachment.mime_type and attachment.mime_type.startswith("image/"):
+                if attachment.path and attachment.path.exists():
+                    raw_data = attachment.path.read_bytes()
+                    step_content.append(
+                        format_image_content(
+                            data=raw_data,
+                            mime_type=attachment.mime_type,
+                        )
+                    )
+
+    if content.content:
+        step_content.append(interactions.TextContent(text=content.content))
+    elif not step_content:
+        step_content.append(interactions.TextContent(text=" "))
+
+    return interactions.UserInputStep(content=step_content)
 
 
 def _convert_assistant_content_steps(
