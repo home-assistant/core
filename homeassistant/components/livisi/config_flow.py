@@ -6,7 +6,7 @@ from typing import Any, override
 from aiohttp import ClientConnectorError
 from livisi import errors as livisi_errors
 from livisi.aiolivisi import AioLivisi
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
@@ -21,10 +21,10 @@ class LivisiFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Create the configuration file."""
         self.aio_livisi: AioLivisi = None
-        self.data_schema = vol.Schema(
+        self.data_schema = probatio.Schema(
             {
-                vol.Required(CONF_HOST): str,
-                vol.Required(CONF_PASSWORD): str,
+                probatio.Required(CONF_HOST): str,
+                probatio.Required(CONF_PASSWORD): str,
             }
         )
 

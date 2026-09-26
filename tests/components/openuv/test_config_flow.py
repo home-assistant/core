@@ -2,9 +2,9 @@
 
 from unittest.mock import AsyncMock, patch
 
+import probatio
 from pyopenuv.errors import InvalidApiKeyError
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.openuv.const import (
     CONF_FROM_WINDOW,
@@ -78,9 +78,9 @@ async def test_options_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    def get_schema_marker(data_schema: vol.Schema, key: str) -> vol.Marker:
+    def get_schema_marker(data_schema: probatio.Schema, key: str) -> probatio.Marker:
         for k in data_schema.schema:
-            if k == key and isinstance(k, vol.Marker):
+            if k == key and isinstance(k, probatio.Marker):
                 return k
         return None
 

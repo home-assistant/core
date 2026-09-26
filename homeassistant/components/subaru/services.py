@@ -1,6 +1,6 @@
 """Services for the Subaru integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -17,6 +17,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_UNLOCK_SPECIFIC_DOOR,
         entity_domain=LOCK_DOMAIN,
-        schema={vol.Required(ATTR_DOOR): vol.In(UNLOCK_VALID_DOORS)},
+        schema={probatio.Required(ATTR_DOOR): probatio.In(UNLOCK_VALID_DOORS)},
         func="async_unlock_specific_door",
     )

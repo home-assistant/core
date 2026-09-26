@@ -8,8 +8,8 @@ import logging
 import time
 from typing import Any, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME
 from homeassistant.core import Context, HomeAssistant, callback
@@ -457,20 +457,8 @@ class TimerManager:
         timer.finish()
 
         if timer.conversation_command:
-            from homeassistant.components.conversation import (  # noqa: PLC0415
-                async_converse,
-            )
-
             self.hass.async_create_background_task(
-                async_converse(
-                    self.hass,
-                    timer.conversation_command,
-                    conversation_id=None,
-                    context=Context(),
-                    language=timer.language,
-                    agent_id=timer.conversation_agent_id,
-                    device_id=timer.device_id,
-                ),
+                self._async_run_conversation_command(timer),
                 "timer assist command",
             )
         elif timer.device_id in self.handlers:
@@ -482,6 +470,33 @@ class TimerManager:
             timer.name,
             timer.device_id,
         )
+
+    async def _async_run_conversation_command(self, timer: TimerInfo) -> None:
+        """Run the delayed command of a finished timer."""
+        from homeassistant.components.conversation import (  # noqa: PLC0415
+            async_converse,
+        )
+
+        assert timer.conversation_command is not None
+
+        result = await async_converse(
+            self.hass,
+            timer.conversation_command,
+            conversation_id=None,
+            context=Context(),
+            language=timer.language,
+            agent_id=timer.conversation_agent_id,
+            device_id=timer.device_id,
+        )
+
+        # Nothing is listening to the response, so an error is only visible here.
+        if result.response.response_type is intent.IntentResponseType.ERROR:
+            _LOGGER.warning(
+                "Delayed command failed: command=%s, code=%s, response=%s",
+                timer.conversation_command,
+                result.response.error_code,
+                result.response.speech.get("plain", {}).get("speech", ""),
+            )
 
     def is_timer_device(self, device_id: str) -> bool:
         """Return True if device has been registered to handle timer events."""
@@ -829,9 +844,9 @@ class StartTimerIntentHandler(intent.IntentHandler):
     intent_type = intent.INTENT_START_TIMER
     description = "Starts a new timer"
     slot_schema = {
-        vol.Required(vol.Any("hours", "minutes", "seconds")): cv.positive_int,
-        vol.Optional("name"): cv.string,
-        vol.Optional("conversation_command"): cv.string,
+        probatio.Required(probatio.Any("hours", "minutes", "seconds")): cv.positive_int,
+        probatio.Optional("name"): cv.string,
+        probatio.Optional("conversation_command"): cv.string,
     }
 
     @override
@@ -938,9 +953,9 @@ class CancelTimerIntentHandler(intent.IntentHandler):
     intent_type = intent.INTENT_CANCEL_TIMER
     description = "Cancels a timer"
     slot_schema = {
-        vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
-        vol.Optional("name"): cv.string,
-        vol.Optional("area"): cv.string,
+        probatio.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
+        probatio.Optional("name"): cv.string,
+        probatio.Optional("area"): cv.string,
     }
 
     @override
@@ -961,7 +976,7 @@ class CancelAllTimersIntentHandler(intent.IntentHandler):
     intent_type = intent.INTENT_CANCEL_ALL_TIMERS
     description = "Cancels all timers"
     slot_schema = {
-        vol.Optional("area"): cv.string,
+        probatio.Optional("area"): cv.string,
     }
 
     @override
@@ -992,10 +1007,10 @@ class IncreaseTimerIntentHandler(intent.IntentHandler):
     intent_type = intent.INTENT_INCREASE_TIMER
     description = "Adds more time to a timer"
     slot_schema = {
-        vol.Any("hours", "minutes", "seconds"): cv.positive_int,
-        vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
-        vol.Optional("name"): cv.string,
-        vol.Optional("area"): cv.string,
+        probatio.Any("hours", "minutes", "seconds"): cv.positive_int,
+        probatio.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
+        probatio.Optional("name"): cv.string,
+        probatio.Optional("area"): cv.string,
     }
 
     @override
@@ -1017,10 +1032,10 @@ class DecreaseTimerIntentHandler(intent.IntentHandler):
     intent_type = intent.INTENT_DECREASE_TIMER
     description = "Removes time from a timer"
     slot_schema = {
-        vol.Required(vol.Any("hours", "minutes", "seconds")): cv.positive_int,
-        vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
-        vol.Optional("name"): cv.string,
-        vol.Optional("area"): cv.string,
+        probatio.Required(probatio.Any("hours", "minutes", "seconds")): cv.positive_int,
+        probatio.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
+        probatio.Optional("name"): cv.string,
+        probatio.Optional("area"): cv.string,
     }
 
     @override
@@ -1042,9 +1057,9 @@ class PauseTimerIntentHandler(intent.IntentHandler):
     intent_type = intent.INTENT_PAUSE_TIMER
     description = "Pauses a running timer"
     slot_schema = {
-        vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
-        vol.Optional("name"): cv.string,
-        vol.Optional("area"): cv.string,
+        probatio.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
+        probatio.Optional("name"): cv.string,
+        probatio.Optional("area"): cv.string,
     }
 
     @override
@@ -1067,9 +1082,9 @@ class UnpauseTimerIntentHandler(intent.IntentHandler):
     intent_type = intent.INTENT_UNPAUSE_TIMER
     description = "Resumes a paused timer"
     slot_schema = {
-        vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
-        vol.Optional("name"): cv.string,
-        vol.Optional("area"): cv.string,
+        probatio.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
+        probatio.Optional("name"): cv.string,
+        probatio.Optional("area"): cv.string,
     }
 
     @override
@@ -1092,9 +1107,9 @@ class TimerStatusIntentHandler(intent.IntentHandler):
     intent_type = intent.INTENT_TIMER_STATUS
     description = "Reports the current status of timers"
     slot_schema = {
-        vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
-        vol.Optional("name"): cv.string,
-        vol.Optional("area"): cv.string,
+        probatio.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
+        probatio.Optional("name"): cv.string,
+        probatio.Optional("area"): cv.string,
     }
 
     @override

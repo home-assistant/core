@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from numbers import Number
 from typing import TYPE_CHECKING, Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
@@ -249,10 +249,10 @@ def _deprecated_unit_system(value: str) -> str:
     return value
 
 
-validate_unit_system = vol.All(
-    vol.Lower,
+validate_unit_system = probatio.All(
+    probatio.Lower,
     _deprecated_unit_system,
-    vol.Any(_CONF_UNIT_SYSTEM_METRIC, _CONF_UNIT_SYSTEM_US_CUSTOMARY),
+    probatio.Any(_CONF_UNIT_SYSTEM_METRIC, _CONF_UNIT_SYSTEM_US_CUSTOMARY),
 )
 
 METRIC_SYSTEM = UnitSystem(

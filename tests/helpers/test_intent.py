@@ -4,8 +4,8 @@ import asyncio
 from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import light, switch
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -40,6 +40,23 @@ class MockIntentHandler(intent.IntentHandler):
     def slot_schema(self):
         """Return the slot schema."""
         return self._mock_slot_schema
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param(None, True, id="none"),
+        pytest.param("", True, id="empty-string"),
+        pytest.param(" \t", True, id="whitespace-string"),
+        pytest.param(0, False, id="zero"),
+        pytest.param(False, False, id="false"),
+        pytest.param([], False, id="empty-list"),
+        pytest.param({}, False, id="empty-dict"),
+    ],
+)
+def test_is_blank_slot_value(value: object, expected: bool) -> None:
+    """Test identifying intent slot values that represent an unspecified slot."""
+    assert intent.is_blank_slot_value(value) is expected
 
 
 async def test_async_match_states(
@@ -653,13 +670,13 @@ async def test_match_child_device_area(
 
 def test_async_validate_slots() -> None:
     """Test async_validate_slots of IntentHandler."""
-    handler1 = MockIntentHandler({vol.Required("name"): cv.string})
+    handler1 = MockIntentHandler({probatio.Required("name"): cv.string})
 
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         handler1.async_validate_slots({})
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         handler1.async_validate_slots({"name": 1})
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         handler1.async_validate_slots({"name": "kitchen"})
     handler1.async_validate_slots({"name": {"value": "kitchen"}})
     handler1.async_validate_slots(

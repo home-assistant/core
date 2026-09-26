@@ -4,13 +4,13 @@ from collections.abc import Mapping
 from typing import Any, override
 from urllib.parse import ParseResult, urlparse
 
+import probatio
 from solarlog_cli.solarlog_connector import SolarLogConnector
 from solarlog_cli.solarlog_exceptions import (
     SolarLogAuthenticationError,
     SolarLogConnectionError,
     SolarLogError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TIMEOUT
@@ -94,10 +94,10 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
-                    vol.Required(CONF_HAS_PWD, default=False): bool,
+                    probatio.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
+                    probatio.Required(CONF_HAS_PWD, default=False): bool,
                 }
             ),
             errors=self._errors,
@@ -121,9 +121,9 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="password",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=self._errors,
@@ -155,12 +155,12 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_HAS_PWD, default=reconfigure_entry.data[CONF_HAS_PWD]
                     ): bool,
-                    vol.Optional(CONF_PASSWORD): str,
+                    probatio.Optional(CONF_PASSWORD): str,
                 }
             ),
         )
@@ -183,12 +183,12 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
                 reauth_entry, data_updates=user_input
             )
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_HAS_PWD, default=reauth_entry.data[CONF_HAS_PWD]
                 ): bool,
-                vol.Optional(CONF_PASSWORD): str,
+                probatio.Optional(CONF_PASSWORD): str,
             }
         )
         return self.async_show_form(

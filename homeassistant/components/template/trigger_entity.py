@@ -4,7 +4,7 @@ from collections.abc import Callable
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_CONDITIONS, CONF_VARIABLES
 from homeassistant.core import HomeAssistant, callback
@@ -274,7 +274,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
             validated = {}
             try:
                 result = template_render_complex(attributes_template, variables)
-                validated = vol.All(
+                validated = probatio.All(
                     dict,
                     validate_attributes(
                         self.entity_id,
@@ -286,7 +286,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
                 log_triggered_template_error(
                     self.entity_id, err, attribute=CONF_ATTRIBUTES
                 )
-            except vol.Invalid as err:
+            except probatio.Invalid as err:
                 log_validation_error(
                     result, attributes_template, CONF_ATTRIBUTES, self.entity_id, err
                 )

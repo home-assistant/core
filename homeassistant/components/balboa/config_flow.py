@@ -3,9 +3,9 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pybalboa import SpaClient
 from pybalboa.exceptions import SpaConnectionError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
@@ -22,11 +22,11 @@ from .const import CONF_SYNC_TIME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_SYNC_TIME, default=False): bool,
+        probatio.Required(CONF_SYNC_TIME, default=False): bool,
     }
 )
 OPTIONS_FLOW = {

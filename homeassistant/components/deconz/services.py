@@ -1,8 +1,8 @@
 """deCONZ services."""
 
+import probatio
 from pydeconz import errors
 from pydeconz.utils import normalize_bridge_id
-import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -25,13 +25,13 @@ SERVICE_ENTITY = "entity"
 SERVICE_DATA = "data"
 
 SERVICE_CONFIGURE_DEVICE = "configure"
-SERVICE_CONFIGURE_DEVICE_SCHEMA = vol.All(
-    vol.Schema(
+SERVICE_CONFIGURE_DEVICE_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Optional(SERVICE_ENTITY): cv.entity_id,
-            vol.Optional(SERVICE_FIELD): cv.matches_regex("/.*"),
-            vol.Required(SERVICE_DATA): dict,
-            vol.Optional(CONF_BRIDGE_ID): str,
+            probatio.Optional(SERVICE_ENTITY): cv.entity_id,
+            probatio.Optional(SERVICE_FIELD): cv.matches_regex("/.*"),
+            probatio.Required(SERVICE_DATA): dict,
+            probatio.Optional(CONF_BRIDGE_ID): str,
         }
     ),
     cv.has_at_least_one_key(SERVICE_ENTITY, SERVICE_FIELD),
@@ -39,7 +39,9 @@ SERVICE_CONFIGURE_DEVICE_SCHEMA = vol.All(
 
 SERVICE_DEVICE_REFRESH = "device_refresh"
 SERVICE_REMOVE_ORPHANED_ENTRIES = "remove_orphaned_entries"
-SELECT_GATEWAY_SCHEMA = vol.All(vol.Schema({vol.Optional(CONF_BRIDGE_ID): str}))
+SELECT_GATEWAY_SCHEMA = probatio.All(
+    probatio.Schema({probatio.Optional(CONF_BRIDGE_ID): str})
+)
 
 SUPPORTED_SERVICES = (
     SERVICE_CONFIGURE_DEVICE,

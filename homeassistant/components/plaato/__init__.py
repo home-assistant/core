@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 
 from aiohttp import web
+import probatio
 from pyplaato.models.airlock import PlaatoAirlock
 from pyplaato.plaato import (
     ATTR_ABV,
@@ -19,7 +20,6 @@ from pyplaato.plaato import (
     ATTR_TEMP_UNIT,
     ATTR_VOLUME_UNIT,
 )
-import voluptuous as vol
 
 from homeassistant.components import webhook
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -52,26 +52,26 @@ DEPENDENCIES = ["webhook"]
 SENSOR_UPDATE = f"{DOMAIN}_sensor_update"
 SENSOR_DATA_KEY = f"{DOMAIN}.{SENSOR_DOMAIN}"
 
-WEBHOOK_SCHEMA = vol.Schema(
+WEBHOOK_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_NAME): cv.string,
-        vol.Required(ATTR_DEVICE_ID): cv.positive_int,
-        vol.Required(ATTR_TEMP_UNIT): vol.In(
+        probatio.Required(ATTR_DEVICE_NAME): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): cv.positive_int,
+        probatio.Required(ATTR_TEMP_UNIT): probatio.In(
             [UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT]
         ),
-        vol.Required(ATTR_VOLUME_UNIT): vol.In(
+        probatio.Required(ATTR_VOLUME_UNIT): probatio.In(
             [UnitOfVolume.LITERS, UnitOfVolume.GALLONS]
         ),
-        vol.Required(ATTR_BPM): cv.positive_int,
-        vol.Required(ATTR_TEMP): vol.Coerce(float),
-        vol.Required(ATTR_SG): vol.Coerce(float),
-        vol.Required(ATTR_OG): vol.Coerce(float),
-        vol.Required(ATTR_ABV): vol.Coerce(float),
-        vol.Required(ATTR_CO2_VOLUME): vol.Coerce(float),
-        vol.Required(ATTR_BATCH_VOLUME): vol.Coerce(float),
-        vol.Required(ATTR_BUBBLES): cv.positive_int,
+        probatio.Required(ATTR_BPM): cv.positive_int,
+        probatio.Required(ATTR_TEMP): probatio.Coerce(float),
+        probatio.Required(ATTR_SG): probatio.Coerce(float),
+        probatio.Required(ATTR_OG): probatio.Coerce(float),
+        probatio.Required(ATTR_ABV): probatio.Coerce(float),
+        probatio.Required(ATTR_CO2_VOLUME): probatio.Coerce(float),
+        probatio.Required(ATTR_BATCH_VOLUME): probatio.Coerce(float),
+        probatio.Required(ATTR_BUBBLES): cv.positive_int,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -174,7 +174,7 @@ async def handle_webhook(
     """Handle incoming webhook from Plaato."""
     try:
         data = WEBHOOK_SCHEMA(await request.json())
-    except vol.MultipleInvalid as error:
+    except probatio.MultipleInvalid as error:
         _LOGGER.warning("An error occurred when parsing webhook data <%s>", error)
         return None
 

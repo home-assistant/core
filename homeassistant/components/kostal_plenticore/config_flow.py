@@ -4,8 +4,8 @@ import logging
 from typing import Any, override
 
 from aiohttp.client_exceptions import ClientError
+import probatio
 from pykoplenti import ApiClient, AuthenticationException
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD
@@ -17,11 +17,11 @@ from .helper import get_hostname_id
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_SERVICE_CODE): str,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Optional(CONF_SERVICE_CODE): str,
     }
 )
 

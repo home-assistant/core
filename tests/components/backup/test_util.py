@@ -307,7 +307,7 @@ def test_validate_password_no_homeassistant(caplog: pytest.LogCaptureFixture) ->
 
 
 @pytest.mark.parametrize(
-    ("addons", "padding_size", "decrypted_backup"),
+    ("addons", "padding_size", "encrypted_backup", "decrypted_backup"),
     [
         (
             [
@@ -315,6 +315,7 @@ def test_validate_password_no_homeassistant(caplog: pytest.LogCaptureFixture) ->
                 AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
             ],
             51200,  # 5 x 10240 byte of padding
+            "test_backups/c0cb53bd.tar",
             "test_backups/c0cb53bd.tar.decrypted",
         ),
         (
@@ -322,7 +323,18 @@ def test_validate_password_no_homeassistant(caplog: pytest.LogCaptureFixture) ->
                 AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
             ],
             40960,  # 4 x 10240 byte of padding
+            "test_backups/c0cb53bd.tar",
             "test_backups/c0cb53bd.tar.decrypted_skip_core2",
+        ),
+        # supervisor.tar.gz is not in the backup metadata but must be decrypted
+        (
+            [
+                AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+                AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+            ],
+            51200,  # 5 x 10240 byte of padding
+            "test_backups/c0cb53bd_supervisor.tar.encrypted_v3",
+            "test_backups/c0cb53bd_supervisor.tar.decrypted",
         ),
     ],
 )
@@ -330,11 +342,12 @@ async def test_decrypted_backup_streamer(
     hass: HomeAssistant,
     addons: list[AddonInfo],
     padding_size: int,
+    encrypted_backup: str,
     decrypted_backup: str,
 ) -> None:
     """Test the decrypted backup streamer."""
     decrypted_backup_path = get_fixture_path(decrypted_backup, DOMAIN)
-    encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
+    encrypted_backup_path = get_fixture_path(encrypted_backup, DOMAIN)
     backup = AgentBackup(
         addons=addons,
         backup_id="1234",
@@ -485,7 +498,7 @@ async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> 
 
 
 @pytest.mark.parametrize(
-    ("addons", "padding_size", "encrypted_backup"),
+    ("addons", "padding_size", "decrypted_backup", "encrypted_backup"),
     [
         (
             [
@@ -493,6 +506,7 @@ async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> 
                 AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
             ],
             51200,  # 5 x 10240 byte of padding
+            "test_backups/c0cb53bd.tar.decrypted",
             "test_backups/c0cb53bd.tar.encrypted_v3",
         ),
         (
@@ -500,7 +514,18 @@ async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> 
                 AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
             ],
             40960,  # 4 x 10240 byte of padding
+            "test_backups/c0cb53bd.tar.decrypted",
             "test_backups/c0cb53bd.tar.encrypted_v3_skip_core2",
+        ),
+        # supervisor.tar.gz is not in the backup metadata but must be encrypted
+        (
+            [
+                AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+                AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+            ],
+            51200,  # 5 x 10240 byte of padding
+            "test_backups/c0cb53bd_supervisor.tar.decrypted",
+            "test_backups/c0cb53bd_supervisor.tar.encrypted_v3",
         ),
     ],
 )
@@ -508,12 +533,11 @@ async def test_encrypted_backup_streamer(
     hass: HomeAssistant,
     addons: list[AddonInfo],
     padding_size: int,
+    decrypted_backup: str,
     encrypted_backup: str,
 ) -> None:
     """Test the encrypted backup streamer."""
-    decrypted_backup_path = get_fixture_path(
-        "test_backups/c0cb53bd.tar.decrypted", DOMAIN
-    )
+    decrypted_backup_path = get_fixture_path(decrypted_backup, DOMAIN)
     encrypted_backup_path = get_fixture_path(encrypted_backup, DOMAIN)
     backup = AgentBackup(
         addons=addons,

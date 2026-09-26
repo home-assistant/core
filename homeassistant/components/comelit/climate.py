@@ -3,7 +3,7 @@
 from enum import StrEnum
 from typing import Any, TypedDict, cast, override
 
-from aiocomelit import ComelitSerialBridgeObject
+from aiocomelit import ComelitDeviceObject
 from aiocomelit.const import CLIMATE
 
 from homeassistant.components.climate import (
@@ -128,7 +128,7 @@ class ComelitClimateEntity(ComelitBridgeBaseEntity, ClimateEntity):
     def __init__(
         self,
         coordinator: ComelitSerialBridge,
-        device: ComelitSerialBridgeObject,
+        device: ComelitDeviceObject,
         config_entry_entry_id: str,
     ) -> None:
         """Init light entity."""

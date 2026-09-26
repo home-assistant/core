@@ -5,9 +5,9 @@ from functools import partial
 import logging
 from typing import Any, override
 
+import probatio
 from pyhomeworks import exceptions as hw_exceptions
 from pyhomeworks.pyhomeworks import Homeworks
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
@@ -61,22 +61,22 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_FADE_RATE = 1.0
 
 CONTROLLER_EDIT = {
-    vol.Required(CONF_HOST): selector.TextSelector(),
-    vol.Required(CONF_PORT): selector.NumberSelector(
+    probatio.Required(CONF_HOST): selector.TextSelector(),
+    probatio.Required(CONF_PORT): selector.NumberSelector(
         selector.NumberSelectorConfig(
             min=1,
             max=65535,
             mode=selector.NumberSelectorMode.BOX,
         )
     ),
-    vol.Optional(CONF_USERNAME): selector.TextSelector(),
-    vol.Optional(CONF_PASSWORD): selector.TextSelector(
+    probatio.Optional(CONF_USERNAME): selector.TextSelector(),
+    probatio.Optional(CONF_PASSWORD): selector.TextSelector(
         selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
     ),
 }
 
 LIGHT_EDIT: VolDictType = {
-    vol.Optional(CONF_RATE, default=DEFAULT_FADE_RATE): selector.NumberSelector(
+    probatio.Optional(CONF_RATE, default=DEFAULT_FADE_RATE): selector.NumberSelector(
         selector.NumberSelectorConfig(
             min=0,
             max=20,
@@ -87,8 +87,8 @@ LIGHT_EDIT: VolDictType = {
 }
 
 BUTTON_EDIT: VolDictType = {
-    vol.Optional(CONF_LED, default=False): selector.BooleanSelector(),
-    vol.Optional(CONF_RELEASE_DELAY, default=0): selector.NumberSelector(
+    probatio.Optional(CONF_LED, default=False): selector.BooleanSelector(),
+    probatio.Optional(CONF_RELEASE_DELAY, default=0): selector.NumberSelector(
         selector.NumberSelectorConfig(
             min=0,
             max=5,
@@ -171,7 +171,7 @@ async def _try_connection(user_input: dict[str, Any]) -> None:
         _LOGGER.debug("Caught HomeworksNoCredentialsProvided")
         raise SchemaFlowError("credentials_needed") from err
     except Exception as err:
-        _LOGGER.exception("Caught unexpected exception %s")
+        _LOGGER.exception("Caught unexpected exception")
         raise SchemaFlowError("unknown_error") from err
 
 
@@ -179,7 +179,7 @@ def _validate_address(handler: SchemaCommonFlowHandler, addr: str) -> None:
     """Validate address."""
     try:
         validate_addr(addr)
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         raise SchemaFlowError("invalid_addr") from err
 
     for _key in (CONF_DIMMERS, CONF_KEYPADS):
@@ -241,14 +241,14 @@ async def validate_add_light(
     return {}
 
 
-async def get_select_button_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def get_select_button_schema(handler: SchemaCommonFlowHandler) -> probatio.Schema:
     """Return schema for selecting a button."""
     keypad = handler.flow_state["_idx"]
     buttons: list[dict[str, Any]] = handler.options[CONF_KEYPADS][keypad][CONF_BUTTONS]
 
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_INDEX): vol.In(
+            probatio.Required(CONF_INDEX): probatio.In(
                 {
                     str(index): f"{config[CONF_NAME]} ({config[CONF_NUMBER]})"
                     for index, config in enumerate(buttons)
@@ -258,11 +258,11 @@ async def get_select_button_schema(handler: SchemaCommonFlowHandler) -> vol.Sche
     )
 
 
-async def get_select_keypad_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def get_select_keypad_schema(handler: SchemaCommonFlowHandler) -> probatio.Schema:
     """Return schema for selecting a keypad."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_INDEX): vol.In(
+            probatio.Required(CONF_INDEX): probatio.In(
                 {
                     str(index): f"{config[CONF_NAME]} ({config[CONF_ADDR]})"
                     for index, config in enumerate(handler.options[CONF_KEYPADS])
@@ -272,11 +272,11 @@ async def get_select_keypad_schema(handler: SchemaCommonFlowHandler) -> vol.Sche
     )
 
 
-async def get_select_light_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def get_select_light_schema(handler: SchemaCommonFlowHandler) -> probatio.Schema:
     """Return schema for selecting a light."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_INDEX): vol.In(
+            probatio.Required(CONF_INDEX): probatio.In(
                 {
                     str(index): f"{config[CONF_NAME]} ({config[CONF_ADDR]})"
                     for index, config in enumerate(handler.options[CONF_DIMMERS])
@@ -343,13 +343,13 @@ async def validate_light_edit(
     return {}
 
 
-async def get_remove_button_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def get_remove_button_schema(handler: SchemaCommonFlowHandler) -> probatio.Schema:
     """Return schema for button removal."""
     keypad_idx: int = handler.flow_state["_idx"]
     buttons: list[dict] = handler.options[CONF_KEYPADS][keypad_idx][CONF_BUTTONS]
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_INDEX): cv.multi_select(
+            probatio.Required(CONF_INDEX): cv.multi_select(
                 {
                     str(index): f"{config[CONF_NAME]} ({config[CONF_NUMBER]})"
                     for index, config in enumerate(buttons)
@@ -361,11 +361,11 @@ async def get_remove_button_schema(handler: SchemaCommonFlowHandler) -> vol.Sche
 
 async def get_remove_keypad_light_schema(
     handler: SchemaCommonFlowHandler, *, key: str
-) -> vol.Schema:
+) -> probatio.Schema:
     """Return schema for keypad or light removal."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_INDEX): cv.multi_select(
+            probatio.Required(CONF_INDEX): cv.multi_select(
                 {
                     str(index): f"{config[CONF_NAME]} ({config[CONF_ADDR]})"
                     for index, config in enumerate(handler.options[key])
@@ -435,32 +435,32 @@ async def validate_remove_keypad_light(
     return {}
 
 
-DATA_SCHEMA_ADD_CONTROLLER = vol.Schema(
+DATA_SCHEMA_ADD_CONTROLLER = probatio.Schema(
     {
-        vol.Required(
+        probatio.Required(
             CONF_NAME, description={"suggested_value": "Lutron Homeworks"}
         ): selector.TextSelector(),
         **CONTROLLER_EDIT,
     }
 )
-DATA_SCHEMA_EDIT_CONTROLLER = vol.Schema(CONTROLLER_EDIT)
-DATA_SCHEMA_ADD_LIGHT = vol.Schema(
+DATA_SCHEMA_EDIT_CONTROLLER = probatio.Schema(CONTROLLER_EDIT)
+DATA_SCHEMA_ADD_LIGHT = probatio.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_LIGHT_NAME): TextSelector(),
-        vol.Required(CONF_ADDR): TextSelector(),
+        probatio.Optional(CONF_NAME, default=DEFAULT_LIGHT_NAME): TextSelector(),
+        probatio.Required(CONF_ADDR): TextSelector(),
         **LIGHT_EDIT,
     }
 )
-DATA_SCHEMA_ADD_KEYPAD = vol.Schema(
+DATA_SCHEMA_ADD_KEYPAD = probatio.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_KEYPAD_NAME): TextSelector(),
-        vol.Required(CONF_ADDR): TextSelector(),
+        probatio.Optional(CONF_NAME, default=DEFAULT_KEYPAD_NAME): TextSelector(),
+        probatio.Required(CONF_ADDR): TextSelector(),
     }
 )
-DATA_SCHEMA_ADD_BUTTON = vol.Schema(
+DATA_SCHEMA_ADD_BUTTON = probatio.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_BUTTON_NAME): TextSelector(),
-        vol.Required(CONF_NUMBER): selector.NumberSelector(
+        probatio.Optional(CONF_NAME, default=DEFAULT_BUTTON_NAME): TextSelector(),
+        probatio.Required(CONF_NUMBER): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=1,
                 max=24,
@@ -471,8 +471,8 @@ DATA_SCHEMA_ADD_BUTTON = vol.Schema(
         **BUTTON_EDIT,
     }
 )
-DATA_SCHEMA_EDIT_BUTTON = vol.Schema(BUTTON_EDIT)
-DATA_SCHEMA_EDIT_LIGHT = vol.Schema(LIGHT_EDIT)
+DATA_SCHEMA_EDIT_BUTTON = probatio.Schema(BUTTON_EDIT)
+DATA_SCHEMA_EDIT_LIGHT = probatio.Schema(LIGHT_EDIT)
 
 OPTIONS_FLOW = {
     "init": SchemaFlowMenuStep(

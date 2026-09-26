@@ -153,7 +153,7 @@ class WanIpSensor(SensorEntity):
             await self._resolver.close()
             return ips
         except DNSError as err:
-            _LOGGER.warning("Exception while resolving host: %s", err)
+            _LOGGER.debug("Exception while resolving host: %s", err)
             await self._resolver.close()
             return ips
 

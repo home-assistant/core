@@ -47,10 +47,13 @@
     dict({
       'agent_id': 'conversation.llama_cpp_conversation',
       'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'value1',
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'call_call_1',
       'tool_name': 'test_tool',
-      'tool_result': 'value1',
     }),
     dict({
       'agent_id': 'conversation.llama_cpp_conversation',

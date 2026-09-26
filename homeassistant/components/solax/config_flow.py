@@ -4,10 +4,10 @@ import asyncio
 import logging
 from typing import Any, override
 
+import probatio
 from solax import RealTimeAPI, discover
 from solax.discovery import DiscoveryError
 from solax.inverter import Inverter, InverterError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_MODEL, CONF_PASSWORD, CONF_PORT
@@ -20,11 +20,11 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PORT = 80
 DEFAULT_PASSWORD = ""
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+        probatio.Required(CONF_IP_ADDRESS): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
     }
 )
 
@@ -43,11 +43,11 @@ class SolaxConfigFlow(ConfigFlow, domain=DOMAIN):
         self._connection_data: dict[str, Any] = {}
         self._potential_types: dict[str, Inverter] = {}
 
-    def _select_model_schema(self) -> vol.Schema:
+    def _select_model_schema(self) -> probatio.Schema:
         """Return the schema listing only the discovered inverters."""
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Required(CONF_MODEL): selector.SelectSelector(
+                probatio.Required(CONF_MODEL): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=sorted(self._potential_types),
                         mode=selector.SelectSelectorMode.DROPDOWN,
@@ -57,7 +57,12 @@ class SolaxConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_finalize(
-        self, model: str, inverter: Inverter, *, step_id: str, data_schema: vol.Schema
+        self,
+        model: str,
+        inverter: Inverter,
+        *,
+        step_id: str,
+        data_schema: probatio.Schema,
     ) -> ConfigFlowResult:
         """Fetch the serial number and create the entry, or redisplay on error."""
         errors: dict[str, str] = {}

@@ -3,9 +3,9 @@
 from typing import Any, override
 
 from aiohttp import BasicAuth
+import probatio
 from python_opensky import OpenSky
 from python_opensky.exceptions import OpenSkyUnauthenticatedError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
@@ -61,12 +61,12 @@ class OpenSkyConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_RADIUS): vol.Coerce(float),
-                        vol.Required(CONF_LATITUDE): cv.latitude,
-                        vol.Required(CONF_LONGITUDE): cv.longitude,
-                        vol.Optional(CONF_ALTITUDE): vol.Coerce(float),
+                        probatio.Required(CONF_RADIUS): probatio.Coerce(float),
+                        probatio.Required(CONF_LATITUDE): cv.latitude,
+                        probatio.Required(CONF_LONGITUDE): cv.longitude,
+                        probatio.Optional(CONF_ALTITUDE): probatio.Coerce(float),
                     }
                 ),
                 {
@@ -113,13 +113,13 @@ class OpenSkyOptionsFlowHandler(OptionsFlow):
             step_id="init",
             errors=errors,
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_RADIUS): vol.Coerce(float),
-                        vol.Optional(CONF_ALTITUDE): vol.Coerce(float),
-                        vol.Optional(CONF_USERNAME): str,
-                        vol.Optional(CONF_PASSWORD): str,
-                        vol.Optional(CONF_CONTRIBUTING_USER, default=False): bool,
+                        probatio.Required(CONF_RADIUS): probatio.Coerce(float),
+                        probatio.Optional(CONF_ALTITUDE): probatio.Coerce(float),
+                        probatio.Optional(CONF_USERNAME): str,
+                        probatio.Optional(CONF_PASSWORD): str,
+                        probatio.Optional(CONF_CONTRIBUTING_USER, default=False): bool,
                     }
                 ),
                 user_input or self.config_entry.options,

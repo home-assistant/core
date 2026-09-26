@@ -10,8 +10,8 @@ from pathlib import Path
 import re
 from typing import Any, TypedDict
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_LABEL_ID,
@@ -286,11 +286,19 @@ _TARGET_HELPER_MODULES = frozenset(
 )
 
 
+def _is_helper_module(module: str) -> bool:
+    """Return True for a trigger/condition helper module or one of its submodules."""
+    return any(
+        module == helper or module.startswith(f"{helper}.")
+        for helper in _TARGET_HELPER_MODULES
+    )
+
+
 def _foreign_names(cls: type) -> set[str]:
     """Return names defined by MRO classes outside the trigger/condition helpers."""
     names: set[str] = set()
     for klass in cls.__mro__:
-        if klass.__module__ in _TARGET_HELPER_MODULES:
+        if _is_helper_module(klass.__module__):
             continue
         names.update(vars(klass))
     return names
@@ -315,7 +323,7 @@ def _target_slot_validator(cls: type) -> object | None:
 def _init_hygiene_violation(cls: type, key: str, config_cls_name: str) -> str | None:
     """Return an error if an __init__ override rewrites the config or target."""
     for klass in cls.__mro__:
-        if klass.__module__ in _TARGET_HELPER_MODULES:
+        if _is_helper_module(klass.__module__):
             return None
         if "__init__" not in vars(klass):
             continue
@@ -340,7 +348,7 @@ def _init_hygiene_violation(cls: type, key: str, config_cls_name: str) -> str | 
 def _entity_filter_hygiene_violation(cls: type, key: str) -> str | None:
     """Return an error if an entity_filter override does not narrow the base."""
     for klass in cls.__mro__:
-        if klass.__module__ in _TARGET_HELPER_MODULES:
+        if _is_helper_module(klass.__module__):
             return None
         if "entity_filter" not in vars(klass):
             continue
@@ -1716,7 +1724,7 @@ async def _validate_condition_options(
     if valid:
         await async_validate_condition_config(hass, config)
     else:
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             await async_validate_condition_config(hass, config)
 
 
@@ -1836,7 +1844,7 @@ async def _validate_trigger_options(
     if valid:
         await async_validate_trigger_config(hass, [trigger_config])
     else:
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             await async_validate_trigger_config(hass, [trigger_config])
 
 

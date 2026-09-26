@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 import apprise
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_TARGET,
@@ -24,8 +24,8 @@ CONF_FILE = "config"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_URL): vol.All(cv.ensure_list, [str]),
-        vol.Optional(CONF_FILE): cv.string,
+        probatio.Optional(CONF_URL): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional(CONF_FILE): cv.string,
     }
 )
 

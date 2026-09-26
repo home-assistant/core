@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from hole.exceptions import HoleError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -42,7 +42,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_DISABLE,
         {
-            vol.Required(SERVICE_DISABLE_ATTR_DURATION): vol.All(
+            probatio.Required(SERVICE_DISABLE_ATTR_DURATION): probatio.All(
                 cv.time_period_str, cv.positive_timedelta
             ),
         },

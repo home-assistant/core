@@ -117,7 +117,6 @@ async def test_device_registry(
     mock_config_entry: MockConfigEntry,
     mock_devices: list[CustomerDevice],
     device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Validate device registry snapshots for all devices."""
@@ -136,31 +135,20 @@ async def test_device_registry(
             name=list(device_registry_entry.identifiers)[0][1]
         )
 
-        # Ensure model is suffixed with "(unsupported)" when no entities are generated
-        assert (" (unsupported)" in device_registry_entry.model) == (
-            not er.async_entries_for_device(
-                entity_registry,
-                device_registry_entry.id,
-                include_disabled_entities=True,
-            )
-        )
-
 
 @pytest.mark.parametrize(
     ("mock_device_code", "platforms", "manufacturer", "model", "model_id", "quirks"),
     [
-        # Ensure model is suffixed with "(unsupported)" when no entities
-        # are generated
+        # Device information is registered even when no entities are generated
         (
             "mal_gyitctrjj1kefxp2",
             [],
             "Tuya",
-            "Multifunction alarm (unsupported)",
+            "Multifunction alarm",
             "gyitctrjj1kefxp2",
             {},
         ),
-        # Ensure model is not suffixed with "(unsupported)" when entities
-        # are generated
+        # Creating entities does not alter the registered device information
         (
             "mal_gyitctrjj1kefxp2",
             [Platform.ALARM_CONTROL_PANEL],
@@ -170,8 +158,7 @@ async def test_device_registry(
             {},
         ),
         # With a quirk that has manufacturer, model and model_id are
-        # taken from quirk (and not suffixed with "(unsupported)" even if
-        # no entities are generated)
+        # taken from quirk
         (
             "mal_gyitctrjj1kefxp2",
             [],
@@ -208,7 +195,7 @@ async def test_device_registry(
             "mal_gyitctrjj1kefxp2",
             [],
             "Tuya",
-            "Multifunction alarm (unsupported)",
+            "Multifunction alarm",
             "gyitctrjj1kefxp2",
             {
                 "gyitctrjj1kefxp2": MagicMock(

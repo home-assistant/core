@@ -6,7 +6,7 @@ from typing import Any, override
 
 from aioghost import GhostAdminAPI
 from aioghost.exceptions import GhostAuthError, GhostError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -17,16 +17,16 @@ _LOGGER = logging.getLogger(__name__)
 
 GHOST_INTEGRATION_SETUP_URL = "https://account.ghost.org/?r=settings/integrations/new"
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_URL): str,
-        vol.Required(CONF_ADMIN_API_KEY): str,
+        probatio.Required(CONF_API_URL): str,
+        probatio.Required(CONF_ADMIN_API_KEY): str,
     }
 )
 
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ADMIN_API_KEY): str,
+        probatio.Required(CONF_ADMIN_API_KEY): str,
     }
 )
 

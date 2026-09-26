@@ -9,8 +9,8 @@ from aiohttp import web_response
 import plexapi.exceptions
 from plexapi.gdm import GDM
 from plexauth import PlexAuth
+import probatio
 import requests.exceptions
-import voluptuous as vol
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
@@ -153,23 +153,23 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
 
         previous_input = user_input or {}
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_HOST,
                     description={"suggested_value": previous_input.get(CONF_HOST)},
                 ): str,
-                vol.Required(
+                probatio.Required(
                     CONF_PORT, default=previous_input.get(CONF_PORT, DEFAULT_PORT)
                 ): int,
-                vol.Required(
+                probatio.Required(
                     CONF_SSL, default=previous_input.get(CONF_SSL, DEFAULT_SSL)
                 ): bool,
-                vol.Required(
+                probatio.Required(
                     CONF_VERIFY_SSL,
                     default=previous_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_TOKEN,
                     description={"suggested_value": previous_input.get(CONF_TOKEN)},
                 ): str,
@@ -283,8 +283,12 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="select_server",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_SERVER_IDENTIFIER): vol.In(available_servers)}
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_SERVER_IDENTIFIER): probatio.In(
+                        available_servers
+                    )
+                }
             ),
             errors={},
         )
@@ -423,20 +427,20 @@ class PlexOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="plex_mp_settings",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_USE_EPISODE_ART,
                         default=plex_server.option_use_episode_art,
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_MONITORED_USERS, default=default_accounts
                     ): cv.multi_select(available_accounts),
-                    vol.Required(
+                    probatio.Required(
                         CONF_IGNORE_NEW_SHARED_USERS,
                         default=plex_server.option_ignore_new_shared_users,
                     ): bool,
-                    vol.Required(
+                    probatio.Required(
                         CONF_IGNORE_PLEX_WEB_CLIENTS,
                         default=plex_server.option_ignore_plexweb_clients,
                     ): bool,

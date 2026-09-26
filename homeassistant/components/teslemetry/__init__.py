@@ -59,6 +59,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
+    BLE_DISCONNECT_TIMEOUT,
     CLIENT_ID,
     CONF_VIN,
     DOMAIN,
@@ -111,6 +112,7 @@ STREAM_TOPICS: Final = (
     SseTopic.LIVE_STATUS,
     SseTopic.SITE_INFO,
     SseTopic.TARIFF_CONTENT_V2,
+    SseTopic.ENERGY_TOTALS,
 )
 
 
@@ -702,10 +704,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             for vehicle in vehicles
             if vehicle.poll
         ),
-        *(
-            energysite.info_coordinator.async_config_entry_first_refresh()
-            for energysite in energysites
-        ),
+        *(_async_refresh_energy_site(energysite) for energysite in energysites),
     )
 
     # Setup energy devices with models, versions, and listeners
@@ -816,6 +815,8 @@ def create_handle_energy_stream_connection(
             if energysite.live_coordinator is not None:
                 energysite.live_coordinator.async_set_update_error(error)
             energysite.info_coordinator.async_set_update_error(error)
+            if energysite.history_coordinator is not None:
+                energysite.history_coordinator.async_set_update_error(error)
 
     return handle_connection
 
@@ -889,12 +890,25 @@ async def _async_setup_energy_site(
     )
 
     history_coordinator = (
-        TeslemetryEnergyHistoryCoordinator(hass, entry, energy_site)
-        if powerwall
-        else None
+        TeslemetryEnergyHistoryCoordinator(hass, entry, site_id) if powerwall else None
     )
+    if history_coordinator is not None:
+        entry.async_on_unload(
+            stream_energysite.listen_EnergyTotals(
+                history_coordinator.handle_stream_update
+            )
+        )
 
     return live_coordinator, info_coordinator, history_coordinator
+
+
+async def _async_refresh_energy_site(energysite: TeslemetryEnergyData) -> None:
+    """Cold read the site info, then resolve the site timezone it carries."""
+    await energysite.info_coordinator.async_config_entry_first_refresh()
+    if energysite.history_coordinator is not None:
+        await energysite.history_coordinator.async_set_time_zone(
+            energysite.info_coordinator.data.get("installation_time_zone")
+        )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
@@ -905,12 +919,23 @@ async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) 
         for vehicle in entry.runtime_data.vehicles:
             if isinstance(vehicle.api, VehicleRouter):
                 try:
-                    await vehicle.api.primary.disconnect()
-                except (BleakError, TeslaFleetError, TimeoutError) as err:
-                    # Swallowed so one stuck link cannot block the unload, but
-                    # warn: a leaked BLE connection can keep the vehicle awake.
+                    async with asyncio.timeout(BLE_DISCONNECT_TIMEOUT):
+                        try:
+                            await vehicle.api.primary.disconnect()
+                        except (BleakError, TeslaFleetError, TimeoutError) as err:
+                            # Swallowed so one stuck link cannot block the
+                            # unload, but warn: a leaked BLE connection can
+                            # keep the vehicle awake.
+                            LOGGER.warning(
+                                "Error disconnecting Bluetooth for %s: %s",
+                                vehicle.vin,
+                                err,
+                            )
+                except TimeoutError:
                     LOGGER.warning(
-                        "Error disconnecting Bluetooth for %s: %s", vehicle.vin, err
+                        "Bluetooth disconnect for %s timed out after %ss",
+                        vehicle.vin,
+                        BLE_DISCONNECT_TIMEOUT,
                     )
     return unloaded
 

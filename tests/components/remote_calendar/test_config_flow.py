@@ -13,7 +13,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import setup_integration
 from .conftest import CALENDAR_NAME, CALENDER_URL
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 @respx.mock
@@ -77,6 +77,61 @@ async def test_form_import_webcal(hass: HomeAssistant, ics_content: str) -> None
     }
 
 
+@respx.mock
+async def test_form_import_webcal_error(hass: HomeAssistant, ics_content: str) -> None:
+    """Test webcal URL error re-displays form with suggested values."""
+    respx.get(CALENDER_URL).mock(side_effect=HTTPError("Connection failed"))
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_CALENDAR_NAME: CALENDAR_NAME,
+            CONF_URL: "webcal://some.calendar.com/calendar.ics",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_CALENDAR_NAME)
+        == CALENDAR_NAME
+    )
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_URL)
+        == CALENDER_URL
+    )
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_VERIFY_SSL)
+        is False
+    )
+
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=ics_content,
+        )
+    )
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_CALENDAR_NAME: CALENDAR_NAME,
+            CONF_URL: CALENDER_URL,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == CALENDAR_NAME
+    assert result3["data"] == {
+        CONF_CALENDAR_NAME: CALENDAR_NAME,
+        CONF_URL: CALENDER_URL,
+        CONF_VERIFY_SSL: False,
+    }
+
+
 @pytest.mark.parametrize(
     ("side_effect", "base_error"),
     [
@@ -108,6 +163,14 @@ async def test_form_invalid_url(
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": base_error}
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_CALENDAR_NAME)
+        == CALENDAR_NAME
+    )
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_URL)
+        == "invalid-url.com"
+    )
     respx.get(CALENDER_URL).mock(
         return_value=Response(
             status_code=200,
@@ -167,6 +230,11 @@ async def test_unsupported_inputs(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_CALENDAR_NAME)
+        == CALENDAR_NAME
+    )
+    assert get_schema_suggested_value(result2["data_schema"].schema, CONF_URL) == url
     assert log_message in caplog.text
     ## It's not possible to test a successful config flow because,
     ## we need to mock httpx.get here and then the exception isn't
@@ -204,6 +272,14 @@ async def test_form_http_status_error(
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error}
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_CALENDAR_NAME)
+        == CALENDAR_NAME
+    )
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_URL)
+        == CALENDER_URL
+    )
     respx.get(CALENDER_URL).mock(
         return_value=Response(
             status_code=200,
@@ -252,6 +328,18 @@ async def test_no_valid_calendar(hass: HomeAssistant, ics_content: str) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_ics_file"}
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_CALENDAR_NAME)
+        == CALENDAR_NAME
+    )
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_URL)
+        == CALENDER_URL
+    )
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_VERIFY_SSL)
+        is True
+    )
     respx.get(CALENDER_URL).mock(
         return_value=Response(
             status_code=200,

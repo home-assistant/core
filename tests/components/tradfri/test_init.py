@@ -1,8 +1,9 @@
 """Tests for Tradfri setup."""
 
+import json
 from unittest.mock import MagicMock
 
-from pytradfri.const import ATTR_FIRMWARE_VERSION, ATTR_GATEWAY_ID
+from pytradfri.const import ATTR_GATEWAY_ID
 from pytradfri.gateway import Gateway
 
 from homeassistant.components import tradfri
@@ -104,6 +105,7 @@ async def test_migrate_config_entry_and_identifiers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     command_store: CommandStore,
+    gateway_response: str,
 ) -> None:
     """Test migration of device registry identifiers to the unique format.
 
@@ -120,7 +122,7 @@ async def test_migrate_config_entry_and_identifiers(
         },
     )
 
-    gateway1 = mock_gateway_fixture(command_store, GATEWAY_ID1)
+    gateway1 = mock_gateway_fixture(command_store, GATEWAY_ID1, gateway_response)
     command_store.register_device(
         gateway1, await async_load_json_object_fixture(hass, "bulb_w.json", DOMAIN)
     )
@@ -226,12 +228,16 @@ async def test_migrate_config_entry_and_identifiers(
     assert config_entry3.version == 1
 
 
-def mock_gateway_fixture(command_store: CommandStore, gateway_id: str) -> Gateway:
+def mock_gateway_fixture(
+    command_store: CommandStore, gateway_id: str, gateway_response: str
+) -> Gateway:
     """Mock a Tradfri gateway."""
     gateway = Gateway()
+    gateway_info_response = json.loads(gateway_response)
+    gateway_info_response[ATTR_GATEWAY_ID] = gateway_id
     command_store.register_response(
         gateway.get_gateway_info(),
-        {ATTR_GATEWAY_ID: gateway_id, ATTR_FIRMWARE_VERSION: "1.2.1234"},
+        gateway_info_response,
     )
     command_store.register_response(
         gateway.get_devices(),

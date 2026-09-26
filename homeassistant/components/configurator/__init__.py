@@ -12,7 +12,7 @@ from datetime import datetime
 import functools as ft
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import EntityStateAttribute
 from homeassistant.core import (
@@ -203,7 +203,7 @@ class Configurator:
             DOMAIN,
             SERVICE_CONFIGURE,
             self.async_handle_service_call,
-            schema=vol.Schema({}, extra=vol.ALLOW_EXTRA),
+            schema=probatio.Schema({}, extra=probatio.ALLOW_EXTRA),
         )
 
     @async_callback

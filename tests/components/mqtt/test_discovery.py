@@ -2108,7 +2108,7 @@ async def test_cleanup_device_multiple_config_entries(
         connections={("mac", "12:34:56:AB:CD:EF")},
     )
     assert mqtt_device_entry is not None
-    assert mqtt_device_entry.config_entries == {mqtt_config_entry.entry_id}
+    assert mqtt_device_entry.config_entry_id == mqtt_config_entry.entry_id
     assert (
         _get_device_for_config_entry(
             device_registry,
@@ -2137,7 +2137,7 @@ async def test_cleanup_device_multiple_config_entries(
     )
     assert device_entry is not None
     entity_entry = entity_registry.async_get("sensor.mqtt_mqtt_sensor")
-    assert device_entry.config_entries == {config_entry.entry_id}
+    assert device_entry.config_entry_id == config_entry.entry_id
     assert entity_entry is None
 
     # Verify state is removed
@@ -2233,7 +2233,7 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
         connections={("mac", "12:34:56:AB:CD:EF")},
     )
     assert mqtt_device_entry is not None
-    assert mqtt_device_entry.config_entries == {mqtt_config_entry.entry_id}
+    assert mqtt_device_entry.config_entry_id == mqtt_config_entry.entry_id
     assert (
         _get_device_for_config_entry(
             device_registry,
@@ -2262,7 +2262,7 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
     )
     assert device_entry is not None
     entity_entry = entity_registry.async_get("sensor.mqtt_mqtt_sensor")
-    assert device_entry.config_entries == {config_entry.entry_id}
+    assert device_entry.config_entry_id == config_entry.entry_id
     assert entity_entry is None
 
     # Verify state is removed

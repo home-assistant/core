@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.number import (
     DEFAULT_MAX_VALUE,
@@ -53,15 +53,15 @@ DEFAULT_OPTIMISTIC = False
 
 SCRIPT_FIELDS = (CONF_SET_VALUE,)
 
-NUMBER_COMMON_SCHEMA = vol.Schema(
+NUMBER_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): cv.template,
-        vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): cv.template,
-        vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_STATE): cv.template,
-        vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.template,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): cv.template,
+        probatio.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): cv.template,
+        probatio.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_STATE): cv.template,
+        probatio.Optional(CONF_STEP, default=DEFAULT_STEP): cv.template,
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 )
 

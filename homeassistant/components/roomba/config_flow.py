@@ -4,10 +4,10 @@ import asyncio
 from functools import partial
 from typing import Any, override
 
+import probatio
 from roombapy import RoombaFactory, RoombaInfo
 from roombapy.discovery import RoombaDiscovery
 from roombapy.getpassword import RoombaPassword
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_NAME, CONF_PASSWORD
@@ -210,7 +210,9 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Optional("host"): vol.In(hosts)}),
+            data_schema=probatio.Schema(
+                {probatio.Optional("host"): probatio.In(hosts)}
+            ),
         )
 
     async def async_step_manual(
@@ -221,8 +223,8 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="manual",
                 description_placeholders={AUTH_HELP_URL_KEY: AUTH_HELP_URL_VALUE},
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_HOST, default=self.host): str}
+                data_schema=probatio.Schema(
+                    {probatio.Required(CONF_HOST, default=self.host): str}
                 ),
             )
 
@@ -304,7 +306,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="link_manual",
             description_placeholders={AUTH_HELP_URL_KEY: AUTH_HELP_URL_VALUE},
-            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_PASSWORD): str}),
             errors=errors,
         )
 
@@ -322,13 +324,13 @@ class RoombaOptionsFlowHandler(OptionsFlow):
         options = self.config_entry.options
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_CONTINUOUS,
                         default=options.get(CONF_CONTINUOUS, DEFAULT_CONTINUOUS),
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_DELAY,
                         default=options.get(CONF_DELAY, DEFAULT_DELAY),
                     ): int,

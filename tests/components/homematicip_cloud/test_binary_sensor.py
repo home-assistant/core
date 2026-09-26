@@ -10,6 +10,7 @@ from homematicip.base.enums import (
 )
 import pytest
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.homematicip_cloud.binary_sensor import (
     ATTR_ACCELERATION_SENSOR_MODE,
     ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION,
@@ -30,8 +31,9 @@ from homeassistant.components.homematicip_cloud.entity import (
     ATTR_RSSI_DEVICE,
     ATTR_SABOTAGE,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
 
@@ -68,6 +70,9 @@ async def test_hmip_full_flush_lock_controller_binary_sensors(
         "HmIP-FLC",
     )
     assert glass_state.state == STATE_ON
+    assert (
+        glass_state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.GLASS_BREAK
+    )
 
     assert hmip_device is not None
     await async_manipulate_test_data(hass, hmip_device, "lockState", "UNLOCKED")
@@ -226,6 +231,31 @@ async def test_hmip_tilt_vibration_sensor(
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
     assert len(hmip_device.mock_calls) == service_call_counter + 2
+
+
+async def test_hmip_temperature_tilt_vibration_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    default_mock_hap_factory: HomeFactory,
+) -> None:
+    """Test the ELV-SH-TACO, whose tilt channel sits at index 2, not 1."""
+    entity_id = "binary_sensor.wassertemperatursensor_moving"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Wassertemperatursensor"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, "Wassertemperatursensor Moving", "ELV-SH-TACO"
+    )
+    assert ha_state.state == STATE_ON
+
+    entity = entity_registry.async_get(entity_id)
+    assert entity.unique_id == "3014F711000000000000TACO_2_tilt_vibration"
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "accelerationSensorTriggered", False
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
 
 
 async def test_hmip_contact_interface(

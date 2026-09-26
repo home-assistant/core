@@ -16,11 +16,11 @@ from . import TEST_ADDRESS, TEST_PAIRING_TOKEN, SnoozFixture
 from tests.common import MockConfigEntry
 
 
-async def test_setup_retries_when_device_not_found(
+async def test_setup_retries_when_service_info_not_found(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test setup is retried with a diagnostic reason when the device is missing."""
+    """Test setup is retried when Bluetooth service info is missing."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_ADDRESS,
@@ -30,9 +30,9 @@ async def test_setup_retries_when_device_not_found(
 
     with (
         patch(
-            "homeassistant.components.snooz.async_ble_device_from_address",
+            "homeassistant.components.snooz.async_last_service_info",
             return_value=None,
-        ),
+        ) as mock_last_service_info,
         patch(
             "homeassistant.components.snooz.async_address_reachability_diagnostics",
             return_value="mock reachability reason",
@@ -41,6 +41,7 @@ async def test_setup_retries_when_device_not_found(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
+    mock_last_service_info.assert_called_once_with(hass, TEST_ADDRESS)
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert (
         f"Could not find Snooz with address {TEST_ADDRESS}: mock reachability reason"

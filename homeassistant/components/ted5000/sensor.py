@@ -5,8 +5,8 @@ from datetime import timedelta
 import logging
 from typing import override
 
+import probatio
 import requests
-import voluptuous as vol
 import xmltodict
 
 from homeassistant.components.sensor import (
@@ -38,9 +38,9 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=80): cv.port,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=80): cv.port,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 

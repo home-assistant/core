@@ -7,7 +7,7 @@ from typing import get_args
 from hdate import HebrewDate
 from hdate.omer import Nusach, Omer
 from hdate.translator import Language, set_language
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_DATE, CONF_LANGUAGE, SUN_EVENT_SUNSET
 from homeassistant.core import (
@@ -26,14 +26,14 @@ from homeassistant.util import dt as dt_util
 from .const import ATTR_AFTER_SUNSET, ATTR_NUSACH, DOMAIN, SERVICE_COUNT_OMER
 
 _LOGGER = logging.getLogger(__name__)
-OMER_SCHEMA = vol.Schema(
+OMER_SCHEMA = probatio.Schema(
     {
-        vol.Optional(ATTR_DATE): cv.date,
-        vol.Optional(ATTR_AFTER_SUNSET, default=True): cv.boolean,
-        vol.Required(ATTR_NUSACH, default="sfarad"): vol.In(
+        probatio.Optional(ATTR_DATE): cv.date,
+        probatio.Optional(ATTR_AFTER_SUNSET, default=True): cv.boolean,
+        probatio.Required(ATTR_NUSACH, default="sfarad"): probatio.In(
             [nusach.name.lower() for nusach in Nusach]
         ),
-        vol.Optional(CONF_LANGUAGE, default="he"): LanguageSelector(
+        probatio.Optional(CONF_LANGUAGE, default="he"): LanguageSelector(
             LanguageSelectorConfig(languages=list(get_args(Language)))
         ),
     }

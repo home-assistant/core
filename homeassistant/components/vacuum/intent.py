@@ -3,7 +3,7 @@
 import logging
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, config_validation as cv, intent
@@ -68,10 +68,10 @@ class CleanAreaIntentHandler(intent.IntentHandler):
     def slot_schema(self) -> dict:
         """Return a slot schema."""
         return {
-            vol.Required("area"): cv.string,
-            vol.Optional("name"): cv.string,
-            vol.Optional("preferred_area_id"): cv.string,
-            vol.Optional("preferred_floor_id"): cv.string,
+            probatio.Required("area"): cv.string,
+            probatio.Optional("name"): cv.string,
+            probatio.Optional("preferred_area_id"): cv.string,
+            probatio.Optional("preferred_floor_id"): cv.string,
         }
 
     @override

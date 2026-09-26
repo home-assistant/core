@@ -5,7 +5,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Unpack, override
 
-import voluptuous as vol
+import probatio
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.node import Node as ZwaveNode
 
@@ -45,43 +45,47 @@ from .helpers import (
 CONF_STATUS = "status"
 
 # Conditions compare against state labels, so strings must be kept as given
-_CONDITION_VALUE_SCHEMA = vol.Any(bool, int, float, dict, cv.string)
+_CONDITION_VALUE_SCHEMA = probatio.Any(bool, int, float, dict, cv.string)
 
-_BASE_SCHEMA_DICT: dict[vol.Marker, Any] = {
-    vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
-    vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
+_BASE_SCHEMA_DICT: dict[probatio.Marker, Any] = {
+    probatio.Required(ATTR_DEVICE_ID): probatio.All(cv.ensure_list, [cv.string]),
+    probatio.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): probatio.In(
         [BEHAVIOR_ANY, BEHAVIOR_ALL]
     ),
 }
 
-_NODE_STATUS_OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
+_NODE_STATUS_OPTIONS_SCHEMA_DICT: dict[probatio.Marker, Any] = {
     **_BASE_SCHEMA_DICT,
-    vol.Required(CONF_STATUS): vol.In(NODE_STATUSES),
+    probatio.Required(CONF_STATUS): probatio.In(NODE_STATUSES),
 }
 
-_VALUE_OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
+_VALUE_OPTIONS_SCHEMA_DICT: dict[probatio.Marker, Any] = {
     **_BASE_SCHEMA_DICT,
-    vol.Required(ATTR_COMMAND_CLASS): COMMAND_CLASS_SCHEMA,
-    vol.Required(ATTR_PROPERTY): vol.Any(vol.Coerce(int), cv.string),
-    vol.Optional(ATTR_ENDPOINT): vol.Coerce(int),
-    vol.Optional(ATTR_PROPERTY_KEY): vol.Any(vol.Coerce(int), cv.string),
-    vol.Required(ATTR_VALUE): _CONDITION_VALUE_SCHEMA,
+    probatio.Required(ATTR_COMMAND_CLASS): COMMAND_CLASS_SCHEMA,
+    probatio.Required(ATTR_PROPERTY): probatio.Any(probatio.Coerce(int), cv.string),
+    probatio.Optional(ATTR_ENDPOINT): probatio.Coerce(int),
+    probatio.Optional(ATTR_PROPERTY_KEY): probatio.Any(probatio.Coerce(int), cv.string),
+    probatio.Required(ATTR_VALUE): _CONDITION_VALUE_SCHEMA,
 }
 
-_CONFIG_PARAMETER_OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
+_CONFIG_PARAMETER_OPTIONS_SCHEMA_DICT: dict[probatio.Marker, Any] = {
     **_BASE_SCHEMA_DICT,
-    vol.Required(ATTR_CONFIG_PARAMETER): vol.Coerce(int),
-    vol.Optional(ATTR_CONFIG_PARAMETER_BITMASK): vol.Any(
-        vol.Coerce(int), BITMASK_SCHEMA
+    probatio.Required(ATTR_CONFIG_PARAMETER): probatio.Coerce(int),
+    probatio.Optional(ATTR_CONFIG_PARAMETER_BITMASK): probatio.Any(
+        probatio.Coerce(int), BITMASK_SCHEMA
     ),
-    vol.Optional(ATTR_ENDPOINT, default=0): vol.Coerce(int),
-    vol.Required(ATTR_VALUE): _CONDITION_VALUE_SCHEMA,
+    probatio.Optional(ATTR_ENDPOINT, default=0): probatio.Coerce(int),
+    probatio.Required(ATTR_VALUE): _CONDITION_VALUE_SCHEMA,
 }
 
 
-def _condition_schema(options_schema_dict: dict[vol.Marker, Any]) -> vol.Schema:
+def _condition_schema(
+    options_schema_dict: dict[probatio.Marker, Any],
+) -> probatio.Schema:
     """Return the condition schema for an options schema dict."""
-    return vol.Schema({vol.Required(CONF_OPTIONS, default={}): options_schema_dict})
+    return probatio.Schema(
+        {probatio.Required(CONF_OPTIONS, default={}): options_schema_dict}
+    )
 
 
 @dataclass(slots=True)
@@ -111,8 +115,8 @@ def _async_resolve_nodes(
 class _ZwaveNodeCondition(Condition):
     """Base for conditions evaluated per Z-Wave node."""
 
-    options_schema_dict: dict[vol.Marker, Any]
-    _schema: vol.Schema
+    options_schema_dict: dict[probatio.Marker, Any]
+    _schema: probatio.Schema
 
     @classmethod
     @override
@@ -138,7 +142,7 @@ class _ZwaveNodeCondition(Condition):
 
         resolved = _async_resolve_nodes(hass, device_ids)
         if not resolved.nodes:
-            raise vol.Invalid("No nodes found for the given devices")
+            raise probatio.Invalid("No nodes found for the given devices")
         cls._validate_nodes(resolved.nodes, config[CONF_OPTIONS])
         return config
 
@@ -201,16 +205,18 @@ class _ZwaveValueCondition(_ZwaveNodeCondition):
         for node in nodes:
             try:
                 get_zwave_value_from_config(node, value_config)
-            except vol.Invalid:
+            except probatio.Invalid:
                 continue
             return
-        raise vol.Invalid(f"No targeted node has {cls._value_description(options)}")
+        raise probatio.Invalid(
+            f"No targeted node has {cls._value_description(options)}"
+        )
 
     @override
     def _node_matches(self, node: ZwaveNode) -> bool:
         try:
             value = get_zwave_value_from_config(node, self._value_config(self._options))
-        except vol.Invalid:
+        except probatio.Invalid:
             return False
         return value_matches_state(value, self._options[ATTR_VALUE])
 

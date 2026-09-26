@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from apyosoenergyapi import OSOEnergy
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
@@ -14,7 +14,7 @@ from homeassistant.helpers import aiohttp_client
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-_SCHEMA_STEP_USER = vol.Schema({vol.Required(CONF_API_KEY): str})
+_SCHEMA_STEP_USER = probatio.Schema({probatio.Required(CONF_API_KEY): str})
 
 CONF_PORTAL_URL = "portal_url"
 OSOENERGY_PORTAL_URL = "https://portal.osoenergy.no/"

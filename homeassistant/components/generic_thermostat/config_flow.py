@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from datetime import timedelta
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import fan, switch
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
@@ -35,49 +35,49 @@ from .const import (
 )
 
 OPTIONS_SCHEMA = {
-    vol.Required(CONF_AC_MODE): selector.BooleanSelector(
+    probatio.Required(CONF_AC_MODE): selector.BooleanSelector(
         selector.BooleanSelectorConfig(),
     ),
-    vol.Required(CONF_SENSOR): selector.EntitySelector(
+    probatio.Required(CONF_SENSOR): selector.EntitySelector(
         selector.EntitySelectorConfig(
             domain=SENSOR_DOMAIN, device_class=SensorDeviceClass.TEMPERATURE
         )
     ),
-    vol.Required(CONF_HEATER): selector.EntitySelector(
+    probatio.Required(CONF_HEATER): selector.EntitySelector(
         selector.EntitySelectorConfig(domain=[fan.DOMAIN, switch.DOMAIN])
     ),
-    vol.Required(
+    probatio.Required(
         CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE
     ): selector.NumberSelector(
         selector.NumberSelectorConfig(
             mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE, step=0.1
         )
     ),
-    vol.Required(
+    probatio.Required(
         CONF_HOT_TOLERANCE, default=DEFAULT_TOLERANCE
     ): selector.NumberSelector(
         selector.NumberSelectorConfig(
             mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE, step=0.1
         )
     ),
-    vol.Optional(CONF_MIN_DUR): selector.DurationSelector(
+    probatio.Optional(CONF_MIN_DUR): selector.DurationSelector(
         selector.DurationSelectorConfig(allow_negative=False)
     ),
-    vol.Optional(CONF_KEEP_ALIVE): selector.DurationSelector(
+    probatio.Optional(CONF_KEEP_ALIVE): selector.DurationSelector(
         selector.DurationSelectorConfig(allow_negative=False)
     ),
-    vol.Optional(CONF_MAX_DUR): selector.DurationSelector(
+    probatio.Optional(CONF_MAX_DUR): selector.DurationSelector(
         selector.DurationSelectorConfig(allow_negative=False)
     ),
-    vol.Optional(CONF_DUR_COOLDOWN): selector.DurationSelector(
+    probatio.Optional(CONF_DUR_COOLDOWN): selector.DurationSelector(
         selector.DurationSelectorConfig(allow_negative=False)
     ),
-    vol.Optional(CONF_MIN_TEMP): selector.NumberSelector(
+    probatio.Optional(CONF_MIN_TEMP): selector.NumberSelector(
         selector.NumberSelectorConfig(
             mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE, step=0.1
         )
     ),
-    vol.Optional(CONF_MAX_TEMP): selector.NumberSelector(
+    probatio.Optional(CONF_MAX_TEMP): selector.NumberSelector(
         selector.NumberSelectorConfig(
             mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE, step=0.1
         )
@@ -85,7 +85,7 @@ OPTIONS_SCHEMA = {
 }
 
 PRESETS_SCHEMA = {
-    vol.Optional(v): selector.NumberSelector(
+    probatio.Optional(v): selector.NumberSelector(
         selector.NumberSelectorConfig(
             mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE, step=0.1
         )
@@ -94,7 +94,7 @@ PRESETS_SCHEMA = {
 }
 
 CONFIG_SCHEMA = {
-    vol.Required(CONF_NAME): selector.TextSelector(),
+    probatio.Required(CONF_NAME): selector.TextSelector(),
     **OPTIONS_SCHEMA,
 }
 
@@ -115,20 +115,20 @@ async def _validate_config(
 
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
-        vol.Schema(CONFIG_SCHEMA),
+        probatio.Schema(CONFIG_SCHEMA),
         validate_user_input=_validate_config,
         next_step="presets",
     ),
-    "presets": SchemaFlowFormStep(vol.Schema(PRESETS_SCHEMA)),
+    "presets": SchemaFlowFormStep(probatio.Schema(PRESETS_SCHEMA)),
 }
 
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(
-        vol.Schema(OPTIONS_SCHEMA),
+        probatio.Schema(OPTIONS_SCHEMA),
         validate_user_input=_validate_config,
         next_step="presets",
     ),
-    "presets": SchemaFlowFormStep(vol.Schema(PRESETS_SCHEMA)),
+    "presets": SchemaFlowFormStep(probatio.Schema(PRESETS_SCHEMA)),
 }
 
 

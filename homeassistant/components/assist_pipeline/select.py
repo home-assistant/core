@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, entity_registry as er, restore_state
 
 from .const import OPTION_PREFERRED
-from .pipeline import KEY_ASSIST_PIPELINE, AssistDevice
+from .runtime import KEY_ASSIST_PIPELINE, AssistDevice
 from .vad import VadSensitivity
 
 

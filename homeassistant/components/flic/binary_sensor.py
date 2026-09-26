@@ -3,8 +3,8 @@
 import logging
 import threading
 
+import probatio
 import pyflic
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
@@ -45,12 +45,12 @@ EVENT_DATA_QUEUED_TIME = "queued_time"
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_IGNORED_CLICK_TYPES): vol.All(
-            cv.ensure_list, [vol.In(CLICK_TYPES)]
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_DISCOVERY, default=True): cv.boolean,
+        probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        probatio.Optional(CONF_IGNORED_CLICK_TYPES): probatio.All(
+            cv.ensure_list, [probatio.In(CLICK_TYPES)]
         ),
     }
 )

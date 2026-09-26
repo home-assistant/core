@@ -3,10 +3,10 @@
 import asyncio
 from typing import Any, override
 
+import probatio
 import pyotgw
 from pyotgw import vars as gw_vars
 from serial import SerialException
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -97,10 +97,10 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
         """Show the config flow form with possible errors."""
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_DEVICE): str,
-                    vol.Required(CONF_ID): str,
+                    probatio.Required(CONF_DEVICE): str,
+                    probatio.Required(CONF_ID): str,
                 }
             ),
             errors=errors or {},
@@ -125,33 +125,33 @@ class OpenThermGwOptionsFlow(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_READ_PRECISION,
                         default=self.config_entry.options.get(CONF_READ_PRECISION, 0),
-                    ): vol.All(
-                        vol.Coerce(float),
-                        vol.In(
+                    ): probatio.All(
+                        probatio.Coerce(float),
+                        probatio.In(
                             [0, PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
                         ),
                     ),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_SET_PRECISION,
                         default=self.config_entry.options.get(CONF_SET_PRECISION, 0),
-                    ): vol.All(
-                        vol.Coerce(float),
-                        vol.In(
+                    ): probatio.All(
+                        probatio.Coerce(float),
+                        probatio.In(
                             [0, PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
                         ),
                     ),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_TEMPORARY_OVRD_MODE,
                         default=self.config_entry.options.get(
                             CONF_TEMPORARY_OVRD_MODE, True
                         ),
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_FLOOR_TEMP,
                         default=self.config_entry.options.get(CONF_FLOOR_TEMP, False),
                     ): bool,

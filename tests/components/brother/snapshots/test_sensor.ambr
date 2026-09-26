@@ -284,7 +284,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.hl_l2340dw_black_toner_remaining',
     'has_entity_name': True,
     'hidden_by': None,
@@ -554,7 +554,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.hl_l2340dw_cyan_toner_remaining',
     'has_entity_name': True,
     'hidden_by': None,
@@ -591,6 +591,70 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
+  })
+# ---
+# name: test_sensors[sensor.hl_l2340dw_device_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'down',
+        'running',
+        'testing',
+        'warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hl_l2340dw_device_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Device status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Device status',
+    'platform': 'brother',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_status',
+    'unique_id': '0123456789_device_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.hl_l2340dw_device_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Device status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'down',
+        'running',
+        'testing',
+        'warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hl_l2340dw_device_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'running',
   })
 # ---
 # name: test_sensors[sensor.hl_l2340dw_drum_page_counter-entry]
@@ -863,6 +927,60 @@
     'state': '97',
   })
 # ---
+# name: test_sensors[sensor.hl_l2340dw_ink_capture_box_remaining_lifetime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hl_l2340dw_ink_capture_box_remaining_lifetime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ink capture box remaining lifetime',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ink capture box remaining lifetime',
+    'platform': 'brother',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ink_capture_box_remaining_life',
+    'unique_id': '0123456789_ink_capture_box_remaining_life',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.hl_l2340dw_ink_capture_box_remaining_lifetime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Ink capture box remaining lifetime',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hl_l2340dw_ink_capture_box_remaining_lifetime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '75',
+  })
+# ---
 # name: test_sensors[sensor.hl_l2340dw_magenta_drum_page_counter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1040,7 +1158,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.hl_l2340dw_magenta_toner_remaining',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1187,6 +1305,70 @@
     'state': '98',
   })
 # ---
+# name: test_sensors[sensor.hl_l2340dw_printer_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'idle',
+        'other',
+        'printing',
+        'warmup',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hl_l2340dw_printer_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Printer status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Printer status',
+    'platform': 'brother',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'printer_status',
+    'unique_id': '0123456789_printer_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.hl_l2340dw_printer_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Printer status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'idle',
+        'other',
+        'printing',
+        'warmup',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hl_l2340dw_printer_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
 # name: test_sensors[sensor.hl_l2340dw_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1200,7 +1382,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.hl_l2340dw_status',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1465,7 +1647,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.hl_l2340dw_yellow_toner_remaining',
     'has_entity_name': True,
     'hidden_by': None,

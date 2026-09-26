@@ -5,7 +5,7 @@ from typing import Any, override
 
 from aiolichess import AioLichess
 from aiolichess.exceptions import AioLichessError, AuthError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
@@ -46,7 +46,7 @@ class LichessConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_TOKEN): str}),
             description_placeholders={"token_url": TOKEN_URL},
             errors=errors,
         )

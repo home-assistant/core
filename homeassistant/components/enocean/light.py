@@ -5,7 +5,7 @@ from typing import Any, override
 
 from enocean_async import ERP1Telegram
 from enocean_async.esp3.packet import ESP3PacketType
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -27,9 +27,13 @@ DEFAULT_NAME = "EnOcean Light"
 
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_ID, default=[]): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-        vol.Required(CONF_SENDER_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_ID, default=[]): probatio.All(
+            cv.ensure_list, [probatio.Coerce(int)]
+        ),
+        probatio.Required(CONF_SENDER_ID): probatio.All(
+            cv.ensure_list, [probatio.Coerce(int)]
+        ),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 

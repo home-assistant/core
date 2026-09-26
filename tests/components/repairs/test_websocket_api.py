@@ -7,8 +7,8 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock
 
 import orjson
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import FlowType, RepairsFlow, RepairsFlowResult
@@ -122,7 +122,9 @@ class MockFixFlow(RepairsFlow):
         if user_input is not None:
             return self.async_create_entry(data={})
 
-        return self.async_show_form(step_id="custom_step", data_schema=vol.Schema({}))
+        return self.async_show_form(
+            step_id="custom_step", data_schema=probatio.Schema({})
+        )
 
 
 class MockFixFlowAbort(RepairsFlow):

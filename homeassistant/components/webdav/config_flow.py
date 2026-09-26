@@ -8,7 +8,7 @@ from aiowebdav2.exceptions import (
     MethodNotSupportedError,
     UnauthorizedError,
 )
-import voluptuous as vol
+import probatio
 import yarl
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -24,21 +24,21 @@ from .helpers import async_create_client
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): TextSelector(
+        probatio.Required(CONF_URL): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.URL,
             )
         ),
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
             )
         ),
-        vol.Optional(CONF_BACKUP_PATH, default="/"): str,
-        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Optional(CONF_BACKUP_PATH, default="/"): str,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
 )
 

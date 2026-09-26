@@ -149,6 +149,38 @@
         "name": "Pool light"
       }
     },
+    "number": {
+      "cl1": {
+        "name": "Chlorine setpoint"
+      },
+      "heating_temp": {
+        "name": "Temperature setpoint"
+      },
+      "hidro": {
+        "name": "Hydrolysis target production level"
+      },
+      "hidro_cover_reduction": {
+        "name": "Cover reduction (when covered)"
+      },
+      "hidro_shutdown_temperature": {
+        "name": "Hydrolysis shutdown temp. threshold"
+      },
+      "ph1": {
+        "name": "pH max limit"
+      },
+      "ph2": {
+        "name": "pH min limit"
+      },
+      "rx1": {
+        "name": "Redox setpoint"
+      },
+      "smart_temp_high": {
+        "name": "Smart upper temperature"
+      },
+      "smart_temp_low": {
+        "name": "Smart lower temperature"
+      }
+    },
     "sensor": {
       "cell_runtime_part": {
         "name": "Cell runtime since reset"
@@ -282,9 +314,38 @@
       "uv_mode": {
         "name": "UV mode"
       }
+    },
+    "time": {
+      "filtration_start": {
+        "name": "Timer {number} - filtration start"
+      },
+      "filtration_stop": {
+        "name": "Timer {number} - filtration stop"
+      },
+      "relay_aux_start": {
+        "name": "Timer Aux {number} ({subtimer}) - start"
+      },
+      "relay_aux_stop": {
+        "name": "Timer Aux {number} ({subtimer}) - stop"
+      },
+      "relay_light_start": {
+        "name": "Light timer - start"
+      },
+      "relay_light_stop": {
+        "name": "Light timer - stop"
+      }
     }
   },
   "exceptions": {
+    "device_not_found": {
+      "message": "No loaded NeoPool device found for device_id {device_id}"
+    },
+    "device_time_read_failed": {
+      "message": "Failed to read the device time: {error}"
+    },
+    "device_time_write_failed": {
+      "message": "Failed to write the device time: {error}"
+    },
     "filtration_boost_active": {
       "message": "Filtration cannot be switched on or off while boost mode is active. Turn off boost mode first."
     },
@@ -299,6 +360,15 @@
     },
     "modbus_communication_error": {
       "message": "An error occurred while communicating with the NeoPool controller: {error}"
+    },
+    "multiple_entries_no_device": {
+      "message": "Multiple NeoPool devices are configured. Specify the device to target."
+    },
+    "no_coordinator": {
+      "message": "No NeoPool coordinator found for entry_id {entry_id}"
+    },
+    "no_loaded_entry": {
+      "message": "No loaded NeoPool config entry available"
     },
     "relay_in_auto_mode": {
       "message": "This relay is currently in automatic mode. Change the mode to manual first to control it directly."
@@ -332,6 +402,28 @@
         "description": "Changes take effect immediately and reload the integration.",
         "title": "NeoPool settings"
       }
+    }
+  },
+  "services": {
+    "get_device_time": {
+      "description": "Read the current wall-clock time from the device RTC and report its drift from Home Assistant.",
+      "fields": {
+        "device_id": {
+          "description": "The NeoPool device to target. Optional when only one is configured.",
+          "name": "Device"
+        }
+      },
+      "name": "Get device time"
+    },
+    "set_device_time": {
+      "description": "Write the current Home Assistant time to the device RTC.",
+      "fields": {
+        "device_id": {
+          "description": "The NeoPool device to target. Optional when only one is configured.",
+          "name": "Device"
+        }
+      },
+      "name": "Set device time"
     }
   }
 }

@@ -4,7 +4,7 @@ from http import HTTPStatus
 from typing import Any, cast
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
@@ -93,61 +93,61 @@ PERMISSIONS = [ATTR_LOCATION_PERMISSION, ATTR_NOTIFICATIONS_PERMISSION]
 
 ATTR_DEVICES = "devices"
 
-PUSH_ACTION_SCHEMA = vol.Schema(
+PUSH_ACTION_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PUSH_ACTIONS_IDENTIFIER): vol.Upper,
-        vol.Required(CONF_PUSH_ACTIONS_TITLE): cv.string,
-        vol.Optional(
+        probatio.Required(CONF_PUSH_ACTIONS_IDENTIFIER): probatio.Upper,
+        probatio.Required(CONF_PUSH_ACTIONS_TITLE): cv.string,
+        probatio.Optional(
             CONF_PUSH_ACTIONS_ACTIVATION_MODE, default=ATTR_BACKGROUND
-        ): vol.In(ACTIVATION_MODES),
-        vol.Optional(
+        ): probatio.In(ACTIVATION_MODES),
+        probatio.Optional(
             CONF_PUSH_ACTIONS_AUTHENTICATION_REQUIRED, default=False
         ): cv.boolean,
-        vol.Optional(CONF_PUSH_ACTIONS_DESTRUCTIVE, default=False): cv.boolean,
-        vol.Optional(CONF_PUSH_ACTIONS_BEHAVIOR, default=ATTR_DEFAULT_BEHAVIOR): vol.In(
-            BEHAVIORS
-        ),
-        vol.Optional(CONF_PUSH_ACTIONS_TEXT_INPUT_BUTTON_TITLE): cv.string,
-        vol.Optional(CONF_PUSH_ACTIONS_TEXT_INPUT_PLACEHOLDER): cv.string,
+        probatio.Optional(CONF_PUSH_ACTIONS_DESTRUCTIVE, default=False): cv.boolean,
+        probatio.Optional(
+            CONF_PUSH_ACTIONS_BEHAVIOR, default=ATTR_DEFAULT_BEHAVIOR
+        ): probatio.In(BEHAVIORS),
+        probatio.Optional(CONF_PUSH_ACTIONS_TEXT_INPUT_BUTTON_TITLE): cv.string,
+        probatio.Optional(CONF_PUSH_ACTIONS_TEXT_INPUT_PLACEHOLDER): cv.string,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-PUSH_ACTION_LIST_SCHEMA = vol.All(cv.ensure_list, [PUSH_ACTION_SCHEMA])
+PUSH_ACTION_LIST_SCHEMA = probatio.All(cv.ensure_list, [PUSH_ACTION_SCHEMA])
 
-PUSH_CATEGORY_SCHEMA = vol.Schema(
+PUSH_CATEGORY_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PUSH_CATEGORIES_NAME): cv.string,
-        vol.Required(CONF_PUSH_CATEGORIES_IDENTIFIER): vol.Lower,
-        vol.Required(CONF_PUSH_CATEGORIES_ACTIONS): PUSH_ACTION_LIST_SCHEMA,
+        probatio.Required(CONF_PUSH_CATEGORIES_NAME): cv.string,
+        probatio.Required(CONF_PUSH_CATEGORIES_IDENTIFIER): probatio.Lower,
+        probatio.Required(CONF_PUSH_CATEGORIES_ACTIONS): PUSH_ACTION_LIST_SCHEMA,
     }
 )
 
-PUSH_CATEGORY_LIST_SCHEMA = vol.All(cv.ensure_list, [PUSH_CATEGORY_SCHEMA])
+PUSH_CATEGORY_LIST_SCHEMA = probatio.All(cv.ensure_list, [PUSH_CATEGORY_SCHEMA])
 
-ACTION_SCHEMA = vol.Schema(
+ACTION_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ACTION_NAME): cv.string,
-        vol.Optional(CONF_ACTION_BACKGROUND_COLOR): cv.string,
-        vol.Optional(CONF_ACTION_LABEL): {
-            vol.Optional(CONF_ACTION_LABEL_TEXT): cv.string,
-            vol.Optional(CONF_ACTION_LABEL_COLOR): cv.string,
+        probatio.Required(CONF_ACTION_NAME): cv.string,
+        probatio.Optional(CONF_ACTION_BACKGROUND_COLOR): cv.string,
+        probatio.Optional(CONF_ACTION_LABEL): {
+            probatio.Optional(CONF_ACTION_LABEL_TEXT): cv.string,
+            probatio.Optional(CONF_ACTION_LABEL_COLOR): cv.string,
         },
-        vol.Optional(CONF_ACTION_ICON): {
-            vol.Optional(CONF_ACTION_ICON_ICON): cv.string,
-            vol.Optional(CONF_ACTION_ICON_COLOR): cv.string,
+        probatio.Optional(CONF_ACTION_ICON): {
+            probatio.Optional(CONF_ACTION_ICON_ICON): cv.string,
+            probatio.Optional(CONF_ACTION_ICON_COLOR): cv.string,
         },
-        vol.Optional(CONF_ACTION_SHOW_IN_CARPLAY): cv.boolean,
-        vol.Optional(CONF_ACTION_SHOW_IN_WATCH): cv.boolean,
-        vol.Optional(CONF_ACTION_USE_CUSTOM_COLORS): cv.boolean,
+        probatio.Optional(CONF_ACTION_SHOW_IN_CARPLAY): cv.boolean,
+        probatio.Optional(CONF_ACTION_SHOW_IN_WATCH): cv.boolean,
+        probatio.Optional(CONF_ACTION_USE_CUSTOM_COLORS): cv.boolean,
     },
 )
 
-ACTION_LIST_SCHEMA = vol.All(cv.ensure_list, [ACTION_SCHEMA])
+ACTION_LIST_SCHEMA = probatio.All(cv.ensure_list, [ACTION_SCHEMA])
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             cv.deprecated(CONF_PUSH),
             {
                 CONF_PUSH: {CONF_PUSH_CATEGORIES: PUSH_CATEGORY_LIST_SCHEMA},
@@ -155,57 +155,59 @@ CONFIG_SCHEMA = vol.Schema(
             },
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-IDENTIFY_DEVICE_SCHEMA = vol.Schema(
+IDENTIFY_DEVICE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_NAME): cv.string,
-        vol.Required(ATTR_DEVICE_LOCALIZED_MODEL): cv.string,
-        vol.Required(ATTR_DEVICE_MODEL): cv.string,
-        vol.Required(ATTR_DEVICE_PERMANENT_ID): cv.string,
-        vol.Required(ATTR_DEVICE_SYSTEM_VERSION): cv.string,
-        vol.Required(ATTR_DEVICE_TYPE): cv.string,
-        vol.Required(ATTR_DEVICE_SYSTEM_NAME): cv.string,
+        probatio.Required(ATTR_DEVICE_NAME): cv.string,
+        probatio.Required(ATTR_DEVICE_LOCALIZED_MODEL): cv.string,
+        probatio.Required(ATTR_DEVICE_MODEL): cv.string,
+        probatio.Required(ATTR_DEVICE_PERMANENT_ID): cv.string,
+        probatio.Required(ATTR_DEVICE_SYSTEM_VERSION): cv.string,
+        probatio.Required(ATTR_DEVICE_TYPE): cv.string,
+        probatio.Required(ATTR_DEVICE_SYSTEM_NAME): cv.string,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-IDENTIFY_DEVICE_SCHEMA_CONTAINER = vol.All(dict, IDENTIFY_DEVICE_SCHEMA)
+IDENTIFY_DEVICE_SCHEMA_CONTAINER = probatio.All(dict, IDENTIFY_DEVICE_SCHEMA)
 
-IDENTIFY_APP_SCHEMA = vol.Schema(
+IDENTIFY_APP_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_APP_BUNDLE_IDENTIFIER): cv.string,
-        vol.Required(ATTR_APP_BUILD_NUMBER): cv.positive_int,
-        vol.Optional(ATTR_APP_VERSION_NUMBER): cv.string,
+        probatio.Required(ATTR_APP_BUNDLE_IDENTIFIER): cv.string,
+        probatio.Required(ATTR_APP_BUILD_NUMBER): cv.positive_int,
+        probatio.Optional(ATTR_APP_VERSION_NUMBER): cv.string,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-IDENTIFY_APP_SCHEMA_CONTAINER = vol.All(dict, IDENTIFY_APP_SCHEMA)
+IDENTIFY_APP_SCHEMA_CONTAINER = probatio.All(dict, IDENTIFY_APP_SCHEMA)
 
-IDENTIFY_BATTERY_SCHEMA = vol.Schema(
+IDENTIFY_BATTERY_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_BATTERY_LEVEL): cv.positive_int,
-        vol.Required(ATTR_BATTERY_STATE): vol.In(BATTERY_STATES),
+        probatio.Required(ATTR_BATTERY_LEVEL): cv.positive_int,
+        probatio.Required(ATTR_BATTERY_STATE): probatio.In(BATTERY_STATES),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-IDENTIFY_BATTERY_SCHEMA_CONTAINER = vol.All(dict, IDENTIFY_BATTERY_SCHEMA)
+IDENTIFY_BATTERY_SCHEMA_CONTAINER = probatio.All(dict, IDENTIFY_BATTERY_SCHEMA)
 
-IDENTIFY_SCHEMA = vol.Schema(
+IDENTIFY_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE): IDENTIFY_DEVICE_SCHEMA_CONTAINER,
-        vol.Required(ATTR_BATTERY): IDENTIFY_BATTERY_SCHEMA_CONTAINER,
-        vol.Required(ATTR_PUSH_TOKEN): cv.string,
-        vol.Required(ATTR_APP): IDENTIFY_APP_SCHEMA_CONTAINER,
-        vol.Required(ATTR_PERMISSIONS): vol.All(cv.ensure_list, [vol.In(PERMISSIONS)]),
-        vol.Required(ATTR_PUSH_ID): cv.string,
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Optional(ATTR_PUSH_SOUNDS): list,
+        probatio.Required(ATTR_DEVICE): IDENTIFY_DEVICE_SCHEMA_CONTAINER,
+        probatio.Required(ATTR_BATTERY): IDENTIFY_BATTERY_SCHEMA_CONTAINER,
+        probatio.Required(ATTR_PUSH_TOKEN): cv.string,
+        probatio.Required(ATTR_APP): IDENTIFY_APP_SCHEMA_CONTAINER,
+        probatio.Required(ATTR_PERMISSIONS): probatio.All(
+            cv.ensure_list, [probatio.In(PERMISSIONS)]
+        ),
+        probatio.Required(ATTR_PUSH_ID): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Optional(ATTR_PUSH_SOUNDS): list,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 CONFIGURATION_FILE = ".ios.conf"

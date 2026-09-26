@@ -7,8 +7,8 @@ from typing import Any, cast, override
 
 from google import genai
 from google.genai.errors import APIError, ClientError
+import probatio
 from requests.exceptions import Timeout
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -74,9 +74,9 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_API_DATA_SCHEMA = vol.Schema(
+STEP_API_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_API_KEY): str,
     }
 )
 
@@ -288,7 +288,7 @@ class LLMSubentryFlowHandler(ConfigSubentryFlow):
             self.hass, self._is_new, self._subentry_type, options, self._genai_client
         )
         return self.async_show_form(
-            step_id="set_options", data_schema=vol.Schema(schema), errors=errors
+            step_id="set_options", data_schema=probatio.Schema(schema), errors=errors
         )
 
     async_step_reconfigure = async_step_set_options
@@ -327,10 +327,10 @@ async def google_generative_ai_config_option_schema(
             default_name = DEFAULT_STT_NAME
         else:
             default_name = DEFAULT_CONVERSATION_NAME
-        schema: dict[vol.Required | vol.Optional, Any] = {
+        schema: dict[probatio.Required | probatio.Optional, Any] = {
             # Name field is no longer allowed in config flow schemas
             # pylint: disable-next=home-assistant-config-flow-name-field
-            vol.Required(CONF_NAME, default=default_name): str,
+            probatio.Required(CONF_NAME, default=default_name): str,
         }
     else:
         schema = {}
@@ -338,7 +338,7 @@ async def google_generative_ai_config_option_schema(
     if subentry_type == "conversation":
         schema.update(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_PROMPT,
                     description={
                         "suggested_value": options.get(
@@ -346,7 +346,7 @@ async def google_generative_ai_config_option_schema(
                         )
                     },
                 ): TemplateSelector(),
-                vol.Optional(
+                probatio.Optional(
                     CONF_LLM_HASS_API,
                     description={"suggested_value": suggested_llm_apis},
                 ): SelectSelector(
@@ -357,7 +357,7 @@ async def google_generative_ai_config_option_schema(
     elif subentry_type == "stt":
         schema.update(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_PROMPT,
                     description={
                         "suggested_value": options.get(CONF_PROMPT, DEFAULT_STT_PROMPT)
@@ -368,7 +368,7 @@ async def google_generative_ai_config_option_schema(
 
     schema.update(
         {
-            vol.Required(
+            probatio.Required(
                 CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
             ): bool,
         }
@@ -429,14 +429,14 @@ async def google_generative_ai_config_option_schema(
 
     schema.update(
         {
-            vol.Optional(
+            probatio.Optional(
                 CONF_CHAT_MODEL,
                 description={"suggested_value": options.get(CONF_CHAT_MODEL)},
                 default=default_model,
             ): SelectSelector(
                 SelectSelectorConfig(mode=SelectSelectorMode.DROPDOWN, options=models)
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_TEMPERATURE,
                 description={"suggested_value": options.get(CONF_TEMPERATURE)},
                 default=RECOMMENDED_TEMPERATURE,
@@ -447,34 +447,34 @@ async def google_generative_ai_config_option_schema(
     if subentry_type != "tts":
         schema.update(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_TOP_P,
                     description={"suggested_value": options.get(CONF_TOP_P)},
                     default=RECOMMENDED_TOP_P,
                 ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-                vol.Optional(
+                probatio.Optional(
                     CONF_TOP_K,
                     description={"suggested_value": options.get(CONF_TOP_K)},
                     default=RECOMMENDED_TOP_K,
                 ): int,
-                vol.Optional(
+                probatio.Optional(
                     CONF_MAX_TOKENS,
                     description={"suggested_value": options.get(CONF_MAX_TOKENS)},
                     default=RECOMMENDED_MAX_TOKENS,
                 ): int,
-                vol.Optional(
+                probatio.Optional(
                     CONF_THINKING_BUDGET,
                     description={"suggested_value": options.get(CONF_THINKING_BUDGET)},
                     default=RECOMMENDED_THINKING_BUDGET,
-                ): vol.All(
+                ): probatio.All(
                     NumberSelector(
                         NumberSelectorConfig(
                             min=-1, max=24576, step=1, mode=NumberSelectorMode.BOX
                         )
                     ),
-                    vol.Coerce(int),
+                    probatio.Coerce(int),
                 ),
-                vol.Optional(
+                probatio.Optional(
                     CONF_THINKING_LEVEL,
                     description={"suggested_value": options.get(CONF_THINKING_LEVEL)},
                     default=RECOMMENDED_THINKING_LEVEL,
@@ -491,28 +491,28 @@ async def google_generative_ai_config_option_schema(
                         ],
                     )
                 ),
-                vol.Optional(
+                probatio.Optional(
                     CONF_HARASSMENT_BLOCK_THRESHOLD,
                     description={
                         "suggested_value": options.get(CONF_HARASSMENT_BLOCK_THRESHOLD)
                     },
                     default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 ): harm_block_thresholds_selector,
-                vol.Optional(
+                probatio.Optional(
                     CONF_HATE_BLOCK_THRESHOLD,
                     description={
                         "suggested_value": options.get(CONF_HATE_BLOCK_THRESHOLD)
                     },
                     default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 ): harm_block_thresholds_selector,
-                vol.Optional(
+                probatio.Optional(
                     CONF_SEXUAL_BLOCK_THRESHOLD,
                     description={
                         "suggested_value": options.get(CONF_SEXUAL_BLOCK_THRESHOLD)
                     },
                     default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 ): harm_block_thresholds_selector,
-                vol.Optional(
+                probatio.Optional(
                     CONF_DANGEROUS_BLOCK_THRESHOLD,
                     description={
                         "suggested_value": options.get(CONF_DANGEROUS_BLOCK_THRESHOLD)
@@ -524,7 +524,7 @@ async def google_generative_ai_config_option_schema(
     if subentry_type == "conversation":
         schema.update(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_USE_GOOGLE_SEARCH_TOOL,
                     description={
                         "suggested_value": options.get(CONF_USE_GOOGLE_SEARCH_TOOL),

@@ -3,6 +3,7 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pyipp import (
     IPP,
     IPPConnectionError,
@@ -12,7 +13,6 @@ from pyipp import (
     IPPResponseError,
     IPPVersionNotSupportedError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -78,7 +78,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("IPP Connection/Response Error", exc_info=True)
             return self._show_setup_form({"base": "cannot_connect"})
         except IPPParseError:
-            _LOGGER.debug("IPP Parse Error", exc_info=True)
+            _LOGGER.warning("IPP Parse Error", exc_info=True)
             return self.async_abort(reason="parse_error")
         except IPPVersionNotSupportedError:
             return self.async_abort(reason="ipp_version_error")
@@ -147,7 +147,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("IPP Connection/Response Error", exc_info=True)
             return self.async_abort(reason="cannot_connect")
         except IPPParseError:
-            _LOGGER.debug("IPP Parse Error", exc_info=True)
+            _LOGGER.warning("IPP Parse Error", exc_info=True)
             return self.async_abort(reason="parse_error")
         except IPPVersionNotSupportedError:
             return self.async_abort(reason="ipp_version_error")
@@ -209,13 +209,13 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_PORT, default=631): int,
-                    vol.Required(CONF_BASE_PATH, default="/ipp/print"): str,
-                    vol.Required(CONF_SSL, default=False): bool,
-                    vol.Required(CONF_VERIFY_SSL, default=False): bool,
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Required(CONF_PORT, default=631): int,
+                    probatio.Required(CONF_BASE_PATH, default="/ipp/print"): str,
+                    probatio.Required(CONF_SSL, default=False): bool,
+                    probatio.Required(CONF_VERIFY_SSL, default=False): bool,
                 }
             ),
             errors=errors or {},

@@ -5,8 +5,8 @@ from http import HTTPStatus
 import logging
 from typing import TYPE_CHECKING, Any, override
 
+import probatio
 from pysqueezebox import Server, async_discover
-import voluptuous as vol
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import (
@@ -44,21 +44,21 @@ _LOGGER = logging.getLogger(__name__)
 TIMEOUT = 5
 
 
-FULL_EDIT_SCHEMA = vol.Schema(
+FULL_EDIT_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD): str,
-        vol.Optional(CONF_HTTPS, default=False): bool,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        probatio.Optional(CONF_USERNAME): str,
+        probatio.Optional(CONF_PASSWORD): str,
+        probatio.Optional(CONF_HTTPS, default=False): bool,
     }
 )
 
-SHORT_EDIT_SCHEMA = vol.Schema(
+SHORT_EDIT_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD): str,
-        vol.Optional(CONF_HTTPS, default=False): bool,
+        probatio.Optional(CONF_USERNAME): str,
+        probatio.Optional(CONF_PASSWORD): str,
+        probatio.Optional(CONF_HTTPS, default=False): bool,
     }
 )
 
@@ -173,7 +173,9 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id="choose_server",
-            data_schema=vol.Schema({vol.Required(CONF_SERVER_LIST): vol.In(_options)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_SERVER_LIST): probatio.In(_options)}
+            ),
         )
 
     @override
@@ -349,19 +351,19 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user()
 
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_BROWSE_LIMIT): vol.All(
+        probatio.Required(CONF_BROWSE_LIMIT): probatio.All(
             NumberSelector(
                 NumberSelectorConfig(min=1, max=65534, mode=NumberSelectorMode.BOX)
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
-        vol.Required(CONF_VOLUME_STEP): vol.All(
+        probatio.Required(CONF_VOLUME_STEP): probatio.All(
             NumberSelector(
                 NumberSelectorConfig(min=1, max=20, mode=NumberSelectorMode.SLIDER)
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
     }
 )

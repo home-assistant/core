@@ -3,7 +3,7 @@
 import logging
 from typing import Any, TypedDict, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.script import CONF_MODE
 from homeassistant.const import CONF_ACTION, CONF_DESCRIPTION, CONF_TYPE, SERVICE_RELOAD
@@ -37,36 +37,38 @@ CONF_ASYNC_ACTION = "async_action"
 
 DEFAULT_CONF_ASYNC_ACTION = False
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: {
             cv.string: {
-                vol.Optional(CONF_DESCRIPTION): cv.string,
-                vol.Optional(CONF_PLATFORMS): vol.All([cv.string], vol.Coerce(set)),
-                vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
-                vol.Optional(
+                probatio.Optional(CONF_DESCRIPTION): cv.string,
+                probatio.Optional(CONF_PLATFORMS): probatio.All(
+                    [cv.string], probatio.Coerce(set)
+                ),
+                probatio.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
+                probatio.Optional(
                     CONF_ASYNC_ACTION, default=DEFAULT_CONF_ASYNC_ACTION
                 ): cv.boolean,
-                vol.Optional(CONF_MODE, default=script.DEFAULT_SCRIPT_MODE): vol.In(
-                    script.SCRIPT_MODE_CHOICES
-                ),
-                vol.Optional(CONF_CARD): {
-                    vol.Optional(CONF_TYPE, default="simple"): cv.string,
-                    vol.Required(CONF_TITLE): cv.template,
-                    vol.Required(CONF_CONTENT): cv.template,
+                probatio.Optional(
+                    CONF_MODE, default=script.DEFAULT_SCRIPT_MODE
+                ): probatio.In(script.SCRIPT_MODE_CHOICES),
+                probatio.Optional(CONF_CARD): {
+                    probatio.Optional(CONF_TYPE, default="simple"): cv.string,
+                    probatio.Required(CONF_TITLE): cv.template,
+                    probatio.Required(CONF_CONTENT): cv.template,
                 },
-                vol.Optional(CONF_SPEECH): {
-                    vol.Optional(CONF_TYPE, default="plain"): cv.string,
-                    vol.Required(CONF_TEXT): cv.template,
+                probatio.Optional(CONF_SPEECH): {
+                    probatio.Optional(CONF_TYPE, default="plain"): cv.string,
+                    probatio.Required(CONF_TEXT): cv.template,
                 },
-                vol.Optional(CONF_REPROMPT): {
-                    vol.Optional(CONF_TYPE, default="plain"): cv.string,
-                    vol.Required(CONF_TEXT): cv.template,
+                probatio.Optional(CONF_REPROMPT): {
+                    probatio.Optional(CONF_TYPE, default="plain"): cv.string,
+                    probatio.Required(CONF_TEXT): cv.template,
                 },
             }
         }
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -99,7 +101,7 @@ async def async_load_intents(
         if CONF_ACTION in conf:
             try:
                 actions = await async_validate_actions_config(hass, conf[CONF_ACTION])
-            except (vol.Invalid, HomeAssistantError) as exc:
+            except (probatio.Invalid, HomeAssistantError) as exc:
                 _LOGGER.error(
                     "Failed to validate actions for intent %s: %s", intent_type, exc
                 )
@@ -156,11 +158,11 @@ class ScriptIntentHandler(intent.IntentHandler):
     """Respond to an intent with a script."""
 
     slot_schema = {
-        vol.Any("name", "area", "floor"): cv.string,
-        vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional("preferred_area_id"): cv.string,
-        vol.Optional("preferred_floor_id"): cv.string,
+        probatio.Any("name", "area", "floor"): cv.string,
+        probatio.Optional("domain"): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional("device_class"): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional("preferred_area_id"): cv.string,
+        probatio.Optional("preferred_floor_id"): cv.string,
     }
 
     def __init__(self, intent_type: str, config: ConfigType) -> None:

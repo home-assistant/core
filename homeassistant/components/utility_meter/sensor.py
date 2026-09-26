@@ -9,7 +9,7 @@ import math
 from typing import Any, Self, override
 
 from cronsim import CronSim
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
@@ -119,7 +119,7 @@ def validate_is_number(value):
             return value
     except ValueError, TypeError:
         pass
-    raise vol.Invalid("Value is not a number")
+    raise probatio.Invalid("Value is not a number")
 
 
 async def async_setup_entry(
@@ -201,7 +201,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_CALIBRATE_METER,
-        {vol.Required(ATTR_VALUE): validate_is_number},
+        {probatio.Required(ATTR_VALUE): validate_is_number},
         "async_calibrate",
     )
 
@@ -283,7 +283,7 @@ async def async_setup_platform(
 
     platform.async_register_entity_service(
         SERVICE_CALIBRATE_METER,
-        {vol.Required(ATTR_VALUE): validate_is_number},
+        {probatio.Required(ATTR_VALUE): validate_is_number},
         "async_calibrate",
     )
 

@@ -15,9 +15,9 @@ from aiohomeconnect.model import (
 )
 from aiohomeconnect.model.error import HomeConnectError, NoProgramActiveError
 from aiohomeconnect.model.program import ProgramDefinitionOption
+from probatio.error import MultipleInvalid
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from voluptuous.error import MultipleInvalid
 
 from homeassistant.components import home_connect
 from homeassistant.components.home_connect.const import (

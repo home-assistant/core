@@ -3,8 +3,8 @@
 from dataclasses import fields
 from typing import Any, get_type_hints, override
 
+import probatio
 import pywemo
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.core import HomeAssistant, callback
@@ -57,18 +57,18 @@ class WemoOptionsFlow(OptionsFlow):
         )
 
 
-def _schema_for_options(options: Options) -> vol.Schema:
-    """Return the Voluptuous schema for the Options instance.
+def _schema_for_options(options: Options) -> probatio.Schema:
+    """Return the Probatio schema for the Options instance.
 
     All values are optional. The default value is set to the current value and
     the type hint is set to the value of the field type annotation.
     """
     type_hints = get_type_hints(type(options))
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(field.name, default=getattr(options, field.name)): type_hints[
-                field.name
-            ]
+            probatio.Optional(
+                field.name, default=getattr(options, field.name)
+            ): type_hints[field.name]
             for field in fields(options)
         }
     )

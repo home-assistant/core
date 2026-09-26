@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from wled import WLED, Device, WLEDConnectionError, WLEDUnsupportedVersionError
 import yarl
 
@@ -85,7 +85,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
                     title=device.info.name,
                     data={CONF_HOST: host},
                 )
-        data_schema = vol.Schema({vol.Required(CONF_HOST): str})
+        data_schema = probatio.Schema({probatio.Required(CONF_HOST): str})
         if self.source == SOURCE_RECONFIGURE:
             entry = self._get_reconfigure_entry()
             data_schema = self.add_suggested_values_to_schema(
@@ -175,9 +175,9 @@ class WLEDOptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_KEEP_MAIN_LIGHT,
                         default=self.config_entry.options.get(
                             CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT

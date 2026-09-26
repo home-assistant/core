@@ -732,6 +732,42 @@ async def test_zeroconf_already_configured_no_reload_same_host(
     assert len(mock_setup_entry.mock_calls) == 0
 
 
+async def test_zeroconf_already_configured_keeps_valid_host(
+    hass: HomeAssistant,
+) -> None:
+    """Test zeroconf keeps the stored host when the bridge still announces it."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="already-registered-bond-id",
+        data={CONF_HOST: "127.0.0.3", CONF_ACCESS_TOKEN: "correct-token"},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        _patch_async_setup_entry() as mock_setup_entry,
+        patch_bond_token(return_value={"token": "correct-token"}),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=ZeroconfServiceInfo(
+                ip_address=ip_address("127.0.0.2"),
+                ip_addresses=[ip_address("127.0.0.2"), ip_address("127.0.0.3")],
+                hostname="mock_hostname",
+                name="already-registered-bond-id.some-other-tail-info",
+                port=None,
+                properties={},
+                type="mock_type",
+            ),
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "127.0.0.3"
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
 async def test_zeroconf_form_unexpected_error(hass: HomeAssistant) -> None:
     """Test we handle unexpected error gracefully."""
     await _help_test_form_unexpected_error(

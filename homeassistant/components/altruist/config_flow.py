@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from altruistclient import AltruistClient, AltruistDeviceModel, AltruistError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -50,7 +50,7 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         data_schema = self.add_suggested_values_to_schema(
-            vol.Schema({vol.Required(CONF_HOST): str}),
+            probatio.Schema({probatio.Required(CONF_HOST): str}),
             {CONF_HOST: ip_address},
         )
 

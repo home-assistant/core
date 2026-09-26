@@ -2,8 +2,8 @@
 
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import condition
@@ -77,7 +77,7 @@ async def test_conditions(
 
 async def test_is_phase_rejects_unknown_phase(hass: HomeAssistant) -> None:
     """Test that the is_phase condition rejects an unknown phase."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await condition.async_validate_condition_config(
             hass, {"condition": "moon.is_phase", "options": {"phase": "not_a_phase"}}
         )

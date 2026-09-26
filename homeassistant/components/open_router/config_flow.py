@@ -3,13 +3,13 @@
 import logging
 from typing import Any, override
 
+import probatio
 from python_open_router import (
     Model,
     OpenRouterClient,
     OpenRouterError,
     SupportedParameter,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_USER,
@@ -85,9 +85,9 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): str,
+                    probatio.Required(CONF_API_KEY): str,
                 }
             ),
             errors=errors,
@@ -187,16 +187,16 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_MODEL, default=self.options.get(CONF_MODEL)
                     ): SelectSelector(
                         SelectSelectorConfig(
                             options=options, mode=SelectSelectorMode.DROPDOWN, sort=True
                         ),
                     ),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_PROMPT,
                         description={
                             "suggested_value": self.options.get(
@@ -205,7 +205,7 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
                             )
                         },
                     ): TemplateSelector(),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_LLM_HASS_API,
                         default=self.options.get(
                             CONF_LLM_HASS_API,
@@ -214,7 +214,7 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
                     ): SelectSelector(
                         SelectSelectorConfig(options=hass_apis, multiple=True)
                     ),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_WEB_SEARCH,
                         default=self.options.get(
                             CONF_WEB_SEARCH,
@@ -302,9 +302,9 @@ class AITaskDataFlowHandler(OpenRouterSubentryFlowHandler):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_MODEL, default=self.options.get(CONF_MODEL)
                     ): SelectSelector(
                         SelectSelectorConfig(

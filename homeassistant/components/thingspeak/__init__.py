@@ -2,9 +2,9 @@
 
 import logging
 
+import probatio
 from requests.exceptions import RequestException
 import thingspeak
-import voluptuous as vol
 
 from homeassistant.const import (
     CONF_API_KEY,
@@ -23,17 +23,17 @@ DOMAIN = "thingspeak"
 
 TIMEOUT = 5
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_API_KEY): cv.string,
-                vol.Required(CONF_ID): int,
-                vol.Required(CONF_WHITELIST): cv.string,
+                probatio.Required(CONF_API_KEY): cv.string,
+                probatio.Required(CONF_ID): int,
+                probatio.Required(CONF_WHITELIST): cv.string,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

@@ -37,11 +37,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Collection Image image entities."""
     media = entry.data[CONF_MEDIA]
+    if isinstance(media, dict):
+        content_ids = [media["media_content_id"]]
+    else:
+        content_ids = [item["media_content_id"] for item in media]
     async_add_entities(
         [
             CollectionImageImageEntity(
                 name=entry.title,
-                media_content_id=media["media_content_id"],
+                media_content_ids=content_ids,
                 unique_id=entry.entry_id,
                 hass=hass,
             )
@@ -58,7 +62,7 @@ class CollectionImageImageEntity(ImageEntity):
     def __init__(
         self,
         name: str,
-        media_content_id: str,
+        media_content_ids: list[str],
         unique_id: str,
         hass: HomeAssistant,
     ) -> None:
@@ -67,7 +71,7 @@ class CollectionImageImageEntity(ImageEntity):
         self.path = None
         self._attr_unique_id = unique_id
         self._attr_name = name
-        self.media_content_id = media_content_id
+        self.media_content_ids = media_content_ids
 
     def set_unavailable(self) -> None:
         """Set the entity to unavailable state."""
@@ -76,35 +80,47 @@ class CollectionImageImageEntity(ImageEntity):
         self._attr_image_url = UNDEFINED
         self._cached_image = None
         self.async_write_ha_state()
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="no_images",
+            translation_placeholders={"entity": self.entity_id},
+        )
 
     async def get_valid_images(self) -> list[BrowseMedia]:
         """Given the configured media directory for the entity, get a list of all child images."""
-        try:
-            media = await async_browse_media(self.hass, self.media_content_id)
-        except BrowseError as err:
-            _LOGGER.warning("%s: %s", self.entity_id, str(err))
-            return []
 
-        images = [
-            item
-            for item in (media.children or [])
-            if item.media_class == MediaClass.IMAGE
-        ]
+        images: list[BrowseMedia] = []
+
+        for media_content_id in self.media_content_ids:
+            try:
+                media = await async_browse_media(self.hass, media_content_id)
+            except BrowseError as err:
+                _LOGGER.warning("%s: %s", self.entity_id, str(err))
+                continue
+
+            directory_images = [
+                item
+                for item in (media.children or [])
+                if item.media_class == MediaClass.IMAGE
+            ]
+            if directory_images:
+                images.extend(directory_images)
+            else:
+                _LOGGER.warning(
+                    "%s: No valid images in %s",
+                    self.entity_id,
+                    media_content_id,
+                )
+
         if not images:
-            _LOGGER.warning(
-                "%s: No valid images in %s",
-                self.entity_id,
-                self.media_content_id,
-            )
+            self.set_unavailable()
+
         return images
 
     async def get_random_image(self) -> None:
         """Update the image entity with a random image from the source media."""
 
         filtered = await self.get_valid_images()
-        if not filtered:
-            self.set_unavailable()
-            return
 
         # Don't allow random shuffle to return the same image we are currently viewing.
         if self._current_image_id:
@@ -140,9 +156,6 @@ class CollectionImageImageEntity(ImageEntity):
         """Get the first or last image."""
 
         filtered = await self.get_valid_images()
-        if not filtered:
-            self.set_unavailable()
-            return
 
         child = filtered[position]
         self._attr_available = True
@@ -154,9 +167,6 @@ class CollectionImageImageEntity(ImageEntity):
         """Get the next or previous image."""
 
         filtered = await self.get_valid_images()
-        if not filtered:
-            self.set_unavailable()
-            return
 
         current_index = next(
             (
@@ -186,13 +196,19 @@ class CollectionImageImageEntity(ImageEntity):
         try:
             resolved = await async_resolve_media(self.hass, image_id, self.entity_id)
         except Unresolvable as err:
-            _LOGGER.warning("%s: %s", self.entity_id, str(err))
             self._attr_image_last_updated = None
             self.path = None
             self._attr_image_url = UNDEFINED
             self._attr_content_type = DEFAULT_CONTENT_TYPE
             self.async_write_ha_state()
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unresolvable",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "id": image_id,
+                },
+            ) from err
         finally:
             self._current_image_id = image_id
 
@@ -212,7 +228,12 @@ class CollectionImageImageEntity(ImageEntity):
         """Initialize the first image after entity has been created."""
 
         async def get_random_image_on_start(_hass: HomeAssistant) -> None:
-            await self.get_random_image()
+            try:
+                await self.get_random_image()
+            except HomeAssistantError:
+                _LOGGER.exception(
+                    "Unable to get an initial image",
+                )
 
         self.async_on_remove(async_at_started(self.hass, get_random_image_on_start))
 

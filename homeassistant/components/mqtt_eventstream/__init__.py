@@ -3,7 +3,7 @@
 import json
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import valid_publish_topic, valid_subscribe_topic
@@ -31,20 +31,20 @@ CONF_SUBSCRIBE_TOPIC = "subscribe_topic"
 CONF_PUBLISH_EVENTSTREAM_RECEIVED = "publish_eventstream_received"
 CONF_IGNORE_EVENT = "ignore_event"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_PUBLISH_TOPIC): valid_publish_topic,
-                vol.Optional(CONF_SUBSCRIBE_TOPIC): valid_subscribe_topic,
-                vol.Optional(
+                probatio.Optional(CONF_PUBLISH_TOPIC): valid_publish_topic,
+                probatio.Optional(CONF_SUBSCRIBE_TOPIC): valid_subscribe_topic,
+                probatio.Optional(
                     CONF_PUBLISH_EVENTSTREAM_RECEIVED, default=False
                 ): cv.boolean,
-                vol.Optional(CONF_IGNORE_EVENT, default=[]): cv.ensure_list,
+                probatio.Optional(CONF_IGNORE_EVENT, default=[]): cv.ensure_list,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 BLOCKED_EVENTS = [

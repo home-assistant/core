@@ -2,8 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.value import SetConfigParameterResult
 
@@ -331,7 +331,7 @@ async def test_set_config_parameter(
     client.async_send_command_no_wait.reset_mock()
 
     # Test that we can't include a bitmask value if parameter is a string
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_CONFIG_PARAMETER,
@@ -380,7 +380,7 @@ async def test_set_config_parameter(
         )
 
     # Test that we can't include bitmask and value size and value format
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_CONFIG_PARAMETER,
@@ -396,7 +396,7 @@ async def test_set_config_parameter(
         )
 
     # Test that value size must be 1, 2, or 4 (not 3)
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_CONFIG_PARAMETER,
@@ -478,7 +478,7 @@ async def test_set_config_parameter(
     client.async_send_command.reset_mock()
 
     # Test setting config parameter with no valid nodes raises Exception
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_CONFIG_PARAMETER,
@@ -963,7 +963,7 @@ async def test_refresh_value(
     client.async_send_command.reset_mock()
 
     # Test polling against an invalid entity raises MultipleInvalid
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_REFRESH_VALUE,
@@ -1140,7 +1140,7 @@ async def test_set_value(
     client.async_send_command.reset_mock()
 
     # Test missing device and entities keys
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_VALUE,
@@ -1467,7 +1467,7 @@ async def test_multicast_set_value(
     client.async_send_command_no_wait.reset_mock()
 
     # Test no device, entity, or broadcast flag raises error
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_MULTICAST_SET_VALUE,
@@ -1532,7 +1532,7 @@ async def test_multicast_set_value(
     diff_network_node.client.driver.controller.home_id.return_value = "diff_home_id"
 
     with (
-        pytest.raises(vol.MultipleInvalid),
+        pytest.raises(probatio.MultipleInvalid),
         patch(
             "homeassistant.components.zwave_js.helpers.async_get_node_from_device_id",
             side_effect=(climate_danfoss_lc_13, diff_network_node),
@@ -1558,7 +1558,7 @@ async def test_multicast_set_value(
     # without devices or entities
     new_entry = MockConfigEntry(domain=DOMAIN)
     new_entry.add_to_hass(hass)
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_MULTICAST_SET_VALUE,
@@ -1790,7 +1790,7 @@ async def test_ping(
     client.async_send_command.reset_mock()
 
     # Test no device or entity raises error
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PING,

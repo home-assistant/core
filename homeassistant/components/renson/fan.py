@@ -4,6 +4,7 @@ import logging
 import math
 from typing import Any, override
 
+import probatio
 from renson_endura_delta.field_enum import (
     BREEZE_LEVEL_FIELD,
     BREEZE_TEMPERATURE_FIELD,
@@ -11,7 +12,6 @@ from renson_endura_delta.field_enum import (
     DataType,
 )
 from renson_endura_delta.renson import Level, RensonVentilation
-import voluptuous as vol
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback
@@ -48,30 +48,32 @@ SPEED_MAPPING = {
 }
 
 SET_TIMER_LEVEL_SCHEMA: VolDictType = {
-    vol.Required("timer_level"): vol.In(
+    probatio.Required("timer_level"): probatio.In(
         ["level1", "level2", "level3", "level4", "holiday", "breeze"]
     ),
-    vol.Required("minutes"): cv.positive_int,
+    probatio.Required("minutes"): cv.positive_int,
 }
 
 SET_BREEZE_SCHEMA: VolDictType = {
-    vol.Required("breeze_level"): vol.In(["level1", "level2", "level3", "level4"]),
-    vol.Required("temperature"): cv.positive_int,
-    vol.Required("activate"): bool,
+    probatio.Required("breeze_level"): probatio.In(
+        ["level1", "level2", "level3", "level4"]
+    ),
+    probatio.Required("temperature"): cv.positive_int,
+    probatio.Required("activate"): bool,
 }
 
 SET_POLLUTION_SETTINGS_SCHEMA: VolDictType = {
-    vol.Required("day_pollution_level"): vol.In(
+    probatio.Required("day_pollution_level"): probatio.In(
         ["level1", "level2", "level3", "level4"]
     ),
-    vol.Required("night_pollution_level"): vol.In(
+    probatio.Required("night_pollution_level"): probatio.In(
         ["level1", "level2", "level3", "level4"]
     ),
-    vol.Optional("humidity_control", default=True): bool,
-    vol.Optional("airquality_control", default=True): bool,
-    vol.Optional("co2_control", default=True): bool,
-    vol.Optional("co2_threshold", default=600): cv.positive_int,
-    vol.Optional("co2_hysteresis", default=100): cv.positive_int,
+    probatio.Optional("humidity_control", default=True): bool,
+    probatio.Optional("airquality_control", default=True): bool,
+    probatio.Optional("co2_control", default=True): bool,
+    probatio.Optional("co2_threshold", default=600): cv.positive_int,
+    probatio.Optional("co2_hysteresis", default=100): cv.positive_int,
 }
 
 

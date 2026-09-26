@@ -3,10 +3,10 @@
 from collections.abc import Mapping
 from typing import Any, override
 
+import probatio
 from pysmlight import Api2
 from pysmlight.const import Devices
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -31,16 +31,16 @@ from .bluetooth import get_ble_scanner_mode
 from .const import CONF_BLE_SCANNER_MODE, DOMAIN, BLEScannerMode
 from .coordinator import SmConfigEntry
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 
-STEP_AUTH_DATA_SCHEMA = vol.Schema(
+STEP_AUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -51,9 +51,9 @@ BLE_SCANNER_OPTIONS = [
     BLEScannerMode.PASSIVE,
 ]
 
-BLE_SCANNER_SCHEMA = vol.Schema(
+BLE_SCANNER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_BLE_SCANNER_MODE): SelectSelector(
+        probatio.Required(CONF_BLE_SCANNER_MODE): SelectSelector(
             SelectSelectorConfig(
                 options=BLE_SCANNER_OPTIONS,
                 translation_key=CONF_BLE_SCANNER_MODE,
@@ -383,6 +383,6 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         coordinator = self.config_entry.runtime_data.data
         return self.async_show_form(
             step_id="no_settings",
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
             description_placeholders={"model": coordinator.data.info.model},
         )

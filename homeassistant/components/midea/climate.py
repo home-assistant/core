@@ -409,9 +409,7 @@ class MideaACClimate(MideaClimate):
     def current_humidity(self) -> float | None:
         """Return the current indoor humidity, or None if unavailable."""
         raw = self._device.get_attribute(ACAttributes.indoor_humidity)
-        # Some devices report invalid values (0 or 0xFF) for this sensor
-        # so filter those out and return None instead.
-        if isinstance(raw, (int, float)) and raw not in {0, 0xFF}:
+        if isinstance(raw, (int, float)):
             return float(raw)
         return None
 
@@ -718,7 +716,7 @@ class MideaFBClimate(MideaClimate):
     ) -> None:
         """Midea FB Climate entity init."""
         super().__init__(device, description)
-        self._attr_preset_modes: list[str] = self._device.modes
+        self._attr_preset_modes: list[str] = cast(list[str], self._device.modes)
 
     @property
     @override

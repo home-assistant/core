@@ -29,6 +29,7 @@ class LaMetricEntity(CoordinatorEntity[LaMetricDataUpdateCoordinator]):
             connections=connections,
             identifiers={(DOMAIN, coordinator.data.serial_number)},
             manufacturer="LaMetric Inc.",
+            model=coordinator.data.model_name,
             model_id=coordinator.data.model,
             name=coordinator.data.name,
             sw_version=coordinator.data.os_version,

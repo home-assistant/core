@@ -1,6 +1,6 @@
 """Provides device triggers for Select."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
@@ -33,11 +33,11 @@ TRIGGER_TYPES = {"current_option_changed"}
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
-        vol.Optional(CONF_TO): vol.Any(vol.Coerce(str)),
-        vol.Optional(CONF_FROM): vol.Any(vol.Coerce(str)),
-        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): probatio.In(TRIGGER_TYPES),
+        probatio.Optional(CONF_TO): probatio.Any(probatio.Coerce(str)),
+        probatio.Optional(CONF_FROM): probatio.Any(probatio.Coerce(str)),
+        probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
@@ -89,7 +89,7 @@ async def async_attach_trigger(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List trigger capabilities."""
 
     try:
@@ -104,11 +104,11 @@ async def async_get_trigger_capabilities(
         options = []
 
     return {
-        "extra_fields": vol.Schema(
+        "extra_fields": probatio.Schema(
             {
-                vol.Optional(CONF_FROM): vol.In(options),
-                vol.Optional(CONF_TO): vol.In(options),
-                vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+                probatio.Optional(CONF_FROM): probatio.In(options),
+                probatio.Optional(CONF_TO): probatio.In(options),
+                probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
             }
         )
     }

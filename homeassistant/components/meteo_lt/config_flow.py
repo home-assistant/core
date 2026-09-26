@@ -5,7 +5,7 @@ from typing import Any, override
 
 import aiohttp
 from meteo_lt import MeteoLtAPI, Place
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -65,9 +65,9 @@ class MeteoLtConfigFlow(ConfigFlow, domain=DOMAIN):
             for place in self._places
         }
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_PLACE_CODE): vol.In(places_options),
+                probatio.Required(CONF_PLACE_CODE): probatio.In(places_options),
             }
         )
 

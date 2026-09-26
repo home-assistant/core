@@ -7,7 +7,7 @@ from glances_api.exceptions import (
     GlancesApiAuthorizationError,
     GlancesApiConnectionError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -22,14 +22,14 @@ from homeassistant.const import (
 from . import ServerVersionMismatch, get_api
 from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
-        vol.Optional(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_SSL, default=False): bool,
-        vol.Optional(CONF_VERIFY_SSL, default=False): bool,
+        probatio.Required(CONF_HOST, default=DEFAULT_HOST): str,
+        probatio.Optional(CONF_USERNAME): str,
+        probatio.Optional(CONF_PASSWORD): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        probatio.Optional(CONF_SSL, default=False): bool,
+        probatio.Optional(CONF_VERIFY_SSL, default=False): bool,
     }
 )
 
@@ -70,9 +70,9 @@ class GlancesFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             description_placeholders={CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,

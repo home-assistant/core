@@ -4,9 +4,9 @@ from enum import StrEnum
 from itertools import chain
 from typing import Any
 
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components import fan, template
 from homeassistant.components.fan import (
@@ -1096,7 +1096,7 @@ async def test_set_invalid_osc_from_initial_state(
     """Test set invalid oscillating when fan is in initial state."""
     await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
     await common.async_turn_on(hass, TEST_FAN.entity_id)
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await common.async_oscillate(hass, TEST_FAN.entity_id, "invalid")
     _verify(hass, STATE_ON, None, None, None, None)
 
@@ -1120,7 +1120,7 @@ async def test_set_invalid_osc(hass: HomeAssistant, calls: list[ServiceCall]) ->
     await common.async_oscillate(hass, TEST_FAN.entity_id, False)
     _verify(hass, STATE_ON, None, False, None, None)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await common.async_oscillate(hass, TEST_FAN.entity_id, None)
     _verify(hass, STATE_ON, None, False, None, None)
 

@@ -5,7 +5,7 @@ from typing import Any, override
 from egauge_async.exceptions import EgaugeAuthenticationError, EgaugePermissionError
 from egauge_async.json.client import EgaugeJsonClient
 from httpx import ConnectError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -19,13 +19,13 @@ from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN, LOGGER
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_SSL, default=True): bool,
-        vol.Required(CONF_VERIFY_SSL, default=False): bool,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_SSL, default=True): bool,
+        probatio.Required(CONF_VERIFY_SSL, default=False): bool,
     }
 )
 

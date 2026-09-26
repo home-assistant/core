@@ -7,7 +7,7 @@ from typing import Any, override
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from bond_async import Bond, RequestorUUID
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME
@@ -23,11 +23,11 @@ from .utils import BondHub
 _LOGGER = logging.getLogger(__name__)
 
 
-USER_SCHEMA = vol.Schema(
-    {vol.Required(CONF_HOST): str, vol.Required(CONF_ACCESS_TOKEN): str}
+USER_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_HOST): str, probatio.Required(CONF_ACCESS_TOKEN): str}
 )
-DISCOVERY_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
-TOKEN_SCHEMA = vol.Schema({})
+DISCOVERY_SCHEMA = probatio.Schema({probatio.Required(CONF_ACCESS_TOKEN): str})
+TOKEN_SCHEMA = probatio.Schema({})
 
 
 async def async_get_token(hass: HomeAssistant, host: str) -> str | None:
@@ -123,7 +123,18 @@ class BondConfigFlow(ConfigFlow, domain=DOMAIN):
         name: str = discovery_info.name
         host: str = discovery_info.host
         bond_id = name.partition(".")[0]
-        await self.async_set_unique_id(bond_id)
+        entry = await self.async_set_unique_id(bond_id)
+
+        # A bridge on both Wi-Fi and Ethernet announces every address it has,
+        # and host is whichever one refreshed its record last. Stay on the
+        # address we already talk to as long as the bridge still answers to it.
+        if (
+            entry is not None
+            and (known_host := entry.data.get(CONF_HOST))
+            and known_host in {str(ip) for ip in discovery_info.ip_addresses}
+        ):
+            host = known_host
+
         return await self.async_step_any_discovery(bond_id, host)
 
     async def async_step_any_discovery(

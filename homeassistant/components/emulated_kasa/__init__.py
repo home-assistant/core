@@ -2,8 +2,8 @@
 
 import logging
 
+import probatio
 from sense_energy import PlugInstance, SenseLink
-import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
@@ -23,28 +23,28 @@ from .const import CONF_POWER, CONF_POWER_ENTITY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_ENTITY_SCHEMA = vol.Schema(
+CONFIG_ENTITY_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_POWER): vol.Any(
-            vol.Coerce(float),
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_POWER): probatio.Any(
+            probatio.Coerce(float),
             cv.template,
         ),
-        vol.Optional(CONF_POWER_ENTITY): cv.string,
+        probatio.Optional(CONF_POWER_ENTITY): cv.string,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_ENTITIES): vol.Schema(
+                probatio.Required(CONF_ENTITIES): probatio.Schema(
                     {cv.entity_id: CONFIG_ENTITY_SCHEMA}
                 ),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

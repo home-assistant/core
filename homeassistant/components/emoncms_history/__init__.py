@@ -5,8 +5,8 @@ from functools import partial
 import logging
 
 import aiohttp
+import probatio
 from pyemoncms import EmoncmsClient
-import voluptuous as vol
 
 from homeassistant.const import (
     CONF_API_KEY,
@@ -27,19 +27,19 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "emoncms_history"
 CONF_INPUTNODE = "inputnode"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_API_KEY): cv.string,
-                vol.Required(CONF_URL): cv.string,
-                vol.Required(CONF_INPUTNODE): cv.positive_int,
-                vol.Required(CONF_WHITELIST): cv.entity_ids,
-                vol.Optional(CONF_SCAN_INTERVAL, default=30): cv.positive_int,
+                probatio.Required(CONF_API_KEY): cv.string,
+                probatio.Required(CONF_URL): cv.string,
+                probatio.Required(CONF_INPUTNODE): cv.positive_int,
+                probatio.Required(CONF_WHITELIST): cv.entity_ids,
+                probatio.Optional(CONF_SCAN_INTERVAL, default=30): cv.positive_int,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

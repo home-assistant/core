@@ -5,6 +5,7 @@ import logging
 from typing import Any, override
 from urllib.parse import urlparse
 
+import probatio
 from victron_mqtt import (
     AuthenticationError,
     CannotConnectError,
@@ -13,7 +14,6 @@ from victron_mqtt import (
     PairingToken,
     request_pairing_token,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
@@ -45,34 +45,34 @@ TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 
 ENTRY_TITLE_FORMAT = "Victron OS {installation_id} ({host}:{port})"
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST, default=DEFAULT_HOST): selector.TextSelector(),
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_USERNAME): selector.TextSelector(),
-        vol.Optional(CONF_PASSWORD): selector.TextSelector(
+        probatio.Required(CONF_HOST, default=DEFAULT_HOST): selector.TextSelector(),
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        probatio.Optional(CONF_USERNAME): selector.TextSelector(),
+        probatio.Optional(CONF_PASSWORD): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
-        vol.Required(CONF_SSL, default=False): selector.BooleanSelector(),
+        probatio.Required(CONF_SSL, default=False): selector.BooleanSelector(),
     }
 )
 
-STEP_SSDP_AUTH_DATA_SCHEMA = vol.Schema(
+STEP_SSDP_AUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_PASSWORD, default=""): selector.TextSelector(
+        probatio.Optional(CONF_PASSWORD, default=""): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
-        vol.Optional(CONF_SSL): selector.BooleanSelector(),
+        probatio.Optional(CONF_SSL): selector.BooleanSelector(),
     }
 )
 
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_USERNAME, default=""): selector.TextSelector(),
-        vol.Optional(CONF_PASSWORD, default=""): selector.TextSelector(
+        probatio.Optional(CONF_USERNAME, default=""): selector.TextSelector(),
+        probatio.Optional(CONF_PASSWORD, default=""): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
-        vol.Optional(CONF_SSL): selector.BooleanSelector(),
+        probatio.Optional(CONF_SSL): selector.BooleanSelector(),
     }
 )
 

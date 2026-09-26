@@ -8,7 +8,7 @@ from typing import Any, override
 from caldav.davclient import DAVClient
 from caldav.lib.error import AuthorizationError, DAVError
 from caldav.lib.http_sync import requests as caldav_requests
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
@@ -19,12 +19,12 @@ from .const import DOMAIN, TIMEOUT
 _LOGGER = logging.getLogger(__name__)
 
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): str,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD, default=""): cv.string,
-        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        probatio.Required(CONF_URL): str,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Optional(CONF_PASSWORD, default=""): cv.string,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
 
@@ -120,9 +120,9 @@ class CalDavConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
             },
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,

@@ -4,10 +4,10 @@ import socket
 from typing import Any, override
 from urllib.parse import urlparse
 
-from arcam.fmj import ConnectionFailed
 from arcam.fmj.client import Client
+from arcam.fmj.errors import ConnectionFailed
 from arcam.fmj.utils import get_uniqueid_from_host, get_uniqueid_from_udn
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -16,10 +16,10 @@ from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceIn
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
-STEP_DATA_SCHEMA = vol.Schema(
+STEP_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
     }
 )
 

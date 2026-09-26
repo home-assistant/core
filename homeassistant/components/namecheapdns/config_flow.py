@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from aiohttp import ClientError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DOMAIN, CONF_HOST, CONF_NAME, CONF_PASSWORD
@@ -23,11 +23,11 @@ from .helpers import AuthFailed, update_namecheapdns
 _LOGGER = logging.getLogger(__name__)
 
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST, default="@"): cv.string,
-        vol.Required(CONF_DOMAIN): cv.string,
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(CONF_HOST, default="@"): cv.string,
+        probatio.Required(CONF_DOMAIN): cv.string,
+        probatio.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD, autocomplete="current-password"
             )
@@ -35,9 +35,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-STEP_RECONFIGURE_DATA_SCHEMA = vol.Schema(
+STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD, autocomplete="current-password"
             )

@@ -1,6 +1,6 @@
 """Device automation helpers for toggle entity."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import (
@@ -77,28 +77,28 @@ DEVICE_ACTION_TYPES = [CONF_TOGGLE, CONF_TURN_OFF, CONF_TURN_ON]
 
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(CONF_TYPE): vol.In(DEVICE_ACTION_TYPES),
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): probatio.In(DEVICE_ACTION_TYPES),
     }
 )
 
 CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(CONF_TYPE): vol.In([CONF_IS_OFF, CONF_IS_ON]),
-        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): probatio.In([CONF_IS_OFF, CONF_IS_ON]),
+        probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
 _TOGGLE_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(CONF_TYPE): vol.In([CONF_TURNED_OFF, CONF_TURNED_ON]),
-        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): probatio.In([CONF_TURNED_OFF, CONF_TURNED_ON]),
+        probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
-TRIGGER_SCHEMA = vol.Any(entity.TRIGGER_SCHEMA, _TOGGLE_TRIGGER_SCHEMA)
+TRIGGER_SCHEMA = probatio.Any(entity.TRIGGER_SCHEMA, _TOGGLE_TRIGGER_SCHEMA)
 
 
 async def async_call_action_from_config(
@@ -231,24 +231,24 @@ async def async_get_triggers(
 
 async def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List condition capabilities."""
     return {
-        "extra_fields": vol.Schema(
-            {vol.Optional(CONF_FOR): cv.positive_time_period_dict}
+        "extra_fields": probatio.Schema(
+            {probatio.Optional(CONF_FOR): cv.positive_time_period_dict}
         )
     }
 
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List trigger capabilities."""
     if config[CONF_TYPE] not in [CONF_TURNED_ON, CONF_TURNED_OFF]:
         return await entity.async_get_trigger_capabilities(hass, config)
 
     return {
-        "extra_fields": vol.Schema(
-            {vol.Optional(CONF_FOR): cv.positive_time_period_dict}
+        "extra_fields": probatio.Schema(
+            {probatio.Optional(CONF_FOR): cv.positive_time_period_dict}
         )
     }

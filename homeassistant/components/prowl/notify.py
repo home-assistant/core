@@ -5,8 +5,8 @@ import logging
 from typing import Any, override
 
 import httpx
+import probatio
 import prowlpy
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -27,7 +27,9 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend({vol.Required(CONF_API_KEY): cv.string})
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
+    {probatio.Required(CONF_API_KEY): cv.string}
+)
 
 
 async def async_get_service(

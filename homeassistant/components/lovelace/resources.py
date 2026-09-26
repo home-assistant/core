@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 import uuid
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.const import CONF_ID, CONF_RESOURCES, CONF_TYPE
@@ -50,8 +50,8 @@ class ResourceStorageCollection(collection.DictStorageCollection):
     """Collection to store resources."""
 
     loaded = False
-    CREATE_SCHEMA = vol.Schema(RESOURCE_CREATE_FIELDS)
-    UPDATE_SCHEMA = vol.Schema(RESOURCE_UPDATE_FIELDS)
+    CREATE_SCHEMA = probatio.Schema(RESOURCE_CREATE_FIELDS)
+    UPDATE_SCHEMA = probatio.Schema(RESOURCE_UPDATE_FIELDS)
 
     def __init__(self, hass: HomeAssistant, ll_config: LovelaceConfig) -> None:
         """Initialize the storage collection."""
@@ -108,8 +108,8 @@ class ResourceStorageCollection(collection.DictStorageCollection):
         resources: list[dict[str, Any]] = conf[CONF_RESOURCES]
 
         try:
-            vol.Schema([RESOURCE_SCHEMA])(resources)
-        except vol.Invalid as err:
+            probatio.Schema([RESOURCE_SCHEMA])(resources)
+        except probatio.Invalid as err:
             _LOGGER.warning("Resource import failed. Data invalid: %s", err)
             return None
 
@@ -164,7 +164,7 @@ class ResourceStorageCollectionWebsocket(collection.DictStorageCollectionWebsock
             self.api_prefix,
             self.ws_list_item,
             websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-                {vol.Required("type"): f"{self.api_prefix}"}
+                {probatio.Required("type"): f"{self.api_prefix}"}
             ),
         )
 

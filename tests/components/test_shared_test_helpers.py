@@ -12,8 +12,8 @@ synthetic classes that each introduce exactly one defect.
 
 from typing import Any, cast
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.const import CONF_TARGET, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -41,9 +41,9 @@ _ValidTrigger = make_entity_target_state_trigger("test", STATE_ON)
 _ValidCondition = make_entity_state_condition("test", STATE_ON)
 
 # A schema without a ``target`` marker (a class that does not expose a user target).
-_NO_TARGET_SCHEMA = vol.Schema({vol.Optional("options"): dict})
+_NO_TARGET_SCHEMA = probatio.Schema({probatio.Optional("options"): dict})
 # A schema that does expose the standard user target slot.
-_TARGET_SCHEMA = vol.Schema({vol.Required(CONF_TARGET): cv.TARGET_FIELDS})
+_TARGET_SCHEMA = probatio.Schema({probatio.Required(CONF_TARGET): cv.TARGET_FIELDS})
 
 
 class _MachineryOverrideTrigger(_ValidTrigger):

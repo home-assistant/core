@@ -7,7 +7,7 @@ import logging
 from typing import Any, override
 
 import aiohttp
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.image_processing import (
     ATTR_CONFIDENCE,
@@ -58,8 +58,10 @@ OPENALPR_REGIONS = [
 
 PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_REGION): vol.All(vol.Lower, vol.In(OPENALPR_REGIONS)),
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_REGION): probatio.All(
+            probatio.Lower, probatio.In(OPENALPR_REGIONS)
+        ),
     }
 )
 

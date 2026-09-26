@@ -2,9 +2,9 @@
 
 import math
 
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.util import color as color_util
 
@@ -369,11 +369,11 @@ def test_color_below_6600_should_have_more_red_than_blue_or_green() -> None:
     assert rgb[0] > rgb[2]
 
 
-def test_get_color_in_voluptuous() -> None:
+def test_get_color_in_probatio() -> None:
     """Test using the get method in color validation."""
-    schema = vol.Schema(color_util.color_name_to_rgb)
+    schema = probatio.Schema(color_util.color_name_to_rgb)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema("not a color")
 
     assert schema("red") == (255, 0, 0)

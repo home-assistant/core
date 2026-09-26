@@ -2,6 +2,7 @@
 
 from typing import Any, override
 
+import probatio
 from raspyrfm_client import RaspyRFMClient
 from raspyrfm_client.device_implementations.controlunit.actions import Action
 from raspyrfm_client.device_implementations.controlunit.controlunit_constants import (
@@ -11,7 +12,6 @@ from raspyrfm_client.device_implementations.gateway.manufacturer import (
     gateway_constants as _gw,
 )
 from raspyrfm_client.device_implementations.manufacturer_constants import Manufacturer
-import voluptuous as vol
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -41,22 +41,24 @@ DEFAULT_HOST = "127.0.0.1"
 # define configuration parameters
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_GATEWAY_MANUFACTURER): cv.string,
-        vol.Optional(CONF_GATEWAY_MODEL): cv.string,
-        vol.Required(CONF_SWITCHES): vol.Schema(
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_PORT): cv.port,
+        probatio.Optional(CONF_GATEWAY_MANUFACTURER): cv.string,
+        probatio.Optional(CONF_GATEWAY_MODEL): cv.string,
+        probatio.Required(CONF_SWITCHES): probatio.Schema(
             [
                 {
-                    vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string,
-                    vol.Required(CONF_CONTROLUNIT_MANUFACTURER): cv.string,
-                    vol.Required(CONF_CONTROLUNIT_MODEL): cv.string,
-                    vol.Required(CONF_CHANNEL_CONFIG): {cv.string: cv.match_all},
+                    probatio.Optional(
+                        CONF_NAME, default=DEVICE_DEFAULT_NAME
+                    ): cv.string,
+                    probatio.Required(CONF_CONTROLUNIT_MANUFACTURER): cv.string,
+                    probatio.Required(CONF_CONTROLUNIT_MODEL): cv.string,
+                    probatio.Required(CONF_CHANNEL_CONFIG): {cv.string: cv.match_all},
                 }
             ]
         ),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

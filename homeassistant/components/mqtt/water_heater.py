@@ -3,7 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import water_heater
 from homeassistant.components.water_heater import (
@@ -112,11 +112,11 @@ TOPIC_KEYS = (
 
 _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_CURRENT_TEMP_TEMPLATE): cv.template,
-        vol.Optional(CONF_CURRENT_TEMP_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_MODE_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(
+        probatio.Optional(CONF_CURRENT_TEMP_TEMPLATE): cv.template,
+        probatio.Optional(CONF_CURRENT_TEMP_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_MODE_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(
             CONF_MODE_LIST,
             default=[
                 STATE_ECO,
@@ -128,38 +128,38 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
                 STATE_OFF,
             ],
         ): cv.ensure_list,
-        vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
-        vol.Optional(CONF_MODE_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-        vol.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
-        vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
-        vol.Optional(CONF_POWER_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_POWER_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_PRECISION): vol.All(
-            vol.Coerce(float),
-            vol.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
+        probatio.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_MODE_STATE_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+        probatio.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
+        probatio.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
+        probatio.Optional(CONF_POWER_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_POWER_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_PRECISION): probatio.All(
+            probatio.Coerce(float),
+            probatio.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
         ),
-        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(CONF_TEMP_INITIAL): vol.Coerce(float),
-        vol.Optional(CONF_TEMP_MIN): vol.Coerce(float),
-        vol.Optional(CONF_TEMP_MAX): vol.Coerce(float),
-        vol.Optional(CONF_TEMP_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_TEMP_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_TEMP_STATE_TEMPLATE): cv.template,
-        vol.Optional(CONF_TEMP_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        probatio.Optional(CONF_TEMP_INITIAL): probatio.Coerce(float),
+        probatio.Optional(CONF_TEMP_MIN): probatio.Coerce(float),
+        probatio.Optional(CONF_TEMP_MAX): probatio.Coerce(float),
+        probatio.Optional(CONF_TEMP_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_TEMP_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_TEMP_STATE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_TEMP_STATE_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA_MODERN = vol.All(
+PLATFORM_SCHEMA_MODERN = probatio.All(
     _PLATFORM_SCHEMA_BASE,
 )
 
-_DISCOVERY_SCHEMA_BASE = _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA)
+_DISCOVERY_SCHEMA_BASE = _PLATFORM_SCHEMA_BASE.extend({}, extra=probatio.REMOVE_EXTRA)
 
-DISCOVERY_SCHEMA = vol.All(
+DISCOVERY_SCHEMA = probatio.All(
     _DISCOVERY_SCHEMA_BASE,
 )
 

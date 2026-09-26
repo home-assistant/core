@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock, Mock, PropertyMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pizone import Controller, ControllerCommandError, Zone
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
@@ -648,7 +648,7 @@ async def test_airflow_rejects_non_multiples_of_five(
     airflow: float,
 ) -> None:
     """Airflow services reject values that are not multiples of 5."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             service,
