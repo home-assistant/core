@@ -1,12 +1,13 @@
 """Tests for the binary sensors provided by the Lunatone integration."""
 
+from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from lunatone_rest_api_client.models import ScanData, ScanState
+from lunatone_rest_api_client.models import ScanLineState, ScanState
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -45,32 +46,67 @@ async def test_sensor_value_update(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the Lunatone DALI scan status value update."""
-    scan_states = iter((ScanState.ADDRESSING, ScanState.DONE))
+    scan_states = iter(
+        (
+            (ScanState.ADDRESSING, ScanLineState.ADDRESSING),
+            (ScanState.DONE, ScanLineState.DONE),
+        )
+    )
 
     await setup_integration(hass, mock_config_entry)
 
     coordinator = mock_config_entry.runtime_data.coordinator_scan
 
     async def fake_update():
-        scan_state = next(scan_states)
-        mock_lunatone_scan.data = ScanData(status=scan_state)
+        scan_state, line_scan_state = next(scan_states)
+        scan_data = deepcopy(mock_lunatone_scan.data)
+        scan_data.status = scan_state
+        scan_data.lines[0].scan_state = line_scan_state
+        mock_lunatone_scan.data = scan_data
 
     mock_lunatone_scan.async_update.side_effect = fake_update
 
     entities = hass.states.async_all(Platform.BINARY_SENSOR)
-    assert entities[0].state == "off"
+    assert all(entity.state == STATE_OFF for entity in entities)
     assert coordinator.update_interval == timedelta(seconds=10)
 
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
     entities = hass.states.async_all(Platform.BINARY_SENSOR)
-    assert entities[0].state == "on"
+    assert entities[0].state == STATE_ON
+    assert entities[1].state == STATE_ON
+    assert entities[2].state == STATE_OFF
     assert coordinator.update_interval == timedelta(seconds=1)
 
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
     entities = hass.states.async_all(Platform.BINARY_SENSOR)
-    assert entities[0].state == "off"
+    assert all(entity.state == STATE_OFF for entity in entities)
     assert coordinator.update_interval == timedelta(seconds=10)
+
+
+async def test_line_scan_status_off_when_line_data_is_missing(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Lunatone DALI scan status value update."""
+    mock_lunatone_scan.data.lines = []
+    mock_lunatone_scan.data.status = ScanState.ADDRESSING
+
+    await setup_integration(hass, mock_config_entry)
+
+    entity_ids = (
+        ("binary_sensor.test_scan_status", STATE_ON),
+        ("binary_sensor.dali_line_0_scan_status", STATE_OFF),
+        ("binary_sensor.dali_line_1_scan_status", STATE_OFF),
+    )
+
+    for entity_id, expected_state in entity_ids:
+        entity = hass.states.get(entity_id)
+        assert entity and entity.state == expected_state

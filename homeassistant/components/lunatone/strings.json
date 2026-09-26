@@ -38,12 +38,12 @@
   "entity": {
     "binary_sensor": {
       "scan_status": {
-        "name": "DALI scan"
+        "name": "Scan status"
       }
     },
     "sensor": {
       "dali_line_status": {
-        "name": "Status",
+        "name": "Line status",
         "state": {
           "low_power": "Low bus power",
           "no_power": "Bus power failure",
