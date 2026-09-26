@@ -90,6 +90,7 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
     """Coordinator to manage data updates from UDP packets."""
 
     config_entry: BitvisConfigEntry
+    _listener: SharedListener | None = None
 
     def __init__(
         self,
@@ -108,7 +109,6 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
         self.port = port
         self.mac_address = mac_address
         self._filter = FilterMac(mac_address)
-        self._registered = False
         self._stable_boot_time = ignore_variance(
             _uptime_to_boot_time, timedelta(minutes=5)
         )
@@ -117,36 +117,37 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
     @override
     async def _async_setup(self) -> None:
         """Set up the coordinator by registering with the shared UDP listener."""
+        listener_registry = async_get_listener_registry(self.hass)
         try:
-            listener = await self.hass.data[DATA_LISTENER_REGISTRY].async_get_or_create(
-                self.port
-            )
+            listener = await listener_registry.async_get_or_create(self.port)
             listener.register(self._filter, self._handle_payload)
-            self._registered = True
         except OSError as err:
             raise UpdateFailed(
                 f"Failed to start UDP listener on port {self.port}"
             ) from err
         except RuntimeError as err:
+            await listener_registry.async_remove_if_unused(self.port)
             raise ConfigEntryError(
                 f"Failed to register MAC filter for {self.mac_address} "
                 f"on port {self.port}"
             ) from err
+        self._listener = listener
 
-    async def async_stop(self) -> None:
-        """Unregister from the shared listener, stopping it when no longer needed."""
-        if not self._registered:
-            return
-
-        listener_registry = self.hass.data[DATA_LISTENER_REGISTRY]
-        if listener := listener_registry.get(self.port):
+    @override
+    async def async_shutdown(self) -> None:
+        """Unregister from the shared listener and shut down the coordinator."""
+        if listener := self._listener:
+            self._listener = None
             listener.unregister(self._filter)
-            await listener_registry.async_remove_if_unused(self.port)
+            _LOGGER.debug(
+                "Unregistered coordinator from shared UDP listener for port %s",
+                self.port,
+            )
+            await async_get_listener_registry(self.hass).async_remove_if_unused(
+                self.port
+            )
 
-        self._registered = False
-        _LOGGER.debug(
-            "Unregistered coordinator from shared UDP listener for port %s", self.port
-        )
+        await super().async_shutdown()
 
     @callback
     def _handle_payload(
