@@ -1507,6 +1507,22 @@ def _generate_statistics_period_endpoints_stmt(
     return stmt
 
 
+def _generate_latest_statistics_start_stmt(
+    metadata_ids: list[int] | None,
+) -> StatementLambdaElement:
+    """Find the last timestamp for the requested statistics."""
+    if metadata_ids is None:
+        return lambda_stmt(lambda: select(func.max(Statistics.start_ts)))
+    # Group by metadata_id to allow an index-only lookup per statistic.
+    latest_per_id = (
+        select(func.max(Statistics.start_ts).label("start_ts"))
+        .where(Statistics.metadata_id.in_(metadata_ids))
+        .group_by(Statistics.metadata_id)
+        .subquery()
+    )
+    return lambda_stmt(lambda: select(func.max(latest_per_id.c.start_ts)))
+
+
 def _get_statistics_period_endpoints(
     session: Session,
     start_time: datetime,
@@ -1517,26 +1533,6 @@ def _get_statistics_period_endpoints(
     max_bind_vars: int,
 ) -> list[Row]:
     """Fetch the last source row for each statistic and calendar period."""
-    start_ts = start_time.timestamp()
-    if end_time is None:
-        # Include future imported statistics as well as the current period.
-        latest_stmt = lambda_stmt(lambda: select(func.max(Statistics.start_ts)))
-        latest = cast(
-            Sequence[Row],
-            execute_stmt_lambda_element(session, latest_stmt, orm_rows=False),
-        )
-        if (last_ts := latest[0][0]) is None or last_ts < start_ts:
-            return []
-        end_ts = period_start_end(last_ts)[1]
-    else:
-        end_ts = end_time.timestamp()
-
-    bounds: list[tuple[float, float]] = []
-    while start_ts < end_ts:
-        next_ts = min(period_start_end(start_ts)[1], end_ts)
-        bounds.append((start_ts, next_ts))
-        start_ts = next_ts
-
     rows: list[Row] = []
     id_chunks = (
         chunked_or_all(
@@ -1546,6 +1542,27 @@ def _get_statistics_period_endpoints(
         else (None,)
     )
     for ids in id_chunks:
+        start_ts = start_time.timestamp()
+        if end_time is None:
+            # Include future imported statistics as well as the current period.
+            latest = cast(
+                Sequence[Row],
+                execute_stmt_lambda_element(
+                    session, _generate_latest_statistics_start_stmt(ids), orm_rows=False
+                ),
+            )
+            if (last_ts := latest[0][0]) is None or last_ts < start_ts:
+                continue
+            end_ts = period_start_end(last_ts)[1]
+        else:
+            end_ts = end_time.timestamp()
+
+        bounds: list[tuple[float, float]] = []
+        while start_ts < end_ts:
+            next_ts = min(period_start_end(start_ts)[1], end_ts)
+            bounds.append((start_ts, next_ts))
+            start_ts = next_ts
+
         periods_per_query = min(
             MAX_STATISTICS_PERIODS_PER_QUERY,
             max_bind_vars // (2 + len(ids or ())),
