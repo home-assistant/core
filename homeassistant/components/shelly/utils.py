@@ -13,7 +13,6 @@ from aioshelly.const import (
     DEFAULT_COAP_PORT,
     DEFAULT_HTTP_PORT,
     MODEL_1L,
-    MODEL_BLU_GATEWAY_G3,
     MODEL_DIMMER,
     MODEL_DIMMER_2,
     MODEL_EM3,
@@ -922,9 +921,6 @@ def remove_stale_blu_trv_devices(
     hass: HomeAssistant, rpc_device: RpcDevice, entry: ConfigEntry
 ) -> None:
     """Remove stale BLU TRV devices."""
-    if rpc_device.model != MODEL_BLU_GATEWAY_G3:
-        return
-
     dev_reg = dr.async_get(hass)
     devices = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
     config = rpc_device.config
@@ -934,6 +930,12 @@ def remove_stale_blu_trv_devices(
     for device in devices:
         if not device.via_device_id:
             # Device is not a sub-device, skip
+            continue
+
+        if not any(
+            connection[0] == CONNECTION_BLUETOOTH for connection in device.connections
+        ):
+            # Channel sub-devices have no Bluetooth connection
             continue
 
         if any(

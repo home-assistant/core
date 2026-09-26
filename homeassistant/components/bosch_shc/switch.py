@@ -190,6 +190,24 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_value=True,
         should_poll=False,
     ),
+    "swap_inputs": SHCSwitchEntityDescription(
+        key="swap_inputs",
+        translation_key="swap_inputs",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="swap_inputs",
+        on_value=True,
+        should_poll=False,
+    ),
+    "swap_outputs": SHCSwitchEntityDescription(
+        key="swap_outputs",
+        translation_key="swap_outputs",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="swap_outputs",
+        on_value=True,
+        should_poll=False,
+    ),
 }
 
 
@@ -465,6 +483,34 @@ async def async_setup_entry(
         )
         for switch in session.device_helper.motion_detectors2
         if switch.supports_smart_sensitivity
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["swap_inputs"],
+            unique_id_suffix="swap_inputs",
+        )
+        for switch in session.device_helper.micromodule_relays
+        if getattr(switch, "supports_switch_configuration", False)
+        and getattr(switch, "swap_inputs", None) is not None
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["swap_outputs"],
+            unique_id_suffix="swap_outputs",
+        )
+        for switch in session.device_helper.micromodule_relays
+        if getattr(switch, "supports_switch_configuration", False)
+        and getattr(switch, "swap_outputs", None) is not None
     )
 
     async_add_entities(entities)
