@@ -1,0 +1,19 @@
+{
+  "domain": "spinev",
+  "name": "Spin EV Charger",
+  "bluetooth": [
+    {
+      "connectable": true,
+      "service_uuid": "49535343-fe7d-4ae5-8fa9-9fafd205e455"
+    }
+  ],
+  "codeowners": ["@Dr-Blank"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/spinev",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["spinev_ble"],
+  "quality_scale": "bronze",
+  "requirements": ["spinev-ble[bleak]==0.3.0"]
+}
