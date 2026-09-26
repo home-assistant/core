@@ -1,7 +1,6 @@
 """Test the De Dietrich sensor platform."""
 
 from datetime import timedelta
-from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import ModbusConnectionError, ModbusError, ModbusTimeoutError
@@ -18,7 +17,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -38,7 +37,20 @@ async def test_all_entities(
     assert device.model is None
     assert device.manufacturer == "De Dietrich"
     assert device.sw_version == "100"
-    await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
+    sensor_entries = [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, init_integration.entry_id
+        )
+        if entry.domain == SENSOR_DOMAIN
+    ]
+    assert sensor_entries
+    for entity_entry in sensor_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert entity_entry.disabled_by is None, "Please enable all entities."
+        state = hass.states.get(entity_entry.entity_id)
+        assert state, f"State not found for {entity_entry.entity_id}"
+        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 
 async def test_diagnostic_entities_disabled_by_default(
@@ -60,44 +72,6 @@ async def test_diagnostic_entities_disabled_by_default(
         "fan_speed",
         "ionization_current",
     }
-
-
-@pytest.mark.parametrize(
-    ("register", "entity_id"),
-    [
-        pytest.param(
-            614,
-            "sensor.de_dietrich_circuit_a_room_temperature",
-            id="circuit_a",
-        ),
-        pytest.param(
-            616,
-            "sensor.de_dietrich_circuit_b_room_temperature",
-            id="circuit_b",
-        ),
-    ],
-)
-async def test_circuit_sensor_without_room_temperature(
-    hass: HomeAssistant,
-    mock_connection: MockModbusConnection,
-    mock_config_entry: MockConfigEntry,
-    register: int,
-    entity_id: str,
-) -> None:
-    """Test a circuit sensor is unknown when no room temperature is reported."""
-    mock_connection.for_unit(DEFAULT_UNIT_ID).holding[register] = 0xFFFF
-    mock_config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.de_dietrich.async_get_unit",
-        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
-            unit_id
-        ),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert (state := hass.states.get(entity_id)) is not None
-    assert state.state == "unknown"
 
 
 @pytest.mark.parametrize(
@@ -146,7 +120,7 @@ async def test_sensor_partial_update_failure(
     mock_connection: MockModbusConnection,
 ) -> None:
     """Test a failed circuit becomes unavailable while other readings update."""
-    circuit_id = "sensor.de_dietrich_circuit_a_room_temperature"
+    circuit_id = "sensor.de_dietrich_heating_circuit_a_room_temperature"
     outdoor_id = "sensor.de_dietrich_outdoor_temperature"
     assert hass.states.get(circuit_id).state == "21.0"
     assert hass.states.get(outdoor_id).state == "5.0"

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import override
+from typing import cast, override
 
 from diematic_modbus import Diematic, DiematicISystem
 
@@ -23,7 +23,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import DeDietrichConfigEntry
+from .coordinator import (
+    CHILD_COMPONENT_DEVICE_NAMES,
+    DeDietrichConfigEntry,
+    DeDietrichDataUpdateCoordinator,
+)
 from .entity import DeDietrichEntity, DeDietrichEntityDescription
 
 PARALLEL_UPDATES = 0
@@ -124,18 +128,8 @@ SENSOR_DESCRIPTIONS: tuple[DeDietrichSensorDescription, ...] = (
         value_fn=lambda device: device.sensors.ionization_current,
     ),
     DeDietrichSensorDescription(
-        key="hot_water_temperature",
-        translation_key="hot_water_temperature",
-        component="hot_water",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
-        value_fn=lambda device: device.hot_water.temp,
-    ),
-    DeDietrichSensorDescription(
         key="circuit_a_room_temperature",
-        translation_key="circuit_a_room_temperature",
+        translation_key="room_temperature",
         component="circuit_a",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -145,7 +139,7 @@ SENSOR_DESCRIPTIONS: tuple[DeDietrichSensorDescription, ...] = (
     ),
     DeDietrichSensorDescription(
         key="circuit_b_room_temperature",
-        translation_key="circuit_b_room_temperature",
+        translation_key="room_temperature",
         component="circuit_b",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -153,7 +147,29 @@ SENSOR_DESCRIPTIONS: tuple[DeDietrichSensorDescription, ...] = (
         suggested_display_precision=1,
         value_fn=lambda device: device.circuit_b.room_temp,
     ),
+    DeDietrichSensorDescription(
+        key="circuit_c_room_temperature",
+        translation_key="room_temperature",
+        component="circuit_c",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda device: cast(DiematicISystem, device).circuit_c.room_temp,
+    ),
 )
+
+
+def _enabled_descriptions(
+    coordinator: DeDietrichDataUpdateCoordinator,
+) -> tuple[DeDietrichSensorDescription, ...]:
+    """Return descriptions for boiler sensors and present child components."""
+    return tuple(
+        description
+        for description in SENSOR_DESCRIPTIONS
+        if description.component not in CHILD_COMPONENT_DEVICE_NAMES
+        or coordinator.child_device_info(description.component) is not None
+    )
 
 
 async def async_setup_entry(
@@ -165,7 +181,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     async_add_entities(
         DeDietrichSensor(coordinator, description)
-        for description in SENSOR_DESCRIPTIONS
+        for description in _enabled_descriptions(coordinator)
     )
 
 

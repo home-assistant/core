@@ -1,20 +1,28 @@
 """Test the De Dietrich setup."""
 
+from collections.abc import Callable
 from unittest.mock import patch
 
 import diematic_modbus
 from diematic_modbus import UpdateReport
 from modbus_connection import ModbusTimeoutError
-from modbus_connection.mock import MockModbusConnection
+from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 
 from homeassistant.components.de_dietrich.const import DEFAULT_UNIT_ID, DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import MOCK_ENTRY_ID, MOCK_TITLE, MOCK_USER_INPUT, seed_boiler
+from . import (
+    MOCK_ENTRY_ID,
+    MOCK_TITLE,
+    MOCK_USER_INPUT,
+    seed_boiler,
+    seed_isystem_boiler,
+)
 
 from tests.common import MockConfigEntry
 
@@ -258,6 +266,159 @@ async def test_base_layout_device_info(
     assert device.model is None
     assert device.serial_number is None
     assert device.sw_version is None
+
+
+@pytest.mark.parametrize(
+    ("seed_fn", "expected_children"),
+    [
+        pytest.param(
+            seed_isystem_boiler,
+            {
+                "circuit_a": ("Heating circuit A", "circuit_a_room_temperature"),
+                "circuit_b": ("Heating circuit B", "circuit_b_room_temperature"),
+                "circuit_c": ("Heating circuit C", "circuit_c_room_temperature"),
+            },
+            id="isystem",
+        ),
+        pytest.param(
+            seed_boiler,
+            {
+                "circuit_a": ("Heating circuit A", "circuit_a_room_temperature"),
+                "circuit_b": ("Heating circuit B", "circuit_b_room_temperature"),
+            },
+            id="base_layout",
+        ),
+    ],
+)
+async def test_child_devices_route_per_component_sensors(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MockModbusConnection,
+    seed_fn: Callable[[MockModbusUnit], None],
+    expected_children: dict[str, tuple[str, str]],
+) -> None:
+    """Test each present bundle has a child device and its sensors route to it."""
+    seed_fn(mock_connection.for_unit(DEFAULT_UNIT_ID))
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.de_dietrich.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    parent = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
+    assert parent is not None
+
+    for bundle, (expected_name, sensor_key) in expected_children.items():
+        child = device_registry.async_get_child_device_by_identifier(
+            (DOMAIN, f"{mock_config_entry.entry_id}_{bundle}"),
+            mock_config_entry.entry_id,
+        )
+        assert child is not None, f"Missing child device for {bundle}"
+        assert child.name == expected_name
+
+        entity_id = entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{mock_config_entry.entry_id}_{sensor_key}"
+        )
+        assert entity_id is not None, f"Missing sensor for {bundle}"
+        sensor_entry = entity_registry.async_get(entity_id)
+        assert sensor_entry is not None
+        assert sensor_entry.device_id == child.id
+
+    outdoor_entity_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{mock_config_entry.entry_id}_outdoor_temperature"
+    )
+    assert outdoor_entity_id is not None
+    outdoor_entry = entity_registry.async_get(outdoor_entity_id)
+    assert outdoor_entry is not None
+    assert outdoor_entry.device_id == parent.id
+
+
+@pytest.mark.parametrize(
+    ("seed_fn", "zapped_registers", "missing_bundle", "missing_sensor_key"),
+    [
+        pytest.param(
+            seed_isystem_boiler,
+            [614, 615, 621],
+            "circuit_a",
+            "circuit_a_room_temperature",
+            id="isystem_no_circuit_a",
+        ),
+        pytest.param(
+            seed_isystem_boiler,
+            [616, 617, 605, 662, 663],
+            "circuit_b",
+            "circuit_b_room_temperature",
+            id="isystem_no_circuit_b",
+        ),
+        pytest.param(
+            seed_isystem_boiler,
+            [618, 619],
+            "circuit_c",
+            "circuit_c_room_temperature",
+            id="isystem_no_circuit_c",
+        ),
+        pytest.param(
+            seed_boiler,
+            [18, 21],
+            "circuit_a",
+            "circuit_a_room_temperature",
+            id="base_no_circuit_a",
+        ),
+        pytest.param(
+            seed_boiler,
+            [27, 32, 33, 30, 31],
+            "circuit_b",
+            "circuit_b_room_temperature",
+            id="base_no_circuit_b",
+        ),
+    ],
+)
+async def test_absent_bundle_has_no_child_device_or_sensor(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MockModbusConnection,
+    seed_fn: Callable[[MockModbusUnit], None],
+    zapped_registers: list[int],
+    missing_bundle: str,
+    missing_sensor_key: str,
+) -> None:
+    """Test a bundle with no live readings produces no child device and no per-component sensor."""
+    unit = mock_connection.for_unit(DEFAULT_UNIT_ID)
+    seed_fn(unit)
+    for register in zapped_registers:
+        unit.holding[register] = 0xFFFF
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.de_dietrich.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    child = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_{missing_bundle}"),
+        mock_config_entry.entry_id,
+    )
+    assert child is None, f"Absent bundle {missing_bundle} should have no child device"
+
+    entity_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{mock_config_entry.entry_id}_{missing_sensor_key}"
+    )
+    assert entity_id is None, (
+        f"Absent bundle {missing_bundle} should have no {missing_sensor_key} entity"
+    )
 
 
 async def test_unload_entry(
