@@ -21,8 +21,8 @@ TOKEN_URL = "https://example.com/token"
             "s:cr&t",
             "client_secret_basic",
             {"grant_type": "refresh_token"},
-            # base64 of "my%20client:s%3Acr%26t"
-            {"Authorization": "Basic bXklMjBjbGllbnQ6cyUzQWNyJTI2dA=="},
+            # base64 of "my+client:s%3Acr%26t"
+            {"Authorization": "Basic bXkrY2xpZW50OnMlM0FjciUyNnQ="},
             id="basic",
         ),
         pytest.param(
