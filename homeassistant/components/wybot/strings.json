@@ -1,0 +1,75 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Account is already configured",
+      "already_in_progress": "Configuration flow is already in progress",
+      "reauth_successful": "Re-authentication was successful",
+      "reconfigure_successful": "Reconfiguration was successful",
+      "wrong_account": "The credentials are for a different WyBot account"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to WyBot",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "Password"
+        },
+        "data_description": {
+          "password": "The password for your WyBot account."
+        },
+        "description": "The password for {username} is no longer valid. Enter the new password.",
+        "title": "Re-authenticate WyBot"
+      },
+      "reconfigure": {
+        "data": {
+          "password": "Password",
+          "username": "Email"
+        },
+        "data_description": {
+          "password": "The password for your WyBot account.",
+          "username": "The email address for your WyBot account."
+        },
+        "description": "Update the WyBot account credentials used by this integration.",
+        "title": "Reconfigure WyBot account"
+      },
+      "user": {
+        "data": {
+          "password": "Password",
+          "username": "Email"
+        },
+        "data_description": {
+          "password": "The password for your WyBot account.",
+          "username": "The email address for your WyBot account."
+        },
+        "description": "Enter your WyBot account credentials.",
+        "title": "WyBot account"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to the WyBot API."
+    },
+    "cannot_send_command": {
+      "message": "Failed to send the command to the WyBot device via Bluetooth or the cloud."
+    },
+    "device_unavailable": {
+      "message": "The WyBot device is not available to receive commands."
+    },
+    "invalid_auth": {
+      "message": "The WyBot credentials are no longer valid."
+    },
+    "invalid_fan_speed": {
+      "message": "{fan_speed} is not a supported cleaning mode."
+    },
+    "no_data": {
+      "message": "No data was received from the WyBot device via Bluetooth or the cloud."
+    },
+    "update_failed": {
+      "message": "Error communicating with the WyBot API."
+    }
+  }
+}
