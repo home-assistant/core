@@ -40,6 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 
 VTM_URL = "/api/ezviz/vtm/{serial}.ts"
 READ_CHUNK = 65536
+STDERR_TAIL = 2048
 # Relay packets are about 1.4 kB, so this caps the backlog at roughly 360 kB.
 QUEUE_SIZE = 256
 QUEUE_PUT_TIMEOUT = 1.0
@@ -165,13 +166,16 @@ async def _async_stream(
         "pipe:1",
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.DEVNULL,
+        stderr=asyncio.subprocess.PIPE,
     )
     try:
         stdin = process.stdin
         stdout = process.stdout
-        if stdin is None or stdout is None:  # pragma: no cover - PIPE requested
+        stderr = process.stderr
+        if stdin is None or stdout is None or stderr is None:  # pragma: no cover
             raise web.HTTPInternalServerError
+
+        errors = asyncio.create_task(_read_tail(stderr))
 
         queue: asyncio.Queue[bytes | None] = asyncio.Queue(QUEUE_SIZE)
         relay = VtmRelay(camera.client, serial, asyncio.get_running_loop(), queue)
@@ -185,17 +189,34 @@ async def _async_stream(
             await response.prepare(request)
             while chunk := await stdout.read(READ_CHUNK):
                 await response.write(chunk)
+            # FFmpeg closed its output by itself, so report it if it failed.
+            if await process.wait():
+                _LOGGER.warning(
+                    "%s: FFmpeg failed to remux the VTM stream (exit code %s): %s",
+                    serial,
+                    process.returncode,
+                    (await errors).decode(errors="replace").strip(),
+                )
         except ConnectionResetError:
             pass
         finally:
             relay.stop()
             feeder.cancel()
+            errors.cancel()
             await _async_stop_process(process)
             await hass.async_add_executor_job(relay.join, RELAY_JOIN_TIMEOUT)
             _LOGGER.debug("%s: VTM stream closed", serial)
     finally:
         await _async_stop_process(process)
     return response
+
+
+async def _read_tail(reader: asyncio.StreamReader) -> bytes:
+    """Drain a pipe and return the end of its output."""
+    tail = b""
+    while chunk := await reader.read(READ_CHUNK):
+        tail = (tail + chunk)[-STDERR_TAIL:]
+    return tail
 
 
 async def _async_stop_process(process: asyncio.subprocess.Process) -> None:
