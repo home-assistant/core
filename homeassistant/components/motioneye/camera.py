@@ -2,11 +2,15 @@
 
 from collections.abc import Mapping
 from contextlib import suppress
-from typing import Any, override
+from typing import Any, cast, override
 
 import aiohttp
 from jinja2 import Template
-from motioneye_client.client import MotionEyeClient, MotionEyeClientURLParseError
+from motioneye_client.client import (
+    MotionEyeClient,
+    MotionEyeClientError,
+    MotionEyeClientURLParseError,
+)
 from motioneye_client.const import (
     DEFAULT_SURVEILLANCE_USERNAME,
     KEY_ACTION_SNAPSHOT,
@@ -39,6 +43,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -195,8 +200,16 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
 
         return {
             CONF_NAME: None,
-            CONF_USERNAME: self._surveillance_username if auth is not None else None,
-            CONF_PASSWORD: self._surveillance_password if auth is not None else "",
+            CONF_USERNAME: (
+                camera.get("streaming_username") or self._surveillance_username
+                if auth is not None
+                else None
+            ),
+            CONF_PASSWORD: (
+                camera.get("streaming_password") or self._surveillance_password
+                if auth is not None
+                else ""
+            ),
             CONF_MJPEG_URL: streaming_url or "",
             CONF_STILL_IMAGE_URL: self._client.get_camera_snapshot_url(camera),
             CONF_AUTHENTICATION: auth,
@@ -214,6 +227,7 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         self._mjpeg_url = properties[CONF_MJPEG_URL]
         self._still_image_url = properties[CONF_STILL_IMAGE_URL]
         self._authentication = properties[CONF_AUTHENTICATION]
+        self._auth_headers = {}
 
         if (
             self._authentication == HTTP_BASIC_AUTHENTICATION
@@ -254,6 +268,20 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
     def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
         return self._motion_detection_enabled
+
+    @override
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
+        """Return a still image using the authenticated motionEye client."""
+        if not self._camera:
+            return None
+        try:
+            return await cast(Any, self._client).async_get_camera_snapshot(
+                self._camera_id
+            )
+        except MotionEyeClientError as err:
+            raise HomeAssistantError("Unable to get camera snapshot") from err
 
     async def async_set_text_overlay(
         self,
