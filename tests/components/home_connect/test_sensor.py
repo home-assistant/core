@@ -20,6 +20,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.home_connect.const import (
+    ATTR_RAW_VALUE,
     BSH_DOOR_STATE_CLOSED,
     BSH_DOOR_STATE_LOCKED,
     BSH_DOOR_STATE_OPEN,
@@ -905,6 +906,198 @@ async def test_sensor_unit_fetching_after_rate_limit_error(
     assert entity_state.attributes["unit_of_measurement"] == unit
 
 
+DISHWASHER_PROGRAM_SENSORS = [
+    pytest.param(
+        EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+        "sensor.dishwasher_active_program",
+        id="active_program",
+    ),
+    pytest.param(
+        EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+        "sensor.dishwasher_selected_program",
+        id="selected_program",
+    ),
+]
+
+
+async def _send_program_event(
+    client: MagicMock,
+    appliance: HomeAppliance,
+    event_key: EventKey,
+    value: str | None,
+) -> None:
+    """Send a program event with the given raw value."""
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                ArrayOfEvents(
+                    [
+                        Event(
+                            key=event_key,
+                            raw_key=event_key.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=value,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize(("event_key", "entity_id"), DISHWASHER_PROGRAM_SENSORS)
+@pytest.mark.parametrize(
+    ("raw_value", "expected_state"),
+    [
+        (
+            "Dishcare.Dishwasher.Program.Eco50",
+            "Eco 50",
+        ),
+        (
+            "Dishcare.Dishwasher.Program.RinseOnStartup",
+            "Rinse On Startup",
+        ),
+        (
+            "BSH.Common.Program.Favorite.001",
+            "Favorite 001",
+        ),
+        (
+            "LaundryCare.WasherDryer.Program.WashAndDry.60",
+            "Wash And Dry 60",
+        ),
+        (
+            "ConsumerProducts.CoffeeMaker.Program.Beverage.XLCoffee",
+            "XL Coffee",
+        ),
+        (
+            "Cooking.Oven.Program.HeatingMode.3DHotAir",
+            "3D Hot Air",
+        ),
+    ],
+)
+async def test_program_key_sensor_states(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    event_key: EventKey,
+    entity_id: str,
+    raw_value: str,
+    expected_state: str,
+) -> None:
+    """Test the program sensors format the raw program key into a readable name.
+
+    Regardless of whether the program is known to aiohomeconnect or not, only
+    the last segment of the key is used, except for keys ending in a number -
+    such as favorites, reported as an opaque "Favorite.NNN" key - where the
+    segment before it is kept too, since the number alone would not be
+    descriptive. Acronyms and dimensions are kept as one word. The raw value
+    is always exposed as-is via the raw_value attribute.
+    """
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await _send_program_event(client, appliance, event_key, raw_value)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == expected_state
+    assert state.attributes[ATTR_RAW_VALUE] == raw_value
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize(("event_key", "entity_id"), DISHWASHER_PROGRAM_SENSORS)
+async def test_program_key_sensor_cleared_when_program_becomes_none(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    event_key: EventKey,
+    entity_id: str,
+) -> None:
+    """Test the program sensors reset when the program is cleared."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # The mocked client reports the first known program on setup.
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Auto 1"
+    assert state.attributes[ATTR_RAW_VALUE] == "Dishcare.Dishwasher.Program.Auto1"
+
+    await _send_program_event(
+        client, appliance, event_key, "Dishcare.Dishwasher.Program.Eco50"
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Eco 50"
+
+    await _send_program_event(client, appliance, event_key, None)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert ATTR_RAW_VALUE not in state.attributes
+
+
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize(("event_key", "entity_id"), DISHWASHER_PROGRAM_SENSORS)
+async def test_program_key_sensor_disabled_by_default(
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    event_key: EventKey,
+    entity_id: str,
+) -> None:
+    """Test that the program sensors are disabled by default."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == f"{appliance.ha_id}-{event_key}"
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.parametrize("appliance", ["FridgeFreezer"], indirect=True)
+@pytest.mark.parametrize(
+    "event_key",
+    [
+        EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+        EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+    ],
+)
+async def test_program_key_sensor_not_created_without_programs(
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    event_key: EventKey,
+) -> None:
+    """Test that the program sensors are not created for appliances without programs."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert not entity_registry.async_get_entity_id(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{appliance.ha_id}-{event_key}",
+    )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,

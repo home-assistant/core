@@ -996,6 +996,9 @@
       }
     },
     "sensor": {
+      "active_program": {
+        "name": "Active program"
+      },
       "alarm_clock_elapsed": {
         "name": "Alarm clock elapsed",
         "state": {
@@ -1442,6 +1445,9 @@
           "off": "[%key:common::state::off%]",
           "present": "[%key:component::home_connect::common::present%]"
         }
+      },
+      "selected_program": {
+        "name": "Selected program"
       },
       "smart_filter_cleaning_reminder": {
         "name": "Smart filter cleaning reminder",
