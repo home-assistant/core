@@ -1,0 +1,13 @@
+{
+  "serial_number": "SK-00000001",
+  "type": "device_status",
+  "hub_sn": "HB-00000001",
+  "timestamp": 1510855923,
+  "uptime": 2189,
+  "voltage": 3.12,
+  "firmware_revision": 29,
+  "rssi": -17,
+  "hub_rssi": -87,
+  "sensor_status": 0,
+  "debug": 0
+}
