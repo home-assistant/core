@@ -326,6 +326,7 @@ async def test_reconfigure(
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data == {CONF_HOST: "new-host", CONF_PORT: 9080}
     assert mock_api.get_data.call_count == 1
+    await hass.async_block_till_done()
     assert mock_setup_entry.await_count == 1
 
 
