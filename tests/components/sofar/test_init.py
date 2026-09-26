@@ -91,18 +91,20 @@ async def test_setup_and_unload_entry(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_setup_removes_the_stale_waiting_time_entity(
+@pytest.mark.parametrize("key", ["serial_number", "waiting_time"])
+async def test_setup_removes_stale_sensor_entities(
     hass: HomeAssistant,
     mock_connection: MockModbusConnection,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    key: str,
 ) -> None:
-    """Test an upgrade drops the removed waiting-time entity too."""
+    """Test an upgrade drops the entity of a removed sensor."""
     mock_config_entry.add_to_hass(hass)
     entry = entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
         DOMAIN,
-        f"{MOCK_SERIAL}_waiting_time",
+        f"{MOCK_SERIAL}_{key}",
         config_entry=mock_config_entry,
     )
 
