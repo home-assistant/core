@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "best_day_count": {
+        "default": "mdi:trophy-award"
+      },
+      "detection_streak": {
+        "default": "mdi:calendar-range"
+      },
+      "lifetime_species": {
+        "default": "mdi:counter"
+      },
+      "today_detections": {
+        "default": "mdi:bird"
+      }
+    }
+  }
+}
