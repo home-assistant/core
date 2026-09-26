@@ -471,6 +471,7 @@ FLOWS = {
         "madvr",
         "mailgun",
         "marantz_infrared",
+        "marantz_rs232",
         "mastodon",
         "matter",
         "mcp",
