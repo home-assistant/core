@@ -304,7 +304,6 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Mark setup as complete, setup firmware checks and token refresh."""
         self._setup_complete = True
         self.async_cancel_firmware_refresh()
-        # this is the timer that creates a background task when firing
         self._cancel_firmware_refresh = async_track_time_interval(
             self.hass,
             self._async_refresh_firmware,
