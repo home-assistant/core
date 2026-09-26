@@ -4,7 +4,7 @@ rules:
     comment: The initial sensor platform defines no custom actions.
   appropriate-polling: done
   brands:
-    status: todo
+    status: done
     comment: Artwork is prepared for a coordinated brands PR.
   common-modules: done
   config-flow-test-coverage: done
