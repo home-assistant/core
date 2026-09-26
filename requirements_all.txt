@@ -238,6 +238,9 @@ aiocentriconnect==0.2.3
 # homeassistant.components.comelit
 aiocomelit==3.0.0
 
+# homeassistant.components.eurotronic_comet_wifi
+aiocometwifi==0.1.0
+
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.2.7
 
