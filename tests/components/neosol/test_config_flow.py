@@ -41,7 +41,7 @@ PROBE_FAILURES = [
 def _fail_probe(
     mock_dongle_class: MagicMock, failing_call: str, exception: Exception
 ) -> None:
-    """Make the probe fail, and clear the failure so the next attempt succeeds."""
+    """Make the probe fail at ``failing_call`` with ``exception``."""
     target = (
         mock_dongle_class.open
         if failing_call == "open"
