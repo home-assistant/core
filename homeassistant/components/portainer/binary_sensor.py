@@ -33,6 +33,7 @@ class PortainerContainerBinarySensorEntityDescription(BinarySensorEntityDescript
     """Class to hold Portainer container binary sensor description."""
 
     state_fn: Callable[[PortainerContainerData], bool | None]
+    supported_fn: Callable[[PortainerContainerData], bool]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -54,7 +55,18 @@ CONTAINER_SENSORS: tuple[PortainerContainerBinarySensorEntityDescription, ...] =
         key="status",
         translation_key="status",
         state_fn=lambda data: data.container.state == DockerContainerState.RUNNING,
+        supported_fn=lambda data: data.container.state == DockerContainerState.RUNNING,
         device_class=BinarySensorDeviceClass.RUNNING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PortainerContainerBinarySensorEntityDescription(
+        key="container_oom_killed",
+        translation_key="container_oom_killed",
+        state_fn=lambda data: (
+            state.oom_killed if (state := data.container_inspect.state) else None
+        ),
+        supported_fn=lambda data: data.container_inspect.state is not None,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -114,7 +126,7 @@ async def async_setup_entry(
             )
             for (endpoint, container) in containers
             for entity_description in CONTAINER_SENSORS
-            if entity_description.state_fn(container)
+            if entity_description.supported_fn(container)
         )
 
     def _async_add_new_stacks(
