@@ -5,7 +5,7 @@ from collections.abc import Callable, Iterable, Sequence
 import dataclasses
 from datetime import datetime, timedelta
 from functools import lru_cache, partial
-from itertools import chain, groupby
+from itertools import batched, chain, groupby
 import logging
 import math
 from operator import itemgetter
@@ -24,6 +24,7 @@ from sqlalchemy import (
     lambda_stmt,
     select,
     text,
+    union_all,
 )
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import SQLAlchemyError
@@ -116,6 +117,9 @@ from .util import (
 
 if TYPE_CHECKING:
     from . import Recorder
+
+# Stay below SQLite's limit of 500 compound SELECT terms.
+MAX_STATISTICS_PERIODS_PER_QUERY = 400
 
 QUERY_STATISTICS = (
     Statistics.metadata_id,
@@ -1476,6 +1480,89 @@ def _generate_statistics_during_period_stmt(
     return stmt
 
 
+def _generate_statistics_period_endpoints_stmt(
+    metadata_ids: list[int] | None,
+    period_bounds: tuple[tuple[float, float], ...],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+) -> StatementLambdaElement:
+    """Select original rows at the end of each requested calendar period."""
+    queries = []
+    for lower, upper in period_bounds:
+        query = select(
+            Statistics.metadata_id,
+            func.max(Statistics.start_ts).label("start_ts"),
+        ).where(Statistics.start_ts >= lower, Statistics.start_ts < upper)
+        if metadata_ids:
+            query = query.where(Statistics.metadata_id.in_(metadata_ids))
+        queries.append(query.group_by(Statistics.metadata_id))
+    endpoints = union_all(*queries).subquery()
+    stmt = _generate_select_columns_for_types_stmt(Statistics, types)
+    stmt += lambda q: q.join(
+        endpoints,
+        and_(
+            Statistics.metadata_id == endpoints.c.metadata_id,
+            Statistics.start_ts == endpoints.c.start_ts,
+        ),
+    )
+    return stmt
+
+
+def _get_statistics_period_endpoints(
+    session: Session,
+    start_time: datetime,
+    end_time: datetime | None,
+    metadata_ids: list[int] | None,
+    period_start_end: Callable[[float], tuple[float, float]],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    max_bind_vars: int,
+) -> list[Row]:
+    """Fetch the last source row for each statistic and calendar period."""
+    start_ts = start_time.timestamp()
+    if end_time is None:
+        # Include future imported statistics as well as the current period.
+        latest_stmt = lambda_stmt(lambda: select(func.max(Statistics.start_ts)))
+        latest = cast(
+            Sequence[Row],
+            execute_stmt_lambda_element(session, latest_stmt, orm_rows=False),
+        )
+        if (last_ts := latest[0][0]) is None or last_ts < start_ts:
+            return []
+        end_ts = period_start_end(last_ts)[1]
+    else:
+        end_ts = end_time.timestamp()
+
+    bounds: list[tuple[float, float]] = []
+    while start_ts < end_ts:
+        next_ts = min(period_start_end(start_ts)[1], end_ts)
+        bounds.append((start_ts, next_ts))
+        start_ts = next_ts
+
+    rows: list[Row] = []
+    id_chunks = (
+        chunked_or_all(
+            metadata_ids, min(MAX_IDS_FOR_INDEXED_GROUP_BY, max_bind_vars - 2)
+        )
+        if metadata_ids
+        else (None,)
+    )
+    for ids in id_chunks:
+        periods_per_query = min(
+            MAX_STATISTICS_PERIODS_PER_QUERY,
+            max_bind_vars // (2 + len(ids or ())),
+        )
+        for period_bounds in batched(bounds, periods_per_query, strict=False):
+            stmt = _generate_statistics_period_endpoints_stmt(ids, period_bounds, types)
+            rows.extend(
+                cast(
+                    Sequence[Row],
+                    execute_stmt_lambda_element(session, stmt, orm_rows=False),
+                )
+            )
+    # Keep original timestamps for the existing reducer and unit conversion.
+    rows.sort(key=itemgetter(0, 1))
+    return rows
+
+
 def _generate_max_mean_min_statistic_in_sub_period_stmt(
     columns: Select,
     start_time: datetime | None,
@@ -2173,12 +2260,35 @@ def _statistics_during_period_with_session(
     table: type[Statistics | StatisticsShortTerm] = (
         Statistics if period != "5minute" else StatisticsShortTerm
     )
-    stmt = _generate_statistics_during_period_stmt(
-        start_time, end_time, metadata_ids, table, types
-    )
-    stats = cast(
-        Sequence[Row], execute_stmt_lambda_element(session, stmt, orm_rows=False)
-    )
+    stats: Sequence[Row]
+    if period in {"day", "week", "month", "year"} and types <= {
+        "sum",
+        "state",
+        "last_reset",
+    }:
+        factories = {
+            "day": reduce_day_ts_factory,
+            "week": reduce_week_ts_factory,
+            "month": reduce_month_ts_factory,
+            "year": reduce_year_ts_factory,
+        }
+        _, period_start_end = factories[period]()
+        stats = _get_statistics_period_endpoints(
+            session,
+            start_time,
+            end_time,
+            metadata_ids,
+            period_start_end,
+            types,
+            get_instance(hass).max_bind_vars,
+        )
+    else:
+        stmt = _generate_statistics_during_period_stmt(
+            start_time, end_time, metadata_ids, table, types
+        )
+        stats = cast(
+            Sequence[Row], execute_stmt_lambda_element(session, stmt, orm_rows=False)
+        )
 
     if not stats:
         return {}
