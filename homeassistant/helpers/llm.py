@@ -217,10 +217,12 @@ class APIInstance:
         for tool in self.tools:
             if tool.integration is not None:
                 continue
-            # A tool whose class lives outside an integration, such as a shared
-            # helper tool, is reported by the llm integration, which knows the
-            # domain of the platform that returned it.
-            if (domain := _tool_integration_domain(tool)) is not None:
+            # A tool class outside an integration, such as a shared helper tool,
+            # belongs to whichever integration provides the API.
+            domain = _tool_integration_domain(tool) or _integration_domain(
+                type(self.api).__module__
+            )
+            if domain is not None:
                 report_untagged_tool(tool, domain)
 
     async def async_call_tool(self, tool_input: ToolInput) -> ToolResult:
@@ -270,13 +272,19 @@ def report_untagged_tool(tool: Tool, domain: str) -> None:
         custom_integration_behavior=frame.ReportBehavior.LOG,
         integration_domain=domain,
     )
+    # Record the domain so the tool carries it until the requirement is enforced.
+    tool.integration = domain
 
 
 def _tool_integration_domain(tool: Tool) -> str | None:
     """Return the domain of the integration that provides the tool."""
     while isinstance(tool, NamespacedTool):
         tool = tool.tool
-    module = type(tool).__module__
+    return _integration_domain(type(tool).__module__)
+
+
+def _integration_domain(module: str) -> str | None:
+    """Return the domain of the integration that defines the module."""
     for prefix in ("custom_components.", "homeassistant.components."):
         if module.startswith(prefix):
             return module.removeprefix(prefix).partition(".")[0]

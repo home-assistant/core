@@ -230,6 +230,8 @@ async def test_get_tools_untagged_tool_reported_for_custom(
         "without an integration. This will stop working in Home Assistant 2027.10"
         in caplog.text
     )
+    # The platform domain is recorded on the tool, so it is not reported again.
+    assert tools[0].integration == "test"
 
 
 async def test_get_tools_prefixed_tool_names_not_reported(

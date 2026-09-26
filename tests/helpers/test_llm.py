@@ -278,6 +278,31 @@ async def test_api_instance_raises_untagged_tool_for_core_integration(
         )
 
 
+async def test_api_instance_reports_untagged_tool_from_the_api(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a tool defined outside an integration is reported against its API."""
+    mock_integration(hass, MockModule("my_custom"), built_in=False)
+    tool = _untagged_tool("homeassistant.helpers.llm")
+
+    class CustomAPI(MyAPI):
+        """API provided by a custom integration."""
+
+    CustomAPI.__module__ = "custom_components.my_custom.llm_api"
+    llm.APIInstance(
+        CustomAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool]
+    )
+
+    assert (
+        "custom integration 'my_custom' provides the LLM tool test_tool without an "
+        "integration" in caplog.text
+    )
+    # The tool carries the domain until the requirement is enforced.
+    assert tool.integration == "my_custom"
+
+
 async def test_merged_api_reports_untagged_tool_once(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,
