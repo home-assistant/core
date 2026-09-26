@@ -27,6 +27,9 @@ from .utils import retry_after_from
 _LOGGER = logging.getLogger(__name__)
 
 
+BACKOFF_STEPS = (300, 600, 900)  # 5min, 10min, 15min
+
+
 class ViCareCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for a single ViCare gateway.
 
@@ -56,6 +59,7 @@ class ViCareCoordinator(DataUpdateCoordinator[None]):
         )
         self._device = device
         self._accessor = accessor
+        self._consecutive_offline_failures: int = 0
 
     @override
     async def _async_update_data(self) -> None:
@@ -67,11 +71,13 @@ class ViCareCoordinator(DataUpdateCoordinator[None]):
         try:
             self._device.service.clear_cache()
             self._device.service.fetch_all_features(self._accessor)
+            self._consecutive_offline_failures = 0
         except PyViCareNotSupportedFeatureError:
             # PACKAGE_NOT_PAID_FOR: load with no features instead of retrying setup.
             _LOGGER.debug(
                 "No accessible features for gateway %s", self._accessor.serial
             )
+            self._consecutive_offline_failures = 0
         except PyViCareInvalidCredentialsError as err:
             raise ConfigEntryAuthFailed from err
         except PyViCareRateLimitError as err:
@@ -82,8 +88,37 @@ class ViCareCoordinator(DataUpdateCoordinator[None]):
                     self.update_interval or timedelta(seconds=DEFAULT_CACHE_DURATION),
                 ),
             ) from err
+        except PyViCareDeviceCommunicationError as err:
+            error_str = str(err)
+            if (
+                getattr(err, "reason", None) == "GATEWAY_OFFLINE"
+                or "GATEWAY_OFFLINE" in error_str
+            ):
+                self._consecutive_offline_failures += 1
+                idx = min(
+                    self._consecutive_offline_failures - 1,
+                    len(BACKOFF_STEPS) - 1,
+                )
+                normal_interval = int(
+                    (
+                        self.update_interval
+                        or timedelta(seconds=DEFAULT_CACHE_DURATION)
+                    ).total_seconds()
+                )
+                backoff = max(BACKOFF_STEPS[idx], normal_interval)
+                _LOGGER.debug(
+                    "ViCare gateway %s is offline (consecutive failures: %d). "
+                    "Backing off next refresh for %d seconds",
+                    self._accessor.serial,
+                    self._consecutive_offline_failures,
+                    backoff,
+                )
+                raise UpdateFailed(
+                    error_str,
+                    retry_after=backoff,
+                ) from err
+            raise UpdateFailed(error_str) from err
         except (
-            PyViCareDeviceCommunicationError,
             PyViCareInternalServerError,
             PyViCareInvalidDataError,
             requests.RequestException,
