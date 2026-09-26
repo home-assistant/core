@@ -168,7 +168,7 @@ async def mock_modbus_fixture(
     assert hub.event_connected.is_set()
     freezer.tick(timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     return mock_pymodbus
 
 
@@ -218,7 +218,7 @@ async def mock_do_cycle_fixture(
     """Trigger update call with time_changed event."""
     freezer.tick(timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     return freezer
 
 
@@ -228,7 +228,7 @@ async def do_next_cycle(
     """Trigger update call with time_changed event."""
     freezer.tick(timedelta(seconds=cycle))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.fixture(name="mock_test_state")
