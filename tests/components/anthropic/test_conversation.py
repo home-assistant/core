@@ -1,5 +1,6 @@
 """Tests for the Anthropic integration."""
 
+from collections.abc import AsyncGenerator
 import datetime
 from pathlib import Path
 from typing import Any
@@ -19,6 +20,7 @@ from anthropic.types import (
     RawMessageDeltaEvent,
     RawMessageStartEvent,
     RawMessageStopEvent,
+    RawMessageStreamEvent,
     ServerToolCaller20260120,
     TextBlock,
     TextEditorCodeExecutionCreateResultBlock,
@@ -63,6 +65,7 @@ from homeassistant.components.anthropic.const import (
     DOMAIN,
 )
 from homeassistant.components.anthropic.entity import (
+    AnthropicDeltaStream,
     CitationDetails,
     ContentDetails,
     _convert_content,
@@ -393,6 +396,140 @@ async def test_prompt_caching_automatic(
     assert mock_create_stream.call_args.kwargs["cache_control"] == {"type": "ephemeral"}
     system = mock_create_stream.call_args.kwargs["system"]
     assert isinstance(system, str)
+
+
+@pytest.mark.parametrize(
+    ("body_events", "expected_roles"),
+    [
+        pytest.param(create_content_block(0, []), [], id="empty-response"),
+        pytest.param(
+            [
+                *create_server_tool_use_block(
+                    0, "srvtoolu_test", "web_search", ['{"query":"Home Assistant"}']
+                ),
+                *create_web_search_result_block(1, "srvtoolu_test", []),
+                *create_content_block(2, []),
+            ],
+            ["assistant", "tool_result"],
+            id="server-tool-result",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "end_events",
+    [
+        pytest.param(
+            [
+                RawMessageDeltaEvent(
+                    type="message_delta",
+                    delta=Delta(stop_reason="max_tokens"),
+                    usage=MessageDeltaUsage(output_tokens=0),
+                ),
+                RawMessageStopEvent(type="message_stop"),
+            ],
+            id="token-limit",
+        ),
+        pytest.param(
+            [
+                RawMessageDeltaEvent(
+                    type="message_delta",
+                    delta=Delta(stop_reason="pause_turn"),
+                    usage=MessageDeltaUsage(output_tokens=0),
+                ),
+                RawMessageStopEvent(type="message_stop"),
+            ],
+            id="paused-turn",
+        ),
+        pytest.param(
+            [
+                RawMessageDeltaEvent(
+                    type="message_delta",
+                    delta=Delta(stop_reason="tool_use"),
+                    usage=MessageDeltaUsage(output_tokens=0),
+                ),
+                RawMessageStopEvent(type="message_stop"),
+            ],
+            id="tool-use",
+        ),
+        pytest.param(
+            [RawMessageStopEvent(type="message_stop")], id="missing-stop-reason"
+        ),
+        pytest.param(
+            [
+                RawMessageDeltaEvent(
+                    type="message_delta",
+                    delta=Delta(stop_reason="end_turn"),
+                    usage=MessageDeltaUsage(output_tokens=0),
+                ),
+            ],
+            id="missing-message-stop",
+        ),
+    ],
+)
+async def test_empty_response_without_completed_turn(
+    hass: HomeAssistant,
+    body_events: list[RawMessageStreamEvent],
+    expected_roles: list[str],
+    end_events: list[RawMessageStreamEvent],
+) -> None:
+    """Test incomplete empty responses do not produce a silent acknowledgement."""
+    chat_log = conversation.ChatLog(hass, "test-conversation")
+
+    async def stream() -> AsyncGenerator[RawMessageStreamEvent]:
+        for event in (*body_events, *end_events):
+            yield event
+
+    results = [
+        content
+        async for content in chat_log.async_add_delta_content_stream(
+            "conversation.claude_conversation", AnthropicDeltaStream(chat_log, stream())
+        )
+    ]
+
+    assert [content.role for content in results] == expected_roles
+
+
+@pytest.mark.usefixtures("mock_config_entry_with_assist", "mock_init_component")
+@pytest.mark.parametrize(
+    "events",
+    [
+        pytest.param([], id="no-content-blocks"),
+        pytest.param(create_content_block(0, []), id="empty-text-block"),
+        pytest.param(create_content_block(0, [""]), id="empty-text-delta"),
+    ],
+)
+@patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
+async def test_function_call_with_silent_response(
+    mock_get_tools: AsyncMock,
+    hass: HomeAssistant,
+    mock_create_stream: AsyncMock,
+    events: list[RawMessageStreamEvent],
+) -> None:
+    """Test an empty completed turn acknowledges tool results without retries."""
+    mock_tool = AsyncMock()
+    mock_tool.name = "test_tool"
+    mock_tool.description = "Test function"
+    mock_tool.parameters = probatio.Schema({})
+    mock_tool.async_call.return_value = llm.ToolResult(data="Test response")
+    mock_get_tools.return_value = LLMTools(tools=[mock_tool])
+    mock_create_stream.return_value = [
+        create_tool_use_block(0, "toolu_test", "test_tool", ["{}"]),
+        events,
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Please call the test function silently",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech["plain"]["speech"] == ""
+    assert not result.continue_conversation
+    assert mock_create_stream.await_count == 2
+    mock_tool.async_call.assert_awaited_once()
 
 
 @patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
@@ -1148,6 +1285,79 @@ async def test_web_search(
     # Don't test the prompt because it's not deterministic
     assert chat_log.content[1:] == snapshot
     assert mock_create_stream.call_args.kwargs["messages"] == snapshot
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    "preamble",
+    [
+        pytest.param([], id="no-preamble"),
+        pytest.param(create_content_block(0, ["Searching"]), id="with-preamble"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("final_events", "expected_speech"),
+    [
+        pytest.param([], "", id="no-final-text"),
+        pytest.param(create_content_block(3, [""]), "", id="empty-final-text"),
+        pytest.param(
+            create_content_block(3, ["Found it"]), "Found it", id="nonempty-final-text"
+        ),
+    ],
+)
+async def test_web_search_final_response(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_stream: AsyncMock,
+    preamble: list[RawMessageStreamEvent],
+    final_events: list[RawMessageStreamEvent],
+    expected_speech: str,
+) -> None:
+    """Test completed server tool results can be followed by a silent response."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={CONF_WEB_SEARCH: True},
+    )
+    await hass.async_block_till_done()
+    mock_create_stream.return_value = [
+        (
+            *preamble,
+            *create_server_tool_use_block(
+                1, "srvtoolu_test", "web_search", ['{"query":"Home Assistant"}']
+            ),
+            *create_web_search_result_block(
+                2,
+                "srvtoolu_test",
+                [
+                    WebSearchResultBlock(
+                        type="web_search_result",
+                        title="Home Assistant",
+                        url="https://www.home-assistant.io/",
+                        encrypted_content="test",
+                    )
+                ],
+            ),
+            *final_events,
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Search for Home Assistant",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech["plain"]["speech"] == expected_speech
+    assert not result.continue_conversation
+    mock_create_stream.assert_awaited_once()
+    chat_log = hass.data[conversation.chat_log.DATA_CHAT_LOGS][result.conversation_id]
+    assert not chat_log.unresponded_tool_results
+    assert isinstance(chat_log.content[-1], conversation.AssistantContent)
+    assert chat_log.content[-1].content == expected_speech
 
 
 @freeze_time("2025-10-31 12:00:00")

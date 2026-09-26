@@ -74,8 +74,28 @@ async def test_empty_data(
     hass: HomeAssistant,
     mock_create_stream: AsyncMock,
 ) -> None:
-    """Test AI Task data generation but the data returned is empty."""
+    """Test a completed empty response returns empty data."""
     mock_create_stream.return_value = [create_content_block(0, [""])]
+
+    result = await ai_task.async_generate_data(
+        hass,
+        task_name="Test Task",
+        entity_id="ai_task.claude_ai_task",
+        instructions="Generate test data",
+    )
+
+    assert result.data == ""
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_missing_response(
+    hass: HomeAssistant,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Test a stream without a response still raises an error."""
+    mock_create_stream.side_effect = None
+    mock_create_stream.return_value = AsyncMock()
+    mock_create_stream.return_value.__aiter__.return_value = []
 
     with pytest.raises(
         HomeAssistantError, match="Last content in chat log is not an AssistantContent"
