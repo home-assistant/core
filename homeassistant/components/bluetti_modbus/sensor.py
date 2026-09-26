@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, cast, override
 
-from bluetti_modbus_lib.enums import InverterStatus
+from bluetti_modbus_lib import InverterStatus
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -20,7 +20,6 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
-    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -42,9 +41,23 @@ _INVERTER_STATUS: dict[InverterStatus, str] = {
     InverterStatus.AbnormalOffGrid: "abnormal_off_grid",
 }
 
+# Keyed by member name: bluetti_modbus_lib does not export PvType.
+_PV_TYPE: dict[str, str] = {
+    "Reserve": "reserve",
+    "Car": "car",
+    "Adapter": "adapter",
+    "Other": "other",
+    "DcPv": "dc_pv",
+    "AcPv": "ac_pv",
+}
+
 
 def _as_is(value: Any) -> StateType:
     return cast(StateType, value)
+
+
+def _pv_type(value: Any) -> StateType:
+    return None if value is None else _PV_TYPE.get(value.name)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -156,6 +169,72 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
         suggested_display_precision=1,
     ),
     BluettiModbusSensorEntityDescription(
+        key="g_1_i_v",
+        translation_key="g_1_i_v",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    BluettiModbusSensorEntityDescription(
+        key="g_1_i_c",
+        translation_key="g_1_i_c",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    BluettiModbusSensorEntityDescription(
+        key="ac_1_o_v",
+        translation_key="ac_1_o_v",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    BluettiModbusSensorEntityDescription(
+        key="ac_1_o_c",
+        translation_key="ac_1_o_c",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    BluettiModbusSensorEntityDescription(
+        key="d_inverter_1_v",
+        translation_key="d_inverter_1_v",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    BluettiModbusSensorEntityDescription(
+        key="d_inverter_1_c",
+        translation_key="d_inverter_1_c",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    BluettiModbusSensorEntityDescription(
+        key="pv_dc_count",
+        translation_key="pv_dc_count",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    BluettiModbusSensorEntityDescription(
+        key="pv_ac_count",
+        translation_key="pv_ac_count",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    BluettiModbusSensorEntityDescription(
+        key="pv_1_i_type",
+        translation_key="pv_1_i_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(_PV_TYPE.values()),
+        value_fn=_pv_type,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    BluettiModbusSensorEntityDescription(
         key="pv_1_i_p",
         translation_key="pv_1_i_p",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -177,6 +256,14 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
+    ),
+    BluettiModbusSensorEntityDescription(
+        key="pv_2_i_type",
+        translation_key="pv_2_i_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(_PV_TYPE.values()),
+        value_fn=_pv_type,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BluettiModbusSensorEntityDescription(
         key="pv_2_i_p",
@@ -202,6 +289,14 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
         suggested_display_precision=1,
     ),
     BluettiModbusSensorEntityDescription(
+        key="pv_3_i_type",
+        translation_key="pv_3_i_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(_PV_TYPE.values()),
+        value_fn=_pv_type,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    BluettiModbusSensorEntityDescription(
         key="pv_3_i_p",
         translation_key="pv_3_i_p",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -223,6 +318,14 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
+    ),
+    BluettiModbusSensorEntityDescription(
+        key="pv_4_i_type",
+        translation_key="pv_4_i_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(_PV_TYPE.values()),
+        value_fn=_pv_type,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BluettiModbusSensorEntityDescription(
         key="pv_4_i_p",
@@ -277,6 +380,14 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
         suggested_display_precision=1,
     ),
     BluettiModbusSensorEntityDescription(
+        key="b_c",
+        translation_key="b_c",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    BluettiModbusSensorEntityDescription(
         key="b_soc",
         translation_key="b_soc",
         native_unit_of_measurement=PERCENTAGE,
@@ -295,16 +406,6 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
         translation_key="b_cycle_count",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    BluettiModbusSensorEntityDescription(
-        key="b_t_avg",
-        translation_key="b_t_avg",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        # Reads a permanent 0 on Balco260 hardware; BLUETTI confirmed the
-        # register isn't supported on this device.
-        entity_registry_enabled_default=False,
     ),
     BluettiModbusSensorEntityDescription(
         key="b_cell_count",

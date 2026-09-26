@@ -73,7 +73,7 @@ async def test_firmware_versions_are_device_metadata_not_a_sensor(
         (DOMAIN, SERIAL), mock_config_entry.entry_id
     )
     assert device_entry is not None
-    assert device_entry.sw_version == "ARM 0, DSP 0"
+    assert device_entry.sw_version == "ARM 50011.01.12, DSP 50014.01.10"
 
     assert hass.states.get("sensor.balco260_arm_firmware_version") is None
     assert hass.states.get("sensor.balco260_dsp_firmware_version") is None
@@ -108,7 +108,7 @@ async def test_setup_error_when_link_settings_are_in_use(
 async def _tick(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_dead_link_fails_the_refresh(

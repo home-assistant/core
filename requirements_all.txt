@@ -718,7 +718,7 @@ bluetooth-auto-recovery==1.6.4
 bluetooth-data-tools==1.29.24
 
 # homeassistant.components.bluetti_modbus
-bluetti-modbus==0.1.4
+bluetti-modbus==0.34.0
 
 # homeassistant.components.bond
 bond-async==0.2.1

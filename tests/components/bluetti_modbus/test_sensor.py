@@ -1,13 +1,11 @@
 """Tests for the BLUETTI Modbus sensor entities."""
 
-from bluetti_modbus_lib.devices.getter import get_device
+from bluetti_modbus_lib import get_device
+from modbus_connection.mock import MockModbusUnit
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.bluetti_modbus.const import (
-    DEVICE_TYPE_BALCO260,
-    EXCLUDED_FIELDS,
-)
+from homeassistant.components.bluetti_modbus.const import EXCLUDED_FIELDS
 from homeassistant.components.bluetti_modbus.sensor import SENSOR_DESCRIPTIONS
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import EntityCategory
@@ -21,6 +19,8 @@ ENERGY_ENTITY = "sensor.balco260_total_battery_charged_energy"
 BATTERY_LEVEL_ENTITY = "sensor.balco260_battery_soc"
 TOTAL_BATTERY_LEVEL_ENTITY = "sensor.balco260_total_battery_soc"
 CYCLE_COUNT_ENTITY = "sensor.balco260_battery_cycle_count"
+INVERTER_POWER_ENTITY = "sensor.balco260_total_inverter_power"
+PV_1_TYPE_ENTITY = "sensor.balco260_pv_1_input_type"
 
 # Shown as DeviceInfo (serial number, firmware) rather than as sensors.
 DEVICE_INFO_FIELDS = {"d_serial", "d_ver_arm", "d_ver_dsp"}
@@ -78,7 +78,7 @@ async def test_only_the_present_charge_level_is_a_battery_sensor(
 
 def test_every_readable_field_has_exactly_one_description() -> None:
     """The static description table and the library's register map stay in step."""
-    device = get_device(DEVICE_TYPE_BALCO260)
+    device = get_device("balco260")
     assert device is not None
     expected = set(device.field_names()) - EXCLUDED_FIELDS - DEVICE_INFO_FIELDS
 
@@ -99,3 +99,61 @@ async def test_diagnostic_fields_are_categorized_as_diagnostic(
     entry = entity_registry.async_get(CYCLE_COUNT_ENTITY)
     assert entry is not None
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+async def test_inverter_power_is_signed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Power flowing into the battery reads as a negative inverter power."""
+    field = get_device("balco260").get_field("d_inverter_total")
+    assert field is not None
+    low, high = field.encode(-1200)
+    mock_modbus_unit.holding[field.address] = low
+    mock_modbus_unit.holding[field.address + 1] = high
+
+    await _setup(hass, mock_config_entry)
+
+    state = hass.states.get(INVERTER_POWER_ENTITY)
+    assert state is not None
+    assert state.state == "-1200"
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        pytest.param(0, "reserve", id="reserve"),
+        pytest.param(1, "car", id="car"),
+        pytest.param(2, "adapter", id="adapter"),
+        pytest.param(3, "other", id="other"),
+        pytest.param(100, "dc_pv", id="dc_pv"),
+        pytest.param(101, "ac_pv", id="ac_pv"),
+    ],
+)
+async def test_pv_input_type_states(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+    raw: int,
+    expected: str,
+) -> None:
+    """Every PV input type the device reports maps to a declared state."""
+    field = get_device("balco260").get_field("pv_1_i_type")
+    assert field is not None
+    mock_modbus_unit.holding[field.address] = raw
+
+    await _setup(hass, mock_config_entry)
+
+    state = hass.states.get(PV_1_TYPE_ENTITY)
+    assert state is not None
+    assert state.state == expected
+
+
+def test_pv_input_type_states_cover_the_library_enum() -> None:
+    """A PV input type added to the library needs a state here first."""
+    field = get_device("balco260").get_field("pv_1_i_type")
+    assert field is not None
+    pv_type = type(field.decode([100]))
+
+    assert sorted(member.value for member in pv_type) == [0, 1, 2, 3, 100, 101]

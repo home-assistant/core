@@ -10,30 +10,23 @@ from contextlib import asynccontextmanager
 from typing import Any
 from unittest.mock import patch
 
-from bluetti_modbus_lib.devices.getter import get_device
 from modbus_connection import ModbusUnit
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 
-from homeassistant.components.bluetti_modbus.const import (
-    CONF_UNIT_ID,
-    DEVICE_TYPE_BALCO260,
-    DOMAIN,
-)
+from homeassistant.components.bluetti_modbus.const import CONF_UNIT_ID, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 HOST = "1.2.3.4"
 PORT = 502
 UNIT_ID = 1
 ENTRY_ID = "01K3ZZZZZZZZZZZZZZZZZZZZZZ"
-# A real Balco260 always has a non-zero manufactured serial (the config flow
-# rejects 0 as not a real device identity - see config_flow.py), so this
-# can't be zero-seeded like everything else; seed_unit() overrides it after
-# the generic zero pass.
+# The capture's own serial registers are redacted.
 SERIAL = "1234"
+SERIAL_ADDRESS = 50206
 
 
 def bluetti_data(unit_id: int = UNIT_ID) -> dict[str, Any]:
@@ -46,28 +39,9 @@ def bluetti_data(unit_id: int = UNIT_ID) -> dict[str, Any]:
 
 
 def seed_unit(unit: MockModbusUnit) -> None:
-    """Seed a mock unit so every field Balco260 has decodes cleanly.
-
-    There is no captured full register dump for this hardware yet (unlike a
-    single self-describing header block, BLUETTI's map has none to capture
-    once): every field's own registers are zeroed directly from the library's
-    field metadata instead. Zero decodes safely everywhere, including the
-    enum-typed status/warning/fault fields, whose "normal" member is always 0
-    - except d_serial, which the config flow treats 0 as a failed probe, not
-    a real device (see config_flow.py); the register holding its
-    least-significant word is overridden with SERIAL's value afterwards.
-    """
-    device = get_device(DEVICE_TYPE_BALCO260)
-    assert device is not None
-    for name in device.field_names():
-        field = device.get_field(name)
-        assert field is not None
-        for offset in range(field.count):
-            unit.holding[field.address + offset] = 0
-
-    serial_field = device.get_field("d_serial")
-    assert serial_field is not None
-    unit.holding[serial_field.address] = int(SERIAL)
+    """Seed a mock unit with registers captured from a real Balco260."""
+    unit.load_raw(load_json_object_fixture("balco260_registers.json", DOMAIN))
+    unit.holding[SERIAL_ADDRESS] = int(SERIAL)
 
 
 @pytest.fixture(autouse=True)
