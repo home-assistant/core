@@ -109,6 +109,30 @@ async def test_user_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(NotADongleError("no marker"), id="not-a-dongle"),
+        pytest.param(RuntimeError("boom"), id="unexpected"),
+    ],
+)
+async def test_port_released_when_identification_fails(
+    hass: HomeAssistant, mock_dongle: MagicMock, exception: Exception
+) -> None:
+    """Test the probe closes the port whatever makes the identification fail."""
+    mock_dongle.info.side_effect = exception
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE: MOCK_PORT}
+    )
+
+    mock_dongle.close.assert_awaited_once()
+
+
 @pytest.mark.usefixtures("mock_dongle")
 @pytest.mark.parametrize(
     ("source", "data"),
