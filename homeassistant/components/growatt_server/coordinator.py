@@ -29,6 +29,7 @@ from .const import (
     DEFAULT_URL,
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
+    SERVER_TEMPORARILY_UNAVAILABLE_CODE,
     V1_DEVICE_TYPES,
 )
 from .models import GrowattRuntimeData
@@ -184,6 +185,29 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 )
                 self.device_list = None
 
+    def _classic_login(self) -> None:
+        """Log in via the Classic API, raising on failure."""
+        login_response = self.api.login(self.username, self.password)
+        if login_response.get("success"):
+            return
+        msg = login_response.get("msg", "Unknown error")
+        if msg == LOGIN_INVALID_AUTH_CODE:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_credentials",
+            )
+        if msg == SERVER_TEMPORARILY_UNAVAILABLE_CODE:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="server_temporarily_unavailable",
+                translation_placeholders={"message": msg},
+            )
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="login_failed",
+            translation_placeholders={"message": msg},
+        )
+
     def _sync_update_data(self) -> dict[str, Any]:
         """Update data via library synchronously."""
         _LOGGER.debug("Updating data for %s (%s)", self.device_id, self.device_type)
@@ -195,19 +219,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # login only required for classic API
         if self.api_version == "classic":
-            login_response = self.api.login(self.username, self.password)
-            if not login_response.get("success"):
-                msg = login_response.get("msg", "Unknown error")
-                if msg == LOGIN_INVALID_AUTH_CODE:
-                    raise ConfigEntryAuthFailed(
-                        translation_domain=DOMAIN,
-                        translation_key="invalid_credentials",
-                    )
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="login_failed",
-                    translation_placeholders={"message": msg},
-                )
+            self._classic_login()
 
         if self.device_type == "total":
             if self.api_version == "v1":

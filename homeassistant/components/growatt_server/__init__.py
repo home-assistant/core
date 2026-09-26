@@ -21,7 +21,17 @@ Error handling pattern for reauth:
   → raise ConfigEntryAuthFailed
 - V1 API: catch GrowattV1ApiError with error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE
   → raise ConfigEntryAuthFailed
+- Classic API: msg == SERVER_TEMPORARILY_UNAVAILABLE_CODE (507, transient server error)
+  → raise ConfigEntryNotReady (setup retries automatically)
 - All other errors → ConfigEntryError (setup) or UpdateFailed (coordinator)
+
+Migration and transient errors:
+- async_migrate_entry() resolves legacy DEFAULT_PLANT_ID entries by calling
+  the Classic API. MIGRATION_ERROR (returning False) has no automatic retry,
+  so a transient ConfigEntryNotReady there is NOT treated as a migration
+  failure: migration returns True, leaving CONF_PLANT_ID unresolved, and
+  async_setup_entry() retries the resolution instead, benefiting from the
+  normal setup-retry backoff.
 """
 
 from collections.abc import Mapping
@@ -57,6 +67,7 @@ from .const import (
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
     PLATFORMS,
+    SERVER_TEMPORARILY_UNAVAILABLE_CODE,
     SUPPORTED_DEVICE_TYPES,
     V1_DEVICE_TYPES,
 )
@@ -79,6 +90,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Register services
     async_setup_services(hass)
     return True
+
+
+async def _resolve_default_plant_id(
+    hass: HomeAssistant, username: str, password: str, url: str
+) -> tuple[growattServer.GrowattApi, str]:
+    """Resolve DEFAULT_PLANT_ID to the actual plant_id for a Classic API account.
+
+    Returns the authenticated API instance (for reuse) and the resolved
+    plant_id. Raises ConfigEntryAuthFailed, ConfigEntryNotReady or
+    ConfigEntryError on failure, letting callers (migration and setup) react
+    appropriately.
+    """
+    api, login_response = await _create_api_and_login(hass, username, password, url)
+    plant_info = await hass.async_add_executor_job(
+        api.plant_list, login_response["user"]["id"]
+    )
+    # plant_list() is annotated as list, but the classic API returns
+    # {"data": [...]}. Remove once the annotation is fixed upstream:
+    # https://github.com/indykoning/PyPi_GrowattServer/issues/157
+    if not isinstance(plant_info, dict) or not plant_info.get("data"):
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="no_plants_found",
+        )
+    return api, plant_info["data"][0]["plantId"]
 
 
 async def async_migrate_entry(
@@ -164,16 +200,26 @@ async def async_migrate_entry(
                     return False
 
                 try:
-                    # Create API instance and login
-                    api, login_response = await _create_api_and_login(
+                    api, first_plant_id = await _resolve_default_plant_id(
                         hass, username, password, url
                     )
-
-                    # Resolve DEFAULT_PLANT_ID to actual plant_id
-                    plant_info = await hass.async_add_executor_job(
-                        api.plant_list, login_response["user"]["id"]
+                except ConfigEntryNotReady as ex:
+                    # Transient server error (e.g. 507): don't fail migration
+                    # permanently, since MIGRATION_ERROR has no automatic
+                    # retry. Leave the entry on 1.0 so async_setup_entry
+                    # retries the resolution, benefiting from the automatic
+                    # setup-retry backoff.
+                    _LOGGER.warning(
+                        "Could not resolve plant_id during migration: %s. "
+                        "Will retry automatically during setup",
+                        ex,
                     )
-                except (ConfigEntryError, RequestException, JSONDecodeError) as ex:
+                    return True
+                except (
+                    ConfigEntryError,
+                    RequestException,
+                    JSONDecodeError,
+                ) as ex:
                     # API failure during migration - return False to retry later
                     _LOGGER.error(
                         "Failed to resolve plant_id during migration: %s. "
@@ -181,18 +227,6 @@ async def async_migrate_entry(
                         ex,
                     )
                     return False
-
-                # plant_list() is annotated as list, but the classic API returns
-                # {"data": [...]}. Remove once the annotation is fixed upstream:
-                # https://github.com/indykoning/PyPi_GrowattServer/issues/157
-                if not isinstance(plant_info, dict) or not plant_info.get("data"):
-                    _LOGGER.error(
-                        "No plants found for this account. "
-                        "Migration will retry on next restart"
-                    )
-                    return False
-
-                first_plant_id = plant_info["data"][0]["plantId"]
 
                 # Update config entry with resolved plant_id
                 new_data = dict(config_entry.data)
@@ -224,7 +258,6 @@ async def _create_api_and_login(
 
     Returns both the API instance (with authenticated session) and the login
     response (containing user_id needed for subsequent API calls).
-
     """
     api = growattServer.GrowattApi(add_random_user_id=True, agent_identifier=username)
     api.server_url = url
@@ -237,7 +270,9 @@ async def _create_api_and_login(
 
 
 def _login_classic_api(
-    api: growattServer.GrowattApi, username: str, password: str
+    api: growattServer.GrowattApi,
+    username: str,
+    password: str,
 ) -> dict:
     """Log in to Classic API and return user info."""
     try:
@@ -256,6 +291,12 @@ def _login_classic_api(
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_credentials",
+            )
+        if msg == SERVER_TEMPORARILY_UNAVAILABLE_CODE:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="server_temporarily_unavailable",
+                translation_placeholders={"message": msg},
             )
         raise ConfigEntryError(
             translation_domain=DOMAIN,
@@ -350,22 +391,36 @@ async def async_setup_entry(
         username = config[CONF_USERNAME]
         password = config[CONF_PASSWORD]
 
-        # Check if migration cached an authenticated API instance for us to reuse.
-        # This avoids calling login() twice (once in migration, once here) which
-        # would trigger rate limiting.
-        cached_api = _CACHED_APIS.pop(config_entry.entry_id, None)
-
-        if cached_api:
-            # Reuse the logged-in API instance from migration (rate limit optimization)
-            api = cached_api
-            _LOGGER.debug("Reusing logged-in session from migration")
+        if config.get(CONF_PLANT_ID) == DEFAULT_PLANT_ID:
+            # Migration couldn't resolve the actual plant_id (e.g. a transient
+            # server error). Retry it here so failures benefit from the
+            # automatic setup-retry backoff instead of getting stuck waiting
+            # for a restart.
+            api, plant_id = await _resolve_default_plant_id(
+                hass, username, password, url
+            )
+            new_data = dict(config_entry.data)
+            new_data[CONF_PLANT_ID] = plant_id
+            hass.config_entries.async_update_entry(config_entry, data=new_data)
         else:
-            # No cached API (normal setup or migration didn't run)
-            # Create new API instance and login
-            api, _ = await _create_api_and_login(hass, username, password, url)
+            # Check if migration cached an authenticated API instance for us to
+            # reuse. This avoids calling login() twice (once in migration, once
+            # here) which would trigger rate limiting.
+            cached_api = _CACHED_APIS.pop(config_entry.entry_id, None)
 
-        # Get plant_id and devices using the authenticated session
-        plant_id = config[CONF_PLANT_ID]
+            if cached_api:
+                # Reuse the logged-in API instance from migration (rate limit
+                # optimization)
+                api = cached_api
+                _LOGGER.debug("Reusing logged-in session from migration")
+            else:
+                # No cached API (normal setup or migration didn't run)
+                # Create new API instance and login
+                api, _ = await _create_api_and_login(hass, username, password, url)
+
+            plant_id = config[CONF_PLANT_ID]
+
+        # Get devices using the authenticated session
         try:
             devices = await hass.async_add_executor_job(api.device_list, plant_id)
         except (RequestException, JSONDecodeError) as ex:
