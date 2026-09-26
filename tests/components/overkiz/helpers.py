@@ -13,7 +13,10 @@ from pyoverkiz.models import (
     DeviceUnavailableEvent,
     Event,
     EventState,
+    ExecutionRegisteredEvent,
     ExecutionStateChangedEvent,
+    GatewayAliveEvent,
+    GatewayDownEvent,
 )
 
 from homeassistant.components.overkiz.const import UPDATE_INTERVAL
@@ -103,6 +106,14 @@ def device_created_event(device_url: str) -> DeviceCreatedEvent:
     return DeviceCreatedEvent(name=EventName.DEVICE_CREATED, device_url=device_url)
 
 
+def execution_registered_event(exec_id: str) -> ExecutionRegisteredEvent:
+    """Build an EXECUTION_REGISTERED event."""
+    return ExecutionRegisteredEvent(
+        name=EventName.EXECUTION_REGISTERED,
+        exec_id=exec_id,
+    )
+
+
 def execution_state_changed_event(
     exec_id: str, new_state: ExecutionState, old_state: ExecutionState
 ) -> ExecutionStateChangedEvent:
@@ -113,6 +124,16 @@ def execution_state_changed_event(
         new_state=new_state,
         old_state=old_state,
     )
+
+
+def gateway_down_event(gateway_id: str) -> GatewayDownEvent:
+    """Build a GATEWAY_DOWN event for the given gateway."""
+    return GatewayDownEvent(name=EventName.GATEWAY_DOWN, gateway_id=gateway_id)
+
+
+def gateway_alive_event(gateway_id: str) -> GatewayAliveEvent:
+    """Build a GATEWAY_ALIVE event for the given gateway."""
+    return GatewayAliveEvent(name=EventName.GATEWAY_ALIVE, gateway_id=gateway_id)
 
 
 async def async_deliver_events(

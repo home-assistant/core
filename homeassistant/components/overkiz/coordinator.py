@@ -24,6 +24,8 @@ from pyoverkiz.models import (
     DeviceStateChangedEvent,
     ExecutionRegisteredEvent,
     ExecutionStateChangedEvent,
+    Gateway,
+    GatewayEvent,
     Place,
 )
 
@@ -40,7 +42,14 @@ from homeassistant.util.decorator import Registry
 if TYPE_CHECKING:
     from . import OverkizDataConfigEntry
 
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, LOGGER, UPDATE_INTERVAL
+from .const import (
+    DOMAIN,
+    IGNORED_OVERKIZ_DEVICES,
+    LOGGER,
+    UPDATE_INTERVAL,
+    UPDATE_INTERVAL_EXECUTION,
+    UPDATE_INTERVAL_RATE_LIMITED_MAX,
+)
 
 # Events are a discriminated union; each handler narrows to its own subtype.
 EVENT_HANDLERS: Registry[
@@ -53,6 +62,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
     config_entry: OverkizDataConfigEntry
     _default_update_interval: timedelta
+    _rate_limited_interval: timedelta | None
 
     def __init__(
         self,
@@ -62,6 +72,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         *,
         client: OverkizClient,
         devices: list[Device],
+        gateways: list[Gateway],
         places: Place | None,
     ) -> None:
         """Initialize global data updater."""
@@ -77,8 +88,14 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.client = client
         self.devices: dict[str, Device] = {d.device_url: d for d in devices}
         self.executions: dict[str, list[dict[str, str]]] = {}
+        # A gateway reports its devices' states from cache while it is
+        # unreachable, so nothing in the device payload reveals the outage.
+        self.unreachable_gateways: set[str] = {
+            gateway.gateway_id for gateway in gateways if gateway.alive is False
+        }
         self.areas = self._places_to_area(places) if places else None
         self._default_update_interval = UPDATE_INTERVAL
+        self._rate_limited_interval = None
 
         self.is_stateless = all(
             device.identifier.protocol in (Protocol.RTS, Protocol.INTERNAL)
@@ -103,6 +120,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         except TooManyConcurrentRequestsError as exception:
             raise UpdateFailed("Too many concurrent requests.") from exception
         except TooManyRequestsError as exception:
+            self._back_off()
             raise UpdateFailed("Too many requests, try again later.") from exception
         except MaintenanceError as exception:
             raise UpdateFailed("Server is down for maintenance.") from exception
@@ -123,7 +141,10 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             except (BadCredentialsError, NotAuthenticatedError) as exception:
                 raise ConfigEntryAuthFailed("Invalid authentication.") from exception
             except TooManyRequestsError as exception:
+                self._back_off()
                 raise UpdateFailed("Too many requests, try again later.") from exception
+
+            self._on_successful_update()
 
             return self.devices
 
@@ -133,9 +154,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             if event_handler := EVENT_HANDLERS.get(event.name):
                 await event_handler(self, event)
 
-        # Restore the default update interval if no executions are pending
-        if not self.executions:
-            self.update_interval = self._default_update_interval
+        self._on_successful_update()
 
         return self.devices
 
@@ -156,10 +175,51 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
         return areas
 
+    def _on_successful_update(self) -> None:
+        """Clear the rate limit back off and restore the polling cadence.
+
+        Every path that returns data has to go through this, including the
+        reconnect after a ServerDisconnectedError.
+        """
+        self._rate_limited_interval = None
+
+        if self.executions and not self.is_stateless:
+            self.update_interval = UPDATE_INTERVAL_EXECUTION
+        else:
+            self.update_interval = self._default_update_interval
+
+    def _back_off(self) -> None:
+        """Poll less often while the server is rate limiting us.
+
+        DataUpdateCoordinator otherwise retries at the unchanged interval.
+        """
+        # An all-assumed-state hub already polls hourly, so the cap has to
+        # respect the configured interval or backing off would speed it up.
+        maximum = max(UPDATE_INTERVAL_RATE_LIMITED_MAX, self._default_update_interval)
+        previous = self._rate_limited_interval or self._default_update_interval
+        self._rate_limited_interval = min(previous * 2, maximum)
+        self.update_interval = self._rate_limited_interval
+
     def set_update_interval(self, update_interval: timedelta) -> None:
         """Set the update interval and store this value."""
         self.update_interval = update_interval
         self._default_update_interval = update_interval
+
+
+@EVENT_HANDLERS.register(EventName.GATEWAY_DOWN)
+async def on_gateway_down(
+    coordinator: OverkizDataUpdateCoordinator, event: GatewayEvent
+) -> None:
+    """Handle gateway down event."""
+    coordinator.unreachable_gateways.add(event.gateway_id)
+
+
+@EVENT_HANDLERS.register(EventName.GATEWAY_ALIVE)
+async def on_gateway_alive(
+    coordinator: OverkizDataUpdateCoordinator, event: GatewayEvent
+) -> None:
+    """Handle gateway alive event."""
+    coordinator.unreachable_gateways.discard(event.gateway_id)
 
 
 @EVENT_HANDLERS.register(EventName.DEVICE_AVAILABLE)
@@ -200,6 +260,13 @@ async def on_device_state_changed(
     if event.device_url not in coordinator.devices:
         return
 
+    # A state coming from the device is proof its gateway carried it.
+    # GATEWAY_ALIVE is otherwise the only way out of unreachable_gateways, so a
+    # missed one would strand every entity on that gateway.
+    coordinator.unreachable_gateways.discard(
+        coordinator.devices[event.device_url].identifier.gateway_id
+    )
+
     for state in event.device_states:
         device = coordinator.devices[event.device_url]
         device.states[state.name] = state
@@ -229,9 +296,6 @@ async def on_execution_registered(
     """Handle execution registered event."""
     if event.exec_id not in coordinator.executions:
         coordinator.executions[event.exec_id] = []
-
-    if not coordinator.is_stateless:
-        coordinator.update_interval = timedelta(seconds=1)
 
 
 @EVENT_HANDLERS.register(EventName.EXECUTION_STATE_CHANGED)
