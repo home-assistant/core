@@ -107,17 +107,6 @@
             "value_template": "[%key:component::rest::common::value_template_description%]"
           },
           "description": "Configure a binary sensor using the `{entry_title}` resource",
-          "sections": {
-            "availability": {
-              "data": {
-                "availability": "[%key:component::template::common::availability%]"
-              },
-              "data_description": {
-                "availability": "[%key:component::rest::common::availability_description%]"
-              },
-              "name": "[%key:component::rest::common::availability_section%]"
-            }
-          },
           "title": "RESTful binary sensor"
         }
       }
@@ -164,17 +153,6 @@
             "value_template": "[%key:component::rest::common::value_template_description%]"
           },
           "description": "Configure a sensor using the `{entry_title}` resource",
-          "sections": {
-            "availability": {
-              "data": {
-                "availability": "[%key:component::template::common::availability%]"
-              },
-              "data_description": {
-                "availability": "[%key:component::rest::common::availability_description%]"
-              },
-              "name": "[%key:component::rest::common::availability_section%]"
-            }
-          },
           "title": "RESTful sensor"
         }
       }

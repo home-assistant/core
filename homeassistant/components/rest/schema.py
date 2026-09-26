@@ -360,6 +360,7 @@ SENSOR_SUBENTRY_FLOW_SCHEMA = SUBENTRY_FLOW_SCHEMA.extend(
                 mode=selector.SelectSelectorMode.DROPDOWN,
                 custom_value=True,
                 sort=True,
+                translation_key="sensor_unit_of_measurement",
             )
         ),
         probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
