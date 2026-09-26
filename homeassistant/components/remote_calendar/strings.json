@@ -3,7 +3,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "forbidden": "[%key:component::remote_calendar::config::error::forbidden%]",
-      "invalid_ics_file": "[%key:component::remote_calendar::config::error::invalid_ics_file%]"
+      "invalid_ics_file": "[%key:component::remote_calendar::config::error::invalid_ics_file%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -23,6 +24,17 @@
           "username": "The username for HTTP Basic Authentication."
         },
         "description": "The calendar requires authentication."
+      },
+      "reconfigure": {
+        "data": {
+          "url": "[%key:component::remote_calendar::config::step::user::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "url": "[%key:component::remote_calendar::config::step::user::data_description::url%]",
+          "verify_ssl": "[%key:common::config_flow::description::verify_ssl%]"
+        },
+        "description": "Update the URL of the remote calendar."
       },
       "user": {
         "data": {
