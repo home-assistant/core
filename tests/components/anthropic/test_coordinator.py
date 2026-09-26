@@ -12,6 +12,7 @@ from homeassistant.components.anthropic.const import DOMAIN
 from homeassistant.components.anthropic.coordinator import (
     UPDATE_INTERVAL_CONNECTED,
     UPDATE_INTERVAL_DISCONNECTED,
+    model_alias,
 )
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import Context, HomeAssistant
@@ -19,6 +20,25 @@ from homeassistant.helpers import intent
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+@pytest.mark.parametrize(
+    ("model_id", "expected_alias"),
+    [
+        pytest.param("claude-opus-4-5-20251101", "claude-opus-4-5", id="dated_model"),
+        pytest.param("claude-opus-4-7", "claude-opus-4-7", id="version_alias"),
+        pytest.param("claude-opus-5", "claude-opus-5", id="major_version_alias"),
+        pytest.param(
+            "claude-opus-4-10", "claude-opus-4-10", id="multi_digit_version_alias"
+        ),
+        pytest.param(
+            "claude-mythos-preview", "claude-mythos-preview", id="preview_alias"
+        ),
+    ],
+)
+def test_model_alias(model_id: str, expected_alias: str) -> None:
+    """Test model aliases preserve versions and remove date suffixes."""
+    assert model_alias(model_id) == expected_alias
 
 
 @patch("anthropic.resources.models.AsyncModels.list", new_callable=AsyncMock)

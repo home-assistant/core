@@ -57,9 +57,6 @@ from anthropic.types import (
     ThinkingConfigDisabledParam,
     ThinkingConfigEnabledParam,
     ThinkingDelta,
-    ToolChoiceAnyParam,
-    ToolChoiceAutoParam,
-    ToolChoiceToolParam,
     ToolParam,
     ToolSearchToolBm25_20251119Param,
     ToolSearchToolResultBlock,
@@ -111,7 +108,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import (
@@ -528,12 +525,10 @@ class AnthropicDeltaStream:
         self,
         chat_log: conversation.ChatLog,
         stream: AsyncStream[MessageStreamEvent],
-        output_tool: str | None = None,
     ) -> None:
         """Initialize the delta stream."""
         self._chat_log: conversation.ChatLog = chat_log
         self._stream: AsyncStream[MessageStreamEvent] = stream
-        self._output_tool: str | None = output_tool
 
         self._buffer: deque[
             conversation.AssistantContentDeltaDict
@@ -666,15 +661,6 @@ class AnthropicDeltaStream:
             input=input,
         )
         self._current_tool_args = ""
-        if name == self._output_tool:
-            if self._first_block or self._content_details.has_content():
-                if self._content_details:
-                    self._content_details.delete_empty()
-                    self._buffer.append({"native": self._content_details})
-                self._content_details = ContentDetails()
-                self._content_details.add_citation_detail()
-                self._buffer.append({"role": "assistant"})
-                self._first_block = False
 
     def on_text_block(self, text: str, citations: list[TextCitation] | None) -> None:
         """Handle TextBlock."""
@@ -814,14 +800,7 @@ class AnthropicDeltaStream:
 
     def on_input_json_delta(self, partial_json: str) -> None:
         """Handle InputJSONDelta."""
-        if (
-            self._current_tool_block is not None
-            and self._current_tool_block["name"] == self._output_tool
-        ):
-            self._content_details.citation_details[-1].length += len(partial_json)
-            self._buffer.append({"content": partial_json})
-        else:
-            self._current_tool_args += partial_json
+        self._current_tool_args += partial_json
 
     def on_text_delta(self, text: str) -> None:
         """Handle TextDelta."""
@@ -845,9 +824,6 @@ class AnthropicDeltaStream:
     def on_content_block_stop_event(self, index: int) -> None:
         """Handle RawContentBlockStopEvent."""
         if self._current_tool_block is not None:
-            if self._current_tool_block["name"] == self._output_tool:
-                self._current_tool_block = None
-                return
             tool_args = (
                 json.loads(self._current_tool_args) if self._current_tool_args else {}
             )
@@ -928,12 +904,11 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
-    async def _get_model_args(  # noqa: C901
+    async def _get_model_args(
         self,
         chat_log: conversation.ChatLog,
-        structure_name: str | None = None,
         structure: probatio.Schema | None = None,
-    ) -> tuple[MessageCreateParamsStreaming, str | None]:
+    ) -> MessageCreateParamsStreaming:
         """Get the model arguments."""
         options: dict[str, Any] = DEFAULT | self.subentry.data
 
@@ -1110,77 +1085,21 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 )
             )
 
-        if structure and structure_name:
-            if (
-                self.model_info.capabilities
-                and self.model_info.capabilities.structured_outputs.supported
-            ):
-                # Native structured output for those models who support it.
-                structure_name = None
-                model_args.setdefault("output_config", OutputConfigParam())[
-                    "format"
-                ] = JSONOutputFormatParam(
+        if structure:
+            model_args.setdefault("output_config", OutputConfigParam())["format"] = (
+                JSONOutputFormatParam(
                     type="json_schema",
-                    schema={
-                        **probatio.to_openapi(
+                    schema=anthropic.transform_schema(
+                        probatio.to_openapi(
                             structure,
                             custom_serializer=chat_log.llm_api.custom_serializer
                             if chat_log.llm_api
                             else llm.selector_serializer,
                             openapi_version="3.1.0",
-                        ),
-                        "additionalProperties": False,
-                    },
+                        )
+                    ),
                 )
-            elif model_args["thinking"]["type"] == "disabled":
-                structure_name = slugify(structure_name)
-                if not tools:
-                    # Simplest case: no tools and no extended thinking
-                    # Add a tool and force its use
-                    model_args["tool_choice"] = ToolChoiceToolParam(
-                        type="tool",
-                        name=structure_name,
-                    )
-                else:
-                    # Second case: tools present but no extended thinking
-                    # Allow the model to use any tool but not text response
-                    # The model should know to use the right tool by its description
-                    model_args["tool_choice"] = ToolChoiceAnyParam(
-                        type="any",
-                    )
-            else:
-                # Extended thinking is enabled. With extended thinking, we cannot
-                # force tool use or disable text responses, so we add a hint to the
-                # system prompt instead. With extended thinking, the model should be
-                # smart enough to use the tool.
-                structure_name = slugify(structure_name)
-                model_args["tool_choice"] = ToolChoiceAutoParam(
-                    type="auto",
-                )
-
-                model_args["system"].append(  # type: ignore[union-attr]
-                    TextBlockParam(
-                        type="text",
-                        text=f"Claude MUST use the '{structure_name}' tool to provide "
-                        "the final answer instead of plain text.",
-                    )
-                )
-
-            if structure_name:
-                tools.append(
-                    ToolParam(
-                        name=structure_name,
-                        description="Use this tool to reply to the user",
-                        input_schema=probatio.to_openapi(
-                            structure,
-                            custom_serializer=chat_log.llm_api.custom_serializer
-                            if chat_log.llm_api
-                            else llm.selector_serializer,
-                            openapi_version="3.1.0",
-                        ),
-                    )
-                )
-                preloaded_tools.append(structure_name)
+            )
 
         if tools:
             if options[CONF_TOOL_SEARCH] and len(tools) > len(preloaded_tools) + 1:
@@ -1196,19 +1115,16 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
 
             model_args["tools"] = tools
 
-        return model_args, structure_name
+        return model_args
 
     async def _async_handle_chat_log(
         self,
         chat_log: conversation.ChatLog,
-        structure_name: str | None = None,
         structure: probatio.Schema | None = None,
         max_iterations: int = MAX_TOOL_ITERATIONS,
     ) -> None:
         """Generate an answer for the chat log."""
-        model_args, structure_name = await self._get_model_args(
-            chat_log, structure_name, structure
-        )
+        model_args = await self._get_model_args(chat_log, structure)
         coordinator = self.entry.runtime_data
         client = coordinator.client
 
@@ -1222,11 +1138,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                         content
                         async for content in chat_log.async_add_delta_content_stream(
                             self.entity_id,
-                            AnthropicDeltaStream(
-                                chat_log,
-                                stream,
-                                output_tool=structure_name or None,
-                            ),
+                            AnthropicDeltaStream(chat_log, stream),
                         )
                     ]
                 )
