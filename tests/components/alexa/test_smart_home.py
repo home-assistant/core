@@ -1,9 +1,12 @@
 """Test for smart home alexa support."""
 
+import asyncio
+from collections.abc import Generator
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
+from webrtc_models import RTCIceCandidate, RTCIceCandidateInit
 
 from homeassistant.components import camera
 from homeassistant.components.alexa import smart_home, state_report
@@ -13,8 +16,11 @@ from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.components.valve import SERVICE_STOP_VALVE, ValveEntityFeature
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
@@ -5846,3 +5852,516 @@ async def test_alexa_config(
         assert len(test_config._auth.async_invalidate_access_token.mock_calls) == 1
         await test_config.async_accept_grant("grant_code")
         test_config._auth.async_do_auth.assert_called_once_with("grant_code")
+
+
+WEBRTC_OFFER = "v=0\r\no=- 1 1 IN IP4 0.0.0.0\r\ns=-\r\na=group:BUNDLE 0 1\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\na=mid:0\r\na=recvonly\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=mid:1\r\na=recvonly\r\n"
+WEBRTC_CANDIDATE_IN_ANSWER = "candidate:0 1 udp 2130706431 192.168.1.20 4000 typ host"
+WEBRTC_CANDIDATE_IN_ANSWER_IPV6 = (
+    "candidate:0 2 udp 2130706431 2001:db8::20 4000 typ host"
+)
+WEBRTC_ANSWER = (
+    "v=0\r\no=- 2 2 IN IP4 0.0.0.0\r\ns=-\r\na=group:BUNDLE 0 1\r\n"
+    "m=video 9 UDP/TLS/RTP/SAVPF 96\r\na=mid:0\r\na=sendonly\r\n"
+    f"a={WEBRTC_CANDIDATE_IN_ANSWER}\r\na={WEBRTC_CANDIDATE_IN_ANSWER_IPV6}\r\n"
+    "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=mid:1\r\na=sendonly\r\n"
+)
+WEBRTC_CANDIDATE_IPV4 = "candidate:1 1 udp 2130706431 192.168.1.10 5000 typ host"
+WEBRTC_CANDIDATE_IPV6 = "candidate:2 1 udp 2130706431 fe80::1 5000 typ host"
+WEBRTC_CANDIDATE_AUDIO = "candidate:3 1 udp 1694498815 10.0.0.1 6000 typ srflx"
+WEBRTC_CANDIDATE_MDNS = "candidate:4 1 udp 2130706431 abcd.local 5000 typ host"
+WEBRTC_CANDIDATE_RELAY = "candidate:5 1 udp 16777215 203.0.113.5 7000 typ relay"
+RTC_SESSION_ID = "e2c4f6a8-0b1d-4e3f-9a5b-7c8d9e0f1a2b"
+DEMO_CAMERA_ENDPOINT = "camera#demo_camera"
+
+
+@pytest.fixture
+def mock_camera_capabilities(
+    request: pytest.FixtureRequest, mock_camera: None
+) -> Generator[None]:
+    """Patch the camera capabilities of the demo camera."""
+    with patch(
+        "homeassistant.components.camera.Camera.camera_capabilities",
+        new_callable=PropertyMock(
+            return_value=camera.CameraCapabilities(request.param)
+        ),
+    ):
+        yield
+
+
+RTC_SESSION_CAPABILITY = {
+    "type": "AlexaInterface",
+    "interface": "Alexa.RTCSessionController",
+    "version": "3",
+    "configuration": {"isFullDuplexAudioSupported": False},
+}
+
+
+@pytest.mark.parametrize(
+    ("mock_camera_capabilities", "external_url", "interfaces", "rtc_capability"),
+    [
+        pytest.param(
+            {camera.StreamType.WEB_RTC},
+            "http://nohttps.local:8123",
+            ("Alexa.RTCSessionController",),
+            RTC_SESSION_CAPABILITY,
+            id="webrtc_only",
+        ),
+        pytest.param(
+            {camera.StreamType.HLS, camera.StreamType.WEB_RTC},
+            "https://example.nabu.casa",
+            ("Alexa.RTCSessionController", "Alexa.CameraStreamController"),
+            RTC_SESSION_CAPABILITY,
+            id="webrtc_and_hls",
+        ),
+        pytest.param(
+            {camera.StreamType.HLS},
+            "https://example.nabu.casa",
+            ("Alexa.CameraStreamController",),
+            None,
+            id="hls_only",
+        ),
+    ],
+    indirect=["mock_camera_capabilities"],
+)
+@pytest.mark.usefixtures("mock_stream", "mock_camera_capabilities")
+async def test_camera_discovery_webrtc(
+    hass: HomeAssistant,
+    external_url: str,
+    interfaces: tuple[str, ...],
+    rtc_capability: dict[str, Any] | None,
+) -> None:
+    """Test camera discovery advertises the RTC session controller."""
+    await async_process_ha_core_config(hass, {"external_url": external_url})
+    request = get_new_request("Alexa.Discovery", "Discover")
+
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
+
+    endpoints = msg["event"]["payload"]["endpoints"]
+    appliance = next(
+        endpoint
+        for endpoint in endpoints
+        if endpoint["endpointId"] == DEMO_CAMERA_ENDPOINT
+    )
+    capabilities = assert_endpoint_capabilities(
+        appliance, *interfaces, "Alexa.EndpointHealth", "Alexa"
+    )
+    assert get_capability(capabilities, "Alexa.RTCSessionController") == rtc_capability
+
+
+@pytest.mark.parametrize(
+    "mock_camera_capabilities", [{camera.StreamType.WEB_RTC}], indirect=True
+)
+@pytest.mark.usefixtures("mock_camera_capabilities")
+async def test_camera_discovery_webrtc_camera_off(hass: HomeAssistant) -> None:
+    """Test the RTC session controller is advertised for a switched off camera."""
+    await hass.services.async_call(
+        camera.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "camera.demo_camera"},
+        blocking=True,
+    )
+    request = get_new_request("Alexa.Discovery", "Discover")
+
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
+
+    endpoints = msg["event"]["payload"]["endpoints"]
+    appliance = next(
+        endpoint
+        for endpoint in endpoints
+        if endpoint["endpointId"] == DEMO_CAMERA_ENDPOINT
+    )
+    capabilities = assert_endpoint_capabilities(
+        appliance, "Alexa.RTCSessionController", "Alexa.EndpointHealth", "Alexa"
+    )
+    assert (
+        get_capability(capabilities, "Alexa.RTCSessionController")
+        == RTC_SESSION_CAPABILITY
+    )
+
+
+@pytest.mark.parametrize(
+    "mock_camera_capabilities", [{camera.StreamType.WEB_RTC}], indirect=True
+)
+@pytest.mark.usefixtures("mock_camera_capabilities")
+async def test_initiate_session_with_offer(hass: HomeAssistant) -> None:
+    """Test InitiateSessionWithOffer returns an answer with gathered candidates."""
+    request = get_new_request(
+        "Alexa.RTCSessionController",
+        "InitiateSessionWithOffer",
+        DEMO_CAMERA_ENDPOINT,
+    )
+    request["directive"]["payload"] = {
+        "sessionId": RTC_SESSION_ID,
+        "offer": {"format": "SDP", "value": WEBRTC_OFFER},
+    }
+
+    async def async_handle_async_webrtc_offer(
+        offer_sdp: str, session_id: str, send_message: camera.WebRTCSendMessage
+    ) -> None:
+        assert offer_sdp == WEBRTC_OFFER
+        assert session_id == RTC_SESSION_ID
+        send_message(camera.WebRTCAnswer(WEBRTC_ANSWER))
+        send_message(camera.WebRTCCandidate(RTCIceCandidateInit(WEBRTC_CANDIDATE_IPV4)))
+        send_message(camera.WebRTCCandidate(RTCIceCandidateInit(WEBRTC_CANDIDATE_IPV6)))
+        send_message(
+            camera.WebRTCCandidate(
+                RTCIceCandidateInit(WEBRTC_CANDIDATE_AUDIO, sdp_mid="1")
+            )
+        )
+        send_message(camera.WebRTCCandidate(RTCIceCandidateInit(WEBRTC_CANDIDATE_MDNS)))
+        send_message(camera.WebRTCCandidate(RTCIceCandidateInit("candidate:6")))
+        send_message(
+            camera.WebRTCCandidate(
+                RTCIceCandidateInit(WEBRTC_CANDIDATE_RELAY, sdp_m_line_index=5)
+            )
+        )
+        send_message(camera.WebRTCCandidate(RTCIceCandidateInit("")))
+
+    with patch(
+        "homeassistant.components.camera.Camera.async_handle_async_webrtc_offer",
+        side_effect=async_handle_async_webrtc_offer,
+    ):
+        msg = await smart_home.async_handle_message(
+            hass, get_default_config(hass), request
+        )
+
+    assert "event" in msg
+    response = msg["event"]
+    assert response["header"]["namespace"] == "Alexa.RTCSessionController"
+    assert response["header"]["name"] == "AnswerGeneratedForSession"
+    assert response["endpoint"]["endpointId"] == DEMO_CAMERA_ENDPOINT
+    assert response["payload"]["answer"]["format"] == "SDP"
+    assert response["payload"]["answer"]["value"] == (
+        "v=0\r\n"
+        "o=- 2 2 IN IP4 0.0.0.0\r\n"
+        "s=-\r\n"
+        "a=group:BUNDLE 0 1\r\n"
+        "m=video 9 UDP/TLS/RTP/SAVPF 96\r\n"
+        "a=mid:0\r\n"
+        "a=sendonly\r\n"
+        f"a={WEBRTC_CANDIDATE_IN_ANSWER}\r\n"
+        f"a={WEBRTC_CANDIDATE_IPV4}\r\n"
+        f"a={WEBRTC_CANDIDATE_RELAY}\r\n"
+        "a=end-of-candidates\r\n"
+        "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n"
+        "a=mid:1\r\n"
+        "a=sendonly\r\n"
+        f"a={WEBRTC_CANDIDATE_AUDIO}\r\n"
+        "a=end-of-candidates\r\n"
+    )
+
+
+@pytest.mark.parametrize(
+    "mock_camera_capabilities", [{camera.StreamType.WEB_RTC}], indirect=True
+)
+@pytest.mark.usefixtures("mock_camera_capabilities")
+async def test_initiate_session_with_offer_candidate_timeout(
+    hass: HomeAssistant,
+) -> None:
+    """Test the answer is returned when no end of candidates is signalled."""
+    request = get_new_request(
+        "Alexa.RTCSessionController",
+        "InitiateSessionWithOffer",
+        DEMO_CAMERA_ENDPOINT,
+    )
+    request["directive"]["payload"] = {
+        "sessionId": RTC_SESSION_ID,
+        "offer": {"format": "SDP", "value": WEBRTC_OFFER},
+    }
+
+    async def async_handle_async_webrtc_offer(
+        offer_sdp: str, session_id: str, send_message: camera.WebRTCSendMessage
+    ) -> None:
+        send_message(camera.WebRTCAnswer(WEBRTC_ANSWER))
+        with pytest.warns(DeprecationWarning, match="RTCIceCandidate is deprecated"):
+            candidate = RTCIceCandidate(WEBRTC_CANDIDATE_IPV4)
+        send_message(camera.WebRTCCandidate(candidate))
+
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.async_handle_async_webrtc_offer",
+            side_effect=async_handle_async_webrtc_offer,
+        ),
+        patch(
+            "homeassistant.components.alexa.handlers.RTC_CANDIDATE_GATHERING_TIMEOUT",
+            0,
+        ),
+    ):
+        msg = await smart_home.async_handle_message(
+            hass, get_default_config(hass), request
+        )
+
+    response = msg["event"]
+    assert response["header"]["name"] == "AnswerGeneratedForSession"
+    answer = response["payload"]["answer"]["value"]
+    assert f"a={WEBRTC_CANDIDATE_IPV4}\r\n" in answer
+    assert answer.count("a=end-of-candidates") == 2
+
+
+@pytest.mark.parametrize(
+    "mock_camera_capabilities", [{camera.StreamType.WEB_RTC}], indirect=True
+)
+@pytest.mark.usefixtures("mock_camera_capabilities")
+async def test_initiate_session_with_offer_without_media(hass: HomeAssistant) -> None:
+    """Test an answer without media sections is returned unchanged."""
+    request = get_new_request(
+        "Alexa.RTCSessionController",
+        "InitiateSessionWithOffer",
+        DEMO_CAMERA_ENDPOINT,
+    )
+    request["directive"]["payload"] = {
+        "sessionId": RTC_SESSION_ID,
+        "offer": {"format": "SDP", "value": WEBRTC_OFFER},
+    }
+
+    async def async_handle_async_webrtc_offer(
+        offer_sdp: str, session_id: str, send_message: camera.WebRTCSendMessage
+    ) -> None:
+        send_message(camera.WebRTCAnswer("a=sendonly"))
+        send_message(camera.WebRTCCandidate(RTCIceCandidateInit("")))
+
+    with patch(
+        "homeassistant.components.camera.Camera.async_handle_async_webrtc_offer",
+        side_effect=async_handle_async_webrtc_offer,
+    ):
+        msg = await smart_home.async_handle_message(
+            hass, get_default_config(hass), request
+        )
+
+    response = msg["event"]
+    assert response["header"]["name"] == "AnswerGeneratedForSession"
+    assert response["payload"]["answer"]["value"] == "a=sendonly"
+
+
+@pytest.mark.parametrize(
+    "mock_camera_capabilities", [{camera.StreamType.WEB_RTC}], indirect=True
+)
+@pytest.mark.parametrize(
+    ("messages", "answer_timeout", "error_message"),
+    [
+        pytest.param(
+            [camera.WebRTCError("webrtc_offer_failed", "Camera offline")],
+            1,
+            "Failed to negotiate WebRTC session: Camera offline",
+            id="error",
+        ),
+        pytest.param(
+            [],
+            0,
+            "Failed to negotiate WebRTC session: camera did not answer in time",
+            id="timeout",
+        ),
+        pytest.param(
+            [
+                camera.WebRTCAnswer(WEBRTC_ANSWER),
+                camera.WebRTCError("webrtc_offer_failed", "Stream lost"),
+            ],
+            1,
+            "Failed to negotiate WebRTC session: Stream lost",
+            id="error_after_answer",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_camera_capabilities")
+async def test_initiate_session_with_offer_failure(
+    hass: HomeAssistant,
+    messages: list[camera.WebRTCMessage],
+    answer_timeout: float,
+    error_message: str,
+) -> None:
+    """Test InitiateSessionWithOffer failures return ENDPOINT_UNREACHABLE."""
+    request = get_new_request(
+        "Alexa.RTCSessionController",
+        "InitiateSessionWithOffer",
+        DEMO_CAMERA_ENDPOINT,
+    )
+    request["directive"]["payload"] = {
+        "sessionId": RTC_SESSION_ID,
+        "offer": {"format": "SDP", "value": WEBRTC_OFFER},
+    }
+
+    async def async_handle_async_webrtc_offer(
+        offer_sdp: str, session_id: str, send_message: camera.WebRTCSendMessage
+    ) -> None:
+        for message in messages:
+            send_message(message)
+
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.async_handle_async_webrtc_offer",
+            side_effect=async_handle_async_webrtc_offer,
+        ),
+        patch(
+            "homeassistant.components.alexa.handlers.RTC_ANSWER_TIMEOUT",
+            answer_timeout,
+        ),
+        patch(
+            "homeassistant.components.camera.Camera.close_webrtc_session"
+        ) as mock_close,
+    ):
+        msg = await smart_home.async_handle_message(
+            hass, get_default_config(hass), request
+        )
+
+    response = msg["event"]
+    assert response["header"]["name"] == "ErrorResponse"
+    assert response["payload"]["type"] == "ENDPOINT_UNREACHABLE"
+    assert response["payload"]["message"] == error_message
+    mock_close.assert_called_once_with(RTC_SESSION_ID)
+
+
+@pytest.mark.parametrize(
+    "mock_camera_capabilities", [{camera.StreamType.WEB_RTC}], indirect=True
+)
+@pytest.mark.usefixtures("mock_camera_capabilities")
+async def test_initiate_session_with_offer_slow_camera(hass: HomeAssistant) -> None:
+    """Test a camera that does not return from the offer in time."""
+    request = get_new_request(
+        "Alexa.RTCSessionController",
+        "InitiateSessionWithOffer",
+        DEMO_CAMERA_ENDPOINT,
+    )
+    request["directive"]["payload"] = {
+        "sessionId": RTC_SESSION_ID,
+        "offer": {"format": "SDP", "value": WEBRTC_OFFER},
+    }
+
+    async def async_handle_async_webrtc_offer(
+        offer_sdp: str, session_id: str, send_message: camera.WebRTCSendMessage
+    ) -> None:
+        await asyncio.Event().wait()
+
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.async_handle_async_webrtc_offer",
+            side_effect=async_handle_async_webrtc_offer,
+        ),
+        patch("homeassistant.components.alexa.handlers.RTC_ANSWER_TIMEOUT", 0),
+        patch(
+            "homeassistant.components.camera.Camera.close_webrtc_session"
+        ) as mock_close,
+    ):
+        msg = await smart_home.async_handle_message(
+            hass, get_default_config(hass), request
+        )
+
+    response = msg["event"]
+    assert response["header"]["name"] == "ErrorResponse"
+    assert response["payload"]["type"] == "ENDPOINT_UNREACHABLE"
+    assert (
+        response["payload"]["message"]
+        == "Failed to negotiate WebRTC session: camera did not answer in time"
+    )
+    mock_close.assert_called_once_with(RTC_SESSION_ID)
+
+
+@pytest.mark.parametrize(
+    "mock_camera_capabilities", [{camera.StreamType.HLS}], indirect=True
+)
+@pytest.mark.usefixtures("mock_camera_capabilities")
+async def test_initiate_session_with_offer_unsupported(hass: HomeAssistant) -> None:
+    """Test InitiateSessionWithOffer for a camera without WebRTC support."""
+    request = get_new_request(
+        "Alexa.RTCSessionController",
+        "InitiateSessionWithOffer",
+        DEMO_CAMERA_ENDPOINT,
+    )
+    request["directive"]["payload"] = {
+        "sessionId": RTC_SESSION_ID,
+        "offer": {"format": "SDP", "value": WEBRTC_OFFER},
+    }
+
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
+
+    response = msg["event"]
+    assert response["header"]["name"] == "ErrorResponse"
+    assert response["payload"]["type"] == "INVALID_DIRECTIVE"
+
+
+async def test_initiate_session_with_offer_unknown_camera(
+    hass: HomeAssistant,
+) -> None:
+    """Test InitiateSessionWithOffer for a camera entity that does not exist."""
+    hass.states.async_set(
+        "camera.test",
+        "idle",
+        {"friendly_name": "Test camera", "supported_features": 3},
+    )
+    request = get_new_request(
+        "Alexa.RTCSessionController", "InitiateSessionWithOffer", "camera#test"
+    )
+    request["directive"]["payload"] = {
+        "sessionId": RTC_SESSION_ID,
+        "offer": {"format": "SDP", "value": WEBRTC_OFFER},
+    }
+
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
+
+    response = msg["event"]
+    assert response["header"]["name"] == "ErrorResponse"
+    assert response["payload"]["type"] == "ENDPOINT_UNREACHABLE"
+
+
+@pytest.mark.usefixtures("mock_camera")
+async def test_rtc_session_connected(hass: HomeAssistant) -> None:
+    """Test SessionConnected is acknowledged."""
+    request = get_new_request(
+        "Alexa.RTCSessionController", "SessionConnected", DEMO_CAMERA_ENDPOINT
+    )
+    request["directive"]["payload"] = {"sessionId": RTC_SESSION_ID}
+
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
+
+    response = msg["event"]
+    assert response["header"]["namespace"] == "Alexa.RTCSessionController"
+    assert response["header"]["name"] == "SessionConnected"
+    assert response["endpoint"]["endpointId"] == DEMO_CAMERA_ENDPOINT
+    assert response["payload"] == {"sessionId": RTC_SESSION_ID}
+
+
+@pytest.mark.parametrize("camera_on", [True, False])
+@pytest.mark.usefixtures("mock_camera")
+async def test_rtc_session_disconnected(hass: HomeAssistant, camera_on: bool) -> None:
+    """Test SessionDisconnected closes the WebRTC session, even for a camera that is off."""
+    await hass.services.async_call(
+        camera.DOMAIN,
+        SERVICE_TURN_ON if camera_on else SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "camera.demo_camera"},
+        blocking=True,
+    )
+    request = get_new_request(
+        "Alexa.RTCSessionController", "SessionDisconnected", DEMO_CAMERA_ENDPOINT
+    )
+    request["directive"]["payload"] = {"sessionId": RTC_SESSION_ID}
+
+    with patch(
+        "homeassistant.components.camera.Camera.close_webrtc_session"
+    ) as mock_close:
+        msg = await smart_home.async_handle_message(
+            hass, get_default_config(hass), request
+        )
+
+    mock_close.assert_called_once_with(RTC_SESSION_ID)
+    response = msg["event"]
+    assert response["header"]["namespace"] == "Alexa.RTCSessionController"
+    assert response["header"]["name"] == "SessionDisconnected"
+    assert response["payload"] == {"sessionId": RTC_SESSION_ID}
+
+
+async def test_rtc_session_disconnected_unknown_camera(hass: HomeAssistant) -> None:
+    """Test SessionDisconnected for a camera entity that does not exist."""
+    hass.states.async_set(
+        "camera.test",
+        "idle",
+        {"friendly_name": "Test camera", "supported_features": 3},
+    )
+    request = get_new_request(
+        "Alexa.RTCSessionController", "SessionDisconnected", "camera#test"
+    )
+    request["directive"]["payload"] = {"sessionId": RTC_SESSION_ID}
+
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
+
+    response = msg["event"]
+    assert response["header"]["name"] == "SessionDisconnected"
+    assert response["payload"] == {"sessionId": RTC_SESSION_ID}
