@@ -230,6 +230,7 @@ async def test_vtm_view_relay_error(
     [
         f"/api/ezviz/vtm/{SERIAL}.ts",
         f"/api/ezviz/vtm/{SERIAL}.ts?auth=wrong-token",
+        f"/api/ezviz/vtm/{SERIAL}.ts?auth=%C5%BC%C3%B3%C5%82%C4%87",
         "/api/ezviz/vtm/C000000000.ts?auth={token}",
     ],
 )

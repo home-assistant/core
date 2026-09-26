@@ -125,7 +125,10 @@ class EzvizVtmStreamView(HomeAssistantView):
         hass = request.app[KEY_HASS]
         camera = hass.data.get(DATA_VTM, {}).get(serial)
         access_token = request.query.get("auth", "")
-        if camera is None or not hmac.compare_digest(access_token, camera.access_token):
+        # Compare bytes: compare_digest rejects non-ASCII str input with TypeError.
+        if camera is None or not hmac.compare_digest(
+            access_token.encode(), camera.access_token.encode()
+        ):
             raise web.HTTPNotFound
 
         # Track the handler before the first await, so unloading the entry at
