@@ -570,7 +570,6 @@ def test_tracking_type_capability_attribute() -> None:
             "zen_zone",
             {
                 ATTR_SOURCE_TYPE: SourceType.GPS,
-                ATTR_IN_ZONES: [],
             },
             id="location_name",
         ),
@@ -583,7 +582,6 @@ def test_tracking_type_capability_attribute() -> None:
             STATE_UNKNOWN,
             {
                 ATTR_SOURCE_TYPE: SourceType.GPS,
-                ATTR_IN_ZONES: [],
             },
             id="no_location",
         ),
@@ -597,7 +595,6 @@ def test_tracking_type_capability_attribute() -> None:
             {
                 ATTR_BATTERY_LEVEL: 100,
                 ATTR_SOURCE_TYPE: SourceType.GPS,
-                ATTR_IN_ZONES: [],
             },
             id="battery_only",
         ),
