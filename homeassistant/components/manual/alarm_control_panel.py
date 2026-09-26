@@ -120,7 +120,7 @@ def _codes_validator(value: Any) -> dict[str | None, str]:
 
     codes = {code_id: cv.string(code) for code_id, code in items}
     codes = {code_id: code for code_id, code in codes.items() if code}
-    # A repeated code would be reported under the code ID it was configured under first
+    # Duplicate codes would make the reported code ID ambiguous
     if len(set(codes.values())) != len(codes):
         raise probatio.Invalid("Codes must be unique")
     return codes
@@ -267,7 +267,11 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         self._attr_unique_id = unique_id
         self._code_template = code_template
         self._codes = codes or {}
-        self._attr_code_arm_required = code_arm_required
+        # Without a code to check against, requiring one for arming only makes the
+        # panel impossible to arm from the frontend, which shows no code field
+        self._attr_code_arm_required = code_arm_required and (
+            code_template is not None or bool(self._codes)
+        )
         self._disarm_after_trigger = disarm_after_trigger
         self._previous_state: AlarmControlPanelState = self._state
         self._state_ts: datetime.datetime = dt_util.utcnow()

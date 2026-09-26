@@ -1751,17 +1751,23 @@ async def test_multiple_codes_from_yaml_numbers(hass: HomeAssistant) -> None:
 async def test_empty_code_accepts_any_code(
     hass: HomeAssistant, code_config: str | list[str] | dict[str, str]
 ) -> None:
-    """Test that an empty code configuration validates no code."""
+    """Test that an empty code configuration requires and validates no code."""
     await _setup_manual_alarm(hass, code_config)
 
-    assert hass.states.get(ENTITY_ID).attributes["code_format"] is None
+    attributes = hass.states.get(ENTITY_ID).attributes
+    assert attributes["code_format"] is None
+    assert attributes["code_arm_required"] is False
 
-    # Any code is accepted, since no code is configured
-    await common.async_alarm_arm_away(hass, "whatever")
+    # The frontend shows no code field, so it arms without passing one
+    await common.async_alarm_arm_away(hass)
     assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.ARMED_AWAY
 
-    await common.async_alarm_disarm(hass, "something else")
+    await common.async_alarm_disarm(hass)
     assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
+
+    # Any code is accepted too, since there is none to check against
+    await common.async_alarm_arm_away(hass, "whatever")
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.ARMED_AWAY
 
 
 @pytest.mark.parametrize(
