@@ -3,6 +3,7 @@
 import logging
 from typing import TYPE_CHECKING
 
+from aiopvapi.automations import Automations
 from aiopvapi.resources.model import PowerviewData
 from aiopvapi.resources.shade_data import PowerviewShadeData
 from aiopvapi.rooms import Rooms
@@ -29,6 +30,7 @@ PLATFORMS = [
     Platform.SCENE,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,6 +88,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) ->
 
         shades = Shades(pv_request)
         shade_data: PowerviewData = await shades.get_shades()
+
+        automations = Automations(pv_request)
+        automation_data: PowerviewData = await automations.get_automations()
+
     except HUB_EXCEPTIONS as err:
         raise ConfigEntryNotReady(
             f"Connection error to PowerView hub {hub_address}: {err}"
@@ -114,6 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) ->
         room_data=room_data.processed,
         scene_data=scene_data.processed,
         shade_data=shade_data.processed,
+        automation_data=automation_data.processed,
         coordinator=coordinator,
         device_info=device_info,
     )
