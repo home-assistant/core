@@ -20,7 +20,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import OpenGarageConfigEntry
-from .entity import OpenGarageEntity
+from .entity import (
+    OpenGarageCapabilityEntity,
+    OpenGarageEntity,
+    async_add_capability_entities,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +72,25 @@ async def async_setup_entry(
             description,
         )
         for description in SENSOR_TYPES
-        if description.key in open_garage_data_coordinator.data
+        if description.key in open_garage_data_coordinator.data.raw
+    )
+
+    async_add_capability_entities(
+        entry.runtime_data,
+        async_add_entities,
+        {
+            "openings_counter": lambda: OpenGarageOpeningsSensor(
+                entry.runtime_data,
+                cast(str, entry.unique_id),
+                SensorEntityDescription(
+                    key="nopenings",
+                    translation_key="openings",
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                    entity_registry_enabled_default=False,
+                    state_class=SensorStateClass.TOTAL_INCREASING,
+                ),
+            )
+        },
     )
 
 
@@ -79,4 +101,18 @@ class OpenGarageSensor(OpenGarageEntity, SensorEntity):
     @override
     def _update_attr(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_native_value = self.coordinator.data.get(self.entity_description.key)
+        self._attr_native_value = self.coordinator.data.raw.get(
+            self.entity_description.key
+        )
+
+
+class OpenGarageOpeningsSensor(OpenGarageCapabilityEntity, SensorEntity):
+    """Representation of the opener's reported openings counter."""
+
+    capability = "openings_counter"
+
+    @callback
+    @override
+    def _update_attr(self) -> None:
+        """Update the number of openings."""
+        self._attr_native_value = self.coordinator.data.nopenings

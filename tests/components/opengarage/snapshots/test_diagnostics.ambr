@@ -1,0 +1,35 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'capabilities': dict({
+      'light_control': False,
+      'lock_control': False,
+      'obstruction': False,
+      'openings_counter': False,
+      'pemu': True,
+      'security_plus': True,
+    }),
+    'door_state': 'closed',
+    'door_value': 0,
+    'has_swrx': True,
+    'light_on': None,
+    'lock_engaged': None,
+    'nopenings': None,
+    'obstruction': None,
+    'pemu': 2,
+    'raw': dict({
+      '_raw': '**REDACTED**',
+      'cid': '**REDACTED**',
+      'device_key': '**REDACTED**',
+      'dkey': '**REDACTED**',
+      'door': 0,
+      'fwv': 120,
+      'has_swrx': 1,
+      'mac': '**REDACTED**',
+      'name': '**REDACTED**',
+      'pemu': 2,
+      'secv': 1,
+    }),
+    'secv': 1,
+  })
+# ---

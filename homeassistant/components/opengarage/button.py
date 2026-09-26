@@ -1,8 +1,8 @@
 """OpenGarage button."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, cast, override
+from typing import cast, override
 
 from opengarage import OpenGarage
 
@@ -23,7 +23,7 @@ from .entity import OpenGarageEntity
 class OpenGarageButtonEntityDescription(ButtonEntityDescription):
     """OpenGarage Browser button description."""
 
-    press_action: Callable[[OpenGarage], Any]
+    press_action: Callable[[OpenGarage], Awaitable[int | None]]
 
 
 BUTTONS: tuple[OpenGarageButtonEntityDescription, ...] = (
@@ -69,7 +69,9 @@ class OpenGarageButtonEntity(OpenGarageEntity, ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Press the button."""
-        await self.entity_description.press_action(
-            self.coordinator.open_garage_connection
+        await self.coordinator.async_command(
+            lambda: self.entity_description.press_action(
+                self.coordinator.open_garage_connection
+            )
         )
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
