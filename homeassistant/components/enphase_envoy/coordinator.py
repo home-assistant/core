@@ -205,6 +205,12 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # just try again next time
             _LOGGER.debug("%s: Error reading firmware: %s", err, self.name)
             return
+        except RuntimeError as err:
+            # Don't raise on session closed next runs will try again
+            if "Session is closed" in str(err):
+                _LOGGER.debug("Client is closed when reading firmware: %s", self.name)
+                return
+            raise
         if (current_firmware := self.envoy_firmware) and current_firmware != (
             new_firmware := self.envoy.firmware
         ):
@@ -243,9 +249,18 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_fetch_and_compare_mac(self) -> None:
         """Get Envoy interface information and update mac in device connections."""
-        interface: (
-            EnvoyInterfaceInformation | None
-        ) = await self.envoy.interface_settings()
+        try:
+            interface: (
+                EnvoyInterfaceInformation | None
+            ) = await self.envoy.interface_settings()
+        except RuntimeError as err:
+            # We may get session is closed if we still run at unload
+            if "Session is closed" in str(err):
+                _LOGGER.debug(
+                    "Client is closed when reading interface information: %s", self.name
+                )
+                return
+            raise
         if interface is None:
             _LOGGER.debug("%s: interface information returned None", self.name)
             return
