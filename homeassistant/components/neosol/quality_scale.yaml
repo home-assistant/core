@@ -55,9 +55,8 @@ rules:
   discovery-update-info:
     status: exempt
     comment: |
-      The integration takes a single config entry, so Home Assistant aborts a
-      rediscovery before the flow runs. The stored port is a /dev/serial/by-id path,
-      which survives a move to another USB port anyway.
+      The stored port is a /dev/serial/by-id path, which survives a move to another
+      USB port, so a rediscovered dongle aborts on its unchanged port.
   discovery: done
   docs-data-update: todo
   docs-examples: todo
