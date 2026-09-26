@@ -61,7 +61,7 @@ def build_authorize_url(
     """Return the URL that sends the user to the authorization endpoint."""
     return str(
         URL(authorize_url)
-        .update_query(
+        .with_query(
             {
                 "response_type": "code",
                 "client_id": client_id,
@@ -101,8 +101,6 @@ async def async_token_request(
     data: Mapping[str, Any],
     *,
     domain: str,
-    headers: Mapping[str, str] | None = None,
-    allow_redirects: bool = True,
 ) -> dict:
     """Post to a token endpoint and return the decoded response."""
     session = async_get_clientsession(hass)
@@ -110,9 +108,7 @@ async def async_token_request(
     _LOGGER.debug("Sending token request to %s", token_url)
 
     try:
-        resp = await session.post(
-            token_url, data=data, headers=headers, allow_redirects=allow_redirects
-        )
+        resp = await session.post(token_url, data=data)
         if resp.status >= 400:
             error_body = ""
             try:
@@ -129,14 +125,6 @@ async def async_token_request(
                 detail = error_body[:200] if error_body else "unknown error"
             _LOGGER.debug(
                 "Token request for %s failed (%s): %s", domain, resp.status, detail
-            )
-        elif not allow_redirects and 300 <= resp.status < 400:
-            raise ClientResponseError(
-                resp.request_info,
-                resp.history,
-                status=resp.status,
-                message="Token endpoint redirected",
-                headers=resp.headers,
             )
         resp.raise_for_status()
         return cast(dict, await resp.json())
