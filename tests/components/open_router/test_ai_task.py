@@ -559,3 +559,46 @@ async def test_generate_image_clears_native_image_data(
     ]
     content = chat_log.content[-1]
     assert content.native[0]["image_url"]["url"] is None
+
+
+async def test_generate_image_clears_all_native_image_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+) -> None:
+    """Test all base64 image payloads are discarded from the chat log cache."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_openai_client.chat.completions.create = AsyncMock(
+        return_value=_image_completion(
+            [
+                {
+                    "type": "image_url",
+                    "image_url": {"url": "data:image/png;base64,aGVsbG8="},
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {"url": "data:image/png;base64,d29ybGQ="},
+                },
+            ]
+        )
+    )
+
+    with patch.object(
+        media_source.local_source.LocalSource,
+        "async_upload_media",
+        return_value="media-source://ai_task/image/2025-06-14_225900_test_task.png",
+    ):
+        result = await ai_task.async_generate_image(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.gemini_2_5_flash_image",
+            instructions="Generate a test image",
+        )
+
+    chat_log = hass.data[conversation.chat_log.DATA_CHAT_LOGS][
+        result["conversation_id"]
+    ]
+    content = chat_log.content[-1]
+    assert content.native[0]["image_url"]["url"] is None
+    assert content.native[1]["image_url"]["url"] is None

@@ -98,8 +98,9 @@ async def async_migrate_entry(
             try:
                 models = {model.id: model for model in await client.get_models()}
             except OpenRouterError as err:
-                LOGGER.error("Error fetching models during migration: %s", err)
-                return False
+                raise ConfigEntryNotReady(
+                    "Error fetching models during migration"
+                ) from err
 
             for subentry in subentries_to_backfill:
                 model = models.get(subentry.data[CONF_MODEL])

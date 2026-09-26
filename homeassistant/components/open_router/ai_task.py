@@ -1,6 +1,7 @@
 """AI Task integration for OpenRouter."""
 
 import base64
+import contextlib
 from json import JSONDecodeError
 import logging
 import re
@@ -115,8 +116,10 @@ class OpenRouterAITaskEntity(
         except (LookupError, TypeError) as err:
             raise HomeAssistantError("Invalid image returned") from err
 
-        # Discard the base64 payload so it isn't retained in the chat log cache.
-        content.native[0]["image_url"]["url"] = None
+        # Discard the base64 payloads so none linger in the chat log cache.
+        for image in content.native:
+            with contextlib.suppress(LookupError, TypeError):
+                image["image_url"]["url"] = None
 
         if not isinstance(image_url, str):
             raise HomeAssistantError("Invalid image returned")
