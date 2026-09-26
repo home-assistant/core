@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.braviatv.const import CONF_USE_PSK, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import HomeAssistant
@@ -17,31 +19,22 @@ ENTRY_DATA = {
 }
 
 
-async def test_migrate_empty_unique_id(hass: HomeAssistant) -> None:
-    """Test an entry stored without a CID adopts the MAC as unique ID."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id="", data=ENTRY_DATA, version=1, minor_version=1
-    )
-    config_entry.add_to_hass(hass)
-
-    with (
-        patch("homeassistant.components.braviatv.BraviaClient", autospec=True),
-        patch(
-            "homeassistant.components.braviatv.coordinator.BraviaTVCoordinator._async_update_data",
-            return_value=None,
-        ),
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.unique_id == "aa:bb:cc:dd:ee:ff"
-
-
-async def test_existing_unique_id_is_kept(hass: HomeAssistant) -> None:
-    """Test an entry that already has a unique ID is left alone."""
+@pytest.mark.parametrize(
+    ("unique_id", "expected_unique_id"),
+    [
+        # Stored without a CID: adopts the MAC address.
+        ("", "aa:bb:cc:dd:ee:ff"),
+        # Stored with a CID: left alone.
+        ("very_unique_string", "very_unique_string"),
+    ],
+)
+async def test_migrate_unique_id(
+    hass: HomeAssistant, unique_id: str, expected_unique_id: str
+) -> None:
+    """Test only an entry stored without a CID gets a new unique ID."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="very_unique_string",
+        unique_id=unique_id,
         data=ENTRY_DATA,
         version=1,
         minor_version=1,
@@ -58,7 +51,7 @@ async def test_existing_unique_id_is_kept(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.unique_id == "very_unique_string"
+    assert config_entry.unique_id == expected_unique_id
     assert config_entry.minor_version == 2
 
 

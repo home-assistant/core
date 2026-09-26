@@ -75,20 +75,16 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: BraviaTVConfigEntry
 ) -> bool:
     """Migrate an old config entry."""
-    if config_entry.version > 1:
-        return False
-
     if config_entry.version == 1 and config_entry.minor_version == 1:
-        # Televisions that report an empty CID were stored without a usable
-        # unique ID. Adopt the MAC address, which the config flow now falls
-        # back to. The device and the entities derive their identifiers from
-        # the unique ID of the entry, so they have to move along or they are
-        # left behind as orphans.
+        # A television that reports an empty CID was stored with an empty
+        # unique ID. Adopt the MAC address, like the config flow now does.
         new_unique_id = config_entry.unique_id
 
         if not new_unique_id:
             new_unique_id = format_mac(config_entry.data[CONF_MAC])
 
+            # The device and the entities are identified by the unique ID too,
+            # so they move along or they are left behind as orphans.
             device_registry = dr.async_get(hass)
             if device_entry := device_registry.async_get_device_by_identifier(
                 (DOMAIN, ""), config_entry.entry_id

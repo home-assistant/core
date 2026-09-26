@@ -22,7 +22,7 @@
       'subentries': list([
       ]),
       'title': 'BRAVIA TV-Model',
-      'unique_id': 'very_unique_string',
+      'unique_id': '**REDACTED**',
       'version': 1,
     }),
     'device_info': dict({

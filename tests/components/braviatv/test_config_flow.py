@@ -22,7 +22,6 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import instance_id
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MODEL_NAME,
@@ -458,36 +457,51 @@ async def test_reauth_successful(hass: HomeAssistant, use_psk, new_pin) -> None:
         assert config_entry.data[CONF_PIN] == new_pin
 
 
-async def test_create_entry_with_empty_cid(hass: HomeAssistant) -> None:
-    """Test two televisions that report an empty CID can both be added."""
-    for host, mac in (
-        ("bravia-host", "AA:BB:CC:DD:EE:FF"),
-        ("bravia-host-2", "11:22:33:44:55:66"),
+@pytest.mark.parametrize(
+    ("existing_unique_id", "expected_type", "expected_unique_ids"),
+    [
+        # Another television that was stored without a CID before the fallback.
+        ("", FlowResultType.CREATE_ENTRY, ["", "aa:bb:cc:dd:ee:ff"]),
+        # The same television, already stored under its MAC address.
+        ("aa:bb:cc:dd:ee:ff", FlowResultType.ABORT, ["aa:bb:cc:dd:ee:ff"]),
+    ],
+)
+async def test_user_flow_with_empty_cid(
+    hass: HomeAssistant,
+    existing_unique_id: str,
+    expected_type: FlowResultType,
+    expected_unique_ids: list[str],
+) -> None:
+    """Test a television that reports an empty CID is identified by its MAC."""
+    MockConfigEntry(
+        domain=DOMAIN, unique_id=existing_unique_id, data={CONF_HOST: "other-host"}
+    ).add_to_hass(hass)
+
+    with (
+        patch("pybravia.BraviaClient.connect"),
+        patch("pybravia.BraviaClient.pair"),
+        patch("pybravia.BraviaClient.set_wol_mode"),
+        patch(
+            "pybravia.BraviaClient.get_system_info",
+            return_value=BRAVIA_SYSTEM_INFO
+            | {"cid": "", "macAddr": "AA:BB:CC:DD:EE:FF"},
+        ),
     ):
-        with (
-            patch("pybravia.BraviaClient.connect"),
-            patch("pybravia.BraviaClient.pair"),
-            patch("pybravia.BraviaClient.set_wol_mode"),
-            patch(
-                "pybravia.BraviaClient.get_system_info",
-                return_value=BRAVIA_SYSTEM_INFO | {"cid": "", "macAddr": mac},
-            ),
-        ):
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_USER}
-            )
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], user_input={CONF_HOST: host}
-            )
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                user_input={CONF_USE_PSK: True, CONF_USE_SSL: False},
-            )
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], user_input={CONF_PIN: "secret"}
-            )
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: "bravia-host"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_USE_PSK: True, CONF_USE_SSL: False}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PIN: "secret"}
+        )
 
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["result"].unique_id == format_mac(mac)
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+    assert result["type"] is expected_type
+    assert (
+        sorted(entry.unique_id for entry in hass.config_entries.async_entries(DOMAIN))
+        == expected_unique_ids
+    )
