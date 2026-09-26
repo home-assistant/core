@@ -175,9 +175,12 @@ def async_setup_rpc_attribute_entities(
     assert coordinator
 
     polling_coordinator = None
+    config_coordinator = None
     if not (sleep_period := config_entry.data[CONF_SLEEP_PERIOD]):
         polling_coordinator = config_entry.runtime_data.rpc_poll
         assert polling_coordinator
+        config_coordinator = config_entry.runtime_data.rpc_config_poll
+        assert config_coordinator
 
     entities = []
     for sensor_id in sensors:
@@ -196,10 +199,15 @@ def async_setup_rpc_attribute_entities(
             ):
                 continue
 
+            source_data = (
+                coordinator.device.config[key]
+                if description.config_source
+                else coordinator.device.status[key]
+            )
             if (
                 description.sub_key
-                and description.sub_key not in coordinator.device.status[key]
-                and not description.supported(coordinator.device.status[key])
+                and description.sub_key not in source_data
+                and not description.supported(source_data)
             ):
                 continue
 
@@ -215,6 +223,13 @@ def async_setup_rpc_attribute_entities(
                 ).unique_id
                 LOGGER.debug("Removing Shelly entity with unique_id: %s", unique_id)
                 async_remove_shelly_entity(hass, domain, unique_id)
+            elif description.config_source:
+                if not sleep_period:
+                    entities.append(
+                        get_entity_class(sensor_class, description)(
+                            config_coordinator, key, sensor_id, description
+                        )
+                    )
             elif description.use_polling_coordinator:
                 if not sleep_period:
                     entities.append(
@@ -310,6 +325,8 @@ class RpcEntityDescription(EntityDescription):
 
     sub_key: str | None = None
 
+    # Read the value from device.config instead of device.status
+    config_source: bool = False
     value: Callable[[Any, Any], Any] | None = None
     available: Callable[[dict], bool] | None = None
     removal_condition: Callable[[dict, dict, str], bool] | None = None
@@ -410,6 +427,9 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
     """Helper class to represent a rpc entity."""
 
     _attr_has_entity_name = True
+    # sleeping entities do not call CoordinatorEntity.__init__(), which is what
+    # normally sets this
+    coordinator_context: Any = None
 
     def __init__(self, coordinator: ShellyRpcCoordinator, key: str) -> None:
         """Initialize Shelly entity."""
@@ -437,7 +457,11 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
     # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """When entity is added to HASS."""
-        self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
+        self.async_on_remove(
+            self.coordinator.async_add_listener(
+                self._update_callback, self.coordinator_context
+            )
+        )
 
     @callback
     def _update_callback(self) -> None:
@@ -552,6 +576,10 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
 
         self._attr_unique_id = f"{super().unique_id}-{attribute}"
         self._last_value = None
+        if description.config_source:
+            # let the coordinator know which config key this entity watches, so
+            # a change limited to it does not have to reload the config entry
+            self.coordinator_context = (key, description.sub_key)
         has_id, _, component_id = get_rpc_key(key)
         self._id = int(component_id) if has_id and component_id.isnumeric() else None
 
@@ -574,9 +602,17 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
             }
 
     @property
+    def source_data(self) -> dict:
+        """Device config or status by entity key, whichever the entity reads."""
+        if self.entity_description.config_source:
+            return cast(dict, self.coordinator.device.config[self.key])
+
+        return self.status
+
+    @property
     def sub_status(self) -> Any:
         """Device status by entity key."""
-        return self.status[self.entity_description.sub_key]
+        return self.source_data[self.entity_description.sub_key]
 
     @property
     def attribute_value(self) -> StateType:
@@ -584,7 +620,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
         if self.entity_description.value is not None:
             # using "get" here since subkey might not exist (e.g. "errors" sub_key)
             self._last_value = self.entity_description.value(
-                self.status.get(self.entity_description.sub_key), self._last_value
+                self.source_data.get(self.entity_description.sub_key), self._last_value
             )
         else:
             self._last_value = self.sub_status

@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 from aioshelly.const import MODEL_1PM, MODEL_CAMERA, MODEL_MOTION, MODEL_WALL_DISPLAY
@@ -27,6 +28,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityCategory,
     Platform,
 )
 from homeassistant.core import HomeAssistant, State
@@ -758,6 +760,257 @@ async def test_rpc_remove_virtual_switch_when_orphaned(
 
     assert entity_registry.async_get(entity_id1) is None
     assert entity_registry.async_get(entity_id2) is None
+
+
+async def _async_inject_config_change(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    config: dict[str, Any],
+    key: str,
+    sub_key: str,
+    value: Any,
+) -> None:
+    """Change the device config and report it the way the device does."""
+    new_config = deepcopy(config)
+    new_config[key][sub_key] = value
+    # the device bumps the config revision on every config change
+    new_config["sys"]["cfg_rev"] = new_config["sys"].get("cfg_rev", 0) + 1
+
+    async def _update_config() -> None:
+        monkeypatch.setattr(mock_rpc_device, "config", new_config)
+
+    mock_rpc_device.update_config = AsyncMock(side_effect=_update_config)
+
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "component": key,
+                    "data": [],
+                    "event": "config_changed",
+                    "id": 0,
+                    "ts": 1668522399.2,
+                }
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rpc_switch_input_lock(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test input lock switch for RPC device."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
+
+    config = deepcopy(mock_rpc_device.config)
+    config["switch:0"]["in_locked"] = False
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    await init_integration(hass, 3)
+
+    entity_id = "switch.test_name_test_switch_0_input_lock"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-switch:0-switch_in_locked"
+    assert entry.entity_category is EntityCategory.CONFIG
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_rpc_device.switch_set_config.assert_called_once_with(0, {"in_locked": True})
+
+    # the device applies the new value and reports the change
+    await _async_inject_config_change(
+        hass, mock_rpc_device, monkeypatch, config, "switch:0", "in_locked", True
+    )
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rpc_cover_input_lock(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test input lock switch for a RPC device in cover profile."""
+    config = deepcopy(mock_rpc_device.config)
+    config["cover:0"]["in_locked"] = True
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    await init_integration(hass, 3)
+
+    entity_id = "switch.test_name_test_cover_0_input_lock"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-cover:0-cover_in_locked"
+    assert entry.entity_category is EntityCategory.CONFIG
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_rpc_device.cover_set_config.assert_called_once_with(0, {"in_locked": False})
+
+    # the device applies the new value and reports the change
+    await _async_inject_config_change(
+        hass, mock_rpc_device, monkeypatch, config, "cover:0", "in_locked", False
+    )
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rpc_input_lock_change_does_not_reload(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test an external input lock change updates the entity without a reload."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
+
+    config = deepcopy(mock_rpc_device.config)
+    config["switch:0"]["in_locked"] = False
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    await init_integration(hass, 3)
+
+    entity_id = "switch.test_name_test_switch_0_input_lock"
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    mock_rpc_device.initialize.reset_mock()
+    await _async_inject_config_change(
+        hass, mock_rpc_device, monkeypatch, config, "switch:0", "in_locked", True
+    )
+
+    # the new value is shown without waiting for the reload debouncer
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # the entry was not reloaded, so the device was not initialized again
+    mock_rpc_device.initialize.assert_not_called()
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rpc_channel_rename_still_reloads(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a change outside the tracked config keys still reloads the entry."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
+
+    config = deepcopy(mock_rpc_device.config)
+    config["switch:0"]["in_locked"] = False
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    await init_integration(hass, 3)
+
+    entity_id = "switch.test_name_test_switch_0_input_lock"
+    assert (state := hass.states.get(entity_id))
+    assert state.name == "Test name test switch_0 input lock"
+
+    # renaming a channel changes the entity name, so the entry has to reload
+    mock_rpc_device.initialize.reset_mock()
+    await _async_inject_config_change(
+        hass, mock_rpc_device, monkeypatch, config, "switch:0", "name", "kitchen"
+    )
+
+    freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_rpc_device.initialize.assert_called()
+    assert (state := hass.states.get(entity_id))
+    assert state.name == "Test name kitchen input lock"
+
+
+async def test_rpc_input_lock_change_reloads_when_entity_disabled(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the entry still reloads when no entity is watching the config key."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
+
+    config = deepcopy(mock_rpc_device.config)
+    config["switch:0"]["in_locked"] = False
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    await init_integration(hass, 3)
+
+    # the input lock entity is disabled by default, so nothing tracks the key
+    assert hass.states.get("switch.test_name_test_switch_0_input_lock") is None
+
+    mock_rpc_device.initialize.reset_mock()
+    await _async_inject_config_change(
+        hass, mock_rpc_device, monkeypatch, config, "switch:0", "in_locked", True
+    )
+
+    freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_rpc_device.initialize.assert_called()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rpc_switch_input_lock_not_supported(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test input lock switch is not created when the device does not report it."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
+
+    assert "in_locked" not in mock_rpc_device.config["switch:0"]
+
+    await init_integration(hass, 3)
+
+    assert (
+        entity_registry.async_get("switch.test_name_test_switch_0_input_lock") is None
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

@@ -63,6 +63,7 @@ from .const import (
     GEN1_RELEASE_URL,
     GEN2_BETA_RELEASE_URL,
     GEN2_RELEASE_URL,
+    IGNORED_CONFIG_KEYS,
     LOGGER,
     MAX_SCRIPT_SIZE,
     PUSH_UPDATE_ISSUE_ID,
@@ -1109,3 +1110,41 @@ async def async_manage_coiot_issues_task(
         },
         data={"entry_id": entry.entry_id},
     )
+
+
+def is_config_entity_only_change(
+    old_config: dict[str, Any],
+    new_config: dict[str, Any],
+    tracked_keys: set[tuple[str, str]],
+) -> bool:
+    """Return True if a config change only affects keys backed by entities.
+
+    `tracked_keys` holds the (component key, sub key) pairs watched by config
+    entities. Those entities read the new value from the config coordinator, so
+    a change limited to them does not require reloading the config entry.
+
+    Anything else returns False and the config entry is reloaded as before, a
+    change that cannot be attributed to a tracked key included.
+    """
+    if not tracked_keys or old_config.keys() != new_config.keys():
+        return False
+
+    tracked_key_changed = False
+    for key, old_component in old_config.items():
+        new_component = new_config[key]
+        if old_component == new_component:
+            continue
+
+        if not isinstance(old_component, dict) or not isinstance(new_component, dict):
+            return False
+
+        for sub_key in old_component.keys() | new_component.keys():
+            if old_component.get(sub_key) == new_component.get(sub_key):
+                continue
+            if (key, sub_key) in IGNORED_CONFIG_KEYS:
+                continue
+            if (key, sub_key) not in tracked_keys:
+                return False
+            tracked_key_changed = True
+
+    return tracked_key_changed
