@@ -88,6 +88,27 @@ async def test_coordinators_preserve_handler_update_sources(
         assert coordinator.update_interval == IDLE_POLL_INTERVAL
 
 
+async def test_network_api_coordinators_keep_polling_when_empty(
+    network_api_config_entry_setup: MockConfigEntry,
+) -> None:
+    """Ensure Integration API handlers poll at full rate even while empty.
+
+    Polling is their only source of change, so an empty site must be polled
+    as often as a busy one to notice its first client or device.
+    """
+    loader = network_api_config_entry_setup.runtime_data.entity_loader
+    network = network_api_config_entry_setup.runtime_data.api.network
+
+    for handler in (network.clients, network.devices):
+        assert not handler.items()
+        coordinator = loader.get_data_update_coordinator(handler)
+        assert coordinator.update_interval == POLL_INTERVAL
+
+        await coordinator.async_refresh()
+
+        assert coordinator.update_interval == POLL_INTERVAL
+
+
 async def test_get_data_update_coordinator_requires_registered_handler(
     config_entry_setup: MockConfigEntry,
 ) -> None:

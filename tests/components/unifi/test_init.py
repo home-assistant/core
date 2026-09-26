@@ -1,9 +1,11 @@
 """Test UniFi Network integration setup process."""
 
+from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
 from aiounifi.models.message import MessageKey
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import unifi
@@ -14,7 +16,9 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_DEVICES,
     DOMAIN,
 )
+from homeassistant.components.unifi.coordinator import POLL_INTERVAL
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
+from homeassistant.components.unifi.hub.client_store import SAVE_DELAY, storage_key
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -22,11 +26,15 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import (
     DEFAULT_CONFIG_ENTRY_ID,
+    NETWORK_API_URL,
+    NETWORK_SITE_ID,
     ConfigEntryFactoryType,
     WebsocketMessageMock,
+    mock_network_api_lists,
 )
 
-from tests.common import flush_store
+from tests.common import MockConfigEntry, async_fire_time_changed, flush_store
+from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
 
@@ -241,3 +249,151 @@ async def test_remove_config_entry_device_rejects_child_device(
         == "Failed to remove device entry, rejected by integration"
     )
     assert device_registry.async_get(child_device.id)
+
+
+async def test_setup_entry_with_api_key(
+    hass: HomeAssistant,
+    network_api_config_entry_setup: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test an entry set up with an API key loads and polls, without a websocket."""
+    config_entry = network_api_config_entry_setup
+    hub = config_entry.runtime_data
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hub.config.uses_api_key
+    assert hub.is_admin
+    assert hub.available
+    assert hub.websocket.ws_task is None, "the Integration API has no websocket"
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, config_entry.unique_id), config_entry.entry_id
+    )
+    assert device is not None
+    assert device.sw_version == "10.6.106"
+
+
+async def test_setup_entry_with_rejected_api_key_triggers_reauth(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    network_api_config_entry: MockConfigEntry,
+) -> None:
+    """Test a rejected API key starts a reauthentication flow."""
+    aioclient_mock.get(
+        f"{NETWORK_API_URL}/v1/info", status=401, json={"error": {"code": 401}}
+    )
+
+    await hass.config_entries.async_setup(network_api_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert network_api_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
+    assert flows[0]["step_id"] == "reauth_api_key"
+
+
+@pytest.mark.parametrize(
+    ("status", "state", "reauth"),
+    [
+        (401, ConfigEntryState.SETUP_ERROR, True),
+        (503, ConfigEntryState.SETUP_RETRY, False),
+    ],
+)
+async def test_setup_entry_with_api_key_site_request_fails(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    network_api_config_entry: MockConfigEntry,
+    status: int,
+    state: ConfigEntryState,
+    reauth: bool,
+) -> None:
+    """Test a failing site request after the key was accepted maps like the first."""
+    aioclient_mock.get(
+        f"{NETWORK_API_URL}/v1/info", json={"applicationVersion": "10.6.106"}
+    )
+    aioclient_mock.get(
+        f"{NETWORK_API_URL}/v1/sites",
+        status=status,
+        json={"error": {"code": status, "message": "failed"}},
+    )
+
+    await hass.config_entries.async_setup(network_api_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert network_api_config_entry.state is state
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert [flow["step_id"] for flow in flows] == (["reauth_api_key"] if reauth else [])
+
+
+async def test_revoked_api_key_triggers_reauth_while_polling(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    network_api_config_entry_setup: MockConfigEntry,
+) -> None:
+    """Test a key revoked after setup starts a reauthentication flow from a poll."""
+    config_entry = network_api_config_entry_setup
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        f"{NETWORK_API_URL}/v1/sites/{NETWORK_SITE_ID}/clients",
+        status=401,
+        json={"error": {"code": 401, "message": "Unauthorized"}},
+    )
+    mock_network_api_lists(aioclient_mock)
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
+    assert flows[0]["step_id"] == "reauth_api_key"
+
+
+@pytest.mark.parametrize(
+    "network_client_payload",
+    [
+        [
+            {
+                "type": "WIRED",
+                "id": "f9edef13-b667-369f-9556-bc36978095af",
+                "name": "ha",
+                "macAddress": "00:00:00:00:00:01",
+                "access": {"type": "DEFAULT"},
+            }
+        ]
+    ],
+)
+async def test_remove_entry_with_api_key_deletes_stored_clients(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    network_api_config_entry_setup: MockConfigEntry,
+) -> None:
+    """Test removing an entry set up with an API key deletes its stored clients."""
+    config_entry = network_api_config_entry_setup
+    key = storage_key(config_entry)
+    hub = config_entry.runtime_data
+    assert hub.network_clients is not None
+    await flush_store(hub.network_clients._store)
+    assert key in hass_storage
+
+    # A poll leaves a delayed save pending when the entry goes
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert key not in hass_storage
+
+    freezer.tick(timedelta(seconds=SAVE_DELAY + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert key not in hass_storage, "the pending save did not put the file back"

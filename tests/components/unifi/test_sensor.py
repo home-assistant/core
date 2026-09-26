@@ -29,6 +29,7 @@ from homeassistant.components.unifi.const import (
     DEFAULT_DETECTION_TIME,
     DEVICE_STATES,
 )
+from homeassistant.components.unifi.coordinator import POLL_INTERVAL
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -47,9 +48,11 @@ from .conftest import (
     ConfigEntryFactoryType,
     WebsocketMessageMock,
     WebsocketStateManager,
+    mock_network_api_lists,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 WIRED_CLIENT = {
     "hostname": "Wired client",
@@ -2320,3 +2323,85 @@ async def test_device_uplink(
     device["uplink"]["uplink_mac"] = "00:00:00:00:00:03"
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
     assert hass.states.get("sensor.device_uplink_mac").state == "00:00:00:00:00:03"
+
+
+NETWORK_DEVICE = {
+    "id": "90edff53-2df1-3c0a-be00-516fb6e88bdc",
+    "macAddress": "00:00:00:00:01:01",
+    "ipAddress": "10.8.0.188",
+    "name": "switch",
+    "model": "USW Enterprise 8 PoE",
+    "state": "ONLINE",
+    "supported": True,
+    "firmwareVersion": "7.5.15",
+    "firmwareUpdatable": False,
+    "features": ["switching"],
+    "interfaces": ["ports"],
+}
+
+
+NETWORK_CLIENT = {
+    "type": "WIRELESS",
+    "id": "f9edef13-b667-369f-9556-bc36978095af",
+    "name": "phone",
+    "connectedAt": "2026-09-24T17:40:52Z",
+    "ipAddress": "10.8.0.20",
+    "macAddress": "00:00:00:00:00:01",
+    "uplinkDeviceId": "72cf3194-b496-3ada-877c-6764792adc4a",
+    "access": {"type": "DEFAULT"},
+}
+
+
+@pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_UPTIME_SENSORS: True}])
+@pytest.mark.parametrize("network_client_payload", [[NETWORK_CLIENT]])
+@pytest.mark.usefixtures("network_api_config_entry_setup")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_network_api_client_uptime_sensor(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the uptime of an Integration API client follows its connection."""
+    assert hass.states.get("sensor.phone_uptime").state == "2026-09-24T17:40:52+00:00"
+
+    # The client leaves: no connection, so no uptime
+    aioclient_mock.clear_requests()
+    mock_network_api_lists(aioclient_mock)
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.phone_uptime").state == STATE_UNKNOWN
+
+    # It comes back later, with a new connection time
+    aioclient_mock.clear_requests()
+    mock_network_api_lists(
+        aioclient_mock,
+        clients=[{**NETWORK_CLIENT, "connectedAt": "2026-09-25T08:00:00Z"}],
+    )
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.phone_uptime").state == "2026-09-25T08:00:00+00:00"
+
+
+@pytest.mark.parametrize("network_device_payload", [[NETWORK_DEVICE]])
+@pytest.mark.usefixtures("network_api_config_entry_setup")
+async def test_network_api_device_state_sensor(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the state sensor maps Integration API states onto the classic ones."""
+    assert hass.states.get("sensor.switch_state").state == "connected"
+
+    aioclient_mock.clear_requests()
+    mock_network_api_lists(
+        aioclient_mock, devices=[{**NETWORK_DEVICE, "state": "CONNECTION_INTERRUPTED"}]
+    )
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.switch_state").state == "heartbeat_missed"

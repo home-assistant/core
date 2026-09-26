@@ -28,6 +28,11 @@ PLATFORMS = [
 
 CONF_SITE_ID = "site"
 
+CONF_CONNECTION_MODE = "connection_mode"
+CONNECTION_MODE_LOCAL_USER = "local_user"
+CONNECTION_MODE_API_KEY = "api_key"
+"""Network Integration API with an API key, for consoles without local users."""
+
 UNIFI_WIRELESS_CLIENTS = "unifi_wireless_clients"
 
 CONF_ALLOW_BANDWIDTH_SENSORS = "allow_bandwidth_sensors"
