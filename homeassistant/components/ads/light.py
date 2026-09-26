@@ -21,9 +21,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE
+from .const import CONF_ADS_VAR, STATE_KEY_STATE
 from .entity import AdsEntity
-from .hub import AdsHub
+from .hub import AdsHub, async_get_hub
 
 CONF_ADS_VAR_BRIGHTNESS = "adsvar_brightness"
 CONF_ADS_VAR_COLOR_TEMP_KELVIN = "adsvar_color_temp_kelvin"
@@ -45,14 +45,14 @@ PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the light platform for ADS."""
-    ads_hub = hass.data[DATA_ADS]
+    ads_hub = async_get_hub(hass)
 
     ads_var_enable: str = config[CONF_ADS_VAR]
     ads_var_brightness: str | None = config.get(CONF_ADS_VAR_BRIGHTNESS)
@@ -61,7 +61,7 @@ def setup_platform(
     max_color_temp_kelvin: int | None = config.get(CONF_MAX_COLOR_TEMP_KELVIN)
     name: str = config[CONF_NAME]
 
-    add_entities(
+    async_add_entities(
         [
             AdsLight(
                 ads_hub,

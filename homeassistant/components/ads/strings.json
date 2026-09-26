@@ -1,4 +1,60 @@
 {
+  "config": {
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_net_id": "[%key:component::ads::config::error::invalid_net_id%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_net_id": "Invalid AMS NetID. Use the format `x.x.x.x.x.x`.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "device": "AMS NetID",
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "local_net_id": "Local AMS NetID",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "device": "The AMS NetID of the ADS device, for example `192.168.1.10.1.1`.",
+          "ip_address": "The IP address of the ADS device. If left empty, it is derived from the AMS NetID.",
+          "local_net_id": "The AMS NetID Home Assistant should identify itself with, for example `192.168.1.50.1.1`. Leave empty to use the automatically generated NetID. Only supported when Home Assistant runs on Linux.",
+          "port": "The AMS port of the PLC runtime, for example `851` for the first TwinCAT 3 runtime."
+        },
+        "description": "Set up the connection to your ADS device. Make sure a route to Home Assistant is configured on the device."
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not connect to the ADS device: {error}"
+    },
+    "not_loaded": {
+      "message": "The ADS integration is not set up."
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "description": "Configuring the {integration_title} connection using YAML is being removed. Your existing connection configuration has been imported into the UI automatically.\n\nRemove the `{domain}` key from your configuration.yaml file and restart Home Assistant to fix this issue. Entities configured with `platform: {domain}` are not affected by this change and keep working.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    },
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} using YAML is being removed. While importing your YAML configuration, Home Assistant could not connect to the ADS device. Fix the connection settings and restart Home Assistant to try again, or remove the `{domain}` key from your configuration and set up the integration in the UI. Your ADS entities defined in YAML keep working once the connection is set up.",
+      "title": "The {integration_title} YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_invalid_net_id": {
+      "description": "Configuring {integration_title} using YAML is being removed. While importing your YAML configuration, the AMS NetID turned out to be invalid. Fix the connection settings and restart Home Assistant to try again, or remove the `{domain}` key from your configuration and set up the integration in the UI. Your ADS entities defined in YAML keep working once the connection is set up.",
+      "title": "[%key:component::ads::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring {integration_title} using YAML is being removed. While importing your YAML configuration, an unknown error occurred. Fix the connection settings and restart Home Assistant to try again, or remove the `{domain}` key from your configuration and set up the integration in the UI. Your ADS entities defined in YAML keep working once the connection is set up.",
+      "title": "[%key:component::ads::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
+    }
+  },
   "services": {
     "write_data_by_name": {
       "description": "Write a value to the connected ADS device.",

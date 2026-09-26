@@ -15,9 +15,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_ADS_VAR, DATA_ADS
+from .const import CONF_ADS_VAR, STATE_KEY_STATE
 from .entity import AdsEntity
-from .hub import AdsHub
+from .hub import AdsHub, async_get_hub
 
 DEFAULT_NAME = "ADS select"
 
@@ -30,14 +30,14 @@ PLATFORM_SCHEMA = SELECT_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up an ADS select device."""
-    ads_hub = hass.data[DATA_ADS]
+    ads_hub = async_get_hub(hass)
 
     ads_var: str = config[CONF_ADS_VAR]
     name: str = config[CONF_NAME]
@@ -45,7 +45,7 @@ def setup_platform(
 
     entity = AdsSelect(ads_hub, ads_var, name, options)
 
-    add_entities([entity])
+    async_add_entities([entity])
 
 
 class AdsSelect(AdsEntity, SelectEntity):
@@ -61,26 +61,23 @@ class AdsSelect(AdsEntity, SelectEntity):
         """Initialize the AdsSelect entity."""
         super().__init__(ads_hub, name, ads_var)
         self._attr_options = options
-        self._attr_current_option = None
 
     @override
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
         await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_INT)
-        self._ads_hub.add_device_notification(
-            self._ads_var, pyads.PLCTYPE_INT, self._handle_ads_value
-        )
+
+    @property
+    @override
+    def current_option(self) -> str | None:
+        """Return the option the PLC reports."""
+        index = self._state_dict[STATE_KEY_STATE]
+        if index is None or not 0 <= index < len(self._attr_options):
+            return None
+        return self._attr_options[index]
 
     @override
     def select_option(self, option: str) -> None:
         """Change the selected option."""
-        if option in self._attr_options:
-            index = self._attr_options.index(option)
-            self._ads_hub.write_by_name(self._ads_var, index, pyads.PLCTYPE_INT)
-            self._attr_current_option = option
-
-    def _handle_ads_value(self, name: str, value: int) -> None:
-        """Handle the value update from ADS."""
-        if 0 <= value < len(self._attr_options):
-            self._attr_current_option = self._attr_options[value]
-            self.schedule_update_ha_state()
+        index = self._attr_options.index(option)
+        self._ads_hub.write_by_name(self._ads_var, index, pyads.PLCTYPE_INT)

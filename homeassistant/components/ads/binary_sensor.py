@@ -17,9 +17,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE
+from .const import CONF_ADS_VAR, STATE_KEY_STATE
 from .entity import AdsEntity
-from .hub import AdsHub
+from .hub import AdsHub, async_get_hub
 
 DEFAULT_NAME = "ADS binary sensor"
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
@@ -31,21 +31,21 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Binary Sensor platform for ADS."""
-    ads_hub = hass.data[DATA_ADS]
+    ads_hub = async_get_hub(hass)
 
     ads_var: str = config[CONF_ADS_VAR]
     name: str = config[CONF_NAME]
     device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
 
     ads_sensor = AdsBinarySensor(ads_hub, name, ads_var, device_class)
-    add_entities([ads_sensor])
+    async_add_entities([ads_sensor])
 
 
 class AdsBinarySensor(AdsEntity, BinarySensorEntity):
