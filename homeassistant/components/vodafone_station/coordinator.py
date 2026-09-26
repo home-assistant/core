@@ -135,9 +135,18 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     self.api.base_url.host,
                 )
                 await self.api.login()
-            raw_data_devices = await self.api.get_devices_data()
-            data_sensors = await self.api.get_sensor_data()
-            data_wifi = await self.api.get_wifi_data()
+            for attempt in range(2):
+                try:
+                    raw_data_devices = await self.api.get_devices_data()
+                    data_sensors = await self.api.get_sensor_data()
+                    data_wifi = await self.api.get_wifi_data()
+                except exceptions.CannotAuthenticate:
+                    if attempt:
+                        raise
+                    LOGGER.debug("Session rejected, re-login and retry data update")
+                    await self.api.login()
+                else:
+                    break
         except exceptions.CannotAuthenticate as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
