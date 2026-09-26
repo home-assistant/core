@@ -9,6 +9,9 @@ LOGGER = logging.getLogger(__package__)
 
 CONF_UNIT_ID: Final = "unit_id"
 
+# Also the inverter type string the device reports over Modbus.
+MODEL: Final = "Balco260"
+
 # BLUETTI's factory defaults.
 DEFAULT_PORT: Final = 502
 DEFAULT_UNIT_ID: Final = 1
