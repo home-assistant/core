@@ -1,9 +1,11 @@
 """Test the Assist Satellite platform."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
+from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
+from homeassistant.components.voip.assist_satellite import VoipAssistSatellite
 from homeassistant.components.voip.devices import VoIPDevice
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent as intent_helper
@@ -60,3 +62,41 @@ async def test_timer_events(
     assert len(mock_resolve.mock_calls) == 1
     assert len(mock_announce.mock_calls) == 1
     assert mock_resolve.mock_calls[0][1][0] == message
+
+
+async def test_run_start_streams_pipeline_audio(
+    hass: HomeAssistant,
+    satellite: VoipAssistSatellite,
+) -> None:
+    """Test RUN_START can immediately stream processor-produced audio."""
+    stream = Mock()
+    with (
+        patch(
+            "homeassistant.components.voip.assist_satellite.async_get_audio_output_stream",
+            return_value=stream,
+        ),
+        patch.object(satellite, "_send_tts", new_callable=AsyncMock) as send_tts,
+    ):
+        satellite.on_pipeline_event(
+            PipelineEvent(
+                PipelineEventType.RUN_START,
+                {
+                    "tts_output": {
+                        "token": "pipeline-output",
+                        "start_streaming": True,
+                    }
+                },
+            )
+        )
+        await hass.async_block_till_done()
+
+        satellite.on_pipeline_event(
+            PipelineEvent(
+                PipelineEventType.TTS_END,
+                {"tts_output": {"token": "pipeline-output"}},
+            )
+        )
+        await hass.async_block_till_done()
+
+    send_tts.assert_awaited_once_with(tts_stream=stream, wait_for_tone=False)
+    assert not satellite._tts_done.is_set()
