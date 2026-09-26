@@ -1,5 +1,6 @@
 """Utilities used by insteon component."""
 
+import asyncio
 from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, Any
@@ -32,6 +33,14 @@ if TYPE_CHECKING:
     from .entity import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+# Insteon's protocol cannot handle concurrent status requests (see the
+# sequential status pass in async_get_device_config in __init__.py). This
+# integration only ever has a single config entry, so one process-wide lock
+# is enough to serialize every async_status() call site: entity-triggered
+# refreshes (entity.py), the startup status pass, and new-device discovery
+# (both below).
+STATUS_LOCK = asyncio.Lock()
 
 
 def _register_event(event: Event, listener: Callable) -> None:
@@ -100,7 +109,9 @@ def register_new_device_callback(hass: HomeAssistant) -> None:
         )
         await devices.async_save(workdir=hass.config.config_dir)
         device = devices[address]
-        await device.async_status()
+        if not device.is_battery:
+            async with STATUS_LOCK:
+                await device.async_status()
         platforms = get_device_platforms(device)
         for platform in platforms:
             groups = get_device_platform_groups(device, platform)
