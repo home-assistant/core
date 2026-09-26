@@ -39,7 +39,7 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.const import ATTR_NAME, STATE_OFF, STATE_UNAVAILABLE, Platform
-from homeassistant.core import HomeAssistant, ServiceResponse
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -60,6 +60,7 @@ from .const import (
     ATTR_REPEAT_MODE,
     ATTR_SHUFFLE_ENABLED,
     DOMAIN,
+    LINKED_USER_SCHEMA_VERSION,
 )
 from .entity import MusicAssistantEntity
 from .helpers import catch_musicassistant_error, catch_user_not_found
@@ -472,16 +473,8 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         """Send the play_media command to the media player."""
         # An explicit username impersonates that Music Assistant user (the server rejects an
         # unknown name). When omitted, default playback to the Home Assistant user that made
-        # the call: the server resolves them by provider link, or plays as the default
-        # account (required=False) when that Home Assistant user has no linked account.
-        user: str | LinkedUser | None = username
-        ha_user_id = self._context.user_id if self._context is not None else None
-        if username is None and ha_user_id is not None:
-            user = LinkedUser(
-                provider=AuthProviderType.HOME_ASSISTANT,
-                user_id=ha_user_id,
-                required=False,
-            )
+        # the call.
+        user: str | LinkedUser | None = username or self._linked_user()
 
         media_uris: list[str] = []
         item: MediaItemType | ItemMapping | None = None
@@ -663,12 +656,29 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             media_content_type,
         )
 
+    @callback
+    def _linked_user(self) -> LinkedUser | None:
+        """Return the Music Assistant user to act as for the current call."""
+        ha_user_id = self._context.user_id if self._context is not None else None
+        if ha_user_id is None:
+            return None
+        return LinkedUser(
+            provider=AuthProviderType.HOME_ASSISTANT,
+            user_id=ha_user_id,
+            required=False,
+        )
+
     @override
     async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
         """Search media."""
+        server_info = self.mass.server_info
         return await async_search_media(
             self.mass,
             query,
+            self._linked_user()
+            if server_info is not None
+            and server_info.schema_version >= LINKED_USER_SCHEMA_VERSION
+            else None,
         )
 
     def _update_media_image_url(
