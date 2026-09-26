@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, override
 
-from aioshelly.const import MODEL_BLU_GATEWAY_G3, RPC_GENERATIONS
+from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
 from homeassistant.components.button import (
@@ -368,7 +368,6 @@ RPC_BUTTONS = {
         translation_key="calibrate",
         entity_category=EntityCategory.CONFIG,
         entity_class=ShellyBluTrvButton,
-        models={MODEL_BLU_GATEWAY_G3},
     ),
     "smoke_mute": RpcButtonDescription(
         key="smoke",
