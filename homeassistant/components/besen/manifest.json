@@ -13,6 +13,6 @@
   "documentation": "https://www.home-assistant.io/integrations/besen",
   "integration_type": "device",
   "iot_class": "local_push",
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["besen==0.4.7"]
 }
