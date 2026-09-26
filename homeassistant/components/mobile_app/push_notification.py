@@ -2,12 +2,25 @@
 
 import asyncio
 from collections.abc import Callable
+from datetime import datetime
+import logging
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.uuid import random_uuid_hex
 
+_LOGGER = logging.getLogger(__name__)
+
 PUSH_CONFIRM_TIMEOUT = 10  # seconds
+
+# Consecutive confirm timeouts after which the channel is considered degraded
+# and cloud-capable targets are routed straight to cloud instead of waiting
+# out the confirm timeout for every message.
+PUSH_DEGRADED_AFTER_TIMEOUTS = 2
+
+# How long a degraded channel routes via cloud before the next send probes
+# local delivery again.
+PUSH_DEGRADED_PROBE_INTERVAL = 300  # seconds
 
 
 class PushChannel:
@@ -28,10 +41,31 @@ class PushChannel:
         self._send_message = send_message
         self.on_teardown = on_teardown
         self.pending_confirms: dict[str, dict] = {}
+        self._consecutive_timeouts = 0
+        self._degraded = False
+        self._probe_permit = False
+        self._unsub_degraded_probe: CALLBACK_TYPE | None = None
 
     @callback
-    def async_send_notification(self, data, fallback_send):
-        """Send a push notification."""
+    def async_should_send_local(self) -> bool:
+        """Return if the next send should be delivered locally.
+
+        Consumes the single probe permit of a degraded channel.
+        """
+        if not self._degraded:
+            return True
+        if self._probe_permit:
+            self._probe_permit = False
+            return True
+        return False
+
+    @callback
+    def async_send_notification(self, data, fallback_send: Callable | None):
+        """Send a push notification.
+
+        fallback_send is None for local-push-only registrations, which have no
+        cloud delivery to fall back to.
+        """
         if not self.support_confirm:
             self._send_message(data)
             return
@@ -40,16 +74,19 @@ class PushChannel:
         data["hass_confirm_id"] = confirm_id
 
         async def handle_push_failed(_=None):
-            """Handle a failed local push notification."""
-            # Remove this handler from the pending dict
-            # If it didn't exist we hit a race condition between call_later and another
-            # push failing and tearing down the connection.
+            """Fall back to cloud for a local push left unconfirmed in time."""
+            # Already popped by a confirm or a teardown flush; nothing to fall back.
             if self.pending_confirms.pop(confirm_id, None) is None:
                 return
 
-            # Drop local channel if it's still open
+            # A teardown flush is not a delivery failure of a live channel
             if self.on_teardown is not None:
-                await self.async_teardown()
+                self._consecutive_timeouts += 1
+                if self._consecutive_timeouts >= PUSH_DEGRADED_AFTER_TIMEOUTS:
+                    self._async_mark_degraded()
+
+            if fallback_send is None:
+                return
 
             await fallback_send(data)
 
@@ -71,7 +108,47 @@ class PushChannel:
             return False
 
         self.pending_confirms.pop(confirm_id)["unsub_scheduled_push_failed"]()
+        # A timely confirm proves the channel delivers
+        if self._degraded:
+            _LOGGER.debug("Push channel %s restored to local delivery", self.webhook_id)
+        self._consecutive_timeouts = 0
+        self._async_clear_degraded()
         return True
+
+    @callback
+    def _async_mark_degraded(self) -> None:
+        """Route cloud-capable sends via cloud until a probe is confirmed."""
+        if not self._degraded:
+            _LOGGER.debug(
+                "Push channel %s degraded after %d consecutive confirm timeouts;"
+                " routing cloud-capable sends via cloud",
+                self.webhook_id,
+                self._consecutive_timeouts,
+            )
+        self._degraded = True
+        self._probe_permit = False
+        if self._unsub_degraded_probe is None:
+            self._unsub_degraded_probe = async_call_later(
+                self.hass, PUSH_DEGRADED_PROBE_INTERVAL, self._async_allow_probe
+            )
+
+    @callback
+    def _async_allow_probe(self, _now: datetime) -> None:
+        """Let a single next send probe local delivery again."""
+        _LOGGER.debug(
+            "Allowing a local delivery probe for push channel %s", self.webhook_id
+        )
+        self._unsub_degraded_probe = None
+        self._probe_permit = True
+
+    @callback
+    def _async_clear_degraded(self) -> None:
+        """Restore local delivery for all sends."""
+        if self._unsub_degraded_probe is not None:
+            self._unsub_degraded_probe()
+            self._unsub_degraded_probe = None
+        self._probe_permit = False
+        self._degraded = False
 
     async def async_teardown(self):
         """Tear down this channel."""
@@ -81,6 +158,7 @@ class PushChannel:
 
         self.on_teardown()
         self.on_teardown = None
+        self._async_clear_degraded()
 
         cancel_pending_local_tasks = [
             actions["handle_push_failed"]()
