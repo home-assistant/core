@@ -1,6 +1,7 @@
 """SNMP constants."""
 
 from datetime import timedelta
+from typing import Final
 
 DOMAIN = "snmp"
 
@@ -49,3 +50,11 @@ MAP_PRIV_PROTOCOLS = {
     "aes-cfb-192": "usmAesCfb192Protocol",
     "aes-cfb-256": "usmAesCfb256Protocol",
 }
+
+# MAC columns of IP-indexed tables, where the row index ends with the device
+# IPv4 address. Tables indexed by the MAC (e.g. bridge forwarding tables) use the
+# same OID suffix for something else.
+IP_INDEXED_MAC_OIDS: Final = (
+    (1, 3, 6, 1, 2, 1, 4, 22, 1, 2),  # ipNetToMediaPhysAddress (ARP)
+    (1, 3, 6, 1, 2, 1, 3, 1, 1, 2),  # atPhysAddress (RFC 1213 ARP)
+)

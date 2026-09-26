@@ -32,6 +32,17 @@ from tests.common import MockConfigEntry, async_fire_time_changed, patch_yaml_fi
 MAC = "00:11:22:33:44:55"
 LEGACY_ENTITY_ID = "device_tracker.00_11_22_33_44_55"
 
+# ipNetToMediaPhysAddress, the MAC column of the ARP table
+ARP_MAC_OID = (1, 3, 6, 1, 2, 1, 4, 22, 1, 2)
+
+# atPhysAddress, the MAC column of the deprecated RFC 1213 ARP table
+LEGACY_ARP_MAC_OID = (1, 3, 6, 1, 2, 1, 3, 1, 1, 2)
+
+
+def _arp_oid(*octets: int) -> tuple[int, ...]:
+    """Return the OID of an ARP table row for the given IPv4 octets."""
+    return (*ARP_MAC_OID, 1, *octets)
+
 
 def _known_devices(*macs: str) -> dict[str, str]:
     """Return a patched known_devices.yaml that tracks the given MACs."""
@@ -50,7 +61,7 @@ def mock_walk():
         # Return a list of MAC addresses
         mac1 = binascii.unhexlify("001122334455")
         oid1 = Mock()
-        oid1.asTuple.return_value = (1, 192, 168, 1, 1)
+        oid1.asTuple.return_value = _arp_oid(192, 168, 1, 1)
         yield None, None, None, [(oid1, OctetString(mac1))]
 
     with patch(
@@ -97,7 +108,7 @@ async def test_device_tracker_legacy_state_is_not_an_enable_signal(
         domain=DOMAIN,
         data={
             "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.4.22.1.6",
+            "baseoid": "1.3.6.1.2.1.4.22.1.2",
             "community": "public",
         },
     )
@@ -135,7 +146,7 @@ async def test_yaml_migration_keeps_entity_enabled(
         DEVICE_TRACKER_DOMAIN: {
             CONF_PLATFORM: "snmp",
             "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.4.22.1.6",
+            "baseoid": "1.3.6.1.2.1.4.22.1.2",
             "community": "public",
         }
     }
@@ -176,7 +187,7 @@ async def test_device_tracker_new_entity_disabled_by_default(
         domain=DOMAIN,
         data={
             "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.4.22.1.6",
+            "baseoid": "1.3.6.1.2.1.4.22.1.2",
             "community": "public",
         },
     )
@@ -213,7 +224,7 @@ async def test_device_tracker_update(
         source=SOURCE_IMPORT,
         data={
             "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.4.22.1.6",
+            "baseoid": "1.3.6.1.2.1.4.22.1.2",
             "community": "public",
         },
     )
@@ -225,9 +236,9 @@ async def test_device_tracker_update(
     mac2_str = "aa:bb:cc:dd:ee:ff"
 
     oid1 = Mock()
-    oid1.asTuple.return_value = (1, 192, 168, 1, 1)
+    oid1.asTuple.return_value = _arp_oid(192, 168, 1, 1)
     oid2 = Mock()
-    oid2.asTuple.return_value = (1, 192, 168, 1, 22)
+    oid2.asTuple.return_value = _arp_oid(192, 168, 1, 22)
 
     async def mock_walk_1(*args, **kwargs):
         yield None, None, None, [(oid1, OctetString(mac1))]
@@ -282,7 +293,7 @@ async def test_device_tracker_device_registry_linking(
         domain=DOMAIN,
         data={
             "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.4.22.1.6",
+            "baseoid": "1.3.6.1.2.1.4.22.1.2",
             "community": "public",
         },
     )
@@ -324,7 +335,7 @@ async def test_device_tracker_name_resolves_to_mac_address(
         source=SOURCE_IMPORT,
         data={
             "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.4.22.1.6",
+            "baseoid": "1.3.6.1.2.1.4.22.1.2",
             "community": "public",
         },
     )
@@ -360,7 +371,7 @@ async def test_device_tracker_enabled_if_device_exists(
         domain=DOMAIN,
         data={
             "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.4.22.1.6",
+            "baseoid": "1.3.6.1.2.1.4.22.1.2",
             "community": "public",
         },
     )
@@ -460,7 +471,7 @@ async def test_device_tracker_initial_macs(
         domain=DOMAIN,
         data={
             "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.4.22.1.6",
+            "baseoid": "1.3.6.1.2.1.4.22.1.2",
             "community": "public",
         },
     )
@@ -505,7 +516,7 @@ async def test_device_tracker_state_cleanup(
         domain=DOMAIN,
         data={
             "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.4.22.1.6",
+            "baseoid": "1.3.6.1.2.1.4.22.1.2",
             "community": "public",
         },
     )
@@ -549,7 +560,7 @@ async def test_device_tracker_update_empty_data(
         domain=DOMAIN,
         data={
             "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.4.22.1.6",
+            "baseoid": "1.3.6.1.2.1.4.22.1.2",
             "community": "public",
         },
     )
@@ -591,7 +602,7 @@ def mock_coordinator_entry(hass: HomeAssistant) -> MockConfigEntry:
         source=SOURCE_IMPORT,
         data={
             "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.4.22.1.6",
+            "baseoid": "1.3.6.1.2.1.4.22.1.2",
             "community": "public",
         },
     )
@@ -658,12 +669,20 @@ async def test_mac_normalization(
 @pytest.mark.parametrize(
     ("oid_tuple", "expected_ip"),
     [
+        pytest.param(_arp_oid(192, 168, 1, 10), "192.168.1.10", id="arp_row"),
         pytest.param(
-            (1, 3, 6, 1, 2, 1, 4, 22, 1, 6, 1, 192, 168, 1, 10),
-            "192.168.1.10",
-            id="full_oid",
+            (*LEGACY_ARP_MAC_OID, 1, 192, 168, 1, 11),
+            "192.168.1.11",
+            id="rfc1213_arp_row",
         ),
-        pytest.param((1, 1, 1, 1, 10, 20, 30, 40), "10.20.30.40", id="short_oid"),
+        pytest.param(
+            # Bridge forwarding tables are indexed by the MAC, not by an IP
+            (1, 3, 6, 1, 2, 1, 17, 4, 3, 1, 1, 0, 26, 43, 60, 77, 94),
+            None,
+            id="mac_indexed_table",
+        ),
+        pytest.param(_arp_oid(192, 168, 70000), None, id="octet_out_of_range"),
+        pytest.param((*ARP_MAC_OID, 1, 192, 168, 1), None, id="missing_octet"),
     ],
 )
 async def test_ip_extraction(
@@ -709,7 +728,7 @@ async def test_ip_extraction(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.attributes["ip"] == expected_ip
+    assert state.attributes.get("ip") == expected_ip
 
 
 async def test_ip_extraction_oid_too_short(

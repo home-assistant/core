@@ -251,7 +251,7 @@ def mock_coordinator_entry(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN,
         data={
             "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.4.22.1.6",
+            "baseoid": "1.3.6.1.2.1.4.22.1.2",
             "community": "public",
         },
     )

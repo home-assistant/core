@@ -28,6 +28,7 @@ from .const import (
     DEFAULT_TIMEOUT,
     DEFAULT_VERSION,
     DOMAIN,
+    IP_INDEXED_MAC_OIDS,
     SCAN_INTERVAL,
 )
 from .util import (
@@ -56,6 +57,24 @@ def normalize_mac(value: bytes) -> str | None:
     if len(mac) != 12 or not all(char in "0123456789abcdef" for char in mac):
         return None
     return ":".join(mac[i : i + 2] for i in range(0, 12, 2))
+
+
+def _ip_address_from_oid(oid: tuple[int, ...]) -> str | None:
+    """Return the IPv4 address of an OID, if its table is indexed by it.
+
+    Only the MAC columns of IP-indexed tables pair a MAC address with an IPv4
+    address in the row index. In tables indexed by the MAC the trailing
+    components of the OID mean something else.
+    """
+    for prefix in IP_INDEXED_MAC_OIDS:
+        # The row index is the interface index plus the four address octets
+        if oid[: len(prefix)] != prefix or len(oid) != len(prefix) + 5:
+            continue
+        octets = oid[-4:]
+        if any(not 0 <= octet <= 255 for octet in octets):
+            return None
+        return ".".join(map(str, octets))
+    return None
 
 
 class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
@@ -218,13 +237,7 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
                     if (mac := normalize_mac(octets)) is None:
                         continue
 
-                    # Extract IP address from OID suffix (last 4 parts)
-                    ip = None
-                    if hasattr(oid, "asTuple"):
-                        oid_tuple = oid.asTuple()
-                        if len(oid_tuple) >= 4:
-                            ip = ".".join(map(str, oid_tuple[-4:]))
-                    devices[mac] = ip
+                    devices[mac] = _ip_address_from_oid(oid.asTuple())
         except WrongValueError as err:
             raise ConfigEntryAuthFailed(
                 f"Invalid authentication credentials or protocols: {err}"
