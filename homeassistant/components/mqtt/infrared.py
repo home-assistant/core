@@ -15,7 +15,7 @@ from homeassistant.components.infrared import (
     InfraredReceiverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE
+from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -41,7 +41,7 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
 )
-from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+from .schemas import mqtt_entity_common_schema
 from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,7 +93,7 @@ EMITTER_SCHEMA = MQTT_BASE_SCHEMA.extend(
         probatio.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
     }
-).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+).extend(mqtt_entity_common_schema(Platform.INFRARED).schema)
 
 RECEIVER_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
@@ -102,7 +102,7 @@ RECEIVER_SCHEMA = MQTT_BASE_SCHEMA.extend(
         probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
         probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
     }
-).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+).extend(mqtt_entity_common_schema(Platform.INFRARED).schema)
 
 
 DISCOVERY_SCHEMA_MAPPING: dict[str, VolSchemaType] = {

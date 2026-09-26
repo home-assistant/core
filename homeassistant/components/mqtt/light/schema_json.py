@@ -37,6 +37,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIMISTIC,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
@@ -73,7 +74,7 @@ from ..const import (
 )
 from ..entity import MqttEntity
 from ..models import ReceiveMessage
-from ..schemas import MQTT_ENTITY_COMMON_SCHEMA
+from ..schemas import mqtt_entity_common_schema
 from ..util import valid_subscribe_topic
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import (
@@ -130,7 +131,7 @@ PLATFORM_SCHEMA_MODERN_JSON = (
             ): probatio.All(probatio.Coerce(int), probatio.Range(min=1)),
         },
     )
-    .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+    .extend(mqtt_entity_common_schema(Platform.LIGHT).schema)
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 

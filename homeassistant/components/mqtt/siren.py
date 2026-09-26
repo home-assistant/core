@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -59,7 +60,7 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
 )
-from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+from .schemas import mqtt_entity_common_schema
 
 PARALLEL_UPDATES = 0
 
@@ -83,7 +84,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
         probatio.Optional(CONF_SUPPORT_DURATION, default=True): cv.boolean,
         probatio.Optional(CONF_SUPPORT_VOLUME_SET, default=True): cv.boolean,
     },
-).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+).extend(mqtt_entity_common_schema(Platform.SIREN).schema)
 
 DISCOVERY_SCHEMA = probatio.All(
     PLATFORM_SCHEMA_MODERN.extend({}, extra=probatio.REMOVE_EXTRA)

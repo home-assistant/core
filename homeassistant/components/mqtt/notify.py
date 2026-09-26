@@ -7,7 +7,7 @@ import probatio
 from homeassistant.components import notify
 from homeassistant.components.notify import NotifyEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -17,7 +17,7 @@ from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
 from .const import CONF_COMMAND_TEMPLATE, CONF_COMMAND_TOPIC, CONF_RETAIN
 from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttCommandTemplate
-from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+from .schemas import mqtt_entity_common_schema
 from .util import valid_publish_topic
 
 PARALLEL_UPDATES = 0
@@ -31,7 +31,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
         probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
         probatio.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     }
-).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+).extend(mqtt_entity_common_schema(Platform.NOTIFY).schema)
 
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=probatio.REMOVE_EXTRA)
 

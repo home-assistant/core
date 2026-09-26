@@ -385,6 +385,9 @@ PAYLOAD_NONE = "None"
 CONFIG_ENTRY_VERSION = 2
 CONFIG_ENTRY_MINOR_VERSION = 1
 
+# `sensor` and `binary_sensor` entities raise when added with `EntityCategory.CONFIG`
+PLATFORMS_WITHOUT_CONFIG_CATEGORY = frozenset({Platform.BINARY_SENSOR, Platform.SENSOR})
+
 ENTITY_PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,

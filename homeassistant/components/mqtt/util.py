@@ -12,7 +12,12 @@ from typing import Any
 import probatio
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import MAX_LENGTH_STATE_STATE, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    MAX_LENGTH_STATE_STATE,
+    STATE_UNKNOWN,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -21,6 +26,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     template,
 )
+from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import create_eager_task
 
@@ -36,6 +42,7 @@ from .const import (
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DOMAIN,
+    PLATFORMS_WITHOUT_CONFIG_CATEGORY,
 )
 from .models import DATA_MQTT, DATA_MQTT_AVAILABLE, ReceiveMessage
 
@@ -324,6 +331,32 @@ def valid_publish_topic(topic: Any) -> str:
     if "+" in validated_topic or "#" in validated_topic:
         raise probatio.Invalid("Wildcards cannot be used in topic names")
     return validated_topic
+
+
+def valid_entity_categories(platform: str) -> tuple[EntityCategory, ...]:
+    """Return the entity categories a platform supports."""
+    valid_categories = set(EntityCategory)
+    if platform in PLATFORMS_WITHOUT_CONFIG_CATEGORY:
+        valid_categories -= {EntityCategory.CONFIG}
+    return tuple(sorted(valid_categories))
+
+
+def entity_category_validator(platform: str) -> Callable[[Any], EntityCategory]:
+    """Return a validator for the entity category of a platform."""
+    valid_categories = valid_entity_categories(platform)
+
+    def validate(value: Any) -> EntityCategory:
+        """Validate the entity category is supported by the platform."""
+        entity_category: EntityCategory = ENTITY_CATEGORIES_SCHEMA(value)
+        if entity_category not in valid_categories:
+            _options = ", ".join(sorted(valid_categories))
+            raise probatio.Invalid(
+                f"Entity category '{entity_category}' is not supported by the"
+                f" {platform} platform. Valid options are: {_options}"
+            )
+        return entity_category
+
+    return validate
 
 
 def valid_qos_schema(qos: Any) -> int:
