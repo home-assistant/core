@@ -24,7 +24,7 @@ from homeassistant.components.recorder.const import (
     SQLITE_URL_PREFIX,
     SupportedDialect,
 )
-from homeassistant.components.recorder.db_schema import RecorderRuns
+from homeassistant.components.recorder.db_schema import RecorderRuns, StatesMeta
 from homeassistant.components.recorder.history import _get_single_entity_start_time_stmt
 from homeassistant.components.recorder.models import (
     UnsupportedDialect,
@@ -1145,6 +1145,116 @@ def test_build_mysqldb_conv() -> None:
     assert conv["DATETIME"]("2022-05-13T22:33:12.741") == datetime(
         2022, 5, 13, 22, 33, 12, 741000, tzinfo=None
     )
+
+
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
+async def test_execute_retries_after_lost_connection(
+    hass: HomeAssistant,
+    setup_recorder: None,
+) -> None:
+    """Test execute rolls back and retries after the connection is lost.
+
+    This test is specific for SQLite: the in-memory database is lost with the
+    connection, so the retried query raises OperationalError. Without the rollback
+    every retry would raise PendingRollbackError instead.
+    """
+    hass.states.async_set("sensor.on", "on")
+    await async_wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        query = session.query(StatesMeta).limit(1)
+        # Simulate a lost connection: the session object stays intact and unaware
+        session.connection().invalidate()
+
+        with pytest.raises(OperationalError):
+            util.execute(query)
+
+
+@pytest.mark.skip_on_db_engine(["sqlite"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
+async def test_execute_recovers_after_lost_connection(
+    hass: HomeAssistant,
+    setup_recorder: None,
+) -> None:
+    """Test execute returns rows after the connection is lost.
+
+    This test is specific for MySQL and PostgreSQL, where the database survives
+    the lost connection and the retry can reconnect and succeed.
+    """
+    hass.states.async_set("sensor.on", "on")
+    await async_wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        query = session.query(StatesMeta).limit(1)
+        session.connection().invalidate()
+
+        assert len(util.execute(query)) == 1
+
+
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
+async def test_execute_stmt_lambda_element_retries_after_lost_connection(
+    hass: HomeAssistant,
+    setup_recorder: None,
+) -> None:
+    """Test execute_stmt_lambda_element retries after a lost connection.
+
+    This test is specific for SQLite, same as
+    test_execute_retries_after_lost_connection.
+    """
+    instance = recorder.get_instance(hass)
+    hass.states.async_set("sensor.on", "on")
+    await async_wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        metadata_id = instance.states_meta_manager.get("sensor.on", session, True)
+        start_time_ts = dt_util.utcnow().timestamp()
+        stmt = lambda_stmt(
+            lambda: _get_single_entity_start_time_stmt(
+                start_time_ts, metadata_id, False, False, False
+            )
+        )
+        session.connection().invalidate()
+
+        with pytest.raises(OperationalError):
+            util.execute_stmt_lambda_element(session, stmt)
+
+
+@pytest.mark.skip_on_db_engine(["sqlite"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
+async def test_execute_stmt_lambda_element_recovers_after_lost_connection(
+    hass: HomeAssistant,
+    setup_recorder: None,
+) -> None:
+    """Test execute_stmt_lambda_element returns rows after a lost connection.
+
+    This test is specific for MySQL and PostgreSQL, same as
+    test_execute_recovers_after_lost_connection.
+    """
+    instance = recorder.get_instance(hass)
+    hass.states.async_set("sensor.on", "on")
+    new_state = hass.states.get("sensor.on")
+    await async_wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        metadata_id = instance.states_meta_manager.get("sensor.on", session, True)
+        start_time_ts = dt_util.utcnow().timestamp()
+        stmt = lambda_stmt(
+            lambda: _get_single_entity_start_time_stmt(
+                start_time_ts, metadata_id, False, False, False
+            )
+        )
+        session.connection().invalidate()
+
+        rows = util.execute_stmt_lambda_element(session, stmt)
+        assert isinstance(rows, list)
+        assert rows[0].state == new_state.state
+        assert rows[0].metadata_id == metadata_id
 
 
 @patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
