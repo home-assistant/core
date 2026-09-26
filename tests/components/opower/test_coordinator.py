@@ -1,11 +1,19 @@
 """Tests for the Opower coordinator."""
 
-from datetime import datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from itertools import pairwise
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from opower import AggregateType, CostRead
+from opower import (
+    Account,
+    AggregateType,
+    Bill,
+    BillSegment,
+    BillServiceQuantity,
+    CostRead,
+    UnitOfMeasure,
+)
 from opower.exceptions import ApiException
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -31,6 +39,108 @@ from homeassistant.util.unit_conversion import EnergyConverter
 
 from tests.common import MockConfigEntry
 from tests.components.recorder.common import async_wait_recording_done
+
+
+def _bill(
+    account: Account,
+    *,
+    usage_charges: float | None,
+    quantities: list[BillServiceQuantity],
+    extra_account: Account | None = None,
+) -> Bill:
+    """Create a completed bill."""
+    segments = [
+        BillSegment(
+            account=account,
+            current_amount=usage_charges,
+            service_quantities=quantities,
+        )
+    ]
+    if extra_account is not None:
+        segments.append(
+            BillSegment(
+                account=extra_account,
+                current_amount=1.0,
+                service_quantities=quantities,
+            )
+        )
+    return Bill(
+        bill_date=date(2023, 1, 31),
+        start_time=datetime(2023, 1, 1, tzinfo=UTC),
+        end_time=datetime(2023, 2, 1, tzinfo=UTC),
+        usage_charges=usage_charges,
+        segments=segments,
+    )
+
+
+async def test_last_bill_electricity_rate(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test repeated segments and only NET_USAGE quantities are counted."""
+    account = mock_opower_api.async_get_accounts.return_value[0]
+    bill = _bill(
+        account,
+        usage_charges=45.0,
+        quantities=[
+            BillServiceQuantity(UnitOfMeasure.KWH, " ELEC:NET_USAGE ", 100.0),
+            BillServiceQuantity(UnitOfMeasure.KWH, "ELEC:DELIVERED", 900.0),
+        ],
+    )
+    bill.segments.append(
+        BillSegment(
+            account=account,
+            current_amount=20.0,
+            service_quantities=[
+                BillServiceQuantity(UnitOfMeasure.KWH, "net_usage", 50.0),
+                BillServiceQuantity(UnitOfMeasure.KWH, "ELEC:GENERATED", 500.0),
+            ],
+        )
+    )
+    mock_opower_api.async_get_bills.return_value = [bill]
+
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    data = await coordinator._async_update_data()
+
+    assert data["111111"].last_bill_electricity_rate == pytest.approx(0.3)
+
+
+async def test_last_bill_electricity_rate_skips_unsafe_newer_bills(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test unsafe newer bills are skipped in favor of the latest safe bill."""
+    electric_account, gas_account = mock_opower_api.async_get_accounts.return_value
+    net_usage = [BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", 100.0)]
+    mock_opower_api.async_get_bills.return_value = [
+        _bill(
+            electric_account,
+            usage_charges=50.0,
+            quantities=net_usage,
+            extra_account=gas_account,
+        ),
+        _bill(electric_account, usage_charges=None, quantities=net_usage),
+        _bill(
+            electric_account,
+            usage_charges=50.0,
+            quantities=[BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", 0.0)],
+        ),
+        _bill(
+            electric_account,
+            usage_charges=50.0,
+            quantities=[BillServiceQuantity(UnitOfMeasure.KWH, "DELIVERED", 100.0)],
+        ),
+        _bill(electric_account, usage_charges=25.0, quantities=net_usage),
+    ]
+
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    data = await coordinator._async_update_data()
+
+    assert data["111111"].last_bill_electricity_rate == pytest.approx(0.25)
 
 
 async def test_coordinator_first_run(
