@@ -16,7 +16,11 @@ from homeassistant.components.hassio import (
     AddonState,
 )
 from homeassistant.components.onboarding import async_is_onboarded
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    DEFAULT_DISCOVERY_UNIQUE_ID,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_CODE, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
@@ -133,10 +137,15 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
         """Install the Matter Server add-on."""
         addon_manager: AddonManager = get_addon_manager(self.hass)
         await addon_manager.async_schedule_install_addon()
+        if "bluetooth" not in self.hass.config.components:
+            return
         # Supervisor merges the app defaults with the user options, so a fresh
-        # install has nothing to preserve.
-        if "bluetooth" in self.hass.config.components:
+        # install has nothing to preserve. Enabling the proxy is optional, so a
+        # failure here must not fail the install.
+        try:
             await addon_manager.async_set_addon_options({CONF_ADDON_BLE_PROXY: True})
+        except AddonError as err:
+            LOGGER.warning("Failed to enable the Matter Server app BLE proxy: %s", err)
 
     async def _async_get_addon_discovery_info(self) -> dict:
         """Return add-on discovery info."""
@@ -258,18 +267,31 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="manual", data_schema=get_manual_schema(user_input), errors=errors
         )
 
+    async def _async_mark_server_discovery(self) -> None:
+        """Mark this flow as a discovery of the Matter server.
+
+        Devices the user ignored own entries in this domain too, so unlike the
+        discovery helper only a real entry counts as already configured.
+        """
+        if self._async_current_entries(include_ignore=False):
+            raise AbortFlow("already_configured")
+        await self.async_set_unique_id(DEFAULT_DISCOVERY_UNIQUE_ID)
+        self._abort_if_unique_id_configured()
+        if self._async_in_progress(include_uninitialized=True):
+            raise AbortFlow("already_in_progress")
+
     @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
+        await self._async_mark_server_discovery()
         if not async_is_onboarded(self.hass) and is_hassio(self.hass):
-            await self._async_handle_discovery_without_unique_id()
             self._running_in_background = True
             return await self.async_step_on_supervisor(
                 user_input={CONF_USE_ADDON: True}
             )
-        return await self._async_step_discovery_without_unique_id()
+        return await self.async_step_user()
 
     @override
     async def async_step_bluetooth(
@@ -288,6 +310,12 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return self.async_abort(reason="not_commissionable")
 
+        if self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, advertisement.unique_id
+        ):
+            # The user ignored this device.
+            return self.async_abort(reason="already_configured")
+
         # Watch the device from here on, so every card this flow can show is
         # dropped once the device stops advertising as commissionable.
         self._ble = MatterBleDiscovery(
@@ -297,7 +325,8 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if not self._async_current_entries(include_ignore=False):
             # No server to commission with; offer to set up the integration first.
-            return await self._async_step_discovery_without_unique_id()
+            await self._async_mark_server_discovery()
+            return await self.async_step_user()
         if self.hass.config_entries.async_loaded_entries(DOMAIN):
             matter = get_matter(self.hass)
             server_info = matter.matter_client.server_info
@@ -314,7 +343,6 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="bluetooth_not_supported")
 
         await self.async_set_unique_id(advertisement.unique_id, raise_on_progress=False)
-        self._abort_if_unique_id_configured()
         # Rediscovery of the same address keeps the existing card. A device that
         # rotated its address gets a new card and the old one goes stale, and
         # identical products with a colliding discriminator each keep a card.

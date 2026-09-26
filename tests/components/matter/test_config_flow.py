@@ -1568,6 +1568,50 @@ async def test_addon_install_enables_ble_proxy(
     )
 
 
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_matter_server",
+                service="matter",
+                uuid=uuid4(),
+                config=ADDON_DISCOVERY_INFO,
+            )
+        ]
+    ],
+)
+@pytest.mark.parametrize("set_addon_options_side_effect", [SupervisorError("boom")])
+@pytest.mark.usefixtures(
+    "supervisor",
+    "addon_not_installed",
+    "install_addon",
+    "start_addon",
+    "addon_info",
+    "addon_store_info",
+    "set_addon_options",
+)
+async def test_addon_install_ble_proxy_failure_is_not_fatal(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Failing to turn on the optional BLE proxy still finishes the install."""
+    mock_component(hass, "bluetooth")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert "Failed to enable the Matter Server app BLE proxy" in caplog.text
+
+
 async def test_addon_not_installed_failures(
     hass: HomeAssistant,
     supervisor: MagicMock,

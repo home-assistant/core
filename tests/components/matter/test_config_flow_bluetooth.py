@@ -153,14 +153,24 @@ async def test_discovery_title(hass: HomeAssistant, name: str, title: str) -> No
     assert result["description_placeholders"]["name"] == title
 
 
-async def test_only_ignored_entries_is_not_a_server(hass: HomeAssistant) -> None:
-    """An ignored device on its own does not count as a Matter server."""
+async def test_ignored_device_without_server(hass: HomeAssistant) -> None:
+    """A device the user ignored stays ignored when no server is configured."""
     MockConfigEntry(
         domain=DOMAIN, source=SOURCE_IGNORE, unique_id=UNIQUE_ID
     ).add_to_hass(hass)
     result = await _async_start_discovery(hass)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_ignored_device_does_not_block_setup(hass: HomeAssistant) -> None:
+    """Ignoring one device must not stop another from offering Matter setup."""
+    MockConfigEntry(
+        domain=DOMAIN, source=SOURCE_IGNORE, unique_id="fff10001abc"
+    ).add_to_hass(hass)
+    result = await _async_start_discovery(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
 
 
 async def test_entry_not_loaded_shows_confirm(hass: HomeAssistant) -> None:
