@@ -6,7 +6,6 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_response": "LiteLLM returned an unexpected response structure.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -28,7 +27,6 @@
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "The main integration entry is not loaded. Please ensure the integration is loaded before reconfiguring.",
         "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-        "invalid_response": "LiteLLM returned an unexpected response structure.",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "entry_type": "Conversation agent",
@@ -57,7 +55,6 @@
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "The main integration entry is not loaded. Please ensure the integration is loaded before reconfiguring.",
         "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-        "invalid_response": "LiteLLM returned an unexpected response structure.",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "entry_type": "Speech-to-text",

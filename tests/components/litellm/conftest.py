@@ -20,35 +20,7 @@ from tests.common import MockConfigEntry
 
 TEST_URL = "http://localhost:4000/v1"
 
-MODEL_INFO = [
-    {
-        "model_name": "gpt-4o",
-        "model_info": {
-            "mode": "chat",
-            "supported_endpoints": ["/v1/chat/completions"],
-        },
-    },
-    {
-        "model_name": "gpt-4o-transcribe",
-        "model_info": {
-            "mode": "audio_transcription",
-            "supported_endpoints": ["/v1/audio/transcriptions"],
-        },
-    },
-]
-
-MODELS = [
-    {
-        "model_name": "gpt-4o",
-        "mode": "chat",
-        "supported_endpoints": ["/v1/chat/completions"],
-    },
-    {
-        "model_name": "gpt-4o-transcribe",
-        "mode": "audio_transcription",
-        "supported_endpoints": ["/v1/audio/transcriptions"],
-    },
-]
+MODELS = ["gpt-4o", "gpt-4o-transcribe"]
 
 
 async def models_response(*model_ids: str) -> AsyncGenerator[Model]:
@@ -154,21 +126,21 @@ def mock_models() -> Generator[AsyncMock]:
         "homeassistant.components.litellm.config_flow.AsyncOpenAI"
     ) as mock_client:
         client = mock_client.return_value
-        client.with_options.return_value.get = AsyncMock(
-            return_value={"data": MODEL_INFO}
+        client.with_options.return_value.models.list.side_effect = (
+            lambda *args, **kwargs: models_response(*MODELS)
         )
         yield client
 
 
 @pytest.fixture
-def mock_model_info() -> Generator[AsyncMock]:
-    """Mock the model information returned by the proxy."""
+def mock_get_models() -> Generator[AsyncMock]:
+    """Mock the model names returned by the proxy."""
     with patch(
         "homeassistant.components.litellm.config_flow._get_models",
         new_callable=AsyncMock,
-    ) as mock_model_info:
-        mock_model_info.return_value = MODELS
-        yield mock_model_info
+    ) as mock_get_models:
+        mock_get_models.return_value = MODELS
+        yield mock_get_models
 
 
 @pytest.fixture(autouse=True)

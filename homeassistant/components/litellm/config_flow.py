@@ -1,7 +1,7 @@
 """Config flow for LiteLLM integration."""
 
 import logging
-from typing import Any, TypedDict, cast, override
+from typing import Any, cast, override
 
 from openai import AsyncOpenAI, AuthenticationError, OpenAIError, PermissionDeniedError
 import probatio
@@ -30,17 +30,13 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
-    CHAT_COMPLETIONS_ENDPOINT,
     CONF_PROMPT,
     CONF_STT_CUSTOM_PROMPT_KEYWORDS,
     CONF_STT_KEYWORDS,
     CONF_STT_PROMPT,
     DOMAIN,
-    MODE_AUDIO_TRANSCRIPTION,
-    MODE_CHAT,
     PLACEHOLDER_API_KEY,
     RECOMMENDED_CONVERSATION_OPTIONS,
-    STT_ENDPOINT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,18 +50,6 @@ class InvalidAuth(HomeAssistantError):
     """Error to indicate the API key is invalid."""
 
 
-class InvalidResponse(HomeAssistantError):
-    """Error to indicate the proxy returned an invalid response."""
-
-
-class Model(TypedDict):
-    """LiteLLM model entity used by Home Assistant."""
-
-    model_name: str
-    mode: str | None
-    supported_endpoints: list[str]
-
-
 def _normalize_url(url: str) -> str:
     """Normalize the proxy URL, ensuring it ends with the OpenAI `/v1` path."""
     parsed = URL(url.strip())
@@ -75,13 +59,10 @@ def _normalize_url(url: str) -> str:
     return str(parsed.with_path(path))
 
 
-async def _get_models(
-    hass: HomeAssistant, url: str, api_key: str | None
-) -> list[Model]:
+async def _get_models(hass: HomeAssistant, url: str, api_key: str | None) -> list[str]:
     """Fetch the available models from the LiteLLM proxy.
 
-    Uses LiteLLM's model-info endpoint, which serves the configured models and
-    their capabilities.
+    Uses the OpenAI-compatible `/v1/models` endpoint.
     """
     client = AsyncOpenAI(
         base_url=url,
@@ -90,31 +71,13 @@ async def _get_models(
         http_client=cast(Any, get_async_client(hass)),
     )
     try:
-        response = await client.with_options(timeout=10.0).get(
-            "model/info",
-            cast_to=object,
-            options={"security": {"bearer_auth": True}},
-        )
+        return [
+            model.id async for model in client.with_options(timeout=10.0).models.list()
+        ]
     except (AuthenticationError, PermissionDeniedError) as err:
         raise InvalidAuth from err
     except OpenAIError as err:
         raise CannotConnect from err
-
-    try:
-        models = cast(dict[str, list[dict[str, Any]]], response)["data"]
-        # LiteLLM may omit capabilities for custom models; flows use their
-        # standard chat-completion or STT defaults.
-        return [
-            {
-                "model_name": str(model["model_name"]),
-                "mode": model["model_info"].get("mode"),
-                "supported_endpoints": model["model_info"].get("supported_endpoints")
-                or [],
-            }
-            for model in models
-        ]
-    except (AttributeError, KeyError, TypeError) as err:
-        raise InvalidResponse from err
 
 
 class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -150,8 +113,6 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except InvalidResponse:
-                errors["base"] = "invalid_response"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -175,26 +136,12 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-def _get_model_options(
-    models: list[Model], mode: str, endpoint: str
-) -> list[SelectOptionDict]:
-    """Return models matching the mode and endpoint when provided."""
-    return [
-        SelectOptionDict(value=model["model_name"], label=model["model_name"])
-        for model in models
-        if model["mode"] in (None, mode)
-        and (
-            not model["supported_endpoints"] or endpoint in model["supported_endpoints"]
-        )
-    ]
-
-
 class LiteLLMSubentryFlowHandler(ConfigSubentryFlow):
     """Handle subentry flow for LiteLLM."""
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""
-        self.models: list[Model] = []
+        self.models: list[str] = []
 
     async def _fetch_models(self) -> None:
         """Fetch models from the LiteLLM proxy."""
@@ -258,13 +205,11 @@ class ConversationFlowHandler(LiteLLMSubentryFlowHandler):
             return self.async_abort(reason="invalid_auth")
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
-        except InvalidResponse:
-            return self.async_abort(reason="invalid_response")
         except Exception:
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
-        options = _get_model_options(self.models, MODE_CHAT, CHAT_COMPLETIONS_ENDPOINT)
+        options = [SelectOptionDict(value=model, label=model) for model in self.models]
 
         hass_apis: list[SelectOptionDict] = [
             SelectOptionDict(
@@ -380,8 +325,6 @@ class STTFlowHandler(LiteLLMSubentryFlowHandler):
             return self.async_abort(reason="invalid_auth")
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
-        except InvalidResponse:
-            return self.async_abort(reason="invalid_response")
         except Exception:
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
@@ -391,9 +334,10 @@ class STTFlowHandler(LiteLLMSubentryFlowHandler):
                 CONF_MODEL, default=self.options.get(CONF_MODEL)
             ): SelectSelector(
                 SelectSelectorConfig(
-                    options=_get_model_options(
-                        self.models, MODE_AUDIO_TRANSCRIPTION, STT_ENDPOINT
-                    ),
+                    options=[
+                        SelectOptionDict(value=model, label=model)
+                        for model in self.models
+                    ],
                     mode=SelectSelectorMode.DROPDOWN,
                     sort=True,
                 )
