@@ -5,8 +5,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import override
 
-from aiozoneinfo import get_time_zone
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -19,13 +17,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from .const import ZONNEPLAN_TIMEZONE
 from .coordinator import ZonneplanConfigEntry, ZonneplanCoordinator
 from .entity import ZonneplanEntity
 
 PARALLEL_UPDATES = 0
-
-# It's for Dutchies, so ya...
-ZONNEPLAN_TIMEZONE = get_time_zone("Europe/Amsterdam")
 
 
 @dataclass(frozen=True, kw_only=True)

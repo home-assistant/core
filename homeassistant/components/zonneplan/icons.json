@@ -1,5 +1,14 @@
 {
   "entity": {
+    "binary_sensor": {
+      "electricity_price_low": {
+        "default": "mdi:cash-minus",
+        "state": {
+          "off": "mdi:cash-plus",
+          "on": "mdi:cash-minus"
+        }
+      }
+    },
     "sensor": {
       "current_electricity_price": {
         "default": "mdi:cash-multiple"
