@@ -5,6 +5,8 @@ from typing import Final
 
 from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
 
+DOMAIN: Final = "climate"
+
 
 class HVACMode(StrEnum):
     """HVAC mode for climate devices."""
@@ -127,7 +129,6 @@ DEFAULT_MAX_TEMP = 35
 DEFAULT_MIN_HUMIDITY = 30
 DEFAULT_MAX_HUMIDITY = 99
 
-DOMAIN: Final = "climate"
 
 INTENT_SET_FAN_MODE = "HassClimateSetFanMode"
 INTENT_SET_TEMPERATURE = "HassClimateSetTemperature"

@@ -44,7 +44,7 @@ rules:
     comment: Integration does not connect to any physical object or service.
 
   # Silver
-  action-exceptions: todo
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -60,7 +60,9 @@ rules:
   test-coverage: done
 
   # Gold
-  devices: todo
+  devices:
+    status: exempt
+    comment: Adding a device adds no benefit for a single entity config entry.
   diagnostics: todo
   discovery-update-info:
     status: exempt

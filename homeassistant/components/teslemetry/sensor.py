@@ -40,6 +40,7 @@ from homeassistant.util.variance import ignore_variance
 
 from . import TeslemetryConfigEntry
 from .const import ENERGY_HISTORY_FIELDS
+from .coordinator import PERIOD_START
 from .entity import (
     TeslemetryEnergyHistoryEntity,
     TeslemetryEnergyInfoEntity,
@@ -1653,7 +1654,7 @@ ENERGY_HISTORY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = tuple(
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         entity_registry_enabled_default=(
             key.startswith("total") or key == "grid_energy_imported"
         ),
@@ -1966,6 +1967,7 @@ class TeslemetryEnergyHistorySensorEntity(TeslemetryEnergyHistoryEntity, SensorE
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_native_value = self._value
+        self._attr_last_reset = self.coordinator.data.get(PERIOD_START)
 
 
 class TeslemetryCreditBalanceSensor(RestoreSensor):

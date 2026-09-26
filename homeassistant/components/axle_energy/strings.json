@@ -5,6 +5,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_retrieve": "[%key:component::axle_energy::exceptions::cannot_connect::message%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {

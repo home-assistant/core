@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_URL,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
+    DEGREE,
     Platform,
     UnitOfTemperature,
 )
@@ -37,6 +38,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowMenuStep,
 )
 
+from . import validators as tcv
 from .alarm_control_panel import (
     CONF_ARM_AWAY_ACTION,
     CONF_ARM_CUSTOM_BYPASS_ACTION,
@@ -50,7 +52,23 @@ from .alarm_control_panel import (
     TemplateCodeFormat,
     async_create_preview_alarm_control_panel,
 )
-from .binary_sensor import async_create_preview_binary_sensor
+from .binary_sensor import (
+    CONF_DELAY_OFF,
+    CONF_DELAY_ON,
+    async_create_preview_binary_sensor,
+)
+from .climate import (
+    CONF_CURRENT_TEMPERATURE,
+    CONF_HVAC_ACTION,
+    CONF_HVAC_MODE,
+    CONF_HVAC_MODES,
+    CONF_MAX_TEMPERATURE,
+    CONF_MIN_TEMPERATURE,
+    CONF_TARGET_TEMPERATURE,
+    SET_HVAC_MODE_ACTION,
+    SET_TEMPERATURE_ACTION,
+    async_create_preview_climate,
+)
 from .const import (
     CONF_ADDITIONAL_OPTIONS,
     CONF_AVAILABILITY,
@@ -184,6 +202,14 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
                 selector.DeviceClassSelectorConfig(domain=Platform.BINARY_SENSOR),
             ),
         }
+        additional_options |= {
+            probatio.Optional(CONF_DELAY_ON): selector.DurationSelector(
+                selector.DurationSelectorConfig(allow_negative=False)
+            ),
+            probatio.Optional(CONF_DELAY_OFF): selector.DurationSelector(
+                selector.DurationSelectorConfig(allow_negative=False)
+            ),
+        }
 
     if domain == Platform.BUTTON:
         schema |= {
@@ -195,6 +221,40 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
                     selector.DeviceClassSelectorConfig(domain=Platform.BUTTON),
                 ),
             }
+
+    if domain == Platform.CLIMATE:
+        schema |= {
+            probatio.Required(CONF_HVAC_MODES): selector.TemplateSelector(),
+            probatio.Optional(CONF_HVAC_MODE): selector.TemplateSelector(),
+            probatio.Required(SET_HVAC_MODE_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_HVAC_ACTION): selector.TemplateSelector(),
+            probatio.Optional(CONF_CURRENT_TEMPERATURE): selector.TemplateSelector(),
+            probatio.Optional(CONF_TARGET_TEMPERATURE): selector.TemplateSelector(),
+            probatio.Optional(SET_TEMPERATURE_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_TEMPERATURE_UNIT): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[cls.value for cls in UnitOfTemperature],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    sort=True,
+                ),
+            ),
+        }
+        additional_options |= {
+            probatio.Optional(CONF_MIN_TEMPERATURE): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    mode=selector.NumberSelectorMode.BOX,
+                    unit_of_measurement=DEGREE,
+                    step=0.1,
+                )
+            ),
+            probatio.Optional(CONF_MAX_TEMPERATURE): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    mode=selector.NumberSelectorMode.BOX,
+                    unit_of_measurement=DEGREE,
+                    step=0.1,
+                )
+            ),
+        }
 
     if domain == Platform.COVER:
         schema |= _SCHEMA_STATE | {
@@ -505,6 +565,10 @@ def validate_user_input(
         if template_type == Platform.SENSOR:
             _validate_unit(user_input)
             _validate_state_class(user_input)
+        if template_type == Platform.CLIMATE:
+            tcv.requires_option(CONF_TARGET_TEMPERATURE, SET_TEMPERATURE_ACTION)(
+                user_input
+            )
         return {"template_type": template_type} | user_input
 
     return _validate_user_input
@@ -514,6 +578,7 @@ TEMPLATE_TYPES = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.COVER,
     Platform.DEVICE_TRACKER,
     Platform.EVENT,
@@ -545,6 +610,11 @@ CONFIG_FLOW = {
     Platform.BUTTON: SchemaFlowFormStep(
         config_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
+    ),
+    Platform.CLIMATE: SchemaFlowFormStep(
+        config_schema(Platform.CLIMATE),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.CLIMATE),
     ),
     Platform.COVER: SchemaFlowFormStep(
         config_schema(Platform.COVER),
@@ -635,6 +705,11 @@ OPTIONS_FLOW = {
         options_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
     ),
+    Platform.CLIMATE: SchemaFlowFormStep(
+        options_schema(Platform.CLIMATE),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.CLIMATE),
+    ),
     Platform.COVER: SchemaFlowFormStep(
         options_schema(Platform.COVER),
         preview="template",
@@ -713,6 +788,7 @@ CREATE_PREVIEW_ENTITY: dict[
 ] = {
     Platform.ALARM_CONTROL_PANEL: async_create_preview_alarm_control_panel,
     Platform.BINARY_SENSOR: async_create_preview_binary_sensor,
+    Platform.CLIMATE: async_create_preview_climate,
     Platform.COVER: async_create_preview_cover,
     Platform.DEVICE_TRACKER: async_create_preview_tracker,
     Platform.EVENT: async_create_preview_event,

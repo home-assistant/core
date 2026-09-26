@@ -53,7 +53,9 @@ class UnifiEntityLoader:
                 hub, hub.api.firewall_policies
             ),
             id(hub.api.object_oriented_network_configs): UnifiDataUpdateCoordinator(
-                hub, hub.api.object_oriented_network_configs
+                hub,
+                hub.api.object_oriented_network_configs,
+                disable_polling_on_endpoint_not_found=True,
             ),
             id(hub.api.port_forwarding): UnifiDataUpdateCoordinator(
                 hub, hub.api.port_forwarding

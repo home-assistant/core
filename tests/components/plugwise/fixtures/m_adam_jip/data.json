@@ -91,7 +91,7 @@
       "setpoint": 13.0,
       "temperature": 28.8,
       "temperature_difference": 2.0,
-      "valve_position": 0.0
+      "valve_position": 0
     },
     "temperature_offset": {
       "lower_bound": -2.0,
@@ -115,7 +115,7 @@
       "setpoint": 13.0,
       "temperature": 24.2,
       "temperature_difference": 1.7,
-      "valve_position": 0.0
+      "valve_position": 0
     },
     "temperature_offset": {
       "lower_bound": -2.0,
@@ -282,7 +282,7 @@
       "setpoint": 13.0,
       "temperature": 28.7,
       "temperature_difference": 1.9,
-      "valve_position": 0.0
+      "valve_position": 0
     },
     "temperature_offset": {
       "lower_bound": -2.0,
@@ -350,7 +350,7 @@
     "name": "OpenTherm",
     "sensors": {
       "intended_boiler_temperature": 0.0,
-      "modulation_level": 0.0,
+      "modulation_level": 0,
       "return_temperature": 37.1,
       "water_pressure": 1.4,
       "water_temperature": 37.3

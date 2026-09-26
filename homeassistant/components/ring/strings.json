@@ -156,6 +156,9 @@
     "api_timeout": {
       "message": "Timeout communicating with Ring API"
     },
+    "chime_type_unknown": {
+      "message": "The in-home chime type changed and is no longer supported. Reload the Ring integration."
+    },
     "no_subscription": {
       "message": "Ring Protect subscription required for snapshots"
     },

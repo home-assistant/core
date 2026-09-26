@@ -12,7 +12,7 @@ from mcp import McpError
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
-from mcp.types import InitializeResult
+from mcp.types import InitializeResult, ToolAnnotations
 import probatio
 
 # Imported by name because the tests patch it on this module.
@@ -29,7 +29,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import llm
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.json import JsonObjectType
 from homeassistant.util.ssl import SSL_ALPN_HTTP11, SSLCipherList, client_context
 
 from .auth import AuthenticateHeader
@@ -122,22 +121,48 @@ async def mcp_client(
             raise main_error from streamable_err
 
 
+def _tool_annotations(remote: ToolAnnotations | None) -> llm.ToolAnnotations:
+    """Return the annotations the remote server declares for a tool.
+
+    A hint the server leaves out keeps the conservative default.
+    """
+    if remote is None:
+        return llm.ToolAnnotations()
+    declared = {
+        field: value
+        for field, value in (
+            ("read_only", remote.readOnlyHint),
+            ("destructive", remote.destructiveHint),
+            ("idempotent", remote.idempotentHint),
+            ("open_world", remote.openWorldHint),
+        )
+        if value is not None
+    }
+    return llm.ToolAnnotations(**declared)
+
+
 class ModelContextProtocolTool(llm.Tool):
     """A Tool exposed over the Model Context Protocol."""
+
+    integration = DOMAIN
 
     def __init__(
         self,
         name: str,
+        title: str | None,
         description: str | None,
         parameters: probatio.Schema,
         server_url: str,
         config_entry: ConfigEntry,
         token_manager: TokenManager | None = None,
+        annotations: llm.ToolAnnotations = llm.ToolAnnotations(),
     ) -> None:
         """Initialize the tool."""
         self.name = name
+        self.title = title
         self.description = description
         self.parameters = parameters
+        self.annotations = annotations
         self.server_url = server_url
         self.config_entry = config_entry
         self.token_manager = token_manager
@@ -148,7 +173,7 @@ class ModelContextProtocolTool(llm.Tool):
         hass: HomeAssistant,
         tool_input: llm.ToolInput,
         llm_context: llm.LLMContext,
-    ) -> JsonObjectType:
+    ) -> llm.ToolResult:
         """Call the tool."""
         try:
             async with asyncio.timeout(TIMEOUT):
@@ -188,7 +213,10 @@ class ModelContextProtocolTool(llm.Tool):
             raise HomeAssistantError(
                 f"Error communicating with MCP server when calling tool: {error}"
             ) from error
-        return result.model_dump(exclude_unset=True, exclude_none=True)
+        return llm.ToolResult(
+            data=result.model_dump(exclude_unset=True, exclude_none=True),
+            error=bool(result.isError),
+        )
 
 
 class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
@@ -260,11 +288,13 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
             tools.append(
                 ModelContextProtocolTool(
                     tool.name,
+                    tool.title,
                     tool.description,
                     parameters,
                     self.config_entry.data[CONF_URL],
                     self.config_entry,
                     self.token_manager,
+                    _tool_annotations(tool.annotations),
                 )
             )
         return tools

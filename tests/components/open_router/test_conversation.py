@@ -19,7 +19,7 @@ from homeassistant.components import conversation
 from homeassistant.const import Platform
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er, intent
-from homeassistant.helpers.llm import ToolInput
+from homeassistant.helpers.llm import ToolInput, ToolResult
 
 from . import setup_integration
 
@@ -73,6 +73,7 @@ async def test_default_prompt(
     assert mock_chat_log.content[1:] == snapshot
     call = mock_openai_client.chat.completions.create.call_args_list[0][1]
     assert call["model"] == "openai/gpt-3.5-turbo"
+    assert call["extra_body"] == {"provider": {"require_parameters": True}}
     assert call["extra_headers"] == {
         "HTTP-Referer": "https://www.home-assistant.io/integrations/open_router",
         "X-Title": "Home Assistant",
@@ -217,12 +218,14 @@ async def test_function_call(
             agent_id="conversation.gpt_3_5_turbo",
             tool_call_id="mock_tool_call_id",
             tool_name="HassGetCurrentTime",
-            tool_result={
-                "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
-                "response_type": "action_done",
-                "speech_slots": {"time": datetime.time(12, 0)},
-                "data": {"success": [], "failed": []},
-            },
+            result=ToolResult(
+                data={
+                    "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
+                    "response_type": "action_done",
+                    "speech_slots": {"time": datetime.time(12, 0)},
+                    "data": {"success": [], "failed": []},
+                }
+            ),
         )
     )
     mock_chat_log.async_add_assistant_content_without_tools(
