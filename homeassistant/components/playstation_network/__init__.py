@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType
 
-from .const import CONF_NPSSO, DOMAIN
+from .const import CONF_NPSSO, CONF_TOKEN_RESPONSE, DOMAIN
 from .coordinator import (
     PlaystationNetworkConfigEntry,
     PlaystationNetworkFriendDataCoordinator,
@@ -33,7 +33,11 @@ async def async_setup_entry(
 ) -> bool:
     """Set up Playstation Network from a config entry."""
 
-    psn = PlaystationNetwork(hass, entry.data[CONF_NPSSO])
+    psn = PlaystationNetwork(
+        hass,
+        entry.data[CONF_NPSSO],
+        entry.data.get(CONF_TOKEN_RESPONSE),
+    )
 
     coordinator = PlaystationNetworkUserDataCoordinator(hass, psn, entry)
     await coordinator.async_config_entry_first_refresh()
@@ -81,6 +85,13 @@ async def _async_update_listener(
     hass: HomeAssistant, entry: PlaystationNetworkConfigEntry
 ) -> None:
     """Handle update."""
+    psn = entry.runtime_data.user_data.psn
+    if (
+        entry.data[CONF_NPSSO] == psn.npsso
+        and entry.data.get(CONF_TOKEN_RESPONSE) == psn.token_response
+        and entry.subentries.keys() == entry.runtime_data.friends.keys()
+    ):
+        return
     await hass.config_entries.async_reload(entry.entry_id)
 
 
