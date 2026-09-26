@@ -712,6 +712,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/google_travel_time/ @eifinger
 /homeassistant/components/google_weather/ @tronikos
 /tests/components/google_weather/ @tronikos
+/homeassistant/components/google_wifi/ @EReaso
+/tests/components/google_wifi/ @EReaso
 /homeassistant/components/govee_ble/ @bdraco
 /tests/components/govee_ble/ @bdraco
 /homeassistant/components/govee_light_local/ @Galorhallen
