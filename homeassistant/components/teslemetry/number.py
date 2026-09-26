@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from itertools import chain
-from typing import Any, override
+from typing import Any, cast, override
 
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
@@ -30,6 +30,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TeslemetryConfigEntry
+from .coordinator import TeslemetryEnergySiteInfoCoordinator
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryRootEntity,
@@ -308,4 +309,7 @@ class TeslemetryEnergyInfoNumberSensorEntity(TeslemetryEnergyInfoEntity, NumberE
         self.raise_for_scope(Scope.ENERGY_CMDS)
         await handle_command(self.entity_description.func(self.api, value))
         self._attr_native_value = value
+        cast(
+            TeslemetryEnergySiteInfoCoordinator, self.coordinator
+        ).async_set_local_value(self.key, value)
         self.async_write_ha_state()
