@@ -48,9 +48,6 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         if self.device.identifier.gateway_id in self.coordinator.unreachable_gateways:
             return False
 
-        if self.device_url in self.coordinator.unreachable_devices:
-            return False
-
         if self.device.available:
             return super().available
 

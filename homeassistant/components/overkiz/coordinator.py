@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientConnectorError, ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
-from pyoverkiz.enums import EventName, ExecutionState, FailureType, Protocol
+from pyoverkiz.enums import EventName, ExecutionState, Protocol
 from pyoverkiz.exceptions import (
     BadCredentialsError,
     InvalidEventListenerIdError,
@@ -51,19 +51,6 @@ from .const import (
     UPDATE_INTERVAL_RATE_LIMITED_MAX,
 )
 
-# A command can fail because the device refused it (a priority lock, an open
-# door) or because the gateway never reached it. Only the latter says anything
-# about availability.
-UNREACHABLE_FAILURE_TYPES = {
-    FailureType.ACTUATORNOANSWER,
-    FailureType.ACTUATORUNKNOWN,
-    FailureType.ADDRESS_UNKNOWN,
-    FailureType.PEER_DOWN,
-    FailureType.TIME_OUT_ON_COMMAND_PROGRESS,
-    FailureType.TIME_OUT_ON_TRANSMIT,
-    FailureType.TIME_OUT_ON_TRANSMITTED_COMMAND,
-}
-
 # Events are a discriminated union; each handler narrows to its own subtype.
 EVENT_HANDLERS: Registry[
     str, Callable[[OverkizDataUpdateCoordinator, Any], Coroutine[Any, Any, None]]
@@ -106,9 +93,6 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.unreachable_gateways: set[str] = {
             gateway.gateway_id for gateway in gateways if gateway.alive is False
         }
-        # Kept apart from Device.available so recovery only ever clears what
-        # this integration inferred, never what the server reported.
-        self.unreachable_devices: set[str] = set()
         self.areas = self._places_to_area(places) if places else None
         self._default_update_interval = UPDATE_INTERVAL
         self._rate_limited_interval = None
@@ -243,8 +227,6 @@ async def on_device_available(
     coordinator: OverkizDataUpdateCoordinator, event: DeviceEvent
 ) -> None:
     """Handle device available event."""
-    coordinator.unreachable_devices.discard(event.device_url)
-
     if event.device_url in coordinator.devices:
         coordinator.devices[event.device_url].available = True
 
@@ -278,10 +260,9 @@ async def on_device_state_changed(
     if event.device_url not in coordinator.devices:
         return
 
-    # A state coming from the device is proof it is reachable again, and that
-    # its gateway carried it. GATEWAY_ALIVE is otherwise the only way out of
-    # unreachable_gateways, so a missed one would strand every entity on it.
-    coordinator.unreachable_devices.discard(event.device_url)
+    # A state coming from the device is proof its gateway carried it.
+    # GATEWAY_ALIVE is otherwise the only way out of unreachable_gateways, so a
+    # missed one would strand every entity on that gateway.
     coordinator.unreachable_gateways.discard(
         coordinator.devices[event.device_url].identifier.gateway_id
     )
@@ -322,40 +303,8 @@ async def on_execution_state_changed(
     coordinator: OverkizDataUpdateCoordinator, event: ExecutionStateChangedEvent
 ) -> None:
     """Handle execution changed event."""
-    if event.exec_id not in coordinator.executions or event.new_state not in [
+    if event.exec_id in coordinator.executions and event.new_state in [
         ExecutionState.COMPLETED,
         ExecutionState.FAILED,
     ]:
-        return
-
-    executions = coordinator.executions.pop(event.exec_id)
-    device_urls = {execution["device_url"] for execution in executions}
-
-    # Completion is the only verdict that proves the gateway reached every
-    # device in the execution, so it is the only one that clears them.
-    if event.new_state is ExecutionState.COMPLETED:
-        coordinator.unreachable_devices.difference_update(device_urls)
-        return
-
-    # The action queue merges concurrent action groups into one execution, and
-    # the failure it reports is execution-wide: nothing says which of the
-    # devices answered and which did not.
-    if len(device_urls) > 1:
-        return
-
-    # A refusal proves the device answered, and an unclassified failure proves
-    # nothing at all. Neither is evidence of recovery, so a device stays as it
-    # was until it answers.
-    if event.failure_type_code not in UNREACHABLE_FAILURE_TYPES:
-        return
-
-    for device_url in device_urls:
-        # A one-way protocol cannot acknowledge, so a failure there says
-        # nothing about whether the device is reachable.
-        if (device := coordinator.devices.get(device_url)) and (
-            device.identifier.protocol is not Protocol.RTS
-        ):
-            # An execution failure is the only notice: the server goes on
-            # answering for the device and never sends DeviceUnavailableEvent.
-            LOGGER.debug("Device %s is unreachable: %s", device_url, event.failure_type)
-            coordinator.unreachable_devices.add(device_url)
+        del coordinator.executions[event.exec_id]
