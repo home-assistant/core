@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "switch": {
+      "light": {
+        "default": "mdi:lightbulb",
+        "state": {
+          "off": "mdi:lightbulb-off"
+        }
+      },
+      "turbo": {
+        "default": "mdi:fan-plus"
+      },
+      "xfan": {
+        "default": "mdi:fan-chevron-up",
+        "state": {
+          "off": "mdi:fan"
+        }
+      }
+    }
+  }
+}
