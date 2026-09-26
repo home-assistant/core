@@ -49,6 +49,11 @@ from homeassistant.helpers import (
     config_validation as cv,
     trigger as trigger_helper,
 )
+from homeassistant.helpers.automation import (
+    ValidationFinding,
+    async_clear_validation_issues,
+    async_create_validation_issue,
+)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.issue_registry import (
@@ -380,6 +385,26 @@ class BaseAutomationEntity(ToggleEntity, ABC):
     ) -> ScriptRunResult | None:
         """Trigger automation."""
 
+    @callback
+    def async_refresh_validation_findings(
+        self, findings: list[ValidationFinding]
+    ) -> None:
+        """Refresh repair issues when kept across a reload with unchanged config."""
+
+    @property
+    def validation_issue_ids(self) -> set[tuple[str, str]]:
+        """Return the repair issue IDs this entity has materialized."""
+        return set()
+
+    @callback
+    def async_detach_validation_issues(self) -> set[tuple[str, str]]:
+        """Detach and return the entity's validation issue IDs.
+
+        Used when the entity is removed as part of a reload that may recreate the
+        same stable issue IDs on a replacement entity.
+        """
+        return set()
+
 
 class UnavailableAutomationEntity(BaseAutomationEntity):
     """A non-functional automation entity with its state set to unavailable.
@@ -496,6 +521,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         raw_config: ConfigType | None,
         blueprint_inputs: ConfigType | None,
         trace_config: ConfigType,
+        validation_findings: list[ValidationFinding],
     ) -> None:
         """Initialize an automation entity."""
         self._attr_name = name
@@ -513,6 +539,8 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self._blueprint_inputs = blueprint_inputs
         self._trace_config = trace_config
         self._attr_unique_id = automation_id
+        self._validation_findings = validation_findings
+        self._validation_issue_ids: set[tuple[str, str]] = set()
 
     @property
     @override
@@ -661,6 +689,59 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
         if enable_automation:
             await self._async_enable()
+
+        self._async_create_validation_issues()
+
+    @callback
+    def _async_create_validation_issues(self) -> None:
+        """Materialize repair issues for this automation's validation findings."""
+        edit_url = (
+            f"/config/automation/edit/{self.unique_id}" if self.unique_id else None
+        )
+        for finding in self._validation_findings:
+            self._validation_issue_ids.add(
+                async_create_validation_issue(
+                    self.hass,
+                    finding,
+                    issue_domain=DOMAIN,
+                    owner_key=self.unique_id or self.entity_id,
+                    name=self._attr_name or self.entity_id,
+                    entity_id=self.entity_id,
+                    edit_url=edit_url,
+                )
+            )
+
+    @override
+    @callback
+    def async_refresh_validation_findings(
+        self, findings: list[ValidationFinding]
+    ) -> None:
+        """Re-materialize repair issues when kept across a reload."""
+        if findings == self._validation_findings:
+            return
+        previous_issue_ids = self._validation_issue_ids
+        self._validation_issue_ids = set()
+        self._validation_findings = findings
+        # Recreate the current issues; async_get_or_create updates an existing issue in
+        # place, preserving its dismissal state. Only delete issues that no longer exist.
+        self._async_create_validation_issues()
+        async_clear_validation_issues(
+            self.hass, previous_issue_ids - self._validation_issue_ids
+        )
+
+    @property
+    @override
+    def validation_issue_ids(self) -> set[tuple[str, str]]:
+        """Return the repair issue IDs this entity has materialized."""
+        return self._validation_issue_ids
+
+    @override
+    @callback
+    def async_detach_validation_issues(self) -> set[tuple[str, str]]:
+        """Detach and return the entity's validation issue IDs."""
+        issue_ids = self._validation_issue_ids
+        self._validation_issue_ids = set()
+        return issue_ids
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -826,10 +907,12 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         """Remove listeners when removing automation from Home Assistant."""
         await super().async_will_remove_from_hass()
         if self.registry_entry and self.registry_entry.entity_id != self.entity_id:
-            # Entity ID change, do not unload the script or conditions as they will
-            # be reused.
+            # Entity ID change: keep the repair issues so the re-added entity updates
+            # them in place under the same unique-id-keyed id (preserving any dismissal),
+            # and do not unload the script or conditions as they will be reused.
             await self._async_disable()
             return
+        async_clear_validation_issues(self.hass, self._validation_issue_ids)
         await self._async_disable(stop_actions=False)
         await self.action_script.async_unload()
         if self._condition is not None:
@@ -987,6 +1070,7 @@ class AutomationEntityConfig:
     raw_config: ConfigType | None
     validation_error: str | None
     validation_status: ValidationStatus
+    validation_findings: list[ValidationFinding]
 
 
 async def _prepare_automation_config(
@@ -1008,6 +1092,9 @@ async def _prepare_automation_config(
         raw_blueprint_inputs = cast(AutomationConfig, config_block).raw_blueprint_inputs
         validation_error = cast(AutomationConfig, config_block).validation_error
         validation_status = cast(AutomationConfig, config_block).validation_status
+        validation_findings = (
+            cast(AutomationConfig, config_block).validation_findings or []
+        )
         automation_configs.append(
             AutomationEntityConfig(
                 config_block,
@@ -1016,6 +1103,7 @@ async def _prepare_automation_config(
                 raw_config,
                 validation_error,
                 validation_status,
+                validation_findings,
             )
         )
 
@@ -1102,6 +1190,7 @@ async def _create_automation_entities(
             automation_config.raw_config,
             automation_config.raw_blueprint_inputs,
             config_block[CONF_TRACE],
+            automation_config.validation_findings,
         )
         entities.append(entity)
 
@@ -1124,15 +1213,15 @@ async def _async_process_config(
     def find_matches(
         automations: list[BaseAutomationEntity],
         automation_configs: list[AutomationEntityConfig],
-    ) -> tuple[set[int], set[int]]:
+    ) -> list[tuple[int, int]]:
         """Find matches between automation entities and configurations.
 
         An automation or configuration is only allowed to match at most once to handle
         the case of multiple automations with identical configuration.
 
-        Returns a tuple of sets of indices: ({automation_matches}, {config_matches})
+        Returns a list of matched (automation_idx, config_idx) index pairs.
         """
-        automation_matches: set[int] = set()
+        matches: list[tuple[int, int]] = []
         config_matches: set[int] = set()
         automation_configs_with_id: dict[str, tuple[int, AutomationEntityConfig]] = {}
         automation_configs_without_id: list[tuple[int, AutomationEntityConfig]] = []
@@ -1154,8 +1243,7 @@ async def _async_process_config(
                     automation.unique_id
                 )
                 if automation_matches_config(automation, automation_config):
-                    automation_matches.add(automation_idx)
-                    config_matches.add(config_idx)
+                    matches.append((automation_idx, config_idx))
                 continue
 
             for config_idx, automation_config in automation_configs_without_id:
@@ -1163,26 +1251,45 @@ async def _async_process_config(
                     # Only allow an automation config to match at most once
                     continue
                 if automation_matches_config(automation, automation_config):
-                    automation_matches.add(automation_idx)
+                    matches.append((automation_idx, config_idx))
                     config_matches.add(config_idx)
                     # Only allow an automation to match at most once
                     break
 
-        return automation_matches, config_matches
+        return matches
 
     automation_configs = await _prepare_automation_config(hass, config, None)
     automations: list[BaseAutomationEntity] = list(component.entities)
 
     # Find automations and configurations which have matches
-    automation_matches, config_matches = find_matches(automations, automation_configs)
+    matches = find_matches(automations, automation_configs)
+    automation_matches = {automation_idx for automation_idx, _ in matches}
+    config_matches = {config_idx for _, config_idx in matches}
 
-    # Remove automations which have changed config or no longer exist
-    tasks = [
-        automation.async_remove()
+    # A matched automation is kept as-is, but its registry-dependent findings may have
+    # changed even when the config text is unchanged, so refresh its repair issues.
+    for automation_idx, config_idx in matches:
+        automations[automation_idx].async_refresh_validation_findings(
+            automation_configs[config_idx].validation_findings
+        )
+
+    # Remove automations which have changed config or no longer exist. Detach their
+    # repair issue IDs first so async_will_remove_from_hass does not delete a repair a
+    # replacement entity recreates with the same stable ID (which would reset its
+    # dismissal); issues without a new owner are cleared below.
+    removed_automations = [
+        automation
         for idx, automation in enumerate(automations)
         if idx not in automation_matches
     ]
-    await asyncio.gather(*tasks)
+    previous_issue_ids = {
+        issue_id
+        for automation in removed_automations
+        for issue_id in automation.async_detach_validation_issues()
+    }
+    await asyncio.gather(
+        *(automation.async_remove() for automation in removed_automations)
+    )
 
     # Create automations which have changed config or have been added
     updated_automation_configs = [
@@ -1192,6 +1299,13 @@ async def _async_process_config(
     ]
     entities = await _create_automation_entities(hass, updated_automation_configs)
     await component.async_add_entities(entities)
+
+    # Delete repairs whose owning automation is gone, keeping those a replacement
+    # entity recreated (async_get_or_create preserves their dismissal).
+    current_issue_ids = {
+        issue_id for entity in entities for issue_id in entity.validation_issue_ids
+    }
+    async_clear_validation_issues(hass, previous_issue_ids - current_issue_ids)
 
 
 def _automation_matches_config(
@@ -1221,12 +1335,27 @@ async def _async_process_single_config(
     automation_config = automation_configs[0] if automation_configs else None
 
     if _automation_matches_config(automation, automation_config):
+        # Kept as-is, but refresh registry-dependent findings that may have changed
+        # even though the config text is unchanged.
+        cast(BaseAutomationEntity, automation).async_refresh_validation_findings(
+            cast(AutomationEntityConfig, automation_config).validation_findings
+        )
         return
 
+    # Detach the removed automation's repair issue IDs so async_will_remove_from_hass
+    # does not delete a repair a replacement recreates with the same stable ID (which
+    # would reset its dismissal); issues without a new owner are cleared below.
+    previous_issue_ids: set[tuple[str, str]] = set()
     if automation:
+        previous_issue_ids = automation.async_detach_validation_issues()
         await automation.async_remove()
     entities = await _create_automation_entities(hass, automation_configs)
     await component.async_add_entities(entities)
+
+    current_issue_ids = {
+        issue_id for entity in entities for issue_id in entity.validation_issue_ids
+    }
+    async_clear_validation_issues(hass, previous_issue_ids - current_issue_ids)
 
 
 async def _async_process_if(

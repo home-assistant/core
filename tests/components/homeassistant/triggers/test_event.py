@@ -9,6 +9,7 @@ from homeassistant.components import automation
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, script, trigger
+from homeassistant.helpers.automation import ValidationFinding
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_component
@@ -700,6 +701,23 @@ async def test_composite_device_id_logs_warning(
     """Test a composite event_data.device_id filter logs the full warning."""
     with caplog.at_level(logging.WARNING):
         await trigger.async_validate_trigger_config(hass, [_EVENT_TRIGGER])
+    assert caplog.messages == [_expected_composite_warning(*split_devices)]
+
+
+async def test_composite_device_id_reports_and_logs(
+    hass: HomeAssistant,
+    split_devices: tuple[dr.DeviceEntry, dr.DeviceEntry],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a reporter receives the finding and the warning is still logged."""
+    findings: list[ValidationFinding] = []
+    with caplog.at_level(logging.WARNING):
+        await trigger.async_validate_trigger_config(
+            hass, [_EVENT_TRIGGER], issue_reporter=findings.append
+        )
+    assert len(findings) == 1
+    assert findings[0].finding_type == "event_trigger_composite_device_id"
+    assert findings[0].issue_key == COMPOSITE_ID
     assert caplog.messages == [_expected_composite_warning(*split_devices)]
 
 
