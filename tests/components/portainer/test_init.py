@@ -14,7 +14,7 @@ from pyportainer.models.stacks import Stack
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.portainer.const import DOMAIN
+from homeassistant.components.portainer.const import DOMAIN, SUBENTRY_TYPE_ENVIRONMENT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
@@ -149,6 +149,7 @@ async def test_migration_v3_to_v5(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, original_container_identifier)},
         via_device_id=endpoint_device.id,
+        model="Container",
         name="Test Container",
     )
 
@@ -179,6 +180,84 @@ async def test_migration_v3_to_v5(
         (DOMAIN, f"{entry.entry_id}_1_adguard"),
     }
     assert entity_after.unique_id == f"{entry.entry_id}_1_adguard_container"
+
+
+async def test_migration_v5_1_to_v5_2(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration of pre-subentry devices/entities into an environment subentry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_URL: "http://test_host",
+            CONF_API_TOKEN: "test_key",
+            CONF_VERIFY_SSL: True,
+        },
+        unique_id="1",
+        version=5,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    endpoint_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, f"{entry.entry_id}_1")},
+        name="Test Endpoint",
+    )
+    # A device can carry identifiers from another domain if it was merged with
+    # a device from a different integration; the migration must ignore those.
+    device_registry.async_update_device(
+        endpoint_device.id,
+        new_identifiers=endpoint_device.identifiers | {("other_domain", "some_id")},
+    )
+    container_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, f"{entry.entry_id}_1_adguard")},
+        via_device_id=endpoint_device.id,
+        model="Container",
+        name="Test Container",
+    )
+
+    container_entity = entity_registry.async_get_or_create(
+        domain="switch",
+        platform=DOMAIN,
+        unique_id=f"{entry.entry_id}_adguard_container",
+        config_entry=entry,
+        device_id=container_device.id,
+        original_name="Test Container Switch",
+    )
+
+    endpoint_entity = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id=f"{entry.entry_id}_1_api_version",
+        config_entry=entry,
+        device_id=endpoint_device.id,
+        original_name="Test Endpoint API Version",
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.minor_version == 2
+    assert len(entry.subentries) == 1
+    subentry = next(iter(entry.subentries.values()))
+    assert subentry.subentry_type == SUBENTRY_TYPE_ENVIRONMENT
+    assert subentry.unique_id == "1"
+
+    endpoint_after = device_registry.async_get(endpoint_device.id)
+    container_after = device_registry.async_get(container_device.id)
+    entity_after = entity_registry.async_get(container_entity.entity_id)
+    endpoint_entity_after = entity_registry.async_get(endpoint_entity.entity_id)
+    assert endpoint_after.config_subentry_id == subentry.subentry_id
+    assert container_after.config_subentry_id == subentry.subentry_id
+    assert entity_after.config_subentry_id == subentry.subentry_id
+    assert entity_after.unique_id == f"{entry.entry_id}_1_adguard_container"
+    assert endpoint_entity_after.config_subentry_id == subentry.subentry_id
+    assert endpoint_entity_after.unique_id == f"{entry.entry_id}_1_api_version"
 
 
 async def test_unload_entry(

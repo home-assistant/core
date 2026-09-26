@@ -12,13 +12,27 @@
       }),
       'domain': 'portainer',
       'entry_id': 'portainer_test_entry_123',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
       'subentries': list([
+        dict({
+          'data': dict({
+          }),
+          'subentry_type': 'environment',
+          'title': 'my-environment',
+          'unique_id': '1',
+        }),
+        dict({
+          'data': dict({
+          }),
+          'subentry_type': 'environment',
+          'title': 'my-edge-offline',
+          'unique_id': '42',
+        }),
       ]),
       'title': 'Portainer test',
       'unique_id': '299ab403-70a8-4c05-92f7-bf7a994d50df',
