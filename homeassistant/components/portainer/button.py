@@ -13,6 +13,7 @@ from pyportainer.exceptions import (
     PortainerTimeoutError,
 )
 from pyportainer.models.docker import DockerContainer
+from pyportainer.models.stacks import Stack, StackType
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -30,8 +31,13 @@ from .coordinator import (
     PortainerContainerData,
     PortainerCoordinator,
     PortainerCoordinatorData,
+    PortainerStackData,
 )
-from .entity import PortainerContainerEntity, PortainerEndpointEntity
+from .entity import (
+    PortainerContainerEntity,
+    PortainerEndpointEntity,
+    PortainerStackEntity,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -55,6 +61,13 @@ class PortainerContainerButtonDescription(ButtonEntityDescription):
         Coroutine[Any, Any, DockerContainer | None],
     ]
     available_fn: Callable[[PortainerContainerData], bool]
+
+
+@dataclass(frozen=True, kw_only=True)
+class PortainerStackButtonDescription(ButtonEntityDescription):
+    """Class to describe a Portainer stack button entity."""
+
+    press_action: Callable[[Portainer, int, int], Coroutine[Any, Any, Stack]]
 
 
 ENDPOINT_BUTTONS: tuple[PortainerEndpointButtonDescription, ...] = (
@@ -153,6 +166,20 @@ CONTAINER_BUTTONS: tuple[PortainerContainerButtonDescription, ...] = (
     ),
 )
 
+STACK_BUTTONS: tuple[PortainerStackButtonDescription, ...] = (
+    PortainerStackButtonDescription(
+        key="update",
+        translation_key="update_stack",
+        device_class=ButtonDeviceClass.UPDATE,
+        entity_category=EntityCategory.CONFIG,
+        press_action=(
+            lambda portainer, endpoint_id, stack_id: portainer.update_stack(
+                endpoint_id, stack_id, timeout=timedelta(minutes=10)
+            )
+        ),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -189,8 +216,26 @@ async def async_setup_entry(
             for entity_description in CONTAINER_BUTTONS
         )
 
+    def _async_add_new_stacks(
+        stacks: list[tuple[PortainerCoordinatorData, PortainerStackData]],
+    ) -> None:
+        """Add new stack buttons."""
+        async_add_entities(
+            PortainerStackButton(
+                coordinator,
+                entity_description,
+                stack,
+                endpoint,
+            )
+            for (endpoint, stack) in stacks
+            # Portainer updates Kubernetes stacks through a different API
+            if stack.stack.stack_type != StackType.KUBERNETES
+            for entity_description in STACK_BUTTONS
+        )
+
     coordinator.new_endpoints_callbacks.append(_async_add_new_endpoints)
     coordinator.new_containers_callbacks.append(_async_add_new_containers)
+    coordinator.new_stacks_callbacks.append(_async_add_new_stacks)
 
     _async_add_new_endpoints(
         [
@@ -204,6 +249,13 @@ async def async_setup_entry(
             (endpoint, container)
             for endpoint in coordinator.data.values()
             for container in endpoint.containers.values()
+        ]
+    )
+    _async_add_new_stacks(
+        [
+            (endpoint, stack)
+            for endpoint in coordinator.data.values()
+            for stack in endpoint.stacks.values()
         ]
     )
 
@@ -277,4 +329,17 @@ class PortainerContainerButton(PortainerContainerEntity, PortainerBaseButton):
             self.coordinator.portainer,
             self.endpoint_id,
             self.container_data.container.id,
+        )
+
+
+class PortainerStackButton(PortainerStackEntity, PortainerBaseButton):
+    """Defines a Portainer stack button."""
+
+    entity_description: PortainerStackButtonDescription
+
+    @override
+    async def _async_press_call(self) -> None:
+        """Call the stack button press action."""
+        await self.entity_description.press_action(
+            self.coordinator.portainer, self.endpoint_id, self.stack_id
         )
