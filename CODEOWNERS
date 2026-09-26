@@ -110,8 +110,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/alert/ @home-assistant/core @frenck
 /homeassistant/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
 /tests/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
-/homeassistant/components/alexa_devices/ @chemelli74
-/tests/components/alexa_devices/ @chemelli74
+/homeassistant/components/alexa_devices/ @chemelli74 @jamesonuk
+/tests/components/alexa_devices/ @chemelli74 @jamesonuk
 /homeassistant/components/altruist/ @airalab @LoSk-p
 /tests/components/altruist/ @airalab @LoSk-p
 /homeassistant/components/amazon_polly/ @jschlyter

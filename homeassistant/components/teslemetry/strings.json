@@ -1297,6 +1297,32 @@
     }
   },
   "issues": {
+    "gateway_not_found": {
+      "fix_flow": {
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "entry_not_loaded": "[%key:component::teslemetry::config_subentries::energy_site::abort::entry_not_loaded%]"
+        },
+        "error": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "invalid_auth": "The Powerwall system at this address did not accept the saved password. Check that the address belongs to the Powerwall system for this energy site.",
+          "key_not_approved": "[%key:component::teslemetry::config_subentries::energy_site::error::key_not_approved%]"
+        },
+        "step": {
+          "host": {
+            "data": {
+              "host": "[%key:common::config_flow::data::host%]"
+            },
+            "data_description": {
+              "host": "The address of your Powerwall system on your local network."
+            },
+            "description": "Home Assistant cannot reach the Powerwall system for {site} at its saved address on your local network, so local control is unavailable and commands are sent through the cloud. Enter its current local network address.",
+            "title": "[%key:component::teslemetry::issues::gateway_not_found::title%]"
+          }
+        }
+      },
+      "title": "Local control unavailable for {site}"
+    },
     "key": {
       "fix_flow": {
         "error": {

@@ -83,6 +83,53 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "door_open": {
+        "name": "Door open"
+      },
+      "input_tray_empty": {
+        "name": "Input tray empty"
+      },
+      "input_tray_missing": {
+        "name": "Input tray missing"
+      },
+      "jammed": {
+        "name": "Paper jam"
+      },
+      "low_ink": {
+        "name": "Low ink"
+      },
+      "low_paper": {
+        "name": "Low paper"
+      },
+      "low_toner": {
+        "name": "Low toner"
+      },
+      "no_ink": {
+        "name": "No ink"
+      },
+      "no_paper": {
+        "name": "No paper"
+      },
+      "no_toner": {
+        "name": "No toner"
+      },
+      "output_full": {
+        "name": "Output tray full"
+      },
+      "output_near_full": {
+        "name": "Output tray near full"
+      },
+      "output_tray_missing": {
+        "name": "Output tray missing"
+      },
+      "overdue_prevent_maint": {
+        "name": "Preventive maintenance overdue"
+      },
+      "service_requested": {
+        "name": "Service requested"
+      }
+    },
     "sensor": {
       "belt_unit_remaining_life": {
         "name": "Belt unit remaining lifetime"

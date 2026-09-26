@@ -3,6 +3,8 @@
 from dataclasses import asdict
 from typing import Any
 
+from modbus_connection import ModbusError
+
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
@@ -19,8 +21,13 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     runtime_data = entry.runtime_data
     device = runtime_data.readings.device
-    raw = await device.async_read_raw()
-    if (holding := raw.get("holding")) is not None:
+    raw = masks = read_error = None
+    try:
+        raw = await device.async_read_raw()
+        masks = await device.async_read_masks()
+    except ModbusError as err:
+        read_error = type(err).__name__
+    if raw is not None and (holding := raw.get("holding")) is not None:
         for address in _SERIAL_NUMBER_REGISTERS:
             holding.pop(address, None)
 
@@ -32,11 +39,12 @@ async def async_get_config_entry_diagnostics(
             "readings_components": device.readings_components,
             "settings_components": device.settings_components,
             "active_faults": sorted(fault.key for fault in device.state.active_faults),
-            "address_masks": await device.async_read_masks(),
+            "address_masks": masks,
             "link": {
                 "tuning": asdict(runtime_data.tuner.tuning),
                 "stats": asdict(runtime_data.link.stats),
             },
+            "read_error": read_error,
             "raw": raw,
         },
         TO_REDACT,

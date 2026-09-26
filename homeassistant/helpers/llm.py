@@ -42,6 +42,8 @@ APIS_CACHE: HassKey[dict[str, API]] = HassKey("llm_apis")
 
 LLM_API_ASSIST = "assist"
 
+TOOL_INTEGRATION_BREAKS_IN_HA_VERSION = "2027.10"
+
 DATE_TIME_PROMPT = (
     'Current time is {{ now().strftime("%H:%M:%S") }}. '
     'Today\'s date is {{ now().strftime("%Y-%m-%d") }}.\n'
@@ -210,6 +212,19 @@ class APIInstance:
     tools: list[Tool]
     custom_serializer: Callable[[Any], Any] | None = None
 
+    def __post_init__(self) -> None:
+        """Report a tool that does not record the integration providing it."""
+        for tool in self.tools:
+            if tool.integration is not None:
+                continue
+            # A tool class outside an integration, such as a shared helper tool,
+            # belongs to whichever integration provides the API.
+            domain = _tool_integration_domain(tool) or _integration_domain(
+                type(self.api).__module__
+            )
+            if domain is not None:
+                report_untagged_tool(tool, domain)
+
     async def async_call_tool(self, tool_input: ToolInput) -> ToolResult:
         """Call a LLM tool, validate args and return the response."""
         from homeassistant.components.conversation import (  # noqa: PLC0415
@@ -244,11 +259,35 @@ class APIInstance:
         return ToolResult(data=result)
 
 
+@callback
+def report_untagged_tool(tool: Tool, domain: str) -> None:
+    """Report a tool that does not record the integration providing it."""
+    wrapped = [tool]
+    while isinstance(wrapped[-1], NamespacedTool):
+        wrapped.append(wrapped[-1].tool)
+    frame.report_usage(
+        f"provides the LLM tool {wrapped[-1].name} without an integration",
+        breaks_in_ha_version=TOOL_INTEGRATION_BREAKS_IN_HA_VERSION,
+        core_behavior=frame.ReportBehavior.ERROR,
+        core_integration_behavior=frame.ReportBehavior.ERROR,
+        custom_integration_behavior=frame.ReportBehavior.LOG,
+        integration_domain=domain,
+    )
+    # Record the domain on the tool and every wrapper around it, so it carries
+    # the integration until the requirement is enforced.
+    for entry in wrapped:
+        entry.integration = domain
+
+
 def _tool_integration_domain(tool: Tool) -> str | None:
     """Return the domain of the integration that provides the tool."""
     while isinstance(tool, NamespacedTool):
         tool = tool.tool
-    module = type(tool).__module__
+    return _integration_domain(type(tool).__module__)
+
+
+def _integration_domain(module: str) -> str | None:
+    """Return the domain of the integration that defines the module."""
     for prefix in ("custom_components.", "homeassistant.components."):
         if module.startswith(prefix):
             return module.removeprefix(prefix).partition(".")[0]
