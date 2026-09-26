@@ -21,11 +21,12 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import CONF_REQUIRE_ADMIN, DOMAIN
+from .const import CONF_ALL_LLM_APIS, CONF_REQUIRE_ADMIN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 MORE_INFO_URL = "https://www.home-assistant.io/integrations/mcp_server/#configuration"
+ALL_LLM_APIS_TITLE = "All LLM APIs"
 
 
 def _llm_api_names(hass: HomeAssistant) -> dict[str, str]:
@@ -33,8 +34,12 @@ def _llm_api_names(hass: HomeAssistant) -> dict[str, str]:
     return {api.id: api.name for api in llm.async_get_apis(hass)}
 
 
-def _llm_api_title(llm_apis: dict[str, str], api_ids: list[str]) -> str:
+def _llm_api_title(
+    llm_apis: dict[str, str], all_llm_apis: bool, api_ids: list[str]
+) -> str:
     """Return the entry title generated for the selected LLM APIs."""
+    if all_llm_apis:
+        return ALL_LLM_APIS_TITLE
     return ", ".join(llm_apis[api_id] for api_id in api_ids if api_id in llm_apis)
 
 
@@ -46,10 +51,18 @@ def _selected_llm_apis(entry: ConfigEntry, llm_apis: dict[str, str]) -> list[str
     return [api_id for api_id in api_ids if api_id in llm_apis]
 
 
-def _llm_api_schema(llm_apis: dict[str, str], default: list[str]) -> probatio.Schema:
-    """Return the schema for selecting LLM APIs."""
+def _options_schema(
+    llm_apis: dict[str, str],
+    all_llm_apis: bool,
+    default: list[str],
+    require_admin: bool,
+) -> probatio.Schema:
+    """Return the schema for the options flow."""
     return probatio.Schema(
         {
+            probatio.Required(
+                CONF_ALL_LLM_APIS, default=all_llm_apis
+            ): BooleanSelector(),
             probatio.Optional(
                 CONF_LLM_HASS_API,
                 default=default,
@@ -65,16 +78,6 @@ def _llm_api_schema(llm_apis: dict[str, str], default: list[str]) -> probatio.Sc
                     multiple=True,
                 )
             ),
-        }
-    )
-
-
-def _options_schema(
-    llm_apis: dict[str, str], default: list[str], require_admin: bool
-) -> probatio.Schema:
-    """Return the schema for the options flow."""
-    return _llm_api_schema(llm_apis, default).extend(
-        {
             probatio.Required(
                 CONF_REQUIRE_ADMIN, default=require_admin
             ): BooleanSelector(),
@@ -86,7 +89,7 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Model Context Protocol Server."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @staticmethod
     @callback
@@ -102,22 +105,18 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors: dict[str, str] = {}
-        llm_apis = _llm_api_names(self.hass)
-        if user_input is not None:
-            if not user_input[CONF_LLM_HASS_API]:
-                errors[CONF_LLM_HASS_API] = "llm_api_required"
-            else:
-                return self.async_create_entry(
-                    title=_llm_api_title(llm_apis, user_input[CONF_LLM_HASS_API]),
-                    data={**user_input, CONF_REQUIRE_ADMIN: True},
-                )
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=_llm_api_schema(llm_apis, [llm.LLM_API_ASSIST]),
-            description_placeholders={"more_info_url": MORE_INFO_URL},
-            errors=errors,
+        if user_input is None:
+            return self.async_show_form(
+                step_id="user",
+                description_placeholders={"more_info_url": MORE_INFO_URL},
+            )
+        return self.async_create_entry(
+            title=ALL_LLM_APIS_TITLE,
+            data={
+                CONF_ALL_LLM_APIS: True,
+                CONF_LLM_HASS_API: [],
+                CONF_REQUIRE_ADMIN: True,
+            },
         )
 
 
@@ -130,18 +129,24 @@ class ModelContextServerProtocolOptionsFlow(OptionsFlow):
         """Handle the options step."""
         errors: dict[str, str] = {}
         llm_apis = _llm_api_names(self.hass)
+        # A disabled config entry has not migrated yet
+        current_all = self.config_entry.data.get(CONF_ALL_LLM_APIS, False)
         current = _selected_llm_apis(self.config_entry, llm_apis)
         if user_input is not None:
-            if not user_input[CONF_LLM_HASS_API]:
+            if not user_input[CONF_ALL_LLM_APIS] and not user_input[CONF_LLM_HASS_API]:
                 errors[CONF_LLM_HASS_API] = "llm_api_required"
             else:
                 updates: dict[str, Any] = {
                     "data": {**self.config_entry.data, **user_input}
                 }
                 # Keep a title the user renamed, only refresh a generated one.
-                if self.config_entry.title == _llm_api_title(llm_apis, current):
+                if self.config_entry.title == _llm_api_title(
+                    llm_apis, current_all, current
+                ):
                     updates["title"] = _llm_api_title(
-                        llm_apis, user_input[CONF_LLM_HASS_API]
+                        llm_apis,
+                        user_input[CONF_ALL_LLM_APIS],
+                        user_input[CONF_LLM_HASS_API],
                     )
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, **updates
@@ -154,6 +159,7 @@ class ModelContextServerProtocolOptionsFlow(OptionsFlow):
             step_id="init",
             data_schema=_options_schema(
                 llm_apis,
+                current_all,
                 current,
                 # A disabled config entry has not migrated yet
                 self.config_entry.data.get(CONF_REQUIRE_ADMIN, False),
