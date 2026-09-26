@@ -146,6 +146,9 @@
       },
       "overheat_protection": {
         "name": "Overheat protection"
+      },
+      "standby": {
+        "name": "Standby"
       }
     }
   },
