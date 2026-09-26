@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.pykascx9yfqrxtbgzcchild_lock',
+    'unique_id': 'pykascx9yfqrxtbgzc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -82,7 +82,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.pykascx9yfqrxtbgzcswitch_1',
+    'unique_id': 'pykascx9yfqrxtbgzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -133,7 +133,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.xenxir4a0tn0p1qcqdtswitch_1',
+    'unique_id': 'xenxir4a0tn0p1qcqdt.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -184,7 +184,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.xenxir4a0tn0p1qcqdtswitch_2',
+    'unique_id': 'xenxir4a0tn0p1qcqdt.switch_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -235,7 +235,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.xenxir4a0tn0p1qcqdtswitch_3',
+    'unique_id': 'xenxir4a0tn0p1qcqdt.switch_3',
     'unit_of_measurement': None,
   })
 # ---
@@ -286,7 +286,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.xenxir4a0tn0p1qcqdtswitch_4',
+    'unique_id': 'xenxir4a0tn0p1qcqdt.switch_4',
     'unit_of_measurement': None,
   })
 # ---
@@ -337,7 +337,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.q62sg0p3s52thp6zzcchild_lock',
+    'unique_id': 'q62sg0p3s52thp6zzc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -387,7 +387,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.q62sg0p3s52thp6zzcswitch_1',
+    'unique_id': 'q62sg0p3s52thp6zzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -438,7 +438,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.q62sg0p3s52thp6zzcswitch_2',
+    'unique_id': 'q62sg0p3s52thp6zzc.switch_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -489,7 +489,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch',
-    'unique_id': 'tuya.qyy1auihjyoogvb7zdccqswitch',
+    'unique_id': 'qyy1auihjyoogvb7zdccq.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -539,7 +539,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'socket',
-    'unique_id': 'tuya.vADxMzNytofrgbm4zcswitch',
+    'unique_id': 'vADxMzNytofrgbm4zc.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -590,7 +590,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.ycttanlnpa0aivbfzcswitch_1',
+    'unique_id': 'ycttanlnpa0aivbfzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -641,7 +641,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.sq6fbd3pfkwchild_lock',
+    'unique_id': 'sq6fbd3pfkw.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -691,7 +691,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.ncl7oi5d6hqmf1g0zcswitch_1',
+    'unique_id': 'ncl7oi5d6hqmf1g0zc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -742,7 +742,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.cju47ovcbeuapei2zcchild_lock',
+    'unique_id': 'cju47ovcbeuapei2zc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -792,7 +792,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.cju47ovcbeuapei2zcswitch_1',
+    'unique_id': 'cju47ovcbeuapei2zc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -843,7 +843,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.zjh9xhtm3gibs9kizcchild_lock',
+    'unique_id': 'zjh9xhtm3gibs9kizc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -893,7 +893,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.zjh9xhtm3gibs9kizcswitch_1',
+    'unique_id': 'zjh9xhtm3gibs9kizc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -944,7 +944,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.hxbonj4yzcswitch_1',
+    'unique_id': 'hxbonj4yzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -995,7 +995,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.kvnsoqyfltmf0bknzcswitch_1',
+    'unique_id': 'kvnsoqyfltmf0bknzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1046,7 +1046,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.5gfyvvg48bsxbbnjzcswitch_1',
+    'unique_id': '5gfyvvg48bsxbbnjzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1097,7 +1097,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.gluaktf5gkswitch_1',
+    'unique_id': 'gluaktf5gk.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1148,7 +1148,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.eway2kw92ncuecarzcswitch_1',
+    'unique_id': 'eway2kw92ncuecarzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1199,7 +1199,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.fc2ngmpckwchild_lock',
+    'unique_id': 'fc2ngmpckw.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -1249,7 +1249,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'snooze',
-    'unique_id': 'tuya.bfpewgk8r6fhmissdyzbsnooze',
+    'unique_id': 'bfpewgk8r6fhmissdyzb.snooze',
     'unit_of_measurement': None,
   })
 # ---
@@ -1300,7 +1300,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': 'tuya.ppgdpsq1xaxlyzryjkswitch',
+    'unique_id': 'ppgdpsq1xaxlyzryjk.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -1350,7 +1350,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.pfhwb1v3i7cifa2tcpswitch_1',
+    'unique_id': 'pfhwb1v3i7cifa2tcp.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1401,7 +1401,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.pfhwb1v3i7cifa2tcpswitch_2',
+    'unique_id': 'pfhwb1v3i7cifa2tcp.switch_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -1452,7 +1452,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.2k8wyjo7iidkohuczcswitch_1',
+    'unique_id': '2k8wyjo7iidkohuczc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1503,7 +1503,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flip',
-    'unique_id': 'tuya.svjjuwykgijjedurpsbasic_flip',
+    'unique_id': 'svjjuwykgijjedurps.basic_flip',
     'unit_of_measurement': None,
   })
 # ---
@@ -1553,7 +1553,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_alarm',
-    'unique_id': 'tuya.svjjuwykgijjedurpsmotion_switch',
+    'unique_id': 'svjjuwykgijjedurps.motion_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -1603,7 +1603,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_tracking',
-    'unique_id': 'tuya.svjjuwykgijjedurpsmotion_tracking',
+    'unique_id': 'svjjuwykgijjedurps.motion_tracking',
     'unit_of_measurement': None,
   })
 # ---
@@ -1653,7 +1653,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'privacy_mode',
-    'unique_id': 'tuya.svjjuwykgijjedurpsbasic_private',
+    'unique_id': 'svjjuwykgijjedurps.basic_private',
     'unit_of_measurement': None,
   })
 # ---
@@ -1703,7 +1703,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sound_detection',
-    'unique_id': 'tuya.svjjuwykgijjedurpsdecibel_switch',
+    'unique_id': 'svjjuwykgijjedurps.decibel_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -1753,7 +1753,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'time_watermark',
-    'unique_id': 'tuya.svjjuwykgijjedurpsbasic_osd',
+    'unique_id': 'svjjuwykgijjedurps.basic_osd',
     'unit_of_measurement': None,
   })
 # ---
@@ -1803,7 +1803,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'video_recording',
-    'unique_id': 'tuya.svjjuwykgijjedurpsrecord_switch',
+    'unique_id': 'svjjuwykgijjedurps.record_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -1853,7 +1853,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_push_notifications',
-    'unique_id': 'tuya.rirsc4vhpbv2whkp2gwswitch_alarm_propel',
+    'unique_id': 'rirsc4vhpbv2whkp2gw.switch_alarm_propel',
     'unit_of_measurement': None,
   })
 # ---
@@ -1903,7 +1903,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'keypad_sound',
-    'unique_id': 'tuya.rirsc4vhpbv2whkp2gwswitch_kb_sound',
+    'unique_id': 'rirsc4vhpbv2whkp2gw.switch_kb_sound',
     'unit_of_measurement': None,
   })
 # ---
@@ -1953,7 +1953,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_siren',
-    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsipc_auto_siren',
+    'unique_id': 'fjdyw5ld2f5f5ddsps.ipc_auto_siren',
     'unit_of_measurement': None,
   })
 # ---
@@ -2003,7 +2003,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flip',
-    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsbasic_flip',
+    'unique_id': 'fjdyw5ld2f5f5ddsps.basic_flip',
     'unit_of_measurement': None,
   })
 # ---
@@ -2053,7 +2053,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_alarm',
-    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsmotion_switch',
+    'unique_id': 'fjdyw5ld2f5f5ddsps.motion_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -2103,7 +2103,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_recording',
-    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsmotion_record',
+    'unique_id': 'fjdyw5ld2f5f5ddsps.motion_record',
     'unit_of_measurement': None,
   })
 # ---
@@ -2153,7 +2153,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_tracking',
-    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsmotion_tracking',
+    'unique_id': 'fjdyw5ld2f5f5ddsps.motion_tracking',
     'unit_of_measurement': None,
   })
 # ---
@@ -2203,7 +2203,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'time_watermark',
-    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsbasic_osd',
+    'unique_id': 'fjdyw5ld2f5f5ddsps.basic_osd',
     'unit_of_measurement': None,
   })
 # ---
@@ -2253,7 +2253,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'video_recording',
-    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsrecord_switch',
+    'unique_id': 'fjdyw5ld2f5f5ddsps.record_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -2303,7 +2303,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wide_dynamic_range',
-    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsbasic_wdr',
+    'unique_id': 'fjdyw5ld2f5f5ddsps.basic_wdr',
     'unit_of_measurement': None,
   })
 # ---
@@ -2353,7 +2353,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flip',
-    'unique_id': 'tuya.mgcpxpmovasazerdpsbasic_flip',
+    'unique_id': 'mgcpxpmovasazerdps.basic_flip',
     'unit_of_measurement': None,
   })
 # ---
@@ -2403,7 +2403,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_alarm',
-    'unique_id': 'tuya.mgcpxpmovasazerdpsmotion_switch',
+    'unique_id': 'mgcpxpmovasazerdps.motion_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -2453,7 +2453,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sound_detection',
-    'unique_id': 'tuya.mgcpxpmovasazerdpsdecibel_switch',
+    'unique_id': 'mgcpxpmovasazerdps.decibel_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -2503,7 +2503,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'time_watermark',
-    'unique_id': 'tuya.mgcpxpmovasazerdpsbasic_osd',
+    'unique_id': 'mgcpxpmovasazerdps.basic_osd',
     'unit_of_measurement': None,
   })
 # ---
@@ -2553,7 +2553,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'video_recording',
-    'unique_id': 'tuya.mgcpxpmovasazerdpsrecord_switch',
+    'unique_id': 'mgcpxpmovasazerdps.record_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -2603,7 +2603,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flip',
-    'unique_id': 'tuya.uBLyTOvlhoRWXKjrpsbasic_flip',
+    'unique_id': 'uBLyTOvlhoRWXKjrps.basic_flip',
     'unit_of_measurement': None,
   })
 # ---
@@ -2653,7 +2653,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_alarm',
-    'unique_id': 'tuya.uBLyTOvlhoRWXKjrpsmotion_switch',
+    'unique_id': 'uBLyTOvlhoRWXKjrps.motion_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -2703,7 +2703,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sound_detection',
-    'unique_id': 'tuya.uBLyTOvlhoRWXKjrpsdecibel_switch',
+    'unique_id': 'uBLyTOvlhoRWXKjrps.decibel_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -2753,7 +2753,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'time_watermark',
-    'unique_id': 'tuya.uBLyTOvlhoRWXKjrpsbasic_osd',
+    'unique_id': 'uBLyTOvlhoRWXKjrps.basic_osd',
     'unit_of_measurement': None,
   })
 # ---
@@ -2803,7 +2803,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'video_recording',
-    'unique_id': 'tuya.uBLyTOvlhoRWXKjrpsrecord_switch',
+    'unique_id': 'uBLyTOvlhoRWXKjrps.record_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -2853,7 +2853,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'socket',
-    'unique_id': 'tuya.ZDldMHS0tjmQgGxEzcswitch',
+    'unique_id': 'ZDldMHS0tjmQgGxEzc.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -2904,7 +2904,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'output_power_limit',
-    'unique_id': 'tuya.gbq8kiahk57ct0bpncjynxfeedin_power_limit_enable',
+    'unique_id': 'gbq8kiahk57ct0bpncjynx.feedin_power_limit_enable',
     'unit_of_measurement': None,
   })
 # ---
@@ -2954,7 +2954,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sound',
-    'unique_id': 'tuya.6wxksqu35c61sce9dsffan_beep',
+    'unique_id': '6wxksqu35c61sce9dsf.fan_beep',
     'unit_of_measurement': None,
   })
 # ---
@@ -3004,7 +3004,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.x7quooqakwchild_lock',
+    'unique_id': 'x7quooqakw.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -3054,7 +3054,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.49m7h9lh3t8pq6ftzcswitch_1',
+    'unique_id': '49m7h9lh3t8pq6ftzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -3105,7 +3105,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.49m7h9lh3t8pq6ftzcswitch_2',
+    'unique_id': '49m7h9lh3t8pq6ftzc.switch_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -3156,7 +3156,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.giqs1xhsekjelfibscchild_lock',
+    'unique_id': 'giqs1xhsekjelfibsc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -3207,7 +3207,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.ifzgvpgoodrfw2akscchild_lock',
+    'unique_id': 'ifzgvpgoodrfw2aksc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -3258,7 +3258,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ionizer',
-    'unique_id': 'tuya.ifzgvpgoodrfw2akscanion',
+    'unique_id': 'ifzgvpgoodrfw2aksc.anion',
     'unit_of_measurement': None,
   })
 # ---
@@ -3309,7 +3309,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.2myxayqtud9aqbizscchild_lock',
+    'unique_id': '2myxayqtud9aqbizsc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -3360,7 +3360,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.jgsopsvzh2ec3itjzcchild_lock',
+    'unique_id': 'jgsopsvzh2ec3itjzc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -3410,7 +3410,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.jgsopsvzh2ec3itjzcswitch_1',
+    'unique_id': 'jgsopsvzh2ec3itjzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -3461,7 +3461,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.ake0bre784zriw0uscchild_lock',
+    'unique_id': 'ake0bre784zriw0usc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -3512,7 +3512,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_reset',
-    'unique_id': 'tuya.ake0bre784zriw0uscfilter_reset',
+    'unique_id': 'ake0bre784zriw0usc.filter_reset',
     'unit_of_measurement': None,
   })
 # ---
@@ -3563,7 +3563,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ionizer',
-    'unique_id': 'tuya.ake0bre784zriw0uscanion',
+    'unique_id': 'ake0bre784zriw0usc.anion',
     'unit_of_measurement': None,
   })
 # ---
@@ -3614,7 +3614,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'socket',
-    'unique_id': 'tuya.gnZOKztbAtcBkEGPzcswitch',
+    'unique_id': 'gnZOKztbAtcBkEGPzc.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -3665,7 +3665,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flip',
-    'unique_id': 'tuya.o4hpbl5uarjfbzhepsbasic_flip',
+    'unique_id': 'o4hpbl5uarjfbzheps.basic_flip',
     'unit_of_measurement': None,
   })
 # ---
@@ -3715,7 +3715,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'time_watermark',
-    'unique_id': 'tuya.o4hpbl5uarjfbzhepsbasic_osd',
+    'unique_id': 'o4hpbl5uarjfbzheps.basic_osd',
     'unit_of_measurement': None,
   })
 # ---
@@ -3765,7 +3765,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.l8uxezzkc7c5a0jhzcswitch_1',
+    'unique_id': 'l8uxezzkc7c5a0jhzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -3816,7 +3816,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.qi94v9dmdx4fkpncqldchild_lock',
+    'unique_id': 'qi94v9dmdx4fkpncqld.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -3866,7 +3866,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch',
-    'unique_id': 'tuya.qi94v9dmdx4fkpncqldswitch',
+    'unique_id': 'qi94v9dmdx4fkpncqld.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -3916,7 +3916,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.a3qtb7pulkcc6jdjqldchild_lock',
+    'unique_id': 'a3qtb7pulkcc6jdjqld.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -3966,7 +3966,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch',
-    'unique_id': 'tuya.a3qtb7pulkcc6jdjqldswitch',
+    'unique_id': 'a3qtb7pulkcc6jdjqld.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -4016,7 +4016,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch',
-    'unique_id': 'tuya.vcrfgwvbuybgnj3zqldswitch',
+    'unique_id': 'vcrfgwvbuybgnj3zqld.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -4066,7 +4066,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.LmLMc0ht1KW2zYAIkwchild_lock',
+    'unique_id': 'LmLMc0ht1KW2zYAIkw.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -4116,7 +4116,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.cq4hzlrnqn4qi0mqzcchild_lock',
+    'unique_id': 'cq4hzlrnqn4qi0mqzc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -4166,7 +4166,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.cq4hzlrnqn4qi0mqzcswitch_1',
+    'unique_id': 'cq4hzlrnqn4qi0mqzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -4217,7 +4217,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.pz2xuth8hczv6zrwzcchild_lock',
+    'unique_id': 'pz2xuth8hczv6zrwzc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -4267,7 +4267,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.pz2xuth8hczv6zrwzcswitch_1',
+    'unique_id': 'pz2xuth8hczv6zrwzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -4318,7 +4318,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.paxijfx9fkwchild_lock',
+    'unique_id': 'paxijfx9fkw.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -4368,7 +4368,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch',
-    'unique_id': 'tuya.lr7th3bpx7masmsdzdccqswitch',
+    'unique_id': 'lr7th3bpx7masmsdzdccq.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -4418,7 +4418,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.zspxfhsvgn2hgtndzcswitch_1',
+    'unique_id': 'zspxfhsvgn2hgtndzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -4469,7 +4469,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.oq9ksabjz6tip49tkwchild_lock',
+    'unique_id': 'oq9ksabjz6tip49tkw.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -4519,7 +4519,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.51tdkcsamisw9ukycpchild_lock',
+    'unique_id': '51tdkcsamisw9ukycp.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -4569,7 +4569,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.51tdkcsamisw9ukycpswitch_1',
+    'unique_id': '51tdkcsamisw9ukycp.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -4620,7 +4620,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.51tdkcsamisw9ukycpswitch_2',
+    'unique_id': '51tdkcsamisw9ukycp.switch_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -4671,7 +4671,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.vrhdtr5fawoiyth9qdtswitch_1',
+    'unique_id': 'vrhdtr5fawoiyth9qdt.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -4722,7 +4722,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flip',
-    'unique_id': 'tuya.53fnjncm3jywuaznpsbasic_flip',
+    'unique_id': '53fnjncm3jywuaznps.basic_flip',
     'unit_of_measurement': None,
   })
 # ---
@@ -4772,7 +4772,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_alarm',
-    'unique_id': 'tuya.53fnjncm3jywuaznpsmotion_switch',
+    'unique_id': '53fnjncm3jywuaznps.motion_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -4822,7 +4822,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_recording',
-    'unique_id': 'tuya.53fnjncm3jywuaznpsmotion_record',
+    'unique_id': '53fnjncm3jywuaznps.motion_record',
     'unit_of_measurement': None,
   })
 # ---
@@ -4872,7 +4872,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_tracking',
-    'unique_id': 'tuya.53fnjncm3jywuaznpsmotion_tracking',
+    'unique_id': '53fnjncm3jywuaznps.motion_tracking',
     'unit_of_measurement': None,
   })
 # ---
@@ -4922,7 +4922,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'privacy_mode',
-    'unique_id': 'tuya.53fnjncm3jywuaznpsbasic_private',
+    'unique_id': '53fnjncm3jywuaznps.basic_private',
     'unit_of_measurement': None,
   })
 # ---
@@ -4972,7 +4972,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'time_watermark',
-    'unique_id': 'tuya.53fnjncm3jywuaznpsbasic_osd',
+    'unique_id': '53fnjncm3jywuaznps.basic_osd',
     'unit_of_measurement': None,
   })
 # ---
@@ -5022,7 +5022,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_detection_zone',
-    'unique_id': 'tuya.53fnjncm3jywuaznpsmotion_area_switch',
+    'unique_id': '53fnjncm3jywuaznps.motion_area_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -5072,7 +5072,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'video_recording',
-    'unique_id': 'tuya.53fnjncm3jywuaznpsrecord_switch',
+    'unique_id': '53fnjncm3jywuaznps.record_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -5122,7 +5122,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.3d4yosotwk27nqxvzcswitch_1',
+    'unique_id': '3d4yosotwk27nqxvzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -5173,7 +5173,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'socket',
-    'unique_id': 'tuya.wc6mumew8inrivi9zcswitch',
+    'unique_id': 'wc6mumew8inrivi9zc.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -5224,7 +5224,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.sxa4ealyi9cotiugzcchild_lock',
+    'unique_id': 'sxa4ealyi9cotiugzc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -5274,7 +5274,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.sxa4ealyi9cotiugzcswitch_1',
+    'unique_id': 'sxa4ealyi9cotiugzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -5325,7 +5325,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.zfHZQ7tZUBxAWjACjklock',
+    'unique_id': 'zfHZQ7tZUBxAWjACjk.lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -5375,7 +5375,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ionizer',
-    'unique_id': 'tuya.zfHZQ7tZUBxAWjACjkanion',
+    'unique_id': 'zfHZQ7tZUBxAWjACjk.anion',
     'unit_of_measurement': None,
   })
 # ---
@@ -5425,7 +5425,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': 'tuya.zfHZQ7tZUBxAWjACjkswitch',
+    'unique_id': 'zfHZQ7tZUBxAWjACjk.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -5475,7 +5475,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_sterilization',
-    'unique_id': 'tuya.zfHZQ7tZUBxAWjACjkuv',
+    'unique_id': 'zfHZQ7tZUBxAWjACjk.uv',
     'unit_of_measurement': None,
   })
 # ---
@@ -5525,7 +5525,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mute',
-    'unique_id': 'tuya.sdq2flqkq0lblcah2gwmuffling',
+    'unique_id': 'sdq2flqkq0lblcah2gw.muffling',
     'unit_of_measurement': None,
   })
 # ---
@@ -5575,7 +5575,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch',
-    'unique_id': 'tuya.ol8xwtcj42eg18bdbrnzswitch',
+    'unique_id': 'ol8xwtcj42eg18bdbrnz.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -5625,7 +5625,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.tcdk0skzcpisexj2zcswitch_1',
+    'unique_id': 'tcdk0skzcpisexj2zc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -5676,7 +5676,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.tcdk0skzcpisexj2zcswitch_2',
+    'unique_id': 'tcdk0skzcpisexj2zc.switch_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -5727,7 +5727,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.vx2owjsg86g2ys93zcchild_lock',
+    'unique_id': 'vx2owjsg86g2ys93zc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -5777,7 +5777,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.vx2owjsg86g2ys93zcswitch_1',
+    'unique_id': 'vx2owjsg86g2ys93zc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -5828,7 +5828,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flip',
-    'unique_id': 'tuya.qt0o5jlatiqf2rscpsbasic_flip',
+    'unique_id': 'qt0o5jlatiqf2rscps.basic_flip',
     'unit_of_measurement': None,
   })
 # ---
@@ -5878,7 +5878,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_alarm',
-    'unique_id': 'tuya.qt0o5jlatiqf2rscpsmotion_switch',
+    'unique_id': 'qt0o5jlatiqf2rscps.motion_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -5928,7 +5928,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'time_watermark',
-    'unique_id': 'tuya.qt0o5jlatiqf2rscpsbasic_osd',
+    'unique_id': 'qt0o5jlatiqf2rscps.basic_osd',
     'unit_of_measurement': None,
   })
 # ---
@@ -5978,7 +5978,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.18yvbamhgkjcswitch_1',
+    'unique_id': '18yvbamhgkjc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -6028,7 +6028,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.18yvbamhgkjcswitch_2',
+    'unique_id': '18yvbamhgkjc.switch_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -6078,7 +6078,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.18yvbamhgkjcswitch_3',
+    'unique_id': '18yvbamhgkjc.switch_3',
     'unit_of_measurement': None,
   })
 # ---
@@ -6128,7 +6128,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.18yvbamhgkjcswitch_4',
+    'unique_id': '18yvbamhgkjc.switch_4',
     'unit_of_measurement': None,
   })
 # ---
@@ -6178,7 +6178,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.zuqudhznfzttizpgbrnzchild_lock',
+    'unique_id': 'zuqudhznfzttizpgbrnz.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -6229,7 +6229,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch',
-    'unique_id': 'tuya.zuqudhznfzttizpgbrnzswitch',
+    'unique_id': 'zuqudhznfzttizpgbrnz.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -6279,7 +6279,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.owozxdzgbibizu4sjklock',
+    'unique_id': 'owozxdzgbibizu4sjk.lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -6329,7 +6329,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_cartridge_reset',
-    'unique_id': 'tuya.owozxdzgbibizu4sjkfilter_reset',
+    'unique_id': 'owozxdzgbibizu4sjk.filter_reset',
     'unit_of_measurement': None,
   })
 # ---
@@ -6379,7 +6379,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ionizer',
-    'unique_id': 'tuya.owozxdzgbibizu4sjkanion',
+    'unique_id': 'owozxdzgbibizu4sjk.anion',
     'unit_of_measurement': None,
   })
 # ---
@@ -6429,7 +6429,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': 'tuya.owozxdzgbibizu4sjkswitch',
+    'unique_id': 'owozxdzgbibizu4sjk.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -6479,7 +6479,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_sterilization',
-    'unique_id': 'tuya.owozxdzgbibizu4sjkuv',
+    'unique_id': 'owozxdzgbibizu4sjk.uv',
     'unit_of_measurement': None,
   })
 # ---
@@ -6529,7 +6529,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.xms6qowipdvjnkdgqdtswitch_1',
+    'unique_id': 'xms6qowipdvjnkdgqdt.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -6580,7 +6580,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.b6e05dfy4qhpgea1qdtswitch_1',
+    'unique_id': 'b6e05dfy4qhpgea1qdt.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -6631,7 +6631,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.bjum5isf7h6xpbrvzcchild_lock',
+    'unique_id': 'bjum5isf7h6xpbrvzc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -6681,7 +6681,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.bjum5isf7h6xpbrvzcswitch_1',
+    'unique_id': 'bjum5isf7h6xpbrvzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -6732,7 +6732,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.dn7cjik6kwchild_lock',
+    'unique_id': 'dn7cjik6kw.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -6782,7 +6782,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'frost_protection',
-    'unique_id': 'tuya.dn7cjik6kwfrost',
+    'unique_id': 'dn7cjik6kw.frost',
     'unit_of_measurement': None,
   })
 # ---
@@ -6832,7 +6832,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_cartridge_reset',
-    'unique_id': 'tuya.yo2karkjuhzztxsfjkfilter_reset',
+    'unique_id': 'yo2karkjuhzztxsfjk.filter_reset',
     'unit_of_measurement': None,
   })
 # ---
@@ -6882,7 +6882,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': 'tuya.yo2karkjuhzztxsfjkswitch',
+    'unique_id': 'yo2karkjuhzztxsfjk.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -6932,7 +6932,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_clean',
-    'unique_id': 'tuya.yohkwjjdjlzludd3psmauto_clean',
+    'unique_id': 'yohkwjjdjlzludd3psm.auto_clean',
     'unit_of_measurement': None,
   })
 # ---
@@ -6982,7 +6982,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.g7af6lrt4miugbstcpswitch_1',
+    'unique_id': 'g7af6lrt4miugbstcp.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -7033,7 +7033,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.g7af6lrt4miugbstcpswitch_2',
+    'unique_id': 'g7af6lrt4miugbstcp.switch_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -7084,7 +7084,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.g7af6lrt4miugbstcpswitch_3',
+    'unique_id': 'g7af6lrt4miugbstcp.switch_3',
     'unit_of_measurement': None,
   })
 # ---
@@ -7135,7 +7135,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_usb',
-    'unique_id': 'tuya.g7af6lrt4miugbstcpswitch_usb1',
+    'unique_id': 'g7af6lrt4miugbstcp.switch_usb1',
     'unit_of_measurement': None,
   })
 # ---
@@ -7185,7 +7185,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sleep',
-    'unique_id': 'tuya.btpss2f6kwfi294rqsjsleep',
+    'unique_id': 'btpss2f6kwfi294rqsj.sleep',
     'unit_of_measurement': None,
   })
 # ---
@@ -7235,7 +7235,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.g0edqq0wzcchild_lock',
+    'unique_id': 'g0edqq0wzc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -7285,7 +7285,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.g0edqq0wzcswitch_1',
+    'unique_id': 'g0edqq0wzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -7336,7 +7336,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.uvh6oeqrfliovfiwzcswitch_1',
+    'unique_id': 'uvh6oeqrfliovfiwzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -7387,7 +7387,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.g1qorlffoy2iyo9bscchild_lock',
+    'unique_id': 'g1qorlffoy2iyo9bsc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -7438,7 +7438,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ionizer',
-    'unique_id': 'tuya.g1qorlffoy2iyo9bscanion',
+    'unique_id': 'g1qorlffoy2iyo9bsc.anion',
     'unit_of_measurement': None,
   })
 # ---
@@ -7489,7 +7489,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'socket',
-    'unique_id': 'tuya.9AzrW5XtELTySJxqzcswitch',
+    'unique_id': '9AzrW5XtELTySJxqzc.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -7540,7 +7540,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reverse',
-    'unique_id': 'tuya.g1efxsqnp33cg8r3lccontrol_back',
+    'unique_id': 'g1efxsqnp33cg8r3lc.control_back',
     'unit_of_measurement': None,
   })
 # ---
@@ -7590,7 +7590,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.addr6y4u8gb43nl8brnzchild_lock',
+    'unique_id': 'addr6y4u8gb43nl8brnz.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -7641,7 +7641,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch',
-    'unique_id': 'tuya.addr6y4u8gb43nl8brnzswitch',
+    'unique_id': 'addr6y4u8gb43nl8brnz.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -7691,7 +7691,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.vpfdskpi8pr8cbtfzjschild_lock',
+    'unique_id': 'vpfdskpi8pr8cbtfzjs.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -7741,7 +7741,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mute',
-    'unique_id': 'tuya.ingdwog22gwmuffling',
+    'unique_id': 'ingdwog22gw.muffling',
     'unit_of_measurement': None,
   })
 # ---
@@ -7791,7 +7791,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.zzz87dkfce6pdqxwtklock',
+    'unique_id': 'zzz87dkfce6pdqxwtk.lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -7841,7 +7841,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flip',
-    'unique_id': 'tuya.i6xywcsymer1kmb6psbasic_flip',
+    'unique_id': 'i6xywcsymer1kmb6ps.basic_flip',
     'unit_of_measurement': None,
   })
 # ---
@@ -7891,7 +7891,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'time_watermark',
-    'unique_id': 'tuya.i6xywcsymer1kmb6psbasic_osd',
+    'unique_id': 'i6xywcsymer1kmb6ps.basic_osd',
     'unit_of_measurement': None,
   })
 # ---
@@ -7941,7 +7941,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'arm_beep',
-    'unique_id': 'tuya.2pxfek1jjrtctiyglamswitch_alarm_sound',
+    'unique_id': '2pxfek1jjrtctiyglam.switch_alarm_sound',
     'unit_of_measurement': None,
   })
 # ---
@@ -7991,7 +7991,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'siren',
-    'unique_id': 'tuya.2pxfek1jjrtctiyglamswitch_alarm_light',
+    'unique_id': '2pxfek1jjrtctiyglam.switch_alarm_light',
     'unit_of_measurement': None,
   })
 # ---
@@ -8041,7 +8041,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.uc9fL2NpR79iCzGIzcswitch_1',
+    'unique_id': 'uc9fL2NpR79iCzGIzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -8092,7 +8092,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.2x473nefusdo7af6zcchild_lock',
+    'unique_id': '2x473nefusdo7af6zc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -8142,7 +8142,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.O8QpxJwdme33sqn4gkswitch_1',
+    'unique_id': 'O8QpxJwdme33sqn4gk.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -8193,7 +8193,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.2x473nefusdo7af6zcswitch_1',
+    'unique_id': '2x473nefusdo7af6zc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -8244,7 +8244,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch',
-    'unique_id': 'tuya.bcyciyhhu1g2gk9rqldswitch',
+    'unique_id': 'bcyciyhhu1g2gk9rqld.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -8294,7 +8294,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.zyutbek7wdm1b4cgzckwswitch_1',
+    'unique_id': 'zyutbek7wdm1b4cgzckw.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -8345,7 +8345,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.zyutbek7wdm1b4cgzckwswitch_2',
+    'unique_id': 'zyutbek7wdm1b4cgzckw.switch_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -8396,7 +8396,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_reset',
-    'unique_id': 'tuya.aa99hccfnzvypr3zjsywcfilter_reset',
+    'unique_id': 'aa99hccfnzvypr3zjsywc.filter_reset',
     'unit_of_measurement': None,
   })
 # ---
@@ -8446,7 +8446,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': 'tuya.aa99hccfnzvypr3zjsywcswitch',
+    'unique_id': 'aa99hccfnzvypr3zjsywc.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -8496,7 +8496,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reset_of_water_usage_days',
-    'unique_id': 'tuya.aa99hccfnzvypr3zjsywcwater_reset',
+    'unique_id': 'aa99hccfnzvypr3zjsywc.water_reset',
     'unit_of_measurement': None,
   })
 # ---
@@ -8546,7 +8546,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_sterilization',
-    'unique_id': 'tuya.aa99hccfnzvypr3zjsywcuv',
+    'unique_id': 'aa99hccfnzvypr3zjsywc.uv',
     'unit_of_measurement': None,
   })
 # ---
@@ -8596,7 +8596,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_pump_reset',
-    'unique_id': 'tuya.aa99hccfnzvypr3zjsywcpump_reset',
+    'unique_id': 'aa99hccfnzvypr3zjsywc.pump_reset',
     'unit_of_measurement': None,
   })
 # ---
@@ -8646,7 +8646,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'do_not_disturb',
-    'unique_id': 'tuya.t88qaeyydamm9xhsddxdo_not_disturb',
+    'unique_id': 't88qaeyydamm9xhsddx.do_not_disturb',
     'unit_of_measurement': None,
   })
 # ---
@@ -8696,7 +8696,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_clean',
-    'unique_id': 'tuya.nyriu7sjgj9oruzmpsmauto_clean',
+    'unique_id': 'nyriu7sjgj9oruzmpsm.auto_clean',
     'unit_of_measurement': None,
   })
 # ---
@@ -8746,7 +8746,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.aje5kxgmhhxdihqizcswitch_1',
+    'unique_id': 'aje5kxgmhhxdihqizc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -8797,7 +8797,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ionizer',
-    'unique_id': 'tuya.q8dncqpgin4yympiscanion',
+    'unique_id': 'q8dncqpgin4yympisc.anion',
     'unit_of_measurement': None,
   })
 # ---
@@ -8848,7 +8848,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.w9hdtm88xj5crtc1qdtswitch_1',
+    'unique_id': 'w9hdtm88xj5crtc1qdt.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -8899,7 +8899,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.a4zeazrz1ata9mbggkswitch_1',
+    'unique_id': 'a4zeazrz1ata9mbggk.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -8950,7 +8950,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.zaszonjgzcchild_lock',
+    'unique_id': 'zaszonjgzc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -9000,7 +9000,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.zaszonjgzcswitch_1',
+    'unique_id': 'zaszonjgzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -9051,7 +9051,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.LS6FfVBVU1vzBRBHzcswitch_1',
+    'unique_id': 'LS6FfVBVU1vzBRBHzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -9102,7 +9102,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.gm0whbftkwchild_lock',
+    'unique_id': 'gm0whbftkw.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -9152,7 +9152,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'socket',
-    'unique_id': 'tuya.hfqeljop3aihnm73zcswitch',
+    'unique_id': 'hfqeljop3aihnm73zc.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -9203,7 +9203,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.NVjuXIQ6QH9eZLHCzcswitch_1',
+    'unique_id': 'NVjuXIQ6QH9eZLHCzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -9254,7 +9254,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.kxxrbv93k2vvkconqdtchild_lock',
+    'unique_id': 'kxxrbv93k2vvkconqdt.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -9304,7 +9304,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.kxxrbv93k2vvkconqdtswitch_1',
+    'unique_id': 'kxxrbv93k2vvkconqdt.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -9355,7 +9355,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.kxxrbv93k2vvkconqdtswitch_2',
+    'unique_id': 'kxxrbv93k2vvkconqdt.switch_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -9406,7 +9406,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.kxxrbv93k2vvkconqdtswitch_3',
+    'unique_id': 'kxxrbv93k2vvkconqdt.switch_3',
     'unit_of_measurement': None,
   })
 # ---
@@ -9457,7 +9457,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.kxxrbv93k2vvkconqdtswitch_4',
+    'unique_id': 'kxxrbv93k2vvkconqdt.switch_4',
     'unit_of_measurement': None,
   })
 # ---
@@ -9508,7 +9508,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.kxxrbv93k2vvkconqdtswitch_5',
+    'unique_id': 'kxxrbv93k2vvkconqdt.switch_5',
     'unit_of_measurement': None,
   })
 # ---
@@ -9559,7 +9559,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.kxxrbv93k2vvkconqdtswitch_6',
+    'unique_id': 'kxxrbv93k2vvkconqdt.switch_6',
     'unit_of_measurement': None,
   })
 # ---
@@ -9610,7 +9610,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_siren',
-    'unique_id': 'tuya.xihygtyd0d1faknkpsipc_auto_siren',
+    'unique_id': 'xihygtyd0d1faknkps.ipc_auto_siren',
     'unit_of_measurement': None,
   })
 # ---
@@ -9660,7 +9660,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flip',
-    'unique_id': 'tuya.xihygtyd0d1faknkpsbasic_flip',
+    'unique_id': 'xihygtyd0d1faknkps.basic_flip',
     'unit_of_measurement': None,
   })
 # ---
@@ -9710,7 +9710,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_alarm',
-    'unique_id': 'tuya.xihygtyd0d1faknkpsmotion_switch',
+    'unique_id': 'xihygtyd0d1faknkps.motion_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -9760,7 +9760,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_recording',
-    'unique_id': 'tuya.xihygtyd0d1faknkpsmotion_record',
+    'unique_id': 'xihygtyd0d1faknkps.motion_record',
     'unit_of_measurement': None,
   })
 # ---
@@ -9810,7 +9810,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'privacy_mode',
-    'unique_id': 'tuya.xihygtyd0d1faknkpsbasic_private',
+    'unique_id': 'xihygtyd0d1faknkps.basic_private',
     'unit_of_measurement': None,
   })
 # ---
@@ -9860,7 +9860,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sound_detection',
-    'unique_id': 'tuya.xihygtyd0d1faknkpsdecibel_switch',
+    'unique_id': 'xihygtyd0d1faknkps.decibel_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -9910,7 +9910,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'time_watermark',
-    'unique_id': 'tuya.xihygtyd0d1faknkpsbasic_osd',
+    'unique_id': 'xihygtyd0d1faknkps.basic_osd',
     'unit_of_measurement': None,
   })
 # ---
@@ -9960,7 +9960,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_detection_zone',
-    'unique_id': 'tuya.xihygtyd0d1faknkpsmotion_area_switch',
+    'unique_id': 'xihygtyd0d1faknkps.motion_area_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -10010,7 +10010,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'video_recording',
-    'unique_id': 'tuya.xihygtyd0d1faknkpsrecord_switch',
+    'unique_id': 'xihygtyd0d1faknkps.record_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -10060,7 +10060,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wide_dynamic_range',
-    'unique_id': 'tuya.xihygtyd0d1faknkpsbasic_wdr',
+    'unique_id': 'xihygtyd0d1faknkps.basic_wdr',
     'unit_of_measurement': None,
   })
 # ---
@@ -10110,7 +10110,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.bxfkpxjgux2fgwnazcchild_lock',
+    'unique_id': 'bxfkpxjgux2fgwnazc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -10160,7 +10160,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.bxfkpxjgux2fgwnazcswitch_1',
+    'unique_id': 'bxfkpxjgux2fgwnazc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -10211,7 +10211,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.cxbmhihohohk5bmeqdtswitch_1',
+    'unique_id': 'cxbmhihohohk5bmeqdt.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -10262,7 +10262,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.rvsneuipzcswitch_1',
+    'unique_id': 'rvsneuipzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -10313,7 +10313,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.kaapnqxkvzaqd6uaqdjnzchild_lock',
+    'unique_id': 'kaapnqxkvzaqd6uaqdjnz.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -10364,7 +10364,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.kaapnqxkvzaqd6uaqdjnzswitch_1',
+    'unique_id': 'kaapnqxkvzaqd6uaqdjnz.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -10414,7 +10414,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'start',
-    'unique_id': 'tuya.s5ah3novtabe4tfdhbstart',
+    'unique_id': 's5ah3novtabe4tfdhb.start',
     'unit_of_measurement': None,
   })
 # ---
@@ -10464,7 +10464,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch',
-    'unique_id': 'tuya.rl39uwgaqwjwcswitch',
+    'unique_id': 'rl39uwgaqwjwc.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -10514,7 +10514,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.dj8foneugkjcswitch_1',
+    'unique_id': 'dj8foneugkjc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -10564,7 +10564,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.dj8foneugkjcswitch_2',
+    'unique_id': 'dj8foneugkjc.switch_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -10614,7 +10614,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.sb3zdertrw50bgogkwchild_lock',
+    'unique_id': 'sb3zdertrw50bgogkw.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -10664,7 +10664,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'frost_protection',
-    'unique_id': 'tuya.sb3zdertrw50bgogkwfrost',
+    'unique_id': 'sb3zdertrw50bgogkw.frost',
     'unit_of_measurement': None,
   })
 # ---
@@ -10714,7 +10714,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.ri7eegdifufzdi54dyzbswitch',
+    'unique_id': 'ri7eegdifufzdi54dyzb.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -10764,7 +10764,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'music',
-    'unique_id': 'tuya.ri7eegdifufzdi54dyzbswitch_music',
+    'unique_id': 'ri7eegdifufzdi54dyzb.switch_music',
     'unit_of_measurement': None,
   })
 # ---
@@ -10815,7 +10815,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mute',
-    'unique_id': 'tuya.p8xoxccrjbwymuffling',
+    'unique_id': 'p8xoxccrjbwy.muffling',
     'unit_of_measurement': None,
   })
 # ---
@@ -10865,7 +10865,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mute',
-    'unique_id': 'tuya.jfydgffzmhjed9fgjbwymuffling',
+    'unique_id': 'jfydgffzmhjed9fgjbwy.muffling',
     'unit_of_measurement': None,
   })
 # ---
@@ -10915,7 +10915,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.7zogt3pcwhxhu8upqdtswitch_1',
+    'unique_id': '7zogt3pcwhxhu8upqdt.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -10966,7 +10966,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.4q5c2am8n1bwb6bszcchild_lock',
+    'unique_id': '4q5c2am8n1bwb6bszc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -11016,7 +11016,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.4q5c2am8n1bwb6bszcswitch_1',
+    'unique_id': '4q5c2am8n1bwb6bszc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -11067,7 +11067,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.YQLkAe7nyyAxXHiAzcswitch_1',
+    'unique_id': 'YQLkAe7nyyAxXHiAzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -11118,7 +11118,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saving',
-    'unique_id': 'tuya.couukaypjdnytswitch_save_energy',
+    'unique_id': 'couukaypjdnyt.switch_save_energy',
     'unit_of_measurement': None,
   })
 # ---
@@ -11168,7 +11168,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'start',
-    'unique_id': 'tuya.hyda5jsihokacvaqjzmstart',
+    'unique_id': 'hyda5jsihokacvaqjzm.start',
     'unit_of_measurement': None,
   })
 # ---
@@ -11218,7 +11218,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.gi69tunb0esxcnefzcswitch_1',
+    'unique_id': 'gi69tunb0esxcnefzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -11269,7 +11269,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.kffnst1epj6vr8xnzcchild_lock',
+    'unique_id': 'kffnst1epj6vr8xnzc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -11319,7 +11319,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.kffnst1epj6vr8xnzcswitch_1',
+    'unique_id': 'kffnst1epj6vr8xnzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -11370,7 +11370,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.LJ9zTFQTfMgsG2Ahzcswitch_1',
+    'unique_id': 'LJ9zTFQTfMgsG2Ahzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -11421,7 +11421,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'socket',
-    'unique_id': 'tuya.HzsAAAKFLPABVi8nzcswitch',
+    'unique_id': 'HzsAAAKFLPABVi8nzc.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -11472,7 +11472,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.fasvixqysw1lxvjprdswitch',
+    'unique_id': 'fasvixqysw1lxvjprd.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -11524,7 +11524,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.fasvixqysw1lxvjprdpreheat',
+    'unique_id': 'fasvixqysw1lxvjprd.preheat',
     'unit_of_measurement': None,
   })
 # ---
@@ -11576,7 +11576,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.fasvixqysw1lxvjprdswitch_1',
+    'unique_id': 'fasvixqysw1lxvjprd.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -11628,7 +11628,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.fasvixqysw1lxvjprdpreheat_1',
+    'unique_id': 'fasvixqysw1lxvjprd.preheat_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -11680,7 +11680,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.fasvixqysw1lxvjprdswitch_2',
+    'unique_id': 'fasvixqysw1lxvjprd.switch_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -11732,7 +11732,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.fasvixqysw1lxvjprdpreheat_2',
+    'unique_id': 'fasvixqysw1lxvjprd.preheat_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -11784,7 +11784,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.jm2fsqtzuhqtbo5ykwchild_lock',
+    'unique_id': 'jm2fsqtzuhqtbo5ykw.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -11834,7 +11834,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.gt1q9tldv1opojrtcpswitch_1',
+    'unique_id': 'gt1q9tldv1opojrtcp.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -11885,7 +11885,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.gt1q9tldv1opojrtcpswitch_2',
+    'unique_id': 'gt1q9tldv1opojrtcp.switch_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -11936,7 +11936,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ionizer',
-    'unique_id': 'tuya.lflvu8cazha8af9jskanion',
+    'unique_id': 'lflvu8cazha8af9jsk.anion',
     'unit_of_measurement': None,
   })
 # ---
@@ -11986,7 +11986,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'do_not_disturb',
-    'unique_id': 'tuya.zrrraytdoanz33rldsswitch_disturb',
+    'unique_id': 'zrrraytdoanz33rlds.switch_disturb',
     'unit_of_measurement': None,
   })
 # ---
@@ -12036,7 +12036,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.sw1ejdomlmfubapizcswitch_1',
+    'unique_id': 'sw1ejdomlmfubapizc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -12087,7 +12087,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.pdasfna8fswh4a0tzcchild_lock',
+    'unique_id': 'pdasfna8fswh4a0tzc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -12137,7 +12137,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.pdasfna8fswh4a0tzcswitch_1',
+    'unique_id': 'pdasfna8fswh4a0tzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -12188,7 +12188,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'socket',
-    'unique_id': 'tuya.dBFBdywk9gTihUQmzcswitch',
+    'unique_id': 'dBFBdywk9gTihUQmzc.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -12239,7 +12239,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_reset',
-    'unique_id': 'tuya.q304vac40br8nlkajsywcfilter_reset',
+    'unique_id': 'q304vac40br8nlkajsywc.filter_reset',
     'unit_of_measurement': None,
   })
 # ---
@@ -12289,7 +12289,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': 'tuya.q304vac40br8nlkajsywcswitch',
+    'unique_id': 'q304vac40br8nlkajsywc.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -12339,7 +12339,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_pump_reset',
-    'unique_id': 'tuya.q304vac40br8nlkajsywcpump_reset',
+    'unique_id': 'q304vac40br8nlkajsywc.pump_reset',
     'unit_of_measurement': None,
   })
 # ---
@@ -12389,7 +12389,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.dNBnmtjLU8eRWHf0zcswitch_1',
+    'unique_id': 'dNBnmtjLU8eRWHf0zc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -12440,7 +12440,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.rwp6kdezm97s2nktzcchild_lock',
+    'unique_id': 'rwp6kdezm97s2nktzc.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -12490,7 +12490,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.rwp6kdezm97s2nktzcswitch_1',
+    'unique_id': 'rwp6kdezm97s2nktzc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -12541,7 +12541,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.c9nbmrweturkgqktdyzbswitch',
+    'unique_id': 'c9nbmrweturkgqktdyzb.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -12591,7 +12591,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'music',
-    'unique_id': 'tuya.c9nbmrweturkgqktdyzbswitch_music',
+    'unique_id': 'c9nbmrweturkgqktdyzb.switch_music',
     'unit_of_measurement': None,
   })
 # ---
@@ -12642,7 +12642,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.j6mn1t4ut5end6ifkwchild_lock',
+    'unique_id': 'j6mn1t4ut5end6ifkw.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -12692,7 +12692,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'frost_protection',
-    'unique_id': 'tuya.j6mn1t4ut5end6ifkwfrost',
+    'unique_id': 'j6mn1t4ut5end6ifkw.frost',
     'unit_of_measurement': None,
   })
 # ---
@@ -12742,7 +12742,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mute',
-    'unique_id': 'tuya.tvgoe1s3fabebcskjbwymuffling',
+    'unique_id': 'tvgoe1s3fabebcskjbwy.muffling',
     'unit_of_measurement': None,
   })
 # ---
@@ -12792,7 +12792,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch',
-    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzswitch',
+    'unique_id': '9oh1h1uyalfykgg4bdnz.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -12842,7 +12842,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.fcdadqsiax2gvnt0qldchild_lock',
+    'unique_id': 'fcdadqsiax2gvnt0qld.child_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -12892,7 +12892,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch',
-    'unique_id': 'tuya.fcdadqsiax2gvnt0qldswitch',
+    'unique_id': 'fcdadqsiax2gvnt0qld.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -12942,7 +12942,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'socket',
-    'unique_id': 'tuya.nc4e9nlZPTuTNfYEzcswitch',
+    'unique_id': 'nc4e9nlZPTuTNfYEzc.switch',
     'unit_of_measurement': None,
   })
 # ---

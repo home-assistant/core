@@ -32,7 +32,9 @@ class TuyaEntity(Entity):
     ) -> None:
         """Init TuyaEntity."""
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device.id)})
-        self._attr_unique_id = f"tuya.{device.id}{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
+        self._attr_unique_id = (
+            f"{device.id}.{description.key}" if description.key else device.id
+        )
         self.entity_description = description
         # TuyaEntity initialize mq can subscribe
         device.set_up = True

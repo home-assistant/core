@@ -145,7 +145,7 @@ async def test_set_value(
             (
                 "Incompatible unit invalid_uom replaced by entity description "
                 "unit s for device class duration in number entity "
-                "tuya.iks13mcaiyie3rryjb2ocalarm_time; use a quirk "
+                "iks13mcaiyie3rryjb2oc.alarm_time; use a quirk "
                 "(https://github.com/home-assistant-libs/tuya-device-handlers) "
                 "to override"
             ),
@@ -157,7 +157,7 @@ async def test_set_value(
             "invalid_uom",
             (
                 "Device class temperature ignored for incompatible unit invalid_uom "
-                "in number entity tuya.zuqudhznfzttizpgbrnztemp_set"
+                "in number entity zuqudhznfzttizpgbrnz.temp_set"
             ),
         ),
     ],

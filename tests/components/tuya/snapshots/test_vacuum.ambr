@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': <VacuumEntityFeature: 8984>,
     'translation_key': None,
-    'unique_id': 'tuya.mwsaod7fa3gjyh6ids',
+    'unique_id': 'mwsaod7fa3gjyh6ids',
     'unit_of_measurement': None,
   })
 # ---
@@ -89,7 +89,7 @@
     'suggested_object_id': None,
     'supported_features': <VacuumEntityFeature: 13116>,
     'translation_key': None,
-    'unique_id': 'tuya.zrrraytdoanz33rlds',
+    'unique_id': 'zrrraytdoanz33rlds',
     'unit_of_measurement': None,
   })
 # ---

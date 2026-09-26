@@ -28,6 +28,8 @@ from .const import (
 class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Tuya config flow."""
 
+    MINOR_VERSION = 2
+
     __user_code: str
     __qr_code: str
 

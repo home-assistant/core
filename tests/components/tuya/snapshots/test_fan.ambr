@@ -33,7 +33,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 48>,
     'translation_key': None,
-    'unique_id': 'tuya.8u5ftxkt52smougesc',
+    'unique_id': '8u5ftxkt52smougesc',
     'unit_of_measurement': None,
   })
 # ---
@@ -88,7 +88,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 56>,
     'translation_key': None,
-    'unique_id': 'tuya.ppgdpsq1xaxlyzryjk',
+    'unique_id': 'ppgdpsq1xaxlyzryjk',
     'unit_of_measurement': None,
   })
 # ---
@@ -145,7 +145,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 53>,
     'translation_key': None,
-    'unique_id': 'tuya.6wxksqu35c61sce9dsf',
+    'unique_id': '6wxksqu35c61sce9dsf',
     'unit_of_measurement': None,
   })
 # ---
@@ -207,7 +207,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 61>,
     'translation_key': None,
-    'unique_id': 'tuya.ijzjlqwmv1blwe0gsf',
+    'unique_id': 'ijzjlqwmv1blwe0gsf',
     'unit_of_measurement': None,
   })
 # ---
@@ -269,7 +269,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 49>,
     'translation_key': None,
-    'unique_id': 'tuya.giqs1xhsekjelfibsc',
+    'unique_id': 'giqs1xhsekjelfibsc',
     'unit_of_measurement': None,
   })
 # ---
@@ -326,7 +326,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 49>,
     'translation_key': None,
-    'unique_id': 'tuya.ifzgvpgoodrfw2aksc',
+    'unique_id': 'ifzgvpgoodrfw2aksc',
     'unit_of_measurement': None,
   })
 # ---
@@ -379,7 +379,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 48>,
     'translation_key': None,
-    'unique_id': 'tuya.2myxayqtud9aqbizsc',
+    'unique_id': '2myxayqtud9aqbizsc',
     'unit_of_measurement': None,
   })
 # ---
@@ -432,7 +432,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 49>,
     'translation_key': None,
-    'unique_id': 'tuya.ake0bre784zriw0usc',
+    'unique_id': 'ake0bre784zriw0usc',
     'unit_of_measurement': None,
   })
 # ---
@@ -489,7 +489,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 49>,
     'translation_key': None,
-    'unique_id': 'tuya.zfHZQ7tZUBxAWjACjk',
+    'unique_id': 'zfHZQ7tZUBxAWjACjk',
     'unit_of_measurement': None,
   })
 # ---
@@ -545,7 +545,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 48>,
     'translation_key': None,
-    'unique_id': 'tuya.owozxdzgbibizu4sjk',
+    'unique_id': 'owozxdzgbibizu4sjk',
     'unit_of_measurement': None,
   })
 # ---
@@ -602,7 +602,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 56>,
     'translation_key': None,
-    'unique_id': 'tuya.yo2karkjuhzztxsfjk',
+    'unique_id': 'yo2karkjuhzztxsfjk',
     'unit_of_measurement': None,
   })
 # ---
@@ -661,7 +661,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 49>,
     'translation_key': None,
-    'unique_id': 'tuya.g1qorlffoy2iyo9bsc',
+    'unique_id': 'g1qorlffoy2iyo9bsc',
     'unit_of_measurement': None,
   })
 # ---
@@ -722,7 +722,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 59>,
     'translation_key': None,
-    'unique_id': 'tuya.lflvu8cazha8af9jsk',
+    'unique_id': 'lflvu8cazha8af9jsk',
     'unit_of_measurement': None,
   })
 # ---
