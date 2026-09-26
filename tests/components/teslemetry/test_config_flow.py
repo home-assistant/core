@@ -67,7 +67,7 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 
 from . import mock_config_entry, setup_platform
-from .const import CONFIG_V1, METADATA, PRODUCTS, UNIQUE_ID
+from .const import ADDRESS, CONFIG_V1, METADATA, PRODUCTS, UNIQUE_ID, VIN
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -691,10 +691,6 @@ async def test_migrate_error_from_future(
 
     entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
-
-
-VIN = "LRW3F7EK4NC700000"
-ADDRESS = "AA:BB:CC:DD:EE:FF"
 
 
 def _entry_with_ble() -> MockConfigEntry:
@@ -1411,13 +1407,14 @@ async def test_subentry_add_flow_keeps_device_on_parent(
     assert bound_device.id == existing_device.id
     assert bound_device.config_subentry_id is None
 
-    # The vehicle entities keep their unique IDs and stay on the parent entry.
+    # The vehicle entities keep their unique IDs and stay on the parent entry;
+    # pairing only adds the vehicle's Bluetooth entities.
     bound_entities = er.async_entries_for_device(
         entity_registry, bound_device.id, include_disabled_entities=True
     )
     assert {entity.unique_id for entity in bound_entities} == {
         entity.unique_id for entity in vehicle_entities
-    }
+    } | {f"{VIN}-bluetooth", f"{VIN}-bluetooth_session"}
     assert all(entity.config_subentry_id is None for entity in bound_entities)
 
 

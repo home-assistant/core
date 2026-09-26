@@ -145,6 +145,12 @@
       "blind_spot_collision_warning_chime": {
         "name": "Blind spot collision warning chime"
       },
+      "bluetooth": {
+        "name": "Bluetooth"
+      },
+      "bluetooth_session": {
+        "name": "Bluetooth session"
+      },
       "bms_full_charge_complete": {
         "name": "BMS full charge"
       },

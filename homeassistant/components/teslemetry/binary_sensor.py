@@ -7,13 +7,14 @@ from typing import cast, override
 from tesla_fleet_api import firmware_at_least
 from teslemetry_stream.vehicle import TeslemetryStreamVehicle
 
+from homeassistant.components import bluetooth
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.const import STATE_ON, EntityCategory, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
@@ -23,6 +24,7 @@ from .const import TeslemetryState
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryEnergyLiveEntity,
+    TeslemetryRootEntity,
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
@@ -548,6 +550,21 @@ ENERGY_INFO_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = 
     ),
 )
 
+BLUETOOTH_PRESENCE_DESCRIPTION = TeslemetryBinarySensorEntityDescription(
+    key="bluetooth",
+    translation_key="bluetooth",
+    device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    entity_category=EntityCategory.DIAGNOSTIC,
+)
+
+BLUETOOTH_SESSION_DESCRIPTION = TeslemetryBinarySensorEntityDescription(
+    key="bluetooth_session",
+    translation_key="bluetooth_session",
+    device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    entity_category=EntityCategory.DIAGNOSTIC,
+    entity_registry_enabled_default=False,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -572,6 +589,17 @@ async def async_setup_entry(
                 entities.append(
                     TeslemetryVehiclePollingBinarySensorEntity(vehicle, description)
                 )
+        if vehicle.ble_address:
+            entities.append(
+                TeslemetryVehicleBluetoothPresenceBinarySensorEntity(
+                    vehicle, BLUETOOTH_PRESENCE_DESCRIPTION, vehicle.ble_address
+                )
+            )
+            entities.append(
+                TeslemetryVehicleBluetoothSessionBinarySensorEntity(
+                    vehicle, BLUETOOTH_SESSION_DESCRIPTION
+                )
+            )
 
     entities.extend(
         TeslemetryEnergyLiveBinarySensorEntity(energysite, description)
@@ -702,3 +730,113 @@ class TeslemetryEnergyInfoBinarySensorEntity(
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
         self._attr_is_on = self.entity_description.polling_value_fn(self._value)
+
+
+class TeslemetryVehicleBluetoothBinarySensorEntity(
+    TeslemetryRootEntity, BinarySensorEntity
+):
+    """Base class for Teslemetry vehicle Bluetooth binary sensors."""
+
+    entity_description: TeslemetryBinarySensorEntityDescription
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        data: TeslemetryVehicleData,
+        description: TeslemetryBinarySensorEntityDescription,
+    ) -> None:
+        """Initialize the Bluetooth binary sensor."""
+        self.entity_description = description
+        self._attr_unique_id = f"{data.vin}-{description.key}"
+        self._attr_device_info = data.device
+
+
+class TeslemetryVehicleBluetoothPresenceBinarySensorEntity(
+    TeslemetryVehicleBluetoothBinarySensorEntity
+):
+    """Binary sensor for a vehicle being visible to the Bluetooth stack."""
+
+    def __init__(
+        self,
+        data: TeslemetryVehicleData,
+        description: TeslemetryBinarySensorEntityDescription,
+        address: str,
+    ) -> None:
+        """Initialize the Bluetooth presence binary sensor."""
+        self._address = address
+        super().__init__(data, description)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Follow the Bluetooth stack's own presence history for the address."""
+        await super().async_added_to_hass()
+        self._attr_is_on = bluetooth.async_address_present(self.hass, self._address)
+        self.async_on_remove(
+            bluetooth.async_register_callback(
+                self.hass,
+                self._async_advertisement,
+                bluetooth.BluetoothCallbackMatcher(address=self._address),
+                # Any other mode would ask scanners to actively probe the vehicle.
+                bluetooth.BluetoothScanningMode.PASSIVE,
+            )
+        )
+        self.async_on_remove(
+            bluetooth.async_track_unavailable(
+                self.hass, self._async_unavailable, self._address
+            )
+        )
+
+    @callback
+    def _async_advertisement(
+        self,
+        service_info: bluetooth.BluetoothServiceInfoBleak,
+        change: bluetooth.BluetoothChange,
+    ) -> None:
+        """Handle an advertisement broadcast by the vehicle."""
+        self._attr_is_on = True
+        self.async_write_ha_state()
+
+    @callback
+    def _async_unavailable(
+        self, service_info: bluetooth.BluetoothServiceInfoBleak
+    ) -> None:
+        """Handle the vehicle falling out of the stack's presence history."""
+        self._attr_is_on = False
+        self.async_write_ha_state()
+
+
+class TeslemetryVehicleBluetoothSessionBinarySensorEntity(
+    TeslemetryVehicleBluetoothBinarySensorEntity
+):
+    """Binary sensor for Home Assistant's own Bluetooth link to a vehicle."""
+
+    # Links are opened per command and never kept alive, so there is no session
+    # until the library reports one.
+    _attr_is_on = False
+
+    def __init__(
+        self,
+        data: TeslemetryVehicleData,
+        description: TeslemetryBinarySensorEntityDescription,
+    ) -> None:
+        """Initialize the Bluetooth session binary sensor."""
+        # A vehicle whose key failed to load can never hold a link to report on,
+        # but the entity must still exist so its registry entry survives.
+        self._ble_api = data.ble_api
+        self._attr_available = data.ble_api is not None
+        super().__init__(data, description)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to the library's connect and disconnect events."""
+        await super().async_added_to_hass()
+        if self._ble_api is not None:
+            self.async_on_remove(
+                self._ble_api.listen_connection_status(self._async_connection_status)
+            )
+
+    @callback
+    def _async_connection_status(self, connected: bool) -> None:
+        """Handle the Bluetooth session being established or lost."""
+        self._attr_is_on = connected
+        self.async_write_ha_state()

@@ -7,6 +7,18 @@
           "on": "mdi:home-battery"
         }
       },
+      "bluetooth": {
+        "state": {
+          "off": "mdi:bluetooth-off",
+          "on": "mdi:bluetooth"
+        }
+      },
+      "bluetooth_session": {
+        "state": {
+          "off": "mdi:bluetooth-off",
+          "on": "mdi:bluetooth-connect"
+        }
+      },
       "cellular": {
         "state": {
           "off": "mdi:signal-cellular-outline",
