@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from homeassistant.components.tonewinner.const import CONF_SERIAL_PORT, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_MODEL
@@ -38,14 +40,27 @@ async def test_setup_entry(
     mock_receiver.disconnect.assert_not_awaited()
 
 
+@pytest.mark.parametrize(
+    ("connect_error", "query_error"),
+    [
+        (OSError("Permission denied"), None),
+        (None, ConnectionError("No response for POWER query")),
+    ],
+    ids=["refused", "no_answer"],
+)
 async def test_setup_entry_not_ready(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_receiver: MagicMock,
+    connect_error: OSError | None,
+    query_error: ConnectionError | None,
 ) -> None:
     """Test a failed connection raises ConfigEntryNotReady and cleans up."""
     mock_config_entry.add_to_hass(hass)
-    mock_receiver.connect.side_effect = OSError("Permission denied")
+    if connect_error is not None:
+        mock_receiver.connect.side_effect = connect_error
+    if query_error is not None:
+        mock_receiver.query_state.side_effect = query_error
 
     with (
         patch(
