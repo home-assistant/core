@@ -727,6 +727,57 @@
     'state': 'none',
   })
 # ---
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_manufacture_date-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.garden_test_mower_1_manufacture_date',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Manufacture date',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATE: 'date'>,
+    'original_icon': None,
+    'original_name': 'Manufacture date',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'manufacture_date',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_manufacture_date',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_manufacture_date-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'date',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Manufacture date',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garden_test_mower_1_manufacture_date',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2087,6 +2138,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'no_error',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.garden_test_mower_2_manufacture_date-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.garden_test_mower_2_manufacture_date',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Manufacture date',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATE: 'date'>,
+    'original_icon': None,
+    'original_name': 'Manufacture date',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'manufacture_date',
+    'unique_id': '1234_manufacture_date',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.garden_test_mower_2_manufacture_date-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'date',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 2 Manufacture date',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garden_test_mower_2_manufacture_date',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensor_snapshot[sensor.garden_test_mower_2_mode-entry]
