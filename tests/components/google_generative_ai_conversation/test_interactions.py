@@ -28,6 +28,7 @@ from homeassistant.components.google_generative_ai_conversation.entity import (
 )
 from homeassistant.components.google_generative_ai_conversation.interactions import (
     build_interaction_request,
+    convert_chat_log_to_interactions_steps,
     create_safety_settings,
     format_response_format,
     format_tools_for_interactions,
@@ -761,3 +762,308 @@ async def test_transform_interactions_stream_gemini_3_flash_google_search(
     )
     assert assistant_content.native.part_details[0].thought_signature == search_sig
     assert assistant_content.native.part_details[1].thought_signature == thought_sig
+
+
+async def test_convert_chat_log_to_interactions_steps_simple(
+    hass: HomeAssistant,
+) -> None:
+    """Test converting basic user and assistant conversation history to steps."""
+    chat_log = conversation.ChatLog(hass, "test_conversation")
+    chat_log.async_add_user_content(conversation.UserContent(content="Hello"))
+    chat_log.async_add_assistant_content_without_tools(
+        conversation.AssistantContent(
+            agent_id="test_agent",
+            content="Hello there!",
+        )
+    )
+    chat_log.async_add_user_content(conversation.UserContent(content="How are you?"))
+
+    steps = convert_chat_log_to_interactions_steps(chat_log)
+
+    assert len(steps) == 3
+    assert steps[0] == interactions.UserInputStep(
+        content=[interactions.TextContent(text="Hello")]
+    )
+    assert steps[1] == interactions.ModelOutputStep(
+        content=[interactions.TextContent(text="Hello there!")]
+    )
+    assert steps[2] == interactions.UserInputStep(
+        content=[interactions.TextContent(text="How are you?")]
+    )
+
+
+async def test_convert_chat_log_to_interactions_steps_google_search_multiturn(
+    hass: HomeAssistant,
+) -> None:
+    """Test converting Google Search conversation turn to steps for multi-turn follow-up."""
+    chat_log = conversation.ChatLog(hass, "test_conversation")
+    chat_log.async_add_user_content(
+        conversation.UserContent(content="who won Super Bowl LX 2026?")
+    )
+
+    search_sig = "search_sig_super_bowl_123"
+    thought_sig = "thought_sig_super_bowl_456"
+
+    chat_log.async_add_assistant_content_without_tools(
+        conversation.AssistantContent(
+            agent_id="test_agent",
+            content="The **Seattle Seahawks** won Super Bowl LX on February 8, 2026.",
+            tool_calls=[
+                llm.ToolInput(
+                    tool_name="google_search",
+                    tool_args={
+                        "queries": [
+                            "Super Bowl LX 2026 winner",
+                            "Super Bowl LX date location",
+                        ]
+                    },
+                    id="call_491782",
+                    external=True,
+                )
+            ],
+            native=ContentDetails(
+                part_details=[
+                    PartDetails(
+                        part_type="google_search_call",
+                        index=0,
+                        length=0,
+                        thought_signature=search_sig,
+                    ),
+                    PartDetails(
+                        part_type="thought",
+                        index=0,
+                        length=0,
+                        thought_signature=thought_sig,
+                    ),
+                ]
+            ),
+        )
+    )
+
+    chat_log.async_add_user_content(
+        conversation.UserContent(content="what is the score")
+    )
+
+    steps = convert_chat_log_to_interactions_steps(chat_log)
+
+    assert len(steps) == 5
+    assert steps[0] == interactions.UserInputStep(
+        content=[interactions.TextContent(text="who won Super Bowl LX 2026?")]
+    )
+    assert steps[1] == interactions.GoogleSearchCallStep(
+        arguments=interactions.GoogleSearchCallArguments(
+            queries=[
+                "Super Bowl LX 2026 winner",
+                "Super Bowl LX date location",
+            ]
+        ),
+        id="call_491782",
+        signature=search_sig,
+        search_type="web_search",
+    )
+    assert steps[2] == interactions.ThoughtStep(
+        signature=thought_sig,
+    )
+    assert steps[3] == interactions.ModelOutputStep(
+        content=[
+            interactions.TextContent(
+                text="The **Seattle Seahawks** won Super Bowl LX on February 8, 2026."
+            )
+        ]
+    )
+    assert steps[4] == interactions.UserInputStep(
+        content=[interactions.TextContent(text="what is the score")]
+    )
+
+    request = build_interaction_request(
+        model="gemini-3.8-flash",
+        input_content=steps,
+        stream=True,
+        store=False,
+    )
+    assert request["input"] == steps
+    assert request["model"] == "gemini-3.8-flash"
+    assert request["store"] is False
+    assert request["stream"] is True
+
+
+async def test_convert_chat_log_to_interactions_steps_userland_tool_multiturn(
+    hass: HomeAssistant,
+) -> None:
+    """Test converting userland tool call and result to steps."""
+    chat_log = conversation.ChatLog(hass, "test_conversation")
+    chat_log.async_add_user_content(
+        conversation.UserContent(content="What is the weather in Paris?")
+    )
+
+    thought_sig_1 = "sig_weather_call_1"
+    thought_sig_2 = "sig_weather_output_2"
+
+    async def mock_tool_call_events():
+        yield interactions.StepStart(
+            index=0,
+            step=interactions.ThoughtStep(),
+        )
+        yield interactions.StepDelta(
+            index=0,
+            delta=interactions.ThoughtSignatureDelta(signature=thought_sig_1),
+        )
+        yield interactions.StepStop(index=0)
+        yield interactions.StepStart(
+            index=1,
+            step=interactions.FunctionCallStep(
+                arguments={},
+                id="call_647382",
+                name="get_weather",
+            ),
+        )
+        yield interactions.StepDelta(
+            index=1,
+            delta=interactions.ArgumentsDelta(arguments='{"location":"Paris"}'),
+        )
+        yield interactions.StepStop(index=1)
+
+    chat_log.llm_api = MagicMock()
+    chat_log.llm_api.async_call_tool = AsyncMock(
+        return_value=llm.ToolResult(data={"temperature": "18°C", "condition": "Sunny"})
+    )
+
+    async for _ in chat_log.async_add_delta_content_stream(
+        "test_agent", transform_interactions_stream(chat_log, mock_tool_call_events())
+    ):
+        pass
+
+    async def mock_response_events():
+        yield interactions.StepStart(
+            index=0,
+            step=interactions.ThoughtStep(),
+        )
+        yield interactions.StepDelta(
+            index=0,
+            delta=interactions.ThoughtSignatureDelta(signature=thought_sig_2),
+        )
+        yield interactions.StepStop(index=0)
+        yield interactions.StepStart(
+            index=1,
+            step=interactions.ModelOutputStep(),
+        )
+        yield interactions.StepDelta(
+            index=1,
+            delta=interactions.TextDelta(
+                text="The weather in Paris is sunny and 18°C."
+            ),
+        )
+        yield interactions.StepStop(index=1)
+
+    async for _ in chat_log.async_add_delta_content_stream(
+        "test_agent", transform_interactions_stream(chat_log, mock_response_events())
+    ):
+        pass
+
+    chat_log.async_add_user_content(
+        conversation.UserContent(content="What should I wear there?")
+    )
+
+    steps = convert_chat_log_to_interactions_steps(chat_log)
+
+    assert len(steps) == 7
+    assert steps[0] == interactions.UserInputStep(
+        content=[interactions.TextContent(text="What is the weather in Paris?")]
+    )
+    assert steps[1] == interactions.ThoughtStep(signature=thought_sig_1)
+    assert steps[2] == interactions.FunctionCallStep(
+        arguments={"location": "Paris"},
+        id="call_647382",
+        name="get_weather",
+    )
+    assert steps[3] == interactions.FunctionResultStep(
+        call_id="call_647382",
+        name="get_weather",
+        result={"temperature": "18°C", "condition": "Sunny"},
+    )
+    assert steps[4] == interactions.ThoughtStep(signature=thought_sig_2)
+    assert steps[5] == interactions.ModelOutputStep(
+        content=[
+            interactions.TextContent(text="The weather in Paris is sunny and 18°C.")
+        ]
+    )
+    assert steps[6] == interactions.UserInputStep(
+        content=[interactions.TextContent(text="What should I wear there?")]
+    )
+
+
+async def test_convert_chat_log_to_interactions_steps_tool_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test converting tool error result to FunctionResultStep with is_error flag."""
+    chat_log = conversation.ChatLog(hass, "test_conversation")
+    chat_log.async_add_user_content(
+        conversation.UserContent(content="Turn on the living room light")
+    )
+
+    async def mock_tool_call_events():
+        yield interactions.StepStart(
+            index=0,
+            step=interactions.FunctionCallStep(
+                arguments={"entity_id": "light.living_room"},
+                id="call_999",
+                name="turn_on",
+            ),
+        )
+        yield interactions.StepStop(index=0)
+
+    chat_log.llm_api = MagicMock()
+    chat_log.llm_api.async_call_tool = AsyncMock(
+        return_value=llm.ToolResult(data={"error": "Device unreachable"}, error=True)
+    )
+
+    async for _ in chat_log.async_add_delta_content_stream(
+        "test_agent", transform_interactions_stream(chat_log, mock_tool_call_events())
+    ):
+        pass
+
+    steps = convert_chat_log_to_interactions_steps(chat_log)
+
+    assert len(steps) == 3
+    assert steps[0] == interactions.UserInputStep(
+        content=[interactions.TextContent(text="Turn on the living room light")]
+    )
+    assert steps[1] == interactions.FunctionCallStep(
+        arguments={"entity_id": "light.living_room"},
+        id="call_999",
+        name="turn_on",
+    )
+    assert steps[2] == interactions.FunctionResultStep(
+        call_id="call_999",
+        name="turn_on",
+        result={"error": "Device unreachable"},
+        is_error=True,
+    )
+
+
+async def test_convert_chat_log_to_interactions_steps_thinking_content_without_signature(
+    hass: HomeAssistant,
+) -> None:
+    """Test converting thinking_content without signature to ThoughtStep with summary."""
+    chat_log = conversation.ChatLog(hass, "test_conversation")
+    chat_log.async_add_user_content(conversation.UserContent(content=""))
+    chat_log.async_add_assistant_content_without_tools(
+        conversation.AssistantContent(
+            agent_id="test_agent",
+            thinking_content="I need to think about this.",
+            content="Done thinking.",
+        )
+    )
+
+    steps = convert_chat_log_to_interactions_steps(chat_log)
+
+    assert len(steps) == 3
+    assert steps[0] == interactions.UserInputStep(
+        content=[interactions.TextContent(text=" ")]
+    )
+    assert steps[1] == interactions.ThoughtStep(
+        summary=[interactions.TextContent(text="I need to think about this.")]
+    )
+    assert steps[2] == interactions.ModelOutputStep(
+        content=[interactions.TextContent(text="Done thinking.")]
+    )

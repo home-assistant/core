@@ -2,6 +2,7 @@
 
 from collections.abc import AsyncGenerator, AsyncIterator, Callable, Mapping, Sequence
 from dataclasses import dataclass, field
+import datetime
 import json
 from typing import Any
 
@@ -118,7 +119,7 @@ def create_safety_settings(options: Mapping[str, Any]) -> list[SafetySetting]:
 def build_interaction_request(
     *,
     model: str,
-    input_content: Any,
+    input_content: str | Sequence[interactions.Step] | Sequence[interactions.StepParam],
     options: Mapping[str, Any] | None = None,
     system_instruction: str | None = None,
     tools: Sequence[interactions.Tool] | None = None,
@@ -175,6 +176,134 @@ def build_interaction_request(
     request["generation_config"] = generation_config
 
     return request
+
+
+def _validate_tool_results(value: Any) -> Any:
+    """Recursively convert non-json-serializable types."""
+    if isinstance(value, (datetime.time, datetime.date)):
+        return value.isoformat()
+    if isinstance(value, list):
+        return [_validate_tool_results(item) for item in value]
+    if isinstance(value, dict):
+        return {k: _validate_tool_results(v) for k, v in value.items()}
+    return value
+
+
+def _convert_user_content_step(
+    content: conversation.UserContent,
+) -> interactions.UserInputStep:
+    """Convert UserContent into a UserInputStep."""
+    text = content.content or " "
+    return interactions.UserInputStep(content=[interactions.TextContent(text=text)])
+
+
+def _convert_assistant_content_steps(
+    content: conversation.AssistantContent,
+) -> list[interactions.Step]:
+    """Convert AssistantContent into the corresponding interaction steps."""
+    steps: list[interactions.Step] = []
+    part_details = (
+        content.native.part_details
+        if isinstance(content.native, ContentDetails)
+        else []
+    )
+
+    search_tool = next(
+        (tc for tc in (content.tool_calls or []) if tc.tool_name == "google_search"),
+        None,
+    )
+    if search_tool:
+        search_sig = next(
+            (
+                d.thought_signature
+                for d in part_details
+                if d.part_type == "google_search_call"
+            ),
+            None,
+        )
+        queries = (
+            list(search_tool.tool_args["queries"])
+            if isinstance(search_tool.tool_args, dict)
+            and "queries" in search_tool.tool_args
+            and search_tool.tool_args["queries"] is not None
+            else None
+        )
+        steps.append(
+            interactions.GoogleSearchCallStep(
+                id=search_tool.id,
+                arguments=interactions.GoogleSearchCallArguments(queries=queries),
+                signature=search_sig,
+                search_type="web_search",
+            )
+        )
+
+    thought_sig = next(
+        (d.thought_signature for d in part_details if d.part_type == "thought"),
+        None,
+    )
+    if thought_sig:
+        steps.append(interactions.ThoughtStep(signature=thought_sig))
+    elif content.thinking_content:
+        steps.append(
+            interactions.ThoughtStep(
+                summary=[interactions.TextContent(text=content.thinking_content)]
+            )
+        )
+
+    for tool_call in content.tool_calls or []:
+        if tool_call.tool_name != "google_search":
+            args = tool_call.tool_args if isinstance(tool_call.tool_args, dict) else {}
+            steps.append(
+                interactions.FunctionCallStep(
+                    id=tool_call.id,
+                    name=tool_call.tool_name,
+                    arguments=args,
+                )
+            )
+
+    if content.content:
+        steps.append(
+            interactions.ModelOutputStep(
+                content=[interactions.TextContent(text=content.content)]
+            )
+        )
+
+    return steps
+
+
+def _convert_tool_result_step(
+    content: conversation.ToolResultContent,
+) -> interactions.FunctionResultStep:
+    """Convert ToolResultContent into a FunctionResultStep."""
+    result_data = (
+        _validate_tool_results(content.result.data)
+        if content.result.data is not None
+        else {}
+    )
+    return interactions.FunctionResultStep(
+        call_id=content.tool_call_id,
+        result=result_data,
+        is_error=True if content.result.error else None,
+        name=content.tool_name,
+    )
+
+
+def convert_chat_log_to_interactions_steps(
+    chat_log: conversation.ChatLog,
+) -> list[interactions.Step]:
+    """Convert Home Assistant ChatLog history into a sequence of interaction steps."""
+    steps: list[interactions.Step] = []
+
+    for content in chat_log.content:
+        match content:
+            case conversation.UserContent():
+                steps.append(_convert_user_content_step(content))
+            case conversation.AssistantContent():
+                steps.extend(_convert_assistant_content_steps(content))
+            case conversation.ToolResultContent():
+                steps.append(_convert_tool_result_step(content))
+
+    return steps
 
 
 def _parse_tool_args(args_str: str, args_dict: dict[str, Any] | None) -> dict[str, Any]:
