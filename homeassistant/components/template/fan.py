@@ -226,6 +226,9 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
             "_attr_percentage",
             tcv.number(self, CONF_PERCENTAGE, 0, 100),
         )
+        self.add_assumed_attribute(
+            "_attr_percentage", CONF_PERCENTAGE, CONF_SET_PERCENTAGE_ACTION
+        )
 
         # List of valid preset modes
         self._attr_preset_modes: list[str] | None = config.get(CONF_PRESET_MODES)
@@ -234,6 +237,9 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
             "_attr_preset_mode",
             tcv.item_in_list(self, CONF_PRESET_MODE, self._attr_preset_modes),
         )
+        self.add_assumed_attribute(
+            "_attr_preset_mode", CONF_PRESET_MODE, CONF_SET_PRESET_MODE_ACTION
+        )
 
         # Oscillating boolean
         self.setup_template(
@@ -241,12 +247,18 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
             "_attr_oscillating",
             tcv.boolean(self, CONF_OSCILLATING),
         )
+        self.add_assumed_attribute(
+            "_attr_oscillating", CONF_OSCILLATING, CONF_SET_OSCILLATING_ACTION
+        )
 
         # Forward/Reverse Directions
         self.setup_template(
             CONF_DIRECTION,
             "_attr_current_direction",
             tcv.item_in_list(self, CONF_DIRECTION, _VALID_DIRECTIONS),
+        )
+        self.add_assumed_attribute(
+            "_attr_current_direction", CONF_DIRECTION, CONF_SET_DIRECTION_ACTION
         )
 
         # Number of valid speeds
@@ -313,60 +325,59 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
     @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage speed of the fan."""
-        self._attr_percentage = percentage
-
         if script := self._action_scripts.get(CONF_SET_PERCENTAGE_ACTION):
             await self.async_run_script(
                 script,
-                run_variables={FanScriptVariable.PERCENTAGE: self._attr_percentage},
+                run_variables={FanScriptVariable.PERCENTAGE: percentage},
                 context=self._context,
             )
 
         if self._attr_assumed_state:
             self._attr_is_on = percentage != 0
 
-        if self._attr_assumed_state or CONF_PERCENTAGE not in self._templates:
+        if (
+            self.update_assumed_attribute(CONF_PERCENTAGE, percentage)
+            or self._attr_assumed_state
+        ):
             self.async_write_ha_state()
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset_mode of the fan."""
-        self._attr_preset_mode = preset_mode
-
         if script := self._action_scripts.get(CONF_SET_PRESET_MODE_ACTION):
             await self.async_run_script(
                 script,
-                run_variables={FanScriptVariable.PRESET_MODE: self._attr_preset_mode},
+                run_variables={FanScriptVariable.PRESET_MODE: preset_mode},
                 context=self._context,
             )
 
         if self._attr_assumed_state:
             self._attr_is_on = True
 
-        if self._attr_assumed_state or CONF_PRESET_MODE not in self._templates:
+        if (
+            self.update_assumed_attribute(CONF_PRESET_MODE, preset_mode)
+            or self._attr_assumed_state
+        ):
             self.async_write_ha_state()
 
     @override
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation of the fan."""
-        self._attr_oscillating = oscillating
         if (
             script := self._action_scripts.get(CONF_SET_OSCILLATING_ACTION)
         ) is not None:
             await self.async_run_script(
                 script,
-                run_variables={FanScriptVariable.OSCILLATING: self.oscillating},
+                run_variables={FanScriptVariable.OSCILLATING: oscillating},
                 context=self._context,
             )
 
-        if CONF_OSCILLATING not in self._templates:
-            self.async_write_ha_state()
+        self.write_assumed_attribute(CONF_OSCILLATING, oscillating)
 
     @override
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         if direction in _VALID_DIRECTIONS:
-            self._attr_current_direction = direction
             if (
                 script := self._action_scripts.get(CONF_SET_DIRECTION_ACTION)
             ) is not None:
@@ -375,8 +386,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
                     run_variables={FanScriptVariable.DIRECTION: direction},
                     context=self._context,
                 )
-            if CONF_DIRECTION not in self._templates:
-                self.async_write_ha_state()
+            self.write_assumed_attribute(CONF_DIRECTION, direction)
         else:
             _LOGGER.error(
                 "Received invalid direction: %s for entity %s. Expected: %s",
