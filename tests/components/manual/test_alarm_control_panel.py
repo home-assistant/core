@@ -1911,6 +1911,55 @@ async def test_code_used_event_not_fired_without_state_change(
     assert events[0]["target_state"] == state
 
 
+async def test_code_used_event_not_fired_after_auto_disarm(
+    hass: HomeAssistant,
+) -> None:
+    """Test that disarming an alarm disarm_after_trigger already cleared is no event."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+                "code": CODE_MAPPING,
+                "arming_time": 0,
+                "delay_time": 0,
+                "trigger_time": 5,
+                "disarm_after_trigger": True,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    events: list[dict[str, Any]] = []
+
+    @callback
+    def event_listener(event: Event) -> None:
+        events.append(event.data)
+
+    hass.bus.async_listen("manual_alarm_code_used", event_listener)
+
+    await common.async_alarm_arm_away(hass, "2222")
+    await common.async_alarm_trigger(hass)
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.TRIGGERED
+    assert len(events) == 1
+
+    future = dt_util.utcnow() + timedelta(seconds=10)
+    with freeze_time(future):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+        # disarm_after_trigger reports the panel as disarmed without a command
+        assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
+
+        await common.async_alarm_disarm(hass, "2222")
+        await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
+    assert len(events) == 1
+
+
 async def test_code_used_event_not_fired_on_bad_code(hass: HomeAssistant) -> None:
     """Test that no code used event is fired when the code is rejected."""
     await _setup_manual_alarm(hass, CODE_LIST)
