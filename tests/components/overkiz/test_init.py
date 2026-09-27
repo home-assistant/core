@@ -6,6 +6,7 @@ from aiohttp import ClientError
 from pyoverkiz.exceptions import (
     MaintenanceError,
     ServiceUnavailableError,
+    SomfyServiceError,
     TooManyRequestsError,
 )
 import pytest
@@ -174,6 +175,7 @@ async def test_setup_token_reauth_error_starts_reauth(
         TooManyRequestsError("Too many requests"),
         MaintenanceError("Server is down for maintenance"),
         ServiceUnavailableError("Server is unavailable"),
+        SomfyServiceError("Somfy token refresh failed"),
         TimeoutError("Timed out"),
         ClientError("Connection error"),
     ],
@@ -182,6 +184,7 @@ async def test_setup_token_reauth_error_starts_reauth(
         "too_many_requests",
         "maintenance",
         "service_unavailable",
+        "somfy_service_error",
         "timeout",
         "client_error",
     ],

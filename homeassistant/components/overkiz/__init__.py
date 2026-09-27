@@ -21,6 +21,7 @@ from pyoverkiz.exceptions import (
     NoSuchTokenError,
     NotAuthenticatedError,
     ServiceUnavailableError,
+    SomfyServiceError,
     TooManyRequestsError,
 )
 from pyoverkiz.models import Device, PersistedActionGroup
@@ -159,6 +160,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         raise ConfigEntryNotReady("Server is down for maintenance") from exception
     except ServiceUnavailableError as exception:
         raise ConfigEntryNotReady("Server is unavailable") from exception
+    except SomfyServiceError as exception:
+        raise ConfigEntryNotReady("Somfy service error") from exception
 
     coordinator = OverkizDataUpdateCoordinator(
         hass,
