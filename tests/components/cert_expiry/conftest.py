@@ -39,6 +39,8 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: HOST, CONF_PORT: PORT},
+        entry_id="test-entry",
+        title=HOST,
         unique_id=f"{HOST}:{PORT}",
     )
 

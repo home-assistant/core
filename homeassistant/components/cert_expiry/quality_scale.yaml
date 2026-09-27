@@ -53,9 +53,7 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: Config flow only collects host/port; the integration does not authenticate.
-  test-coverage:
-    status: todo
-    comment: Consider creating a mock_config_entry fixture and use that throughout tests.
+  test-coverage: done
   # Gold
   devices: done
   diagnostics: done

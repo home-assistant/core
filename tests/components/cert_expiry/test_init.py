@@ -168,40 +168,35 @@ async def test_setup_during_boot_failure_loads_unavailable(
     ],
 )
 async def test_setup_retries_on_connection_failure(
-    hass: HomeAssistant, error: CertExpiryException, reason: str
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    error: CertExpiryException,
+    reason: str,
 ) -> None:
     """Test a connection failure during setup schedules a retry instead of loading."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: HOST, CONF_PORT: PORT},
-        unique_id=f"{HOST}:{PORT}",
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.cert_expiry.coordinator.async_get_cert",
         side_effect=error,
     ):
-        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert entry.reason == reason
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.reason == reason
     assert hass.states.get(SENSOR_ENTITY_ID) is None
 
 
 @pytest.mark.freeze_time(static_datetime())
 @pytest.mark.usefixtures("cert_verified")
 async def test_coordinator_refresh_fails_then_recovers(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator recovers after a periodic refresh fails."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: HOST, CONF_PORT: PORT},
-        unique_id=f"{HOST}:{PORT}",
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.cert_expiry.coordinator.async_get_cert",

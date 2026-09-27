@@ -89,7 +89,7 @@
       'discovery_keys': dict({
       }),
       'domain': 'cert_expiry',
-      'entry_id': 'test-entry-cert-error',
+      'entry_id': 'test-entry',
       'minor_version': 1,
       'modified_at': '2020-06-12T08:00:00+00:00',
       'options': dict({
