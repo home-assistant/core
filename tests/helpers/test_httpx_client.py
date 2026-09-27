@@ -1,7 +1,12 @@
 """Test the httpx client helper."""
 
+from collections.abc import Callable
+from pathlib import Path
+import ssl
 from unittest.mock import Mock, patch
 
+import certifi
+import httpcore2
 import httpx2
 import pytest
 
@@ -296,3 +301,50 @@ async def test_warning_close_session_custom(
         "at custom_components/hue/light.py, line 23: await session.aclose(). "
         "Please report it to the author of the 'hue' custom integration"
     ) in caplog.text
+
+
+DEFAULT_SSL_CONTEXT_FACTORIES = [
+    pytest.param(httpx2.create_ssl_context, id="httpx2"),
+    pytest.param(httpcore2.default_ssl_context, id="httpcore2"),
+]
+
+
+@pytest.mark.parametrize("create_context", DEFAULT_SSL_CONTEXT_FACTORIES)
+def test_default_ssl_context_uses_certifi(
+    monkeypatch: pytest.MonkeyPatch, create_context: Callable[[], ssl.SSLContext]
+) -> None:
+    """Test httpx2 default SSL contexts use certifi instead of truststore."""
+    monkeypatch.delenv("SSL_CERT_FILE", raising=False)
+    monkeypatch.delenv("SSL_CERT_DIR", raising=False)
+    monkeypatch.delenv("REQUESTS_CA_BUNDLE", raising=False)
+    expected = ssl.create_default_context(cafile=certifi.where())
+
+    context = create_context()
+
+    assert type(context) is ssl.SSLContext
+    assert context.cert_store_stats() == expected.cert_store_stats()
+    # truststore reloads the system CA store on every handshake
+    with patch.object(ssl.SSLContext, "set_default_verify_paths") as mock_load:
+        context.wrap_bio(ssl.MemoryBIO(), ssl.MemoryBIO(), server_hostname="a.b")
+    mock_load.assert_not_called()
+
+
+@pytest.mark.parametrize("create_context", DEFAULT_SSL_CONTEXT_FACTORIES)
+def test_default_ssl_context_uses_requests_ca_bundle(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    create_context: Callable[[], ssl.SSLContext],
+) -> None:
+    """Test httpx2 default SSL contexts honor REQUESTS_CA_BUNDLE."""
+    certifi_bundle = Path(certifi.where()).read_text(encoding="utf-8")
+    end_marker = "-----END CERTIFICATE-----"
+    ca_bundle = tmp_path / "ca.pem"
+    ca_bundle.write_text(
+        certifi_bundle[: certifi_bundle.index(end_marker)] + end_marker,
+        encoding="utf-8",
+    )
+    monkeypatch.delenv("SSL_CERT_FILE", raising=False)
+    monkeypatch.delenv("SSL_CERT_DIR", raising=False)
+    monkeypatch.setenv("REQUESTS_CA_BUNDLE", str(ca_bundle))
+
+    assert create_context().cert_store_stats()["x509_ca"] == 1
