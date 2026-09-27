@@ -6,8 +6,8 @@ from dataclasses import dataclass
 import logging
 from typing import override
 
-from arcam.fmj import ConnectionFailed
 from arcam.fmj.client import AmxDuetResponse, Client, ResponsePacket
+from arcam.fmj.errors import ConnectionFailed
 from arcam.fmj.state import State
 
 from homeassistant.config_entries import ConfigEntry

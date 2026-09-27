@@ -1,5 +1,6 @@
 """Tests for the Duco integration setup."""
 
+from dataclasses import replace
 from datetime import timedelta
 from unittest.mock import ANY, AsyncMock, patch
 
@@ -13,6 +14,7 @@ from duco_connectivity import (
     DucoConnectionError,
     DucoError,
     DucoResponseError,
+    InfoOverview,
     LanInfo,
     Node,
     NodeListActionItemList,
@@ -138,9 +140,15 @@ async def test_setup_entry_error(
 async def test_setup_entry_success(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    mock_duco_client: AsyncMock,
 ) -> None:
     """Test successful setup of the Duco integration."""
     assert init_integration.state is ConfigEntryState.LOADED
+    mock_duco_client.async_get_info_overview.assert_awaited_once_with()
+    mock_duco_client.async_get_lan_info.assert_not_awaited()
+    mock_duco_client.async_get_diagnostics_info.assert_not_awaited()
+    mock_duco_client.async_get_time_filter_remaining.assert_not_awaited()
+    mock_duco_client.async_get_ventilation_temperature_info.assert_not_awaited()
 
 
 async def test_device_via_device_links(
@@ -180,14 +188,14 @@ async def test_device_via_device_links(
         pytest.param(DucoConnectionError("lan info offline"), id="connection_error"),
     ],
 )
-async def test_setup_entry_ignores_lan_info_failures(
+async def test_setup_entry_ignores_info_overview_failures(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     exception: Exception,
 ) -> None:
-    """Test setup succeeds when the supplemental LAN info endpoint fails."""
-    mock_duco_client.async_get_lan_info.side_effect = exception
+    """Test setup succeeds when the supplemental info overview fails."""
+    mock_duco_client.async_get_info_overview.side_effect = exception
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -211,9 +219,12 @@ async def test_setup_entry_recovers_from_optional_temperature_capability_failure
     exception: Exception,
 ) -> None:
     """Test an optional temperature capability is retried after a setup failure."""
-    mock_duco_client.async_get_ventilation_temperature_info.side_effect = [
+    mock_duco_client.async_get_info_overview.side_effect = [
         exception,
-        VentilationTemperatureInfo(temp_oda=5.5),
+        replace(
+            mock_duco_client.async_get_info_overview.return_value,
+            ventilation_temperatures=VentilationTemperatureInfo(temp_oda=5.5),
+        ),
     ]
     mock_config_entry.add_to_hass(hass)
 
@@ -443,6 +454,9 @@ async def test_setup_entry_creates_http_client(
         mock_client_class.return_value.async_get_node_actions.return_value = (
             mock_node_actions
         )
+        mock_client_class.return_value.async_get_info_overview.return_value = (
+            InfoOverview()
+        )
         (
             mock_client_class.return_value.async_get_ventilation_temperature_info.return_value
         ) = VentilationTemperatureInfo()
@@ -470,6 +484,7 @@ async def test_setup_entry_creates_http_client(
         session=ANY,
         host=TEST_HOST,
     )
+    mock_client_class.return_value.async_get_info_overview.assert_awaited_once_with()
 
 
 async def test_setup_entry_uses_configured_node_name(

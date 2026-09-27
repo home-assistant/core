@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock
 from duco_connectivity import (
     DucoConnectionError,
     DucoError,
+    InfoOverview,
     Node,
     NodeGeneralInfo,
     NodeSensorInfo,
@@ -239,14 +240,14 @@ async def test_coordinator_update_failure_marks_unavailable(
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_lan_info_failures_keep_node_entities_available(
+async def test_info_overview_failures_keep_node_entities_available(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
     exception: Exception,
 ) -> None:
-    """Test node entities stay available when LAN info retrieval fails."""
-    mock_duco_client.async_get_lan_info = AsyncMock(side_effect=exception)
+    """Test node entities stay available when info overview retrieval fails."""
+    mock_duco_client.async_get_info_overview.side_effect = exception
 
     await async_fire_coordinator_update(hass, freezer)
 
@@ -260,9 +261,9 @@ async def test_lan_info_failures_keep_node_entities_available(
 
 
 @pytest.mark.parametrize(
-    "initial_time_filter_remain",
+    "initial_info_overview_result",
     [
-        pytest.param(None, id="missing"),
+        pytest.param(InfoOverview(time_filter_remain=None), id="missing"),
         pytest.param(DucoError("heat recovery info error"), id="transient_failure"),
     ],
 )
@@ -272,13 +273,14 @@ async def test_time_filter_remaining_is_retried(
     mock_duco_client: AsyncMock,
     mock_sensor_nodes: list[Node],
     freezer: FrozenDateTimeFactory,
-    initial_time_filter_remain: DucoError | None,
+    initial_info_overview_result: InfoOverview | DucoError,
 ) -> None:
     """Test unavailable filter timer data is retried and can create the sensor."""
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
-    mock_duco_client.async_get_time_filter_remaining.side_effect = [
-        initial_time_filter_remain,
-        180,
+    info_overview = mock_duco_client.async_get_info_overview.return_value
+    mock_duco_client.async_get_info_overview.side_effect = [
+        initial_info_overview_result,
+        info_overview,
     ]
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
@@ -287,7 +289,7 @@ async def test_time_filter_remaining_is_retried(
 
     await async_fire_coordinator_update(hass, freezer)
 
-    assert mock_duco_client.async_get_time_filter_remaining.await_count == 2
+    assert mock_duco_client.async_get_info_overview.await_count == 2
     state = hass.states.get(FILTER_REMAINING_ENTITY_ID)
     assert state is not None
     assert state.state == "180"
@@ -300,9 +302,13 @@ async def test_empty_ventilation_temperatures_are_retried(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test empty ventilation temperatures are retried and can appear later."""
-    mock_duco_client.async_get_ventilation_temperature_info.side_effect = [
-        VentilationTemperatureInfo(),
-        VentilationTemperatureInfo(temp_oda=5.5),
+    info_overview = mock_duco_client.async_get_info_overview.return_value
+    mock_duco_client.async_get_info_overview.side_effect = [
+        replace(info_overview, ventilation_temperatures=VentilationTemperatureInfo()),
+        replace(
+            info_overview,
+            ventilation_temperatures=VentilationTemperatureInfo(temp_oda=5.5),
+        ),
     ]
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
@@ -312,7 +318,7 @@ async def test_empty_ventilation_temperatures_are_retried(
 
     await async_fire_coordinator_update(hass, freezer)
 
-    assert mock_duco_client.async_get_ventilation_temperature_info.await_count == 2
+    assert mock_duco_client.async_get_info_overview.await_count == 2
     state = hass.states.get("sensor.living_outdoor_air_temperature")
     assert state is not None
     assert state.state == "5.5"
@@ -324,8 +330,11 @@ async def test_partial_ventilation_temperatures_only_expose_available_sensor_val
     mock_duco_client: AsyncMock,
 ) -> None:
     """Test only populated ventilation temperature fields are exposed as states."""
-    mock_duco_client.async_get_ventilation_temperature_info.return_value = (
-        VentilationTemperatureInfo(temp_oda=5.5, temp_eta=21.4)
+    mock_duco_client.async_get_info_overview.return_value = replace(
+        mock_duco_client.async_get_info_overview.return_value,
+        ventilation_temperatures=VentilationTemperatureInfo(
+            temp_oda=5.5, temp_eta=21.4
+        ),
     )
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
@@ -571,7 +580,7 @@ async def test_previously_unknown_node_gets_entities_after_type_becomes_known(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_unknown_node_logged_at_debug(
+async def test_unknown_node_logged_at_debug_when_data_changes(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
@@ -579,7 +588,7 @@ async def test_unknown_node_logged_at_debug(
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that UNKNOWN nodes are logged at DEBUG level on every coordinator update."""
+    """Test that UNKNOWN nodes are logged at DEBUG level when data changes."""
     unknown_node = Node(
         node_id=99,
         general=NodeGeneralInfo(
@@ -602,15 +611,24 @@ async def test_unknown_node_logged_at_debug(
     )
     mock_duco_client.async_get_nodes.return_value = [*mock_sensor_nodes, unknown_node]
 
-    with caplog.at_level(logging.WARNING, logger="homeassistant.components.duco"):
-        await async_fire_coordinator_update(hass, freezer)
-
-    assert "has an unsupported device type" not in caplog.text
-
     with caplog.at_level(logging.DEBUG, logger="homeassistant.components.duco"):
         await async_fire_coordinator_update(hass, freezer)
 
-    assert "has an unsupported device type" in caplog.text
+        assert "has an unsupported device type" in caplog.text
+
+        caplog.clear()
+        await async_fire_coordinator_update(hass, freezer)
+
+        assert "has an unsupported device type" not in caplog.text
+
+        caplog.clear()
+        mock_duco_client.async_get_nodes.return_value = [
+            *mock_sensor_nodes,
+            replace(unknown_node, general=replace(unknown_node.general, identify=1)),
+        ]
+        await async_fire_coordinator_update(hass, freezer)
+
+        assert "has an unsupported device type" in caplog.text
 
 
 @pytest.mark.usefixtures("init_integration")

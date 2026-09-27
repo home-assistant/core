@@ -8,6 +8,7 @@ from lifx import (
     CeilingLight,
     CeilingLightState,
     CollectionInfo,
+    Connectivity,
     DeviceCapabilities,
     FirmwareEffect,
     FirmwareInfo,
@@ -25,6 +26,8 @@ from lifx import (
     MatrixLightState,
     MultiZoneLight,
     MultiZoneLightState,
+    ThreadInfo,
+    ThreadRoutingRole,
     TileInfo,
     WifiInfo,
 )
@@ -142,7 +145,8 @@ def _create_mock_device(
     device.set_reboot = AsyncMock()
     device.apply_theme = AsyncMock()
     # The library only reads the signal strength once it is switched on
-    device.fetch_wifi_info = False
+    device.fetch_radio_info = False
+    device.connectivity = Connectivity.WIFI
     return cast(_DeviceT, device)
 
 
@@ -467,3 +471,19 @@ def create_reference_ceiling_128_light() -> CeilingLight:
     return _create_reference_ceiling_light(
         model="LIFX Ceiling 13x26", product=201, width=16, zone_count=127
     )
+
+
+def create_reference_thread_light() -> Light:
+    """Create the normalized released-emulator color light on Thread."""
+    device = create_reference_color_light()
+    device.connectivity = Connectivity.THREAD
+    device.state.thread_info = ThreadInfo(
+        rloc=1024,
+        network_name="Private mesh",
+        role=ThreadRoutingRole.ROUTER,
+        next_hop=2048,
+        link_quality_in=3,
+        link_quality_out=3,
+        link_margin_db=40,
+    )
+    return device
