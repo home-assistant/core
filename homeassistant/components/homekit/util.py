@@ -65,6 +65,7 @@ from .const import (
     CONF_AUDIO_PACKET_SIZE,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
+    CONF_FLOOR_RGB_COLOR,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LINKED_DOORBELL_SENSOR,
@@ -159,6 +160,9 @@ BASIC_INFO_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_MAX_COLOR_TEMP_KELVIN): cv.positive_int,
         probatio.Inclusive(CONF_RGB_BELOW_KELVIN, "warm_rgb"): cv.positive_int,
         probatio.Inclusive(CONF_WARM_RGB_COLOR, "warm_rgb"): probatio.All(
+            probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 3)
+        ),
+        probatio.Optional(CONF_FLOOR_RGB_COLOR): probatio.All(
             probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 3)
         ),
         probatio.Optional(CONF_LINKED_BATTERY_SENSOR): cv.entity_domain(SENSOR_DOMAIN),

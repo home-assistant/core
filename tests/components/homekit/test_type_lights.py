@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.homekit.const import (
     ATTR_VALUE,
+    CONF_FLOOR_RGB_COLOR,
     CONF_RGB_BELOW_KELVIN,
     CONF_WARM_RGB_COLOR,
     PROP_MAX_VALUE,
@@ -2021,6 +2022,49 @@ async def test_light_below_the_white_floor_uses_the_warm_colour(
     data = await set_mireds(370)
     assert data[ATTR_COLOR_TEMP_KELVIN] == 2702
     assert ATTR_RGB_COLOR not in data
+
+
+async def test_light_below_the_white_floor_starts_from_the_floor_colour(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Just below the floor the colour matches the white it replaces."""
+    entity_id = "light.demo"
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP, ColorMode.HS],
+            ATTR_MIN_COLOR_TEMP_KELVIN: 2000,
+            ATTR_MAX_COLOR_TEMP_KELVIN: 6500,
+        },
+    )
+    await hass.async_block_till_done()
+    config = {
+        CONF_RGB_BELOW_KELVIN: 2700,
+        CONF_WARM_RGB_COLOR: (255, 72, 0),
+        CONF_FLOOR_RGB_COLOR: (255, 130, 30),
+    }
+    acc = Light(hass, hk_driver, "Light", entity_id, 1, config)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: acc.char_color_temp.to_HAP()[HAP_REPR_IID],
+                    HAP_REPR_VALUE: 371,
+                },
+            ]
+        },
+        "mock_addr",
+    )
+    await _wait_for_light_coalesce(hass)
+
+    assert call_turn_on[-1].data[ATTR_RGB_COLOR] == (255, 130, 30)
 
 
 async def test_light_without_colour_ignores_the_warm_colour(

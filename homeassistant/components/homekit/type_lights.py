@@ -47,6 +47,7 @@ from .const import (
     CHAR_ON,
     CHAR_SATURATION,
     CONF_ADAPTIVE_LIGHTING,
+    CONF_FLOOR_RGB_COLOR,
     CONF_MAX_COLOR_TEMP_KELVIN,
     CONF_MIN_COLOR_TEMP_KELVIN,
     CONF_RGB_BELOW_KELVIN,
@@ -336,7 +337,9 @@ class Light(HomeAccessory):
 
         Some bulbs clamp or go dark below a colour temperature they still
         advertise, but can show a warmer tone in colour mode. Below the
-        configured floor the temperature is blended towards that colour.
+        configured floor the temperature is blended towards that colour. The
+        blend starts from a colour that matches the white floor on that bulb,
+        since a bulb's colour LEDs rarely reproduce its white ones.
         """
         floor = self.config.get(CONF_RGB_BELOW_KELVIN)
         kelvin = color_temperature_mired_to_kelvin(mireds)
@@ -344,7 +347,7 @@ class Light(HomeAccessory):
             return None
         warmest = color_temperature_mired_to_kelvin(self.max_mireds)
         ratio = min(1, (floor - kelvin) / max(1, floor - warmest))
-        white = color_temperature_to_rgb(floor)
+        white = self.config.get(CONF_FLOOR_RGB_COLOR) or color_temperature_to_rgb(floor)
         return tuple(
             round(start + (end - start) * ratio)
             for start, end in zip(white, self.config[CONF_WARM_RGB_COLOR], strict=True)

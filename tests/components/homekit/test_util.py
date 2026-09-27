@@ -12,6 +12,7 @@ from homeassistant.components.homekit.const import (
     CONF_AUDIO_PACKET_SIZE,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
+    CONF_FLOOR_RGB_COLOR,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LINKED_DOORBELL_SENSOR,
     CONF_LINKED_MOTION_SENSOR,
@@ -569,14 +570,20 @@ def test_validate_entity_config_warm_rgb_color() -> None:
             "light.demo": {
                 CONF_RGB_BELOW_KELVIN: 2700,
                 CONF_WARM_RGB_COLOR: [255, 124, 7],
+                CONF_FLOOR_RGB_COLOR: [255, 130, 30],
             }
         }
-    )["light.demo"][CONF_WARM_RGB_COLOR] == (255, 124, 7)
+    )["light.demo"][CONF_FLOOR_RGB_COLOR] == (255, 130, 30)
     for config in (
         {CONF_RGB_BELOW_KELVIN: 2700},
         {CONF_WARM_RGB_COLOR: [255, 124, 7]},
         {CONF_RGB_BELOW_KELVIN: 2700, CONF_WARM_RGB_COLOR: [255, 124]},
         {CONF_RGB_BELOW_KELVIN: 2700, CONF_WARM_RGB_COLOR: [256, 124, 7]},
+        {
+            CONF_RGB_BELOW_KELVIN: 2700,
+            CONF_WARM_RGB_COLOR: [255, 124, 7],
+            CONF_FLOOR_RGB_COLOR: [255, 130],
+        },
     ):
         with pytest.raises(probatio.Invalid):
             vec({"light.demo": config})
