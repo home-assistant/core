@@ -1,6 +1,7 @@
 """Basic checks for HomeKitclimate."""
 
 from collections.abc import Callable
+import functools
 
 from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import (
@@ -797,8 +798,22 @@ async def test_heater_cooler_respect_supported_op_modes_2(
     assert state.attributes["hvac_modes"] == ["heat", "cool", "off"]
 
 
-def create_heater_cooler_service_auto(accessory: Accessory) -> Service:
-    """Define AUTO heater-cooler characteristics without any thresholds."""
+ThresholdTuple = tuple[float, float, float, float]
+
+HEATING_THRESHOLD: ThresholdTuple = (15.55556, 46.11111, 37.77777, 0.1)
+COOLING_THRESHOLD: ThresholdTuple = (10.0, 30.0, 20.0, 0.5)
+
+
+def create_heater_cooler_service_auto(
+    accessory: Accessory,
+    heating_threshold: ThresholdTuple | None = None,
+    cooling_threshold: ThresholdTuple | None = None,
+) -> Service:
+    """Define AUTO heater-cooler characteristics.
+
+    Each threshold is a (minValue, maxValue, value, minStep) tuple, or None
+    when the device does not declare that threshold.
+    """
     service = accessory.add_service(ServicesTypes.HEATER_COOLER)
 
     char = service.add_char(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
@@ -819,87 +834,109 @@ def create_heater_cooler_service_auto(accessory: Accessory) -> Service:
     char = service.add_char(CharacteristicsTypes.ROTATION_SPEED)
     char.value = 100
 
+    if heating_threshold is not None:
+        char = service.add_char(CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD)
+        char.minValue, char.maxValue, char.value, char.minStep = heating_threshold
+
+    if cooling_threshold is not None:
+        char = service.add_char(CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD)
+        char.minValue, char.maxValue, char.value, char.minStep = cooling_threshold
+
     return service
 
 
-def create_heater_cooler_service_auto_heating_threshold(
-    accessory: Accessory,
-) -> None:
-    """Define AUTO heater-cooler characteristics with a heating threshold only."""
-    service = create_heater_cooler_service_auto(accessory)
-    char = service.add_char(CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD)
-    char.minValue = 15.55556
-    char.maxValue = 46.11111
-    char.value = 37.77777
-
-
-def create_heater_cooler_service_auto_cooling_threshold(
-    accessory: Accessory,
-) -> None:
-    """Define AUTO heater-cooler characteristics with a cooling threshold only."""
-    service = create_heater_cooler_service_auto(accessory)
-    char = service.add_char(CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD)
-    char.minValue = 10.0
-    char.maxValue = 30.0
-    char.value = 20.0
-
-
-def create_heater_cooler_service_auto_both_thresholds(
-    accessory: Accessory,
-) -> None:
-    """Define AUTO heater-cooler characteristics with both thresholds."""
-    service = create_heater_cooler_service_auto(accessory)
-    char = service.add_char(CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD)
-    char.minValue = 15.55556
-    char.maxValue = 46.11111
-    char.value = 37.77777
-    char = service.add_char(CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD)
-    char.minValue = 10.0
-    char.maxValue = 30.0
-    char.value = 20.0
-
-
 @pytest.mark.parametrize(
-    ("create_service", "expected_min_temp", "expected_max_temp"),
+    (
+        "heating_threshold",
+        "cooling_threshold",
+        "expected_min_temp",
+        "expected_max_temp",
+    ),
     [
+        pytest.param(HEATING_THRESHOLD, None, 15.6, 46.1, id="heating_threshold_only"),
+        pytest.param(None, COOLING_THRESHOLD, 10.0, 30.0, id="cooling_threshold_only"),
         pytest.param(
-            create_heater_cooler_service_auto_heating_threshold,
-            15.6,
-            46.1,
-            id="heating_threshold_only",
-        ),
-        pytest.param(
-            create_heater_cooler_service_auto_cooling_threshold,
+            HEATING_THRESHOLD,
+            COOLING_THRESHOLD,
             10.0,
-            30.0,
-            id="cooling_threshold_only",
-        ),
-        pytest.param(
-            create_heater_cooler_service_auto_both_thresholds,
-            15.6,
             46.1,
-            id="both_thresholds_prefers_heating",
+            id="both_thresholds_use_union",
         ),
-        pytest.param(
-            create_heater_cooler_service_auto,
-            7,
-            35,
-            id="no_thresholds_uses_defaults",
-        ),
+        pytest.param(None, None, 7, 35, id="no_thresholds_use_defaults"),
     ],
 )
 async def test_heater_cooler_auto_uses_declared_threshold_range(
     hass: HomeAssistant,
     get_next_aid: Callable[[], int],
-    create_service: Callable[[Accessory], None],
+    heating_threshold: ThresholdTuple | None,
+    cooling_threshold: ThresholdTuple | None,
     expected_min_temp: float,
     expected_max_temp: float,
 ) -> None:
     """Test that AUTO mode reports the device's declared threshold range."""
+    create_service = functools.partial(
+        create_heater_cooler_service_auto,
+        heating_threshold=heating_threshold,
+        cooling_threshold=cooling_threshold,
+    )
     helper = await setup_test_component(hass, get_next_aid(), create_service)
     state = await helper.poll_and_get_state()
     assert state.attributes["min_temp"] == expected_min_temp
     assert state.attributes["max_temp"] == expected_max_temp
+
+
+@pytest.mark.parametrize(
+    (
+        "heating_threshold",
+        "cooling_threshold",
+        "expected_target_temperature",
+        "expected_target_temp_high",
+        "expected_target_temp_low",
+        "expected_target_temp_step",
+    ),
+    [
+        pytest.param(
+            HEATING_THRESHOLD, None, 37.8, None, None, 0.1, id="heating_threshold_only"
+        ),
+        pytest.param(
+            None, COOLING_THRESHOLD, 20.0, None, None, 0.5, id="cooling_threshold_only"
+        ),
+        pytest.param(
+            HEATING_THRESHOLD,
+            COOLING_THRESHOLD,
+            None,
+            20.0,
+            37.8,
+            0.1,
+            id="both_thresholds_use_range",
+        ),
+        pytest.param(
+            None, None, None, None, None, 1.0, id="no_thresholds_use_defaults"
+        ),
+    ],
+)
+async def test_heater_cooler_auto_target_temperatures(
+    hass: HomeAssistant,
+    get_next_aid: Callable[[], int],
+    heating_threshold: ThresholdTuple | None,
+    cooling_threshold: ThresholdTuple | None,
+    expected_target_temperature: float | None,
+    expected_target_temp_high: float | None,
+    expected_target_temp_low: float | None,
+    expected_target_temp_step: float,
+) -> None:
+    """Test the target temperatures and step reported in AUTO mode."""
+    create_service = functools.partial(
+        create_heater_cooler_service_auto,
+        heating_threshold=heating_threshold,
+        cooling_threshold=cooling_threshold,
+    )
+    helper = await setup_test_component(hass, get_next_aid(), create_service)
+    state = await helper.poll_and_get_state()
+    assert state.attributes.get("temperature") == expected_target_temperature
+    assert state.attributes.get("target_temp_high") == expected_target_temp_high
+    assert state.attributes.get("target_temp_low") == expected_target_temp_low
+    assert state.attributes["target_temp_step"] == expected_target_temp_step
 
 
 async def test_heater_cooler_change_thermostat_state(
