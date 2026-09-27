@@ -1176,11 +1176,17 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                     },
                 ) from err
 
-            if (stop_reason := delta_stream.stop_reason) in (
+            if (
+                stop_reason := delta_stream.stop_reason
+            ) == "pause_turn" and iteration < max_iterations - 1:
+                continue
+
+            if stop_reason in (
                 "refusal",
                 "max_tokens",
                 "model_context_window_exceeded",
                 "stop_sequence",
+                "pause_turn",
             ):
                 coordinator.async_set_updated_data(coordinator.data)
                 raise HomeAssistantError(
@@ -1190,17 +1196,9 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                         "max_tokens": "response_max_tokens",
                         "model_context_window_exceeded": "response_context_window_exceeded",
                         "stop_sequence": "response_stop_sequence",
+                        "pause_turn": "response_incomplete",
                     }[stop_reason],
                 )
-
-            if stop_reason == "pause_turn":
-                if iteration == max_iterations - 1:
-                    coordinator.async_set_updated_data(coordinator.data)
-                    raise HomeAssistantError(
-                        translation_domain=DOMAIN,
-                        translation_key="response_incomplete",
-                    )
-                continue
 
             if not chat_log.unresponded_tool_results:
                 coordinator.async_set_updated_data(coordinator.data)
