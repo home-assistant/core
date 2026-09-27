@@ -1,8 +1,6 @@
 """The Overkiz (by Somfy) integration."""
 
 from collections import defaultdict
-from collections.abc import Iterator
-from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import cast
 
@@ -132,11 +130,21 @@ async def create_client(
     )
 
 
-@contextmanager
-def _translate_api_errors() -> Iterator[None]:
-    """Translate Overkiz API errors into config entry setup errors."""
+async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) -> bool:
+    """Set up Overkiz from a config entry."""
+    api_type = entry.data.get(CONF_API_TYPE, APIType.CLOUD)
+    client = await create_client(hass, entry)
+
     try:
-        yield
+        await client.login()
+        setup = await client.get_setup()
+
+        # Local API does expose scenarios, but they are not functional.
+        # Tracked in https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode/issues/21
+        if api_type == APIType.CLOUD:
+            scenarios = await client.get_action_groups()
+        else:
+            scenarios = []
     except (
         BadCredentialsError,
         NoSuchTokenError,
@@ -154,23 +162,6 @@ def _translate_api_errors() -> Iterator[None]:
         raise ConfigEntryNotReady("Server is down for maintenance") from exception
     except ServiceUnavailableError as exception:
         raise ConfigEntryNotReady("Server is unavailable") from exception
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) -> bool:
-    """Set up Overkiz from a config entry."""
-    api_type = entry.data.get(CONF_API_TYPE, APIType.CLOUD)
-    client = await create_client(hass, entry)
-
-    with _translate_api_errors():
-        await client.login()
-        setup = await client.get_setup()
-
-        # Local API does expose scenarios, but they are not functional.
-        # Tracked in https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode/issues/21
-        if api_type == APIType.CLOUD:
-            scenarios = await client.get_action_groups()
-        else:
-            scenarios = []
 
     coordinator = OverkizDataUpdateCoordinator(
         hass,
@@ -286,15 +277,30 @@ async def async_migrate_entry(
             # device advertises, so this needs the devices from the API.
             client = await create_client(hass, entry)
             try:
-                with _translate_api_errors():
-                    await client.login()
-                    setup = await client.get_setup()
-            except ConfigEntryAuthFailed:
+                await client.login()
+                setup = await client.get_setup()
+            except (
+                BadCredentialsError,
+                NoSuchTokenError,
+                NotAuthenticatedError,
+                OAuth2TokenRequestReauthError,
+            ):
                 # Reauth is not started for a failed migration, so drop the legacy
                 # buttons instead of blocking setup, which then starts reauth.
                 LOGGER.warning(
                     "Could not authenticate to migrate goToAlias buttons, removing them"
                 )
+            except (
+                TooManyRequestsError,
+                OAuth2TokenRequestError,
+                TimeoutError,
+                ClientError,
+                MaintenanceError,
+                ServiceUnavailableError,
+            ) as exception:
+                raise ConfigEntryNotReady(
+                    "Failed to fetch devices for migration"
+                ) from exception
             else:
                 devices_with_favorite = {
                     device.device_url
