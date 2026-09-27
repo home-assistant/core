@@ -18,6 +18,7 @@ from pyoverkiz.exceptions import (
     MaintenanceError,
     NoSuchTokenError,
     NotAuthenticatedError,
+    ServiceUnavailableError,
     SomfyServiceError,
     TooManyAttemptsBannedError,
     TooManyRequestsError,
@@ -1881,6 +1882,9 @@ async def test_somfy_flow_no_sites(
         pytest.param(ClientError, "cannot_connect", id="client_error"),
         pytest.param(
             MaintenanceError, "server_in_maintenance", id="server_in_maintenance"
+        ),
+        pytest.param(
+            ServiceUnavailableError, "cannot_connect", id="service_unavailable"
         ),
         pytest.param(
             TooManyAttemptsBannedError, "too_many_attempts", id="too_many_attempts"

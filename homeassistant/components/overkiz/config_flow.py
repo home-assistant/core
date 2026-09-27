@@ -26,6 +26,7 @@ from pyoverkiz.exceptions import (
     MaintenanceError,
     NoSuchTokenError,
     NotAuthenticatedError,
+    ServiceUnavailableError,
     SomfyServiceError,
     TooManyAttemptsBannedError,
     TooManyRequestsError,
@@ -511,6 +512,8 @@ class OverkizConfigFlow(
                 errors["base"] = "cannot_connect"
             except MaintenanceError:
                 errors["base"] = "server_in_maintenance"
+            except ServiceUnavailableError:
+                errors["base"] = "cannot_connect"
             except TooManyAttemptsBannedError:
                 errors["base"] = "too_many_attempts"
             except UnknownUserError:
