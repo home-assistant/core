@@ -105,12 +105,9 @@ async def test_remove_entry_clears_statistics_after_last_owner(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Clear shared statistics only after removing the last site owner."""
     await setup_platform(hass, normal_config_entry)
-    freezer.tick(ENERGY_STATISTICS_INTERVAL)
-    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     statistic_ids = await _get_statistic_ids(hass)
     assert f"{DOMAIN}:{ENERGY_SITE_ID}_grid_energy_imported" in statistic_ids
@@ -879,6 +876,9 @@ async def test_energy_history_refresh_ratelimited(
     """Test coordinator refresh handles 429."""
 
     await setup_platform(hass, normal_config_entry)
+    # Ignore the statistics import that runs at setup.
+    await hass.async_block_till_done(wait_background_tasks=True)
+    mock_energy_history.reset_mock()
 
     mock_energy_history.side_effect = RateLimited(
         {"after": int(ENERGY_HISTORY_INTERVAL.total_seconds() + 10)}
@@ -942,20 +942,21 @@ async def test_energy_statistics_polling(
         )
 
     await setup_platform(hass, normal_config_entry)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert normal_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.wall_connector_power") is not None
-    assert mock_energy_history.call_count == 0
+    assert mock_energy_history.call_count == expected_calls
 
     freezer.tick(ENERGY_STATISTICS_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert mock_energy_history.call_count == expected_calls
+    assert mock_energy_history.call_count == 2 * expected_calls
 
     assert await hass.config_entries.async_unload(normal_config_entry.entry_id)
     freezer.tick(ENERGY_STATISTICS_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert mock_energy_history.call_count == expected_calls
+    assert mock_energy_history.call_count == 2 * expected_calls
 
 
 async def test_init_region_issue(

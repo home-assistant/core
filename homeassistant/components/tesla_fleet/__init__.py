@@ -228,6 +228,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                 entry.async_on_unload(
                     statistics_coordinator.async_add_listener(lambda: None)
                 )
+                entry.async_create_background_task(
+                    hass,
+                    statistics_coordinator.async_refresh(),
+                    f"{statistics_coordinator.name} first refresh",
+                )
 
             # Create energy site model
             model = None
