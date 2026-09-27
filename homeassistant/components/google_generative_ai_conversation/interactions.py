@@ -24,6 +24,7 @@ from .const import (
     CONF_THINKING_LEVEL,
     CONF_TOP_K,
     CONF_TOP_P,
+    ERROR_GETTING_RESPONSE,
     LOGGER,
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
     RECOMMENDED_MAX_TOKENS,
@@ -32,7 +33,7 @@ from .const import (
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
 )
-from .entity import ERROR_GETTING_RESPONSE, ContentDetails, PartDetails
+from .helpers import ContentDetails, PartDetails
 
 
 def format_tools_for_interactions(
