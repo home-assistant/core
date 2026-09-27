@@ -21,7 +21,7 @@ from homeassistant.components.media_source import (
     PlayMedia,
     Unresolvable,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
 
@@ -415,13 +415,23 @@ class ImmichMediaSource(MediaSource):
 
         LOGGER.debug("search called with item:%s query:%s", item, query)
 
+        if not item.identifier:
+            raise BrowseError(
+                translation_domain=DOMAIN, translation_key="search_requires_account"
+            )
+
         identifier = ImmichMediaSourceIdentifier(item.identifier)
         entry: ImmichConfigEntry | None = (
             self.hass.config_entries.async_entry_for_domain_unique_id(
                 DOMAIN, identifier.unique_id
             )
         )
-        assert entry
+        if entry is None or entry.state is not ConfigEntryState.LOADED:
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="account_not_loaded",
+                translation_placeholders={"unique_id": identifier.unique_id},
+            )
         immich_api = entry.runtime_data.api
 
         search_args: ImmichSmartSearchArgs = {

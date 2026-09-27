@@ -857,3 +857,55 @@ async def test_search_media_errors(
             ),
             SearchMediaQuery(search_query="my search"),
         )
+
+
+@pytest.mark.parametrize(
+    ("identifier", "translation_key"),
+    [
+        pytest.param(None, "search_requires_account", id="root"),
+        pytest.param("unknown_unique_id", "account_not_loaded", id="unknown_account"),
+    ],
+)
+@pytest.mark.usefixtures("mock_immich")
+async def test_search_media_invalid_scope(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    identifier: str | None,
+    translation_key: str,
+) -> None:
+    """Test search_media outside of a loaded Immich account."""
+    assert await async_setup_component(hass, "media_source", {})
+
+    with patch("homeassistant.components.immich.PLATFORMS", []):
+        await setup_integration(hass, mock_config_entry)
+
+    source = await async_get_media_source(hass)
+
+    with pytest.raises(BrowseError) as exc_info:
+        await source.async_search_media(
+            MediaSourceItem(hass, DOMAIN, identifier, None),
+            SearchMediaQuery(search_query="my search"),
+        )
+    assert exc_info.value.translation_key == translation_key
+
+
+@pytest.mark.usefixtures("mock_immich")
+async def test_search_media_account_unloaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test search_media on an unloaded Immich account."""
+    assert await async_setup_component(hass, "media_source", {})
+
+    with patch("homeassistant.components.immich.PLATFORMS", []):
+        await setup_integration(hass, mock_config_entry)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    source = await async_get_media_source(hass)
+
+    with pytest.raises(BrowseError) as exc_info:
+        await source.async_search_media(
+            MediaSourceItem(hass, DOMAIN, mock_config_entry.unique_id, None),
+            SearchMediaQuery(search_query="my search"),
+        )
+    assert exc_info.value.translation_key == "account_not_loaded"
