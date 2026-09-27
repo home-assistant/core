@@ -1495,3 +1495,39 @@ async def test_q10_resolve_error_no_code(
         blocking=True,
     )
     q10_vacuum_api.status.resolve_error.assert_called_once_with(error_code=None)
+
+
+async def test_q10_resolve_error_exception(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q10_vacuum_api: Mock,
+) -> None:
+    """Test resolve_error service on Q10 vacuum when exception is raised."""
+    q10_vacuum_api.status.resolve_error.side_effect = RoborockException("Device error")
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            RESOLVE_ERROR_SERVICE_NAME,
+            {ATTR_ENTITY_ID: Q10_ENTITY_ID, "error_code": 38},
+            blocking=True,
+        )
+
+
+async def test_resolve_error_exception(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """Test resolve_error service on V1 vacuum when exception is raised."""
+    v1_coordinator = setup_entry.runtime_data.v1[0]
+    v1_coordinator.properties_api.status.resolve_error.side_effect = RoborockException(
+        "Device error"
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            RESOLVE_ERROR_SERVICE_NAME,
+            {ATTR_ENTITY_ID: ENTITY_ID, "error_code": 38},
+            blocking=True,
+        )
