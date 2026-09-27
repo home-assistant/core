@@ -69,11 +69,13 @@ async def test_set_select(
     [
         (
             LetPotConnectionException("Connection failed"),
-            "An error occurred while communicating with the LetPot device: Connection failed",
+            "An error occurred while communicating with the LetPot"
+            " device: Connection failed",
         ),
         (
             LetPotException("Random thing failed"),
-            "An unknown error occurred while communicating with the LetPot device: Random thing failed",
+            "An unknown error occurred while communicating with"
+            " the LetPot device: Random thing failed",
         ),
     ],
 )

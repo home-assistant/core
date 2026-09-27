@@ -1,12 +1,10 @@
 """Apprise platform for notify component."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import apprise
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_TARGET,
@@ -26,8 +24,8 @@ CONF_FILE = "config"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_URL): vol.All(cv.ensure_list, [str]),
-        vol.Optional(CONF_FILE): cv.string,
+        probatio.Optional(CONF_URL): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional(CONF_FILE): cv.string,
     }
 )
 
@@ -69,6 +67,7 @@ class AppriseNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.apprise = a_obj
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a specified target.
 

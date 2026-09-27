@@ -1,0 +1,75 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config_entry': dict({
+      'device_id': 'ABC123',
+      'fw_version': '1.2.3',
+      'host': '192.168.1.100',
+      'mac': '**REDACTED**',
+      'model': 'WW-Plus',
+      'token': '**REDACTED**',
+    }),
+    'meter': dict({
+      'datetime_str': '2024-01-01T00:00:00',
+      'timestamp': 1704067200,
+      'values': dict({
+        '1.8.0': dict({
+          'name': 'Total Import',
+          'unit': 'kWh',
+          'value': 12345.678,
+        }),
+        '13.7.0': dict({
+          'name': 'Power Factor',
+          'unit': '',
+          'value': 0.985,
+        }),
+        '14.7.0': dict({
+          'name': 'Frequency',
+          'unit': 'Hz',
+          'value': 50.01,
+        }),
+        '16.7.0': dict({
+          'name': 'Active Power',
+          'unit': 'W',
+          'value': 1500.5,
+        }),
+        '2.8.0': dict({
+          'name': 'Total Export',
+          'unit': 'kWh',
+          'value': 1234.567,
+        }),
+        '31.7.0': dict({
+          'name': 'Current L1',
+          'unit': 'A',
+          'value': 6.52,
+        }),
+        '32.7.0': dict({
+          'name': 'Voltage L1',
+          'unit': 'V',
+          'value': 230.1,
+        }),
+      }),
+    }),
+    'system': dict({
+      'ap': dict({
+      }),
+      'esp': dict({
+        'esp_id': 'ABC123',
+        'os_version': '1.2.3',
+      }),
+      'heap': dict({
+        'free_heap': '120000',
+      }),
+      'uptime': dict({
+        'uptime': '2d 5h 30m',
+      }),
+      'wifi': dict({
+        'ip_address': '192.168.1.100',
+        'mac_address': '**REDACTED**',
+        'mdns_name': '**REDACTED**',
+        'signal_strength': '-45',
+        'ssid': '**REDACTED**',
+      }),
+    }),
+  })
+# ---

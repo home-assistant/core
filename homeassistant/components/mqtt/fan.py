@@ -1,13 +1,11 @@
 """Support for MQTT fans."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 import math
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import fan
 from homeassistant.components.fan import (
@@ -16,7 +14,9 @@ from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
     FanEntity,
+    FanEntityCapabilityAttribute,
     FanEntityFeature,
+    FanEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -93,12 +93,12 @@ DEFAULT_NAME = "MQTT Fan"
 
 MQTT_FAN_ATTRIBUTES_BLOCKED = frozenset(
     {
-        fan.ATTR_DIRECTION,
-        fan.ATTR_OSCILLATING,
-        fan.ATTR_PERCENTAGE_STEP,
-        fan.ATTR_PERCENTAGE,
-        fan.ATTR_PRESET_MODE,
-        fan.ATTR_PRESET_MODES,
+        FanEntityStateAttribute.DIRECTION,
+        FanEntityStateAttribute.OSCILLATING,
+        FanEntityStateAttribute.PERCENTAGE_STEP,
+        FanEntityStateAttribute.PERCENTAGE,
+        FanEntityStateAttribute.PRESET_MODE,
+        FanEntityCapabilityAttribute.PRESET_MODES,
     }
 )
 
@@ -108,78 +108,80 @@ _LOGGER = logging.getLogger(__name__)
 def valid_speed_range_configuration(config: ConfigType) -> ConfigType:
     """Validate that the fan speed_range configuration is valid, throws if it isn't."""
     if config[CONF_SPEED_RANGE_MIN] == 0:
-        raise vol.Invalid("speed_range_min must be > 0")
+        raise probatio.Invalid("speed_range_min must be > 0")
     if config[CONF_SPEED_RANGE_MIN] >= config[CONF_SPEED_RANGE_MAX]:
-        raise vol.Invalid("speed_range_max must be > speed_range_min")
+        raise probatio.Invalid("speed_range_max must be > speed_range_min")
     return config
 
 
 def valid_preset_mode_configuration(config: ConfigType) -> ConfigType:
     """Validate that the preset mode reset payload is not one of the preset modes."""
     if config[CONF_PAYLOAD_RESET_PRESET_MODE] in config[CONF_PRESET_MODES_LIST]:
-        raise vol.Invalid("preset_modes must not contain payload_reset_preset_mode")
+        raise probatio.Invalid(
+            "preset_modes must not contain payload_reset_preset_mode"
+        )
     return config
 
 
 _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_DIRECTION_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_DIRECTION_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_DIRECTION_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_DIRECTION_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_OSCILLATION_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_OSCILLATION_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_OSCILLATION_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_PERCENTAGE_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_PERCENTAGE_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_PERCENTAGE_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_PERCENTAGE_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_DIRECTION_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_DIRECTION_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_DIRECTION_STATE_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_DIRECTION_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_OSCILLATION_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_OSCILLATION_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_OSCILLATION_STATE_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_OSCILLATION_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_PERCENTAGE_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_PERCENTAGE_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_PERCENTAGE_STATE_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_PERCENTAGE_VALUE_TEMPLATE): cv.template,
         # CONF_PRESET_MODE_COMMAND_TOPIC and CONF_PRESET_MODES_LIST
         # must be used together
-        vol.Inclusive(
+        probatio.Inclusive(
             CONF_PRESET_MODE_COMMAND_TOPIC, "preset_modes"
         ): valid_publish_topic,
-        vol.Inclusive(
+        probatio.Inclusive(
             CONF_PRESET_MODES_LIST, "preset_modes", default=[]
         ): cv.ensure_list,
-        vol.Optional(CONF_PRESET_MODE_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_PRESET_MODE_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_PRESET_MODE_VALUE_TEMPLATE): cv.template,
-        vol.Optional(
+        probatio.Optional(CONF_PRESET_MODE_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_PRESET_MODE_STATE_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_PRESET_MODE_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(
             CONF_SPEED_RANGE_MIN, default=DEFAULT_SPEED_RANGE_MIN
         ): cv.positive_int,
-        vol.Optional(
+        probatio.Optional(
             CONF_SPEED_RANGE_MAX, default=DEFAULT_SPEED_RANGE_MAX
         ): cv.positive_int,
-        vol.Optional(
+        probatio.Optional(
             CONF_PAYLOAD_RESET_PERCENTAGE, default=DEFAULT_PAYLOAD_RESET
         ): cv.string,
-        vol.Optional(
+        probatio.Optional(
             CONF_PAYLOAD_RESET_PRESET_MODE, default=DEFAULT_PAYLOAD_RESET
         ): cv.string,
-        vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-        vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-        vol.Optional(
+        probatio.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+        probatio.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+        probatio.Optional(
             CONF_PAYLOAD_OSCILLATION_OFF, default=DEFAULT_PAYLOAD_OSCILLATE_OFF
         ): cv.string,
-        vol.Optional(
+        probatio.Optional(
             CONF_PAYLOAD_OSCILLATION_ON, default=DEFAULT_PAYLOAD_OSCILLATE_ON
         ): cv.string,
-        vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA_MODERN = vol.All(
+PLATFORM_SCHEMA_MODERN = probatio.All(
     _PLATFORM_SCHEMA_BASE,
     valid_speed_range_configuration,
     valid_preset_mode_configuration,
 )
 
-DISCOVERY_SCHEMA = vol.All(
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+DISCOVERY_SCHEMA = probatio.All(
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=probatio.REMOVE_EXTRA),
     valid_speed_range_configuration,
     valid_preset_mode_configuration,
 )
@@ -226,10 +228,12 @@ class MqttFan(MqttEntity, FanEntity):
     _speed_range: tuple[int, int]
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._speed_range = (
@@ -428,6 +432,7 @@ class MqttFan(MqttEntity, FanEntity):
         self._attr_current_direction = str(direction)
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})
@@ -451,16 +456,19 @@ class MqttFan(MqttEntity, FanEntity):
             {"_attr_current_direction"},
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if device is on."""
         # The default for FanEntity is to compute it based on percentage
         return self._attr_is_on
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -483,6 +491,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._attr_is_on = True
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity.
 
@@ -496,6 +505,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._attr_is_on = False
             self.async_write_ha_state()
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage of the fan.
 
@@ -512,6 +522,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._attr_percentage = percentage
             self.async_write_ha_state()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan.
 
@@ -525,6 +536,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._attr_preset_mode = preset_mode
             self.async_write_ha_state()
 
+    @override
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation.
 
@@ -545,6 +557,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._attr_oscillating = oscillating
             self.async_write_ha_state()
 
+    @override
     async def async_set_direction(self, direction: str) -> None:
         """Set direction.
 

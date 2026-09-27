@@ -2,9 +2,10 @@
 # name: test_cover_entities[cover.door_1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'garage',
-      'friendly_name': 'Door 1',
-      'supported_features': <CoverEntityFeature: 3>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Door 1',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.door_1',
@@ -16,8 +17,9 @@
 # ---
 # name: test_cover_entities[cover.door_1].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -35,6 +37,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
@@ -52,8 +55,8 @@
 # name: test_cover_entities[cover.door_1].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -74,7 +77,6 @@
     'model_id': None,
     'name': 'Door 1',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': '10.10',
     'via_device_id': <ANY>,
@@ -83,9 +85,10 @@
 # name: test_cover_entities[cover.door_2]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'garage',
-      'friendly_name': 'Door 2',
-      'supported_features': <CoverEntityFeature: 3>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Door 2',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.door_2',
@@ -97,8 +100,9 @@
 # ---
 # name: test_cover_entities[cover.door_2].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
@@ -133,8 +138,8 @@
 # name: test_cover_entities[cover.door_2].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -155,7 +160,6 @@
     'model_id': None,
     'name': 'Door 2',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': '10.10',
     'via_device_id': <ANY>,

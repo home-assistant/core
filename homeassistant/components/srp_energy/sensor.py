@@ -1,13 +1,12 @@
 """Support for SRP Energy Sensor."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -15,19 +14,17 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SRPEnergyDataUpdateCoordinator
 from .const import DEVICE_CONFIG_URL, DEVICE_MANUFACTURER, DEVICE_MODEL, DOMAIN
+from .coordinator import SRPEnergyConfigEntry, SRPEnergyDataUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SRPEnergyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SRP Energy Usage sensor."""
-    coordinator: SRPEnergyDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-
-    async_add_entities([SrpEntity(coordinator, entry)])
+    async_add_entities([SrpEntity(entry.runtime_data, entry)])
 
 
 class SrpEntity(CoordinatorEntity[SRPEnergyDataUpdateCoordinator], SensorEntity):
@@ -43,7 +40,7 @@ class SrpEntity(CoordinatorEntity[SRPEnergyDataUpdateCoordinator], SensorEntity)
     def __init__(
         self,
         coordinator: SRPEnergyDataUpdateCoordinator,
-        config_entry: ConfigEntry,
+        config_entry: SRPEnergyConfigEntry,
     ) -> None:
         """Initialize the SrpEntity class."""
         super().__init__(coordinator)
@@ -58,6 +55,7 @@ class SrpEntity(CoordinatorEntity[SRPEnergyDataUpdateCoordinator], SensorEntity)
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the device."""
         return self.coordinator.data

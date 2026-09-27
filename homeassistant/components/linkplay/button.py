@@ -1,11 +1,9 @@
 """Support for LinkPlay buttons."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from linkplay.bridge import LinkPlayBridge
 
@@ -77,6 +75,7 @@ class LinkPlayButton(LinkPlayBaseEntity, ButtonEntity):
         self._attr_unique_id = f"{bridge.device.uuid}-{description.key}"
 
     @exception_wrap
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self.entity_description.remote_function(self._bridge)

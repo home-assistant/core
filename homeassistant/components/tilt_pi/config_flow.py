@@ -1,10 +1,10 @@
 """Config flow for Tilt Pi integration."""
 
-from typing import Any
+from typing import Any, override
 
 import aiohttp
+import probatio
 from tiltpi import TiltPiClient, TiltPiError
-import voluptuous as vol
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -26,10 +26,11 @@ class TiltPiConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             await client.get_hydrometers()
-        except (TiltPiError, TimeoutError, aiohttp.ClientError):
+        except TiltPiError, TimeoutError, aiohttp.ClientError:
             return "cannot_connect"
         return None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -58,6 +59,6 @@ class TiltPiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_URL): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_URL): str}),
             errors=errors,
         )

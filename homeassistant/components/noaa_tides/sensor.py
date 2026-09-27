@@ -1,14 +1,12 @@
 """Support for the NOAA Tides and Currents API."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING, Any, Literal, TypedDict
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, override
 
 import noaa_coops as coops
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -41,10 +39,12 @@ UNIT_SYSTEMS = ["english", "metric"]
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_STATION_ID): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_TIME_ZONE, default=DEFAULT_TIMEZONE): vol.In(TIMEZONES),
-        vol.Optional(CONF_UNIT_SYSTEM): vol.In(UNIT_SYSTEMS),
+        probatio.Required(CONF_STATION_ID): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_TIME_ZONE, default=DEFAULT_TIMEZONE): probatio.In(
+            TIMEZONES
+        ),
+        probatio.Optional(CONF_UNIT_SYSTEM): probatio.In(UNIT_SYSTEMS),
     }
 )
 
@@ -110,11 +110,13 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
         self._attr_unique_id = f"{get_station_unique_id(station_id)}_summary"
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of this device."""
         attr: dict[str, Any] = {}
@@ -141,6 +143,7 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
         return attr
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state."""
         if self.data is None:
@@ -156,7 +159,7 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
 
     def update(self) -> None:
         """Get the latest data from NOAA Tides and Currents API."""
-        begin = datetime.now()
+        begin = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
         end = begin + DEFAULT_PREDICTION_LENGTH
         try:
             df_predictions = self._station.get_data(

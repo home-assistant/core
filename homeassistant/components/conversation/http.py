@@ -1,12 +1,10 @@
 """HTTP endpoints for conversation integration."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from typing import Any
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
@@ -43,11 +41,13 @@ def async_setup(hass: HomeAssistant) -> None:
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "conversation/process",
-        vol.Required("text"): str,
-        vol.Optional("conversation_id"): vol.Any(str, None),
-        vol.Optional("language"): str,
-        vol.Optional("agent_id"): agent_id_validator,
+        probatio.Required("type"): "conversation/process",
+        probatio.Required("text"): str,
+        probatio.Optional("conversation_id"): probatio.Any(str, None),
+        probatio.Optional("language"): str,
+        probatio.Optional("agent_id"): agent_id_validator,
+        probatio.Optional("device_id"): probatio.Any(str, None),
+        probatio.Optional("satellite_id"): probatio.Any(str, None),
     }
 )
 @websocket_api.async_response
@@ -64,6 +64,8 @@ async def websocket_process(
         context=connection.context(msg),
         language=msg.get("language"),
         agent_id=msg.get("agent_id"),
+        device_id=msg.get("device_id"),
+        satellite_id=msg.get("satellite_id"),
     )
     connection.send_result(msg["id"], result.as_dict())
 
@@ -71,8 +73,8 @@ async def websocket_process(
 @websocket_api.websocket_command(
     {
         "type": "conversation/prepare",
-        vol.Optional("language"): str,
-        vol.Optional("agent_id"): agent_id_validator,
+        probatio.Optional("language"): str,
+        probatio.Optional("agent_id"): agent_id_validator,
     }
 )
 @websocket_api.async_response
@@ -94,9 +96,9 @@ async def websocket_prepare(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "conversation/agent/list",
-        vol.Optional("language"): str,
-        vol.Optional("country"): str,
+        probatio.Required("type"): "conversation/agent/list",
+        probatio.Optional("language"): str,
+        probatio.Optional("country"): str,
     }
 )
 @websocket_api.async_response
@@ -154,7 +156,7 @@ async def websocket_list_agents(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "conversation/sentences/list",
+        probatio.Required("type"): "conversation/sentences/list",
     }
 )
 @websocket_api.require_admin
@@ -165,26 +167,22 @@ async def websocket_list_sentences(
     """List custom registered sentences."""
     manager = get_agent_manager(hass)
 
-    sentences = []
-    for trigger_details in manager.triggers_details:
-        sentences.extend(trigger_details.sentences)
-
-    connection.send_result(msg["id"], {"trigger_sentences": sentences})
+    connection.send_result(msg["id"], {"trigger_sentences": manager.trigger_sentences})
 
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "conversation/agent/homeassistant/debug",
-        vol.Required("sentences"): [str],
-        vol.Optional("language"): str,
-        vol.Optional("device_id"): vol.Any(str, None),
+        probatio.Required("type"): "conversation/agent/homeassistant/debug",
+        probatio.Required("sentences"): [str],
+        probatio.Optional("language"): str,
+        probatio.Optional("device_id"): probatio.Any(str, None),
     }
 )
 @websocket_api.async_response
 async def websocket_hass_agent_debug(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
-    """Return intents that would be matched by the default agent for a list of sentences."""
+    """Return intents matched by the default agent for a list of sentences."""
     agent = get_agent_manager(hass).default_agent
     assert agent is not None
 
@@ -208,9 +206,9 @@ async def websocket_hass_agent_debug(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "conversation/agent/homeassistant/language_scores",
-        vol.Optional("language"): str,
-        vol.Optional("country"): str,
+        probatio.Required("type"): "conversation/agent/homeassistant/language_scores",
+        probatio.Optional("language"): str,
+        probatio.Optional("country"): str,
     }
 )
 @websocket_api.async_response
@@ -246,12 +244,14 @@ class ConversationProcessView(http.HomeAssistantView):
     name = "api:conversation:process"
 
     @RequestDataValidator(
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required("text"): str,
-                vol.Optional("conversation_id"): str,
-                vol.Optional("language"): str,
-                vol.Optional("agent_id"): agent_id_validator,
+                probatio.Required("text"): str,
+                probatio.Optional("conversation_id"): str,
+                probatio.Optional("language"): str,
+                probatio.Optional("agent_id"): agent_id_validator,
+                probatio.Optional("device_id"): probatio.Any(str, None),
+                probatio.Optional("satellite_id"): probatio.Any(str, None),
             }
         )
     )
@@ -266,6 +266,8 @@ class ConversationProcessView(http.HomeAssistantView):
             context=self.context(request),
             language=data.get("language"),
             agent_id=data.get("agent_id"),
+            device_id=data.get("device_id"),
+            satellite_id=data.get("satellite_id"),
         )
 
         return self.json(result.as_dict())
@@ -273,8 +275,8 @@ class ConversationProcessView(http.HomeAssistantView):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "conversation/chat_log/subscribe",
-        vol.Required("conversation_id"): str,
+        probatio.Required("type"): "conversation/chat_log/subscribe",
+        probatio.Required("conversation_id"): str,
     }
 )
 @websocket_api.require_admin
@@ -335,7 +337,7 @@ def websocket_subscribe_chat_log(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "conversation/chat_log/subscribe_index",
+        probatio.Required("type"): "conversation/chat_log/subscribe_index",
     }
 )
 @websocket_api.require_admin

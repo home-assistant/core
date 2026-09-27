@@ -1,12 +1,11 @@
 """Twilio Call platform for notify component."""
 
-from __future__ import annotations
-
 import logging
+from typing import Any, override
 import urllib
 
+import probatio
 from twilio.base.exceptions import TwilioRestException
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_TARGET,
@@ -24,8 +23,8 @@ CONF_FROM_NUMBER = "from_number"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_FROM_NUMBER): vol.All(
-            cv.string, vol.Match(r"^\+?[1-9]\d{1,14}$")
+        probatio.Required(CONF_FROM_NUMBER): probatio.All(
+            cv.string, probatio.Match(r"^\+?[1-9]\d{1,14}$")
         )
     }
 )
@@ -50,7 +49,8 @@ class TwilioCallNotificationService(BaseNotificationService):
         self.client = twilio_client
         self.from_number = from_number
 
-    def send_message(self, message="", **kwargs):
+    @override
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Call to specified target users."""
         if not (targets := kwargs.get(ATTR_TARGET)):
             _LOGGER.warning("At least 1 target is required")
@@ -67,5 +67,6 @@ class TwilioCallNotificationService(BaseNotificationService):
                 self.client.calls.create(
                     to=target, url=twimlet_url, from_=self.from_number
                 )
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except TwilioRestException as exc:
                 _LOGGER.error(exc)

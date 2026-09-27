@@ -2,10 +2,10 @@
 
 from json import JSONDecodeError
 import logging
-from typing import Any
+from typing import Any, override
 
 import lupupy
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -16,11 +16,11 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -28,6 +28,7 @@ DATA_SCHEMA = vol.Schema(
 class LupusecConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Lupusec config flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

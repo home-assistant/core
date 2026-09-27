@@ -1,8 +1,6 @@
 """Platform for switch integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
@@ -56,14 +54,17 @@ class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
         ]
         self._attr_is_on = self._binary_switch_property.state
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Switch on the device."""
         self._binary_switch_property.set(state=True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Switch off the device."""
         self._binary_switch_property.set(state=False)
 
+    @override
     def sync_callback(self, message: tuple) -> None:
         """Update the binary switch state and consumption."""
         if message[0].startswith("devolo.BinarySwitch"):

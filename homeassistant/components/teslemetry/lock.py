@@ -1,11 +1,11 @@
 """Lock platform for Teslemetry integration."""
 
-from __future__ import annotations
-
 from itertools import chain
-from typing import Any
+from typing import Any, override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.components.lock import LockEntity
@@ -42,7 +42,7 @@ async def async_setup_entry(
                 TeslemetryVehiclePollingVehicleLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
                 )
-                if vehicle.poll or vehicle.firmware < "2024.26"
+                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.26")
                 else TeslemetryStreamingVehicleLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
                 )
@@ -52,7 +52,7 @@ async def async_setup_entry(
                 TeslemetryVehiclePollingCableLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
                 )
-                if vehicle.poll or vehicle.firmware < "2024.26"
+                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.26")
                 else TeslemetryStreamingCableLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
                 )
@@ -65,8 +65,9 @@ async def async_setup_entry(
 class TeslemetryVehicleLockEntity(TeslemetryRootEntity, LockEntity):
     """Base vehicle lock entity for Teslemetry."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the doors."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
@@ -75,6 +76,7 @@ class TeslemetryVehicleLockEntity(TeslemetryRootEntity, LockEntity):
         self._attr_is_locked = True
         self.async_write_ha_state()
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the doors."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
@@ -97,6 +99,7 @@ class TeslemetryVehiclePollingVehicleLockEntity(
         )
         self.scoped = scoped
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update entity attributes."""
         self._attr_is_locked = self._value
@@ -115,6 +118,7 @@ class TeslemetryStreamingVehicleLockEntity(
         )
         self.scoped = scoped
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -138,16 +142,17 @@ class TeslemetryStreamingVehicleLockEntity(
 class TeslemetryCableLockEntity(TeslemetryRootEntity, LockEntity):
     """Base cable Lock entity for Teslemetry."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Charge cable Lock cannot be manually locked."""
         raise ServiceValidationError(
-            "Insert cable to lock",
             translation_domain=DOMAIN,
             translation_key="no_cable",
         )
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock charge cable lock."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
@@ -174,10 +179,12 @@ class TeslemetryVehiclePollingCableLockEntity(
         )
         self.scoped = scoped
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update entity attributes."""
         if self._value is None:
             self._attr_is_locked = None
+            return
         self._attr_is_locked = self._value == ENGAGED
 
 
@@ -198,6 +205,7 @@ class TeslemetryStreamingCableLockEntity(
         )
         self.scoped = scoped
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()

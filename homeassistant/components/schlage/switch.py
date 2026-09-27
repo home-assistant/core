@@ -1,11 +1,9 @@
 """Platform for Schlage switch integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from pyschlage.lock import Lock
 
@@ -72,7 +70,7 @@ async def async_setup_entry(
             for description in SWITCHES
         )
 
-    _add_new_locks(coordinator.data.locks)
+    _add_new_locks(coordinator.data)
     coordinator.new_locks_callbacks.append(_add_new_locks)
 
 
@@ -93,10 +91,12 @@ class SchlageSwitch(SchlageEntity, SwitchEntity):
         self._attr_unique_id = f"{device_id}_{self.entity_description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the switch is on."""
         return self.entity_description.value_fn(self._lock)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.hass.async_add_executor_job(
@@ -104,6 +104,7 @@ class SchlageSwitch(SchlageEntity, SwitchEntity):
         )
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.hass.async_add_executor_job(

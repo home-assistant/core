@@ -1,7 +1,5 @@
 """Tests for the AVM Fritz!Box integration."""
 
-from __future__ import annotations
-
 from unittest.mock import Mock, call, patch
 
 from pyfritzhome import LoginError
@@ -18,6 +16,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
     STATE_UNAVAILABLE,
     UnitOfTemperature,
@@ -39,12 +38,19 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     entries = hass.config_entries.async_entries()
     assert entries
     assert len(entries) == 1
-    assert entries[0].data[CONF_HOST] == "10.0.0.1"
+    assert entries[0].data[CONF_HOST] == "http://10.0.0.1"
     assert entries[0].data[CONF_PASSWORD] == "fake_pass"
     assert entries[0].data[CONF_USERNAME] == "fake_user"
+    assert entries[0].data[CONF_VERIFY_SSL] is False
     assert fritz.call_count == 1
     assert fritz.call_args_list == [
-        call(host="10.0.0.1", password="fake_pass", user="fake_user")
+        call(
+            host="http://10.0.0.1",
+            password="fake_pass",
+            user="fake_user",
+            ssl_verify=False,
+            timeout=20,
+        )
     ]
 
 
@@ -86,6 +92,8 @@ async def test_update_unique_id(
         domain=DOMAIN,
         data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
         unique_id="any",
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 
@@ -145,6 +153,8 @@ async def test_update_unique_id_no_change(
         domain=DOMAIN,
         data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
         unique_id="any",
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 
@@ -170,6 +180,8 @@ async def test_unload_remove(hass: HomeAssistant, fritz: Mock) -> None:
         domain=DOMAIN,
         data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
         unique_id=entity_id,
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 
@@ -209,6 +221,8 @@ async def test_logout_on_stop(hass: HomeAssistant, fritz: Mock) -> None:
         domain=DOMAIN,
         data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
         unique_id=entity_id,
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 
@@ -263,14 +277,14 @@ async def test_remove_device(
 
     # try to delete good_device
     ws_client = await hass_ws_client(hass)
-    response = await ws_client.remove_device(good_device.id, entry.entry_id)
+    response = await ws_client.remove_device(good_device.id)
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
     await hass.async_block_till_done()
 
     # try to delete orphan_device
     ws_client = await hass_ws_client(hass)
-    response = await ws_client.remove_device(orphan_device.id, entry.entry_id)
+    response = await ws_client.remove_device(orphan_device.id)
     assert response["success"]
     await hass.async_block_till_done()
 
@@ -281,6 +295,8 @@ async def test_raise_config_entry_not_ready_when_offline(hass: HomeAssistant) ->
         domain=DOMAIN,
         data={CONF_HOST: "any", **MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]},
         unique_id="any",
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
     with patch(
@@ -302,6 +318,8 @@ async def test_raise_config_entry_error_when_login_fail(hass: HomeAssistant) -> 
         domain=DOMAIN,
         data={CONF_HOST: "any", **MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]},
         unique_id="any",
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
     with patch(
@@ -315,3 +333,99 @@ async def test_raise_config_entry_error_when_login_fail(hass: HomeAssistant) -> 
     entries = hass.config_entries.async_entries()
     config_entry = entries[0]
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.parametrize(
+    ("old_data", "new_data"),
+    [
+        (
+            {
+                CONF_HOST: "10.0.0.1",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+            },
+            {
+                CONF_HOST: "http://10.0.0.1",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+                CONF_VERIFY_SSL: True,
+            },
+        ),
+        (
+            {
+                CONF_HOST: "https://10.0.0.1",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+            },
+            {
+                CONF_HOST: "https://10.0.0.1",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+                CONF_VERIFY_SSL: True,
+            },
+        ),
+        (
+            {
+                CONF_HOST: "1234::1",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+            },
+            {
+                CONF_HOST: "http://[1234::1]",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+                CONF_VERIFY_SSL: True,
+            },
+        ),
+        (
+            {
+                CONF_HOST: "http://[1234::1]",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+            },
+            {
+                CONF_HOST: "http://[1234::1]",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+                CONF_VERIFY_SSL: True,
+            },
+        ),
+        (
+            {
+                CONF_HOST: "https://[1234::1]",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+            },
+            {
+                CONF_HOST: "https://[1234::1]",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+                CONF_VERIFY_SSL: True,
+            },
+        ),
+    ],
+)
+async def test_migrate_entry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    fritz: Mock,
+    old_data: dict,
+    new_data: dict,
+) -> None:
+    """Test migrate config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=old_data,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.fritzbox.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 1
+    assert entry.minor_version == 2
+    assert entry.data == new_data

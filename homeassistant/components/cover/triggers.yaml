@@ -1,79 +1,82 @@
 .trigger_common_fields: &trigger_common_fields
   behavior:
     required: true
-    default: any
+    default: each
     selector:
-      select:
-        translation_key: trigger_behavior
-        options:
-          - first
-          - last
-          - any
-  fully_opened:
+      automation_behavior:
+        mode: trigger
+  for:
     required: true
-    default: false
+    default: 00:00:00
     selector:
-      boolean:
+      duration:
+
+awning_closed:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: awning
 
 awning_opened:
   fields: *trigger_common_fields
   target:
     entity:
-      domain: cover
-      device_class: awning
+      - domain: cover
+        device_class: awning
+
+blind_closed:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: blind
 
 blind_opened:
   fields: *trigger_common_fields
   target:
     entity:
-      domain: cover
-      device_class: blind
+      - domain: cover
+        device_class: blind
+
+curtain_closed:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: curtain
 
 curtain_opened:
   fields: *trigger_common_fields
   target:
     entity:
-      domain: cover
-      device_class: curtain
+      - domain: cover
+        device_class: curtain
 
-door_opened:
+shade_closed:
   fields: *trigger_common_fields
   target:
     entity:
-      domain: cover
-      device_class: door
-
-garage_opened:
-  fields: *trigger_common_fields
-  target:
-    entity:
-      domain: cover
-      device_class: garage
-
-gate_opened:
-  fields: *trigger_common_fields
-  target:
-    entity:
-      domain: cover
-      device_class: gate
+      - domain: cover
+        device_class: shade
 
 shade_opened:
   fields: *trigger_common_fields
   target:
     entity:
-      domain: cover
-      device_class: shade
+      - domain: cover
+        device_class: shade
+
+shutter_closed:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: shutter
 
 shutter_opened:
   fields: *trigger_common_fields
   target:
     entity:
-      domain: cover
-      device_class: shutter
-
-window_opened:
-  fields: *trigger_common_fields
-  target:
-    entity:
-      domain: cover
-      device_class: window
+      - domain: cover
+        device_class: shutter

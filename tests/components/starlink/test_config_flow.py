@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_flow_user_fails_can_succeed(hass: HomeAssistant) -> None:
-    """Test user initialized flow can still succeed after failure when Starlink is available."""
+    """Test user flow can succeed after failure when Starlink is available."""
     user_input = {CONF_IP_ADDRESS: "192.168.100.1:9200"}
 
     with NO_DEVICE_PATCHER, SETUP_ENTRY_PATCHER:

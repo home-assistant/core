@@ -1,13 +1,11 @@
 """Config flow for A. O. Smith integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from py_aosmith import AOSmithAPIClient, AOSmithInvalidCredentialsException
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -42,6 +40,7 @@ class AOSmithConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -64,10 +63,10 @@ class AOSmithConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_EMAIL): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_EMAIL): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
@@ -98,7 +97,7 @@ class AOSmithConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_PASSWORD): str}),
             description_placeholders={CONF_EMAIL: self._reauth_email},
             errors=errors,
         )

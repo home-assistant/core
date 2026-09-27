@@ -1,0 +1,87 @@
+{
+  "isOnline": true,
+  "lastKnownState": {
+    "AirconSystem": {
+      "MasterWCModel": "Test Model",
+      "MasterSerial": "123456",
+      "MasterWCFirmwareVersion": "1.0.0",
+      "SystemName": "Test System",
+      "Peripherals": [
+        {
+          "LogicalAddress": 1,
+          "DeviceType": "Sensor",
+          "ZoneAssignment": [1],
+          "SerialNumber": "PERIPH001",
+          "RemainingBatteryCapacity_pc": 85.0,
+          "SensorInputs": {
+            "SHTC1": {
+              "Temperature_oC": 23.5,
+              "RelativeHumidity_pc": 55.0
+            }
+          }
+        }
+      ]
+    },
+    "NV_SystemSettings": {
+      "SystemName": "Test System"
+    },
+    "UserAirconSettings": {
+      "isOn": false,
+      "Mode": "COOL",
+      "FanMode": "LOW",
+      "AwayMode": false,
+      "TemperatureSetpoint_Cool_oC": 24.0,
+      "TemperatureSetpoint_Heat_oC": 20.0,
+      "EnabledZones": [],
+      "QuietModeEnabled": false,
+      "TurboMode": {
+        "Enabled": false,
+        "Supported": true
+      },
+      "ModeSupport": {
+        "Cool": true,
+        "Heat": true,
+        "Fan": true,
+        "Auto": true,
+        "Dry": false
+      }
+    },
+    "MasterInfo": {
+      "LiveTemp_oC": 22.0,
+      "LiveHumidity_pc": 50.0,
+      "LiveOutdoorTemp_oC": 28.5
+    },
+    "LiveAircon": {
+      "SystemOn": true,
+      "CompressorMode": "COOL",
+      "CompressorCapacity": 75,
+      "FanRPM": 850,
+      "Defrost": false,
+      "CompressorChasingTemperature": 24.0,
+      "CompressorLiveTemperature": 22.5,
+      "OutdoorUnit": {
+        "ModelNumber": "OU-100",
+        "SerialNumber": "OU123456",
+        "SoftwareVersion": "2.0.0",
+        "CompSpeed": 1200.0,
+        "CompPower": 1500,
+        "CompRunningPWM": 80,
+        "CompressorOn": true,
+        "AmbTemp": 28.5,
+        "Family": "Neo"
+      }
+    },
+    "Alerts": {
+      "CleanFilter": true,
+      "Defrosting": false
+    },
+    "NV_Limits": {
+      "UserSetpoint_oC": {
+        "setCool_Min": 16.0,
+        "setCool_Max": 30.0
+      }
+    },
+    "RemoteZoneInfo": []
+  },
+  "serial_number": "123456"
+}

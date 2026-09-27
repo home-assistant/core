@@ -1,0 +1,193 @@
+{
+  "items": [
+    {
+      "deviceId": "C097277F-0DCF-0000-0000-000000000000",
+      "name": "Refrigerator",
+      "label": "Kj\u00f8leskap",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-REF-NORMAL-100001",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "1aae117e-39a8-4690-a9c9-c094b46dcf21",
+      "ownerId": "d262d517-4a99-671b-8d9c-8f2d88738136",
+      "roomId": "c64432c1-eaa3-4c05-a17a-8b01ce1dc3c5",
+      "deviceTypeName": "Samsung OCF Refrigerator",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "contactSensor",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "refrigeration",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledComponents",
+              "version": 1
+            },
+            {
+              "id": "custom.waterFilter",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Refrigerator",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "freezer",
+          "label": "freezer",
+          "capabilities": [
+            {
+              "id": "contactSensor",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "cooler",
+          "label": "cooler",
+          "capabilities": [
+            {
+              "id": "contactSensor",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "cvroom",
+          "label": "cvroom",
+          "capabilities": [
+            {
+              "id": "contactSensor",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "onedoor",
+          "label": "onedoor",
+          "capabilities": [
+            {
+              "id": "contactSensor",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2024-01-27T15:33:41.668Z",
+      "profile": {
+        "id": "10ea47c7-59fb-312d-84ec-638f155f0011"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.refrigerator",
+        "name": "Refrigerator",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "res.1.1.0,sh.1.1.0",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "DONGLE_0281|00090741|00090028001130300100000000000000",
+        "vendorId": "DA-REF-NORMAL-100001",
+        "lastSignupTime": "2024-01-27T15:33:41.520918Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

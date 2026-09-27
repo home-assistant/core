@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
@@ -24,7 +24,7 @@ def async_setup(hass: HomeAssistant) -> bool:
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/floor_registry/list",
+        probatio.Required("type"): "config/floor_registry/list",
     }
 )
 @callback
@@ -41,11 +41,11 @@ def websocket_list_floors(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/floor_registry/create",
-        vol.Required("name"): str,
-        vol.Optional("aliases"): list,
-        vol.Optional("icon"): vol.Any(str, None),
-        vol.Optional("level"): vol.Any(int, None),
+        probatio.Required("type"): "config/floor_registry/create",
+        probatio.Required("name"): str,
+        probatio.Optional("aliases"): list,
+        probatio.Optional("icon"): probatio.Any(str, None),
+        probatio.Optional("level"): probatio.Any(int, None),
     }
 )
 @websocket_api.require_admin
@@ -61,8 +61,10 @@ def websocket_create_floor(
     data.pop("id")
 
     if "aliases" in data:
-        # Convert aliases to a set
-        data["aliases"] = set(data["aliases"])
+        # Create a set for the aliases without:
+        #   - Empty strings
+        #   - Trailing and leading whitespace characters in the individual aliases
+        data["aliases"] = {s_strip for s in data["aliases"] if (s_strip := s.strip())}
 
     try:
         entry = registry.async_create(**data)
@@ -74,8 +76,8 @@ def websocket_create_floor(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/floor_registry/delete",
-        vol.Required("floor_id"): str,
+        probatio.Required("type"): "config/floor_registry/delete",
+        probatio.Required("floor_id"): str,
     }
 )
 @websocket_api.require_admin
@@ -96,12 +98,12 @@ def websocket_delete_floor(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/floor_registry/update",
-        vol.Required("floor_id"): str,
-        vol.Optional("aliases"): list,
-        vol.Optional("icon"): vol.Any(str, None),
-        vol.Optional("level"): vol.Any(int, None),
-        vol.Optional("name"): str,
+        probatio.Required("type"): "config/floor_registry/update",
+        probatio.Required("floor_id"): str,
+        probatio.Optional("aliases"): list,
+        probatio.Optional("icon"): probatio.Any(str, None),
+        probatio.Optional("level"): probatio.Any(int, None),
+        probatio.Optional("name"): str,
     }
 )
 @websocket_api.require_admin
@@ -117,8 +119,10 @@ def websocket_update_floor(
     data.pop("id")
 
     if "aliases" in data:
-        # Convert aliases to a set
-        data["aliases"] = set(data["aliases"])
+        # Create a set for the aliases without:
+        #   - Empty strings
+        #   - Trailing and leading whitespace characters in the individual aliases
+        data["aliases"] = {s_strip for s in data["aliases"] if (s_strip := s.strip())}
 
     try:
         entry = registry.async_update(**data)
@@ -130,8 +134,8 @@ def websocket_update_floor(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/floor_registry/reorder",
-        vol.Required("floor_ids"): [str],
+        probatio.Required("type"): "config/floor_registry/reorder",
+        probatio.Required("floor_ids"): [str],
     }
 )
 @websocket_api.require_admin

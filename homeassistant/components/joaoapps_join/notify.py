@@ -1,11 +1,10 @@
 """Support for Join notifications."""
 
-from __future__ import annotations
-
 import logging
+from typing import Any, override
 
+import probatio
 from pyjoin import get_devices, send_notification
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -26,10 +25,10 @@ CONF_DEVICE_NAMES = "device_names"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_DEVICE_ID): cv.string,
-        vol.Optional(CONF_DEVICE_IDS): cv.string,
-        vol.Optional(CONF_DEVICE_NAMES): cv.string,
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Optional(CONF_DEVICE_ID): cv.string,
+        probatio.Optional(CONF_DEVICE_IDS): cv.string,
+        probatio.Optional(CONF_DEVICE_NAMES): cv.string,
     }
 )
 
@@ -66,7 +65,8 @@ class JoinNotificationService(BaseNotificationService):
         self._device_ids = device_ids
         self._device_names = device_names
 
-    def send_message(self, message="", **kwargs):
+    @override
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = kwargs.get(ATTR_DATA) or {}

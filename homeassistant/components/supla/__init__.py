@@ -1,13 +1,9 @@
 """Support for Supla devices."""
 
-from __future__ import annotations
-
-import asyncio
-from datetime import timedelta
 import logging
 
 from asyncpysupla import SuplaAPI
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -15,15 +11,14 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .coordinator import SuplaCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "supla"
 CONF_SERVER = "server"
 CONF_SERVERS = "servers"
-
-SCAN_INTERVAL = timedelta(seconds=10)
 
 SUPLA_FUNCTION_HA_CMP_MAP = {
     "CONTROLLINGTHEROLLERSHUTTER": Platform.COVER,
@@ -35,20 +30,24 @@ SUPLA_FUNCTION_NONE = "NONE"
 SUPLA_SERVERS = "supla_servers"
 SUPLA_COORDINATORS = "supla_coordinators"
 
-SERVER_CONFIG = vol.Schema(
+SERVER_CONFIG = probatio.Schema(
     {
-        vol.Required(CONF_SERVER): cv.string,
-        vol.Required(CONF_ACCESS_TOKEN): cv.string,
+        probatio.Required(CONF_SERVER): cv.string,
+        probatio.Required(CONF_ACCESS_TOKEN): cv.string,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
-            {vol.Required(CONF_SERVERS): vol.All(cv.ensure_list, [SERVER_CONFIG])}
+        DOMAIN: probatio.Schema(
+            {
+                probatio.Required(CONF_SERVERS): probatio.All(
+                    cv.ensure_list, [SERVER_CONFIG]
+                )
+            }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -98,23 +97,7 @@ async def discover_devices(hass, hass_config):
     component_configs: dict[Platform, dict[str, dict]] = {}
 
     for server_name, server in hass.data[DOMAIN][SUPLA_SERVERS].items():
-
-        async def _fetch_channels():
-            async with asyncio.timeout(SCAN_INTERVAL.total_seconds()):
-                return {
-                    channel["id"]: channel
-                    for channel in await server.get_channels(  # noqa: B023
-                        include=["iodevice", "state", "connected"]
-                    )
-                }
-
-        coordinator = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name=f"{DOMAIN}-{server_name}",
-            update_method=_fetch_channels,
-            update_interval=SCAN_INTERVAL,
-        )
+        coordinator = SuplaCoordinator(hass, server, server_name)
 
         await coordinator.async_refresh()
 

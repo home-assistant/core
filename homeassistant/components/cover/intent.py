@@ -4,7 +4,8 @@ from homeassistant.const import SERVICE_CLOSE_COVER, SERVICE_OPEN_COVER
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
-from . import DOMAIN, INTENT_CLOSE_COVER, INTENT_OPEN_COVER, CoverDeviceClass
+from . import INTENT_CLOSE_COVER, INTENT_OPEN_COVER, CoverDeviceClass
+from .const import DOMAIN
 
 
 async def async_setup_intents(hass: HomeAssistant) -> None:
@@ -15,9 +16,9 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             INTENT_OPEN_COVER,
             DOMAIN,
             SERVICE_OPEN_COVER,
-            "Opening {}",
             description="Opens a cover",
             platforms={DOMAIN},
+            required_domains={DOMAIN},
             device_classes={CoverDeviceClass},
         ),
     )
@@ -27,9 +28,9 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             INTENT_CLOSE_COVER,
             DOMAIN,
             SERVICE_CLOSE_COVER,
-            "Closing {}",
             description="Closes a cover",
             platforms={DOMAIN},
+            required_domains={DOMAIN},
             device_classes={CoverDeviceClass},
         ),
     )

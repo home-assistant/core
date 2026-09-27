@@ -163,7 +163,7 @@
       "code": "CMBrewByWeightDoses",
       "index": 1,
       "output": {
-        "scaleConnected": false,
+        "scaleConnected": true,
         "availableModes": ["Continuous"],
         "mode": "Continuous",
         "doses": {

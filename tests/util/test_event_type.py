@@ -1,7 +1,5 @@
 """Test EventType implementation."""
 
-from __future__ import annotations
-
 import orjson
 
 from homeassistant.util.event_type import EventType

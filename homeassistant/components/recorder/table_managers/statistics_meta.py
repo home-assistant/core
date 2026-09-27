@@ -1,7 +1,5 @@
 """Support managing StatesMeta."""
 
-from __future__ import annotations
-
 import logging
 import threading
 from typing import TYPE_CHECKING, Any, Final, Literal
@@ -53,7 +51,8 @@ def _generate_get_metadata_stmt(
 ) -> StatementLambdaElement:
     """Generate a statement to fetch metadata with the passed filters.
 
-    Depending on the schema version, either mean_type (added in version 49) or has_mean column is used.
+    Depending on the schema version, either mean_type (added in
+    version 49) or has_mean column is used.
     """
     columns: list[InstrumentedAttribute[Any]] = list(QUERY_STATISTICS_META)
     if schema_version >= CIRCULAR_MEAN_SCHEMA_VERSION:
@@ -133,7 +132,9 @@ class StatisticsMetaManager:
                         mean_type = StatisticMeanType(row[INDEX_MEAN_TYPE])
                     except ValueError:
                         _LOGGER.warning(
-                            "Invalid mean type found for statistic_id: %s, mean_type: %s. Skipping",
+                            "Invalid mean type found for"
+                            " statistic_id: %s, mean_type:"
+                            " %s. Skipping",
                             statistic_id,
                             row[INDEX_MEAN_TYPE],
                         )
@@ -205,8 +206,10 @@ class StatisticsMetaManager:
         recorder thread.
         """
         if "mean_type" not in new_metadata:
-            # To maintain backward compatibility after adding 'mean_type' in schema version 49,
-            # we must still check for its presence. Even though type hints suggest it should always exist,
+            # To maintain backward compatibility after adding
+            # 'mean_type' in schema version 49, we must still
+            # check for its presence. Even though type hints
+            # suggest it should always exist,
             # custom integrations might omit it, so we need to guard against that.
             new_metadata["mean_type"] = (  # type: ignore[unreachable]
                 StatisticMeanType.ARITHMETIC
@@ -267,7 +270,8 @@ class StatisticsMetaManager:
     ) -> dict[str, tuple[int, StatisticMetaData]]:
         """Fetch meta data.
 
-        Returns a dict of (metadata_id, StatisticMetaData) tuples indexed by statistic_id.
+        Returns a dict of (metadata_id, StatisticMetaData) tuples
+        indexed by statistic_id.
 
         If statistic_ids is given, fetch metadata only for the listed statistics_ids.
         If statistic_type is given, fetch metadata only for statistic_ids supporting it.
@@ -285,7 +289,8 @@ class StatisticsMetaManager:
             # so the code was ripped out to reduce the maintenance
             # burden.
             raise ValueError(
-                "Providing statistic_type and statistic_source is mutually exclusive of statistic_ids"
+                "Providing statistic_type and statistic_source"
+                " is mutually exclusive of statistic_ids"
             )
 
         results = self.get_from_cache_threadsafe(statistic_ids)
@@ -379,7 +384,8 @@ class StatisticsMetaManager:
         self._assert_in_recorder_thread()
         if self.get(session, new_statistic_id):
             _LOGGER.error(
-                "Cannot rename statistic_id `%s` to `%s` because the new statistic_id is already in use",
+                "Cannot rename statistic_id `%s` to `%s` because"
+                " the new statistic_id is already in use",
                 old_statistic_id,
                 new_statistic_id,
             )

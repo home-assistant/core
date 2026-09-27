@@ -1,6 +1,6 @@
 """Plugwise Button component for Home Assistant."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.const import EntityCategory
@@ -47,6 +47,7 @@ class PlugwiseButtonEntity(PlugwiseEntity, ButtonEntity):
         self._attr_unique_id = f"{device_id}-reboot"
 
     @plugwise_command
+    @override
     async def async_press(self) -> None:
         """Triggers the Plugwise button press service."""
         await self.coordinator.api.reboot_gateway()

@@ -413,7 +413,7 @@ async def test_well_known_auth_info(
     expected_url_prefix: str,
     extra_response_data: dict[str, str],
 ) -> None:
-    """Test the well-known OAuth authorization server endpoint with different URL configurations."""
+    """Test well-known OAuth endpoint with different URL configurations."""
     await async_process_ha_core_config(hass, config)
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
     resp = await client.get(
@@ -425,6 +425,142 @@ async def test_well_known_auth_info(
         "authorization_endpoint": f"{expected_url_prefix}/auth/authorize",
         "token_endpoint": f"{expected_url_prefix}/auth/token",
         "revocation_endpoint": f"{expected_url_prefix}/auth/revoke",
+        "client_id_metadata_document_supported": True,
+        "code_challenge_methods_supported": ["S256"],
         "response_types_supported": ["code"],
         "service_documentation": "https://developers.home-assistant.io/docs/auth_api",
     }
+
+
+@pytest.mark.usefixtures("current_request_with_host")  # Has example.com host
+@pytest.mark.parametrize(
+    ("config", "expected_response"),
+    [
+        (
+            {
+                "internal_url": "http://192.168.1.100:8123",
+                # Current request matches external url
+                "external_url": "https://example.com",
+            },
+            {
+                "resource": "https://example.com",
+                "authorization_servers": ["https://example.com"],
+                "resource_documentation": "https://developers.home-assistant.io/docs/auth_api",
+            },
+        ),
+        (
+            {
+                # Current request matches internal url
+                "internal_url": "https://example.com",
+                "external_url": "https://other.com",
+            },
+            {
+                "resource": "https://example.com",
+                "authorization_servers": ["https://example.com"],
+                "resource_documentation": "https://developers.home-assistant.io/docs/auth_api",
+            },
+        ),
+    ],
+    ids=["external_url", "internal_url"],
+)
+async def test_well_known_protected_resource(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    config: dict[str, str],
+    expected_response: dict[str, Any],
+) -> None:
+    """Test the well-known OAuth protected resource metadata endpoint per RFC9728."""
+    await async_process_ha_core_config(hass, config)
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+    resp = await client.get(
+        "/.well-known/oauth-protected-resource",
+    )
+    assert resp.status == 200
+    assert await resp.json() == expected_response
+
+
+@pytest.mark.usefixtures("current_request_with_host")  # Has example.com host
+async def test_well_known_protected_resource_no_url(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+) -> None:
+    """Test the protected resource metadata returns 404 when no URL is configured."""
+    await async_process_ha_core_config(
+        hass,
+        {
+            "internal_url": "https://other.com",
+            "external_url": "https://again.com",
+        },
+    )
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+    resp = await client.get(
+        "/.well-known/oauth-protected-resource",
+    )
+    assert resp.status == 404
+
+
+@pytest.mark.parametrize(
+    ("payload", "expected_message"),
+    [
+        (
+            {
+                "code_challenge_method": "S256",
+            },
+            "code_challenge required when code_challenge_method is provided",
+        ),
+        (
+            {
+                "code_challenge": "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
+            },
+            "Transform algorithm not supported",
+        ),
+        (
+            {
+                "code_challenge": "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
+                "code_challenge_method": "plain",
+            },
+            "Transform algorithm not supported",
+        ),
+        (
+            {
+                "code_challenge": "short",
+                "code_challenge_method": "S256",
+            },
+            "Message format incorrect",
+        ),
+        (
+            {
+                "code_challenge": "a" * 43 + "=",
+                "code_challenge_method": "S256",
+            },
+            "Message format incorrect",
+        ),
+    ],
+    ids=[
+        "method_without_challenge",
+        "challenge_without_method",
+        "unsupported_plain_method",
+        "challenge_too_short",
+        "challenge_padded",
+    ],
+)
+async def test_login_flow_pkce_validation(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    payload: dict[str, str],
+    expected_message: str,
+) -> None:
+    """Test PKCE parameter validation in login_flow."""
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+            **payload,
+        },
+    )
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    result = await resp.json()
+    assert expected_message in result["message"]

@@ -5,12 +5,9 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The login details correspond to a different account. Please re-authenticate to the previously configured account."
     },
     "error": {
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -123,10 +120,6 @@
     },
     "entity_not_found": {
       "message": "Failed to send reaction for Bring! — Unknown entity {entity_id}"
-    },
-
-    "entry_not_loaded": {
-      "message": "The account associated with this Bring! list is either not loaded or disabled in Home Assistant."
     },
     "notify_missing_argument": {
       "message": "This action requires field {field}, please enter a valid value for {field}"

@@ -17,6 +17,7 @@ from .agent import (
     BackupAgentError,
     BackupAgentPlatformProtocol,
     LocalBackupAgent,
+    OnProgressCallback,
 )
 from .config import BackupConfig, CreateBackupParametersDict
 from .const import DATA_MANAGER, DOMAIN
@@ -41,6 +42,7 @@ from .manager import (
     RestoreBackupEvent,
     RestoreBackupStage,
     RestoreBackupState,
+    UploadBackupEvent,
     WrittenBackup,
 )
 from .models import AddonInfo, AgentBackup, BackupNotFound, Folder
@@ -72,9 +74,11 @@ __all__ = [
     "LocalBackupAgent",
     "ManagerBackup",
     "NewBackup",
+    "OnProgressCallback",
     "RestoreBackupEvent",
     "RestoreBackupStage",
     "RestoreBackupState",
+    "UploadBackupEvent",
     "WrittenBackup",
     "async_get_manager",
     "suggested_filename",
@@ -94,7 +98,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not with_hassio:
         reader_writer = CoreBackupReaderWriter(hass)
     else:
-        # pylint: disable-next=hass-component-root-import
+        # pylint: disable-next=home-assistant-component-root-import
         from homeassistant.components.hassio.backup import (  # noqa: PLC0415
             SupervisorBackupReaderWriter,
         )

@@ -1,8 +1,5 @@
 """Test the Matter diagnostics platform."""
 
-from __future__ import annotations
-
-import json
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -11,12 +8,16 @@ from matter_server.common.helpers.util import dataclass_from_dict
 from matter_server.common.models import ServerDiagnostics
 import pytest
 
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.components.matter.const import DOMAIN
-from homeassistant.components.matter.diagnostics import redact_matter_attributes
+from homeassistant.components.matter.diagnostics import (
+    SERVER_INFO_TO_REDACT,
+    redact_matter_attributes,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
@@ -27,19 +28,19 @@ from tests.typing import ClientSessionGenerator
 @pytest.fixture(name="config_entry_diagnostics")
 def config_entry_diagnostics_fixture() -> dict[str, Any]:
     """Fixture for config entry diagnostics."""
-    return json.loads(load_fixture("config_entry_diagnostics.json", DOMAIN))
+    return load_json_object_fixture("config_entry_diagnostics.json", DOMAIN)
 
 
 @pytest.fixture(name="config_entry_diagnostics_redacted")
 def config_entry_diagnostics_redacted_fixture() -> dict[str, Any]:
     """Fixture for redacted config entry diagnostics."""
-    return json.loads(load_fixture("config_entry_diagnostics_redacted.json", DOMAIN))
+    return load_json_object_fixture("config_entry_diagnostics_redacted.json", DOMAIN)
 
 
 @pytest.fixture(name="device_diagnostics")
 def device_diagnostics_fixture() -> dict[str, Any]:
     """Fixture for device diagnostics."""
-    return json.loads(load_fixture("nodes/device_diagnostics.json", DOMAIN))
+    return load_json_object_fixture("nodes/device_diagnostics.json", DOMAIN)
 
 
 async def test_matter_attribute_redact(device_diagnostics: dict[str, Any]) -> None:
@@ -87,7 +88,7 @@ async def test_device_diagnostics(
     """Test the device diagnostics."""
     system_info_dict = config_entry_diagnostics["info"]
     device_diagnostics_redacted = {
-        "server_info": system_info_dict,
+        "server_info": async_redact_data(system_info_dict, SERVER_INFO_TO_REDACT),
         "node": redact_matter_attributes(device_diagnostics),
     }
     server_diagnostics_response = {

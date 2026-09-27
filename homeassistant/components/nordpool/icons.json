@@ -28,8 +28,14 @@
       "exchange_rate": {
         "default": "mdi:currency-usd"
       },
+      "highest_price": {
+        "default": "mdi:cash-plus"
+      },
       "last_price": {
         "default": "mdi:cash"
+      },
+      "lowest_price": {
+        "default": "mdi:cash-minus"
       },
       "next_price": {
         "default": "mdi:cash"

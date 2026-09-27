@@ -1,10 +1,9 @@
 """Config flow to configure the SimpliSafe component."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, override
 
+import probatio
 from simplipy import API
 from simplipy.errors import InvalidCredentialsError, SimplipyError
 from simplipy.util.auth import (
@@ -12,18 +11,13 @@ from simplipy.util.auth import (
     get_auth0_code_verifier,
     get_auth_url,
 )
-import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_CODE, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
+from . import SimpliSafeConfigEntry
 from .const import DOMAIN, LOGGER
 
 CONF_AUTH_CODE = "auth_code"
@@ -32,9 +26,9 @@ DOCUMENTATION_URL = (
     "https://home-assistant.io/integrations/simplisafe#getting-an-authorization-code"
 )
 
-STEP_USER_SCHEMA = vol.Schema(
+STEP_USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_AUTH_CODE): cv.string,
+        probatio.Required(CONF_AUTH_CODE): cv.string,
     }
 )
 
@@ -67,8 +61,9 @@ class SimpliSafeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: SimpliSafeConfigEntry,
     ) -> SimpliSafeOptionsFlowHandler:
         """Define the config flow to handle options."""
         return SimpliSafeOptionsFlowHandler()
@@ -80,6 +75,7 @@ class SimpliSafeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._reauth = True
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -175,9 +171,9 @@ class SimpliSafeOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_CODE,
                         description={
                             "suggested_value": self.config_entry.options.get(CONF_CODE)

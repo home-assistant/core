@@ -1,6 +1,6 @@
 """Support for Magic Home sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import EntityCategory
@@ -37,6 +37,7 @@ class FluxPairedRemotes(FluxEntity, SensorEntity):
     _attr_translation_key = "paired_remotes"
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the number of paired remotes."""
         assert self._device.paired_remotes is not None

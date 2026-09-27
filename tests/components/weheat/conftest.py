@@ -1,6 +1,7 @@
 """Fixtures for Weheat tests."""
 
 from collections.abc import Generator
+from datetime import UTC, datetime
 from time import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -9,7 +10,7 @@ from weheat.abstractions.discovery import HeatPumpDiscovery
 from weheat.abstractions.heat_pump import HeatPump
 
 from homeassistant.components.application_credentials import (
-    DOMAIN as APPLICATION_CREDENTIALS,
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -32,7 +33,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
-    assert await async_setup_component(hass, APPLICATION_CREDENTIALS, {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,
@@ -111,6 +112,7 @@ def mock_weheat_heat_pump_instance() -> MagicMock:
     mock_heat_pump_instance.water_outlet_temperature = 22
     mock_heat_pump_instance.water_house_in_temperature = 33
     mock_heat_pump_instance.air_inlet_temperature = 44
+    mock_heat_pump_instance.air_outlet_temperature = 50
     mock_heat_pump_instance.power_input = 55
     mock_heat_pump_instance.power_output = 66
     mock_heat_pump_instance.dhw_top_temperature = 77
@@ -120,17 +122,55 @@ def mock_weheat_heat_pump_instance() -> MagicMock:
     mock_heat_pump_instance.thermostat_room_temperature_setpoint = 21
     mock_heat_pump_instance.cop = 4.5
     mock_heat_pump_instance.heat_pump_state = HeatPump.State.HEATING
-    mock_heat_pump_instance.energy_total = 12345
-    mock_heat_pump_instance.energy_output = 56789
+    mock_heat_pump_instance.energy_in_heating = 12345
+    mock_heat_pump_instance.energy_in_dhw = 6789
+    mock_heat_pump_instance.energy_in_defrost = 555
+    mock_heat_pump_instance.energy_in_cooling = 9000
+    mock_heat_pump_instance.energy_in_standby = 684
+    mock_heat_pump_instance.energy_total = 28689
+    mock_heat_pump_instance.energy_in_indoor_unit = 1042
+    mock_heat_pump_instance.energy_out_heating = 10000
+    mock_heat_pump_instance.energy_out_dhw = 6677
+    mock_heat_pump_instance.energy_out_defrost = -1200
+    mock_heat_pump_instance.energy_out_cooling = -876
+    mock_heat_pump_instance.energy_output = 14601
     mock_heat_pump_instance.compressor_rpm = 4500
     mock_heat_pump_instance.compressor_percentage = 100
     mock_heat_pump_instance.dhw_flow_volume = 1.12
+    mock_heat_pump_instance.cooling_pause_reason_code = 4
+    mock_heat_pump_instance.cooling_stop_reason_code = 0
+    mock_heat_pump_instance.last_cooling_time = datetime(
+        2025, 6, 21, 14, 30, tzinfo=UTC
+    )
+    # The heat pump only reports a cooling state during a cooling cycle, so a
+    # heating one derives its cooling activity from the latched reasons instead.
+    mock_heat_pump_instance.cooling_state = None
+    mock_heat_pump_instance.cooling_activity = HeatPump.CoolingActivity.WAITING
+    mock_heat_pump_instance.cooling_pause_reason = (
+        HeatPump.CoolingPauseReason.WATER_TEMPERATURE_BELOW_SETPOINT
+    )
+    mock_heat_pump_instance.cooling_stop_reason = HeatPump.CoolingStopReason.NONE
+    mock_heat_pump_instance.cooling_backoff = 60
+    mock_heat_pump_instance.cooling_available_from = datetime(
+        2025, 6, 21, 15, 30, tzinfo=UTC
+    )
+    mock_heat_pump_instance.cooling_start_conditions = {
+        name: name != "demand" for name in HeatPump.COOLING_START_CONDITION_BITS
+    }
+    mock_heat_pump_instance.dhw_target_temperature = 55
+    mock_heat_pump_instance.dhw_control_method = HeatPump.DhwControlMethod.FIXED
+    mock_heat_pump_instance.dhw_control_method_code = 1
     mock_heat_pump_instance.central_heating_flow_volume = 1.23
     mock_heat_pump_instance.indoor_unit_water_pump_state = False
     mock_heat_pump_instance.indoor_unit_auxiliary_pump_state = False
     mock_heat_pump_instance.indoor_unit_dhw_valve_or_pump_state = None
     mock_heat_pump_instance.indoor_unit_gas_boiler_state = False
     mock_heat_pump_instance.indoor_unit_electric_heater_state = True
+    mock_heat_pump_instance.raw_content = {
+        "heat_pump_id": TEST_HP_UUID,
+        "t_water_in": 11,
+        "total_ein_heating": 12345,
+    }
 
     return mock_heat_pump_instance
 

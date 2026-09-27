@@ -1,0 +1,54 @@
+# serializer version: 1
+# name: test_camera_setup_and_states[camera.indi_allsky-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.indi_allsky',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'indi_allsky',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1234567890abcdef1234567890abcdef',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_camera_setup_and_states[camera.indi_allsky-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.indi_allsky?token=1caab5c3b3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'INDI Allsky',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.indi_allsky',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---

@@ -1,12 +1,10 @@
 """Support for MQTT JSON lights."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -35,13 +33,9 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import (
     CONF_BRIGHTNESS,
-    CONF_COLOR_TEMP,
     CONF_EFFECT,
-    CONF_HS,
     CONF_NAME,
     CONF_OPTIMISTIC,
-    CONF_RGB,
-    CONF_XY,
     STATE_ON,
 )
 from homeassistant.core import callback
@@ -55,7 +49,6 @@ from homeassistant.util.json import json_loads_object
 from .. import subscription
 from ..config import DEFAULT_QOS, DEFAULT_RETAIN, MQTT_RW_SCHEMA
 from ..const import (
-    CONF_COLOR_MODE,
     CONF_COLOR_TEMP_KELVIN,
     CONF_COMMAND_TOPIC,
     CONF_EFFECT_LIST,
@@ -96,67 +89,53 @@ DEFAULT_NAME = "MQTT JSON Light"
 DEFAULT_FLASH = True
 DEFAULT_TRANSITION = True
 
-_PLATFORM_SCHEMA_BASE = (
+PLATFORM_SCHEMA_MODERN_JSON = (
     MQTT_RW_SCHEMA.extend(
         {
-            vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS): cv.boolean,
-            vol.Optional(
+            probatio.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS): cv.boolean,
+            probatio.Optional(
                 CONF_BRIGHTNESS_SCALE, default=DEFAULT_BRIGHTNESS_SCALE
-            ): vol.All(vol.Coerce(int), vol.Range(min=1)),
-            vol.Optional(CONF_COLOR_TEMP_KELVIN, default=False): cv.boolean,
-            vol.Optional(CONF_EFFECT, default=DEFAULT_EFFECT): cv.boolean,
-            vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_FLASH, default=DEFAULT_FLASH): cv.boolean,
-            vol.Optional(
+            ): probatio.All(probatio.Coerce(int), probatio.Range(min=1)),
+            probatio.Optional(CONF_COLOR_TEMP_KELVIN, default=False): cv.boolean,
+            probatio.Optional(CONF_EFFECT, default=DEFAULT_EFFECT): cv.boolean,
+            probatio.Optional(CONF_EFFECT_LIST): probatio.All(
+                cv.ensure_list, [cv.string]
+            ),
+            probatio.Optional(CONF_FLASH, default=DEFAULT_FLASH): cv.boolean,
+            probatio.Optional(
                 CONF_FLASH_TIME_LONG, default=DEFAULT_FLASH_TIME_LONG
             ): cv.positive_int,
-            vol.Optional(
+            probatio.Optional(
                 CONF_FLASH_TIME_SHORT, default=DEFAULT_FLASH_TIME_SHORT
             ): cv.positive_int,
-            vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
-            vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
-            vol.Optional(CONF_MAX_KELVIN): cv.positive_int,
-            vol.Optional(CONF_MIN_KELVIN): cv.positive_int,
-            vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-            vol.Optional(CONF_QOS, default=DEFAULT_QOS): vol.All(
-                vol.Coerce(int), vol.In([0, 1, 2])
+            probatio.Optional(CONF_MAX_MIREDS): cv.positive_int,
+            probatio.Optional(CONF_MIN_MIREDS): cv.positive_int,
+            probatio.Optional(CONF_MAX_KELVIN): cv.positive_int,
+            probatio.Optional(CONF_MIN_KELVIN): cv.positive_int,
+            probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+            probatio.Optional(CONF_QOS, default=DEFAULT_QOS): probatio.All(
+                probatio.Coerce(int), probatio.In([0, 1, 2])
             ),
-            vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-            vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
-            vol.Optional(CONF_SUPPORTED_COLOR_MODES): vol.All(
+            probatio.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+            probatio.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
+            probatio.Optional(CONF_SUPPORTED_COLOR_MODES): probatio.All(
                 cv.ensure_list,
-                [vol.In(VALID_COLOR_MODES)],
-                vol.Unique(),
+                [probatio.In(VALID_COLOR_MODES)],
+                probatio.Unique(),
                 valid_supported_color_modes,
             ),
-            vol.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.boolean,
-            vol.Optional(CONF_WHITE_SCALE, default=DEFAULT_WHITE_SCALE): vol.All(
-                vol.Coerce(int), vol.Range(min=1)
-            ),
+            probatio.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.boolean,
+            probatio.Optional(
+                CONF_WHITE_SCALE, default=DEFAULT_WHITE_SCALE
+            ): probatio.All(probatio.Coerce(int), probatio.Range(min=1)),
         },
     )
     .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
-# Support for legacy color_mode handling was removed with HA Core 2025.3
-# The removed attributes can be removed from the schema's from HA Core 2026.3
-DISCOVERY_SCHEMA_JSON = vol.All(
-    cv.removed(CONF_COLOR_MODE, raise_if_present=False),
-    cv.removed(CONF_COLOR_TEMP, raise_if_present=False),
-    cv.removed(CONF_HS, raise_if_present=False),
-    cv.removed(CONF_RGB, raise_if_present=False),
-    cv.removed(CONF_XY, raise_if_present=False),
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
-)
-
-PLATFORM_SCHEMA_MODERN_JSON = vol.All(
-    cv.removed(CONF_COLOR_MODE),
-    cv.removed(CONF_COLOR_TEMP),
-    cv.removed(CONF_HS),
-    cv.removed(CONF_RGB),
-    cv.removed(CONF_XY),
-    _PLATFORM_SCHEMA_BASE,
+DISCOVERY_SCHEMA_JSON = probatio.All(
+    PLATFORM_SCHEMA_MODERN_JSON.extend({}, extra=probatio.REMOVE_EXTRA),
 )
 
 
@@ -167,16 +146,17 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
-    _fixed_color_mode: ColorMode | str | None = None
     _flash_times: dict[str, int | None]
     _topic: dict[str, str | None]
     _optimistic: bool
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA_JSON
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._color_temp_kelvin = config[CONF_COLOR_TEMP_KELVIN]
@@ -211,6 +191,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         self._attr_supported_features |= (
             config[CONF_TRANSITION] and LightEntityFeature.TRANSITION
         )
+        self._attr_color_mode = ColorMode.UNKNOWN
         if supported_color_modes := self._config.get(CONF_SUPPORTED_COLOR_MODES):
             self._attr_supported_color_modes = supported_color_modes
             if self.supported_color_modes and len(self.supported_color_modes) == 1:
@@ -221,8 +202,10 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             # Brightness is supported and no supported_color_modes are set,
             # so set brightness as the supported color mode.
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+            self._attr_color_mode = ColorMode.BRIGHTNESS
         else:
             self._attr_supported_color_modes = {ColorMode.ONOFF}
+            self._attr_color_mode = ColorMode.ONOFF
 
     def _update_color(self, values: dict[str, Any]) -> None:
         color_mode: str = values["color_mode"]
@@ -276,7 +259,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 y = float(values["color"]["y"])
                 self._attr_color_mode = ColorMode.XY
                 self._attr_xy_color = (x, y)
-        except (KeyError, TypeError, ValueError):
+        except KeyError, TypeError, ValueError:
             _LOGGER.warning(
                 "Invalid or incomplete color value '%s' received for entity %s",
                 values,
@@ -314,7 +297,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
             except KeyError:
                 pass
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 _LOGGER.warning(
                     "Invalid brightness value '%s' received for entity %s",
                     values["brightness"],
@@ -326,6 +309,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 self._attr_effect = cast(str, values["effect"])
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
@@ -345,6 +329,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             },
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
@@ -356,8 +341,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             self._attr_brightness = last_attributes.get(
                 ATTR_BRIGHTNESS, self.brightness
             )
-            self._attr_color_mode = last_attributes.get(
-                ATTR_COLOR_MODE, self.color_mode
+            self._attr_color_mode = (
+                last_attributes.get(ATTR_COLOR_MODE) or self.color_mode
             )
             self._attr_color_temp_kelvin = last_attributes.get(
                 ATTR_COLOR_TEMP_KELVIN, self.color_temp_kelvin
@@ -403,6 +388,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             and color_mode in self.supported_color_modes
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on.
 
@@ -525,6 +511,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         if should_update:
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off.
 

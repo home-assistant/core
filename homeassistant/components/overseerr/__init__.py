@@ -1,8 +1,5 @@
 """The Overseerr integration."""
 
-from __future__ import annotations
-
-import json
 from typing import cast
 
 from aiohttp.hdrs import METH_POST
@@ -135,7 +132,7 @@ class OverseerrWebhookManager:
         return (
             not current_config.enabled
             or current_config.options.webhook_url not in self.webhook_urls
-            or current_config.options.json_payload != json.loads(JSON_PAYLOAD)
+            or current_config.options.json_payload != JSON_PAYLOAD
             or current_config.types != REGISTERED_NOTIFICATIONS
         )
 
@@ -159,7 +156,8 @@ class OverseerrWebhookManager:
         """Handle webhook."""
         data = await request.json()
         LOGGER.debug("Received webhook payload: %s", data)
-        if data["notification_type"].startswith("MEDIA"):
+        notification_type = data["notification_type"]
+        if notification_type.startswith(("REQUEST_", "ISSUE_", "MEDIA_")):
             await self.entry.runtime_data.async_refresh()
         async_dispatcher_send(hass, EVENT_KEY, data)
         return HomeAssistantView.json({"message": "ok"})

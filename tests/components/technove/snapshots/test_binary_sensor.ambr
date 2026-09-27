@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[binary_sensor.technove_station_battery_protected-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery protected',
     'options': dict({
     }),
     'original_device_class': None,
@@ -37,7 +39,7 @@
 # name: test_sensors[binary_sensor.technove_station_battery_protected-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TechnoVE Station Battery protected',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TechnoVE Station Battery protected',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.technove_station_battery_protected',
@@ -49,8 +51,9 @@
 # ---
 # name: test_sensors[binary_sensor.technove_station_conflict_with_power_sharing_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,9 +71,10 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Conflict with power sharing mode',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Conflict with power sharing mode',
     'platform': 'technove',
@@ -85,7 +89,8 @@
 # name: test_sensors[binary_sensor.technove_station_conflict_with_power_sharing_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TechnoVE Station Conflict with power sharing mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TechnoVE Station Conflict with power sharing mode',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.technove_station_conflict_with_power_sharing_mode',
@@ -97,8 +102,9 @@
 # ---
 # name: test_sensors[binary_sensor.technove_station_power_sharing_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +122,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power sharing mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -133,7 +140,7 @@
 # name: test_sensors[binary_sensor.technove_station_power_sharing_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TechnoVE Station Power sharing mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TechnoVE Station Power sharing mode',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.technove_station_power_sharing_mode',
@@ -145,8 +152,9 @@
 # ---
 # name: test_sensors[binary_sensor.technove_station_static_ip-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -164,6 +172,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Static IP',
     'options': dict({
     }),
     'original_device_class': None,
@@ -181,7 +190,7 @@
 # name: test_sensors[binary_sensor.technove_station_static_ip-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TechnoVE Station Static IP',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TechnoVE Station Static IP',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.technove_station_static_ip',
@@ -193,8 +202,9 @@
 # ---
 # name: test_sensors[binary_sensor.technove_station_update-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -212,6 +222,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Update',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.UPDATE: 'update'>,
@@ -229,8 +240,8 @@
 # name: test_sensors[binary_sensor.technove_station_update-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'update',
-      'friendly_name': 'TechnoVE Station Update',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'update',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TechnoVE Station Update',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.technove_station_update',

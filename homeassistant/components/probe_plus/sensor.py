@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -38,14 +39,14 @@ SENSOR_DESCRIPTIONS: tuple[ProbePlusSensorEntityDescription, ...] = (
         key="probe_temperature",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda device: device.device_state.probe_temperature,
+        value_fn=lambda device: device.device_state.probe.temperature,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     ProbePlusSensorEntityDescription(
         key="probe_battery",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda device: device.device_state.probe_battery,
+        value_fn=lambda device: device.device_state.probe.battery,
         device_class=SensorDeviceClass.BATTERY,
     ),
     ProbePlusSensorEntityDescription(
@@ -61,7 +62,7 @@ SENSOR_DESCRIPTIONS: tuple[ProbePlusSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda device: device.device_state.probe_rssi,
+        value_fn=lambda device: device.device_state.probe.rssi,
         entity_registry_enabled_default=False,
     ),
     ProbePlusSensorEntityDescription(
@@ -79,7 +80,7 @@ SENSOR_DESCRIPTIONS: tuple[ProbePlusSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.VOLTAGE,
-        value_fn=lambda device: device.device_state.probe_voltage,
+        value_fn=lambda device: device.device_state.probe.voltage,
         entity_registry_enabled_default=False,
     ),
 )
@@ -101,6 +102,7 @@ class ProbeSensor(ProbePlusEntity, RestoreSensor):
     entity_description: ProbePlusSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.device)

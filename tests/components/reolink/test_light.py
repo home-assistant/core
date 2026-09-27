@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, call, patch
 
 import pytest
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -20,10 +21,28 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
+from . import setup_integration
 from .conftest import TEST_CAM_NAME, TEST_NVR_NAME
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "reolink_host")
+async def test_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all entities."""
+    with patch(
+        "homeassistant.components.reolink.PLATFORMS",
+        [Platform.LIGHT],
+    ):
+        await setup_integration(hass, config_entry)
+        await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -74,6 +93,7 @@ async def test_light_turn_off(
 ) -> None:
     """Test light turn off service."""
     reolink_host.whiteled_color_temperature.return_value = 3000
+    reolink_host.whiteled_brightness.return_value = 75
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.LIGHT]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -81,6 +101,8 @@ async def test_light_turn_off(
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.LIGHT}.{TEST_CAM_NAME}_floodlight"
+    state = hass.states.get(entity_id)
+    assert state and state.attributes.get(ATTR_BRIGHTNESS) == 191
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -107,6 +129,7 @@ async def test_light_turn_on(
 ) -> None:
     """Test light turn on service."""
     reolink_host.whiteled_color_temperature.return_value = 3000
+    reolink_host.whiteled_brightness.return_value = None
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.LIGHT]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)

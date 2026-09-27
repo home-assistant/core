@@ -1,9 +1,7 @@
 """Sensor for Last.fm account status."""
 
-from __future__ import annotations
-
 import hashlib
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
@@ -71,11 +69,13 @@ class LastFmSensor(CoordinatorEntity[LastFMDataUpdateCoordinator], SensorEntity)
         return self.coordinator.data.get(self._username)
 
     @property
+    @override
     def available(self) -> bool:
         """If user not found in coordinator, entity is unavailable."""
         return super().available and self.user_data is not None
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return user avatar."""
         if self.user_data and self.user_data.image is not None:
@@ -83,6 +83,7 @@ class LastFmSensor(CoordinatorEntity[LastFMDataUpdateCoordinator], SensorEntity)
         return None
 
     @property
+    @override
     def native_value(self) -> str:
         """Return value of sensor."""
         if self.user_data and self.user_data.now_playing is not None:
@@ -90,6 +91,7 @@ class LastFmSensor(CoordinatorEntity[LastFMDataUpdateCoordinator], SensorEntity)
         return STATE_NOT_SCROBBLING
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return state attributes."""
         play_count = None

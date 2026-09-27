@@ -1,10 +1,9 @@
 """SwitchBee integration Coordinator."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from datetime import timedelta
 import logging
+from typing import override
 
 from switchbee.api import CentralUnitPolling, CentralUnitWsRPC
 from switchbee.api.central_unit import SwitchBeeError
@@ -19,16 +18,18 @@ from .const import DOMAIN, SCAN_INTERVAL_SEC
 
 _LOGGER = logging.getLogger(__name__)
 
+type SwitchBeeConfigEntry = ConfigEntry[SwitchBeeCoordinator]
+
 
 class SwitchBeeCoordinator(DataUpdateCoordinator[Mapping[int, SwitchBeeBaseDevice]]):
     """Class to manage fetching SwitchBee data API."""
 
-    config_entry: ConfigEntry
+    config_entry: SwitchBeeConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SwitchBeeConfigEntry,
         swb_api: CentralUnitPolling | CentralUnitWsRPC,
     ) -> None:
         """Initialize."""
@@ -59,6 +60,7 @@ class SwitchBeeCoordinator(DataUpdateCoordinator[Mapping[int, SwitchBeeBaseDevic
         _LOGGER.debug("Received update: %s", push_data)
         self.async_set_updated_data(self.api.devices)
 
+    @override
     async def _async_update_data(self) -> Mapping[int, SwitchBeeBaseDevice]:
         """Update data via library."""
 

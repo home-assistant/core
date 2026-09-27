@@ -1,8 +1,7 @@
 """Support for Blink system camera sensors."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -94,6 +93,7 @@ class BlinkSensor(CoordinatorEntity[BlinkUpdateCoordinator], SensorEntity):
         self._update_attr()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle coordinator update."""
         self._update_attr()

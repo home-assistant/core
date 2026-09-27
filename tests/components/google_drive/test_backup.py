@@ -1,5 +1,6 @@
 """Test the Google Drive backup platform."""
 
+from collections.abc import AsyncIterator
 from io import StringIO
 import json
 from typing import Any
@@ -16,6 +17,7 @@ from homeassistant.components.backup import (
     AgentBackup,
 )
 from homeassistant.components.google_drive import DOMAIN
+from homeassistant.components.google_drive.backup import GoogleDriveBackupAgent
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -59,6 +61,35 @@ TEST_AGENT_BACKUP_RESULT = {
 }
 
 
+async def consume_stream(
+    file_metadata: Any,
+    open_stream: Any,
+    *args: Any,
+    **kwargs: Any,
+) -> None:
+    """Consume the stream from the open_stream callable."""
+    stream = await open_stream()
+    async for _ in stream:
+        pass
+
+
+async def consume_stream_twice(
+    file_metadata: Any,
+    open_stream: Any,
+    *args: Any,
+    **kwargs: Any,
+) -> None:
+    """Consume the stream twice, like a resumable upload that had to retry.
+
+    A retried upload reopens the stream from the beginning and skips whatever
+    the server already received.
+    """
+    for _ in range(2):
+        stream = await open_stream()
+        async for _ in stream:
+            pass
+
+
 @pytest.fixture(autouse=True)
 async def setup_integration(
     hass: HomeAssistant,
@@ -68,11 +99,11 @@ async def setup_integration(
     """Set up Google Drive integration."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
     mock_api.list_files = AsyncMock(
         return_value={"files": [{"id": "HA folder ID", "name": "HA folder name"}]}
     )
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
 
 
 async def test_agents_info(
@@ -127,6 +158,84 @@ async def test_agents_list_backups(
     assert response["result"]["agent_errors"] == {}
     assert response["result"]["backups"] == [TEST_AGENT_BACKUP_RESULT]
     assert [tuple(mock_call) for mock_call in mock_api.mock_calls] == snapshot
+
+
+async def test_agents_list_backups_ignores_unreadable_metadata(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_api: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a backup whose description cannot be read is skipped.
+
+    The description is editable from the Google Drive UI, so one unreadable
+    file must not hide the others.
+    """
+    mock_api.list_files = AsyncMock(
+        return_value={
+            "files": [
+                {"id": "no description at all"},
+                {"id": "not json", "description": "cleared by the user"},
+                {"id": "not backup metadata", "description": '{"foo": "bar"}'},
+                {"description": json.dumps(TEST_AGENT_BACKUP.as_dict())},
+            ]
+        }
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+    assert response["result"]["backups"] == [TEST_AGENT_BACKUP_RESULT]
+    assert "Ignoring backup file no description at all" in caplog.text
+    assert "Ignoring backup file not json" in caplog.text
+    assert "Ignoring backup file not backup metadata" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        # The backup manager calls extra_metadata.get() on every backup.
+        ("extra_metadata", []),
+        # The backup manager uses backup_id as a dict key.
+        ("backup_id", ["not a string"]),
+    ],
+)
+async def test_agents_list_backups_ignores_wrong_typed_metadata(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_api: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    field: str,
+    value: Any,
+) -> None:
+    """Test that metadata which decodes but has the wrong types is skipped.
+
+    AgentBackup.from_dict does not enforce its annotations, so such a backup is
+    only rejected once the backup manager uses it.
+    """
+    wrong_types = TEST_AGENT_BACKUP.as_dict()
+    wrong_types[field] = value
+    mock_api.list_files = AsyncMock(
+        return_value={
+            "files": [
+                {"id": "wrong types", "description": json.dumps(wrong_types)},
+                {"description": json.dumps(TEST_AGENT_BACKUP.as_dict())},
+            ]
+        }
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+    assert response["result"]["backups"] == [TEST_AGENT_BACKUP_RESULT]
+    assert "Ignoring backup file wrong types" in caplog.text
+    assert f"{field} is not a" in caplog.text
 
 
 async def test_agents_list_backups_fail(
@@ -283,7 +392,7 @@ async def test_agents_upload(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test agent upload backup."""
-    mock_api.resumable_upload_file = AsyncMock(return_value=None)
+    mock_api.resumable_upload_file = AsyncMock(side_effect=consume_stream)
 
     client = await hass_client()
 
@@ -324,7 +433,7 @@ async def test_agents_upload_create_folder_if_missing(
     mock_api.create_file = AsyncMock(
         return_value={"id": "new folder id", "name": "Home Assistant"}
     )
-    mock_api.resumable_upload_file = AsyncMock(return_value=None)
+    mock_api.resumable_upload_file = AsyncMock(side_effect=consume_stream)
 
     client = await hass_client()
 
@@ -354,6 +463,68 @@ async def test_agents_upload_create_folder_if_missing(
     assert [tuple(mock_call) for mock_call in mock_api.mock_calls] == snapshot
 
 
+async def test_agents_upload_progress(
+    hass: HomeAssistant,
+    mock_api: MagicMock,
+) -> None:
+    """Test agent upload reports progress."""
+    mock_api.resumable_upload_file = AsyncMock(side_effect=consume_stream)
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    agent = GoogleDriveBackupAgent(entries[0])
+
+    progress_calls = []
+
+    def on_progress(*, bytes_uploaded: int, **kwargs: Any) -> None:
+        progress_calls.append(bytes_uploaded)
+
+    async def open_stream() -> AsyncIterator[bytes]:
+        async def stream() -> AsyncIterator[bytes]:
+            yield b"chunk1"
+            yield b"chunk2"
+
+        return stream()
+
+    await agent.async_upload_backup(
+        open_stream=open_stream,
+        backup=TEST_AGENT_BACKUP,
+        on_progress=on_progress,
+    )
+
+    assert progress_calls == [6, 12]
+
+
+async def test_agents_upload_progress_does_not_go_backwards_on_retry(
+    hass: HomeAssistant,
+    mock_api: MagicMock,
+) -> None:
+    """Test agent upload progress is not reported twice when the upload retries."""
+    mock_api.resumable_upload_file = AsyncMock(side_effect=consume_stream_twice)
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    agent = GoogleDriveBackupAgent(entries[0])
+
+    progress_calls = []
+
+    def on_progress(*, bytes_uploaded: int, **kwargs: Any) -> None:
+        progress_calls.append(bytes_uploaded)
+
+    async def open_stream() -> AsyncIterator[bytes]:
+        async def stream() -> AsyncIterator[bytes]:
+            yield b"chunk1"
+            yield b"chunk2"
+
+        return stream()
+
+    await agent.async_upload_backup(
+        open_stream=open_stream,
+        backup=TEST_AGENT_BACKUP,
+        on_progress=on_progress,
+    )
+
+    assert progress_calls == [6, 12]
+
+
 async def test_agents_upload_fail(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -363,6 +534,13 @@ async def test_agents_upload_fail(
     """Test agent upload backup fails."""
     mock_api.resumable_upload_file = AsyncMock(
         side_effect=GoogleDriveApiError("some error")
+    )
+    mock_api.list_files = AsyncMock(
+        side_effect=[
+            {"files": [{"id": "HA folder ID", "name": "HA folder name"}]},
+            {"files": []},
+            {"files": [{"id": "HA folder ID", "name": "HA folder name"}]},
+        ]
     )
 
     client = await hass_client()

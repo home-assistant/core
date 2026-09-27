@@ -5,18 +5,21 @@ from datetime import datetime, timedelta
 from functools import partial
 from typing import Any, NamedTuple
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import sensor
+from homeassistant.components.input_datetime import DOMAIN as INPUT_DATETIME_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
     CONF_AT,
     CONF_ENTITY_ID,
     CONF_OFFSET,
     CONF_PLATFORM,
+    CONF_WEEKDAY,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     WEEKDAYS,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -38,15 +41,15 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-CONF_WEEKDAY = "weekday"
+_TIME_TRIGGER_ENTITY = probatio.All(str, cv.entity_domain(["input_datetime", "sensor"]))
+_TIME_AT_SCHEMA = probatio.Any(cv.time, _TIME_TRIGGER_ENTITY)
 
-_TIME_TRIGGER_ENTITY = vol.All(str, cv.entity_domain(["input_datetime", "sensor"]))
-_TIME_AT_SCHEMA = vol.Any(cv.time, _TIME_TRIGGER_ENTITY)
-
-_TIME_TRIGGER_ENTITY_WITH_OFFSET = vol.Schema(
+_TIME_TRIGGER_ENTITY_WITH_OFFSET = probatio.Schema(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_domain(["input_datetime", "sensor"]),
-        vol.Optional(CONF_OFFSET): cv.time_period,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_domain(
+            ["input_datetime", "sensor"]
+        ),
+        probatio.Optional(CONF_OFFSET): cv.time_period,
     }
 )
 
@@ -61,25 +64,28 @@ def valid_at_template(value: Any) -> template.Template:
     return tpl
 
 
-_TIME_TRIGGER_SCHEMA = vol.Any(
+_TIME_TRIGGER_SCHEMA = probatio.Any(
     cv.time,
     _TIME_TRIGGER_ENTITY,
     _TIME_TRIGGER_ENTITY_WITH_OFFSET,
     valid_at_template,
     msg=(
         "Expected HH:MM, HH:MM:SS, an Entity ID with domain 'input_datetime' or "
-        "'sensor', a combination of a timestamp sensor entity and an offset, or Limited Template"
+        "'sensor', a combination of a timestamp sensor entity"
+        " and an offset, or Limited Template"
     ),
 )
 
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): "time",
-        vol.Required(CONF_AT): vol.All(cv.ensure_list, [_TIME_TRIGGER_SCHEMA]),
-        vol.Optional(CONF_WEEKDAY): vol.Any(
-            vol.In(WEEKDAYS),
-            vol.All(cv.ensure_list, [vol.In(WEEKDAYS)]),
+        probatio.Required(CONF_PLATFORM): "time",
+        probatio.Required(CONF_AT): probatio.All(
+            cv.ensure_list, [_TIME_TRIGGER_SCHEMA]
+        ),
+        probatio.Optional(CONF_WEEKDAY): probatio.Any(
+            probatio.In(WEEKDAYS),
+            probatio.All(cv.ensure_list, [probatio.In(WEEKDAYS)]),
         ),
     }
 )
@@ -160,7 +166,7 @@ async def async_attach_trigger(  # noqa: C901
         trigger_dt: datetime | None
 
         # Check state of entity. If valid, set up a listener.
-        if new_state.domain == "input_datetime":
+        if new_state.domain == INPUT_DATETIME_DOMAIN:
             if has_date := new_state.attributes["has_date"]:
                 year = new_state.attributes["year"]
                 month = new_state.attributes["month"]
@@ -223,9 +229,9 @@ async def async_attach_trigger(  # noqa: C901
                     second=second,
                 )
         elif (
-            new_state.domain == "sensor"
-            and new_state.attributes.get(ATTR_DEVICE_CLASS)
-            == sensor.SensorDeviceClass.TIMESTAMP
+            new_state.domain == SENSOR_DOMAIN
+            and new_state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
+            in (sensor.SensorDeviceClass.TIMESTAMP, sensor.SensorDeviceClass.UPTIME)
             and new_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
         ):
             trigger_dt = dt_util.parse_datetime(new_state.state)
@@ -255,19 +261,21 @@ async def async_attach_trigger(  # noqa: C901
             render = template.render_complex(at_time, variables, limited=True)
             try:
                 at_time = _TIME_AT_SCHEMA(render)
-            except vol.Invalid as exc:
+            except probatio.Invalid as exc:
                 raise HomeAssistantError(
-                    f"Limited Template for 'at' rendered a unexpected value '{render}', expected HH:MM, "
-                    f"HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'"
+                    f"Limited Template for 'at' rendered a"
+                    f" unexpected value '{render}', expected"
+                    " HH:MM, HH:MM:SS or Entity ID with domain"
+                    " 'input_datetime' or 'sensor'"
                 ) from exc
 
         if isinstance(at_time, str):
             # entity
             update_entity_trigger(at_time, new_state=hass.states.get(at_time))
             to_track.append(TrackEntity(at_time, update_entity_trigger_event))
-        elif isinstance(at_time, dict) and CONF_OFFSET in at_time:
-            # entity with offset
-            entity_id: str = at_time.get(CONF_ENTITY_ID, "")
+        elif isinstance(at_time, dict):
+            # entity with optional offset
+            entity_id: str = at_time[CONF_ENTITY_ID]
             offset: timedelta = at_time.get(CONF_OFFSET, timedelta(0))
             update_entity_trigger(
                 entity_id, new_state=hass.states.get(entity_id), offset=offset

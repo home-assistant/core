@@ -1,7 +1,5 @@
 """Websocket API for the history integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
@@ -9,8 +7,10 @@ from datetime import datetime as dt, timedelta
 import logging
 from typing import Any, cast
 
-import voluptuous as vol
+import probatio
 
+from homeassistant.auth.permissions import filter_entity_ids_by_permission
+from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components import websocket_api
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.websocket_api import ActiveConnection, messages
@@ -95,14 +95,14 @@ def _ws_get_significant_states(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "history/history_during_period",
-        vol.Required("start_time"): str,
-        vol.Optional("end_time"): str,
-        vol.Required("entity_ids"): [str],
-        vol.Optional("include_start_time_state", default=True): bool,
-        vol.Optional("significant_changes_only", default=True): bool,
-        vol.Optional("minimal_response", default=False): bool,
-        vol.Optional("no_attributes", default=False): bool,
+        probatio.Required("type"): "history/history_during_period",
+        probatio.Required("start_time"): str,
+        probatio.Optional("end_time"): str,
+        probatio.Required("entity_ids"): [str],
+        probatio.Optional("include_start_time_state", default=True): bool,
+        probatio.Optional("significant_changes_only", default=True): bool,
+        probatio.Optional("minimal_response", default=False): bool,
+        probatio.Optional("no_attributes", default=False): bool,
     }
 )
 @websocket_api.async_response
@@ -137,6 +137,13 @@ async def ws_get_history_during_period(
         if not hass.states.get(entity_id) and not valid_entity_id(entity_id):
             connection.send_error(msg["id"], "invalid_entity_ids", "Invalid entity_ids")
             return
+
+    entity_ids = filter_entity_ids_by_permission(
+        connection.user, entity_ids, POLICY_READ
+    )
+    if not entity_ids:
+        connection.send_result(msg["id"], {})
+        return
 
     include_start_time_state = msg["include_start_time_state"]
     no_attributes = msg["no_attributes"]
@@ -401,14 +408,14 @@ def _async_subscribe_events(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "history/stream",
-        vol.Required("start_time"): str,
-        vol.Optional("end_time"): str,
-        vol.Required("entity_ids"): [str],
-        vol.Optional("include_start_time_state", default=True): bool,
-        vol.Optional("significant_changes_only", default=True): bool,
-        vol.Optional("minimal_response", default=False): bool,
-        vol.Optional("no_attributes", default=False): bool,
+        probatio.Required("type"): "history/stream",
+        probatio.Required("start_time"): str,
+        probatio.Optional("end_time"): str,
+        probatio.Required("entity_ids"): [str],
+        probatio.Optional("include_start_time_state", default=True): bool,
+        probatio.Optional("significant_changes_only", default=True): bool,
+        probatio.Optional("minimal_response", default=False): bool,
+        probatio.Optional("no_attributes", default=False): bool,
     }
 )
 @websocket_api.async_response
@@ -443,6 +450,13 @@ async def ws_stream(
         if not hass.states.get(entity_id) and not valid_entity_id(entity_id):
             connection.send_error(msg["id"], "invalid_entity_ids", "Invalid entity_ids")
             return
+
+    entity_ids = filter_entity_ids_by_permission(
+        connection.user, entity_ids, POLICY_READ
+    )
+    if not entity_ids:
+        _async_send_empty_response(connection, msg_id, start_time, end_time)
+        return
 
     include_start_time_state = msg["include_start_time_state"]
     significant_changes_only = msg["significant_changes_only"]

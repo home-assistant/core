@@ -3,12 +3,13 @@
 from collections.abc import Callable
 import json
 
-import voluptuous as vol
+import probatio
 import yaml
 
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import async_register_admin_service
 
 from .const import ATTR_FILE_ENCODING, ATTR_FILE_NAME, DOMAIN, SERVICE_READ_FILE
 
@@ -17,14 +18,15 @@ from .const import ATTR_FILE_ENCODING, ATTR_FILE_NAME, DOMAIN, SERVICE_READ_FILE
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register services for File integration."""
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_READ_FILE,
         read_file,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_FILE_NAME): cv.string,
-                vol.Required(ATTR_FILE_ENCODING): cv.string,
+                probatio.Required(ATTR_FILE_NAME): cv.string,
+                probatio.Required(ATTR_FILE_ENCODING): cv.string,
             }
         ),
         supports_response=SupportsResponse.ONLY,

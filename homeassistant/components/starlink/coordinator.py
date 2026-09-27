@@ -1,11 +1,10 @@
 """Contains the shared Coordinator for Starlink systems."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 from zoneinfo import ZoneInfo
 
 from starlink_grpc import (
@@ -72,7 +71,6 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
     def _get_starlink_data(self) -> StarlinkData:
         """Retrieve Starlink data."""
         context = self.channel_context
-        status = status_data(context)
         location = location_data(context)
         sleep = get_sleep_config(context)
         status, obstruction, alert = status_data(context)
@@ -86,6 +84,7 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
             location, sleep, status, obstruction, alert, usage, consumption
         )
 
+    @override
     async def _async_update_data(self) -> StarlinkData:
         async with asyncio.timeout(4):
             try:
@@ -143,7 +142,8 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         """Set Starlink system sleep schedule end time."""
         duration = end - self.data.sleep[0]
         if duration < 0:
-            # If the duration pushed us into the next day, add one days worth to correct that.
+            # If the duration pushed us into the next day,
+            # add one days worth to correct that.
             duration += 1440
         async with asyncio.timeout(4):
             try:

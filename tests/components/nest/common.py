@@ -1,7 +1,5 @@
 """Common libraries for test setup."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Generator
 import copy
 from dataclasses import dataclass
@@ -87,8 +85,8 @@ class CreateDevice:
     ) -> None:
         """Create a new device with the specifeid traits."""
         data = copy.deepcopy(self.data)
-        data.update(raw_data if raw_data else {})
-        data["traits"].update(raw_traits if raw_traits else {})
+        data.update(raw_data or {})
+        data["traits"].update(raw_traits or {})
         self.devices.append(data)
 
 

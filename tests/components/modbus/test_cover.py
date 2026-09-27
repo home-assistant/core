@@ -187,7 +187,7 @@ async def test_service_cover_update(hass: HomeAssistant, mock_modbus_ha) -> None
     """Run test for service homeassistant.update_entity."""
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
-        "update_entity",
+        SERVICE_UPDATE_ENTITY,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )

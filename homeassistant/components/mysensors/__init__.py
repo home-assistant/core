@@ -1,36 +1,23 @@
 """Connect to a MySensors gateway via pymysensors API."""
 
-from __future__ import annotations
-
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 import logging
 
-from mysensors import BaseAsyncGateway
-
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    ATTR_DEVICES,
-    DOMAIN,
-    MYSENSORS_DISCOVERED_NODES,
-    MYSENSORS_GATEWAYS,
-    PLATFORMS,
-    DevId,
-    DiscoveryInfo,
-    SensorType,
-)
-from .entity import MySensorsChildEntity, get_mysensors_devices
+from .const import ATTR_DEVICES, DOMAIN, PLATFORMS, DevId, DiscoveryInfo, SensorType
+from .entity import MySensorsChildEntity
 from .gateway import finish_setup, gw_stop, setup_gateway
+from .helpers import remove_node_dev_ids
+from .models import MySensorsConfigEntry, MySensorsData
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_HASS_CONFIG = "hass_config"
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MySensorsConfigEntry) -> bool:
     """Set up an instance of the MySensors integration.
 
     Every instance has a connection to exactly one Gateway.
@@ -41,40 +28,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Gateway setup failed for %s", entry.data)
         return False
 
-    mysensors_data = hass.data.setdefault(DOMAIN, {})
-    if MYSENSORS_GATEWAYS not in mysensors_data:
-        mysensors_data[MYSENSORS_GATEWAYS] = {}
-    mysensors_data[MYSENSORS_GATEWAYS][entry.entry_id] = gateway
+    entry.runtime_data = MySensorsData(gateway=gateway)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    await finish_setup(hass, entry, gateway)
+    await finish_setup(hass, entry)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MySensorsConfigEntry) -> bool:
     """Remove an instance of the MySensors integration."""
-
-    gateway: BaseAsyncGateway = hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id]
-
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if not unload_ok:
         return False
 
-    del hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id]
-    hass.data[DOMAIN].pop(MYSENSORS_DISCOVERED_NODES.format(entry.entry_id), None)
-
-    await gw_stop(hass, entry, gateway)
+    await gw_stop(entry)
     return True
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant,
+    config_entry: MySensorsConfigEntry,
+    device_entry: AnyDeviceEntry,
 ) -> bool:
     """Remove a MySensors config entry from a device."""
-    gateway: BaseAsyncGateway = hass.data[DOMAIN][MYSENSORS_GATEWAYS][
-        config_entry.entry_id
-    ]
+    if not isinstance(device_entry, DeviceEntry):
+        # This integration does not create child devices.
+        return False
+    gateway = config_entry.runtime_data.gateway
     device_id = next(
         device_id for domain, device_id in device_entry.identifiers if domain == DOMAIN
     )
@@ -83,51 +64,35 @@ async def async_remove_config_entry_device(
     gateway.tasks.persistence.need_save = True
 
     # remove node from discovered nodes
-    hass.data[DOMAIN].setdefault(
-        MYSENSORS_DISCOVERED_NODES.format(config_entry.entry_id), set()
-    ).remove(node_id)
+    config_entry.runtime_data.discovered_nodes.discard(node_id)
+    remove_node_dev_ids(config_entry, node_id)
 
     return True
 
 
 @callback
 def setup_mysensors_platform(
-    hass: HomeAssistant,
+    config_entry: MySensorsConfigEntry,
     domain: Platform,  # hass platform name
     discovery_info: DiscoveryInfo,
     device_class: type[MySensorsChildEntity]
     | Mapping[SensorType, type[MySensorsChildEntity]],
-    device_args: (
-        tuple | None
-    ) = None,  # extra arguments that will be given to the entity constructor
-    async_add_entities: Callable | None = None,
-) -> list[MySensorsChildEntity] | None:
-    """Set up a MySensors platform.
-
-    Sets up a bunch of instances of a single platform that is supported by this
-    integration.
-
-    The function is given a list of device ids, each one describing an instance
-    to set up. The function is also given a class.
-
-    A new instance of the class is created for every device id, and the device
-    id is given to the constructor of the class.
-    """
-    if device_args is None:
-        device_args = ()
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up entities for newly discovered devices on a MySensors platform."""
     new_devices: list[MySensorsChildEntity] = []
     new_dev_ids: list[DevId] = discovery_info[ATTR_DEVICES]
+    dev_ids = config_entry.runtime_data.discovered_dev_ids[domain]
+    gateway = config_entry.runtime_data.gateway
     for dev_id in new_dev_ids:
-        devices: dict[DevId, MySensorsChildEntity] = get_mysensors_devices(hass, domain)
-        if dev_id in devices:
+        if dev_id in dev_ids:
             _LOGGER.debug(
                 "Skipping setup of %s for platform %s as it already exists",
                 dev_id,
                 domain,
             )
             continue
-        gateway_id, node_id, child_id, value_type = dev_id
-        gateway: BaseAsyncGateway = hass.data[DOMAIN][MYSENSORS_GATEWAYS][gateway_id]
+        _gateway_id, node_id, child_id, value_type = dev_id
 
         if isinstance(device_class, dict):
             child = gateway.sensors[node_id].children[child_id]
@@ -136,11 +101,10 @@ def setup_mysensors_platform(
         else:
             device_class_copy = device_class
 
-        args_copy = (*device_args, gateway_id, gateway, node_id, child_id, value_type)
-        devices[dev_id] = device_class_copy(*args_copy)
-        new_devices.append(devices[dev_id])
+        dev_ids.add(dev_id)
+        new_devices.append(
+            device_class_copy(config_entry, node_id, child_id, value_type)
+        )
     if new_devices:
         _LOGGER.debug("Adding new devices: %s", new_devices)
-        if async_add_entities is not None:
-            async_add_entities(new_devices)
-    return new_devices
+        async_add_entities(new_devices)

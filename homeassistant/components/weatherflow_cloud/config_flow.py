@@ -1,12 +1,10 @@
 """Config flow for WeatherflowCloud integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientResponseError
-import voluptuous as vol
+import probatio
 from weatherflow4py.api import WeatherFlowRestAPI
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -58,10 +56,11 @@ class WeatherFlowCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_TOKEN): str}),
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -80,6 +79,6 @@ class WeatherFlowCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_TOKEN): str}),
             errors=errors,
         )

@@ -2,9 +2,10 @@
 
 import logging
 from queue import Empty, Full, Queue
+from typing import override
 
+import probatio
 import temescal
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -12,7 +13,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from .const import DEFAULT_PORT, DOMAIN
 
 DATA_SCHEMA = {
-    vol.Required(CONF_HOST): str,
+    probatio.Required(CONF_HOST): str,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,6 +73,7 @@ class LGSoundbarConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
@@ -105,6 +107,6 @@ class LGSoundbarConfigFlow(ConfigFlow, domain=DOMAIN):
         """Show the form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(DATA_SCHEMA),
-            errors=errors if errors else {},
+            data_schema=probatio.Schema(DATA_SCHEMA),
+            errors=errors or {},
         )

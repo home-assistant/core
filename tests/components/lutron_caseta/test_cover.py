@@ -6,16 +6,18 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_STOP_COVER,
+    CoverEntityFeature,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MockBridge, async_setup_integration
+from . import MockBridge, MockBridgeWithOpenCloseStopCover, async_setup_integration
 
 
 @pytest.fixture
@@ -45,9 +47,10 @@ async def test_cover_unique_id(
     """Test a cover unique ID."""
     await async_setup_integration(hass, MockBridge)
 
-    cover_entity_id = "cover.basement_bedroom_left_shade"
+    cover_entity_id = "cover.basement_bedroom_basement_bedroom_left_shade"
 
-    # Assert that Caseta covers will have the bridge serial hash and the zone id as the uniqueID
+    # Assert that Caseta covers will have the bridge serial hash
+    # and the zone id as the uniqueID
     assert entity_registry.async_get(cover_entity_id).unique_id == "000004d2_802"
 
 
@@ -56,7 +59,7 @@ async def test_cover_open_close_using_set_value(
 ) -> None:
     """Test that open/close commands use set_value to avoid stuttering."""
     mock_instance = mock_bridge_with_cover_mocks
-    cover_entity_id = "cover.basement_bedroom_left_shade"
+    cover_entity_id = "cover.basement_bedroom_basement_bedroom_left_shade"
 
     # Test opening the cover
     await hass.services.async_call(
@@ -91,7 +94,7 @@ async def test_cover_stop_with_direction_tracking(
 ) -> None:
     """Test that stop command sends appropriate directional command first."""
     mock_instance = mock_bridge_with_cover_mocks
-    cover_entity_id = "cover.basement_bedroom_left_shade"
+    cover_entity_id = "cover.basement_bedroom_basement_bedroom_left_shade"
 
     # Simulate shade moving up (opening)
     mock_instance.devices["802"]["current_state"] = 30
@@ -147,7 +150,7 @@ async def test_cover_stop_at_endpoints(
 ) -> None:
     """Test stop command behavior when shade is at fully open or closed."""
     mock_instance = mock_bridge_with_cover_mocks
-    cover_entity_id = "cover.basement_bedroom_left_shade"
+    cover_entity_id = "cover.basement_bedroom_basement_bedroom_left_shade"
 
     # Test stop at fully open (100) - should infer it was opening
     mock_instance.devices["802"]["current_state"] = 100
@@ -191,7 +194,7 @@ async def test_cover_position_heuristic_fallback(
 ) -> None:
     """Test stop command uses position heuristic when movement direction is unknown."""
     mock_instance = mock_bridge_with_cover_mocks
-    cover_entity_id = "cover.basement_bedroom_left_shade"
+    cover_entity_id = "cover.basement_bedroom_basement_bedroom_left_shade"
 
     # Test stop at position < 50 with no movement
     # Update the device data directly in the bridge's devices dict
@@ -236,7 +239,7 @@ async def test_cover_stopped_movement_detection(
 ) -> None:
     """Test that movement direction is set to STOPPED when position doesn't change."""
     mock_instance = mock_bridge_with_cover_mocks
-    cover_entity_id = "cover.basement_bedroom_left_shade"
+    cover_entity_id = "cover.basement_bedroom_basement_bedroom_left_shade"
 
     # Set initial position
     mock_instance.devices["802"]["current_state"] = 50
@@ -266,7 +269,7 @@ async def test_cover_startup_with_shade_in_motion(
 ) -> None:
     """Test stop command when HA starts with shade already in motion."""
     mock_instance = mock_bridge_with_cover_mocks
-    cover_entity_id = "cover.basement_bedroom_left_shade"
+    cover_entity_id = "cover.basement_bedroom_basement_bedroom_left_shade"
 
     # Shade starts at position 50 (simulating HA startup with shade in motion)
     # First stop without seeing movement should use position heuristic
@@ -301,3 +304,76 @@ async def test_cover_startup_with_shade_in_motion(
     # Should now correctly send lower_cover since we detected downward movement
     mock_instance.lower_cover.assert_called_with("802")
     mock_instance.stop_cover.assert_called_with("802")
+
+
+async def test_open_close_stop_cover_supported_features(hass: HomeAssistant) -> None:
+    """Test an OpenCloseStop zone exposes open/close/stop but not set_position."""
+    await async_setup_integration(hass, MockBridgeWithOpenCloseStopCover)
+
+    cover_entity_id = "cover.basement_bedroom_basement_bedroom_armor_screen"
+    state = hass.states.get(cover_entity_id)
+
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
+        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+    )
+    assert ATTR_CURRENT_POSITION not in state.attributes
+
+
+@pytest.fixture
+async def mock_open_close_stop_bridge(hass: HomeAssistant) -> MockBridge:
+    """Set up a bridge exposing an OpenCloseStop cover with mocked methods."""
+    instance = MockBridgeWithOpenCloseStopCover()
+
+    def factory(*args: Any, **kwargs: Any) -> MockBridge:
+        """Return the mock bridge instance."""
+        return instance
+
+    instance.set_value = AsyncMock()
+    instance.raise_cover = AsyncMock()
+    instance.lower_cover = AsyncMock()
+    instance.stop_cover = AsyncMock()
+
+    await async_setup_integration(hass, factory)
+    await hass.async_block_till_done()
+
+    return instance
+
+
+async def test_open_close_stop_cover_uses_raise_lower(
+    hass: HomeAssistant, mock_open_close_stop_bridge: MockBridge
+) -> None:
+    """Test an OpenCloseStop zone uses Raise/Lower rather than set_value.
+
+    These zones do not accept a level, so set_value must not be used.
+    """
+    mock_instance = mock_open_close_stop_bridge
+    cover_entity_id = "cover.basement_bedroom_basement_bedroom_armor_screen"
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
+    mock_instance.lower_cover.assert_called_once_with("805")
+    mock_instance.set_value.assert_not_called()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
+    mock_instance.raise_cover.assert_called_once_with("805")
+    mock_instance.set_value.assert_not_called()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
+    mock_instance.stop_cover.assert_called_once_with("805")
+    mock_instance.set_value.assert_not_called()

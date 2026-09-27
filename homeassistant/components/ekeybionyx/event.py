@@ -1,5 +1,8 @@
 """Event platform for ekey bionyx integration."""
 
+from http import HTTPStatus
+from typing import override
+
 from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response
 
@@ -29,6 +32,7 @@ class EkeyEvent(EventEntity):
 
     _attr_device_class = EventDeviceClass.BUTTON
     _attr_event_types = ["event happened"]
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -46,14 +50,25 @@ class EkeyEvent(EventEntity):
         self._trigger_event("event happened")
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks with your device API/library."""
 
         async def async_webhook_handler(
             hass: HomeAssistant, webhook_id: str, request: Request
         ) -> Response | None:
-            if (await request.json())["auth"] == self._auth:
-                self._async_handle_event()
+            try:
+                payload = await request.json()
+            except ValueError:
+                return Response(status=HTTPStatus.BAD_REQUEST)
+            auth = payload.get("auth")
+
+            if auth is None:
+                return Response(status=HTTPStatus.BAD_REQUEST)
+            if auth != self._auth:
+                return Response(status=HTTPStatus.UNAUTHORIZED)
+
+            self._async_handle_event()
             return None
 
         webhook_register(
@@ -65,6 +80,7 @@ class EkeyEvent(EventEntity):
             allowed_methods=[METH_POST],
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unregister Webhook."""
         webhook_unregister(self.hass, self._webhook_id)

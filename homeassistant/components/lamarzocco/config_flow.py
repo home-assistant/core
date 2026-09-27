@@ -1,18 +1,17 @@
 """Config flow for La Marzocco integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 import uuid
 
 from aiohttp import ClientSession
+import probatio
 from pylamarzocco import LaMarzoccoCloudClient
+from pylamarzocco.const import DeviceType
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 from pylamarzocco.models import Thing
 from pylamarzocco.util import InstallationKey, generate_installation_key
-import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfo,
@@ -47,7 +46,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import create_client_session
-from .const import CONF_INSTALLATION_KEY, CONF_USE_BLUETOOTH, DOMAIN
+from .const import CONF_INSTALLATION_KEY, CONF_OFFLINE_MODE, CONF_USE_BLUETOOTH, DOMAIN
 from .coordinator import LaMarzoccoConfigEntry
 
 CONF_MACHINE = "machine"
@@ -70,6 +69,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         self._things: dict[str, Thing] = {}
         self._discovered: dict[str, str] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -106,7 +106,11 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Error connecting to server: %s", exc)
                 errors["base"] = "cannot_connect"
             else:
-                self._things = {thing.serial_number: thing for thing in things}
+                self._things = {
+                    thing.serial_number: thing
+                    for thing in things
+                    if thing.type is DeviceType.MACHINE
+                }
                 if not self._things:
                     errors["base"] = "no_machines"
 
@@ -140,14 +144,14 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME): TextSelector(
+                    probatio.Required(CONF_USERNAME): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.EMAIL, autocomplete="username"
                         )
                     ),
-                    vol.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(CONF_PASSWORD): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -205,9 +209,9 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             for thing in self._things.values()
         ]
 
-        machine_selection_schema = vol.Schema(
+        machine_selection_schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_MACHINE, default=machine_options[0]["value"]
                 ): SelectSelector(
                     SelectSelectorConfig(
@@ -247,9 +251,9 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="bluetooth_selection",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_MAC): SelectSelector(
+                    probatio.Required(CONF_MAC): SelectSelector(
                         SelectSelectorConfig(
                             options=bt_options,
                             mode=SelectSelectorMode.DROPDOWN,
@@ -259,6 +263,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
     ) -> ConfigFlowResult:
@@ -283,6 +288,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -323,9 +329,9 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         if not user_input:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(CONF_PASSWORD): str,
+                        probatio.Required(CONF_PASSWORD): str,
                     }
                 ),
             )
@@ -340,16 +346,16 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             reconfigure_entry = self._get_reconfigure_entry()
             return self.async_show_form(
                 step_id="reconfigure",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(
+                        probatio.Required(
                             CONF_USERNAME, default=reconfigure_entry.data[CONF_USERNAME]
                         ): TextSelector(
                             TextSelectorConfig(
                                 type=TextSelectorType.EMAIL, autocomplete="username"
                             ),
                         ),
-                        vol.Required(
+                        probatio.Required(
                             CONF_PASSWORD, default=reconfigure_entry.data[CONF_PASSWORD]
                         ): TextSelector(
                             TextSelectorConfig(
@@ -365,6 +371,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: LaMarzoccoConfigEntry,
     ) -> LmOptionsFlowHandler:
@@ -379,14 +386,24 @@ class LmOptionsFlowHandler(OptionsFlowWithReload):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options for the custom component."""
-        if user_input:
-            return self.async_create_entry(title="", data=user_input)
+        errors: dict[str, str] = {}
 
-        options_schema = vol.Schema(
+        if user_input:
+            if user_input.get(CONF_OFFLINE_MODE) and not user_input.get(
+                CONF_USE_BLUETOOTH
+            ):
+                errors[CONF_USE_BLUETOOTH] = "bluetooth_required_offline"
+            else:
+                return self.async_create_entry(title="", data=user_input)
+        options_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_USE_BLUETOOTH,
                     default=self.config_entry.options.get(CONF_USE_BLUETOOTH, True),
+                ): cv.boolean,
+                probatio.Optional(
+                    CONF_OFFLINE_MODE,
+                    default=self.config_entry.options.get(CONF_OFFLINE_MODE, False),
                 ): cv.boolean,
             }
         )
@@ -394,4 +411,5 @@ class LmOptionsFlowHandler(OptionsFlowWithReload):
         return self.async_show_form(
             step_id="init",
             data_schema=options_schema,
+            errors=errors,
         )

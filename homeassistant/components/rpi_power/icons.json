@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "rpi_power": {
+        "default": "mdi:raspberry-pi"
+      }
+    }
+  }
+}

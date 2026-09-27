@@ -1,0 +1,30 @@
+.trigger_common_fields: &trigger_common_fields
+  behavior:
+    required: true
+    default: each
+    selector:
+      automation_behavior:
+        mode: trigger
+  for:
+    required: true
+    default: 00:00:00
+    selector:
+      duration:
+
+closed:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      - domain: binary_sensor
+        device_class: door
+      - domain: cover
+        device_class: door
+
+opened:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      - domain: binary_sensor
+        device_class: door
+      - domain: cover
+        device_class: door

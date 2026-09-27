@@ -8,9 +8,15 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: |
@@ -30,18 +36,12 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: |
-      Change to mock_setup_entry to avoid repetition when expanding tests.
+  test-coverage: done
 
   # Gold
-  devices:
-    status: todo
-    comment: |
-      Add additional device detail including link to ui.
+  devices: done
   diagnostics: todo
   discovery-update-info: todo
   discovery: todo
@@ -60,11 +60,8 @@ rules:
     comment: |
       Speed sensors change so frequently that disabling by default may be appropriate.
   entity-translations: done
-  exception-translations: done
-  icon-translations:
-    status: todo
-    comment: |
-      Add icons for sensors & switches.
+  exception-translations: todo
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues: todo
   stale-devices: todo

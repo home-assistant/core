@@ -1,9 +1,7 @@
 """Config flow for World Air Quality Index (WAQI) integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiowaqi import (
     WAQIAirQuality,
@@ -11,7 +9,7 @@ from aiowaqi import (
     WAQIClient,
     WAQIConnectionError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -60,12 +58,14 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {SUBENTRY_TYPE_STATION: StationFlowHandler}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -94,7 +94,7 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
             errors=errors,
         )
 
@@ -134,9 +134,9 @@ class StationFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id=CONF_MAP,
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_LOCATION): LocationSelector(),
+                        probatio.Required(CONF_LOCATION): LocationSelector(),
                     }
                 ),
                 {
@@ -170,7 +170,7 @@ class StationFlowHandler(ConfigSubentryFlow):
                 return await self._async_create_entry(measuring_station)
         return self.async_show_form(
             step_id=CONF_STATION_NUMBER,
-            data_schema=vol.Schema({vol.Required(CONF_STATION_NUMBER): int}),
+            data_schema=probatio.Schema({probatio.Required(CONF_STATION_NUMBER): int}),
             errors=errors,
         )
 

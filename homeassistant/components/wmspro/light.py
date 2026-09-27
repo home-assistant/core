@@ -1,12 +1,10 @@
 """Support for lights connected with WMS WebControl pro."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from wmspro.const import (
-    WMS_WebControl_pro_API_actionDescription,
+    WMS_WebControl_pro_API_actionDescription as ACTION_DESC,
     WMS_WebControl_pro_API_responseType,
 )
 
@@ -33,10 +31,10 @@ async def async_setup_entry(
 
     entities: list[WebControlProGenericEntity] = []
     for dest in hub.dests.values():
-        if dest.hasAction(WMS_WebControl_pro_API_actionDescription.LightDimming):
-            entities.append(WebControlProDimmer(config_entry.entry_id, dest))
-        elif dest.hasAction(WMS_WebControl_pro_API_actionDescription.LightSwitch):
-            entities.append(WebControlProLight(config_entry.entry_id, dest))
+        if dest.hasAction(ACTION_DESC.LightDimming):
+            entities.append(WebControlProDimmer(hass, config_entry.entry_id, dest))
+        elif dest.hasAction(ACTION_DESC.LightSwitch):
+            entities.append(WebControlProLight(hass, config_entry.entry_id, dest))
 
     async_add_entities(entities)
 
@@ -49,21 +47,24 @@ class WebControlProLight(WebControlProGenericEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
-        action = self._dest.action(WMS_WebControl_pro_API_actionDescription.LightSwitch)
+        action = self._dest.action(ACTION_DESC.LightSwitch)
         return action["onOffState"]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        action = self._dest.action(WMS_WebControl_pro_API_actionDescription.LightSwitch)
+        action = self._dest.action(ACTION_DESC.LightSwitch)
         await action(
             onOffState=True, responseType=WMS_WebControl_pro_API_responseType.Detailed
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        action = self._dest.action(WMS_WebControl_pro_API_actionDescription.LightSwitch)
+        action = self._dest.action(ACTION_DESC.LightSwitch)
         await action(
             onOffState=False, responseType=WMS_WebControl_pro_API_responseType.Detailed
         )
@@ -76,22 +77,20 @@ class WebControlProDimmer(WebControlProLight):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of this light between 1..255."""
-        action = self._dest.action(
-            WMS_WebControl_pro_API_actionDescription.LightDimming
-        )
+        action = self._dest.action(ACTION_DESC.LightDimming)
         return value_to_brightness(BRIGHTNESS_SCALE, action["percentage"])
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the dimmer on."""
         if ATTR_BRIGHTNESS not in kwargs:
             await super().async_turn_on(**kwargs)
             return
 
-        action = self._dest.action(
-            WMS_WebControl_pro_API_actionDescription.LightDimming
-        )
+        action = self._dest.action(ACTION_DESC.LightDimming)
         await action(
             percentage=brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS]),
             responseType=WMS_WebControl_pro_API_responseType.Detailed,

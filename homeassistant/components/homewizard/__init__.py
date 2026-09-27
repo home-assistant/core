@@ -17,6 +17,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import HomeWizardConfigEntry, HWEnergyDeviceUpdateCoordinator
+from .entity import create_main_device_info
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -> bool:
@@ -60,6 +61,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -
         ):
             hass.config_entries.flow.async_abort(progress_flow["flow_id"])
 
+    # Register the main device up front so external sub-device sensors can
+    # resolve it as their via_device parent regardless of entity add order.
+    if coordinator.data.device.serial is not None:
+        dr.async_get(hass).async_get_or_create(
+            config_entry_id=entry.entry_id,
+            **create_main_device_info(coordinator),
+        )
+
     # Finalize
     entry.async_on_unload(coordinator.api.close)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -84,8 +93,10 @@ def get_main_device(
     if not device_entries:
         return None
 
-    # Get first device that is not a sub-device, as this is the main device in HomeWizard
-    # This is relevant for the P1 Meter which may create sub-devices for external utility meters
+    # Get first device that is not a sub-device, as this is the
+    # main device in HomeWizard. This is relevant for the P1
+    # Meter which may create sub-devices for external utility
+    # meters.
     return next(
         (device for device in device_entries if device.via_device_id is None), None
     )
@@ -102,7 +113,9 @@ async def async_check_v2_support_and_create_issue(
     title = entry.title
 
     # Try to get the name from the device registry
-    # This is to make it clearer which device needs reconfiguration, as the config entry title is kept default most of the time
+    # This is to make it clearer which device needs
+    # reconfiguration, as the config entry title is kept default
+    # most of the time
     if main_device := get_main_device(hass, entry):
         device_name = main_device.name_by_user or main_device.name
 

@@ -1,9 +1,10 @@
 """Coordinator for Twinkly."""
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 from awesomeversion import AwesomeVersion
@@ -54,11 +55,12 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
         )
         self.client = client
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the Twinkly data."""
         try:
-            software_version = await self.client.get_firmware_version()
-            self.device_name = (await self.client.get_details())[DEV_NAME]
+            software_version = await self._request(self.client.get_firmware_version)
+            self.device_name = (await self._request(self.client.get_details))[DEV_NAME]
         except (TimeoutError, ClientError) as exception:
             raise UpdateFailed from exception
         self.software_version = software_version["version"]
@@ -66,29 +68,43 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
             MIN_EFFECT_VERSION
         )
 
+    async def _request[_T](self, request: Callable[[], Awaitable[_T]]) -> _T:
+        """Make a request, retrying it once if it times out.
+
+        A device that stalls one request keeps answering others: it replies on
+        a new connection within milliseconds while the first is still hanging.
+        aiohttp closes a timed-out connection instead of returning it to the
+        pool, so the retry gets a fresh one.
+        """
+        try:
+            return await request()
+        except TimeoutError:
+            return await request()
+
+    @override
     async def _async_update_data(self) -> TwinklyData:
         """Fetch data from Twinkly."""
         movies: list[dict[str, Any]] = []
         current_movie: dict[str, Any] = {}
         try:
-            device_info = await self.client.get_details()
-            brightness = await self.client.get_brightness()
-            is_on = await self.client.is_on()
-            mode_data = await self.client.get_mode()
+            device_info = await self._request(self.client.get_details)
+            brightness = await self._request(self.client.get_brightness)
+            is_on = await self._request(self.client.is_on)
+            mode_data = await self._request(self.client.get_mode)
             current_mode = mode_data.get("mode")
             if self.supports_effects:
-                movies = (await self.client.get_saved_movies())["movies"]
+                movies = (await self._request(self.client.get_saved_movies))["movies"]
         except (TimeoutError, ClientError) as exception:
             raise UpdateFailed from exception
         if self.supports_effects:
             try:
-                current_movie = await self.client.get_current_movie()
+                current_movie = await self._request(self.client.get_current_movie)
             except (TwinklyError, TimeoutError, ClientError) as exception:
                 _LOGGER.debug("Error fetching current movie: %s", exception)
         brightness = (
             int(brightness["value"]) if brightness["mode"] == "enabled" else 100
         )
-        brightness = int(round(brightness * 2.55)) if is_on else 0
+        brightness = round(brightness * 2.55) if is_on else 0
         if self.device_name != device_info[DEV_NAME]:
             self._async_update_device_info(device_info[DEV_NAME])
         return TwinklyData(
@@ -103,8 +119,8 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
     def _async_update_device_info(self, name: str) -> None:
         """Update the device info."""
         device_registry = dr.async_get(self.hass)
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, self.data.device_info["mac"])},
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, self.data.device_info["mac"]), self.config_entry.entry_id
         )
         if device:
             device_registry.async_update_device(

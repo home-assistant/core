@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Generator
 import logging
+from pathlib import Path
 import subprocess
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -47,16 +48,22 @@ def server(
     enable_ui: bool,
     username: str,
     password: str,
-) -> Server:
+    server_dir: Path,
+) -> Generator[Server]:
     """Fixture to initialize the Server."""
-    return Server(
-        hass,
-        binary=TEST_BINARY,
-        session=mock_session,
-        enable_ui=enable_ui,
-        username=username,
-        password=password,
-    )
+    with patch(
+        "homeassistant.components.go2rtc.server.get_go2rtc_unix_socket_path",
+        return_value="/test/path/go2rtc.sock",
+    ):
+        yield Server(
+            hass,
+            binary=TEST_BINARY,
+            session=mock_session,
+            enable_ui=enable_ui,
+            username=username,
+            password=password,
+            working_dir=str(server_dir),
+        )
 
 
 @pytest.fixture
@@ -179,7 +186,8 @@ async def test_server_timeout_on_stop(
     "server_stdout",
     [
         [
-            "09:00:03.466 INF go2rtc platform=linux/amd64 revision=780f378 version=1.9.5",
+            "09:00:03.466 INF go2rtc"
+            " platform=linux/amd64 revision=780f378 version=1.9.5",
             "09:00:03.466 INF config path=/tmp/go2rtc.yaml",
         ]
     ],
@@ -191,7 +199,7 @@ async def test_server_failed_to_start(
     server: Server,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test server, where an exception is raised if the expected log entry was not received until the timeout."""
+    """Test server raises exception when expected log not received."""
     with (
         patch("homeassistant.components.go2rtc.server._SETUP_TIMEOUT", new=0.1),
         pytest.raises(HomeAssistantError, match="Go2rtc server didn't start correctly"),
@@ -226,10 +234,13 @@ async def test_server_failed_to_start(
             [
                 "09:00:03.466 TRC [api] register path path=/",
                 "09:00:03.466 DBG build vcs.time=2024-10-28T19:47:55Z version=go1.23.2",
-                "09:00:03.466 INF go2rtc platform=linux/amd64 revision=780f378 version=1.9.5",
+                "09:00:03.466 INF go2rtc"
+                " platform=linux/amd64 revision=780f378 version=1.9.5",
                 "09:00:03.467 INF [api] listen addr=127.0.0.1:1984",
                 "09:00:03.466 WRN warning message",
-                '09:00:03.466 ERR [api] listen error="listen tcp 127.0.0.1:11984: bind: address already in use"',
+                "09:00:03.466 ERR [api] listen"
+                ' error="listen tcp 127.0.0.1:11984:'
+                ' bind: address already in use"',
                 "09:00:03.466 FTL fatal message",
                 "09:00:03.466 PNC panic message",
                 "exit with signal: interrupt",  # Example of stderr write
@@ -412,5 +423,50 @@ async def test_server_restart_error(
     assert_server_output_logged(server_stdout, caplog, logging.WARNING)
 
     assert "Unexpected error when restarting go2rtc server" in caplog.text
+
+    await server.stop()
+
+
+@pytest.mark.parametrize(
+    ("server_stdout", "expected_stdout"),
+    [
+        (
+            [
+                "09:00:03.467 INF [api] listen addr=127.0.0.1:1984",
+                "10:27:02.622 WRN producer.go:170 >"
+                ' error="read tcp 192.168.1.96:42550->192.168.1.145:554: i/o timeout"'
+                " url=rtsp://admin:hunter2@192.168.1.145:554/Preview_01_sub",
+                "10:27:02.623 WRN [streams] url=http://192.168.1.145/snapshot"
+                "?auth=token&channel=0&user=admin&password=hunter2",
+                "10:27:02.624 WRN [streams] url=http://camera.local"
+                "?user=alice@example.com",
+            ],
+            [
+                "10:27:02.622 WRN producer.go:170 >"
+                ' error="read tcp 192.168.1.96:42550->192.168.1.145:554: i/o timeout"'
+                " url=rtsp://****@192.168.1.145:554/Preview_01_sub",
+                "10:27:02.623 WRN [streams] url=http://192.168.1.145/snapshot"
+                "?auth=****&channel=0&user=****&password=****",
+                "10:27:02.624 WRN [streams] url=http://camera.local?user=****",
+            ],
+        )
+    ],
+)
+@pytest.mark.usefixtures("mock_tempfile", "rest_client")
+async def test_credentials_redacted_from_server_output(
+    hass: HomeAssistant,
+    mock_create_subprocess: MagicMock,
+    server: Server,
+    caplog: pytest.LogCaptureFixture,
+    expected_stdout: list[str],
+) -> None:
+    """Test credentials in urls are redacted from the logged server output."""
+    await server.start()
+    await hass.async_block_till_done()
+
+    assert_server_output_logged(expected_stdout, caplog, logging.WARNING)
+    assert "hunter2" not in caplog.text
+    assert "token" not in caplog.text
+    assert "alice@example.com" not in caplog.text
 
     await server.stop()

@@ -1,7 +1,5 @@
 """Coordinator for the IKEA Idasen Desk integration."""
 
-from __future__ import annotations
-
 import logging
 
 from idasen_ha import Desk

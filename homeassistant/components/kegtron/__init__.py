@@ -1,7 +1,5 @@
 """The Kegtron integration."""
 
-from __future__ import annotations
-
 import logging
 
 from kegtron_ble import KegtronBluetoothDeviceData

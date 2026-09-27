@@ -7,7 +7,6 @@ from hole.exceptions import HoleConnectionError, HoleError
 
 from homeassistant.components.pi_hole.const import (
     DEFAULT_LOCATION,
-    DEFAULT_NAME,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
 )
@@ -147,7 +146,7 @@ VERIFY_SSL = True
 CONFIG_DATA_DEFAULTS = {
     CONF_HOST: f"{HOST}:{PORT}",
     CONF_LOCATION: DEFAULT_LOCATION,
-    CONF_NAME: DEFAULT_NAME,
+    CONF_NAME: "Pi-Hole",
     CONF_SSL: DEFAULT_SSL,
     CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
     CONF_API_KEY: API_KEY,
@@ -169,7 +168,6 @@ CONFIG_FLOW_USER = {
     CONF_PORT: PORT,
     CONF_LOCATION: LOCATION,
     CONF_API_KEY: API_KEY,
-    CONF_NAME: NAME,
     CONF_SSL: SSL,
     CONF_VERIFY_SSL: VERIFY_SSL,
 }
@@ -181,7 +179,6 @@ CONFIG_FLOW_API_KEY = {
 CONFIG_ENTRY_WITH_API_KEY = {
     CONF_HOST: f"{HOST}:{PORT}",
     CONF_LOCATION: LOCATION,
-    CONF_NAME: NAME,
     CONF_API_KEY: API_KEY,
     CONF_SSL: SSL,
     CONF_VERIFY_SSL: VERIFY_SSL,
@@ -190,7 +187,6 @@ CONFIG_ENTRY_WITH_API_KEY = {
 CONFIG_ENTRY_WITHOUT_API_KEY = {
     CONF_HOST: f"{HOST}:{PORT}",
     CONF_LOCATION: LOCATION,
-    CONF_NAME: NAME,
     CONF_SSL: SSL,
     CONF_VERIFY_SSL: VERIFY_SSL,
 }
@@ -206,6 +202,7 @@ def _create_mocked_hole(
     incorrect_app_password: bool = False,
     wrong_host: bool = False,
     ftl_error: bool = False,
+    logout_error: bool = False,
 ) -> MagicMock:
     """Return a mocked Hole API object with side effects based on constructor args."""
 
@@ -232,7 +229,7 @@ def _create_mocked_hole(
                     incorrect_app_password or password not in ["newkey", "apikey"]
                 ):
                     raise HoleError("Authentication failed: Invalid password")
-                raise HoleConnectionError
+                raise HoleConnectionError("Connection error")
 
         async def get_data_side_effect(*_args, **_kwargs):
             """Return data based on the mocked Hole instance state."""
@@ -254,10 +251,14 @@ def _create_mocked_hole(
             mocked_hole.data = FTL_ERROR
 
         mocked_hole.authenticate = AsyncMock(side_effect=authenticate_side_effect)
+        mocked_hole.logout = AsyncMock(
+            side_effect=HoleError("Logout failed") if logout_error else None
+        )
         mocked_hole.get_data = AsyncMock(side_effect=get_data_side_effect)
 
         if ftl_error:
-            # two unauthenticated instances are created in `determine_api_version` before aync_try_connect is called
+            # two unauthenticated instances are created in
+            # `determine_api_version` before aync_try_connect is called
             if len(instances) > 1:
                 mocked_hole.get_data = AsyncMock(side_effect=ftl_side_effect)
         mocked_hole.get_versions = AsyncMock(return_value=None)

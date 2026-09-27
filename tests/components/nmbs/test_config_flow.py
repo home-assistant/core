@@ -3,6 +3,8 @@
 from typing import Any
 from unittest.mock import AsyncMock
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.nmbs.config_flow import CONF_EXCLUDE_VIAS
 from homeassistant.components.nmbs.const import (
@@ -35,9 +37,8 @@ DUMMY_DATA: dict[str, Any] = {
 }
 
 
-async def test_full_flow(
-    hass: HomeAssistant, mock_nmbs_client: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_nmbs_client: AsyncMock) -> None:
     """Test the full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -68,9 +69,8 @@ async def test_full_flow(
     )
 
 
-async def test_same_station(
-    hass: HomeAssistant, mock_nmbs_client: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_same_station(hass: HomeAssistant, mock_nmbs_client: AsyncMock) -> None:
     """Test selecting the same station."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -105,13 +105,20 @@ async def test_abort_if_exists(
     """Test aborting the flow if the entry already exists."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_STATION_FROM: DUMMY_DATA["STAT_BRUSSELS_NORTH"],
             CONF_STATION_TO: DUMMY_DATA["STAT_BRUSSELS_SOUTH"],
         },
     )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
@@ -122,14 +129,21 @@ async def test_dont_abort_if_exists_when_vias_differs(
     """Test aborting the flow if the entry already exists."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_STATION_FROM: DUMMY_DATA["STAT_BRUSSELS_NORTH"],
             CONF_STATION_TO: DUMMY_DATA["STAT_BRUSSELS_SOUTH"],
             CONF_EXCLUDE_VIAS: True,
         },
     )
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 

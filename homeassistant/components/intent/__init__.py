@@ -1,13 +1,11 @@
 """The Intent integration."""
 
-from __future__ import annotations
-
 from collections.abc import Collection
 import logging
-from typing import Any, Protocol
+from typing import Any, Protocol, override
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import http, sensor
 from homeassistant.components.button import (
@@ -22,6 +20,7 @@ from homeassistant.components.cover import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
+    SERVICE_STOP_COVER,
     CoverDeviceClass,
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
@@ -38,6 +37,7 @@ from homeassistant.components.valve import (
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
     SERVICE_SET_VALVE_POSITION,
+    SERVICE_STOP_VALVE,
     ValveDeviceClass,
 )
 from homeassistant.const import (
@@ -110,7 +110,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             intent.INTENT_TURN_ON,
             HOMEASSISTANT_DOMAIN,
             SERVICE_TURN_ON,
-            description="Turns on/opens/presses a device or entity. For locks, this performs a 'lock' action. Use for requests like 'turn on', 'activate', 'enable', or 'lock'.",
+            description=(
+                "Turns on/opens/presses a device or entity."
+                " For locks, this performs a 'lock' action."
+                " Use for requests like 'turn on',"
+                " 'activate', 'enable', or 'lock'."
+            ),
             device_classes=ONOFF_DEVICE_CLASSES,
         ),
     )
@@ -120,7 +125,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             intent.INTENT_TURN_OFF,
             HOMEASSISTANT_DOMAIN,
             SERVICE_TURN_OFF,
-            description="Turns off/closes a device or entity. For locks, this performs an 'unlock' action. Use for requests like 'turn off', 'deactivate', 'disable', or 'unlock'.",
+            description=(
+                "Turns off/closes a device or entity."
+                " For locks, this performs an 'unlock' action."
+                " Use for requests like 'turn off',"
+                " 'deactivate', 'disable', or 'unlock'."
+            ),
             device_classes=ONOFF_DEVICE_CLASSES,
         ),
     )
@@ -143,6 +153,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         NevermindIntentHandler(),
     )
     intent.async_register(hass, SetPositionIntentHandler())
+    intent.async_register(hass, StopMovingIntentHandler())
     intent.async_register(hass, StartTimerIntentHandler())
     intent.async_register(hass, CancelTimerIntentHandler())
     intent.async_register(hass, CancelAllTimersIntentHandler())
@@ -169,6 +180,7 @@ class IntentPlatformProtocol(Protocol):
 class OnOffIntentHandler(intent.ServiceIntentHandler):
     """Intent handler for on/off that also supports covers, valves, locks, etc."""
 
+    @override
     async def async_call_service(
         self, domain: str, service: str, intent_obj: intent.Intent, state: State
     ) -> None:
@@ -272,14 +284,15 @@ class GetStateIntentHandler(intent.IntentHandler):
     intent_type = intent.INTENT_GET_STATE
     description = "Gets or checks the state of a device or entity"
     slot_schema = {
-        vol.Any("name", "area", "floor"): cv.string,
-        vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional("state"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional("preferred_area_id"): cv.string,
-        vol.Optional("preferred_floor_id"): cv.string,
+        probatio.Any("name", "area", "floor"): cv.string,
+        probatio.Optional("domain"): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional("device_class"): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional("state"): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional("preferred_area_id"): cv.string,
+        probatio.Optional("preferred_floor_id"): cv.string,
     }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the hass intent."""
         hass = intent_obj.hass
@@ -400,6 +413,7 @@ class NevermindIntentHandler(intent.IntentHandler):
     intent_type = intent.INTENT_NEVERMIND
     description = "Cancels the current request and does nothing"
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Do nothing and produces an empty response."""
         return intent_obj.create_response()
@@ -413,13 +427,16 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
         super().__init__(
             intent.INTENT_SET_POSITION,
             required_slots={
-                ATTR_POSITION: vol.All(vol.Coerce(int), vol.Range(min=0, max=100))
+                ATTR_POSITION: probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=0, max=100)
+                )
             },
             description="Sets the position of a device or entity",
             platforms={COVER_DOMAIN, VALVE_DOMAIN},
             device_classes={CoverDeviceClass, ValveDeviceClass},
         )
 
+    @override
     def get_domain_and_service(
         self, intent_obj: intent.Intent, state: State
     ) -> tuple[str, str]:
@@ -433,12 +450,39 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
         raise intent.IntentHandleError(f"Domain not supported: {state.domain}")
 
 
+class StopMovingIntentHandler(intent.DynamicServiceIntentHandler):
+    """Intent handler for stopping covers and valves."""
+
+    def __init__(self) -> None:
+        """Create stop moving handler."""
+        super().__init__(
+            intent.INTENT_STOP_MOVING,
+            description="Stops a moving device or entity",
+            platforms={COVER_DOMAIN, VALVE_DOMAIN},
+            device_classes={CoverDeviceClass, ValveDeviceClass},
+        )
+
+    @override
+    def get_domain_and_service(
+        self, intent_obj: intent.Intent, state: State
+    ) -> tuple[str, str]:
+        """Get the domain and service name to call."""
+        if state.domain == COVER_DOMAIN:
+            return (COVER_DOMAIN, SERVICE_STOP_COVER)
+
+        if state.domain == VALVE_DOMAIN:
+            return (VALVE_DOMAIN, SERVICE_STOP_VALVE)
+
+        raise intent.IntentHandleError(f"Domain not supported: {state.domain}")
+
+
 class GetCurrentDateIntentHandler(intent.IntentHandler):
     """Gets the current date."""
 
     intent_type = intent.INTENT_GET_CURRENT_DATE
     description = "Gets the current date"
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         response = intent_obj.create_response()
         response.async_set_speech_slots({"date": dt_util.now().date()})
@@ -451,6 +495,7 @@ class GetCurrentTimeIntentHandler(intent.IntentHandler):
     intent_type = intent.INTENT_GET_CURRENT_TIME
     description = "Gets the current time"
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         response = intent_obj.create_response()
         response.async_set_speech_slots({"time": dt_util.now().time()})
@@ -464,9 +509,10 @@ class RespondIntentHandler(intent.IntentHandler):
     description = "Returns the provided response with no action."
 
     slot_schema = {
-        vol.Optional("response"): cv.string,
+        probatio.Optional("response"): cv.string,
     }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Return the provided response, but take no action."""
         slots = self.async_validate_slots(intent_obj.slots)
@@ -484,14 +530,15 @@ class GetTemperatureIntent(intent.IntentHandler):
     intent_type = intent.INTENT_GET_TEMPERATURE
     description = "Gets the current temperature of a climate device or entity"
     slot_schema = {
-        vol.Optional("area"): intent.non_empty_string,
-        vol.Optional("name"): intent.non_empty_string,
-        vol.Optional("floor"): intent.non_empty_string,
-        vol.Optional("preferred_area_id"): cv.string,
-        vol.Optional("preferred_floor_id"): cv.string,
+        probatio.Optional("area"): intent.non_empty_string,
+        probatio.Optional("name"): intent.non_empty_string,
+        probatio.Optional("floor"): intent.non_empty_string,
+        probatio.Optional("preferred_area_id"): cv.string,
+        probatio.Optional("preferred_floor_id"): cv.string,
     }
     platforms = {CLIMATE_DOMAIN}
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -595,17 +642,21 @@ class IntentHandleView(http.HomeAssistantView):
     name = "api:intent:handle"
 
     @RequestDataValidator(
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required("name"): cv.string,
-                vol.Optional("data"): vol.Schema({cv.string: object}),
+                probatio.Required("name"): cv.string,
+                probatio.Optional("data"): probatio.Schema({cv.string: object}),
+                probatio.Optional("language"): cv.string,
+                probatio.Optional("assistant"): probatio.Any(cv.string, None),
+                probatio.Optional("device_id"): probatio.Any(cv.string, None),
+                probatio.Optional("satellite_id"): probatio.Any(cv.string, None),
             }
         )
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle intent with name/data."""
         hass = request.app[http.KEY_HASS]
-        language = hass.config.language
+        language = data.get("language", hass.config.language)
 
         try:
             intent_name = data["name"]
@@ -613,14 +664,21 @@ class IntentHandleView(http.HomeAssistantView):
                 key: {"value": value} for key, value in data.get("data", {}).items()
             }
             intent_result = await intent.async_handle(
-                hass, DOMAIN, intent_name, slots, "", self.context(request)
+                hass,
+                DOMAIN,
+                intent_name,
+                slots,
+                "",
+                self.context(request),
+                language=language,
+                assistant=data.get("assistant"),
+                device_id=data.get("device_id"),
+                satellite_id=data.get("satellite_id"),
             )
         except (intent.IntentHandleError, intent.MatchFailedError) as err:
             intent_result = intent.IntentResponse(language=language)
-            intent_result.async_set_speech(str(err))
-
-        if intent_result is None:
-            intent_result = intent.IntentResponse(language=language)  # type: ignore[unreachable]
-            intent_result.async_set_speech("Sorry, I couldn't handle that")
+            intent_result.async_set_error(
+                intent.IntentResponseErrorCode.FAILED_TO_HANDLE, str(err)
+            )
 
         return self.json(intent_result)

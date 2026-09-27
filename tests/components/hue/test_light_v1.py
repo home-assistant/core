@@ -191,6 +191,12 @@ async def setup_bridge(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
     config_entry.mock_state(hass, ConfigEntryState.LOADED)
     mock_bridge_v1.config_entry = config_entry
     config_entry.runtime_data = mock_bridge_v1
+    # Register the bridge device so the light entities can resolve it as their
+    # via_device parent while they are being added.
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(hue.DOMAIN, mock_bridge_v1.api.config.bridgeid)},
+    )
     await hass.config_entries.async_forward_entry_setups(config_entry, [Platform.LIGHT])
     # To flush out the service call to update the group
     await hass.async_block_till_done()
@@ -249,7 +255,7 @@ async def test_lights_color_mode(hass: HomeAssistant, mock_bridge_v1: Mock) -> N
     assert lamp_1.state == "on"
     assert lamp_1.attributes["brightness"] == 145
     assert lamp_1.attributes["hs_color"] == (36.067, 69.804)
-    assert lamp_1.attributes["color_temp"] is None
+    assert lamp_1.attributes["color_temp_kelvin"] is None
     assert lamp_1.attributes["color_mode"] == ColorMode.HS
     assert lamp_1.attributes["supported_color_modes"] == [
         ColorMode.COLOR_TEMP,
@@ -273,7 +279,7 @@ async def test_lights_color_mode(hass: HomeAssistant, mock_bridge_v1: Mock) -> N
     assert lamp_1 is not None
     assert lamp_1.state == "on"
     assert lamp_1.attributes["brightness"] == 145
-    assert lamp_1.attributes["color_temp"] == 467
+    assert lamp_1.attributes["color_temp_kelvin"] == 2141
     assert "hs_color" in lamp_1.attributes
     assert lamp_1.attributes["color_mode"] == ColorMode.COLOR_TEMP
     assert lamp_1.attributes["supported_color_modes"] == [
@@ -298,7 +304,7 @@ async def test_groups(
     assert lamp_1 is not None
     assert lamp_1.state == "on"
     assert lamp_1.attributes["brightness"] == 255
-    assert lamp_1.attributes["color_temp"] == 250
+    assert lamp_1.attributes["color_temp_kelvin"] == 4000
 
     lamp_2 = hass.states.get("light.group_2")
     assert lamp_2 is not None
@@ -352,7 +358,7 @@ async def test_new_group_discovered(hass: HomeAssistant, mock_bridge_v1: Mock) -
     assert new_group is not None
     assert new_group.state == "on"
     assert new_group.attributes["brightness"] == 154
-    assert new_group.attributes["color_temp"] == 250
+    assert new_group.attributes["color_temp_kelvin"] == 4000
 
 
 async def test_new_light_discovered(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
@@ -476,7 +482,7 @@ async def test_other_group_update(hass: HomeAssistant, mock_bridge_v1: Mock) -> 
     assert group_2.name == "Group 2"
     assert group_2.state == "on"
     assert group_2.attributes["brightness"] == 154
-    assert group_2.attributes["color_temp"] == 250
+    assert group_2.attributes["color_temp_kelvin"] == 4000
 
     updated_group_response = dict(GROUP_RESPONSE)
     updated_group_response["2"] = {
@@ -562,7 +568,7 @@ async def test_other_light_update(hass: HomeAssistant, mock_bridge_v1: Mock) -> 
 
     lamp_2 = hass.states.get("light.hue_lamp_2")
     assert lamp_2 is not None
-    assert lamp_2.name == "Hue Lamp 2 new"
+    assert lamp_2.name == "Hue Lamp 2 New"
     assert lamp_2.state == "on"
     assert lamp_2.attributes["brightness"] == 100
 
@@ -602,7 +608,7 @@ async def test_light_turn_on_service(hass: HomeAssistant, mock_bridge_v1: Mock) 
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": "light.hue_lamp_2", "brightness": 100, "color_temp": 300},
+        {"entity_id": "light.hue_lamp_2", "brightness": 100, "color_temp_kelvin": 3333},
         blocking=True,
     )
     # 2x light update, 1x group update, 1 turn on request
@@ -973,19 +979,19 @@ async def test_group_features(
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry.area_id is None
 
-    entry = entity_registry.async_get("light.hue_lamp_2")
+    entry = entity_registry.async_get("light.living_room_hue_lamp_2")
     device_entry = device_registry.async_get(entry.device_id)
     assert (
         device_entry.area_id == area_registry.async_get_area_by_name("Living Room").id
     )
 
-    entry = entity_registry.async_get("light.hue_lamp_3")
+    entry = entity_registry.async_get("light.living_room_hue_lamp_3")
     device_entry = device_registry.async_get(entry.device_id)
     assert (
         device_entry.area_id == area_registry.async_get_area_by_name("Living Room").id
     )
 
-    entry = entity_registry.async_get("light.hue_lamp_4")
+    entry = entity_registry.async_get("light.dining_room_hue_lamp_4")
     device_entry = device_registry.async_get(entry.device_id)
     assert (
         device_entry.area_id == area_registry.async_get_area_by_name("Dining Room").id

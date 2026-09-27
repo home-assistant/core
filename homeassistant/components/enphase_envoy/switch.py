@@ -1,10 +1,8 @@
 """Switch platform for Enphase Envoy solar energy monitor."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pyenphase import Envoy, EnvoyDryContactStatus, EnvoyEnpower
 from pyenphase.const import SupportedFeatures
@@ -13,6 +11,7 @@ from pyenphase.models.tariff import EnvoyStorageSettings
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -137,11 +136,16 @@ class EnvoyEnpowerSwitchEntity(EnvoyBaseEntity, SwitchEntity):
             model="Enpower",
             name=f"Enpower {self._serial_number}",
             sw_version=str(enpower.firmware_version),
-            via_device=(DOMAIN, self.envoy_serial_num),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, self.envoy_serial_num),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
             serial_number=self._serial_number,
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the Enpower switch."""
         enpower = self.data.enpower
@@ -149,12 +153,14 @@ class EnvoyEnpowerSwitchEntity(EnvoyBaseEntity, SwitchEntity):
         return self.entity_description.value_fn(enpower)
 
     @exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Enpower switch."""
         await self.entity_description.turn_on_fn(self.envoy)
         await self.coordinator.async_request_refresh()
 
     @exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Enpower switch."""
         await self.entity_description.turn_off_fn(self.envoy)
@@ -188,10 +194,15 @@ class EnvoyDryContactSwitchEntity(EnvoyBaseEntity, SwitchEntity):
             model="Dry contact relay",
             name=relay.load_name,
             sw_version=str(enpower.firmware_version),
-            via_device=(DOMAIN, enpower.serial_number),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, enpower.serial_number),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the dry contact."""
         relay = self.data.dry_contact_status[self.relay_id]
@@ -199,12 +210,14 @@ class EnvoyDryContactSwitchEntity(EnvoyBaseEntity, SwitchEntity):
         return self.entity_description.value_fn(relay)
 
     @exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on (close) the dry contact."""
         if await self.entity_description.turn_on_fn(self.envoy, self.relay_id):
             self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off (open) the dry contact."""
         if await self.entity_description.turn_off_fn(self.envoy, self.relay_id):
@@ -235,7 +248,11 @@ class EnvoyStorageSettingsSwitchEntity(EnvoyBaseEntity, SwitchEntity):
                 model="Enpower",
                 name=f"Enpower {self._serial_number}",
                 sw_version=str(enpower.firmware_version),
-                via_device=(DOMAIN, self.envoy_serial_num),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    coordinator.hass,
+                    (DOMAIN, self.envoy_serial_num),
+                    config_entry_id=coordinator.config_entry.entry_id,
+                ),
                 serial_number=self._serial_number,
             )
         else:
@@ -252,6 +269,7 @@ class EnvoyStorageSettingsSwitchEntity(EnvoyBaseEntity, SwitchEntity):
             )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the storage settings switch."""
         assert self.data.tariff is not None
@@ -259,12 +277,14 @@ class EnvoyStorageSettingsSwitchEntity(EnvoyBaseEntity, SwitchEntity):
         return self.entity_description.value_fn(self.data.tariff.storage_settings)
 
     @exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the storage settings switch."""
         await self.entity_description.turn_on_fn(self.envoy)
         await self.coordinator.async_request_refresh()
 
     @exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the storage switch."""
         await self.entity_description.turn_off_fn(self.envoy)

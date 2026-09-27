@@ -1,8 +1,6 @@
 """Support for TCP socket based sensors."""
 
-from __future__ import annotations
-
-from typing import Final
+from typing import Final, override
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -33,11 +31,13 @@ class TcpSensor(TcpEntity, SensorEntity):
     """Implementation of a TCP socket based sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the device."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity."""
         return self._config[CONF_UNIT_OF_MEASUREMENT]

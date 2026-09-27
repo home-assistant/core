@@ -1,6 +1,6 @@
 """SMA Solar Webconnect interface."""
 
-from __future__ import annotations
+from typing import override
 
 from pysma.sensor import Sensor
 
@@ -894,6 +894,7 @@ class SMAsensor(CoordinatorEntity[SMADataUpdateCoordinator], SensorEntity):
         self._sensor.enabled = False
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor prefixed with the device name."""
         if self._attr_device_info is None or not (
@@ -904,6 +905,7 @@ class SMAsensor(CoordinatorEntity[SMADataUpdateCoordinator], SensorEntity):
         return f"{name_prefix} {super().name}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return (
@@ -912,15 +914,18 @@ class SMAsensor(CoordinatorEntity[SMADataUpdateCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self._sensor.value
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         self._sensor.enabled = True
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()

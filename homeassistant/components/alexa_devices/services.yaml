@@ -67,3 +67,36 @@ send_sound:
             - squeaky_12
             - zap_01
           translation_key: sound
+
+send_info_skill:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: alexa_devices
+    info_skill:
+      required: true
+      example: date
+      default: date
+      selector:
+        select:
+          options:
+            - calendar_today
+            - calendar_tomorrow
+            - calendar_next
+            - date
+            - time
+            - national_news
+            - flash_briefing
+            - traffic
+            - weather
+            - cleanup
+            - good_morning
+            - sing_song
+            - fun_fact
+            - tell_joke
+            - tell_story
+            - im_home
+            - goodnight
+          translation_key: info_skill

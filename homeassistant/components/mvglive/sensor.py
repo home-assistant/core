@@ -1,15 +1,13 @@
 """Support for departure information for public transport in Munich."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from copy import deepcopy
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from mvg import MvgApi, MvgApiError, TransportType
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -51,22 +49,26 @@ ATTRIBUTION = "Data provided by mvg.de"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA = probatio.All(
     cv.deprecated(CONF_DIRECTIONS),
     SENSOR_PLATFORM_SCHEMA.extend(
         {
-            vol.Required(CONF_NEXT_DEPARTURE): [
+            probatio.Required(CONF_NEXT_DEPARTURE): [
                 {
-                    vol.Required(CONF_STATION): cv.string,
-                    vol.Optional(CONF_DESTINATIONS, default=[""]): cv.ensure_list_csv,
-                    vol.Optional(CONF_DIRECTIONS, default=[""]): cv.ensure_list_csv,
-                    vol.Optional(CONF_LINES, default=[""]): cv.ensure_list_csv,
-                    vol.Optional(
+                    probatio.Required(CONF_STATION): cv.string,
+                    probatio.Optional(
+                        CONF_DESTINATIONS, default=[""]
+                    ): cv.ensure_list_csv,
+                    probatio.Optional(
+                        CONF_DIRECTIONS, default=[""]
+                    ): cv.ensure_list_csv,
+                    probatio.Optional(CONF_LINES, default=[""]): cv.ensure_list_csv,
+                    probatio.Optional(
                         CONF_PRODUCTS, default=DEFAULT_PRODUCT
                     ): cv.ensure_list_csv,
-                    vol.Optional(CONF_TIMEOFFSET, default=0): cv.positive_int,
-                    vol.Optional(CONF_NUMBER, default=1): cv.positive_int,
-                    vol.Optional(CONF_NAME): cv.string,
+                    probatio.Optional(CONF_TIMEOFFSET, default=0): cv.positive_int,
+                    probatio.Optional(CONF_NUMBER, default=1): cv.positive_int,
+                    probatio.Optional(CONF_NAME): cv.string,
                 }
             ]
         }
@@ -123,6 +125,7 @@ class MVGLiveSensor(SensorEntity):
         self._icon = ICONS["-"]
 
     @property
+    @override
     def name(self) -> str | None:
         """Return the name of the sensor."""
         if self._name:
@@ -130,11 +133,13 @@ class MVGLiveSensor(SensorEntity):
         return self._station_name
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the next departure time."""
         return self._state
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         if not (dep := self.data.departures):
@@ -144,11 +149,13 @@ class MVGLiveSensor(SensorEntity):
         return attr
 
     @property
+    @override
     def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
         return self._icon
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
         return UnitOfTime.MINUTES
@@ -165,7 +172,7 @@ class MVGLiveSensor(SensorEntity):
 
 
 def _get_minutes_until_departure(departure_time: int) -> int:
-    """Calculate the time difference in minutes between the current time and a given departure time.
+    """Calculate the time difference in minutes between now and a departure time.
 
     Args:
         departure_time: Unix timestamp of the departure time, in seconds.

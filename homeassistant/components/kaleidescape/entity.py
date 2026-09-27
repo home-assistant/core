@@ -1,9 +1,7 @@
 """Base Entity for Kaleidescape."""
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -40,11 +38,12 @@ class KaleidescapeEntity(Entity):
             configuration_url=f"http://{self._device.host}",
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register update listener."""
 
         @callback
-        def _update(event: str) -> None:
+        def _update(event: str, *args: Any) -> None:
             """Handle device state changes."""
             self.async_write_ha_state()
 

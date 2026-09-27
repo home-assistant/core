@@ -106,7 +106,7 @@ async def test_raise_config_entry_not_ready_when_offline_and_expired(
     mock_config_entry: MockConfigEntry,
     mock_fyta_connector: AsyncMock,
 ) -> None:
-    """Config entry state is SETUP_RETRY when FYTA is offline and access_token is expired."""
+    """Config entry is SETUP_RETRY when FYTA is offline and token expired."""
 
     mock_fyta_connector.login.side_effect = FytaConnectionError
     mock_fyta_connector.expiration = datetime.fromisoformat(EXPIRATION_OLD).replace(

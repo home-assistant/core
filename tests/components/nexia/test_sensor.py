@@ -1,17 +1,36 @@
-"""The sensor tests for the nexia platform."""
+"""Tests for the nexia sensor platform."""
 
+from datetime import timedelta
+import inspect
+from unittest.mock import NonCallableMock
+
+from freezegun.api import FrozenDateTimeFactory
+from nexia.home import NexiaHome
+from nexia.sensor import NexiaSensor
+import pytest
+
+from homeassistant.components.nexia.coordinator import (
+    DEFAULT_UPDATE_RATE as COORDINATOR_UPDATE_RATE,
+)
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers.entity_registry import EntityRegistry
 
-from .util import async_init_integration
+from .conftest import setup_integration
+
+from tests.common import async_fire_time_changed
 
 
-async def test_create_sensors(hass: HomeAssistant) -> None:
+async def test_create_sensors(hass: HomeAssistant, patch_nexia_home: NexiaHome) -> None:
     """Test creation of sensors."""
 
-    await async_init_integration(hass)
+    await setup_integration(hass, patch_nexia_home)
 
-    state = hass.states.get("sensor.nick_office_temperature")
+    state = hass.states.get("sensor.nick_office_nick_office_temperature")
+    assert state is not None
     assert round(float(state.state)) == 23
 
     expected_attributes = {
@@ -26,7 +45,8 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
         state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
-    state = hass.states.get("sensor.nick_office_zone_setpoint_status")
+    state = hass.states.get("sensor.nick_office_nick_office_zone_setpoint_status")
+    assert state is not None
     assert state.state == "Permanent Hold"
     expected_attributes = {
         "attribution": "Data provided by Trane Technologies",
@@ -38,7 +58,8 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
         state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
-    state = hass.states.get("sensor.nick_office_zone_status")
+    state = hass.states.get("sensor.nick_office_nick_office_zone_status")
+    assert state is not None
     assert state.state == "Relieving Air"
 
     expected_attributes = {
@@ -52,6 +73,7 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
     )
 
     state = hass.states.get("sensor.master_suite_air_cleaner_mode")
+    assert state is not None
     assert state.state == "auto"
 
     expected_attributes = {
@@ -65,6 +87,7 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
     )
 
     state = hass.states.get("sensor.master_suite_current_compressor_speed")
+    assert state is not None
     assert round(float(state.state)) == 69
 
     expected_attributes = {
@@ -79,6 +102,7 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
     )
 
     state = hass.states.get("sensor.master_suite_outdoor_temperature")
+    assert state is not None
     assert round(float(state.state), 1) == 30.6
 
     expected_attributes = {
@@ -94,6 +118,7 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
     )
 
     state = hass.states.get("sensor.master_suite_humidity")
+    assert state is not None
     assert state.state == "52.0"
 
     expected_attributes = {
@@ -109,6 +134,7 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
     )
 
     state = hass.states.get("sensor.master_suite_requested_compressor_speed")
+    assert state is not None
     assert state.state == "69.0"
 
     expected_attributes = {
@@ -123,6 +149,7 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
     )
 
     state = hass.states.get("sensor.master_suite_system_status")
+    assert state is not None
     assert state.state == "Cooling"
 
     expected_attributes = {
@@ -134,3 +161,152 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
     assert all(
         state.attributes[key] == value for key, value in expected_attributes.items()
     )
+
+
+async def test_room_iq_sensor_disabled_by_default(
+    hass: HomeAssistant, patch_nexia_home: NonCallableMock[NexiaHome]
+) -> None:
+    """Test NexiaRoomIQSensor is disabled by default."""
+
+    await setup_integration(hass, patch_nexia_home)
+
+    assert patch_nexia_home.any_room_iq_monitors() is False
+    assert patch_nexia_home.update.await_count == 1
+    state = hass.states.get("sensor.zone3_zone3_roomiq_temperature")
+    assert state is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_room_iq_sensors(
+    hass: HomeAssistant,
+    patch_nexia_home: NonCallableMock[NexiaHome],
+    entity_registry: EntityRegistry,
+    device_registry: DeviceRegistry,
+) -> None:
+    """Test NexiaRoomIQSensor."""
+
+    await setup_integration(hass, patch_nexia_home)
+
+    assert patch_nexia_home.any_room_iq_monitors() is True
+    assert patch_nexia_home.update.await_count == 2
+    state = hass.states.get("sensor.zone3_zone3_roomiq_temperature")
+    assert state is not None
+
+    entry = entity_registry.async_get(state.entity_id)
+    device = device_registry.async_get(entry.device_id)
+    assert device is not None
+    assert device.model == "XL1050"
+    assert device.sw_version == "5.9.1"
+
+    assert state.state == "25.0"
+    assert state.attributes["device_class"] == SensorDeviceClass.TEMPERATURE
+    assert state.attributes["friendly_name"] == "Zone3 RoomIQ temperature"
+    assert state.attributes["unit_of_measurement"] == UnitOfTemperature.CELSIUS
+
+    state = hass.states.get("sensor.zone3_zone3_roomiq_humidity")
+    assert state is not None
+    assert state.state == "45"
+    assert state.attributes["device_class"] == SensorDeviceClass.HUMIDITY
+    assert state.attributes["friendly_name"] == "Zone3 RoomIQ humidity"
+    assert state.attributes["unit_of_measurement"] == PERCENTAGE
+
+    state = hass.states.get("sensor.zone3_zone3_roomiq_battery")
+    assert state is None
+
+    state = hass.states.get("sensor.upstairs_upstairs_roomiq_temperature")
+    assert state is not None
+
+    entry = entity_registry.async_get(state.entity_id)
+    device = device_registry.async_get(entry.device_id)
+    assert device is not None
+    assert device.model is None
+    assert device.sw_version is None
+
+    assert state.state == "22.5"
+    assert state.attributes["device_class"] == SensorDeviceClass.TEMPERATURE
+    assert state.attributes["friendly_name"] == "Upstairs RoomIQ temperature"
+    assert state.attributes["unit_of_measurement"] == UnitOfTemperature.CELSIUS
+
+    state = hass.states.get("sensor.upstairs_upstairs_roomiq_humidity")
+    assert state is not None
+    assert state.state == "45"
+    assert state.attributes["device_class"] == SensorDeviceClass.HUMIDITY
+    assert state.attributes["friendly_name"] == "Upstairs RoomIQ humidity"
+    assert state.attributes["unit_of_measurement"] == PERCENTAGE
+
+    state = hass.states.get("sensor.upstairs_upstairs_roomiq_battery")
+    assert state is not None
+    assert state.state == "93"
+    assert state.attributes["device_class"] == SensorDeviceClass.BATTERY
+    assert state.attributes["friendly_name"] == "Upstairs RoomIQ battery"
+    assert state.attributes["unit_of_measurement"] == PERCENTAGE
+
+    state = hass.states.get("sensor.downstairs_downstairs_roomiq_temperature")
+    assert state is not None
+    assert state.state == "unavailable"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_any_room_iq_monitors(
+    hass: HomeAssistant, patch_nexia_home: NexiaHome
+) -> None:
+    """Test any_room_iq_monitors after unload."""
+
+    config_entry = await setup_integration(hass, patch_nexia_home)
+
+    assert patch_nexia_home.any_room_iq_monitors() is True
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert patch_nexia_home.any_room_iq_monitors() is False
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_room_iq_sensor_no_longer_present(
+    hass: HomeAssistant, patch_nexia_home: NexiaHome, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test RoomIQ sensor no longer present."""
+    zone = patch_nexia_home.get_thermostat_by_id(2000004).get_zone_by_id(500)
+    get_item = zone.get_sensor_by_id.side_effect
+    zone.get_sensor_by_id.side_effect = KeyError
+
+    await setup_integration(hass, patch_nexia_home)
+
+    state = hass.states.get("sensor.upstairs_upstairs_roomiq_humidity")
+    assert state is not None
+    assert state.state == "unavailable"
+
+    def get_sensor_raise_from_native_value(sensor_id: int) -> NexiaSensor:
+        for caller_frame in inspect.stack():
+            if caller_frame.function == "native_value":
+                raise KeyError
+
+        return get_item(sensor_id)
+
+    # The state machine won't call NexiaRoomIQSensor.native_value() when unavailable, so only
+    # raise when called from native_value() & return something new to coordinator so it updates
+    zone.get_sensor_by_id.side_effect = get_sensor_raise_from_native_value
+    patch_nexia_home.update.return_value = {"key": "different value"}
+
+    freezer.tick(timedelta(seconds=COORDINATOR_UPDATE_RATE))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.upstairs_upstairs_roomiq_humidity")
+    assert state is not None
+    assert state.state == "unknown"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_1_room_iq_sensor(
+    hass: HomeAssistant, patch_nexia_home: NexiaHome
+) -> None:
+    """Test one-RoomIQ sensor case."""
+    zone = patch_nexia_home.get_thermostat_by_id(2000003).get_zone_by_id(400)
+    assert len(zone.get_sensors()) == 1
+
+    await setup_integration(hass, patch_nexia_home)
+
+    state = hass.states.get("sensor.kitchen_kitchen_roomiq_temperature")
+    assert state is None

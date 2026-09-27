@@ -1,7 +1,5 @@
 """Test the Bond config flow."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 from ipaddress import ip_address
 from typing import Any
@@ -538,7 +536,7 @@ async def test_zeroconf_form_with_token_available(hass: HomeAssistant) -> None:
 async def test_zeroconf_form_with_token_available_name_unavailable(
     hass: HomeAssistant,
 ) -> None:
-    """Test we get the discovery form when we can get the token but the name is unavailable."""
+    """Test discovery form when we can get the token but name is unavailable."""
 
     with (
         patch_bond_version(
@@ -651,7 +649,7 @@ async def test_zeroconf_in_setup_retry_state(hass: HomeAssistant) -> None:
 
 
 async def test_zeroconf_already_configured_refresh_token(hass: HomeAssistant) -> None:
-    """Test starting a flow from zeroconf when already configured and the token is out of date."""
+    """Test zeroconf flow when already configured and token is outdated."""
     entry2 = MockConfigEntry(
         domain=DOMAIN,
         unique_id="not-the-same-bond-id",
@@ -702,7 +700,7 @@ async def test_zeroconf_already_configured_refresh_token(hass: HomeAssistant) ->
 async def test_zeroconf_already_configured_no_reload_same_host(
     hass: HomeAssistant,
 ) -> None:
-    """Test starting a flow from zeroconf when already configured does not reload if the host is the same."""
+    """Test zeroconf when already configured does not reload if host is the same."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="already-registered-bond-id",
@@ -731,6 +729,42 @@ async def test_zeroconf_already_configured_no_reload_same_host(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_zeroconf_already_configured_keeps_valid_host(
+    hass: HomeAssistant,
+) -> None:
+    """Test zeroconf keeps the stored host when the bridge still announces it."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="already-registered-bond-id",
+        data={CONF_HOST: "127.0.0.3", CONF_ACCESS_TOKEN: "correct-token"},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        _patch_async_setup_entry() as mock_setup_entry,
+        patch_bond_token(return_value={"token": "correct-token"}),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=ZeroconfServiceInfo(
+                ip_address=ip_address("127.0.0.2"),
+                ip_addresses=[ip_address("127.0.0.2"), ip_address("127.0.0.3")],
+                hostname="mock_hostname",
+                name="already-registered-bond-id.some-other-tail-info",
+                port=None,
+                properties={},
+                type="mock_type",
+            ),
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "127.0.0.3"
     assert len(mock_setup_entry.mock_calls) == 0
 
 

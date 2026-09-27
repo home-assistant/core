@@ -1,0 +1,8 @@
+{
+  "domain": "motion",
+  "name": "Motion",
+  "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/motion",
+  "integration_type": "system",
+  "quality_scale": "internal"
+}

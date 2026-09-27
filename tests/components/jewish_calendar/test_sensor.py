@@ -1,9 +1,9 @@
 """The tests for the Jewish calendar sensors."""
 
+from collections.abc import AsyncGenerator
 from datetime import datetime as dt
 from typing import Any
 
-from freezegun.api import FrozenDateTimeFactory
 from hdate.holidays import HolidayDatabase
 from hdate.parasha import Parasha
 import pytest
@@ -11,7 +11,9 @@ import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from . import TimeValue, TimeValueSequence
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("language", ["en", "he"])
@@ -412,7 +414,8 @@ SHABBAT_PARAMS = [
             "he_holiday": "ערב שבועות",
         },
         None,
-        id="currently_first_day_of_three_day_type1_yomtov_in_diaspora",  # Type 1 = Sat/Sun/Mon
+        # Type 1 = Sat/Sun/Mon
+        id="currently_first_day_of_three_day_type1_yomtov_in_diaspora",
     ),
     pytest.param(
         "New York",
@@ -428,7 +431,8 @@ SHABBAT_PARAMS = [
             "he_holiday": "שבועות",
         },
         None,
-        id="currently_second_day_of_three_day_type1_yomtov_in_diaspora",  # Type 1 = Sat/Sun/Mon
+        # Type 1 = Sat/Sun/Mon
+        id="currently_second_day_of_three_day_type1_yomtov_in_diaspora",
     ),
     pytest.param(
         "Jerusalem",
@@ -444,7 +448,8 @@ SHABBAT_PARAMS = [
             "he_holiday": "א' ראש השנה",
         },
         None,
-        id="currently_first_day_of_three_day_type2_yomtov_in_israel",  # Type 2 = Thurs/Fri/Sat
+        # Type 2 = Thurs/Fri/Sat
+        id="currently_first_day_of_three_day_type2_yomtov_in_israel",
     ),
     pytest.param(
         "Jerusalem",
@@ -460,7 +465,8 @@ SHABBAT_PARAMS = [
             "he_holiday": "ב' ראש השנה",
         },
         None,
-        id="currently_second_day_of_three_day_type2_yomtov_in_israel",  # Type 2 = Thurs/Fri/Sat
+        # Type 2 = Thurs/Fri/Sat
+        id="currently_second_day_of_three_day_type2_yomtov_in_israel",
     ),
     pytest.param(
         "Jerusalem",
@@ -476,7 +482,8 @@ SHABBAT_PARAMS = [
             "he_holiday": "",
         },
         None,
-        id="currently_third_day_of_three_day_type2_yomtov_in_israel",  # Type 2 = Thurs/Fri/Sat
+        # Type 2 = Thurs/Fri/Sat
+        id="currently_third_day_of_three_day_type2_yomtov_in_israel",
     ),
 ]
 
@@ -542,28 +549,67 @@ async def test_dafyomi_sensor(hass: HomeAssistant, results: str) -> None:
 
 
 @pytest.mark.parametrize(
-    ("test_time", "results"),
+    "test_sequence",
     [
-        (
-            dt(2025, 6, 10, 17),
-            {
-                "initial_state": "14 Sivan 5785",
-                "move_to": dt(2025, 6, 10, 23, 0),
-                "new_state": "15 Sivan 5785",
-            },
-        ),
+        TimeValueSequence(
+            [
+                TimeValue(dt(2025, 6, 10, 17), "14 Sivan 5785"),  # Initial time
+                TimeValue(dt(2025, 6, 10, 23, 0), "15 Sivan 5785"),  # Later in the day
+                TimeValue(dt(2025, 6, 11, 9, 0), "15 Sivan 5785"),  # Next morning
+                TimeValue(dt(2025, 6, 11, 22, 0), "16 Sivan 5785"),  # Next evening
+            ]
+        )
     ],
     indirect=True,
 )
-@pytest.mark.usefixtures("setup_at_time")
-async def test_sensor_does_not_update_on_time_change(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, results: dict[str, Any]
+async def test_sensor_date_changes_with_time(
+    hass: HomeAssistant, test_sequence: AsyncGenerator[Any]
 ) -> None:
-    """Test that the Jewish calendar sensor does not update after time advances (regression test for update bug)."""
-    sensor_id = "sensor.jewish_calendar_date"
-    assert hass.states.get(sensor_id).state == results["initial_state"]
+    """Test the date sensor updates when time crosses boundaries."""
+    async for expected_state in test_sequence():
+        current_state = hass.states.get("sensor.jewish_calendar_date").state
+        assert current_state == expected_state
 
-    freezer.move_to(results["move_to"])
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert hass.states.get(sensor_id).state == results["new_state"]
+
+@pytest.mark.parametrize("location_data", ["New York"], indirect=True)
+@pytest.mark.parametrize(
+    "test_sequence",
+    [
+        TimeValueSequence(
+            [
+                TimeValue(dt(2018, 9, 9, 18, 55), "Erev Rosh Hashana"),
+                TimeValue(dt(2018, 9, 9, 19, 1), "Rosh Hashana I"),
+            ]
+        )
+    ],
+    indirect=True,
+)
+async def test_sensor_holiday_changes_at_candle_lighting(
+    hass: HomeAssistant, test_sequence: AsyncGenerator[Any]
+) -> None:
+    """Test that the holiday sensor updates at candle lighting when available."""
+    async for expected_state in test_sequence():
+        current_state = hass.states.get("sensor.jewish_calendar_holiday").state
+        assert current_state == expected_state
+
+
+@pytest.mark.parametrize("location_data", ["New York"], indirect=True)
+@pytest.mark.parametrize(
+    "test_sequence",
+    [
+        TimeValueSequence(
+            [
+                TimeValue(dt(2018, 9, 11, 19, 20), "Rosh Hashana II"),
+                TimeValue(dt(2018, 9, 11, 20, 0), "Tzom Gedaliah"),
+            ]
+        )
+    ],
+    indirect=True,
+)
+async def test_sensor_holiday_changes_at_havdalah(
+    hass: HomeAssistant, test_sequence: AsyncGenerator[Any]
+) -> None:
+    """Test that the holiday sensor updates at havdalah when available."""
+    async for expected_state in test_sequence():
+        current_state = hass.states.get("sensor.jewish_calendar_holiday").state
+        assert current_state == expected_state

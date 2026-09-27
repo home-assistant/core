@@ -1,8 +1,6 @@
 """Passive update coordinator for the Bluetooth integration."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import (
@@ -52,6 +50,7 @@ class PassiveBluetoothDataUpdateCoordinator(
             update_callback()
 
     @callback
+    @override
     def _async_handle_unavailable(
         self, service_info: BluetoothServiceInfoBleak
     ) -> None:
@@ -60,6 +59,7 @@ class PassiveBluetoothDataUpdateCoordinator(
         self.async_update_listeners()
 
     @callback
+    @override
     def async_add_listener(
         self, update_callback: CALLBACK_TYPE, context: Any = None
     ) -> Callable[[], None]:
@@ -80,6 +80,7 @@ class PassiveBluetoothDataUpdateCoordinator(
         )
 
     @callback
+    @override
     def _async_handle_bluetooth_event(
         self,
         service_info: BluetoothServiceInfoBleak,
@@ -90,17 +91,19 @@ class PassiveBluetoothDataUpdateCoordinator(
         self.async_update_listeners()
 
 
-class PassiveBluetoothCoordinatorEntity[
-    _PassiveBluetoothDataUpdateCoordinatorT: PassiveBluetoothDataUpdateCoordinator = PassiveBluetoothDataUpdateCoordinator
-](  # pylint: disable=hass-enforce-class-module
-    BaseCoordinatorEntity[_PassiveBluetoothDataUpdateCoordinatorT]
-):
+class PassiveBluetoothCoordinatorEntity[  # pylint: disable=home-assistant-enforce-class-module
+    _PassiveBluetoothDataUpdateCoordinatorT: (
+        PassiveBluetoothDataUpdateCoordinator
+    ) = PassiveBluetoothDataUpdateCoordinator
+](BaseCoordinatorEntity[_PassiveBluetoothDataUpdateCoordinatorT]):
     """A class for entities using DataUpdateCoordinator."""
 
+    @override
     async def async_update(self) -> None:
         """All updates are passive."""
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.available

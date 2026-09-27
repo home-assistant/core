@@ -1,14 +1,12 @@
 """Manage the history_stats data."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import datetime
 import logging
 import math
 
 from homeassistant.components.recorder import get_instance, history
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.template import Template
 from homeassistant.util import dt as dt_util
 
@@ -47,6 +45,7 @@ class HistoryStats:
         start: Template | None,
         end: Template | None,
         duration: datetime.timedelta | None,
+        min_state_duration: datetime.timedelta,
         preview: bool = False,
     ) -> None:
         """Init the history stats manager."""
@@ -58,16 +57,15 @@ class HistoryStats:
         self._has_recorder_data = False
         self._entity_states = set(entity_states)
         self._duration = duration
+        self._min_state_duration = min_state_duration.total_seconds()
         self._start = start
         self._end = end
         self._preview = preview
 
-        self._pending_events: list[Event[EventStateChangedData]] = []
+        self._pending_events: list[State] = []
         self._query_count = 0
 
-    async def async_update(
-        self, event: Event[EventStateChangedData] | None
-    ) -> HistoryStatsState:
+    async def async_update(self, new_state: State | None) -> HistoryStatsState:
         """Update the stats at a given time."""
         # Get previous values of start and end
         previous_period_start, previous_period_end = self._period
@@ -92,13 +90,15 @@ class HistoryStats:
         utc_now = dt_util.utcnow()
         now_timestamp = floored_timestamp(utc_now)
 
-        # If we end up querying data from the recorder when we get triggered by a new state
-        # change event, it is possible this function could be reentered a second time before
-        # the first recorder query returns. In that case a second recorder query will be done
-        # and we need to hold the new event so that we can append it after the second query.
+        # If we end up querying data from the recorder when we
+        # get triggered by a new state change event, it is possible
+        # this function could be reentered a second time before the
+        # first recorder query returns. In that case a second
+        # recorder query will be done and we need to hold the new
+        # event so that we can append it after the second query.
         # Otherwise the event will be dropped.
-        if event:
-            self._pending_events.append(event)
+        if new_state:
+            self._pending_events.append(new_state)
 
         if current_period_start_timestamp > now_timestamp:
             # History cannot tell the future
@@ -133,7 +133,7 @@ class HistoryStats:
                 self._prune_history_cache(current_period_start_timestamp)
 
             new_data = False
-            if event and (new_state := event.data["new_state"]) is not None:
+            if new_state is not None:
                 if current_period_start_timestamp <= floored_timestamp(
                     new_state.last_changed
                 ):
@@ -154,16 +154,15 @@ class HistoryStats:
             await self._async_history_from_db(
                 current_period_start_timestamp, now_timestamp
             )
-            for pending_event in self._pending_events:
-                if (new_state := pending_event.data["new_state"]) is not None:
-                    if current_period_start_timestamp <= floored_timestamp(
-                        new_state.last_changed
-                    ):
-                        self._history_current_period.append(
-                            HistoryState(
-                                new_state.state, new_state.last_changed_timestamp
-                            )
+            for pending_state in self._pending_events:
+                if current_period_start_timestamp <= floored_timestamp(
+                    pending_state.last_changed
+                ):
+                    self._history_current_period.append(
+                        HistoryState(
+                            pending_state.state, pending_state.last_changed_timestamp
                         )
+                    )
 
             self._has_recorder_data = True
 
@@ -195,8 +194,7 @@ class HistoryStats:
         finally:
             self._query_count -= 1
         self._history_current_period = [
-            HistoryState(state.state, state.last_changed.timestamp())
-            for state in states
+            HistoryState(state.state, state.last_changed_timestamp) for state in states
         ]
 
     def _state_changes_during_period(
@@ -217,7 +215,7 @@ class HistoryStats:
     def _async_compute_seconds_and_changes(
         self, now_timestamp: float, start_timestamp: float, end_timestamp: float
     ) -> tuple[float, int]:
-        """Compute the seconds matched and changes from the history list and first state."""
+        """Compute seconds matched and changes from history list."""
         # state_changes_during_period is called with include_start_time_state=True
         # which is the default and always provides the state at the start
         # of the period
@@ -243,18 +241,38 @@ class HistoryStats:
                 )
                 break
 
-            if previous_state_matches:
-                elapsed += state_change_timestamp - last_state_change_timestamp
-            elif current_state_matches:
-                match_count += 1
+            if not previous_state_matches and current_state_matches:
+                # We are entering a matching state.
+                # This marks the start of a new candidate block that may later
+                # qualify if it lasts at least min_state_duration.
+                last_state_change_timestamp = max(
+                    start_timestamp, state_change_timestamp
+                )
+            elif previous_state_matches and not current_state_matches:
+                # We are leaving a matching state.
+                # This closes the current matching block and allows to
+                # evaluate its total duration.
+                block_duration = state_change_timestamp - last_state_change_timestamp
+                if block_duration >= self._min_state_duration:
+                    # The block lasted long enough so we increment match count
+                    # and accumulate its duration.
+                    elapsed += block_duration
+                    match_count += 1
 
             previous_state_matches = current_state_matches
-            last_state_change_timestamp = max(start_timestamp, state_change_timestamp)
 
         # Count time elapsed between last history state and end of measure
         if previous_state_matches:
+            # We are still inside a matching block at the end of the
+            # measurement window. This block has not been closed by a
+            # transition, so we evaluate it up to measure_end.
             measure_end = min(end_timestamp, now_timestamp)
-            elapsed += measure_end - last_state_change_timestamp
+            last_state_duration = max(0, measure_end - last_state_change_timestamp)
+            if last_state_duration >= self._min_state_duration:
+                # The open block lasted long enough so we increment match count
+                # and accumulate its duration.
+                elapsed += last_state_duration
+                match_count += 1
 
         # Save value in seconds
         seconds_matched = elapsed
@@ -263,7 +281,8 @@ class HistoryStats:
     def _prune_history_cache(self, start_timestamp: float) -> None:
         """Remove unnecessary old data from the history state cache from previous runs.
 
-        Update the timestamp of the last record from before the start to the current start time.
+        Update the timestamp of the last record from before the
+        start to the current start time.
         """
         trim_count = 0
         for i, history_state in enumerate(self._history_current_period):

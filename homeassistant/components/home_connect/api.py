@@ -1,6 +1,6 @@
 """API for Home Connect bound to HASS OAuth."""
 
-from typing import cast
+from typing import cast, override
 
 from aiohomeconnect.client import AbstractAuth
 from aiohomeconnect.const import API_ENDPOINT
@@ -23,6 +23,7 @@ class AsyncConfigEntryAuth(AbstractAuth):
         super().__init__(get_async_client(hass), host=API_ENDPOINT)
         self.session = oauth_session
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         await self.session.async_ensure_token_valid()

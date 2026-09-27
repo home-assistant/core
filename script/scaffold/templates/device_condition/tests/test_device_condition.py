@@ -1,7 +1,5 @@
 """The tests for NEW_NAME device conditions."""
 
-from __future__ import annotations
-
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -75,7 +73,11 @@ async def test_if_state(hass: HomeAssistant, service_calls: list[ServiceCall]) -
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_on - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_on"
+                                " - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -93,7 +95,11 @@ async def test_if_state(hass: HomeAssistant, service_calls: list[ServiceCall]) -
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_off - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_off"
+                                " - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },

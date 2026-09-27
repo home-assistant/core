@@ -1,12 +1,10 @@
 """Config flow for Wemo."""
 
-from __future__ import annotations
-
 from dataclasses import fields
-from typing import Any, get_type_hints
+from typing import Any, get_type_hints, override
 
+import probatio
 import pywemo
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.core import HomeAssistant, callback
@@ -30,6 +28,7 @@ class WemoFlow(DiscoveryFlowHandler, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         return WemoOptionsFlow()
@@ -58,17 +57,18 @@ class WemoOptionsFlow(OptionsFlow):
         )
 
 
-def _schema_for_options(options: Options) -> vol.Schema:
-    """Return the Voluptuous schema for the Options instance.
+def _schema_for_options(options: Options) -> probatio.Schema:
+    """Return the Probatio schema for the Options instance.
 
     All values are optional. The default value is set to the current value and
     the type hint is set to the value of the field type annotation.
     """
-    return vol.Schema(
+    type_hints = get_type_hints(type(options))
+    return probatio.Schema(
         {
-            vol.Optional(
+            probatio.Optional(
                 field.name, default=getattr(options, field.name)
-            ): get_type_hints(options)[field.name]
+            ): type_hints[field.name]
             for field in fields(options)
         }
     )

@@ -80,7 +80,7 @@ async def test_dynamic_new_devices(
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test light platform setup with at first no devices and dynamically adding a device."""
+    """Test platform setup with no devices and dynamically adding one."""
     mock_config_entry.add_to_hass(hass)
 
     eheimdigital_hub_mock.return_value.devices = {}
@@ -135,7 +135,7 @@ async def test_turn_off(
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.mock_classicledcontrol_e_channel_1"},
+            {ATTR_ENTITY_ID: "light.mock_aquarium_mock_classicledcontrol_e_channel_1"},
             blocking=True,
         )
 
@@ -146,7 +146,7 @@ async def test_turn_off(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.mock_classicledcontrol_e_channel_1"},
+        {ATTR_ENTITY_ID: "light.mock_aquarium_mock_classicledcontrol_e_channel_1"},
         blocking=True,
     )
 
@@ -191,7 +191,7 @@ async def test_turn_on_brightness(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {
-                ATTR_ENTITY_ID: "light.mock_classicledcontrol_e_channel_1",
+                ATTR_ENTITY_ID: "light.mock_aquarium_mock_classicledcontrol_e_channel_1",
                 ATTR_BRIGHTNESS: dim_input,
             },
             blocking=True,
@@ -205,7 +205,7 @@ async def test_turn_on_brightness(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.mock_classicledcontrol_e_channel_1",
+            ATTR_ENTITY_ID: "light.mock_aquarium_mock_classicledcontrol_e_channel_1",
             ATTR_BRIGHTNESS: dim_input,
         },
         blocking=True,
@@ -241,7 +241,7 @@ async def test_turn_on_effect(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.mock_classicledcontrol_e_channel_1",
+            ATTR_ENTITY_ID: "light.mock_aquarium_mock_classicledcontrol_e_channel_1",
             ATTR_EFFECT: EFFECT_DAYCL_MODE,
         },
         blocking=True,
@@ -274,7 +274,11 @@ async def test_state_update(
 
     await eheimdigital_hub_mock.call_args.kwargs["receive_callback"]()
 
-    assert (state := hass.states.get("light.mock_classicledcontrol_e_channel_1"))
+    assert (
+        state := hass.states.get(
+            "light.mock_aquarium_mock_classicledcontrol_e_channel_1"
+        )
+    )
     assert state.attributes["brightness"] == value_to_brightness((1, 100), 20)
 
 
@@ -299,6 +303,6 @@ async def test_update_failed(
     await hass.async_block_till_done()
 
     assert (
-        hass.states.get("light.mock_classicledcontrol_e_channel_1").state
+        hass.states.get("light.mock_aquarium_mock_classicledcontrol_e_channel_1").state
         == STATE_UNAVAILABLE
     )

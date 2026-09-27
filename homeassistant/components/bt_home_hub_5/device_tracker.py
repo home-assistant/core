@@ -1,11 +1,10 @@
 """Support for BT Home Hub 5."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 import bthomehub5_devicelist
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -22,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_DEFAULT_IP = "192.168.1.254"
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string}
+    {probatio.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string}
 )
 
 
@@ -48,12 +47,14 @@ class BTHomeHub5DeviceScanner(DeviceScanner):
         data = bthomehub5_devicelist.get_devicelist(self.host)
         self.success_init = data is not None
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self.update_info()
 
         return (device for device in self.last_results)
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         # If not initialised and not already scanned and not found.

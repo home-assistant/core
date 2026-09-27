@@ -1,14 +1,12 @@
 """Config flow for Lidarr."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientConnectorError
 from aiopyarr import exceptions
 from aiopyarr.lidarr_client import LidarrClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
@@ -39,6 +37,7 @@ class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(step_id="reauth_confirm")
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -51,7 +50,7 @@ class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_API_KEY] = result[1]
             except exceptions.ArrAuthenticationException:
                 errors = {"base": "invalid_auth"}
-            except (ClientConnectorError, exceptions.ArrConnectionException):
+            except ClientConnectorError, exceptions.ArrConnectionException:
                 errors = {"base": "cannot_connect"}
             except exceptions.ArrWrongAppException:
                 errors = {"base": "wrong_app"}
@@ -74,11 +73,13 @@ class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_URL, default=user_input.get(CONF_URL, "")): str,
-                    vol.Optional(CONF_API_KEY): str,
-                    vol.Optional(
+                    probatio.Required(
+                        CONF_URL, default=user_input.get(CONF_URL, "")
+                    ): str,
+                    probatio.Optional(CONF_API_KEY): str,
+                    probatio.Optional(
                         CONF_VERIFY_SSL,
                         default=user_input.get(CONF_VERIFY_SSL, False),
                     ): bool,

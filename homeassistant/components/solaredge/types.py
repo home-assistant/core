@@ -1,7 +1,5 @@
 """Typing for the SolarEdge Monitoring API."""
 
-from __future__ import annotations
-
 from typing import TypedDict
 
 from aiosolaredge import SolarEdge

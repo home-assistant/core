@@ -1,12 +1,10 @@
 """Config flow to configure the Ambient PWS component."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from aioambient import API
 from aioambient.errors import AmbientError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
@@ -22,8 +20,8 @@ class AmbientStationFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.data_schema = vol.Schema(
-            {vol.Required(CONF_API_KEY): str, vol.Required(CONF_APP_KEY): str}
+        self.data_schema = probatio.Schema(
+            {probatio.Required(CONF_API_KEY): str, probatio.Required(CONF_APP_KEY): str}
         )
 
     async def _show_form(self, errors: dict | None = None) -> ConfigFlowResult:
@@ -31,9 +29,10 @@ class AmbientStationFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.data_schema,
-            errors=errors if errors else {},
+            errors=errors or {},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

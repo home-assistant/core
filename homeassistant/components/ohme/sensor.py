@@ -1,9 +1,8 @@
 """Platform for sensor."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from ohme import ChargerStatus, OhmeApiClient
 
@@ -18,7 +17,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
-    UnitOfEnergy,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
@@ -49,6 +47,7 @@ SENSORS = [
         key="current",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda client: client.power.amps,
     ),
     OhmeSensorDescription(
@@ -57,16 +56,8 @@ SENSORS = [
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=1,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda client: client.power.watts,
-    ),
-    OhmeSensorDescription(
-        key="energy",
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=1,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda client: client.energy,
     ),
     OhmeSensorDescription(
         key="voltage",
@@ -81,13 +72,15 @@ SENSORS = [
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda client: client.battery,
     ),
     OhmeSensorDescription(
         key="slot_list",
         translation_key="slot_list",
-        value_fn=lambda client: ", ".join(str(x) for x in client.slots)
-        or STATE_UNKNOWN,
+        value_fn=lambda client: (
+            ", ".join(str(x) for x in client.slots) or STATE_UNKNOWN
+        ),
     ),
 ]
 
@@ -113,6 +106,7 @@ class OhmeSensor(OhmeEntity, SensorEntity):
     entity_description: OhmeSensorDescription
 
     @property
+    @override
     def native_value(self) -> str | int | float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.client)

@@ -73,7 +73,7 @@ async def test_dynamic_new_devices(
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test light platform setup with at first no devices and dynamically adding a device."""
+    """Test platform setup with no devices and dynamically adding one."""
     mock_config_entry.add_to_hass(hass)
 
     eheimdigital_hub_mock.return_value.devices = {}
@@ -136,7 +136,10 @@ async def test_set_preset_mode(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: "climate.mock_heater", ATTR_PRESET_MODE: preset_mode},
+            {
+                ATTR_ENTITY_ID: "climate.mock_aquarium_mock_heater",
+                ATTR_PRESET_MODE: preset_mode,
+            },
             blocking=True,
         )
 
@@ -145,7 +148,10 @@ async def test_set_preset_mode(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.mock_heater", ATTR_PRESET_MODE: preset_mode},
+        {
+            ATTR_ENTITY_ID: "climate.mock_aquarium_mock_heater",
+            ATTR_PRESET_MODE: preset_mode,
+        },
         blocking=True,
     )
 
@@ -173,7 +179,10 @@ async def test_set_temperature(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: "climate.mock_heater", ATTR_TEMPERATURE: 26.0},
+            {
+                ATTR_ENTITY_ID: "climate.mock_aquarium_mock_heater",
+                ATTR_TEMPERATURE: 26.0,
+            },
             blocking=True,
         )
 
@@ -182,7 +191,7 @@ async def test_set_temperature(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.mock_heater", ATTR_TEMPERATURE: 26.0},
+        {ATTR_ENTITY_ID: "climate.mock_aquarium_mock_heater", ATTR_TEMPERATURE: 26.0},
         blocking=True,
     )
 
@@ -215,7 +224,10 @@ async def test_set_hvac_mode(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.mock_heater", ATTR_HVAC_MODE: hvac_mode},
+            {
+                ATTR_ENTITY_ID: "climate.mock_aquarium_mock_heater",
+                ATTR_HVAC_MODE: hvac_mode,
+            },
             blocking=True,
         )
 
@@ -224,7 +236,10 @@ async def test_set_hvac_mode(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.mock_heater", ATTR_HVAC_MODE: hvac_mode},
+        {
+            ATTR_ENTITY_ID: "climate.mock_aquarium_mock_heater",
+            ATTR_HVAC_MODE: hvac_mode,
+        },
         blocking=True,
     )
 
@@ -250,7 +265,7 @@ async def test_state_update(
     )
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get("climate.mock_heater"))
+    assert (state := hass.states.get("climate.mock_aquarium_mock_heater"))
 
     assert state.attributes["hvac_action"] == HVACAction.IDLE
     assert state.attributes["preset_mode"] == HEATER_BIO_MODE
@@ -260,6 +275,6 @@ async def test_state_update(
 
     await eheimdigital_hub_mock.call_args.kwargs["receive_callback"]()
 
-    assert (state := hass.states.get("climate.mock_heater"))
+    assert (state := hass.states.get("climate.mock_aquarium_mock_heater"))
     assert state.state == HVACMode.OFF
     assert state.attributes["preset_mode"] == HEATER_SMART_MODE

@@ -1,7 +1,35 @@
 {
+  "conditions": {
+    "in_zone": {
+      "condition": "mdi:map-marker-check"
+    },
+    "not_in_zone": {
+      "condition": "mdi:map-marker-remove"
+    },
+    "occupancy_is_detected": {
+      "condition": "mdi:account-group"
+    },
+    "occupancy_is_not_detected": {
+      "condition": "mdi:account-off"
+    }
+  },
   "services": {
     "reload": {
       "service": "mdi:reload"
+    }
+  },
+  "triggers": {
+    "entered": {
+      "trigger": "mdi:map-marker-plus"
+    },
+    "left": {
+      "trigger": "mdi:map-marker-minus"
+    },
+    "occupancy_cleared": {
+      "trigger": "mdi:account-off"
+    },
+    "occupancy_detected": {
+      "trigger": "mdi:account-group"
     }
   }
 }

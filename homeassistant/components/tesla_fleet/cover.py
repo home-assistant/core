@@ -1,8 +1,6 @@
 """Cover platform for Tesla Fleet integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from tesla_fleet_api.const import Scope, SunRoofCommand, Trunk, WindowCommand
 
@@ -60,6 +58,7 @@ class TeslaFleetWindowEntity(TeslaFleetVehicleEntity, CoverEntity):
         if not self.scoped:
             self._attr_supported_features = CoverEntityFeature(0)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
         fd = self.get("vehicle_state_fd_window")
@@ -77,6 +76,7 @@ class TeslaFleetWindowEntity(TeslaFleetVehicleEntity, CoverEntity):
         else:
             self._attr_is_closed = None
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Vent windows."""
         await self.wake_up_if_asleep()
@@ -86,6 +86,7 @@ class TeslaFleetWindowEntity(TeslaFleetVehicleEntity, CoverEntity):
         self._attr_is_closed = False
         self.async_write_ha_state()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close windows."""
         await self.wake_up_if_asleep()
@@ -114,10 +115,12 @@ class TeslaFleetChargePortEntity(TeslaFleetVehicleEntity, CoverEntity):
         if not self.scoped:
             self._attr_supported_features = CoverEntityFeature(0)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
         self._attr_is_closed = not self._value
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open charge port."""
         await self.wake_up_if_asleep()
@@ -125,6 +128,7 @@ class TeslaFleetChargePortEntity(TeslaFleetVehicleEntity, CoverEntity):
         self._attr_is_closed = False
         self.async_write_ha_state()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close charge port."""
         await self.wake_up_if_asleep()
@@ -147,10 +151,12 @@ class TeslaFleetFrontTrunkEntity(TeslaFleetVehicleEntity, CoverEntity):
         if not self.scoped:
             self._attr_supported_features = CoverEntityFeature(0)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
         self._attr_is_closed = self._value == CLOSED
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open front trunk."""
         await self.wake_up_if_asleep()
@@ -175,10 +181,12 @@ class TeslaFleetRearTrunkEntity(TeslaFleetVehicleEntity, CoverEntity):
         if not self.scoped:
             self._attr_supported_features = CoverEntityFeature(0)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
         self._attr_is_closed = self._value == CLOSED
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open rear trunk."""
         if self.is_closed is not False:
@@ -187,6 +195,7 @@ class TeslaFleetRearTrunkEntity(TeslaFleetVehicleEntity, CoverEntity):
             self._attr_is_closed = False
             self.async_write_ha_state()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close rear trunk."""
         if self.is_closed is not True:
@@ -213,6 +222,7 @@ class TeslaFleetSunroofEntity(TeslaFleetVehicleEntity, CoverEntity):
         if not self.scoped:
             self._attr_supported_features = CoverEntityFeature(0)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
         value = self._value
@@ -225,6 +235,7 @@ class TeslaFleetSunroofEntity(TeslaFleetVehicleEntity, CoverEntity):
             "vehicle_state_sun_roof_percent_open"
         )
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open sunroof."""
         await self.wake_up_if_asleep()
@@ -232,6 +243,7 @@ class TeslaFleetSunroofEntity(TeslaFleetVehicleEntity, CoverEntity):
         self._attr_is_closed = False
         self.async_write_ha_state()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close sunroof."""
         await self.wake_up_if_asleep()
@@ -239,6 +251,7 @@ class TeslaFleetSunroofEntity(TeslaFleetVehicleEntity, CoverEntity):
         self._attr_is_closed = True
         self.async_write_ha_state()
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Close sunroof."""
         await self.wake_up_if_asleep()

@@ -1,7 +1,5 @@
 """Tests for the ElevenLabs TTS entity."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 from homeassistant.config_entries import ConfigEntryState
@@ -18,10 +16,10 @@ async def test_setup(
     """Test entry setup without any exceptions."""
     mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
-    assert mock_entry.state == ConfigEntryState.LOADED
+    assert mock_entry.state is ConfigEntryState.LOADED
     # Unload
     await hass.config_entries.async_unload(mock_entry.entry_id)
-    assert mock_entry.state == ConfigEntryState.NOT_LOADED
+    assert mock_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_setup_connect_error(
@@ -33,4 +31,4 @@ async def test_setup_connect_error(
     mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
     # Ensure is not ready
-    assert mock_entry.state == ConfigEntryState.SETUP_RETRY
+    assert mock_entry.state is ConfigEntryState.SETUP_RETRY

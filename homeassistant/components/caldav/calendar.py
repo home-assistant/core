@@ -1,16 +1,14 @@
 """Support for WebDav Calendar."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from functools import partial
 import logging
-from typing import Any
+from typing import Any, override
 
-import caldav
+from caldav.davclient import DAVClient
 from caldav.lib.error import DAVError
-import requests
-import voluptuous as vol
+from caldav.lib.http_sync import requests as caldav_requests
+import probatio
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
@@ -40,6 +38,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import CalDavConfigEntry
 from .api import async_get_calendars
+from .const import TIMEOUT
 from .coordinator import CalDavUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,24 +57,26 @@ SUPPORTED_COMPONENT = "VEVENT"
 
 PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_URL): vol.Url(),
-        vol.Optional(CONF_CALENDARS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
-        vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
-        vol.Optional(CONF_CUSTOM_CALENDARS, default=[]): vol.All(
+        probatio.Required(CONF_URL): probatio.Url(),
+        probatio.Optional(CONF_CALENDARS, default=[]): probatio.All(
+            cv.ensure_list, [cv.string]
+        ),
+        probatio.Inclusive(CONF_USERNAME, "authentication"): cv.string,
+        probatio.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
+        probatio.Optional(CONF_CUSTOM_CALENDARS, default=[]): probatio.All(
             cv.ensure_list,
             [
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_CALENDAR): cv.string,
-                        vol.Required(CONF_NAME): cv.string,
-                        vol.Required(CONF_SEARCH): cv.string,
+                        probatio.Required(CONF_CALENDAR): cv.string,
+                        probatio.Required(CONF_NAME): cv.string,
+                        probatio.Required(CONF_SEARCH): cv.string,
                     }
                 )
             ],
         ),
-        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-        vol.Optional(CONF_DAYS, default=1): cv.positive_int,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        probatio.Optional(CONF_DAYS, default=1): cv.positive_int,
     }
 )
 
@@ -92,25 +93,33 @@ async def async_setup_platform(
     password = config.get(CONF_PASSWORD)
     days = config[CONF_DAYS]
 
-    client = caldav.DAVClient(
-        url, None, username, password, ssl_verify_cert=config[CONF_VERIFY_SSL]
+    client = await hass.async_add_executor_job(
+        partial(
+            DAVClient,
+            url,
+            None,
+            username,
+            password,
+            ssl_verify_cert=config[CONF_VERIFY_SSL],
+            timeout=TIMEOUT,
+        )
     )
 
     calendars = await async_get_calendars(hass, client, SUPPORTED_COMPONENT)
 
     entities = []
     device_id: str | None
-    for calendar in list(calendars):
+    for calendar, calendar_name in calendars:
         # If a calendar name was given in the configuration,
         # ignore all the others
-        if config[CONF_CALENDARS] and calendar.name not in config[CONF_CALENDARS]:
-            _LOGGER.debug("Ignoring calendar '%s'", calendar.name)
+        if config[CONF_CALENDARS] and calendar_name not in config[CONF_CALENDARS]:
+            _LOGGER.debug("Ignoring calendar '%s'", calendar_name)
             continue
 
         # Create additional calendars based on custom filtering rules
         for cust_calendar in config[CONF_CUSTOM_CALENDARS]:
             # Check that the base calendar matches
-            if cust_calendar[CONF_CALENDAR] != calendar.name:
+            if cust_calendar[CONF_CALENDAR] != calendar_name:
                 continue
 
             name = cust_calendar[CONF_NAME]
@@ -120,6 +129,7 @@ async def async_setup_platform(
                 hass,
                 None,
                 calendar=calendar,
+                calendar_name=calendar_name,
                 days=days,
                 include_all_day=True,
                 search=cust_calendar[CONF_SEARCH],
@@ -131,13 +141,14 @@ async def async_setup_platform(
         # Create a default calendar if there was no custom one for all calendars
         # that support events.
         if not config[CONF_CUSTOM_CALENDARS]:
-            name = calendar.name
-            device_id = calendar.name
+            name = calendar_name
+            device_id = calendar_name
             entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             coordinator = CalDavUpdateCoordinator(
                 hass,
                 None,
                 calendar=calendar,
+                calendar_name=calendar_name,
                 days=days,
                 include_all_day=False,
                 search=None,
@@ -156,26 +167,25 @@ async def async_setup_entry(
 ) -> None:
     """Set up the CalDav calendar platform for a config entry."""
     calendars = await async_get_calendars(hass, entry.runtime_data, SUPPORTED_COMPONENT)
-    async_add_entities(
-        (
-            WebDavCalendarEntity(
-                calendar.name,
-                async_generate_entity_id(ENTITY_ID_FORMAT, calendar.name, hass=hass),
-                CalDavUpdateCoordinator(
-                    hass,
-                    entry,
-                    calendar=calendar,
-                    days=CONFIG_ENTRY_DEFAULT_DAYS,
-                    include_all_day=True,
-                    search=None,
-                ),
-                unique_id=f"{entry.entry_id}-{calendar.id}",
-            )
-            for calendar in calendars
-            if calendar.name
-        ),
-        True,
-    )
+    entities = [
+        WebDavCalendarEntity(
+            calendar_name,
+            async_generate_entity_id(ENTITY_ID_FORMAT, calendar_name, hass=hass),
+            CalDavUpdateCoordinator(
+                hass,
+                entry,
+                calendar=calendar,
+                calendar_name=calendar_name,
+                days=CONFIG_ENTRY_DEFAULT_DAYS,
+                include_all_day=True,
+                search=None,
+            ),
+            unique_id=f"{entry.entry_id}-{calendar.id}",
+        )
+        for calendar, calendar_name in calendars
+        if calendar_name
+    ]
+    async_add_entities(entities, True)
 
 
 class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarEntity):
@@ -201,16 +211,19 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         self._supports_offset = supports_offset
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return self._event
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
         return await self.coordinator.async_get_events(hass, start_date, end_date)
 
+    @override
     async def async_create_event(self, **kwargs: Any) -> None:
         """Create a new event in the calendar."""
         _LOGGER.debug("Event: %s", kwargs)
@@ -233,10 +246,15 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
             await self.hass.async_add_executor_job(
                 partial(self.coordinator.calendar.add_event, **item_data),
             )
-        except (requests.ConnectionError, DAVError) as err:
+        except (
+            caldav_requests.exceptions.ConnectionError,
+            caldav_requests.exceptions.Timeout,
+            DAVError,
+        ) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update event data."""
         self._event = self.coordinator.data
@@ -251,6 +269,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
             }
         super()._handle_coordinator_update()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass update state from existing coordinator data."""
         await super().async_added_to_hass()

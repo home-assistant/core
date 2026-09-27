@@ -1,8 +1,8 @@
 """Data update coordinator for trigger based template entities."""
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, cast, override
 
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.const import (
@@ -17,11 +17,11 @@ from homeassistant.core import Context, CoreState, Event, HomeAssistant, callbac
 from homeassistant.helpers import condition, discovery, trigger as trigger_helper
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.script_variables import ScriptVariables
-from homeassistant.helpers.trace import trace_get
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, PLATFORMS
+from .validators import check_conditions
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
             hass, _LOGGER, config_entry=None, name="Trigger Update Coordinator"
         )
         self.config = config
-        self._cond_func: Callable[[Mapping[str, Any] | None], bool] | None = None
+        self._cond_func: condition.ConditionsChecker | None = None
         self._unsub_start: Callable[[], None] | None = None
         self._unsub_trigger: Callable[[], None] | None = None
         self._script: Script | None = None
@@ -59,13 +59,20 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         """Return unique ID for the entity."""
         return self.config.get("unique_id")
 
-    @callback
-    def async_remove(self) -> None:
-        """Signal that the entities need to remove themselves."""
+    @override
+    async def async_shutdown(self) -> None:
+        """Shut down the coordinator and clean up resources."""
+        await super().async_shutdown()
         if self._unsub_start:
             self._unsub_start()
+            self._unsub_start = None
         if self._unsub_trigger:
             self._unsub_trigger()
+            self._unsub_trigger = None
+        if self._script is not None:
+            await self._script.async_unload()
+        if self._cond_func is not None:
+            self._cond_func.async_unload()
 
     async def async_setup(self, hass_config: ConfigType) -> None:
         """Set up the trigger and create entities."""
@@ -119,7 +126,6 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
             DOMAIN,
             self.name,
             self.logger.log,
-            start_event is not None,
         )
 
     async def _handle_triggered_with_script(
@@ -129,7 +135,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         if self._run_variables:
             run_variables = self._run_variables.async_render(self.hass, run_variables)
 
-        if not self._check_condition(run_variables):
+        if not check_conditions(self._cond_func, run_variables):
             return
         # Create a context referring to the trigger context.
         trigger_context_id = None if context is None else context.id
@@ -147,20 +153,9 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         if self._run_variables:
             run_variables = self._run_variables.async_render(self.hass, run_variables)
 
-        if not self._check_condition(run_variables):
+        if not check_conditions(self._cond_func, run_variables):
             return
         self._execute_update(run_variables, context)
-
-    def _check_condition(self, run_variables: TemplateVarsType) -> bool:
-        if not self._cond_func:
-            return True
-        condition_result = self._cond_func(run_variables)
-        if condition_result is False:
-            _LOGGER.debug(
-                "Conditions not met, aborting template trigger update. Condition summary: %s",
-                trace_get(clear=False),
-            )
-        return condition_result
 
     @callback
     def _execute_update(

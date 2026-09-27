@@ -1,7 +1,5 @@
 """The Synology DSM component."""
 
-from __future__ import annotations
-
 from itertools import chain
 import logging
 from typing import TYPE_CHECKING
@@ -136,6 +134,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: SynologyDSMConfigEntry) 
         coordinator_cameras=coordinator_cameras,
         coordinator_switches=coordinator_switches,
     )
+
+    # Register parent devices before forwarding platform setups so that child
+    # devices (storage/USB devices, surveillance station, cameras) can resolve
+    # their via_device_id regardless of platform setup order.
+    if TYPE_CHECKING:
+        assert api.information is not None
+        assert api.network is not None
+    central_device = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, api.information.serial)},
+        connections={(dr.CONNECTION_NETWORK_MAC, mac) for mac in api.network.macs},
+        name=api.network.hostname,
+        manufacturer="Synology",
+        model=api.information.model,
+        sw_version=api.information.version_string,
+        configuration_url=api.config_url,
+    )
+    if api.surveillance_station is not None:
+        dev_reg.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={
+                (
+                    DOMAIN,
+                    f"{api.information.serial}_{SynoSurveillanceStation.INFO_API_KEY}",
+                )
+            },
+            name=f"{api.network.hostname} Surveillance Station",
+            manufacturer="Synology",
+            model=api.information.model,
+            sw_version=coordinator_switches.version if coordinator_switches else None,
+            via_device_id=central_device.id,
+        )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     if entry.options[CONF_BACKUP_SHARE]:
@@ -173,7 +204,7 @@ async def async_unload_entry(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: SynologyDSMConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, entry: SynologyDSMConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove synology_dsm config entry from a device."""
     data = entry.runtime_data

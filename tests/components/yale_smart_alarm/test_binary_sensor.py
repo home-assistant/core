@@ -1,7 +1,5 @@
 """The test for the Yale Smart Alarm binary sensor platform."""
 
-from __future__ import annotations
-
 from unittest.mock import Mock
 
 import pytest

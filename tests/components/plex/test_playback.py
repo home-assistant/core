@@ -103,7 +103,9 @@ async def test_media_player_playback(
             {
                 ATTR_ENTITY_ID: media_player,
                 ATTR_MEDIA_CONTENT_TYPE: MediaType.MOVIE,
-                ATTR_MEDIA_CONTENT_ID: '{"library_name": "Movies", "title": "Movie 1" }',
+                ATTR_MEDIA_CONTENT_ID: (
+                    '{"library_name": "Movies", "title": "Movie 1" }'
+                ),
             },
             True,
         )
@@ -122,7 +124,9 @@ async def test_media_player_playback(
             {
                 ATTR_ENTITY_ID: media_player,
                 ATTR_MEDIA_CONTENT_TYPE: MediaType.MOVIE,
-                ATTR_MEDIA_CONTENT_ID: '{"library_name": "Movies", "title": "Movie 1", "resume": true}',
+                ATTR_MEDIA_CONTENT_ID: (
+                    '{"library_name": "Movies", "title": "Movie 1", "resume": true}'
+                ),
             },
             True,
         )
@@ -236,7 +240,11 @@ async def test_media_player_playback(
             {
                 ATTR_ENTITY_ID: media_player,
                 ATTR_MEDIA_CONTENT_TYPE: MediaType.MOVIE,
-                ATTR_MEDIA_CONTENT_ID: '{"library_name": "Movies", "title": "Movie", "allow_multiple": true }',
+                ATTR_MEDIA_CONTENT_ID: (
+                    '{"library_name": "Movies",'
+                    ' "title": "Movie",'
+                    ' "allow_multiple": true }'
+                ),
             },
             True,
         )

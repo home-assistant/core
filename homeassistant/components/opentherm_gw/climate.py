@@ -1,11 +1,9 @@
 """Support for OpenTherm Gateway climate devices."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyotgw import vars as gw_vars
 
@@ -111,6 +109,7 @@ class OpenThermClimate(OpenThermStatusEntity, ClimateEntity):
         self._attr_target_temperature_step = entry.options[CONF_SET_PRECISION]
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Connect to the OpenTherm Gateway device."""
         await super().async_added_to_hass()
@@ -121,6 +120,7 @@ class OpenThermClimate(OpenThermStatusEntity, ClimateEntity):
         )
 
     @callback
+    @override
     def receive_report(self, status: dict[OpenThermDataSource, dict]):
         """Receive and handle a new report from the Gateway."""
         ch_active = status[OpenThermDataSource.BOILER].get(gw_vars.DATA_SLAVE_CH_ACTIVE)
@@ -175,17 +175,20 @@ class OpenThermClimate(OpenThermStatusEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._new_target_temperature or self._target_temperature
 
     @property
+    @override
     def preset_mode(self) -> str:
         """Return current preset mode."""
         if self._away_state_a or self._away_state_b:
             return PRESET_AWAY
         return PRESET_NONE
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         raise ServiceValidationError(
@@ -193,10 +196,12 @@ class OpenThermClimate(OpenThermStatusEntity, ClimateEntity):
             translation_key="change_hvac_mode_not_supported",
         )
 
+    @override
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
         _LOGGER.warning("Changing preset mode is not supported")
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if ATTR_TEMPERATURE in kwargs:

@@ -74,14 +74,15 @@ async def test_set_value(
     device_registry: dr.DeviceRegistry,
     aioclient_mock: AiohttpClientMocker,
     responses: list[str],
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test setting the rain delay number."""
 
     raindelay = hass.states.get("number.rain_bird_controller_rain_delay")
     assert raindelay is not None
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MAC_ADDRESS.lower())}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MAC_ADDRESS.lower()), config_entry.entry_id
     )
     assert device
     assert device.name == "Rain Bird Controller"
@@ -152,7 +153,7 @@ async def test_no_unique_id(
     """Test number platform with no unique id."""
 
     # Failure to migrate config entry to a unique id
-    responses.insert(0, mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE))
+    responses.insert(1, mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE))
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.LOADED

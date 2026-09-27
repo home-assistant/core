@@ -6,7 +6,6 @@ import logging
 import os
 from pathlib import Path
 import socket
-import sys
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -14,10 +13,10 @@ from lru import LRU
 import objgraph
 import pytest
 
-from homeassistant.components.profiler import (
+from homeassistant.components.profiler.const import DOMAIN
+from homeassistant.components.profiler.services import (
     _LRU_CACHE_WRAPPER_OBJECT,
     _SQLALCHEMY_LRU_OBJECT,
-    CONF_ENABLED,
     CONF_SECONDS,
     SERVICE_DUMP_LOG_OBJECTS,
     SERVICE_DUMP_SOCKETS,
@@ -33,8 +32,7 @@ from homeassistant.components.profiler import (
     SERVICE_STOP_LOG_OBJECT_SOURCES,
     SERVICE_STOP_LOG_OBJECTS,
 )
-from homeassistant.components.profiler.const import DOMAIN
-from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TYPE
+from homeassistant.const import CONF_ENABLED, CONF_SCAN_INTERVAL, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
@@ -73,9 +71,6 @@ async def test_basic_usage(hass: HomeAssistant, tmp_path: Path) -> None:
     await hass.async_block_till_done()
 
 
-@pytest.mark.skipif(
-    sys.version_info >= (3, 14), reason="not yet available on Python 3.14"
-)
 async def test_memory_usage(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test we can setup and the service is registered."""
     test_dir = tmp_path / "profiles"
@@ -105,24 +100,6 @@ async def test_memory_usage(hass: HomeAssistant, tmp_path: Path) -> None:
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-
-
-@pytest.mark.skipif(sys.version_info < (3, 14), reason="still works on python 3.13")
-async def test_memory_usage_py313(hass: HomeAssistant, tmp_path: Path) -> None:
-    """Test raise an error on python3.13."""
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert hass.services.has_service(DOMAIN, SERVICE_MEMORY)
-    with pytest.raises(
-        HomeAssistantError,
-        match="Memory profiling is not supported on Python 3.14. Please use Python 3.13.",
-    ):
-        await hass.services.async_call(
-            DOMAIN, SERVICE_MEMORY, {CONF_SECONDS: 0.000001}, blocking=True
-        )
 
 
 async def test_object_growth_logging(

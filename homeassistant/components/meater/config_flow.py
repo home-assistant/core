@@ -1,13 +1,11 @@
 """Config flow for Meater."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from meater import AuthenticationError, MeaterApi, ServiceUnavailableError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -17,9 +15,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
-USER_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+REAUTH_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
+USER_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_USERNAME): str, probatio.Required(CONF_PASSWORD): str}
 )
 
 
@@ -29,6 +27,7 @@ class MeaterConfigFlow(ConfigFlow, domain=DOMAIN):
     _data_schema = USER_SCHEMA
     _username: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

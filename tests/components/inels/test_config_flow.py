@@ -1,5 +1,7 @@
 """Test the iNELS config flow."""
 
+from unittest.mock import patch
+
 from homeassistant.components.inels.const import DOMAIN, TITLE
 from homeassistant.components.mqtt import MQTT_CONNECTION_STATE
 from homeassistant.config_entries import SOURCE_MQTT, SOURCE_USER
@@ -28,7 +30,7 @@ async def test_mqtt_config_single_instance(
 
 
 async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
-    """When an MQTT message is received on the discovery topic, it triggers a config flow."""
+    """Test MQTT message on discovery topic triggers a config flow."""
     discovery_info = MqttServiceInfo(
         topic="inels/status/MAC_ADDRESS/gw",
         payload='{"CUType":"CU3-08M","Status":"Runfast","FW":"02.97.18"}',
@@ -42,11 +44,16 @@ async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
     )
     assert result["type"] is FlowResultType.FORM
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    with patch(
+        "homeassistant.components.inels.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["result"].data == {}
+    mock_setup_entry.assert_called_once()
 
 
 async def test_mqtt_abort_invalid_topic(
@@ -120,12 +127,16 @@ async def test_user_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    with patch(
+        "homeassistant.components.inels.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["result"].data == {}
+    mock_setup_entry.assert_called_once()
 
 
 async def test_user_config_single_instance(

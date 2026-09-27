@@ -2,10 +2,10 @@
 
 import logging
 
+import probatio
 from pyspcwebgw import SpcWebGateway
 from pyspcwebgw.area import Area
 from pyspcwebgw.zone import Zone
-import voluptuous as vol
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -24,16 +24,16 @@ DATA_API = "spc_api"
 SIGNAL_UPDATE_ALARM = "spc_update_alarm_{}"
 SIGNAL_UPDATE_SENSOR = "spc_update_sensor_{}"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_WS_URL): cv.string,
-                vol.Required(CONF_API_URL): cv.string,
+                probatio.Required(CONF_WS_URL): cv.string,
+                probatio.Required(CONF_API_URL): cv.string,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

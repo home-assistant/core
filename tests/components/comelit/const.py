@@ -1,12 +1,13 @@
 """Common stuff for Comelit SimpleHome tests."""
 
 from aiocomelit.api import (
-    AlarmDataObject,
-    ComelitSerialBridgeObject,
+    ComelitDeviceObject,
     ComelitVedoAreaObject,
     ComelitVedoZoneObject,
 )
 from aiocomelit.const import (
+    ALARM_AREA,
+    ALARM_ZONE,
     CLIMATE,
     COVER,
     IRRIGATION,
@@ -21,6 +22,7 @@ from aiocomelit.const import (
 BRIDGE_HOST = "fake_bridge_host"
 BRIDGE_PORT = 80
 BRIDGE_PIN = "1234"
+BRIDGE_VEDO_PIN = "5678"
 
 VEDO_HOST = "fake_vedo_host"
 VEDO_PORT = 8080
@@ -29,7 +31,7 @@ VEDO_PIN = "5678"
 FAKE_PIN = "0000"
 BAD_PIN = "abcd"
 
-LIGHT0 = ComelitSerialBridgeObject(
+LIGHT0 = ComelitDeviceObject(
     index=0,
     name="Light0",
     status=0,
@@ -43,7 +45,7 @@ LIGHT0 = ComelitSerialBridgeObject(
 )
 BRIDGE_DEVICE_QUERY = {
     CLIMATE: {
-        0: ComelitSerialBridgeObject(
+        0: ComelitDeviceObject(
             index=0,
             name="Climate0",
             status=0,
@@ -61,7 +63,7 @@ BRIDGE_DEVICE_QUERY = {
         ),
     },
     COVER: {
-        0: ComelitSerialBridgeObject(
+        0: ComelitDeviceObject(
             index=0,
             name="Cover0",
             status=0,
@@ -78,7 +80,7 @@ BRIDGE_DEVICE_QUERY = {
         0: LIGHT0,
     },
     OTHER: {
-        0: ComelitSerialBridgeObject(
+        0: ComelitDeviceObject(
             index=0,
             name="Switch0",
             status=0,
@@ -102,8 +104,8 @@ ZONE0 = ComelitVedoZoneObject(
     status=0,
     human_status=AlarmZoneState.REST,
 )
-VEDO_DEVICE_QUERY = AlarmDataObject(
-    alarm_areas={
+VEDO_DEVICE_QUERY = {
+    ALARM_AREA: {
         0: ComelitVedoAreaObject(
             index=0,
             name="Area0",
@@ -120,7 +122,7 @@ VEDO_DEVICE_QUERY = AlarmDataObject(
             human_status=AlarmAreaState.DISARMED,
         )
     },
-    alarm_zones={
+    ALARM_ZONE: {
         0: ZONE0,
     },
-)
+}

@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -39,6 +38,12 @@
       "battery_level": {
         "name": "Battery level"
       },
+      "consumption_tariff_t1": {
+        "name": "Consumption Tariff T1"
+      },
+      "consumption_tariff_t2": {
+        "name": "Consumption Tariff T2"
+      },
       "core_bridge_rssi": {
         "name": "Signal strength Core/Bridge"
       },
@@ -60,6 +65,9 @@
           "battery": "Battery",
           "wired": "Wired"
         }
+      },
+      "power_three_phase": {
+        "name": "Power on phase {phase_number}"
       },
       "total_consumption": {
         "name": "Total consumption"

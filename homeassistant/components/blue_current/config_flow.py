@@ -1,9 +1,7 @@
 """Config flow for Blue Current integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from bluecurrent_api import Client
 from bluecurrent_api.exceptions import (
@@ -12,14 +10,14 @@ from bluecurrent_api.exceptions import (
     RequestLimitReached,
     WebsocketError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
 
 from .const import DOMAIN, LOGGER
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_TOKEN): str})
+DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_API_TOKEN): str})
 
 
 class BlueCurrentConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -27,6 +25,7 @@ class BlueCurrentConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

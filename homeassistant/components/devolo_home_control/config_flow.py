@@ -1,11 +1,9 @@
 """Config flow to configure the devolo home control integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -15,8 +13,8 @@ from . import configure_mydevolo
 from .const import DOMAIN, SUPPORTED_MODEL_TYPES
 from .exceptions import CredentialsInvalid, UuidChanged
 
-DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_USERNAME): str, probatio.Required(CONF_PASSWORD): str}
 )
 
 
@@ -25,6 +23,7 @@ class DevoloHomeControlFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -41,6 +40,7 @@ class DevoloHomeControlFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -78,10 +78,12 @@ class DevoloHomeControlFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initiated by reauthentication."""
         errors: dict[str, str] = {}
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_USERNAME, default=self.init_data[CONF_USERNAME]): str,
-                vol.Required(CONF_PASSWORD): str,
+                probatio.Required(
+                    CONF_USERNAME, default=self.init_data[CONF_USERNAME]
+                ): str,
+                probatio.Required(CONF_PASSWORD): str,
             }
         )
 
@@ -119,7 +121,9 @@ class DevoloHomeControlFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         if self.unique_id != uuid:
-            # The old user and the new user are not the same. This could mess-up everything as all unique IDs might change.
+            # The old user and the new user are not the same.
+            # This could mess-up everything as all
+            # unique IDs might change.
             raise UuidChanged
 
         reauth_entry = self._get_reauth_entry()

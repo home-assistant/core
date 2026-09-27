@@ -5,8 +5,8 @@ import threading
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries, loader, setup
 from homeassistant.config_entries import ConfigEntry
@@ -51,7 +51,7 @@ def mock_handlers():
 
 async def test_validate_component_config(hass: HomeAssistant) -> None:
     """Test validating component configuration."""
-    config_schema = vol.Schema({"comp_conf": {"hello": str}}, required=True)
+    config_schema = probatio.Schema({"comp_conf": {"hello": str}}, required=True)
     mock_integration(hass, MockModule("comp_conf", config_schema=config_schema))
 
     with assert_setup_component(0):
@@ -260,7 +260,7 @@ async def test_component_not_found(
 async def test_yaml_component_not_found(
     hass: HomeAssistant, issue_registry: IssueRegistry
 ) -> None:
-    """setup_component should only raise an exception for missing config entry integrations."""
+    """setup_component should only raise for missing config entry."""
     assert await setup.async_setup_component(hass, "non_existing", {}) is False
     assert len(issue_registry.issues) == 0
     assert (
@@ -584,7 +584,7 @@ async def test_component_setup_with_validation_and_dependency(
 async def test_platform_specific_config_validation(hass: HomeAssistant) -> None:
     """Test platform that specifies config."""
     platform_schema = cv.PLATFORM_SCHEMA.extend(
-        {"valid": True}, extra=vol.PREVENT_EXTRA
+        {"valid": True}, extra=probatio.PREVENT_EXTRA
     )
 
     mock_setup = Mock(spec_set=True)
@@ -1114,7 +1114,7 @@ async def test_async_start_setup_config_entry_late_platform(
 async def test_async_start_setup_config_entry_platform_wait(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test setup started tracks wait time when a platform loads inside of config entry setup."""
+    """Test setup tracks wait time for platform in config entry."""
     hass.set_state(CoreState.not_running)
     setup_started = hass.data.setdefault(setup._DATA_SETUP_STARTED, {})
     setup_time = setup._setup_times(hass)
@@ -1145,7 +1145,8 @@ async def test_async_start_setup_config_entry_platform_wait(
             assert isinstance(setup_started[("august", "entry_id")], float)
 
     # CONFIG_ENTRY_PLATFORM_SETUP is run inside of CONFIG_ENTRY_SETUP, so it should not
-    # be tracked, but any wait time should still be tracked because its blocking the setup
+    # be tracked, but any wait time should still be tracked
+    # because its blocking the setup
     assert setup_time["august"] == {
         None: {setup.SetupPhases.SETUP: 10.0},
         "entry_id": {
@@ -1156,7 +1157,7 @@ async def test_async_start_setup_config_entry_platform_wait(
 
 
 async def test_async_start_setup_top_level_yaml(hass: HomeAssistant) -> None:
-    """Test setup started context manager keeps track of setup times with modern yaml."""
+    """Test setup started tracks setup times with modern yaml."""
     hass.set_state(CoreState.not_running)
     setup_started = hass.data.setdefault(setup._DATA_SETUP_STARTED, {})
     setup_time = setup._setup_times(hass)
@@ -1206,7 +1207,7 @@ async def test_async_start_setup_platform_integration(hass: HomeAssistant) -> No
 async def test_async_start_setup_legacy_platform_integration(
     hass: HomeAssistant,
 ) -> None:
-    """Test setup started keeps track of setup times for a legacy platform integration."""
+    """Test setup started tracks times for legacy platform."""
     hass.set_state(CoreState.not_running)
     setup_started = hass.data.setdefault(setup._DATA_SETUP_STARTED, {})
     setup_time = setup._setup_times(hass)
@@ -1438,7 +1439,8 @@ async def test_async_wait_component(hass: HomeAssistant) -> None:
     # Allow setup to proceed
     setup_stall.set()
 
-    # The component is scheduled to load, this will block until the config entry is loaded
+    # The component is scheduled to load, this will block
+    # until the config entry is loaded
     assert await setup.async_wait_component(hass, "test") is True
 
     # The component has been loaded

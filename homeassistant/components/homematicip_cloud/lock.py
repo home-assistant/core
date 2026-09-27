@@ -1,9 +1,7 @@
 """Support for HomematicIP Cloud lock devices."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from homematicip.base.enums import LockState, MotorState
 from homematicip.device import DoorLockDrive
@@ -13,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import HomematicipGenericEntity
-from .hap import HomematicIPConfigEntry
+from .hap import HomematicIPConfigEntry, HomematicipHAP
 from .helpers import handle_errors
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,7 +51,12 @@ class HomematicipDoorLockDrive(HomematicipGenericEntity, LockEntity):
 
     _attr_supported_features = LockEntityFeature.OPEN
 
+    def __init__(self, hap: HomematicipHAP, device: DoorLockDrive) -> None:
+        """Initialize the door lock drive."""
+        super().__init__(hap, device, feature_id="lock")
+
     @property
+    @override
     def is_locked(self) -> bool | None:
         """Return true if device is locked."""
         return (
@@ -62,31 +65,37 @@ class HomematicipDoorLockDrive(HomematicipGenericEntity, LockEntity):
         )
 
     @property
+    @override
     def is_locking(self) -> bool:
         """Return true if device is locking."""
         return self._device.motorState == MotorState.CLOSING
 
     @property
+    @override
     def is_unlocking(self) -> bool:
         """Return true if device is unlocking."""
         return self._device.motorState == MotorState.OPENING
 
     @handle_errors
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         return await self._device.set_lock_state_async(LockState.LOCKED)
 
     @handle_errors
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         return await self._device.set_lock_state_async(LockState.UNLOCKED)
 
     @handle_errors
+    @override
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
         return await self._device.set_lock_state_async(LockState.OPEN)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
         return super().extra_state_attributes | {

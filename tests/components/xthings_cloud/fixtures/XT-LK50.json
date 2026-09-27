@@ -1,0 +1,13 @@
+{
+  "id": "dev_lock_001",
+  "name": "Front Door Lock",
+  "type": "lock",
+  "model": "XT-LK50",
+  "version": "1.0.0",
+  "online": true,
+  "status": {
+    "locked": true,
+    "jammed": false,
+    "battery": 85
+  }
+}

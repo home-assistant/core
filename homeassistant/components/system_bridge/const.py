@@ -2,9 +2,7 @@
 
 from typing import Final
 
-from systembridgemodels.modules import Module
-
-SYNTAX_KEYS_DOCUMENTATION_URL = "http://robotjs.io/docs/syntax#keys"
+from systembridgeconnector.models.modules import Module
 
 DOMAIN = "system_bridge"
 

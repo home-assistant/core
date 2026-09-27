@@ -1,13 +1,11 @@
 """Config flow for Radio Thermostat integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.error import URLError
 
+import probatio
 from radiotherm.validate import RadiothermTstatError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -43,6 +41,7 @@ class RadioThermConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovered_ip: str | None = None
         self.discovered_init_data: RadioThermInitData | None = None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -86,6 +85,7 @@ class RadioThermConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=placeholders,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -112,6 +112,6 @@ class RadioThermConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
             errors=errors,
         )

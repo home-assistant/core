@@ -1,8 +1,6 @@
 """Provides device automations for Cover."""
 
-from __future__ import annotations
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import (
@@ -26,21 +24,22 @@ from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, CoverEntityFeature, CoverState
+from . import CoverEntityFeature, CoverEntityStateAttribute, CoverState
+from .const import DOMAIN
 
 POSITION_TRIGGER_TYPES = {"position", "tilt_position"}
 STATE_TRIGGER_TYPES = {"opened", "closed", "opening", "closing"}
 
-POSITION_TRIGGER_SCHEMA = vol.All(
+POSITION_TRIGGER_SCHEMA = probatio.All(
     DEVICE_TRIGGER_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-            vol.Required(CONF_TYPE): vol.In(POSITION_TRIGGER_TYPES),
-            vol.Optional(CONF_ABOVE): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
+            probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+            probatio.Required(CONF_TYPE): probatio.In(POSITION_TRIGGER_TYPES),
+            probatio.Optional(CONF_ABOVE): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=0, max=100)
             ),
-            vol.Optional(CONF_BELOW): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
+            probatio.Optional(CONF_BELOW): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=0, max=100)
             ),
         }
     ),
@@ -49,13 +48,13 @@ POSITION_TRIGGER_SCHEMA = vol.All(
 
 STATE_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(CONF_TYPE): vol.In(STATE_TRIGGER_TYPES),
-        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): probatio.In(STATE_TRIGGER_TYPES),
+        probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
-TRIGGER_SCHEMA = vol.Any(POSITION_TRIGGER_SCHEMA, STATE_TRIGGER_SCHEMA)
+TRIGGER_SCHEMA = probatio.Any(POSITION_TRIGGER_SCHEMA, STATE_TRIGGER_SCHEMA)
 
 
 async def async_get_triggers(
@@ -111,23 +110,23 @@ async def async_get_triggers(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List trigger capabilities."""
     if config[CONF_TYPE] not in POSITION_TRIGGER_TYPES:
         return {
-            "extra_fields": vol.Schema(
-                {vol.Optional(CONF_FOR): cv.positive_time_period_dict}
+            "extra_fields": probatio.Schema(
+                {probatio.Optional(CONF_FOR): cv.positive_time_period_dict}
             )
         }
 
     return {
-        "extra_fields": vol.Schema(
+        "extra_fields": probatio.Schema(
             {
-                vol.Optional(CONF_ABOVE, default=0): vol.All(
-                    vol.Coerce(int), vol.Range(min=0, max=100)
+                probatio.Optional(CONF_ABOVE, default=0): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=0, max=100)
                 ),
-                vol.Optional(CONF_BELOW, default=100): vol.All(
-                    vol.Coerce(int), vol.Range(min=0, max=100)
+                probatio.Optional(CONF_BELOW, default=100): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=0, max=100)
                 ),
             }
         )
@@ -166,9 +165,9 @@ async def async_attach_trigger(
         )
 
     if config[CONF_TYPE] == "position":
-        position = "current_position"
+        position = CoverEntityStateAttribute.CURRENT_POSITION
     if config[CONF_TYPE] == "tilt_position":
-        position = "current_tilt_position"
+        position = CoverEntityStateAttribute.CURRENT_TILT_POSITION
     min_pos = config.get(CONF_ABOVE, -1)
     max_pos = config.get(CONF_BELOW, 101)
     value_template = f"{{{{ state.attributes.{position} }}}}"

@@ -1,16 +1,14 @@
 """Config flow for the WebDAV integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiowebdav2.exceptions import (
     AccessDeniedError,
     MethodNotSupportedError,
     UnauthorizedError,
 )
-import voluptuous as vol
+import probatio
 import yarl
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -26,21 +24,21 @@ from .helpers import async_create_client
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): TextSelector(
+        probatio.Required(CONF_URL): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.URL,
             )
         ),
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
             )
         ),
-        vol.Optional(CONF_BACKUP_PATH, default="/"): str,
-        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Optional(CONF_BACKUP_PATH, default="/"): str,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
 )
 
@@ -48,6 +46,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class WebDavConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for WebDAV."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

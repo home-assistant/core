@@ -1,10 +1,9 @@
 """DataUpdateCoordinator for the Cookidoo integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from cookidoo_api import (
     Cookidoo,
@@ -12,16 +11,19 @@ from cookidoo_api import (
     CookidooAuthException,
     CookidooException,
     CookidooIngredientItem,
+    CookidooParseException,
     CookidooRequestException,
     CookidooSubscription,
     CookidooUserInfo,
 )
+from cookidoo_api.types import CookidooCalendarDay
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -37,6 +39,7 @@ class CookidooData:
     ingredient_items: list[CookidooIngredientItem]
     additional_items: list[CookidooAdditionalItem]
     subscription: CookidooSubscription | None
+    week_plan: list[CookidooCalendarDay]
 
 
 class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
@@ -58,10 +61,20 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
         )
         self.cookidoo = cookidoo
 
+    async def _async_login(self) -> CookidooUserInfo:
+        """Return the user info, reusing the persisted tokens while they are valid."""
+        if self.cookidoo.auth_data is not None:
+            try:
+                return await self.cookidoo.get_user_info()
+            except CookidooAuthException:
+                _LOGGER.debug("Stored tokens are no longer valid, logging in again")
+        await self.cookidoo.login()
+        return await self.cookidoo.get_user_info()
+
+    @override
     async def _async_setup(self) -> None:
         try:
-            await self.cookidoo.login()
-            self.user = await self.cookidoo.get_user_info()
+            self.user = await self._async_login()
         except CookidooRequestException as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -75,15 +88,25 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
                     CONF_EMAIL: self.config_entry.data[CONF_EMAIL]
                 },
             ) from e
+        except CookidooParseException as e:
+            # login() scrapes the CIAM login page, so it can also fail to parse it
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="setup_request_exception",
+            ) from e
 
+    @override
     async def _async_update_data(self) -> CookidooData:
         try:
             ingredient_items = await self.cookidoo.get_ingredient_items()
             additional_items = await self.cookidoo.get_additional_items()
             subscription = await self.cookidoo.get_active_subscription()
+            week_plan = await self.cookidoo.get_recipes_in_calendar_week(
+                dt_util.now().date()
+            )
         except CookidooAuthException:
             try:
-                await self.cookidoo.refresh_token()
+                await self.cookidoo.login()
             except CookidooAuthException as exc:
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
@@ -92,8 +115,14 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
                         CONF_EMAIL: self.config_entry.data[CONF_EMAIL]
                     },
                 ) from exc
+            except (CookidooRequestException, CookidooParseException) as exc:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_request_exception",
+                ) from exc
             _LOGGER.debug(
-                "Authentication failed but re-authentication was successful, trying again later"
+                "Authentication failed but re-authentication"
+                " was successful, trying again later"
             )
             return self.data
         except CookidooException as e:
@@ -106,4 +135,5 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
             ingredient_items=ingredient_items,
             additional_items=additional_items,
             subscription=subscription,
+            week_plan=week_plan,
         )

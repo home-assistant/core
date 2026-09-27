@@ -1,6 +1,6 @@
 """Shared utilities for different supported platforms."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from http import HTTPStatus
 import logging
 from typing import Any
@@ -34,7 +34,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
-from .const import DEFAULT_TIMEOUT, SCHEDULE_NOK, SCHEDULE_OK
+from .const import DEFAULT_TIMEOUT, SCHEDULE_NOK, SCHEDULE_OK, SERVICE_TIME_ZONE
 
 __all__ = ["BrData"]
 _LOGGER = logging.getLogger(__name__)
@@ -158,7 +158,12 @@ class BrData:
 
         _LOGGER.debug("Buienradar parsed data: %s", result)
         if result.get(SUCCESS) is not True:
-            if int(datetime.now().strftime("%H")) > 0:
+            # buienradar.nl updates its forecast for the next day between 00:00
+            # and 01:00 CE(S)T and often serves nothing during that hour, so the
+            # warning is only meaningful outside it. The hour that decides this
+            # is the one at the service, not in the user's configured time zone.
+            service_tz = await dt_util.async_get_time_zone(SERVICE_TIME_ZONE)
+            if service_tz is None or dt_util.utcnow().astimezone(service_tz).hour > 0:
                 _LOGGER.warning(
                     "Unable to parse data from Buienradar. (Msg: %s)",
                     result.get(MESSAGE),
@@ -199,7 +204,7 @@ class BrData:
         """Return the temperature, or None."""
         try:
             return float(self.data.get(TEMPERATURE))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             return None
 
     @property
@@ -207,7 +212,7 @@ class BrData:
         """Return the feeltemperature, or None."""
         try:
             return float(self.data.get(FEELTEMPERATURE))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             return None
 
     @property
@@ -215,7 +220,7 @@ class BrData:
         """Return the pressure, or None."""
         try:
             return float(self.data.get(PRESSURE))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             return None
 
     @property
@@ -223,7 +228,7 @@ class BrData:
         """Return the humidity, or None."""
         try:
             return int(self.data.get(HUMIDITY))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             return None
 
     @property
@@ -231,7 +236,7 @@ class BrData:
         """Return the visibility, or None."""
         try:
             return int(self.data.get(VISIBILITY))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             return None
 
     @property
@@ -239,7 +244,7 @@ class BrData:
         """Return the windgust, or None."""
         try:
             return float(self.data.get(WINDGUST))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             return None
 
     @property
@@ -247,7 +252,7 @@ class BrData:
         """Return the windspeed, or None."""
         try:
             return float(self.data.get(WINDSPEED))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             return None
 
     @property
@@ -255,7 +260,7 @@ class BrData:
         """Return the wind bearing, or None."""
         try:
             return int(self.data.get(WINDAZIMUTH))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             return None
 
     @property

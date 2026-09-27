@@ -1,7 +1,5 @@
 """Tests for the conversation component."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator
 from dataclasses import dataclass, field
 from typing import Literal
@@ -19,7 +17,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_expose_entity,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import chat_session, intent
+from homeassistant.helpers import chat_session, intent, llm
 
 
 class MockAgent(conversation.AbstractConversationAgent):
@@ -91,7 +89,7 @@ class MockChatLog(conversation.ChatLog):
             """Call tool."""
             if tool_input.id not in self._mock_tool_results:
                 raise ValueError(f"Tool {tool_input.id} not found")
-            return self._mock_tool_results[tool_input.id]
+            return llm.ToolResult(data=self._mock_tool_results[tool_input.id])
 
         self._llm_api.async_call_tool = async_call_tool
 

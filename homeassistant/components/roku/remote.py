@@ -1,9 +1,7 @@
 """Support for the Roku remote."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.core import HomeAssistant
@@ -38,23 +36,27 @@ class RokuRemote(RokuEntity, RemoteEntity):
     _attr_name = None
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return not self.coordinator.data.state.standby
 
     @roku_exception_handler()
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.coordinator.roku.remote("poweron")
         await self.coordinator.async_request_refresh()
 
     @roku_exception_handler(ignore_timeout=True)
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.coordinator.roku.remote("poweroff")
         await self.coordinator.async_request_refresh()
 
     @roku_exception_handler()
+    @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
         num_repeats = kwargs[ATTR_NUM_REPEATS]

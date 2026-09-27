@@ -1,10 +1,8 @@
 """Config flow for habitica integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 from uuid import UUID
 
 from aiohttp import ClientError
@@ -15,7 +13,7 @@ from habiticalib import (
     NotAuthorizedError,
     UserData,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
@@ -62,24 +60,24 @@ from .const import (
 )
 from .coordinator import HabiticaConfigEntry
 
-STEP_ADVANCED_DATA_SCHEMA = vol.Schema(
+STEP_ADVANCED_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_USER): str,
-        vol.Required(CONF_API_KEY): str,
-        vol.Optional(CONF_URL, default=DEFAULT_URL): str,
-        vol.Required(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Required(CONF_API_USER): str,
+        probatio.Required(CONF_API_KEY): str,
+        probatio.Optional(CONF_URL, default=DEFAULT_URL): str,
+        probatio.Required(CONF_VERIFY_SSL, default=True): bool,
     }
 )
 
-STEP_LOGIN_DATA_SCHEMA = vol.Schema(
+STEP_LOGIN_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): TextSelector(
+        probatio.Required(CONF_USERNAME): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.EMAIL,
                 autocomplete="email",
             )
         ),
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -88,18 +86,18 @@ STEP_LOGIN_DATA_SCHEMA = vol.Schema(
     }
 )
 
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(SECTION_REAUTH_LOGIN): data_entry_flow.section(
-            vol.Schema(
+        probatio.Required(SECTION_REAUTH_LOGIN): data_entry_flow.section(
+            probatio.Schema(
                 {
-                    vol.Optional(CONF_USERNAME): TextSelector(
+                    probatio.Optional(CONF_USERNAME): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.EMAIL,
                             autocomplete="email",
                         )
                     ),
-                    vol.Optional(CONF_PASSWORD): TextSelector(
+                    probatio.Optional(CONF_PASSWORD): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -109,10 +107,10 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema(
             ),
             {"collapsed": False},
         ),
-        vol.Required(SECTION_REAUTH_API_KEY): data_entry_flow.section(
-            vol.Schema(
+        probatio.Required(SECTION_REAUTH_API_KEY): data_entry_flow.section(
+            probatio.Schema(
                 {
-                    vol.Optional(CONF_API_KEY): str,
+                    probatio.Optional(CONF_API_KEY): str,
                 },
             ),
             {"collapsed": True},
@@ -120,14 +118,14 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema(
     }
 )
 
-STEP_RECONF_DATA_SCHEMA = vol.Schema(
+STEP_RECONF_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
-        vol.Required(SECTION_DANGER_ZONE): data_entry_flow.section(
-            vol.Schema(
+        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(SECTION_DANGER_ZONE): data_entry_flow.section(
+            probatio.Schema(
                 {
-                    vol.Required(CONF_URL): str,
-                    vol.Required(CONF_VERIFY_SSL): bool,
+                    probatio.Required(CONF_URL): str,
+                    probatio.Required(CONF_VERIFY_SSL): bool,
                 },
             ),
             {"collapsed": True},
@@ -141,6 +139,7 @@ _LOGGER = logging.getLogger(__name__)
 class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for habitica."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -251,7 +250,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not errors and login is not None:
                     await self.async_set_unique_id(str(login.id))
                     self._abort_if_unique_id_mismatch()
-                    return self.async_update_reload_and_abort(
+                    return self.async_update_and_abort(
                         reauth_entry,
                         data_updates={CONF_API_KEY: login.apiToken},
                     )
@@ -263,7 +262,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                     }
                 )
                 if not errors and user is not None:
-                    return self.async_update_reload_and_abort(
+                    return self.async_update_and_abort(
                         reauth_entry, data_updates=user_input[SECTION_REAUTH_API_KEY]
                     )
             else:
@@ -311,7 +310,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             )
             if not errors and user is not None:
-                return self.async_update_reload_and_abort(
+                return self.async_update_and_abort(
                     reconf_entry,
                     data_updates={
                         CONF_API_KEY: user_input[CONF_API_KEY],
@@ -350,7 +349,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         except NotAuthorizedError:
             errors["base"] = "invalid_auth"
-        except (HabiticaException, ClientError):
+        except HabiticaException, ClientError:
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")
@@ -379,7 +378,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
             user = await api.get_user(user_fields="profile")
         except NotAuthorizedError:
             errors["base"] = "invalid_auth"
-        except (HabiticaException, ClientError):
+        except HabiticaException, ClientError:
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")
@@ -391,6 +390,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -443,9 +443,9 @@ class PartyMembersSubentryFlowHandler(ConfigSubentryFlow):
         ]
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PARTY_MEMBER): SelectSelector(
+                    probatio.Required(CONF_PARTY_MEMBER): SelectSelector(
                         SelectSelectorConfig(options=options)
                     )
                 }

@@ -1,16 +1,16 @@
 """Tests for helpers in the Home Assistant Cloud conversation entity."""
 
-from __future__ import annotations
-
 import base64
+import datetime
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from PIL import Image
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import conversation
+from homeassistant.components.cloud.const import AI_TASK_ENTITY_UNIQUE_ID, DOMAIN
 from homeassistant.components.cloud.entity import (
     BaseCloudLLMEntity,
     _convert_content_to_param,
@@ -18,7 +18,8 @@ from homeassistant.components.cloud.entity import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import llm, selector
+from homeassistant.helpers import entity_registry as er, llm, selector
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -30,7 +31,7 @@ def cloud_entity(hass: HomeAssistant) -> BaseCloudLLMEntity:
     cloud.llm = MagicMock()
     cloud.is_logged_in = True
     cloud.valid_subscription = True
-    entry = MockConfigEntry(domain="cloud")
+    entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
     entity = BaseCloudLLMEntity(cloud, entry)
     entity.entity_id = "ai_task.cloud_ai_task"
@@ -56,7 +57,7 @@ class DummyTool(llm.Tool):
 
     name = "do_something"
     description = "Test tool"
-    parameters = vol.Schema({vol.Required("value"): str})
+    parameters = probatio.Schema({probatio.Required("value"): str})
 
     async def async_call(self, hass: HomeAssistant, tool_input, llm_context):
         """No-op implementation."""
@@ -65,13 +66,13 @@ class DummyTool(llm.Tool):
 
 async def test_format_structured_output() -> None:
     """Test that structured output schemas are normalized."""
-    schema = vol.Schema(
+    schema = probatio.Schema(
         {
-            vol.Required("name"): selector.TextSelector(),
-            vol.Optional("age"): selector.NumberSelector(
+            probatio.Required("name"): selector.TextSelector(),
+            probatio.Optional("age"): selector.NumberSelector(
                 config=selector.NumberSelectorConfig(min=0, max=120),
             ),
-            vol.Required("stuff"): selector.ObjectSelector(
+            probatio.Required("stuff"): selector.ObjectSelector(
                 {
                     "multiple": True,
                     "fields": {
@@ -204,18 +205,162 @@ async def test_prepare_chat_for_generation_appends_attachments(
     assert response["messages"] is messages
     mock_prepare_files_for_prompt.assert_awaited_once_with([attachment])
 
+    # Verify that files are actually added to the last user message
+    last_message = messages[-1]
+    assert last_message["type"] == "message"
+    assert last_message["role"] == "user"
+    assert isinstance(last_message["content"], list)
+    assert last_message["content"][0] == {
+        "type": "input_text",
+        "text": "Describe the door",
+    }
+    assert last_message["content"][1] == files[0]
+
 
 async def test_prepare_chat_for_generation_passes_messages_through(
     hass: HomeAssistant, cloud_entity: BaseCloudLLMEntity
 ) -> None:
     """Test that prepared messages are forwarded unchanged."""
     chat_log = conversation.ChatLog(hass, "conversation-id")
-    chat_log.async_add_assistant_content_without_tools(
-        conversation.AssistantContent(agent_id="agent", content="Ready")
+
+    chat_log.async_add_user_content(
+        conversation.UserContent(content="What time is it?")
     )
+    chat_log.async_add_assistant_content_without_tools(
+        conversation.AssistantContent(
+            agent_id="agent",
+            tool_calls=[
+                llm.ToolInput(
+                    tool_name="HassGetCurrentTime",
+                    tool_args={},
+                    id="mock-tool-call-id",
+                    external=True,
+                )
+            ],
+        )
+    )
+    chat_log.async_add_assistant_content_without_tools(
+        conversation.ToolResultContent(
+            agent_id="agent",
+            tool_call_id="mock-tool-call-id",
+            tool_name="HassGetCurrentTime",
+            result=llm.ToolResult(
+                data={
+                    "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
+                    "response_type": "action_done",
+                    "speech_slots": {"time": datetime.time(12, 0)},
+                    "data": {"success": [], "failed": []},
+                }
+            ),
+        )
+    )
+    chat_log.async_add_assistant_content_without_tools(
+        conversation.AssistantContent(agent_id="agent", content="12:00 PM")
+    )
+
     messages = _convert_content_to_param(chat_log.content)
 
     response = await cloud_entity._prepare_chat_for_generation(chat_log, messages)
 
     assert response["messages"] == messages
     assert response["conversation_id"] == "conversation-id"
+
+
+async def test_async_handle_chat_log_service_sets_structured_output_non_strict(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    entity_registry: er.EntityRegistry,
+    mock_cloud_login: None,
+) -> None:
+    """Ensure structured output disables strict validation."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    on_start_callback = cloud.register_on_start.call_args[0][0]
+    await on_start_callback()
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "ai_task", DOMAIN, AI_TASK_ENTITY_UNIQUE_ID
+    )
+    assert entity_id is not None
+
+    async def _empty_stream():
+        return
+
+    async def _fake_delta_stream(
+        self: conversation.ChatLog,
+        agent_id: str,
+        stream,
+    ):
+        content = conversation.AssistantContent(
+            agent_id=agent_id, content='{"value": "ok"}'
+        )
+        self.async_add_assistant_content_without_tools(content)
+        yield content
+
+    cloud.llm.async_generate_data = AsyncMock(return_value=_empty_stream())
+
+    with patch(
+        "homeassistant.components.conversation.chat_log.ChatLog.async_add_delta_content_stream",
+        _fake_delta_stream,
+    ):
+        await hass.services.async_call(
+            "ai_task",
+            "generate_data",
+            {
+                "entity_id": entity_id,
+                "task_name": "Device Report",
+                "instructions": "Provide value.",
+                "structure": {
+                    "value": {
+                        "selector": {"text": None},
+                        "required": True,
+                    }
+                },
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    cloud.llm.async_generate_data.assert_awaited_once()
+    _, kwargs = cloud.llm.async_generate_data.call_args
+
+    assert kwargs["response_format"]["json_schema"]["strict"] is False
+
+
+@pytest.mark.parametrize(
+    ("result", "expected_output"),
+    [
+        pytest.param(
+            llm.ToolResult(data={"temperature": 21}),
+            '{"data":{"temperature":21},"error":false}',
+            id="success",
+        ),
+        pytest.param(
+            llm.ToolResult(data={"error": "Not found"}, error=True),
+            '{"data":{"error":"Not found"},"error":true}',
+            id="error",
+        ),
+    ],
+)
+def test_convert_tool_result_to_param(
+    result: llm.ToolResult, expected_output: str
+) -> None:
+    """Test the tool result is sent with its error flag."""
+    content = [
+        conversation.ToolResultContent(
+            agent_id="agent",
+            tool_call_id="mock-tool-call-id",
+            tool_name="HassGetState",
+            result=result,
+        )
+    ]
+
+    assert _convert_content_to_param(content) == [
+        {
+            "type": "function_call_output",
+            "call_id": "mock-tool-call-id",
+            "output": expected_output,
+        }
+    ]

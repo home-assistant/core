@@ -1,0 +1,75 @@
+{
+  "items": [
+    {
+      "deviceId": "9be7ea22-975e-41f0-bc3c-e811a6fb1289",
+      "name": "switch-dimmer-power-energy",
+      "label": "IKEA Plug Powermeter",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "56731898-55b7-3d41-87cc-460f044d4f7c",
+      "deviceManufacturerCode": "IKEA of Sweden",
+      "locationId": "a123d440-3337-4e3b-8af2-51427b68052f",
+      "ownerId": "a6f94f18-42d6-28c6-57c8-6c77aaf87439",
+      "roomId": "7b29fa2f-60c1-44c2-ad5f-815bd927ac59",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "switchLevel",
+              "version": 1
+            },
+            {
+              "id": "powerMeter",
+              "version": 1
+            },
+            {
+              "id": "energyMeter",
+              "version": 1
+            },
+            {
+              "id": "firmwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Switch",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2026-03-12T15:59:36.448Z",
+      "parentDeviceId": "8ea8d2a4-4f93-4b49-94b8-c9cafd4ffedb",
+      "profile": {
+        "id": "bdfa8010-e4a2-397d-980e-022639ee3b6b"
+      },
+      "zigbee": {
+        "eui": "983268FFFE382CFB",
+        "networkId": "8B4E",
+        "driverId": "f2e891c6-00cc-446c-9192-8ebda63d9898",
+        "executingLocally": true,
+        "hubId": "8ea8d2a4-4f93-4b49-94b8-c9cafd4ffedb",
+        "provisioningState": "PROVISIONED",
+        "fingerprintType": "ZIGBEE_GENERIC",
+        "fingerprintId": "genericMeteredDimmer"
+      },
+      "type": "ZIGBEE",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "LOCAL",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

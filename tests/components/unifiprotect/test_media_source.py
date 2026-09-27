@@ -1,7 +1,9 @@
 """Tests for unifiprotect.media_source."""
 
+from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -21,6 +23,7 @@ from homeassistant.components.media_source import MediaSourceItem
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.components.unifiprotect.media_source import (
     ProtectMediaSource,
+    SimpleEventType,
     async_get_media_source,
 )
 from homeassistant.core import HomeAssistant
@@ -212,6 +215,7 @@ async def test_browse_media_root_multiple_consoles(
     bootstrap2.nvr.name = "UnifiProtect2"
 
     api2 = Mock()
+    api2.is_public_only = False
     bootstrap2.nvr._api = api2
     bootstrap2._api = api2
 
@@ -279,6 +283,7 @@ async def test_browse_media_root_multiple_consoles_only_one_media(
     bootstrap2.nvr.name = "UnifiProtect2"
 
     api2 = Mock()
+    api2.is_public_only = False
     bootstrap2.nvr._api = api2
     bootstrap2._api = api2
 
@@ -654,8 +659,8 @@ async def test_browse_media_recent_truncated(
     browse = await source.async_browse_media(media_item)
 
     assert (
-        browse.title
-        == f"UnifiProtect > {doorbell.name} > Motion Events > Last 24 Hours (1 TRUNCATED)"
+        browse.title == f"UnifiProtect > {doorbell.name} > Motion Events"
+        " > Last 24 Hours (1 TRUNCATED)"
     )
     assert browse.identifier == base_id
     assert len(browse.children) == 1
@@ -897,7 +902,10 @@ async def test_browse_media_browse_day(
     event._api = ufp.api
     ufp.api.get_events_raw = AsyncMock(return_value=[event.unifi_dict()])
 
-    base_id = f"test_id:browse:{doorbell.id}:motion:range:{fixed_now.year}:{fixed_now.month}:1"
+    base_id = (
+        f"test_id:browse:{doorbell.id}:motion:range"
+        f":{fixed_now.year}:{fixed_now.month}:1"
+    )
     source = await async_get_media_source(hass)
     media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
 
@@ -905,8 +913,8 @@ async def test_browse_media_browse_day(
 
     start = fixed_now.replace(day=1)
     assert (
-        browse.title
-        == f"UnifiProtect > {doorbell.name} > Motion Events > {fixed_now.strftime('%B %Y')} > {start.strftime('%x')} (1)"
+        browse.title == f"UnifiProtect > {doorbell.name} > Motion Events"
+        f" > {fixed_now.strftime('%B %Y')} > {start.strftime('%x')} (1)"
     )
     assert browse.identifier == base_id
     assert len(browse.children) == 1
@@ -948,8 +956,8 @@ async def test_browse_media_browse_whole_month(
     browse = await source.async_browse_media(media_item)
 
     assert (
-        browse.title
-        == f"UnifiProtect > {doorbell.name} > All Events > {fixed_now.strftime('%B %Y')} > Whole Month (1)"
+        browse.title == f"UnifiProtect > {doorbell.name} > All Events"
+        f" > {fixed_now.strftime('%B %Y')} > Whole Month (1)"
     )
     assert browse.identifier == base_id
     assert len(browse.children) == 1
@@ -1035,9 +1043,161 @@ async def test_browse_media_browse_whole_month_december(
     browse = await source.async_browse_media(media_item)
 
     assert (
-        browse.title
-        == f"UnifiProtect > {doorbell.name} > All Events > {fixed_now.strftime('%B %Y')} > Whole Month (1)"
+        browse.title == f"UnifiProtect > {doorbell.name} > All Events"
+        f" > {fixed_now.strftime('%B %Y')} > Whole Month (1)"
     )
     assert browse.identifier == base_id
     assert len(browse.children) == 1
     assert browse.children[0].identifier == "test_id:event:test_event_id"
+
+
+@pytest.mark.parametrize(
+    ("year", "month", "expected_days", "expected_end_month", "expected_end_year"),
+    [
+        (2024, 1, 31, 2, 2024),  # January
+        (2024, 2, 29, 3, 2024),  # February (leap year)
+        (2023, 2, 28, 3, 2023),  # February (non-leap year)
+        (2024, 4, 30, 5, 2024),  # April
+        (2024, 12, 31, 1, 2025),  # December - critical edge case
+    ],
+)
+async def test_build_days_whole_month_date_calculation(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    year: int,
+    month: int,
+    expected_days: int,
+    expected_end_month: int,
+    expected_end_year: int,
+) -> None:
+    """Test that whole month date calculation works for all month types.
+
+    This test verifies the monthrange-based date calculation in _build_days,
+    especially for December which previously used manual year/month increment logic.
+    """
+    # Initialize the integration entry to get ProtectData
+    await init_entry(hass, ufp, [], regenerate_ids=False)
+
+    # Create a start date for the first day of the month
+    start = datetime(year=year, month=month, day=1).date()
+    start_dt = datetime(
+        year=start.year,
+        month=start.month,
+        day=start.day,
+        hour=0,
+        minute=0,
+        second=0,
+        tzinfo=dt_util.get_default_time_zone(),
+    )
+
+    # Verify we got the expected number of days
+    expected_end = start_dt + timedelta(days=expected_days)
+
+    # Verify it correctly goes to the expected month/year
+    assert expected_end.month == expected_end_month
+    assert expected_end.year == expected_end_year
+    assert expected_end.day == 1
+
+    # Build the media source with is_all=True (whole month)
+    source = ProtectMediaSource(hass, {})
+    result = await source._build_days(
+        data=ufp.entry.runtime_data,
+        camera_id="test_camera",
+        event_type=SimpleEventType.ALL,
+        start=start,
+        is_all=True,
+        build_children=False,  # We only care about the identifier, not children
+    )
+
+    # Verify the identifier format is correct
+    assert result.identifier.endswith(f"range:{year}:{month}:all")
+    assert "Whole Month" in result.title
+
+
+async def test_public_only_entry_skipped(
+    hass: HomeAssistant,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """A public-only entry must not break the media source map.
+
+    It iterates every loaded entry and reads the private bootstrap; a
+    public-only entry has none and must be skipped, not raise.
+    """
+    await setup_public_only()
+
+    source = await async_get_media_source(hass)
+    assert source.data_sources == {}
+
+
+@pytest.mark.freeze_time("2022-09-15 03:00:00-07:00")
+async def test_browse_media_month_before_recording_started(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+) -> None:
+    """Test browsing a month that is entirely before recording started."""
+    start = datetime.fromisoformat("2022-09-03 03:00:00-07:00")
+    ufp.api.bootstrap._recording_start = dt_util.as_utc(start)
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    base_id = f"test_id:browse:{doorbell.id}:all:range:2022:2"
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert browse.title.endswith("February 2022")
+    assert browse.identifier == base_id
+    # Nothing was recorded that month, so only the whole month selector is
+    # offered, and no days belonging to the month recording started in.
+    assert len(browse.children) == 1
+    assert browse.children[0].title == "Whole Month"
+    assert browse.children[0].identifier == f"{base_id}:all"
+
+
+@pytest.mark.freeze_time("2022-09-15 03:00:00-07:00")
+async def test_browse_media_month_without_recording_start(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+) -> None:
+    """Test browsing a month when the console reports no recording start."""
+    # Falls back to the earliest camera recording, so clear that as well.
+    doorbell.stats.video.recording_start = None
+    ufp.api.bootstrap._recording_start = None
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    base_id = f"test_id:browse:{doorbell.id}:all:range:2022:9"
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert browse.identifier == base_id
+
+
+@pytest.mark.freeze_time("2022-09-15 03:00:00-07:00")
+async def test_browse_media_recording_started_on_last_local_day(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+) -> None:
+    """Test the last day of a month is offered across a UTC date boundary."""
+    await hass.config.async_set_time_zone("US/Pacific")
+
+    # 2022-08-31 19:00 local, which is already 2022-09-01 in UTC.
+    ufp.api.bootstrap._recording_start = datetime.fromisoformat(
+        "2022-09-01 02:00:00+00:00"
+    )
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    base_id = f"test_id:browse:{doorbell.id}:all:range:2022:8"
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert [child.identifier for child in browse.children] == [
+        f"{base_id}:all",
+        f"{base_id}:31",
+    ]

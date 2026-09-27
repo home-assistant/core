@@ -1,8 +1,6 @@
 """Support for update entities through the SmartThings cloud API."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from awesomeversion import AwesomeVersion
 from pysmartthings import Attribute, Capability, Command
@@ -48,6 +46,7 @@ class SmartThingsUpdateEntity(SmartThingsEntity, UpdateEntity):
     )
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Return the installed version of the entity."""
         return self.get_attribute_value(
@@ -55,6 +54,7 @@ class SmartThingsUpdateEntity(SmartThingsEntity, UpdateEntity):
         )
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Return the available version of the entity."""
         return self.get_attribute_value(
@@ -62,6 +62,7 @@ class SmartThingsUpdateEntity(SmartThingsEntity, UpdateEntity):
         )
 
     @property
+    @override
     def in_progress(self) -> bool:
         """Return if the entity is in progress."""
         return (
@@ -69,6 +70,7 @@ class SmartThingsUpdateEntity(SmartThingsEntity, UpdateEntity):
             == "updateInProgress"
         )
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -78,6 +80,7 @@ class SmartThingsUpdateEntity(SmartThingsEntity, UpdateEntity):
             Command.UPDATE_FIRMWARE,
         )
 
+    @override
     def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
         """Return if the latest version is newer."""
         if is_hex_version(latest_version):

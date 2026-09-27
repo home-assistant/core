@@ -1,7 +1,5 @@
 """The dsmr component."""
 
-from __future__ import annotations
-
 from asyncio import CancelledError, Task
 from contextlib import suppress
 from dataclasses import dataclass

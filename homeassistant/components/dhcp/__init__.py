@@ -1,17 +1,15 @@
 """The dhcp integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 from fnmatch import translate
-from functools import lru_cache, partial
+from functools import lru_cache
 from ipaddress import IPv4Address
 import itertools
 import logging
 import re
-from typing import Any, Final
+from typing import Any, Final, override
 
 import aiodhcpwatcher
 from aiodiscover import DiscoverHosts
@@ -50,12 +48,6 @@ from homeassistant.helpers import (
     device_registry as dr,
     discovery_flow,
 )
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstant,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -69,7 +61,12 @@ from homeassistant.loader import DHCPMatcher, async_get_dhcp
 
 from . import websocket_api
 from .const import DOMAIN, HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from .helpers import async_discovered_service_info
 from .models import DATA_DHCP, DHCPAddressData, DHCPData, DhcpMatchers
+
+__all__ = [
+    "async_discovered_service_info",
+]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -78,13 +75,6 @@ SCAN_INTERVAL = timedelta(minutes=60)
 
 
 _LOGGER = logging.getLogger(__name__)
-
-
-_DEPRECATED_DhcpServiceInfo = DeprecatedConstant(
-    _DhcpServiceInfo,
-    "homeassistant.helpers.service_info.dhcp.DhcpServiceInfo",
-    "2026.2",
-)
 
 
 def async_index_integration_matchers(
@@ -243,14 +233,17 @@ class WatcherBase:
         registered_devices_domains = matchers.registered_devices_domains
 
         dev_reg = dr.async_get(self.hass)
-        if device := dev_reg.async_get_device(
+        # Several config entries can each own a device for the same MAC, so check every
+        # matching device, not just the first, or a shared-MAC integration is dropped.
+        for device in dev_reg.async_get_devices(
             connections={(CONNECTION_NETWORK_MAC, formatted_mac)}
         ):
-            for entry_id in device.config_entries:
-                if (
-                    entry := self.hass.config_entries.async_get_entry(entry_id)
-                ) and entry.domain in registered_devices_domains:
-                    matched_domains.add(entry.domain)
+            if (
+                entry := self.hass.config_entries.async_get_entry(
+                    device.config_entry_id
+                )
+            ) and entry.domain in registered_devices_domains:
+                matched_domains.add(entry.domain)
 
         oui = uppercase_mac[:6]
         lowercase_hostname_first_char = (
@@ -313,6 +306,7 @@ class NetworkWatcher(WatcherBase):
         self._discover_task: asyncio.Task | None = None
 
     @callback
+    @override
     def async_stop(self) -> None:
         """Stop scanning for new devices on the network."""
         super().async_stop()
@@ -503,11 +497,3 @@ def _memorized_fnmatch(name: str, pattern: str) -> bool:
     since the devices will not change frequently
     """
     return bool(_compile_fnmatch(pattern).match(name))
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

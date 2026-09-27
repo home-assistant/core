@@ -1,15 +1,13 @@
 """Config flow for Radarr."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientConnectorError
 from aiopyarr import exceptions
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.radarr_client import RadarrClient
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
@@ -41,6 +39,7 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(step_id="reauth_confirm")
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -48,18 +47,20 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            # aiopyarr defaults to the service port if one isn't given
-            # this is counter to standard practice  where http = 80
-            # and https = 443.
+            # Ensure an explicit port is present in the URL so that
+            # aiopyarr does not fall back to its own service-port default
+            # (which differs from the standard HTTP/HTTPS ports).
             url = URL(user_input[CONF_URL])
-            user_input[CONF_URL] = f"{url.scheme}://{url.host}:{url.port}{url.path}"
+            if url.explicit_port is None:
+                url = url.with_port(url.port)
+            user_input[CONF_URL] = url.human_repr()
 
             try:
                 if result := await validate_input(self.hass, user_input):
                     user_input[CONF_API_KEY] = result[1]
             except exceptions.ArrAuthenticationException:
                 errors = {"base": "invalid_auth"}
-            except (ClientConnectorError, exceptions.ArrConnectionException):
+            except ClientConnectorError, exceptions.ArrConnectionException:
                 errors = {"base": "cannot_connect"}
             except exceptions.ArrWrongAppException:
                 errors = {"base": "wrong_app"}
@@ -85,13 +86,13 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_URL, default=user_input.get(CONF_URL, DEFAULT_URL)
                     ): str,
-                    vol.Optional(CONF_API_KEY): str,
-                    vol.Optional(
+                    probatio.Optional(CONF_API_KEY): str,
+                    probatio.Optional(
                         CONF_VERIFY_SSL,
                         default=user_input.get(CONF_VERIFY_SSL, False),
                     ): bool,

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -45,11 +46,28 @@ async def test_config_entry_not_ready(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.usefixtures("mock_device", "mock_integration")
-async def test_device(device_registry: dr.DeviceRegistry) -> None:
+async def test_disconnect_on_hass_stop(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    mock_integration: MockConfigEntry,
+) -> None:
+    """Test device disconnects when Home Assistant stops."""
+    assert mock_integration.state is ConfigEntryState.LOADED
+    assert mock_device.disconnect.call_count == 0
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    assert mock_device.disconnect.call_count == 1
+
+
+@pytest.mark.usefixtures("mock_device")
+async def test_device(
+    device_registry: dr.DeviceRegistry, mock_integration: MockConfigEntry
+) -> None:
     """Test device."""
-    device = device_registry.async_get_device(
-        identifiers={("kaleidescape", MOCK_SERIAL)}
+    device = device_registry.async_get_device_by_identifier(
+        ("kaleidescape", MOCK_SERIAL), mock_integration.entry_id
     )
     assert device is not None
     assert device.identifiers == {("kaleidescape", MOCK_SERIAL)}

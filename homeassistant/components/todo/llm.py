@@ -1,0 +1,147 @@
+"""LLM tools for the todo integration."""
+
+from operator import attrgetter
+from typing import Any, cast, override
+
+import probatio
+
+from homeassistant.components.homeassistant import async_should_expose
+from homeassistant.components.llm import LLMTools
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er, intent
+from homeassistant.helpers.llm import (
+    LLM_API_ASSIST,
+    IntentTool,
+    LLMContext,
+    Tool,
+    ToolAnnotations,
+    ToolInput,
+    ToolResult,
+)
+
+from .const import DOMAIN, TodoServices
+from .intent import (
+    INTENT_LIST_ADD_ITEM,
+    INTENT_LIST_COMPLETE_ITEM,
+    INTENT_LIST_REMOVE_ITEM,
+)
+
+# Intents owned by this integration that are exposed as LLM tools.
+LLM_INTENTS = {
+    INTENT_LIST_ADD_ITEM: "Add to-do list item",
+    INTENT_LIST_COMPLETE_ITEM: "Complete to-do list item",
+    INTENT_LIST_REMOVE_ITEM: "Remove to-do list item",
+}
+
+# Adding an item appends to the list and takes nothing away. Completing and
+# removing both look for an item that is still there, so a repeated call
+# raises instead of having no further effect.
+INTENT_ANNOTATIONS = {
+    INTENT_LIST_ADD_ITEM: ToolAnnotations(destructive=False, open_world=False),
+    INTENT_LIST_COMPLETE_ITEM: ToolAnnotations(open_world=False),
+    INTENT_LIST_REMOVE_ITEM: ToolAnnotations(open_world=False),
+}
+
+
+class TodoGetItemsTool(Tool):
+    """LLM Tool allowing querying a to-do list."""
+
+    name = "todo__get_items"
+    title = "Get to-do list items"
+    description = (
+        "Query a to-do list to find out what items are on it. "
+        "Use this to answer questions like "
+        "'What's on my task list?' or "
+        "'Read my grocery list'. "
+        "Filters items by status (needs_action, completed, all)."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+
+    def __init__(self, todo_lists: list[str]) -> None:
+        """Init the get items tool."""
+        self.parameters = probatio.Schema(
+            {
+                probatio.Required("todo_list"): probatio.In(todo_lists),
+                probatio.Optional(
+                    "status",
+                    description=(
+                        "Filter returned items by status,"
+                        " by default returns incomplete"
+                        " items"
+                    ),
+                    default="needs_action",
+                ): probatio.In(["needs_action", "completed", "all"]),
+            }
+        )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Query a to-do list."""
+        data = self.parameters(tool_input.tool_args)
+        result = intent.async_match_targets(
+            hass,
+            intent.MatchTargetsConstraints(
+                name=data["todo_list"],
+                domains=[DOMAIN],
+                assistant=llm_context.assistant,
+            ),
+        )
+        if not result.is_match:
+            return ToolResult(data={"error": "To-do list not found"}, error=True)
+        entity_id = result.states[0].entity_id
+        service_data: dict[str, Any] = {"entity_id": entity_id}
+        status = data["status"]
+        # "all" means no status filter, which returns every item.
+        if status != "all":
+            service_data["status"] = status
+        service_result = await hass.services.async_call(
+            DOMAIN,
+            TodoServices.GET_ITEMS,
+            service_data,
+            context=llm_context.context,
+            blocking=True,
+            return_response=True,
+        )
+        if not service_result:
+            return ToolResult(data={"error": "To-do list not found"}, error=True)
+        items = cast(dict, service_result)[entity_id]["items"]
+        return ToolResult(data={"items": items})
+
+
+@callback
+def async_get_tools(
+    hass: HomeAssistant, llm_context: LLMContext, api_id: str
+) -> LLMTools | None:
+    """Return the todo LLM tools when a to-do list is exposed."""
+    if api_id != LLM_API_ASSIST:
+        return None
+
+    entity_registry = er.async_get(hass)
+    names: list[str] = []
+    for state in sorted(hass.states.async_all(DOMAIN), key=attrgetter("name")):
+        if not async_should_expose(hass, llm_context.assistant, state.entity_id):
+            continue
+        entity_entry = entity_registry.async_get(state.entity_id)
+        names.extend(intent.async_get_entity_aliases(hass, entity_entry, state=state))
+
+    if not names:
+        return None
+
+    tools: list[Tool] = [TodoGetItemsTool(names)]
+    tools.extend(
+        IntentTool(
+            f"{DOMAIN}__{handler.intent_type}",
+            handler,
+            title=LLM_INTENTS[handler.intent_type],
+            integration=DOMAIN,
+            annotations=INTENT_ANNOTATIONS[handler.intent_type],
+        )
+        for handler in intent.async_get(hass)
+        if handler.intent_type in LLM_INTENTS
+    )
+    return LLMTools(tools=tools)

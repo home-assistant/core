@@ -1,11 +1,9 @@
 """Offer geolocation automation rules."""
 
-from __future__ import annotations
-
 import logging
 from typing import Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.zone import condition as zone_condition
 from homeassistant.const import CONF_EVENT, CONF_PLATFORM, CONF_SOURCE, CONF_ZONE
@@ -24,7 +22,7 @@ from homeassistant.helpers.event import TrackStates, async_track_state_change_fi
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
+from .const import DOMAIN, GeolocationEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,10 +32,10 @@ DEFAULT_EVENT: Final = EVENT_ENTER
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): "geo_location",
-        vol.Required(CONF_SOURCE): cv.string,
-        vol.Required(CONF_ZONE): entity_domain("zone"),
-        vol.Required(CONF_EVENT, default=DEFAULT_EVENT): vol.Any(
+        probatio.Required(CONF_PLATFORM): "geo_location",
+        probatio.Required(CONF_SOURCE): cv.string,
+        probatio.Required(CONF_ZONE): entity_domain("zone"),
+        probatio.Required(CONF_EVENT, default=DEFAULT_EVENT): probatio.Any(
             EVENT_ENTER, EVENT_LEAVE
         ),
     }
@@ -46,7 +44,10 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 
 def source_match(state: State | None, source: str) -> bool:
     """Check if the state matches the provided source."""
-    return state is not None and state.attributes.get("source") == source
+    return (
+        state is not None
+        and state.attributes.get(GeolocationEntityStateAttribute.SOURCE) == source
+    )
 
 
 async def async_attach_trigger(

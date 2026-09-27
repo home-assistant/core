@@ -1,9 +1,7 @@
 """Plugwise Switch component for HomeAssistant."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from plugwise.constants import SwitchType
 
@@ -97,11 +95,13 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self.device["switches"][self.entity_description.key]
 
     @plugwise_command
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.coordinator.api.set_switch_state(
@@ -112,6 +112,7 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
         )
 
     @plugwise_command
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.coordinator.api.set_switch_state(

@@ -1,6 +1,7 @@
 """The Bosch Smart Home Controller integration."""
 
 import logging
+from typing import TYPE_CHECKING
 
 from boschshcpy import SHCSession
 from boschshcpy.exceptions import SHCAuthenticationError, SHCConnectionError
@@ -17,8 +18,10 @@ from .const import CONF_SSL_CERTIFICATE, CONF_SSL_KEY, DOMAIN
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.COVER,
+    Platform.EVENT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.VALVE,
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,6 +50,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
         raise ConfigEntryNotReady from err
 
     shc_info = session.information
+    if TYPE_CHECKING:
+        assert shc_info is not None and shc_info.unique_id is not None
     if shc_info.updateState.name == "UPDATE_AVAILABLE":
         _LOGGER.warning("Please check for software updates in the Bosch Smart Home App")
 
@@ -55,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(shc_info.unique_id))},
+        connections={(dr.CONNECTION_NETWORK_MAC, shc_info.unique_id)},
         identifiers={(DOMAIN, shc_info.unique_id)},
         manufacturer="Bosch",
         name=entry.title,

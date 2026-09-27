@@ -185,7 +185,7 @@ async def test_step_dhcp_already_in_progress(hass: HomeAssistant) -> None:
 
 
 async def test_step_dhcp_already_setup_match_mac(hass: HomeAssistant) -> None:
-    """Test we abort if the device is already setup with matching unique id and discovered via DHCP."""
+    """Test we abort if already setup with matching unique id via DHCP."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"}, unique_id="guardian_ABCD"
     )
@@ -205,7 +205,7 @@ async def test_step_dhcp_already_setup_match_mac(hass: HomeAssistant) -> None:
 
 
 async def test_step_dhcp_already_setup_match_ip(hass: HomeAssistant) -> None:
-    """Test we abort if the device is already setup with matching ip and discovered via DHCP."""
+    """Test we abort if already setup with matching ip via DHCP."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_IP_ADDRESS: "192.168.1.100"},

@@ -14,7 +14,6 @@ import pytest
 
 from homeassistant.components.google_assistant import GOOGLE_ASSISTANT_SCHEMA
 from homeassistant.components.google_assistant.const import (
-    DOMAIN,
     EVENT_COMMAND_RECEIVED,
     HOMEGRAPH_TOKEN_URL,
     REPORT_STATE_BASE_URL,
@@ -28,8 +27,8 @@ from homeassistant.components.google_assistant.http import (
     _get_homegraph_token,
     async_get_users,
 )
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
-from homeassistant.core import HomeAssistant, State
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -42,11 +41,42 @@ from tests.common import (
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
+DUMMY_PRIVATE_KEY = (
+    "-----BEGIN PRIVATE KEY-----\n"
+    "MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDHpAmcxB6bPA"
+    "peq/upM27z/ml+gKghe8xsW0czDSb12p0T4cJgZ7UWlZfl1JmB+WPcvf3Gfe/q"
+    "V5JPxjrQzT1oUP6wZKSH914MeWHImJcp+QhS7n0muGjYvi6VfMIkKvjKlqVVcd"
+    "xV9bkWw+YOHhC+hUi0/rmQw8Dch2NMVMyNamt/PzU8FWQ61w4Bwe0jp0CbxWYk"
+    "HWvDmxYrMXdFs2Q4LxWln8EGuytS9HZAIQxz/UBCBOXDA/q4OqQV/2hpnt6t0H"
+    "Dlpp90YDoHw5d4ySgo80Iz6UDrFUt8G0MJq/8MaGgvOH+ZZ4CtcA/Xes7Uejwy"
+    "/2jhe9dytlrE56z0NotxAgMBAAECggEAM/knDXpbM3OiiXoBls+Oi5PImAfbfX"
+    "gSxITQ2OAMLAYhTYtBBMMK+FmyhUFfQ2CPGGkX16RyoJHyw7TqG/DKk00+uOJC"
+    "mSkTgXDaPZRICkPMYHa4+ysYFJESZJVpn2vWgDtOyJtPTsudR2lxi2xVVJwzTP"
+    "dhjOgBXggbGESdShUcDQj0NeooRfMrj7VMUy8uZ/KjTWXgPyTALVl1udvzGtmy"
+    "2Q/PcUo2RMDKE9azWtV91qoSgiqF4je+IueeT5qgRKPF15r4OWiYv74zM7iseo"
+    "lCgP0QXou+iD26gWnAGxLqo8nG7tqsyPSl0NP4oIwWvcbNP+Ys1+r+PtuGCOmB"
+    "hwKBgQDujHrxccTHAmbxnPpxrai/8d24Mpul+IB34CBK3dSkePxHXitE9q6KhT"
+    "fZaqTDfOzzU9B0P0ohx0U9DLC42m6sLCkCLDa4BEwgsaFG5e/mj+w36cNgt56r"
+    "VKTyleNX4Dhq5oz3azyzVE6rQ8EzLNgvgiN6zr2Gy2+Y1aHFFkQPNwKBgQDWPu"
+    "RixtIhapdqRs1g6R+4prVXzUDWmw1N8y0JJ8DJFSuAyrCblfKSZlrHLq0CZfEp"
+    "2uNJ6+brmnDFo0XMwyhOi8Q4EIx/bZr+tK+ZLJ34ZRuzasglALGdYtLfo3T3A7"
+    "Ca6ThLMy1V+FZPUOP3bgjqmFViQ+/bPdHFrjeCr0/+lwKBgQCxvnrc7KhyoJeT"
+    "8COsEHlsjAto9EyFnmQa7iUho6iN5JgVlVUoTaZAEINMvOmHv83OgOURuRbDlH"
+    "dCxfHnytor77ueotMiyhDvS2ugKDRY12RrRQMPTcIsZyWAm66KC8f930uqD31r"
+    "IaZ8dj++oetzesR0/Ra7GVpNxuCCudR8gQKBgBqO2UjVVJ8H05U9CaCFxYTiRY"
+    "CI1QzFU7Th/CcyYleK5EWm2pWu1M8JGR+vzYqKkIabt6kmMQ3rqycUwkZLuudh"
+    "tAUvJ/tz3s7MHyhhu4NbJT/scLsFhv73jSRj4s/sCSxq1KudwHTzv989K8U0Qq"
+    "6yC4OO4GDRHPvgSMlOaiApAoGBANOE05ONrxrWTKfn+ydTDOIyIlXdVDG0twDE"
+    "vuUvo/6+5BxvuZ0N+s333DA2iRDbfTCTnJizOC/NSGGxzfJ3D6lYOp2a/iC1t3"
+    "IC0fOw+YC6Gq6kN+qaIcyM0Nmsa7rG72Nq987HDwHwL41HLXTDuQEfqO4DsQgC"
+    "WKkTkZh32J2/\n"
+    "-----END PRIVATE KEY-----\n"
+)
 DUMMY_CONFIG = GOOGLE_ASSISTANT_SCHEMA(
     {
         "project_id": "1234",
         "service_account": {
-            "private_key": "-----BEGIN PRIVATE KEY-----\nMIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAKYscIlwm7soDsHAz6L6YvUkCvkrX19rS6yeYOmovvhoK5WeYGWUsd8V72zmsyHB7XO94YgJVjvxfzn5K8bLePjFzwoSJjZvhBJ/ZQ05d8VmbvgyWUoPdG9oEa4fZ/lCYrXoaFdTot2xcJvrb/ZuiRl4s4eZpNeFYvVK/Am7UeFPAgMBAAECgYAUetOfzLYUudofvPCaKHu7tKZ5kQPfEa0w6BAPnBF1Mfl1JiDBRDMryFtKs6AOIAVwx00dY/Ex0BCbB3+Cr58H7t4NaPTJxCpmR09pK7o17B7xAdQv8+SynFNud9/5vQ5AEXMOLNwKiU7wpXT6Z7ZIibUBOR7ewsWgsHCDpN1iqQJBAOMODPTPSiQMwRAUHIc6GPleFSJnIz2PAoG3JOG9KFAL6RtIc19lob2ZXdbQdzKtjSkWo+O5W20WDNAl1k32h6MCQQC7W4ZCIY67mPbL6CxXfHjpSGF4Dr9VWJ7ZrKHr6XUoOIcEvsn/pHvWonjMdy93rQMSfOE8BKd/I1+GHRmNVgplAkAnSo4paxmsZVyfeKt7Jy2dMY+8tVZe17maUuQaAE7Sk00SgJYegwrbMYgQnWCTL39HBfj0dmYA2Zj8CCAuu6O7AkEAryFiYjaUAO9+4iNoL27+ZrFtypeeadyov7gKs0ZKaQpNyzW8A+Zwi7TbTeSqzic/E+z/bOa82q7p/6b7141xsQJBANCAcIwMcVb6KVCHlQbOtKspo5Eh4ZQi8bGl+IcwbQ6JSxeTx915IfAldgbuU047wOB04dYCFB2yLDiUGVXTifU=\n-----END PRIVATE KEY-----\n",
+            "private_key": DUMMY_PRIVATE_KEY,
             "client_email": "dummy@dummy.iam.gserviceaccount.com",
         },
     }
@@ -60,10 +90,41 @@ MOCK_HEADER = {
 }
 
 
+async def test_sync_google_does_not_block_startup(hass: HomeAssistant) -> None:
+    """Test that Google entity sync runs after startup, not during."""
+    hass.set_state(CoreState.not_running)
+    config = GoogleConfig(hass, DUMMY_CONFIG)
+
+    with patch.object(config, "async_sync_entities_all") as mock_sync:
+        await config.async_initialize()
+
+        # Fire EVENT_HOMEASSISTANT_START - sync should NOT run yet
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+        mock_sync.assert_not_called()
+
+        # Fire EVENT_HOMEASSISTANT_STARTED - now sync should run
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        mock_sync.assert_called_once()
+
+
 async def test_get_jwt(hass: HomeAssistant) -> None:
     """Test signing of key."""
 
-    jwt = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkdW1teUBkdW1teS5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsInNjb3BlIjoiaHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vYXV0aC9ob21lZ3JhcGgiLCJhdWQiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20vby9vYXV0aDIvdG9rZW4iLCJpYXQiOjE1NzEwMTEyMDAsImV4cCI6MTU3MTAxNDgwMH0.akHbMhOflXdIDHVvUVwO0AoJONVOPUdCghN6hAdVz4gxjarrQeGYc_Qn2r84bEvCU7t6EvimKKr0fyupyzBAzfvKULs5mTHO3h2CwSgvOBMv8LnILboJmbO4JcgdnRV7d9G3ktQs7wWSCXJsI5i5jUr1Wfi9zWwxn2ebaAAgrp8"
+    jwt = (
+        "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9."
+        "eyJpc3MiOiJkdW1teUBkdW1teS5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsInN"
+        "jb3BlIjoiaHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vYXV0aC9ob21lZ3JhcG"
+        "giLCJhdWQiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20vby9vYXV0aDIvd"
+        "G9rZW4iLCJpYXQiOjE1NzEwMTEyMDAsImV4cCI6MTU3MTAxNDgwMH0."
+        "Tt88OV1IndxiJLdBTPBCW5AlsWWlBRAU9bK8c28PlYSlJBHRd0dQCjYh-4lL1t-"
+        "RfrLJCqiq9_O9xa4n7Ge59xM9pb_ifFCaYzkUpJlVy5XJYVu7hE-0AV_xAygKjN"
+        "7nVLpcCFsygoh-sr2bkJpDKzcEpPRlH2lAjkMisVVibt_-oix9m0KO0qZ-7uqV5"
+        "YG2uLiHvolJ0F2oSc4MJGIOTG7Hf3qWSk_MiVLD0t1Jdp1xniHLzlYht0xSVZ0m"
+        "b1wflqM9VwERuAbCzXRabNJs85XzeR8aOwk38xwobUk0JXSAaNISoQTC47OwEY8"
+        "DvSmDgMbYf5aG5yEKCZnYngt6Pg"
+    )
     res = _get_homegraph_jwt(
         datetime(2019, 10, 14, tzinfo=UTC),
         DUMMY_CONFIG["service_account"]["client_email"],
@@ -286,7 +347,7 @@ async def test_secure_device_pin_config(hass: HomeAssistant) -> None:
         {
             "project_id": "1234",
             "service_account": {
-                "private_key": "-----BEGIN PRIVATE KEY-----\nMIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAKYscIlwm7soDsHAz6L6YvUkCvkrX19rS6yeYOmovvhoK5WeYGWUsd8V72zmsyHB7XO94YgJVjvxfzn5K8bLePjFzwoSJjZvhBJ/ZQ05d8VmbvgyWUoPdG9oEa4fZ/lCYrXoaFdTot2xcJvrb/ZuiRl4s4eZpNeFYvVK/Am7UeFPAgMBAAECgYAUetOfzLYUudofvPCaKHu7tKZ5kQPfEa0w6BAPnBF1Mfl1JiDBRDMryFtKs6AOIAVwx00dY/Ex0BCbB3+Cr58H7t4NaPTJxCpmR09pK7o17B7xAdQv8+SynFNud9/5vQ5AEXMOLNwKiU7wpXT6Z7ZIibUBOR7ewsWgsHCDpN1iqQJBAOMODPTPSiQMwRAUHIc6GPleFSJnIz2PAoG3JOG9KFAL6RtIc19lob2ZXdbQdzKtjSkWo+O5W20WDNAl1k32h6MCQQC7W4ZCIY67mPbL6CxXfHjpSGF4Dr9VWJ7ZrKHr6XUoOIcEvsn/pHvWonjMdy93rQMSfOE8BKd/I1+GHRmNVgplAkAnSo4paxmsZVyfeKt7Jy2dMY+8tVZe17maUuQaAE7Sk00SgJYegwrbMYgQnWCTL39HBfj0dmYA2Zj8CCAuu6O7AkEAryFiYjaUAO9+4iNoL27+ZrFtypeeadyov7gKs0ZKaQpNyzW8A+Zwi7TbTeSqzic/E+z/bOa82q7p/6b7141xsQJBANCAcIwMcVb6KVCHlQbOtKspo5Eh4ZQi8bGl+IcwbQ6JSxeTx915IfAldgbuU047wOB04dYCFB2yLDiUGVXTifU=\n-----END PRIVATE KEY-----\n",
+                "private_key": DUMMY_PRIVATE_KEY,
                 "client_email": "dummy@dummy.iam.gserviceaccount.com",
             },
             "secure_devices_pin": secure_pin,
@@ -295,27 +356,6 @@ async def test_secure_device_pin_config(hass: HomeAssistant) -> None:
     config = GoogleConfig(hass, secure_config)
 
     assert config.secure_devices_pin == secure_pin
-
-
-async def test_should_expose(hass: HomeAssistant) -> None:
-    """Test the google config should expose method."""
-    config = GoogleConfig(hass, DUMMY_CONFIG)
-    await config.async_initialize()
-
-    with patch.object(config, "async_call_homegraph_api"):
-        # Wait for google_assistant.helpers.async_initialize.sync_google to be called
-        await hass.async_block_till_done()
-
-    assert (
-        config.should_expose(State(DOMAIN + ".mock", "mock", {"view": "not None"}))
-        is False
-    )
-
-    with patch.object(config, "async_call_homegraph_api"):
-        # Wait for google_assistant.helpers.async_initialize.sync_google to be called
-        await hass.async_block_till_done()
-
-    assert config.should_expose(State(CLOUD_NEVER_EXPOSED_ENTITIES[0], "mock")) is False
 
 
 async def test_missing_service_account(hass: HomeAssistant) -> None:
@@ -483,8 +523,8 @@ async def test_async_enable_local_sdk(
     )
     assert resp.status == HTTPStatus.OK
     assert (
-        "Cannot process request for webhook **REDACTED** as no linked agent user is found:"
-        in caplog.text
+        "Cannot process request for webhook **REDACTED**"
+        " as no linked agent user is found:" in caplog.text
     )
 
 

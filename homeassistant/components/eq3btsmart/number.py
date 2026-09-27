@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from eq3btsmart import Thermostat
 from eq3btsmart.const import EQ3_MAX_OFFSET, EQ3_MAX_TEMP, EQ3_MIN_OFFSET, EQ3_MIN_TEMP
@@ -47,7 +47,9 @@ NUMBER_ENTITY_DESCRIPTIONS = [
     Eq3NumberEntityDescription(
         key=ENTITY_KEY_COMFORT,
         value_func=lambda presets: presets.comfort_temperature,
-        value_set_func=lambda thermostat: thermostat.async_configure_comfort_temperature,
+        value_set_func=lambda thermostat: (
+            thermostat.async_configure_comfort_temperature
+        ),
         translation_key=ENTITY_KEY_COMFORT,
         native_min_value=EQ3_MIN_TEMP,
         native_max_value=EQ3_MAX_TEMP,
@@ -69,7 +71,9 @@ NUMBER_ENTITY_DESCRIPTIONS = [
     Eq3NumberEntityDescription(
         key=ENTITY_KEY_WINDOW_OPEN_TEMPERATURE,
         value_func=lambda presets: presets.window_open_temperature,
-        value_set_func=lambda thermostat: thermostat.async_configure_window_open_temperature,
+        value_set_func=lambda thermostat: (
+            thermostat.async_configure_window_open_temperature
+        ),
         translation_key=ENTITY_KEY_WINDOW_OPEN_TEMPERATURE,
         native_min_value=EQ3_MIN_TEMP,
         native_max_value=EQ3_MAX_TEMP,
@@ -90,7 +94,9 @@ NUMBER_ENTITY_DESCRIPTIONS = [
     ),
     Eq3NumberEntityDescription(
         key=ENTITY_KEY_WINDOW_OPEN_TIMEOUT,
-        value_set_func=lambda thermostat: thermostat.async_configure_window_open_duration,
+        value_set_func=lambda thermostat: (
+            thermostat.async_configure_window_open_duration
+        ),
         value_func=lambda presets: presets.window_open_time.total_seconds() / 60,
         translation_key=ENTITY_KEY_WINDOW_OPEN_TIMEOUT,
         native_min_value=0,
@@ -128,6 +134,7 @@ class Eq3NumberEntity(Eq3Entity, NumberEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the entity."""
 
@@ -136,12 +143,14 @@ class Eq3NumberEntity(Eq3Entity, NumberEntity):
 
         return self.entity_description.value_func(self._thermostat.status.presets)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the state of the entity."""
 
         await self.entity_description.value_set_func(self._thermostat)(value)
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the entity is available."""
 

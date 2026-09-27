@@ -59,14 +59,14 @@ async def test_add_item_intent(
         {ATTR_ITEM: {"value": " beer "}, "name": {"value": "list 1"}},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert response.success_results[0].name == "list 1"
     assert response.success_results[0].type == intent.IntentResponseTargetType.ENTITY
     assert response.success_results[0].id == entity1.entity_id
 
     assert len(entity1.items) == 1
     assert len(entity2.items) == 0
-    assert entity1.items[0].summary == "beer"  # summary is trimmed
+    assert entity1.items[0].summary == "Beer"  # summary is trimmed and capitalized
     assert entity1.items[0].status == TodoItemStatus.NEEDS_ACTION
     entity1.items.clear()
 
@@ -78,11 +78,11 @@ async def test_add_item_intent(
         {ATTR_ITEM: {"value": "cheese"}, "name": {"value": "List 2"}},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
 
     assert len(entity1.items) == 0
     assert len(entity2.items) == 1
-    assert entity2.items[0].summary == "cheese"
+    assert entity2.items[0].summary == "Cheese"
     assert entity2.items[0].status == TodoItemStatus.NEEDS_ACTION
 
     # List name is case insensitive
@@ -93,11 +93,11 @@ async def test_add_item_intent(
         {ATTR_ITEM: {"value": "wine"}, "name": {"value": "lIST 2"}},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
 
     assert len(entity1.items) == 0
     assert len(entity2.items) == 2
-    assert entity2.items[1].summary == "wine"
+    assert entity2.items[1].summary == "Wine"
     assert entity2.items[1].status == TodoItemStatus.NEEDS_ACTION
 
     # Should fail if lists are not exposed
@@ -111,7 +111,7 @@ async def test_add_item_intent(
             {"item": {"value": "cookies"}, "name": {"value": "list 1"}},
             assistant=conversation.DOMAIN,
         )
-    assert err.value.result.no_match_reason == intent.MatchFailedReason.ASSISTANT
+    assert err.value.result.no_match_reason is intent.MatchFailedReason.ASSISTANT
 
     # Missing list
     with pytest.raises(intent.MatchFailedError):
@@ -187,8 +187,8 @@ async def test_complete_item_intent(
     """Test the complete item intent."""
     entity1 = MockTodoListEntity(
         [
-            TodoItem(summary="beer", uid="1", status=TodoItemStatus.NEEDS_ACTION),
-            TodoItem(summary="wine", uid="2", status=TodoItemStatus.NEEDS_ACTION),
+            TodoItem(summary="Beer", uid="1", status=TodoItemStatus.NEEDS_ACTION),
+            TodoItem(summary="Wine", uid="2", status=TodoItemStatus.NEEDS_ACTION),
         ]
     )
     entity1._attr_name = "List 1"
@@ -210,7 +210,7 @@ async def test_complete_item_intent(
         {ATTR_ITEM: {"value": "beer"}, ATTR_NAME: {"value": "list 1"}},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
 
     assert len(entity1.items) == 2
     assert entity1.items[0].status == TodoItemStatus.COMPLETED
@@ -288,5 +288,82 @@ async def test_complete_item_intent_ha_errors(
             DOMAIN,
             todo_intent.INTENT_LIST_COMPLETE_ITEM,
             {ATTR_ITEM: {"value": "wine"}, ATTR_NAME: {"value": "List 1"}},
+            assistant=conversation.DOMAIN,
+        )
+
+
+async def test_remove_item_intent(
+    hass: HomeAssistant,
+) -> None:
+    """Test the remove item intent."""
+    entity1 = MockTodoListEntity(
+        [
+            TodoItem(summary="Beer", uid="1", status=TodoItemStatus.NEEDS_ACTION),
+            TodoItem(summary="wine", uid="2", status=TodoItemStatus.NEEDS_ACTION),
+            TodoItem(summary="beer", uid="3", status=TodoItemStatus.COMPLETED),
+        ]
+    )
+    entity1._attr_name = "List 1"
+    entity1.entity_id = "todo.list_1"
+
+    # Add entities to hass
+    config_entry = await create_mock_platform(hass, [entity1])
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert len(entity1.items) == 3
+
+    # Remove item
+    async_mock_service(hass, DOMAIN, todo_intent.INTENT_LIST_REMOVE_ITEM)
+    response = await intent.async_handle(
+        hass,
+        DOMAIN,
+        todo_intent.INTENT_LIST_REMOVE_ITEM,
+        {ATTR_ITEM: {"value": "beer"}, ATTR_NAME: {"value": "list 1"}},
+        assistant=conversation.DOMAIN,
+    )
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
+
+    # only the first matching item has been removed
+    assert len(entity1.items) == 2
+    assert entity1.items[0].uid == "2"
+    assert entity1.items[1].uid == "3"
+
+
+async def test_remove_item_intent_errors(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+) -> None:
+    """Test errors with the remove item intent."""
+    entity1 = MockTodoListEntity(
+        [
+            TodoItem(summary="beer", uid="1", status=TodoItemStatus.COMPLETED),
+        ]
+    )
+    entity1._attr_name = "List 1"
+    entity1.entity_id = "todo.list_1"
+
+    # Add entities to hass
+    await create_mock_platform(hass, [entity1])
+
+    # Try to remove item in list that does not exist
+    with pytest.raises(intent.MatchFailedError):
+        await intent.async_handle(
+            hass,
+            "test",
+            todo_intent.INTENT_LIST_REMOVE_ITEM,
+            {
+                ATTR_ITEM: {"value": "wine"},
+                ATTR_NAME: {"value": "This list does not exist"},
+            },
+            assistant=conversation.DOMAIN,
+        )
+
+    # Try to remove item that does not exist
+    with pytest.raises(intent.IntentHandleError):
+        await intent.async_handle(
+            hass,
+            "test",
+            todo_intent.INTENT_LIST_REMOVE_ITEM,
+            {ATTR_ITEM: {"value": "bread"}, ATTR_NAME: {"value": "list 1"}},
             assistant=conversation.DOMAIN,
         )

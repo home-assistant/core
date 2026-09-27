@@ -1,15 +1,13 @@
 """Config flow for Met Office integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from datapoint.exceptions import APIException
 from datapoint.Manager import Manager
+import probatio
 from requests import HTTPError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
@@ -60,6 +58,7 @@ class MetOfficeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -86,13 +85,13 @@ class MetOfficeConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_NAME], data=user_input
                 )
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_API_KEY): str,
-                vol.Required(
+                probatio.Required(CONF_API_KEY): str,
+                probatio.Required(
                     CONF_LATITUDE, default=self.hass.config.latitude
                 ): cv.latitude,
-                vol.Required(
+                probatio.Required(
                     CONF_LONGITUDE, default=self.hass.config.longitude
                 ): cv.longitude,
             },
@@ -135,9 +134,9 @@ class MetOfficeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): str,
+                    probatio.Required(CONF_API_KEY): str,
                 }
             ),
             description_placeholders={

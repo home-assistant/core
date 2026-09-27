@@ -42,7 +42,7 @@
   "services": {
     "reload": {
       "description": "Reloads persons from the YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "Reload persons"
     }
   },
   "title": "Person"

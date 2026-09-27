@@ -1,18 +1,16 @@
 """Support for Openhome Devices."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
-import aiohttp
-from async_upnp_client.client import UpnpError
-import voluptuous as vol
+from openhomedevice.exceptions import OpenhomeError
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    SERVICE_PLAY_MEDIA,
+    SERVICE_SELECT_SOURCE,
     BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -20,13 +18,27 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_STOP,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_PIN_INDEX, DOMAIN, SERVICE_INVOKE_PIN
+from . import OpenhomeConfigEntry
+from .const import DOMAIN
+from .services import SERVICE_INVOKE_PIN
 
 SUPPORT_OPENHOME = (
     MediaPlayerEntityFeature.SELECT_SOURCE
@@ -39,38 +51,32 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OpenhomeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Openhome config entry."""
 
     _LOGGER.debug("Setting up config entry: %s", config_entry.unique_id)
 
-    device = hass.data[DOMAIN][config_entry.entry_id]
+    device = config_entry.runtime_data
 
     entity = OpenhomeDevice(device)
 
     async_add_entities([entity])
 
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_INVOKE_PIN,
-        {vol.Required(ATTR_PIN_INDEX): cv.positive_int},
-        "async_invoke_pin",
-    )
-
 
 type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], Awaitable[_R]]
 type _ReturnFuncType[_T, **_P, _R] = Callable[
-    Concatenate[_T, _P], Coroutine[Any, Any, _R | None]
+    Concatenate[_T, _P], Coroutine[Any, Any, _R]
 ]
 
 
-def catch_request_errors[_OpenhomeDeviceT: OpenhomeDevice, **_P, _R]() -> Callable[
+def catch_request_errors[_OpenhomeDeviceT: OpenhomeDevice, **_P, _R](
+    action: str,
+) -> Callable[
     [_FuncType[_OpenhomeDeviceT, _P, _R]], _ReturnFuncType[_OpenhomeDeviceT, _P, _R]
 ]:
-    """Catch TimeoutError, aiohttp.ClientError, UpnpError errors."""
+    """Return decorator that catches errors and raises HomeAssistantError."""
 
     def call_wrapper(
         func: _FuncType[_OpenhomeDeviceT, _P, _R],
@@ -80,13 +86,15 @@ def catch_request_errors[_OpenhomeDeviceT: OpenhomeDevice, **_P, _R]() -> Callab
         @functools.wraps(func)
         async def wrapper(
             self: _OpenhomeDeviceT, *args: _P.args, **kwargs: _P.kwargs
-        ) -> _R | None:
-            """Catch TimeoutError, aiohttp.ClientError, UpnpError errors."""
+        ) -> _R:
+            """Catch OpenhomeError errors."""
             try:
                 return await func(self, *args, **kwargs)
-            except (TimeoutError, aiohttp.ClientError, UpnpError):
-                _LOGGER.error("Error during call %s", func.__name__)
-            return None
+            except OpenhomeError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key=action,
+                ) from err
 
         return wrapper
 
@@ -128,6 +136,8 @@ class OpenhomeDevice(MediaPlayerEntity):
             self._attr_media_title = track_information.get("title")
             if artists := track_information.get("artist"):
                 self._attr_media_artist = artists[0]
+            self._attr_media_content_id = track_information.get("uri")
+            self._attr_media_content_type = MediaType.MUSIC
 
             if self._device.volume_enabled:
                 self._attr_supported_features |= (
@@ -179,20 +189,25 @@ class OpenhomeDevice(MediaPlayerEntity):
                 self._attr_state = MediaPlayerState.PLAYING
 
             self._attr_available = True
-        except (TimeoutError, aiohttp.ClientError, UpnpError):
+        except OpenhomeError as err:
+            if self._attr_available:
+                _LOGGER.warning("Error updating %s: %s", self.entity_id, err)
             self._attr_available = False
 
-    @catch_request_errors()
+    @catch_request_errors(SERVICE_TURN_ON)
+    @override
     async def async_turn_on(self) -> None:
         """Bring device out of standby."""
         await self._device.set_standby(False)
 
-    @catch_request_errors()
+    @catch_request_errors(SERVICE_TURN_OFF)
+    @override
     async def async_turn_off(self) -> None:
         """Put device in standby."""
         await self._device.set_standby(True)
 
-    @catch_request_errors()
+    @catch_request_errors(SERVICE_PLAY_MEDIA)
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -217,67 +232,77 @@ class OpenhomeDevice(MediaPlayerEntity):
         track_details = {"title": "Home Assistant", "uri": media_id}
         await self._device.play_media(track_details)
 
-    @catch_request_errors()
+    @catch_request_errors(SERVICE_MEDIA_PAUSE)
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._device.pause()
 
-    @catch_request_errors()
+    @catch_request_errors(SERVICE_MEDIA_STOP)
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._device.stop()
 
-    @catch_request_errors()
+    @catch_request_errors(SERVICE_MEDIA_PLAY)
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         await self._device.play()
 
-    @catch_request_errors()
+    @catch_request_errors(SERVICE_MEDIA_NEXT_TRACK)
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._device.skip(1)
 
-    @catch_request_errors()
+    @catch_request_errors(SERVICE_MEDIA_PREVIOUS_TRACK)
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._device.skip(-1)
 
-    @catch_request_errors()
+    @catch_request_errors(SERVICE_SELECT_SOURCE)
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         await self._device.set_source(self._source_index[source])
 
-    @catch_request_errors()
+    @catch_request_errors(SERVICE_INVOKE_PIN)
     async def async_invoke_pin(self, pin):
         """Invoke pin."""
-        try:
-            if self._device.pins_enabled:
-                await self._device.invoke_pin(pin)
-            else:
-                _LOGGER.error("Pins service not supported")
-        except UpnpError:
-            _LOGGER.error("Error invoking pin %s", pin)
+        if not self._device.pins_enabled:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="pins_not_supported",
+            )
+        await self._device.invoke_pin(pin)
 
-    @catch_request_errors()
+    @catch_request_errors(SERVICE_VOLUME_UP)
+    @override
     async def async_volume_up(self) -> None:
         """Volume up media player."""
         await self._device.increase_volume()
 
-    @catch_request_errors()
+    @catch_request_errors(SERVICE_VOLUME_DOWN)
+    @override
     async def async_volume_down(self) -> None:
         """Volume down media player."""
         await self._device.decrease_volume()
 
-    @catch_request_errors()
+    @catch_request_errors(SERVICE_VOLUME_SET)
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._device.set_volume(int(volume * 100))
 
-    @catch_request_errors()
+    @catch_request_errors(SERVICE_VOLUME_MUTE)
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         await self._device.set_mute(mute)
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,

@@ -1,10 +1,8 @@
 """Support for script and automation tracing and debugging."""
 
-from __future__ import annotations
-
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
@@ -32,7 +30,9 @@ STORAGE_KEY = "trace.saved_traces"
 STORAGE_VERSION = 1
 
 TRACE_CONFIG_SCHEMA = {
-    vol.Optional(CONF_STORED_TRACES, default=DEFAULT_STORED_TRACES): cv.positive_int
+    probatio.Optional(
+        CONF_STORED_TRACES, default=DEFAULT_STORED_TRACES
+    ): cv.positive_int
 }
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -60,8 +60,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         try:
             await store.async_save(
                 {
-                    key: list(traces.values())
-                    for key, traces in hass.data[DATA_TRACE].items()
+                    key: list(trace_bucket.all_traces())
+                    for key, trace_bucket in hass.data[DATA_TRACE].items()
                 }
             )
         except HomeAssistantError as exc:

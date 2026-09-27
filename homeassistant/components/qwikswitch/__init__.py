@@ -1,12 +1,10 @@
 """Support for Qwikswitch devices."""
 
-from __future__ import annotations
-
 import logging
 
+import probatio
 from pyqwikswitch.async_ import QSUsb
 from pyqwikswitch.qwikswitch import CMD_BUTTONS, QS_CMD, QS_ID, SENSORS, QSType
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
@@ -24,44 +22,46 @@ from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DATA_QUIKSWITCH, DOMAIN
 
-DOMAIN = "qwikswitch"
+_LOGGER = logging.getLogger(__name__)
 
 CONF_DIMMER_ADJUST = "dimmer_adjust"
 CONF_BUTTON_EVENTS = "button_events"
-CV_DIM_VALUE = vol.All(vol.Coerce(float), vol.Range(min=1, max=3))
+CV_DIM_VALUE = probatio.All(probatio.Coerce(float), probatio.Range(min=1, max=3))
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_URL, default="http://127.0.0.1:2020"): vol.Coerce(
-                    str
-                ),
-                vol.Optional(CONF_DIMMER_ADJUST, default=1): CV_DIM_VALUE,
-                vol.Optional(CONF_BUTTON_EVENTS, default=[]): cv.ensure_list_csv,
-                vol.Optional(CONF_SENSORS, default=[]): vol.All(
+                probatio.Required(
+                    CONF_URL, default="http://127.0.0.1:2020"
+                ): probatio.Coerce(str),
+                probatio.Optional(CONF_DIMMER_ADJUST, default=1): CV_DIM_VALUE,
+                probatio.Optional(CONF_BUTTON_EVENTS, default=[]): cv.ensure_list_csv,
+                probatio.Optional(CONF_SENSORS, default=[]): probatio.All(
                     cv.ensure_list,
                     [
-                        vol.Schema(
+                        probatio.Schema(
                             {
-                                vol.Required("id"): str,
-                                vol.Optional("channel", default=1): int,
-                                vol.Required("name"): str,
-                                vol.Required("type"): str,
-                                vol.Optional("class"): DEVICE_CLASSES_SCHEMA,
-                                vol.Optional("invert"): bool,
+                                probatio.Required("id"): str,
+                                probatio.Optional("channel", default=1): int,
+                                probatio.Required("name"): str,
+                                probatio.Required("type"): str,
+                                probatio.Optional("class"): DEVICE_CLASSES_SCHEMA,
+                                probatio.Optional("invert"): bool,
                             }
                         )
                     ],
                 ),
-                vol.Optional(CONF_SWITCHES, default=[]): vol.All(cv.ensure_list, [str]),
+                probatio.Optional(CONF_SWITCHES, default=[]): probatio.All(
+                    cv.ensure_list, [str]
+                ),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -96,7 +96,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not await qsusb.update_from_devices():
         return False
 
-    hass.data[DOMAIN] = qsusb
+    hass.data[DATA_QUIKSWITCH] = qsusb
 
     comps: dict[Platform, list] = {
         Platform.SWITCH: [],
@@ -168,7 +168,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     @callback
     def async_stop(_):
         """Stop the listener."""
-        hass.data[DOMAIN].stop()
+        hass.data[DATA_QUIKSWITCH].stop()
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, async_stop)
 

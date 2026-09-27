@@ -1,9 +1,7 @@
 """ZHA radio manager."""
 
-from __future__ import annotations
-
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator, Callable
 import contextlib
 from contextlib import suppress
 import copy
@@ -13,7 +11,7 @@ import os
 from typing import Any, Self
 
 from bellows.config import CONF_USE_THREAD
-import voluptuous as vol
+import probatio
 from zha.application.const import RadioType
 from zigpy.application import ControllerApplication
 import zigpy.backups
@@ -24,6 +22,7 @@ from zigpy.config import (
     CONF_NWK_BACKUP_ENABLED,
     SCHEMA_DEVICE,
 )
+import zigpy.device
 from zigpy.exceptions import NetworkNotFormed
 
 from homeassistant import config_entries
@@ -47,13 +46,18 @@ from .helpers import get_zha_data
 RECOMMENDED_RADIOS = (
     RadioType.ezsp,
     RadioType.znp,
+    RadioType.ziggurat,
     RadioType.deconz,
 )
 
 # Only the common radio types will be autoprobed, ordered by new device popularity.
 # XBee takes too long to probe since it scans through all possible bauds and likely has
 # very few users to begin with.
-AUTOPROBE_RADIOS = RECOMMENDED_RADIOS
+AUTOPROBE_RADIOS = (
+    RadioType.ezsp,
+    RadioType.znp,
+    RadioType.deconz,
+)
 
 CONNECT_DELAY_S = 1.0
 RETRY_DELAY_S = 1.0
@@ -62,33 +66,37 @@ BACKUP_RETRIES = 5
 MIGRATION_RETRIES = 100
 
 
-DEVICE_SCHEMA = vol.Schema(
+DEVICE_SCHEMA = probatio.Schema(
     {
-        vol.Required("path"): str,
-        vol.Optional("baudrate", default=115200): int,
-        vol.Optional("flow_control", default=None): vol.In(
+        probatio.Required("path"): str,
+        probatio.Optional("baudrate", default=115200): int,
+        probatio.Optional("flow_control", default=None): probatio.In(
             ["hardware", "software", None]
         ),
     }
 )
 
-HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
+HARDWARE_DISCOVERY_SCHEMA = probatio.Schema(
     {
-        vol.Required("name"): str,
-        vol.Required("port"): DEVICE_SCHEMA,
-        vol.Required("radio_type"): str,
-        vol.Optional("flow_strategy"): vol.All(str, vol.Coerce(ZigbeeFlowStrategy)),
-        vol.Optional("tx_power"): vol.All(vol.Coerce(int), vol.Range(min=0, max=10)),
+        probatio.Required("name"): str,
+        probatio.Required("port"): DEVICE_SCHEMA,
+        probatio.Required("radio_type"): str,
+        probatio.Optional("flow_strategy"): probatio.All(
+            str, probatio.Coerce(ZigbeeFlowStrategy)
+        ),
+        probatio.Optional("tx_power"): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0, max=10)
+        ),
     }
 )
 
-HARDWARE_MIGRATION_SCHEMA = vol.Schema(
+HARDWARE_MIGRATION_SCHEMA = probatio.Schema(
     {
-        vol.Required("new_discovery_info"): HARDWARE_DISCOVERY_SCHEMA,
-        vol.Required("old_discovery_info"): vol.Schema(
+        probatio.Required("new_discovery_info"): HARDWARE_DISCOVERY_SCHEMA,
+        probatio.Required("old_discovery_info"): probatio.Schema(
             {
-                vol.Exclusive("hw", "discovery"): HARDWARE_DISCOVERY_SCHEMA,
-                vol.Exclusive("usb", "discovery"): UsbServiceInfo,
+                probatio.Exclusive("hw", "discovery"): HARDWARE_DISCOVERY_SCHEMA,
+                probatio.Exclusive("usb", "discovery"): UsbServiceInfo,
             }
         ),
     }
@@ -171,9 +179,17 @@ class ZhaRadioManager:
 
     @contextlib.asynccontextmanager
     async def create_zigpy_app(
-        self, *, connect: bool = True
-    ) -> AsyncIterator[ControllerApplication]:
-        """Connect to the radio with the current config and then clean up."""
+        self,
+        *,
+        connect: bool = True,
+        device_resolver: Callable[[zigpy.device.Device], zigpy.device.Device]
+        | None = None,
+    ) -> AsyncGenerator[ControllerApplication]:
+        """Connect to the radio with the current config and then clean up.
+
+        `device_resolver` is forwarded to zigpy so devices loaded from the
+        database are quirk-resolved to get quirk-defined device triggers.
+        """
         assert self.radio_type is not None
 
         config = get_zha_data(self.hass).yaml_config
@@ -198,7 +214,10 @@ class ZhaRadioManager:
         app_config[CONF_USE_THREAD] = False
 
         app = await self.radio_type.controller.new(
-            app_config, auto_form=False, start_radio=False
+            app_config,
+            auto_form=False,
+            start_radio=False,
+            device_resolver=device_resolver,
         )
 
         try:
@@ -323,7 +342,7 @@ class ZhaRadioManager:
 
         return backup
 
-    async def async_form_network(self, config: dict[str, Any] | None) -> None:
+    async def async_form_network(self) -> None:
         """Form a brand-new network."""
 
         # When forming a new network, we delete the ZHA database to prevent old devices
@@ -332,7 +351,7 @@ class ZhaRadioManager:
             await self.hass.async_add_executor_job(os.remove, self.zigpy_database_path)
 
         async with self.create_zigpy_app() as app:
-            await app.form_network(config=config)
+            await app.form_network()
 
     async def async_reset_adapter(self) -> None:
         """Reset the current adapter."""
@@ -409,7 +428,7 @@ class ZhaMultiPANMigrationHelper:
                     create_backup=True
                 )
                 break
-            except OSError as err:
+            except (OSError, HomeAssistantError) as err:
                 if retry >= BACKUP_RETRIES - 1:
                     raise
 
@@ -450,7 +469,7 @@ class ZhaMultiPANMigrationHelper:
             try:
                 await self._radio_mgr.restore_backup(overwrite_ieee=True)
                 break
-            except OSError as err:
+            except (OSError, HomeAssistantError) as err:
                 if retry >= MIGRATION_RETRIES - 1:
                     raise
 

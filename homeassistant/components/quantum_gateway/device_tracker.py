@@ -1,10 +1,10 @@
 """Support for Verizon FiOS Quantum Gateways."""
 
-from __future__ import annotations
+from typing import override
 
+import probatio
 from quantum_gateway import QuantumGatewayScanner
 from requests.exceptions import RequestException
-import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -20,9 +20,9 @@ from .const import DEFAULT_HOST, LOGGER
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_SSL, default=True): cv.boolean,
-        vol.Required(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_SSL, default=True): cv.boolean,
+        probatio.Required(CONF_PASSWORD): cv.string,
     }
 )
 
@@ -59,6 +59,7 @@ class QuantumGatewayDeviceScanner(DeviceScanner):
         if not self.success_init:
             LOGGER.error("Unable to login to gateway. Check password and host")
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list of found MACs."""
         connected_devices = []
@@ -68,6 +69,7 @@ class QuantumGatewayDeviceScanner(DeviceScanner):
             LOGGER.error("Unable to scan devices. Check connection to router")
         return connected_devices
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         return self.quantum.get_device_name(device)

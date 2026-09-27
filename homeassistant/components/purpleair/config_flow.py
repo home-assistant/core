@@ -1,17 +1,15 @@
 """Config flow for PurpleAir integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiopurpleair import API
 from aiopurpleair.endpoints.sensors import NearbySensorResult
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -49,9 +47,9 @@ CONF_SENSOR_INDEX = "sensor_index"
 
 DEFAULT_DISTANCE = 5
 
-API_KEY_SCHEMA = vol.Schema(
+API_KEY_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_API_KEY): cv.string,
     }
 )
 
@@ -64,17 +62,17 @@ def async_get_api(hass: HomeAssistant, api_key: str) -> API:
 
 
 @callback
-def async_get_coordinates_schema(hass: HomeAssistant) -> vol.Schema:
+def async_get_coordinates_schema(hass: HomeAssistant) -> probatio.Schema:
     """Define a schema for searching for sensors near a coordinate pair."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Inclusive(
+            probatio.Inclusive(
                 CONF_LATITUDE, "coords", default=hass.config.latitude
             ): cv.latitude,
-            vol.Inclusive(
+            probatio.Inclusive(
                 CONF_LONGITUDE, "coords", default=hass.config.longitude
             ): cv.longitude,
-            vol.Optional(CONF_DISTANCE, default=DEFAULT_DISTANCE): cv.positive_int,
+            probatio.Optional(CONF_DISTANCE, default=DEFAULT_DISTANCE): cv.positive_int,
         }
     )
 
@@ -93,11 +91,11 @@ def async_get_nearby_sensors_options(
 
 
 @callback
-def async_get_nearby_sensors_schema(options: list[SelectOptionDict]) -> vol.Schema:
+def async_get_nearby_sensors_schema(options: list[SelectOptionDict]) -> probatio.Schema:
     """Define a schema for selecting a sensor from a list."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_SENSOR_INDEX): SelectSelector(
+            probatio.Required(CONF_SENSOR_INDEX): SelectSelector(
                 SelectSelectorConfig(options=options, mode=SelectSelectorMode.DROPDOWN)
             )
         }
@@ -112,18 +110,18 @@ def async_get_remove_sensor_options(
     device_registry = dr.async_get(hass)
     return [
         SelectOptionDict(value=device_entry.id, label=cast(str, device_entry.name))
-        for device_entry in device_registry.devices.get_devices_for_config_entry_id(
-            config_entry.entry_id
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, config_entry.entry_id
         )
     ]
 
 
 @callback
-def async_get_remove_sensor_schema(sensors: list[SelectOptionDict]) -> vol.Schema:
+def async_get_remove_sensor_schema(sensors: list[SelectOptionDict]) -> probatio.Schema:
     """Define a schema removing a sensor."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_SENSOR_DEVICE_ID): SelectSelector(
+            probatio.Required(CONF_SENSOR_DEVICE_ID): SelectSelector(
                 SelectSelectorConfig(options=sensors, mode=SelectSelectorMode.DROPDOWN)
             )
         }
@@ -205,6 +203,7 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> PurpleAirOptionsFlowHandler:
@@ -289,6 +288,7 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
             self._get_reauth_entry(), data={CONF_API_KEY: api_key}
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -320,11 +320,11 @@ class PurpleAirOptionsFlowHandler(OptionsFlowWithReload):
         self._flow_data: dict[str, Any] = {}
 
     @property
-    def settings_schema(self) -> vol.Schema:
+    def settings_schema(self) -> probatio.Schema:
         """Return the settings schema."""
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_SHOW_ON_MAP,
                     description={
                         "suggested_value": self.config_entry.options.get(
@@ -438,9 +438,7 @@ class PurpleAirOptionsFlowHandler(OptionsFlowWithReload):
             [entity_entry.entity_id for entity_entry in entity_entries],
             async_device_entity_state_changed,
         )
-        device_registry.async_update_device(
-            device_id, remove_config_entry_id=self.config_entry.entry_id
-        )
+        device_registry.async_remove_device(device_id)
         await device_entities_removed_event.wait()
 
         # Once we're done, we can cancel the state change tracker callback:

@@ -2,11 +2,12 @@
 
 from unittest.mock import patch
 
+from probatio.error import Invalid
 import pytest
-from voluptuous.error import Invalid
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from .conftest import BUILD, ComponentSetup
 
@@ -45,12 +46,47 @@ async def test_notify(
         )
     assert len(mock_client.mock_calls) == 5
 
+    with pytest.raises(ServiceValidationError) as ex:
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            "example_gmail_com",
+            {
+                "title": "Test",
+                "message": "test email",
+                "target": "text@example.com",
+                "data": {"send": False, "alias_from": "Alias Test"},
+            },
+            blocking=True,
+        )
+    assert ex.match(
+        "Missing 'from' email when setting an alias to show."
+        " You have to provide a 'from' email"
+    )
 
-async def test_notify_voluptuous_error(
+    with patch(BUILD) as mock_client:
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            "example_gmail_com",
+            {
+                "title": "Test",
+                "message": "test email",
+                "target": "text@example.com",
+                "data": {
+                    "send": False,
+                    "alias_from": "Alias Test",
+                    "from": "example@gmail.com",
+                },
+            },
+            blocking=True,
+        )
+    assert len(mock_client.mock_calls) == 5
+
+
+async def test_notify_probatio_error(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
 ) -> None:
-    """Test voluptuous error thrown when drafting email."""
+    """Test probatio error thrown when drafting email."""
     await setup_integration()
 
     with pytest.raises(ValueError) as ex:

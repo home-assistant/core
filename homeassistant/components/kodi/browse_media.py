@@ -70,7 +70,7 @@ async def build_item_response(media_library, payload, get_thumbnail_url=None):
         media_content_id=search_id,
         media_content_type=search_type,
         title=title,
-        can_play=search_type in PLAYABLE_MEDIA_TYPES and search_id,
+        can_play=bool(search_type in PLAYABLE_MEDIA_TYPES and search_id),
         can_expand=True,
         children=children,
         thumbnail=thumbnail,
@@ -219,7 +219,7 @@ async def library_payload(hass):
     )
 
     for child in library_info.children:
-        child.thumbnail = "https://brands.home-assistant.io/_/kodi/logo.png"
+        child.thumbnail = "/api/brands/integration/kodi/logo.png"
 
     with contextlib.suppress(BrowseError):
         item = await media_source.async_browse_media(
@@ -351,12 +351,27 @@ async def get_media_info(media_library, search_id, search_type):
             title = season["seasondetails"]["label"]
 
     elif search_type == MediaType.CHANNEL:
-        media = await media_library.get_channels(
-            channel_group_id="alltv",
-            properties=["thumbnail", "channeltype", "channel", "broadcastnow"],
+        # A channel is asked for by id when its thumbnail is fetched through the
+        # media player proxy, the route an external client takes. There is no
+        # call for a single channel, so it is picked out of the list; the EPG
+        # that the listing needs is then not worth fetching.
+        channel_properties = ["thumbnail"]
+        if not search_id:
+            channel_properties += ["channeltype", "channel", "broadcastnow"]
+
+        channels = await media_library.get_channels(
+            channel_group_id="alltv", properties=channel_properties
         )
-        media = media.get("channels")
+        media = channels.get("channels")
 
         title = "Channels"
+
+        if search_id:
+            channel = next(
+                (item for item in media or [] if str(item["channelid"]) == search_id),
+                None,
+            )
+            if channel:
+                thumbnail = media_library.thumbnail_url(channel.get("thumbnail"))
 
     return thumbnail, title, media

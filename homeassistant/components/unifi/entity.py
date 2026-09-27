@@ -1,11 +1,9 @@
 """UniFi entity representation."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import (
@@ -28,11 +26,17 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import ATTR_MANUFACTURER, DOMAIN
+from .coordinator import UnifiDataUpdateCoordinator
 
 if TYPE_CHECKING:
     from .hub import UnifiHub
 
 type SubscriptionType = Callable[[CallbackType, ItemEvent], UnsubscribeType]
+
+
+def is_locally_administered_mac(mac: str) -> bool:
+    """Return True if the MAC has the locally-administered (U/L) bit set."""
+    return bool(int(mac.split(":", 1)[0], 16) & 0x02)
 
 
 @callback
@@ -88,22 +92,20 @@ def async_client_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
     client = hub.api.clients[obj_id]
     return DeviceInfo(
         connections={(CONNECTION_NETWORK_MAC, obj_id)},
-        default_manufacturer=client.oui,
-        default_name=client.name or client.hostname,
+        manufacturer=client.oui,
+        name=client.name or client.hostname,
     )
 
 
 @dataclass(frozen=True, kw_only=True)
-class UnifiEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
-    EntityDescription
-):
+class UnifiEntityDescription[HandlerT: APIHandler, ItemT: ApiItem](EntityDescription):
     """UniFi Entity Description."""
 
     api_handler_fn: Callable[[aiounifi.Controller], HandlerT]
     """Provide api_handler from api."""
     device_info_fn: Callable[[UnifiHub, str], DeviceInfo | None]
     """Provide device info object based on hub and obj_id."""
-    object_fn: Callable[[aiounifi.Controller, str], ApiItemT]
+    object_fn: Callable[[aiounifi.Controller, str], ItemT]
     """Retrieve object based on api and obj_id."""
     unique_id_fn: Callable[[UnifiHub, str], str]
     """Provide a unique ID based on hub and obj_id."""
@@ -113,10 +115,12 @@ class UnifiEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
     """Determine if config entry options allow creation of entity."""
     available_fn: Callable[[UnifiHub, str], bool] = lambda hub, obj_id: hub.available
     """Determine if entity is available, default is if connection is working."""
-    name_fn: Callable[[ApiItemT], str | None] = lambda obj: None
+    name_fn: Callable[[ItemT], str | None] = lambda obj: None
     """Entity name function, can be used to extend entity name beyond device name."""
     supported_fn: Callable[[UnifiHub, str], bool] = lambda hub, obj_id: True
     """Determine if UniFi object supports providing relevant data for entity."""
+    translation_placeholders_fn: Callable[[ItemT], Mapping[str, str]] | None = None
+    """Provide translation placeholders used together with translation_key."""
 
     # Optional constants
     has_entity_name = True  # Part of EntityDescription
@@ -129,23 +133,27 @@ class UnifiEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
     """If entity needs to do regular checks on state."""
 
 
-class UnifiEntity[HandlerT: APIHandler, ApiItemT: ApiItem](Entity):
+class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
     """Representation of a UniFi entity."""
 
-    entity_description: UnifiEntityDescription[HandlerT, ApiItemT]
+    entity_description: UnifiEntityDescription[HandlerT, ItemT]
+    coordinator: UnifiDataUpdateCoordinator[HandlerT]
     _attr_unique_id: str
 
     def __init__(
         self,
         obj_id: str,
         hub: UnifiHub,
-        description: UnifiEntityDescription[HandlerT, ApiItemT],
+        description: UnifiEntityDescription[HandlerT, ItemT],
     ) -> None:
         """Set up UniFi switch entity."""
         self._obj_id = obj_id
         self.hub = hub
         self.api = hub.api
         self.entity_description = description
+        self.coordinator = hub.entity_loader.get_data_update_coordinator(
+            description.api_handler_fn(self.api)
+        )
 
         hub.entity_loader.known_objects.add((description.key, obj_id))
 
@@ -157,13 +165,18 @@ class UnifiEntity[HandlerT: APIHandler, ApiItemT: ApiItem](Entity):
         self._attr_unique_id = description.unique_id_fn(hub, obj_id)
 
         obj = description.object_fn(self.api, obj_id)
-        self._attr_name = description.name_fn(obj)
+        if (name := description.name_fn(obj)) is not None:
+            self._attr_name = name
+        if description.translation_placeholders_fn is not None:
+            self._attr_translation_placeholders = (
+                description.translation_placeholders_fn(obj)
+            )
         self.async_initiate_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         description = self.entity_description
-        handler = description.api_handler_fn(self.api)
 
         @callback
         def unregister_object() -> None:
@@ -174,11 +187,11 @@ class UnifiEntity[HandlerT: APIHandler, ApiItemT: ApiItem](Entity):
 
         self.async_on_remove(unregister_object)
 
-        # New data from handler
+        # New data from coordinator
         self.async_on_remove(
-            handler.subscribe(
-                self.async_signalling_callback,
-                id_filter=self._obj_id,
+            self.coordinator.async_add_listener(
+                self._async_coordinator_updated,
+                context=(self._obj_id, self._obj_id.partition("_")[0]),
             )
         )
 
@@ -210,10 +223,29 @@ class UnifiEntity[HandlerT: APIHandler, ApiItemT: ApiItem](Entity):
             )
 
     @callback
-    def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
-        """Update the entity state."""
-        if event is ItemEvent.DELETED and obj_id == self._obj_id:
-            self.hass.async_create_task(self.remove_item({obj_id}))
+    def _async_coordinator_updated(self) -> None:
+        """Skip coordinator updates that changed a different object."""
+        coordinator_data = self.coordinator.data
+        if coordinator_data is None:
+            event = ItemEvent.CHANGED
+            changed_obj_id = None
+        else:
+            event, changed_obj_id = coordinator_data
+
+        own_obj_id = self._obj_id.partition("_")[0]
+        if changed_obj_id is not None and changed_obj_id not in (
+            self._obj_id,
+            own_obj_id,
+        ):
+            return
+        self._async_process_update(event)
+
+    @callback
+    def _async_process_update(self, event: ItemEvent = ItemEvent.CHANGED) -> None:
+        """Update the entity state from the handler."""
+        handler = self.entity_description.api_handler_fn(self.api)
+        if self._obj_id not in handler:
+            self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
         description = self.entity_description
@@ -221,9 +253,21 @@ class UnifiEntity[HandlerT: APIHandler, ApiItemT: ApiItem](Entity):
             self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
-        self._attr_available = description.available_fn(self.hub, self._obj_id)
-        self.async_update_state(event, obj_id)
+        self._attr_available = (
+            description.available_fn(self.hub, self._obj_id)
+            and self.coordinator.last_update_success
+        )
+        self.async_update_state(event, self._obj_id)
         self.async_write_ha_state()
+
+    @callback
+    def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
+        """Update the entity state from a handler event."""
+        if event is ItemEvent.DELETED and obj_id == self._obj_id:
+            self.hass.async_create_task(self.remove_item({obj_id}))
+            return
+
+        self._async_process_update(event)
 
     @callback
     def async_signal_reachable_callback(self) -> None:
@@ -249,6 +293,11 @@ class UnifiEntity[HandlerT: APIHandler, ApiItemT: ApiItem](Entity):
         """Update state if polling is configured."""
         self.async_update_state(ItemEvent.CHANGED, self._obj_id)
 
+    async def async_refresh_after_control(self) -> None:
+        """Refresh handler data after a control call when polling."""
+        if self.coordinator.update_interval is not None:
+            await self.coordinator.async_refresh()
+
     @callback
     def async_initiate_state(self) -> None:
         """Initiate entity state.
@@ -257,6 +306,11 @@ class UnifiEntity[HandlerT: APIHandler, ApiItemT: ApiItem](Entity):
         Defaults to using async_update_state to set initial state.
         """
         self.async_update_state(ItemEvent.ADDED, self._obj_id)
+
+    @callback
+    def get_object(self) -> ItemT:
+        """Return the latest object for this entity."""
+        return self.entity_description.object_fn(self.api, self._obj_id)
 
     @callback
     @abstractmethod

@@ -1,4 +1,18 @@
 {
+  "conditions": {
+    "is_off": {
+      "condition": "mdi:water-boiler-off"
+    },
+    "is_on": {
+      "condition": "mdi:water-boiler"
+    },
+    "is_operation_mode": {
+      "condition": "mdi:water-boiler"
+    },
+    "is_target_temperature": {
+      "condition": "mdi:thermometer"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:water-boiler",
@@ -36,6 +50,23 @@
     },
     "turn_on": {
       "service": "mdi:water-boiler"
+    }
+  },
+  "triggers": {
+    "operation_mode_changed": {
+      "trigger": "mdi:water-boiler"
+    },
+    "target_temperature_changed": {
+      "trigger": "mdi:thermometer"
+    },
+    "target_temperature_crossed_threshold": {
+      "trigger": "mdi:thermometer"
+    },
+    "turned_off": {
+      "trigger": "mdi:water-boiler-off"
+    },
+    "turned_on": {
+      "trigger": "mdi:water-boiler"
     }
   }
 }

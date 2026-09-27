@@ -3,6 +3,7 @@
 from datetime import timedelta
 import logging
 import socket
+from typing import override
 
 import motionmount
 
@@ -69,7 +70,7 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
             return True
         try:
             await self.mm.connect()
-        except (ConnectionError, TimeoutError, socket.gaierror):
+        except ConnectionError, TimeoutError, socket.gaierror:
             # We're not interested in exceptions here. In case of a failed connection
             # the try/except from the caller will report it.
             # The purpose of `_ensure_connected()` is only to make sure we try to
@@ -105,13 +106,15 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
             self._update_options(self._presets)
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Get the current option."""
         # When the mount is moving we return the currently selected option
         if self.mm.is_moving:
             return self._attr_current_option
 
-        # When the mount isn't moving we select the option that matches the current position
+        # When the mount isn't moving we select the option
+        # that matches the current position
         self._attr_current_option = None
         if self.mm.extension == 0 and self.mm.turn == 0:
             self._attr_current_option = self._attr_options[0]  # Select Wall preset
@@ -126,6 +129,7 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
 
         return self._attr_current_option
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the new option."""
         index = self._name_to_index.get(option)

@@ -1,7 +1,7 @@
 """Adapter to wrap the rachiopy api for home assistant."""
 
 from abc import abstractmethod
-from typing import Any
+from typing import Any, override
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
@@ -82,6 +82,7 @@ class RachioHoseTimerEntity(CoordinatorEntity[RachioUpdateCoordinator]):
         return self.coordinator.data[self.id][KEY_STATE][KEY_REPORTED_STATE]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         return super().available and self.reported_state[KEY_CONNECTED]
@@ -104,6 +105,7 @@ class RachioHoseTimerEntity(CoordinatorEntity[RachioUpdateCoordinator]):
         """Update the state and attributes."""
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_attr()

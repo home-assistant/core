@@ -1,200 +1,91 @@
-"""Test cover trigger."""
+"""Test cover triggers."""
+
+from typing import Any
 
 import pytest
 
-from homeassistant.components.cover import ATTR_CURRENT_POSITION, CoverState
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.setup import async_setup_component
+from homeassistant.components.cover import ATTR_IS_CLOSED, CoverDeviceClass, CoverState
+from homeassistant.components.cover.trigger import TRIGGERS
+from homeassistant.const import ATTR_DEVICE_CLASS
+from homeassistant.core import HomeAssistant
 
-from tests.components import (
-    StateDescription,
-    arm_trigger,
+from tests.components.common import (
+    TargetSupport,
+    TriggerStateDescription,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
+    assert_trigger_behavior_first,
+    assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_target_entities,
     parametrize_trigger_states,
-    set_or_remove_state,
     target_entities,
 )
 
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
+DEVICE_CLASS_TRIGGERS = [
+    (CoverDeviceClass.AWNING, "cover.awning_opened", "cover.awning_closed"),
+    (CoverDeviceClass.BLIND, "cover.blind_opened", "cover.blind_closed"),
+    (CoverDeviceClass.CURTAIN, "cover.curtain_opened", "cover.curtain_closed"),
+    (CoverDeviceClass.SHADE, "cover.shade_opened", "cover.shade_closed"),
+    (CoverDeviceClass.SHUTTER, "cover.shutter_opened", "cover.shutter_closed"),
+]
 
 
 @pytest.fixture
-async def target_covers(hass: HomeAssistant) -> list[str]:
+async def target_covers(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple cover entities associated with different targets."""
     return await target_entities(hass, "cover")
 
 
-def parametrize_opened_trigger_states(
-    trigger: str, device_class: str
-) -> list[tuple[str, dict, str, list[StateDescription]]]:
-    """Parametrize states and expected service call counts.
-
-    Returns a list of tuples with (trigger, trigger_options,
-    list of StateDescription).
-    """
-    additional_attributes = {ATTR_DEVICE_CLASS: device_class}
-    return [
-        # Test fully_opened = True
-        *(
-            (s[0], {"fully_opened": True}, *s[1:])
-            for s in parametrize_trigger_states(
-                trigger=trigger,
-                target_states=[
-                    (CoverState.OPEN, {}),
-                    (CoverState.OPENING, {}),
-                    (CoverState.OPEN, {ATTR_CURRENT_POSITION: 100}),
-                    (CoverState.OPENING, {ATTR_CURRENT_POSITION: 100}),
-                ],
-                other_states=[
-                    (CoverState.CLOSED, {}),
-                    (CoverState.OPEN, {ATTR_CURRENT_POSITION: 0}),
-                ],
-                additional_attributes=additional_attributes,
-                trigger_from_none=False,
-            )
-        ),
-        # Test fully_opened = False
-        *(
-            (s[0], {}, *s[1:])
-            for s in parametrize_trigger_states(
-                trigger=trigger,
-                target_states=[
-                    (CoverState.OPEN, {}),
-                    (CoverState.OPENING, {}),
-                    (CoverState.OPEN, {ATTR_CURRENT_POSITION: 1}),
-                    (CoverState.OPENING, {ATTR_CURRENT_POSITION: 1}),
-                ],
-                other_states=[
-                    (CoverState.CLOSED, {}),
-                    (CoverState.CLOSED, {ATTR_CURRENT_POSITION: 0}),
-                ],
-                additional_attributes=additional_attributes,
-                trigger_from_none=False,
-            )
-        ),
-    ]
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "awning_opened": TargetSupport.STANDARD,
+    "awning_closed": TargetSupport.STANDARD,
+    "blind_opened": TargetSupport.STANDARD,
+    "blind_closed": TargetSupport.STANDARD,
+    "curtain_opened": TargetSupport.STANDARD,
+    "curtain_closed": TargetSupport.STANDARD,
+    "shade_opened": TargetSupport.STANDARD,
+    "shade_closed": TargetSupport.STANDARD,
+    "shutter_opened": TargetSupport.STANDARD,
+    "shutter_closed": TargetSupport.STANDARD,
+}
 
 
 @pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("cover"),
-)
-@pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        *parametrize_opened_trigger_states("cover.awning_opened", "awning"),
-        *parametrize_opened_trigger_states("cover.blind_opened", "blind"),
-        *parametrize_opened_trigger_states("cover.curtain_opened", "curtain"),
-        *parametrize_opened_trigger_states("cover.door_opened", "door"),
-        *parametrize_opened_trigger_states("cover.garage_opened", "garage"),
-        *parametrize_opened_trigger_states("cover.gate_opened", "gate"),
-        *parametrize_opened_trigger_states("cover.shade_opened", "shade"),
-        *parametrize_opened_trigger_states("cover.shutter_opened", "shutter"),
-        *parametrize_opened_trigger_states("cover.window_opened", "window"),
+        ("cover.awning_closed", {}, True, True),
+        ("cover.awning_opened", {}, True, True),
+        ("cover.blind_closed", {}, True, True),
+        ("cover.blind_opened", {}, True, True),
+        ("cover.curtain_closed", {}, True, True),
+        ("cover.curtain_opened", {}, True, True),
+        ("cover.shade_closed", {}, True, True),
+        ("cover.shade_opened", {}, True, True),
+        ("cover.shutter_closed", {}, True, True),
+        ("cover.shutter_opened", {}, True, True),
     ],
 )
-async def test_cover_state_attribute_trigger_behavior_any(
+async def test_cover_trigger_options_validation(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    target_covers: list[str],
-    trigger_target_config: dict,
-    entity_id: str,
-    entities_in_target: int,
-    trigger: str,
-    trigger_options: dict,
-    states: list[StateDescription],
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
 ) -> None:
-    """Test that the cover state trigger fires when any cover state changes to a specific state."""
-    await async_setup_component(hass, "cover", {})
-
-    other_entity_ids = set(target_covers) - {entity_id}
-
-    # Set all covers, including the tested cover, to the initial state
-    for eid in target_covers:
-        set_or_remove_state(hass, eid, states[0])
-        await hass.async_block_till_done()
-
-    await arm_trigger(hass, trigger, trigger_options, trigger_target_config)
-
-    for state in states[1:]:
-        set_or_remove_state(hass, entity_id, state)
-        await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
-
-        # Check if changing other covers also triggers
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state)
-            await hass.async_block_till_done()
-        assert len(service_calls) == (entities_in_target - 1) * state["count"]
-        service_calls.clear()
-
-
-@pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("cover"),
-)
-@pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
-    [
-        *parametrize_opened_trigger_states("cover.awning_opened", "awning"),
-        *parametrize_opened_trigger_states("cover.blind_opened", "blind"),
-        *parametrize_opened_trigger_states("cover.curtain_opened", "curtain"),
-        *parametrize_opened_trigger_states("cover.door_opened", "door"),
-        *parametrize_opened_trigger_states("cover.garage_opened", "garage"),
-        *parametrize_opened_trigger_states("cover.gate_opened", "gate"),
-        *parametrize_opened_trigger_states("cover.shade_opened", "shade"),
-        *parametrize_opened_trigger_states("cover.shutter_opened", "shutter"),
-        *parametrize_opened_trigger_states("cover.window_opened", "window"),
-    ],
-)
-async def test_cover_state_attribute_trigger_behavior_first(
-    hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    target_covers: list[str],
-    trigger_target_config: dict,
-    entity_id: str,
-    entities_in_target: int,
-    trigger: str,
-    trigger_options: dict,
-    states: list[StateDescription],
-) -> None:
-    """Test that the cover state trigger fires when the first cover state changes to a specific state."""
-    await async_setup_component(hass, "cover", {})
-
-    other_entity_ids = set(target_covers) - {entity_id}
-
-    # Set all covers, including the tested cover, to the initial state
-    for eid in target_covers:
-        set_or_remove_state(hass, eid, states[0])
-        await hass.async_block_till_done()
-
-    await arm_trigger(
+    """Test that cover triggers support the expected options."""
+    await assert_trigger_options_supported(
         hass,
-        trigger,
-        {"behavior": "first"} | trigger_options,
-        trigger_target_config,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
     )
 
-    for state in states[1:]:
-        set_or_remove_state(hass, entity_id, state)
-        await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
 
-        # Triggering other covers should not cause the trigger to fire again
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state)
-            await hass.async_block_till_done()
-        assert len(service_calls) == 0
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(
@@ -204,51 +95,207 @@ async def test_cover_state_attribute_trigger_behavior_first(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_opened_trigger_states("cover.awning_opened", "awning"),
-        *parametrize_opened_trigger_states("cover.blind_opened", "blind"),
-        *parametrize_opened_trigger_states("cover.curtain_opened", "curtain"),
-        *parametrize_opened_trigger_states("cover.door_opened", "door"),
-        *parametrize_opened_trigger_states("cover.garage_opened", "garage"),
-        *parametrize_opened_trigger_states("cover.gate_opened", "gate"),
-        *parametrize_opened_trigger_states("cover.shade_opened", "shade"),
-        *parametrize_opened_trigger_states("cover.shutter_opened", "shutter"),
-        *parametrize_opened_trigger_states("cover.window_opened", "window"),
+        param
+        for device_class, opened_key, closed_key in DEVICE_CLASS_TRIGGERS
+        for param in (
+            *parametrize_trigger_states(
+                trigger=opened_key,
+                target_states=[
+                    (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
+                    (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
+                ],
+                other_states=[
+                    (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
+                    (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
+                ],
+                extra_invalid_states=[
+                    (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
+                    (CoverState.OPEN, {}),
+                ],
+                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
+                trigger_from_none=False,
+            ),
+            *parametrize_trigger_states(
+                trigger=closed_key,
+                target_states=[
+                    (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
+                    (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
+                ],
+                other_states=[
+                    (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
+                    (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
+                    (CoverState.CLOSING, {ATTR_IS_CLOSED: False}),
+                ],
+                extra_invalid_states=[
+                    (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
+                    (CoverState.OPEN, {}),
+                ],
+                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
+                trigger_from_none=False,
+            ),
+        )
     ],
 )
-async def test_cover_state_attribute_trigger_behavior_last(
+async def test_cover_trigger_behavior_each(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    target_covers: list[str],
+    target_covers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    trigger_options: dict,
-    states: list[StateDescription],
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the cover state trigger fires when the last cover state changes to a specific state."""
-    await async_setup_component(hass, "cover", {})
-
-    other_entity_ids = set(target_covers) - {entity_id}
-
-    # Set all covers, including the tested cover, to the initial state
-    for eid in target_covers:
-        set_or_remove_state(hass, eid, states[0])
-        await hass.async_block_till_done()
-
-    await arm_trigger(
-        hass, trigger, {"behavior": "last"} | trigger_options, trigger_target_config
+    """Test cover trigger fires for cover entities with matching device_class."""
+    await assert_trigger_behavior_each(
+        hass,
+        target_entities=target_covers,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
     )
 
-    for state in states[1:]:
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state)
-            await hass.async_block_till_done()
-        assert len(service_calls) == 0
 
-        set_or_remove_state(hass, entity_id, state)
-        await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("cover"),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        param
+        for device_class, opened_key, closed_key in DEVICE_CLASS_TRIGGERS
+        for param in (
+            *parametrize_trigger_states(
+                trigger=opened_key,
+                target_states=[
+                    (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
+                    (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
+                ],
+                other_states=[
+                    (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
+                    (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
+                ],
+                extra_invalid_states=[
+                    (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
+                    (CoverState.OPEN, {}),
+                ],
+                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
+                trigger_from_none=False,
+            ),
+            *parametrize_trigger_states(
+                trigger=closed_key,
+                target_states=[
+                    (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
+                    (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
+                ],
+                other_states=[
+                    (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
+                    (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
+                    (CoverState.CLOSING, {ATTR_IS_CLOSED: False}),
+                ],
+                extra_invalid_states=[
+                    (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
+                    (CoverState.OPEN, {}),
+                ],
+                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
+                trigger_from_none=False,
+            ),
+        )
+    ],
+)
+async def test_cover_trigger_behavior_first(
+    hass: HomeAssistant,
+    target_covers: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test cover trigger fires on the first cover state change."""
+    await assert_trigger_behavior_first(
+        hass,
+        target_entities=target_covers,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
+
+
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("cover"),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        param
+        for device_class, opened_key, closed_key in DEVICE_CLASS_TRIGGERS
+        for param in (
+            *parametrize_trigger_states(
+                trigger=opened_key,
+                target_states=[
+                    (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
+                    (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
+                ],
+                other_states=[
+                    (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
+                    (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
+                ],
+                extra_invalid_states=[
+                    (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
+                    (CoverState.OPEN, {}),
+                ],
+                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
+                trigger_from_none=False,
+            ),
+            *parametrize_trigger_states(
+                trigger=closed_key,
+                target_states=[
+                    (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
+                    (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
+                ],
+                other_states=[
+                    (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
+                    (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
+                    (CoverState.CLOSING, {ATTR_IS_CLOSED: False}),
+                ],
+                extra_invalid_states=[
+                    (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
+                    (CoverState.OPEN, {}),
+                ],
+                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
+                trigger_from_none=False,
+            ),
+        )
+    ],
+)
+async def test_cover_trigger_behavior_all(
+    hass: HomeAssistant,
+    target_covers: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test cover trigger fires when all covers have changed state."""
+    await assert_trigger_behavior_all(
+        hass,
+        target_entities=target_covers,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )

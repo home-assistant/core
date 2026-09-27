@@ -27,7 +27,6 @@ ATTR_IMAGE_PATH = "path"
 ATTR_IMAGE_USERNAME = "username"
 ATTR_IMAGE_PASSWORD = "password"
 ATTR_IMAGE_AUTH = "auth"
-ATTR_ICON = "icon"
 # Attributes contained in icon
 ATTR_ICON_URL = "url"
 ATTR_ICON_PATH = "path"

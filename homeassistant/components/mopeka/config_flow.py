@@ -1,12 +1,10 @@
 """Config flow for mopeka integration."""
 
-from __future__ import annotations
-
 from enum import Enum
-from typing import Any
+from typing import Any, override
 
 from mopeka_iot_ble import MopekaIOTBluetoothDeviceData as DeviceData
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import (
@@ -30,13 +28,13 @@ MEDIUM_TYPES_BY_NAME = {
 }
 
 
-def async_generate_schema(medium_type: str | None = None) -> vol.Schema:
+def async_generate_schema(medium_type: str | None = None) -> probatio.Schema:
     """Return the base schema with formatted medium types."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(
+            probatio.Required(
                 CONF_MEDIUM_TYPE, default=medium_type or DEFAULT_MEDIUM_TYPE
-            ): vol.In(MEDIUM_TYPES_BY_NAME)
+            ): probatio.In(MEDIUM_TYPES_BY_NAME)
         }
     )
 
@@ -54,12 +52,14 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     @staticmethod
+    @override
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
     ) -> MopekaOptionsFlow:
         """Return the options flow for this handler."""
         return MopekaOptionsFlow()
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -98,6 +98,7 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=async_generate_schema(),
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -127,9 +128,11 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices),
+                    probatio.Required(CONF_ADDRESS): probatio.In(
+                        self._discovered_devices
+                    ),
                     **async_generate_schema().schema,
                 }
             ),

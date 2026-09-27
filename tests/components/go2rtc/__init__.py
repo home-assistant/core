@@ -6,13 +6,14 @@ from homeassistant.components.camera import Camera, CameraEntityFeature
 class MockCamera(Camera):
     """Mock Camera Entity."""
 
-    _attr_name = "Test"
     _attr_supported_features: CameraEntityFeature = CameraEntityFeature.STREAM
 
-    def __init__(self) -> None:
+    def __init__(self, unique_id: str | None, name: str = "Test") -> None:
         """Initialize the mock entity."""
         super().__init__()
         self._stream_source: str | None = "rtsp://stream"
+        self._attr_unique_id = unique_id
+        self._attr_name = name
 
     def set_stream_source(self, stream_source: str | None) -> None:
         """Set the stream source."""

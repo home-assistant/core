@@ -99,7 +99,7 @@ async def test_mix_global_timeout_freeze_and_zone_freeze_inside_executor_job(
 async def test_mix_global_timeout_freeze_and_zone_freeze_different_order(
     hass: HomeAssistant,
 ) -> None:
-    """Test a simple global timeout freeze inside an executor job before timeout was set."""
+    """Test global timeout freeze in executor job before timeout set."""
     timeout = TimeoutManager()
 
     def _some_sync_work():
@@ -122,19 +122,19 @@ async def test_mix_global_timeout_freeze_and_zone_freeze_other_zone_inside_execu
         with timeout.freeze("not_recorder"):
             time.sleep(0.3)
 
-    with pytest.raises(TimeoutError):  # noqa: PT012
-        async with timeout.async_timeout(0.1):
-            async with (
-                timeout.async_timeout(0.2, zone_name="recorder"),
-                timeout.async_timeout(0.2, zone_name="not_recorder"),
-            ):
-                await hass.async_add_executor_job(_some_sync_work)
+    with pytest.raises(TimeoutError):
+        async with (
+            timeout.async_timeout(0.1),
+            timeout.async_timeout(0.2, zone_name="recorder"),
+            timeout.async_timeout(0.2, zone_name="not_recorder"),
+        ):
+            await hass.async_add_executor_job(_some_sync_work)
 
 
-async def test_mix_global_timeout_freeze_and_zone_freeze_inside_executor_job_second_job_outside_zone_context(
+async def test_mix_global_timeout_freeze_and_zone_freeze_executor_2nd_outside_zone(
     hass: HomeAssistant,
 ) -> None:
-    """Test a simple global timeout freeze inside an executor job with second job outside of zone context."""
+    """Test global timeout freeze in executor with second job outside zone."""
     timeout = TimeoutManager()
 
     def _some_sync_work():
@@ -304,20 +304,24 @@ async def test_multiple_zone_timeout() -> None:
     """Test a simple zone timeout."""
     timeout = TimeoutManager()
 
-    with pytest.raises(TimeoutError):  # noqa: PT012
-        async with timeout.async_timeout(0.1, "test"):
-            async with timeout.async_timeout(0.5, "test"):
-                await asyncio.sleep(0.3)
+    with pytest.raises(TimeoutError):
+        async with (
+            timeout.async_timeout(0.1, "test"),
+            timeout.async_timeout(0.5, "test"),
+        ):
+            await asyncio.sleep(0.3)
 
 
 async def test_different_zone_timeout() -> None:
     """Test a simple zone timeout."""
     timeout = TimeoutManager()
 
-    with pytest.raises(TimeoutError):  # noqa: PT012
-        async with timeout.async_timeout(0.1, "test"):
-            async with timeout.async_timeout(0.5, "other"):
-                await asyncio.sleep(0.3)
+    with pytest.raises(TimeoutError):
+        async with (
+            timeout.async_timeout(0.1, "test"),
+            timeout.async_timeout(0.5, "other"),
+        ):
+            await asyncio.sleep(0.3)
 
 
 async def test_simple_zone_timeout_freeze() -> None:
@@ -359,7 +363,7 @@ async def test_mix_zone_timeout_freeze_and_global_freeze() -> None:
         await asyncio.sleep(0.3)
 
 
-async def test_mix_global_and_zone_timeout_freeze_() -> None:
+async def test_mix_global_and_zone_timeout_freeze() -> None:
     """Test a mix zone timeout freeze and global freeze."""
     timeout = TimeoutManager()
 
@@ -448,7 +452,7 @@ async def test_simple_zone_timeout_freeze_without_timeout_cleanup2(
             await asyncio.sleep(0.3)
 
 
-async def test_simple_zone_timeout_freeze_without_timeout_exeption() -> None:
+async def test_simple_zone_timeout_freeze_without_timeout_exception() -> None:
     """Test a simple zone timeout freeze on a zone that does not have a timeout set."""
     timeout = TimeoutManager()
 

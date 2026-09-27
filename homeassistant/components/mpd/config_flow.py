@@ -3,22 +3,22 @@
 from asyncio import timeout
 from contextlib import suppress
 from socket import gaierror
-from typing import Any
+from typing import Any, override
 
 import mpd
 from mpd.asyncio import MPDClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 
 from .const import DOMAIN, LOGGER
 
-SCHEMA = vol.Schema(
+SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_PASSWORD): str,
-        vol.Optional(CONF_PORT, default=6600): int,
+        probatio.Required(CONF_HOST): str,
+        probatio.Optional(CONF_PASSWORD): str,
+        probatio.Optional(CONF_PORT, default=6600): int,
     }
 )
 
@@ -26,6 +26,7 @@ SCHEMA = vol.Schema(
 class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
     """Music Player Daemon config flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

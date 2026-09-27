@@ -1,10 +1,9 @@
 """Component to embed TP-Link smart home devices."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from kasa import AuthenticationError, Credentials, Device, KasaException
 from kasa.iot import IotStrip
@@ -72,6 +71,7 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.removed_child_device_ids: set[str] = set()
         self._child_coordinators: dict[str, TPLinkDataUpdateCoordinator] = {}
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch all device and sensor data from api."""
         try:
@@ -106,14 +106,11 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
         ):
             device_registry = dr.async_get(self.hass)
             for device_id in stale_device_ids:
-                device = device_registry.async_get_device(
-                    identifiers={(DOMAIN, device_id)}
+                device = device_registry.async_get_device_by_identifier(
+                    (DOMAIN, device_id), self.config_entry.entry_id
                 )
                 if device:
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
+                    device_registry.async_remove_device(device.id)
                 child_coordinator = self._child_coordinators.pop(device_id, None)
                 if child_coordinator:
                     await child_coordinator.async_shutdown()

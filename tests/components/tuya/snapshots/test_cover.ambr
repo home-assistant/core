@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_platform_setup_and_discovery[cover.bedroom_blinds_curtain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -37,10 +39,11 @@
 # name: test_platform_setup_and_discovery[cover.bedroom_blinds_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'curtain',
-      'friendly_name': 'bedroom blinds Curtain',
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'curtain',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'bedroom blinds Curtain',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.bedroom_blinds_curtain',
@@ -52,8 +55,9 @@
 # ---
 # name: test_platform_setup_and_discovery[cover.blinds_curtain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -71,6 +75,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -88,10 +93,11 @@
 # name: test_platform_setup_and_discovery[cover.blinds_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 36,
-      'device_class': 'curtain',
-      'friendly_name': 'blinds Curtain',
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 36,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'curtain',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'blinds Curtain',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.blinds_curtain',
@@ -103,8 +109,9 @@
 # ---
 # name: test_platform_setup_and_discovery[cover.dining_1_curtain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -122,6 +129,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -139,10 +147,11 @@
 # name: test_platform_setup_and_discovery[cover.dining_1_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'curtain',
-      'friendly_name': 'Dining 1 Curtain',
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'curtain',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining 1 Curtain',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.dining_1_curtain',
@@ -154,8 +163,9 @@
 # ---
 # name: test_platform_setup_and_discovery[cover.estore_sala_curtain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -173,6 +183,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -190,9 +201,10 @@
 # name: test_platform_setup_and_discovery[cover.estore_sala_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'curtain',
-      'friendly_name': 'Estore Sala Curtain',
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'curtain',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Estore Sala Curtain',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.estore_sala_curtain',
@@ -204,8 +216,9 @@
 # ---
 # name: test_platform_setup_and_discovery[cover.fenster_kuche_curtain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -223,6 +236,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -240,10 +254,11 @@
 # name: test_platform_setup_and_discovery[cover.fenster_kuche_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'curtain',
-      'friendly_name': 'Fenster Küche Curtain',
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'curtain',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fenster Küche Curtain',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.fenster_kuche_curtain',
@@ -255,8 +270,9 @@
 # ---
 # name: test_platform_setup_and_discovery[cover.garage_door_door_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -274,6 +290,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door 1',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
@@ -291,9 +308,10 @@
 # name: test_platform_setup_and_discovery[cover.garage_door_door_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'garage',
-      'friendly_name': 'Garage door  Door 1',
-      'supported_features': <CoverEntityFeature: 3>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage door  Door 1',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.garage_door_door_1',
@@ -305,8 +323,9 @@
 # ---
 # name: test_platform_setup_and_discovery[cover.kit_blinds_curtain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -324,6 +343,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -341,9 +361,10 @@
 # name: test_platform_setup_and_discovery[cover.kit_blinds_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'curtain',
-      'friendly_name': 'Kit-Blinds Curtain',
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'curtain',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kit-Blinds Curtain',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.kit_blinds_curtain',
@@ -355,8 +376,9 @@
 # ---
 # name: test_platform_setup_and_discovery[cover.kitchen_blinds_blind-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -374,6 +396,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Blind',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
@@ -391,10 +414,11 @@
 # name: test_platform_setup_and_discovery[cover.kitchen_blinds_blind-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'blind',
-      'friendly_name': 'Kitchen Blinds Blind',
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Blinds Blind',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.kitchen_blinds_blind',
@@ -406,8 +430,9 @@
 # ---
 # name: test_platform_setup_and_discovery[cover.kitchen_blinds_curtain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -425,6 +450,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -442,10 +468,11 @@
 # name: test_platform_setup_and_discovery[cover.kitchen_blinds_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 48,
-      'device_class': 'curtain',
-      'friendly_name': 'Kitchen Blinds Curtain',
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 48,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'curtain',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Blinds Curtain',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.kitchen_blinds_curtain',
@@ -457,8 +484,9 @@
 # ---
 # name: test_platform_setup_and_discovery[cover.lounge_dark_blind_curtain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -476,6 +504,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -493,10 +522,11 @@
 # name: test_platform_setup_and_discovery[cover.lounge_dark_blind_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'curtain',
-      'friendly_name': 'Lounge Dark Blind Curtain',
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'curtain',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Lounge Dark Blind Curtain',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.lounge_dark_blind_curtain',
@@ -508,8 +538,9 @@
 # ---
 # name: test_platform_setup_and_discovery[cover.pergola_curtain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -527,6 +558,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -544,10 +576,11 @@
 # name: test_platform_setup_and_discovery[cover.pergola_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'curtain',
-      'friendly_name': 'Pergola Curtain',
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'curtain',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pergola Curtain',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.pergola_curtain',
@@ -559,8 +592,9 @@
 # ---
 # name: test_platform_setup_and_discovery[cover.persiana_do_quarto_curtain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -578,6 +612,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -595,10 +630,11 @@
 # name: test_platform_setup_and_discovery[cover.persiana_do_quarto_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'curtain',
-      'friendly_name': 'Persiana do Quarto Curtain',
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'curtain',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Persiana do Quarto Curtain',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.persiana_do_quarto_curtain',
@@ -610,8 +646,9 @@
 # ---
 # name: test_platform_setup_and_discovery[cover.projector_screen_curtain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -629,6 +666,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -646,10 +684,11 @@
 # name: test_platform_setup_and_discovery[cover.projector_screen_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'curtain',
-      'friendly_name': 'Projector Screen Curtain',
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'curtain',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Projector Screen Curtain',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.projector_screen_curtain',
@@ -661,8 +700,9 @@
 # ---
 # name: test_platform_setup_and_discovery[cover.roller_shutter_living_room_curtain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -680,6 +720,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -697,10 +738,11 @@
 # name: test_platform_setup_and_discovery[cover.roller_shutter_living_room_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 75,
-      'device_class': 'curtain',
-      'friendly_name': 'Roller shutter Living Room Curtain',
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 75,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'curtain',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roller shutter Living Room Curtain',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.roller_shutter_living_room_curtain',
@@ -712,8 +754,9 @@
 # ---
 # name: test_platform_setup_and_discovery[cover.tapparelle_studio_curtain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -731,6 +774,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -748,10 +792,11 @@
 # name: test_platform_setup_and_discovery[cover.tapparelle_studio_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'curtain',
-      'friendly_name': 'Tapparelle studio Curtain',
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'curtain',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tapparelle studio Curtain',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.tapparelle_studio_curtain',
@@ -763,8 +808,9 @@
 # ---
 # name: test_platform_setup_and_discovery[cover.vividstorm_screen_curtain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -782,6 +828,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -799,10 +846,11 @@
 # name: test_platform_setup_and_discovery[cover.vividstorm_screen_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'curtain',
-      'friendly_name': 'VIVIDSTORM SCREEN Curtain',
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'curtain',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'VIVIDSTORM SCREEN Curtain',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.vividstorm_screen_curtain',

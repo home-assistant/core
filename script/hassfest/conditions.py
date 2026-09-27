@@ -1,15 +1,13 @@
 """Validate conditions."""
 
-from __future__ import annotations
-
 import contextlib
 import json
 import pathlib
 import re
 from typing import Any
 
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant.const import CONF_SELECTOR
 from homeassistant.exceptions import HomeAssistantError
@@ -22,32 +20,126 @@ from .model import Config, Integration
 def exists(value: Any) -> Any:
     """Check if value exists."""
     if value is None:
-        raise vol.Invalid("Value cannot be None")
+        raise probatio.Invalid("Value cannot be None")
     return value
 
 
-FIELD_SCHEMA = vol.Schema(
+def validate_field_schema(condition_schema: dict[str, Any]) -> dict[str, Any]:
+    """Validate a field schema including context references."""
+
+    for field_name, field_schema in condition_schema.get("fields", {}).items():
+        # Validate context if present
+        if "context" in field_schema:
+            if CONF_SELECTOR not in field_schema:
+                raise probatio.Invalid(
+                    f"Context defined without a selector in '{field_name}'"
+                )
+
+            context = field_schema["context"]
+            if not isinstance(context, dict):
+                raise probatio.Invalid(
+                    f"Context must be a dictionary in '{field_name}'"
+                )
+
+            # Determine which selector type is being used
+            selector_config = field_schema[CONF_SELECTOR]
+            selector_class = selector.selector(selector_config)
+
+            for context_key, field_ref in context.items():
+                # Check if context key is allowed for this selector type
+                allowed_keys = selector_class.allowed_context_keys
+                if context_key not in allowed_keys:
+                    allowed = (
+                        ", ".join(sorted(allowed_keys)) if allowed_keys else "none"
+                    )
+                    raise probatio.Invalid(
+                        f"Invalid context key '{context_key}'"
+                        f" for selector type"
+                        f" '{selector_class.selector_type}'."
+                        f" Allowed keys: {allowed}"
+                    )
+
+                # Check if the referenced field exists in condition schema or target
+                if not isinstance(field_ref, str):
+                    raise probatio.Invalid(
+                        f"Context value for '{context_key}'"
+                        " must be a string field reference"
+                    )
+
+                # Check if field exists in condition schema fields or target
+                condition_fields = condition_schema["fields"]
+                field_exists = field_ref in condition_fields
+                if field_exists and "selector" in condition_fields[field_ref]:
+                    # Check if the selector type is allowed for this context key
+                    field_selector_config = condition_fields[field_ref][CONF_SELECTOR]
+                    field_selector_class = selector.selector(field_selector_config)
+                    if field_selector_class.selector_type not in allowed_keys.get(
+                        context_key, set()
+                    ):
+                        allowed_types = ", ".join(allowed_keys.get(context_key, set()))
+                        sel_type = field_selector_class.selector_type
+                        raise probatio.Invalid(
+                            f"The context '{context_key}' for"
+                            f" '{field_name}' references"
+                            f" '{field_ref}', but"
+                            f" '{context_key}' does not allow"
+                            f" selectors of type '{sel_type}'."
+                            f" Allowed types: {allowed_types}"
+                        )
+                if not field_exists and "target" in condition_schema:
+                    # Target is a special field that always exists when defined
+                    field_exists = field_ref == "target"
+                    if field_exists and "target" not in allowed_keys.get(
+                        context_key, set()
+                    ):
+                        allowed_types = ", ".join(allowed_keys.get(context_key, set()))
+                        raise probatio.Invalid(
+                            f"The context '{context_key}' for"
+                            f" '{field_name}' references"
+                            f" 'target', but '{context_key}'"
+                            " does not allow 'target'."
+                            f" Allowed types: {allowed_types}"
+                        )
+
+                if not field_exists:
+                    raise probatio.Invalid(
+                        f"Context reference '{field_ref}'"
+                        f" for key '{context_key}' does"
+                        " not exist in condition schema"
+                        " fields or target"
+                    )
+
+    return condition_schema
+
+
+FIELD_SCHEMA = probatio.Schema(
     {
-        vol.Optional("example"): exists,
-        vol.Optional("default"): exists,
-        vol.Optional("required"): bool,
-        vol.Optional(CONF_SELECTOR): selector.validate_selector,
+        probatio.Optional("example"): exists,
+        probatio.Optional("default"): exists,
+        probatio.Optional("required"): bool,
+        probatio.Optional(CONF_SELECTOR): selector.validate_selector,
+        # key is context key, value is field name in schema
+        # Validated in validate_field_schema
+        probatio.Optional("context"): {str: str},
     }
 )
 
-CONDITION_SCHEMA = vol.Any(
-    vol.Schema(
-        {
-            vol.Optional("target"): selector.TargetSelector.CONFIG_SCHEMA,
-            vol.Optional("fields"): vol.Schema({str: FIELD_SCHEMA}),
-        }
+CONDITION_SCHEMA = probatio.Any(
+    probatio.All(
+        probatio.Schema(
+            {
+                probatio.Optional("target"): selector.TargetSelector.CONFIG_SCHEMA,
+                probatio.Optional("fields"): probatio.Schema({str: FIELD_SCHEMA}),
+            }
+        ),
+        validate_field_schema,
     ),
     None,
 )
 
-CONDITIONS_SCHEMA = vol.Schema(
+CONDITIONS_SCHEMA = probatio.Schema(
     {
-        vol.Remove(vol.All(str, condition.starts_with_dot)): object,
+        probatio.Remove(probatio.All(str, condition.starts_with_dot)): object,
         cv.underscore_slug: CONDITION_SCHEMA,
     }
 )
@@ -96,7 +188,7 @@ def validate_conditions(config: Config, integration: Integration) -> None:  # no
 
     try:
         conditions = CONDITIONS_SCHEMA(data)
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         integration.add_error(
             "conditions", f"Invalid conditions.yaml: {humanize_error(data, err)}"
         )
@@ -157,8 +249,8 @@ def validate_conditions(config: Config, integration: Integration) -> None:  # no
                     f"Condition {condition_name} has no description {error_msg_suffix}",
                 )
 
-        # The same check is done for the description in each of the fields of the
-        # condition schema.
+        # The same check is done for each of the fields of the condition schema,
+        # except that we don't enforce that fields have a description.
         for field_name, field_schema in condition_schema.get("fields", {}).items():
             if "fields" in field_schema:
                 # This is a section
@@ -169,24 +261,9 @@ def validate_conditions(config: Config, integration: Integration) -> None:  # no
                 except KeyError:
                     integration.add_error(
                         "conditions",
-                        (
-                            f"Condition {condition_name} has a field {field_name} with no "
-                            f"name {error_msg_suffix}"
-                        ),
-                    )
-
-            if "description" not in field_schema and integration.core:
-                try:
-                    strings["conditions"][condition_name]["fields"][field_name][
-                        "description"
-                    ]
-                except KeyError:
-                    integration.add_error(
-                        "conditions",
-                        (
-                            f"Condition {condition_name} has a field {field_name} with no "
-                            f"description {error_msg_suffix}"
-                        ),
+                        f"Condition {condition_name} has a"
+                        f" field {field_name} with no"
+                        f" name {error_msg_suffix}",
                     )
 
             if "selector" in field_schema:
@@ -199,7 +276,14 @@ def validate_conditions(config: Config, integration: Integration) -> None:  # no
                     except KeyError:
                         integration.add_error(
                             "conditions",
-                            f"Condition {condition_name} has a field {field_name} with a selector with a translation key {translation_key} that is not in the translations file",
+                            f"Condition {condition_name}"
+                            f" has a field"
+                            f" {field_name} with a"
+                            " selector with a"
+                            " translation key"
+                            f" {translation_key}"
+                            " that is not in the"
+                            " translations file",
                         )
 
         # The same check is done for the description in each of the sections of the
@@ -216,7 +300,10 @@ def validate_conditions(config: Config, integration: Integration) -> None:  # no
                 except KeyError:
                     integration.add_error(
                         "conditions",
-                        f"Condition {condition_name} has a section {section_name} with no name {error_msg_suffix}",
+                        f"Condition {condition_name}"
+                        f" has a section"
+                        f" {section_name} with no"
+                        f" name {error_msg_suffix}",
                     )
 
 

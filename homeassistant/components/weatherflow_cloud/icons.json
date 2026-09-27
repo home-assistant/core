@@ -19,6 +19,9 @@
       "heat_index": {
         "default": "mdi:sun-thermometer"
       },
+      "illuminance": {
+        "default": "mdi:brightness-5"
+      },
       "lightning_strike_count": {
         "default": "mdi:lightning-bolt"
       },
@@ -65,7 +68,7 @@
         "state": {
           "lightning": "mdi:weather-lightning-rainy",
           "rain": "mdi:weather-rainy",
-          "rain_snow": "mdi:weather-snoy-rainy",
+          "rain_snow": "mdi:weather-snowy-rainy",
           "snow": "mdi:weather-snowy"
         }
       },
@@ -88,8 +91,17 @@
         }
       },
 
+      "relative_humidity": {
+        "default": "mdi:water-percent"
+      },
       "sea_level_pressure": {
         "default": "mdi:gauge"
+      },
+      "solar_radiation": {
+        "default": "mdi:solar-power"
+      },
+      "uv_index": {
+        "default": "mdi:sun-wireless"
       },
       "wet_bulb_globe_temperature": {
         "default": "mdi:thermometer-water"

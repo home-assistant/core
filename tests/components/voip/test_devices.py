@@ -1,7 +1,5 @@
 """Test VoIP devices."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 import pytest
@@ -22,13 +20,14 @@ async def test_device_registry_info(
     voip_devices: VoIPDevices,
     call_info: CallInfo,
     device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test info in device registry."""
     voip_device = voip_devices.async_get_or_create(call_info)
     assert not voip_device.async_allow_call(hass)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, call_info.caller_endpoint.uri)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, call_info.caller_endpoint.uri), config_entry.entry_id
     )
     assert device is not None
     assert device.name == call_info.caller_endpoint.host
@@ -42,8 +41,8 @@ async def test_device_registry_info(
 
     assert not voip_device.async_allow_call(hass)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, call_info.caller_endpoint.uri)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, call_info.caller_endpoint.uri), config_entry.entry_id
     )
     assert device.sw_version == "2.0.0.0"
 
@@ -53,14 +52,15 @@ async def test_device_registry_info_from_unknown_phone(
     voip_devices: VoIPDevices,
     call_info: CallInfo,
     device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test info in device registry from unknown phone."""
     call_info.headers["user-agent"] = "Unknown"
     voip_device = voip_devices.async_get_or_create(call_info)
     assert not voip_device.async_allow_call(hass)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, call_info.caller_endpoint.uri)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, call_info.caller_endpoint.uri), config_entry.entry_id
     )
     assert device.manufacturer is None
     assert device.model == "Unknown"
@@ -72,13 +72,14 @@ async def test_device_registry_info_update_contact(
     voip_devices: VoIPDevices,
     call_info: CallInfo,
     device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test info in device registry."""
     voip_device = voip_devices.async_get_or_create(call_info)
     assert not voip_device.async_allow_call(hass)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, call_info.caller_endpoint.uri)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, call_info.caller_endpoint.uri), config_entry.entry_id
     )
     assert device is not None
     assert device.name == call_info.caller_endpoint.host
@@ -94,8 +95,8 @@ async def test_device_registry_info_update_contact(
     assert voip_device.contact == SipEndpoint("Test <sip:example.com:5061>")
     assert not voip_device.async_allow_call(hass)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, call_info.caller_endpoint.uri)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, call_info.caller_endpoint.uri), config_entry.entry_id
     )
     assert device.sw_version == "2.0.0.0"
 
@@ -105,6 +106,7 @@ async def test_device_load_contact(
     call_info: CallInfo,
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    setup_voip: None,
 ) -> None:
     """Test loading contact endpoint from Store."""
     voip_id = call_info.caller_endpoint.uri
@@ -113,7 +115,7 @@ async def test_device_load_contact(
         return_value={voip_id: {"contact": "Test <sip:example.com:5061>"}}
     )
 
-    config_entry.runtime_data = mock_store
+    config_entry.runtime_data.store = mock_store
 
     # Initialize voip device
     device_registry.async_get_or_create(
@@ -126,7 +128,7 @@ async def test_device_load_contact(
         configuration_url=f"http://{call_info.caller_ip}",
     )
 
-    voip = VoIPDevices(hass, config_entry)
+    voip = VoIPDevices(hass, config_entry, mock_store)
 
     await voip.async_setup()
     voip_device = voip.devices.get(voip_id)
@@ -180,13 +182,16 @@ async def test_device_registry_migration(
     call_info: CallInfo,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test info in device registry migrates old devices."""
     voip_device = voip_devices.async_get_or_create(call_info)
     new_id = call_info.caller_endpoint.uri
     assert voip_device.voip_id == new_id
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, new_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, new_id), config_entry.entry_id
+    )
     assert device is not None
     assert device.id == legacy_dev_reg_entry.id
     assert device.identifiers == {(DOMAIN, new_id)}

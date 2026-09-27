@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup.const import DOMAIN
@@ -18,7 +17,6 @@ from tests.common import snapshot_platform
 from tests.typing import WebSocketGenerator
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 async def test_event_entity(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -34,7 +32,6 @@ async def test_event_entity(
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 async def test_event_entity_backup_completed(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -66,7 +63,6 @@ async def test_event_entity_backup_completed(
     assert state.attributes[ATTR_FAILED_REASON] is None
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 async def test_event_entity_backup_failed(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

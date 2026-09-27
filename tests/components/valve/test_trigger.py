@@ -1,0 +1,182 @@
+"""Test valve trigger."""
+
+from typing import Any
+
+import pytest
+
+from homeassistant.components.valve import ATTR_IS_CLOSED, DOMAIN, ValveState
+from homeassistant.components.valve.trigger import TRIGGERS
+from homeassistant.core import HomeAssistant
+
+from tests.components.common import (
+    TargetSupport,
+    TriggerStateDescription,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
+    assert_trigger_behavior_first,
+    assert_trigger_options_supported,
+    assert_triggers_target_support,
+    parametrize_target_entities,
+    parametrize_trigger_states,
+    target_entities,
+)
+
+TRIGGER_STATES = [
+    *parametrize_trigger_states(
+        trigger="valve.closed",
+        target_states=[
+            (ValveState.CLOSED, {ATTR_IS_CLOSED: True}),
+            (ValveState.CLOSING, {ATTR_IS_CLOSED: True}),
+            (ValveState.OPENING, {ATTR_IS_CLOSED: True}),
+        ],
+        other_states=[
+            (ValveState.CLOSING, {ATTR_IS_CLOSED: False}),
+            (ValveState.OPEN, {ATTR_IS_CLOSED: False}),
+            (ValveState.OPENING, {ATTR_IS_CLOSED: False}),
+        ],
+        extra_invalid_states=[
+            (ValveState.OPEN, {ATTR_IS_CLOSED: None}),
+            (ValveState.OPEN, {}),
+        ],
+    ),
+    *parametrize_trigger_states(
+        trigger="valve.opened",
+        target_states=[
+            (ValveState.OPEN, {ATTR_IS_CLOSED: False}),
+            (ValveState.OPENING, {ATTR_IS_CLOSED: False}),
+            (ValveState.CLOSING, {ATTR_IS_CLOSED: False}),
+        ],
+        other_states=[
+            (ValveState.CLOSED, {ATTR_IS_CLOSED: True}),
+        ],
+        extra_invalid_states=[
+            (ValveState.CLOSED, {ATTR_IS_CLOSED: None}),
+            (ValveState.CLOSED, {}),
+        ],
+    ),
+]
+
+
+@pytest.fixture
+async def target_valves(hass: HomeAssistant) -> dict[str, list[str]]:
+    """Create multiple valve entities associated with different targets."""
+    return await target_entities(hass, DOMAIN)
+
+
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "closed": TargetSupport.STANDARD,
+    "opened": TargetSupport.STANDARD,
+}
+
+
+@pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("valve.closed", {}, True, True),
+        ("valve.opened", {}, True, True),
+    ],
+)
+async def test_valve_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that valve triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
+
+
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
+
+
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities(DOMAIN),
+)
+@pytest.mark.parametrize(("trigger", "trigger_options", "states"), TRIGGER_STATES)
+async def test_valve_state_trigger_behavior_each(
+    hass: HomeAssistant,
+    target_valves: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any] | None,
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test valve state trigger fires when any valve changes to a specific state."""
+    await assert_trigger_behavior_each(
+        hass,
+        target_entities=target_valves,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
+
+
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities(DOMAIN),
+)
+@pytest.mark.parametrize(("trigger", "trigger_options", "states"), TRIGGER_STATES)
+async def test_valve_state_trigger_behavior_first(
+    hass: HomeAssistant,
+    target_valves: dict[str, list[str]],
+    trigger_target_config: dict,
+    entities_in_target: int,
+    entity_id: str,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test valve state trigger fires when first valve changes to a specific state."""
+    await assert_trigger_behavior_first(
+        hass,
+        target_entities=target_valves,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
+
+
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities(DOMAIN),
+)
+@pytest.mark.parametrize(("trigger", "trigger_options", "states"), TRIGGER_STATES)
+async def test_valve_state_trigger_behavior_all(
+    hass: HomeAssistant,
+    target_valves: dict[str, list[str]],
+    trigger_target_config: dict,
+    entities_in_target: int,
+    entity_id: str,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test valve state trigger fires when last valve changes to a specific state."""
+    await assert_trigger_behavior_all(
+        hass,
+        target_entities=target_valves,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )

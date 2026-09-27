@@ -1,0 +1,17 @@
+{
+  "entity": {
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "program_1": "mdi:numeric-1",
+              "program_2": "mdi:numeric-2",
+              "program_3": "mdi:numeric-3"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,13 +1,12 @@
 """Support for Concord232 alarm control panels."""
 
-from __future__ import annotations
-
 import datetime
 import logging
+from typing import override
 
 from concord232 import client as concord232_client
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
@@ -33,11 +32,11 @@ SCAN_INTERVAL = datetime.timedelta(seconds=10)
 
 PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_CODE): cv.string,
-        vol.Optional(CONF_MODE, default=DEFAULT_MODE): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_CODE): cv.string,
+        probatio.Optional(CONF_MODE, default=DEFAULT_MODE): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
 
@@ -49,11 +48,11 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Concord232 alarm control panel platform."""
-    name = config[CONF_NAME]
-    code = config.get(CONF_CODE)
-    mode = config[CONF_MODE]
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
+    name: str = config[CONF_NAME]
+    code: str | None = config.get(CONF_CODE)
+    mode: str = config[CONF_MODE]
+    host: str = config[CONF_HOST]
+    port: int = config[CONF_PORT]
 
     url = f"http://{host}:{port}"
 
@@ -72,7 +71,7 @@ class Concord232Alarm(AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
 
-    def __init__(self, url, name, code, mode):
+    def __init__(self, url: str, name: str, code: str | None, mode: str) -> None:
         """Initialize the Concord232 alarm panel."""
 
         self._attr_name = name
@@ -104,12 +103,14 @@ class Concord232Alarm(AlarmControlPanelEntity):
         else:
             self._attr_alarm_state = AlarmControlPanelState.ARMED_AWAY
 
+    @override
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if not self._validate_code(code, AlarmControlPanelState.DISARMED):
             return
         self._alarm.disarm(code)
 
+    @override
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if not self._validate_code(code, AlarmControlPanelState.ARMED_HOME):
@@ -119,13 +120,14 @@ class Concord232Alarm(AlarmControlPanelEntity):
         else:
             self._alarm.arm("stay")
 
+    @override
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if not self._validate_code(code, AlarmControlPanelState.ARMED_AWAY):
             return
         self._alarm.arm("away")
 
-    def _validate_code(self, code, state):
+    def _validate_code(self, code: str | None, state: AlarmControlPanelState) -> bool:
         """Validate given code."""
         if self._code is None:
             return True

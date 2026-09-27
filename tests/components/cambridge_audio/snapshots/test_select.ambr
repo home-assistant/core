@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_all_entities[select.cambridge_audio_cxnv2_audio_output-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Speaker A',
         'Speaker B',
         'Headphones',
@@ -26,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Audio output',
     'options': dict({
     }),
     'original_device_class': None,
@@ -43,8 +45,8 @@
 # name: test_all_entities[select.cambridge_audio_cxnv2_audio_output-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cambridge Audio CXNv2 Audio output',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cambridge Audio CXNv2 Audio output',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Speaker A',
         'Speaker B',
         'Headphones',
@@ -60,11 +62,12 @@
 # ---
 # name: test_all_entities[select.cambridge_audio_cxnv2_control_bus_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'amplifier',
         'receiver',
         'off',
@@ -85,6 +88,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Control Bus mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -102,8 +106,8 @@
 # name: test_all_entities[select.cambridge_audio_cxnv2_control_bus_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cambridge Audio CXNv2 Control Bus mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cambridge Audio CXNv2 Control Bus mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'amplifier',
         'receiver',
         'off',
@@ -119,11 +123,12 @@
 # ---
 # name: test_all_entities[select.cambridge_audio_cxnv2_display_brightness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'bright',
         'dim',
         'off',
@@ -144,6 +149,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Display brightness',
     'options': dict({
     }),
     'original_device_class': None,
@@ -161,8 +167,8 @@
 # name: test_all_entities[select.cambridge_audio_cxnv2_display_brightness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cambridge Audio CXNv2 Display brightness',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cambridge Audio CXNv2 Display brightness',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'bright',
         'dim',
         'off',

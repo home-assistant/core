@@ -10,13 +10,17 @@ from homeassistant.components.bluetooth import (
     async_address_present,
 )
 from homeassistant.components.oralb.const import DOMAIN
+from homeassistant.components.sensor import ATTR_OPTIONS
 from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import (
+    ORALB_IO_POST_BRUSHING_SMART_ADAPT_SERVICE_INFO,
     ORALB_IO_SERIES_4_SERVICE_INFO,
     ORALB_IO_SERIES_6_SERVICE_INFO,
+    ORALB_IO_SIX_SECTORS_LAST_SECTOR_SERVICE_INFO,
+    ORALB_IO_SIX_SECTORS_SECTOR_5_SERVICE_INFO,
     ORALB_SERVICE_INFO,
 )
 
@@ -47,10 +51,10 @@ async def test_sensors(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(hass.states.async_all("sensor")) == 9
 
-    toothbrush_sensor = hass.states.get("sensor.smart_series_7000_48be")
+    toothbrush_sensor = hass.states.get("sensor.triumph_d36_48be")
     toothbrush_sensor_attrs = toothbrush_sensor.attributes
     assert toothbrush_sensor.state == "running"
-    assert toothbrush_sensor_attrs[ATTR_FRIENDLY_NAME] == "Smart Series 7000 48BE"
+    assert toothbrush_sensor_attrs[ATTR_FRIENDLY_NAME] == "Triumph D36 48BE"
     assert ATTR_ASSUMED_STATE not in toothbrush_sensor_attrs
 
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -76,7 +80,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     # All of these devices are sleepy so we should still be available
-    toothbrush_sensor = hass.states.get("sensor.smart_series_7000_48be")
+    toothbrush_sensor = hass.states.get("sensor.triumph_d36_48be")
     assert toothbrush_sensor.state == "running"
 
 
@@ -141,6 +145,77 @@ async def test_sensors_io_series_4(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sector_sensor_six_sectors(hass: HomeAssistant) -> None:
+    """Test the sector sensor while brushing with a six sector routine."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ORALB_IO_SIX_SECTORS_SECTOR_5_SERVICE_INFO.address,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info(hass, ORALB_IO_SIX_SECTORS_SECTOR_5_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    sector_sensor = hass.states.get("sensor.io_series_48be_sector")
+    assert sector_sensor.state == "sector_5"
+    assert sector_sensor.attributes[ATTR_OPTIONS] == [
+        "no_sector",
+        "sector_1",
+        "sector_2",
+        "sector_3",
+        "sector_4",
+        "sector_5",
+        "sector_6",
+        "sector_7",
+    ]
+
+    number_of_sectors_sensor = hass.states.get(
+        "sensor.io_series_48be_number_of_sectors"
+    )
+    assert number_of_sectors_sensor.state == "6"
+
+    # The "last sector" sentinel resolves to the sector count (sector 6)
+    inject_bluetooth_service_info(hass, ORALB_IO_SIX_SECTORS_LAST_SECTOR_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    sector_sensor = hass.states.get("sensor.io_series_48be_sector")
+    assert sector_sensor.state == "sector_6"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_post_brushing_smart_adapt(hass: HomeAssistant) -> None:
+    """Test the post-brushing statistics state and the Smart Adapt mode."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ORALB_IO_POST_BRUSHING_SMART_ADAPT_SERVICE_INFO.address,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info(hass, ORALB_IO_POST_BRUSHING_SMART_ADAPT_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    toothbrush_sensor = hass.states.get("sensor.io_series_48be")
+    assert toothbrush_sensor.state == "post_brushing_statistics"
+    assert "post_brushing_statistics" in toothbrush_sensor.attributes[ATTR_OPTIONS]
+
+    mode_sensor = hass.states.get("sensor.io_series_48be_brushing_mode")
+    assert mode_sensor.state == "smart_adapt"
+    assert "smart_adapt" in mode_sensor.attributes[ATTR_OPTIONS]
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_sensors_battery(hass: HomeAssistant) -> None:
     """Test receiving battery percentage."""
     entry = MockConfigEntry(
@@ -155,9 +230,9 @@ async def test_sensors_battery(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 7
 
-    bat_sensor = hass.states.get("sensor.io_series_6_7_1dcf_battery")
+    bat_sensor = hass.states.get("sensor.io_series_1dcf_battery")
     assert bat_sensor.state == "49"
-    assert bat_sensor.name == "IO Series 6/7 1DCF Battery"
+    assert bat_sensor.name == "IO Series 1DCF Battery"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

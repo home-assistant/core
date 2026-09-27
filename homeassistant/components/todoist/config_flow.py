@@ -2,14 +2,15 @@
 
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from requests.exceptions import HTTPError
 from todoist_api_python.api_async import TodoistAPIAsync
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 
 from .const import DOMAIN
 
@@ -17,9 +18,9 @@ _LOGGER = logging.getLogger(__name__)
 
 SETTINGS_URL = "https://app.todoist.com/app/settings/integrations/developer"
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TOKEN): str,
+        probatio.Required(CONF_TOKEN): str,
     }
 )
 
@@ -29,12 +30,16 @@ class TodoistConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         errors: dict[str, str] = {}
         if user_input is not None:

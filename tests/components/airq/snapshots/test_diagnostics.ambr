@@ -1,0 +1,46 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'config_entry': dict({
+      'created_at': '2025-01-01T00:00:00+00:00',
+      'data': dict({
+        'ip_address': '**REDACTED**',
+        'password': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'airq',
+      'entry_id': '01JGFJJZ008DNE3BKJ7ZE14YFE',
+      'minor_version': 1,
+      'modified_at': '2025-01-01T00:00:00+00:00',
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'coordinator_data': dict({
+      'Status': 'OK',
+      'brightness': 42,
+      'co2': 500.0,
+    }),
+    'device_info': dict({
+      'hw_version': 'hw',
+      'identifiers': '**REDACTED**',
+      'manufacturer': 'CorantGmbH',
+      'model': 'model',
+      'name': '**REDACTED**',
+      'sw_version': 'sw',
+    }),
+    'options': dict({
+      'clip_negative': True,
+      'return_average': True,
+    }),
+  })
+# ---

@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from total_connect_client.client import TotalConnectClient
 from total_connect_client.exceptions import (
@@ -44,6 +45,7 @@ class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Update data."""
         await self.hass.async_add_executor_job(self.sync_update_data)

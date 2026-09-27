@@ -1,14 +1,14 @@
 """Config flow for SwitchBot via API integration."""
 
 from logging import getLogger
-from typing import Any
+from typing import Any, override
 
+import probatio
 from switchbot_api import (
     SwitchBotAPI,
     SwitchBotAuthenticationError,
     SwitchBotConnectionError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
@@ -17,10 +17,10 @@ from .const import DOMAIN, ENTRY_TITLE
 
 _LOGGER = getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_TOKEN): str,
-        vol.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_API_TOKEN): str,
+        probatio.Required(CONF_API_KEY): str,
     }
 )
 
@@ -30,6 +30,7 @@ class SwitchBotCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -77,7 +77,12 @@ MOCK_PET = {
     "id": 24680,
     "household_id": HOUSEHOLD_ID,
     "name": "Pet",
-    "position": {"since": "2020-08-23T23:10:50", "where": 1},
+    "position": {
+        "since": "2020-08-23T23:10:50",
+        "where": 1,
+        "device_id": MOCK_PET_FLAP["id"],
+        "user_id": 112233,
+    },
     "status": {},
 }
 

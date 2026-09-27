@@ -1,11 +1,9 @@
 """Config flow for Minecraft Server integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_TYPE
@@ -23,6 +21,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 3
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -40,7 +39,8 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ADDRESS: address,
             }
 
-            # Some Bedrock Edition servers mimic a Java Edition server, therefore check for a Bedrock Edition server first.
+            # Some Bedrock Edition servers mimic a Java Edition
+            # server, therefore check for Bedrock Edition first.
             for server_type in MinecraftServerType:
                 api = MinecraftServer(self.hass, server_type, address)
 
@@ -75,13 +75,14 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_ADDRESS,
                         default=user_input.get(CONF_ADDRESS, DEFAULT_ADDRESS),
-                    ): vol.All(str, vol.Lower),
+                    ): probatio.All(str, probatio.Lower),
                 }
             ),
             errors=errors,
+            description_placeholders={"minimum_minecraft_version": "1.4"},
         )

@@ -7,6 +7,16 @@
   "records": [
     {
       "movieId": 0,
+      "movie": {
+        "title": "Test Movie 1",
+        "images": [
+          {
+            "coverType": "poster",
+            "url": "/MediaCover/1/poster.jpg",
+            "remoteUrl": "https://image.tmdb.org/t/p/original/testposter1.jpg"
+          }
+        ]
+      },
       "languages": [
         {
           "id": 0,
@@ -79,6 +89,16 @@
     },
     {
       "movieId": 0,
+      "movie": {
+        "title": "Test Movie 2",
+        "images": [
+          {
+            "coverType": "poster",
+            "url": "/MediaCover/2/poster.jpg",
+            "remoteUrl": "https://image.tmdb.org/t/p/original/testposter2.jpg"
+          }
+        ]
+      },
       "languages": [
         {
           "id": 0,

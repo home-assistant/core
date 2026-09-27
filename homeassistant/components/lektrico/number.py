@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from lektricowifi import Device
 
@@ -38,7 +38,7 @@ NUMBERS: tuple[LektricoNumberEntityDescription, ...] = (
         native_max_value=100,
         native_step=5,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda data: int(data["led_max_brightness"]),
+        value_fn=lambda data: data["led_max_brightness"],
         set_value_fn=lambda data, value: data.set_led_max_brightness(value),
     ),
     LektricoNumberEntityDescription(
@@ -49,7 +49,7 @@ NUMBERS: tuple[LektricoNumberEntityDescription, ...] = (
         native_max_value=32,
         native_step=1,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        value_fn=lambda data: int(data["dynamic_current"]),
+        value_fn=lambda data: data["dynamic_current"],
         set_value_fn=lambda data, value: data.set_dynamic_current(value),
     ),
 )
@@ -90,10 +90,12 @@ class LektricoNumber(LektricoEntity, NumberEntity):
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the state of the number."""
         return self.entity_description.value_fn(self.coordinator.data)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the selected value."""
         await self.entity_description.set_value_fn(self.coordinator.device, int(value))

@@ -1,14 +1,13 @@
 """Support for exposing NX584 elements as sensors."""
 
-from __future__ import annotations
-
 import logging
 import threading
 import time
+from typing import Any, override
 
 from nx584 import client as nx584_client
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -28,21 +27,28 @@ CONF_EXCLUDE_ZONES = "exclude_zones"
 CONF_ZONE_TYPES = "zone_types"
 
 DEFAULT_HOST = "localhost"
-DEFAULT_PORT = "5007"
-DEFAULT_SSL = False
+DEFAULT_PORT = 5007
+BYPASS_ZONE_FLAGS = {"Bypass", "Inhibit"}
 
-ZONE_TYPES_SCHEMA = vol.Schema({cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA})
+ZONE_TYPES_SCHEMA = probatio.Schema(
+    {cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA}
+)
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_EXCLUDE_ZONES, default=[]): vol.All(
+        probatio.Optional(CONF_EXCLUDE_ZONES, default=[]): probatio.All(
             cv.ensure_list, [cv.positive_int]
         ),
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_ZONE_TYPES, default={}): ZONE_TYPES_SCHEMA,
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_ZONE_TYPES, default={}): ZONE_TYPES_SCHEMA,
     }
 )
+
+
+def _zone_flags_indicate_bypass(zone_flags: list[str]) -> bool:
+    """Return if NX584 zone condition flags indicate bypass."""
+    return not BYPASS_ZONE_FLAGS.isdisjoint(zone_flags)
 
 
 def setup_platform(
@@ -53,10 +59,10 @@ def setup_platform(
 ) -> None:
     """Set up the NX584 binary sensor platform."""
 
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    exclude = config[CONF_EXCLUDE_ZONES]
-    zone_types = config[CONF_ZONE_TYPES]
+    host: str = config[CONF_HOST]
+    port: int = config[CONF_PORT]
+    exclude: list[int] = config[CONF_EXCLUDE_ZONES]
+    zone_types: dict[int, BinarySensorDeviceClass] = config[CONF_ZONE_TYPES]
 
     try:
         client = nx584_client.Client(f"http://{host}:{port}")
@@ -90,29 +96,29 @@ class NX584ZoneSensor(BinarySensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, zone, zone_type):
+    def __init__(
+        self, zone: dict[str, Any], zone_type: BinarySensorDeviceClass
+    ) -> None:
         """Initialize the nx594 binary sensor."""
         self._zone = zone
-        self._zone_type = zone_type
+        self._attr_device_class = zone_type
 
     @property
-    def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return self._zone_type
-
-    @property
+    @override
     def name(self):
         """Return the name of the binary sensor."""
         return self._zone["name"]
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         # True means "faulted" or "open" or "abnormal state"
         return self._zone["state"]
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             "zone_number": self._zone["number"],
@@ -135,6 +141,10 @@ class NX584Watcher(threading.Thread):
         if not (zone_sensor := self._zone_sensors.get(zone)):
             return
         zone_sensor._zone["state"] = event["zone_state"]  # noqa: SLF001
+        if "zone_flags" in event:
+            zone_sensor._zone["bypassed"] = _zone_flags_indicate_bypass(  # noqa: SLF001
+                event["zone_flags"]
+            )
         zone_sensor.schedule_update_ha_state()
 
     def _process_events(self, events):
@@ -149,6 +159,7 @@ class NX584Watcher(threading.Thread):
             if events := self._client.get_events():
                 self._process_events(events)
 
+    @override
     def run(self):
         """Run the watcher."""
         while True:

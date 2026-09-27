@@ -1,7 +1,5 @@
 """Http view for the Backup integration."""
 
-from __future__ import annotations
-
 import asyncio
 from http import HTTPStatus
 import threading
@@ -23,7 +21,7 @@ from . import util
 from .agent import BackupAgent
 from .const import DATA_MANAGER
 from .manager import BackupManager
-from .models import AgentBackup, BackupNotFound
+from .models import AgentBackup, BackupNotFound, InvalidBackupFilename
 
 
 @callback
@@ -194,6 +192,11 @@ class UploadBackupView(HomeAssistantView):
         try:
             backup_id = await manager.async_receive_backup(
                 contents=contents, agent_ids=agent_ids
+            )
+        except InvalidBackupFilename as err:
+            return Response(
+                body=str(err),
+                status=HTTPStatus.BAD_REQUEST,
             )
         except OSError as err:
             return Response(

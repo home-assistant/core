@@ -1,0 +1,41 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_compatible_transmitters": "No compatible radio frequency transmitter is available for this integration.",
+      "no_transmitters": "[%key:common::config_flow::abort::no_radio_frequency_transmitters%]"
+    },
+    "error": {},
+    "step": {
+      "pairing_mode": {
+        "description": "Bring the device into learn mode by pushing its button for more than 2 seconds, then press OK.",
+        "title": "Pair device"
+      },
+      "pairing_result": {
+        "data": {
+          "device_responded": "Did the device respond?"
+        },
+        "data_description": {
+          "device_responded": "Select Yes if the target device reacted to the learn command."
+        },
+        "description": "Select Yes to continue setup. Select No to return to learn mode and resend the learn command.",
+        "title": "Confirm pairing"
+      },
+      "user": {
+        "data": {
+          "channel": "Channel",
+          "device_id": "Device ID",
+          "group": "Group",
+          "transmitter": "[%key:common::config_flow::data::radio_frequency_transmitter%]"
+        },
+        "data_description": {
+          "channel": "The channel of the target KlikAanKlikUit device (1-16).",
+          "device_id": "The unique KlikAanKlikUit device ID.",
+          "group": "Whether to send commands to the group address instead of a single device.",
+          "transmitter": "[%key:common::config_flow::data_description::radio_frequency_transmitter%]"
+        },
+        "description": "Choose the transmitter and configure your device settings."
+      }
+    }
+  }
+}

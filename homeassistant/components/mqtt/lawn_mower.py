@@ -1,12 +1,11 @@
 """Support for MQTT lawn mowers."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import contextlib
 import logging
+from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import lawn_mower
 from homeassistant.components.lawn_mower import (
@@ -49,6 +48,8 @@ CONF_PAUSE_COMMAND_TOPIC = "pause_command_topic"
 CONF_PAUSE_COMMAND_TEMPLATE = "pause_command_template"
 CONF_START_MOWING_COMMAND_TOPIC = "start_mowing_command_topic"
 CONF_START_MOWING_COMMAND_TEMPLATE = "start_mowing_command_template"
+CONF_STOP_COMMAND_TOPIC = "stop_command_topic"
+CONF_STOP_COMMAND_TEMPLATE = "stop_command_template"
 
 DEFAULT_NAME = "MQTT Lawn Mower"
 
@@ -57,24 +58,29 @@ MQTT_LAWN_MOWER_ATTRIBUTES_BLOCKED: frozenset[str] = frozenset()
 FEATURE_DOCK = "dock"
 FEATURE_PAUSE = "pause"
 FEATURE_START_MOWING = "start_mowing"
+FEATURE_STOP = "stop"
 
 PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_ACTIVITY_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_ACTIVITY_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_DOCK_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_DOCK_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-        vol.Optional(CONF_PAUSE_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_PAUSE_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(CONF_START_MOWING_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_START_MOWING_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_ACTIVITY_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_ACTIVITY_STATE_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_DOCK_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_DOCK_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+        probatio.Optional(CONF_PAUSE_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_PAUSE_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        probatio.Optional(CONF_START_MOWING_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_START_MOWING_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_STOP_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_STOP_COMMAND_TOPIC): valid_publish_topic,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA))
+DISCOVERY_SCHEMA = probatio.All(
+    PLATFORM_SCHEMA_MODERN.extend({}, extra=probatio.REMOVE_EXTRA)
+)
 
 
 async def async_setup_entry(
@@ -105,10 +111,12 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_assumed_state = config[CONF_OPTIMISTIC]
@@ -129,6 +137,9 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
                 CONF_START_MOWING_COMMAND_TOPIC
             ]
             supported_features |= LawnMowerEntityFeature.START_MOWING
+        if CONF_STOP_COMMAND_TOPIC in config:
+            self._command_topics[FEATURE_STOP] = config[CONF_STOP_COMMAND_TOPIC]
+            supported_features |= LawnMowerEntityFeature.STOP
         self._attr_supported_features = supported_features
         self._command_templates = {}
         self._command_templates[FEATURE_DOCK] = MqttCommandTemplate(
@@ -139,6 +150,9 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
         ).async_render
         self._command_templates[FEATURE_START_MOWING] = MqttCommandTemplate(
             config.get(CONF_START_MOWING_COMMAND_TEMPLATE), entity=self
+        ).async_render
+        self._command_templates[FEATURE_STOP] = MqttCommandTemplate(
+            config.get(CONF_STOP_COMMAND_TEMPLATE), entity=self
         ).async_render
 
     @callback
@@ -168,6 +182,7 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
             return
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         if not self.add_subscription(
@@ -177,6 +192,7 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
             self._attr_assumed_state = True
             return
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
@@ -195,14 +211,22 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
             self.async_write_ha_state()
         await self.async_publish_with_config(self._command_topics[option], payload)
 
+    @override
     async def async_start_mowing(self) -> None:
         """Start or resume mowing."""
         await self._async_operate("start_mowing", LawnMowerActivity.MOWING)
 
+    @override
     async def async_dock(self) -> None:
         """Dock the mower."""
         await self._async_operate("dock", LawnMowerActivity.DOCKED)
 
+    @override
     async def async_pause(self) -> None:
         """Pause the lawn mower."""
         await self._async_operate("pause", LawnMowerActivity.PAUSED)
+
+    @override
+    async def async_stop(self) -> None:
+        """Stop the lawn mower."""
+        await self._async_operate("stop", LawnMowerActivity.IDLE)

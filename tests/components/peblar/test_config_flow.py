@@ -66,9 +66,15 @@ async def test_user_flow_errors(
     mock_peblar.login.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_HOST: "127.0.0.1",
             CONF_PASSWORD: "OMGCATS!",
         },
@@ -105,9 +111,15 @@ async def test_user_flow_already_configured(
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_HOST: "127.0.0.1",
             CONF_PASSWORD: "OMGSPIDERS",
         },
@@ -291,7 +303,7 @@ async def test_zeroconf_flow_abort_no_serial(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
-        (PeblarConnectionError, {"base": "unknown"}),
+        (PeblarConnectionError, {"base": "cannot_connect"}),
         (PeblarAuthenticationError, {CONF_PASSWORD: "invalid_auth"}),
         (Exception, {"base": "unknown"}),
     ],

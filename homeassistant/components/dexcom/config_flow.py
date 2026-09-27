@@ -1,12 +1,11 @@
 """Config flow for Dexcom integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
-from pydexcom import AccountError, Dexcom, SessionError
-import voluptuous as vol
+import probatio
+from pydexcom import Dexcom, Region
+from pydexcom.errors import AccountError, SessionError
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -15,11 +14,11 @@ from .const import CONF_SERVER, DOMAIN, SERVER_OUS, SERVER_US
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_SERVER): vol.In({SERVER_US, SERVER_OUS}),
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_SERVER): probatio.In({SERVER_US, SERVER_OUS}),
     }
 )
 
@@ -29,6 +28,7 @@ class DexcomConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -37,10 +37,13 @@ class DexcomConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await self.hass.async_add_executor_job(
-                    Dexcom,
-                    user_input[CONF_USERNAME],
-                    user_input[CONF_PASSWORD],
-                    user_input[CONF_SERVER] == SERVER_OUS,
+                    lambda: Dexcom(
+                        username=user_input[CONF_USERNAME],
+                        password=user_input[CONF_PASSWORD],
+                        region=Region.OUS
+                        if user_input[CONF_SERVER] == SERVER_OUS
+                        else Region.US,
+                    )
                 )
             except SessionError:
                 errors["base"] = "cannot_connect"

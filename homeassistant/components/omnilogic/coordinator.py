@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from omnilogic import OmniLogic, OmniLogicException
 
@@ -15,17 +15,20 @@ from .const import ALL_ITEM_KINDS
 _LOGGER = logging.getLogger(__name__)
 
 
+type OmniLogicConfigEntry = ConfigEntry[OmniLogicUpdateCoordinator]
+
+
 class OmniLogicUpdateCoordinator(DataUpdateCoordinator[dict[tuple, dict[str, Any]]]):
     """Class to manage fetching update data from single endpoint."""
 
-    config_entry: ConfigEntry
+    config_entry: OmniLogicConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         api: OmniLogic,
         name: str,
-        config_entry: ConfigEntry,
+        config_entry: OmniLogicConfigEntry,
         polling_interval: int,
     ) -> None:
         """Initialize the global Omnilogic data updater."""
@@ -39,6 +42,7 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator[dict[tuple, dict[str, Any
             update_interval=timedelta(seconds=polling_interval),
         )
 
+    @override
     async def _async_update_data(self):
         """Fetch data from OmniLogic."""
         try:

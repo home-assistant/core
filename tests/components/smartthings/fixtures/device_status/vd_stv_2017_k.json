@@ -36,11 +36,11 @@
               "name": "PlayStation 4"
             },
             {
-              "id": "HDMI4",
+              "id": "HDMI2",
               "name": "HT-CT370"
             },
             {
-              "id": "HDMI4",
+              "id": "HDMI3",
               "name": "HT-CT370"
             }
           ],
@@ -53,7 +53,7 @@
       },
       "mediaInputSource": {
         "supportedInputSources": {
-          "value": ["digitalTv", "HDMI1", "HDMI4", "HDMI4"],
+          "value": ["digitalTv", "HDMI1", "HDMI2", "HDMI3"],
           "timestamp": "2021-10-16T15:18:11.622Z"
         },
         "inputSource": {

@@ -1,7 +1,5 @@
 """Test Tuya Alarm Control Panel platform."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 
@@ -26,7 +24,16 @@ from . import initialize_entry
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.ALARM_CONTROL_PANEL])
+@pytest.fixture(autouse=True)
+def platform_autouse():
+    """Platform fixture."""
+    with patch(
+        "homeassistant.components.tuya.PLATFORMS", [Platform.ALARM_CONTROL_PANEL]
+    ):
+        yield
+
+
+@pytest.mark.usefixtures("no_quirk")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -41,10 +48,12 @@ async def test_platform_setup_and_discovery(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.ALARM_CONTROL_PANEL])
 @pytest.mark.parametrize(
-    "mock_device_code",
-    ["mal_gyitctrjj1kefxp2"],
+    ("mock_device_code", "entity_id"),
+    [
+        ("mal_gyitctrjj1kefxp2", "alarm_control_panel.multifunction_alarm"),
+        ("wg2_pkhw2vbphv4csrir", "alarm_control_panel.c30"),
+    ],
 )
 @pytest.mark.parametrize(
     ("service", "command"),
@@ -62,9 +71,9 @@ async def test_service(
     mock_device: CustomerDevice,
     service: str,
     command: dict[str, Any],
+    entity_id: str,
 ) -> None:
     """Test service."""
-    entity_id = "alarm_control_panel.multifunction_alarm"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     state = hass.states.get(entity_id)
@@ -80,10 +89,12 @@ async def test_service(
     mock_manager.send_commands.assert_called_once_with(mock_device.id, [command])
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.ALARM_CONTROL_PANEL])
 @pytest.mark.parametrize(
-    "mock_device_code",
-    ["mal_gyitctrjj1kefxp2"],
+    ("mock_device_code", "entity_id"),
+    [
+        ("mal_gyitctrjj1kefxp2", "alarm_control_panel.multifunction_alarm"),
+        ("wg2_pkhw2vbphv4csrir", "alarm_control_panel.c30"),
+    ],
 )
 @pytest.mark.parametrize(
     ("status_updates", "expected_state"),
@@ -118,7 +129,10 @@ async def test_service(
                 "master_mode": "home",
                 "master_state": "alarm",
                 # "Sensor Low Battery Test Sensor" in UTF-16BE
-                "alarm_msg": "AFMAZQBuAHMAbwByACAATABvAHcAIABCAGEAdAB0AGUAcgB5ACAAVABlAHMAdAAgAFMAZQBuAHMAbwBy",
+                "alarm_msg": (
+                    "AFMAZQBuAHMAbwByACAATABvAHcAIABCAGEAdAB0"
+                    "AGUAcgB5ACAAVABlAHMAdAAgAFMAZQBuAHMAbwBy"
+                ),
             },
             AlarmControlPanelState.ARMED_HOME,
         ),
@@ -131,9 +145,9 @@ async def test_state(
     mock_device: CustomerDevice,
     status_updates: dict[str, Any],
     expected_state: str,
+    entity_id: str,
 ) -> None:
     """Test state."""
-    entity_id = "alarm_control_panel.multifunction_alarm"
     mock_device.status.update(status_updates)
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 

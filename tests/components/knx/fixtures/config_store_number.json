@@ -1,0 +1,52 @@
+{
+  "version": 2,
+  "minor_version": 2,
+  "key": "knx/config_store.json",
+  "data": {
+    "entities": {
+      "number": {
+        "knx_es_01KFD3W6X5F24HSNSJK3EQDJ4G": {
+          "entity": {
+            "name": "test simple",
+            "entity_category": null,
+            "device_info": null
+          },
+          "knx": {
+            "ga_sensor": {
+              "write": "1/0/1",
+              "dpt": "5.001",
+              "state": null,
+              "passive": []
+            },
+            "sync_state": true,
+            "respond_to_read": false,
+            "mode": "auto"
+          }
+        },
+        "knx_es_01KFD3ZRZ4YXY3GHQM7TQZJVPV": {
+          "entity": {
+            "name": "test options",
+            "entity_category": null,
+            "device_info": null
+          },
+          "knx": {
+            "ga_sensor": {
+              "write": "2/0/1",
+              "dpt": "7",
+              "state": "2/0/0",
+              "passive": []
+            },
+            "mode": "slider",
+            "min": 3000,
+            "max": 5000,
+            "step": 100,
+            "unit_of_measurement": "kW",
+            "device_class": "power",
+            "sync_state": true,
+            "respond_to_read": false
+          }
+        }
+      }
+    }
+  }
+}

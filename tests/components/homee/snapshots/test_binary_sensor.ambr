@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_add_device[binary_sensor.added_device_blackout-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Blackout',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -37,8 +39,8 @@
 # name: test_add_device[binary_sensor.added_device_blackout-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Added Device Blackout',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Added Device Blackout',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.added_device_blackout',
@@ -50,8 +52,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -86,8 +90,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Test Binary Sensor Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Battery',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_battery',
@@ -99,8 +103,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_blackout-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -118,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Blackout',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -135,8 +141,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_blackout-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Blackout',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Blackout',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_blackout',
@@ -148,8 +154,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -167,6 +174,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -184,8 +192,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Carbon dioxide',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Carbon dioxide',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_carbon_dioxide',
@@ -197,8 +205,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_carbon_monoxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -216,6 +225,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon monoxide',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CO: 'carbon_monoxide'>,
@@ -233,8 +243,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_carbon_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'carbon_monoxide',
-      'friendly_name': 'Test Binary Sensor Carbon monoxide',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_monoxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Carbon monoxide',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_carbon_monoxide',
@@ -246,8 +256,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_flood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -265,6 +276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flood',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
@@ -282,8 +294,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_flood-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'Test Binary Sensor Flood',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Flood',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_flood',
@@ -295,8 +307,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_high_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -314,6 +327,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High temperature',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
@@ -331,8 +345,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_high_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
-      'friendly_name': 'Test Binary Sensor High temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor High temperature',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_high_temperature',
@@ -344,8 +358,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_leak-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -363,6 +378,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leak',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -380,8 +396,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_leak-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Leak',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Leak',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_leak',
@@ -393,8 +409,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_load-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -412,6 +429,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Load',
     'options': dict({
     }),
     'original_device_class': None,
@@ -429,7 +447,7 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_load-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Binary Sensor Load',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Load',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_load',
@@ -441,8 +459,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -460,6 +479,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
@@ -477,8 +497,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'lock',
-      'friendly_name': 'Test Binary Sensor Lock',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Lock',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_lock',
@@ -490,8 +510,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_low_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -509,6 +530,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Low temperature',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.COLD: 'cold'>,
@@ -526,8 +548,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_low_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'cold',
-      'friendly_name': 'Test Binary Sensor Low temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'cold',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Low temperature',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_low_temperature',
@@ -539,8 +561,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_malfunction-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -558,6 +581,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Malfunction',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -575,8 +599,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_malfunction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Malfunction',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Malfunction',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_malfunction',
@@ -588,8 +612,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_maximum_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -607,6 +632,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum level',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -624,8 +650,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_maximum_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Maximum level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Maximum level',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_maximum_level',
@@ -637,8 +663,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_minimum_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -656,6 +683,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Minimum level',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -673,8 +701,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_minimum_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Minimum level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Minimum level',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_minimum_level',
@@ -686,8 +714,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -705,6 +734,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -722,8 +752,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'Test Binary Sensor Motion',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_motion',
@@ -735,8 +765,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_motor_blocked-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -754,6 +785,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motor blocked',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -771,8 +803,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_motor_blocked-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Motor blocked',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Motor blocked',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_motor_blocked',
@@ -784,8 +816,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_opening-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -803,6 +836,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opening',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
@@ -820,8 +854,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_opening-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'opening',
-      'friendly_name': 'Test Binary Sensor Opening',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'opening',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Opening',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_opening',
@@ -833,8 +867,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_overcurrent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -852,6 +887,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overcurrent',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -869,8 +905,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_overcurrent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Overcurrent',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Overcurrent',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_overcurrent',
@@ -882,8 +918,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_overload-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -901,6 +938,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overload',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -918,8 +956,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_overload-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Overload',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Overload',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_overload',
@@ -931,8 +969,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_plug-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -950,6 +989,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
@@ -967,8 +1007,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_plug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'plug',
-      'friendly_name': 'Test Binary Sensor Plug',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'plug',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Plug',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_plug',
@@ -980,8 +1020,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -999,6 +1040,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -1016,8 +1058,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test Binary Sensor Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Power',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_power',
@@ -1029,8 +1071,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_presence-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1048,6 +1091,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Presence',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PRESENCE: 'presence'>,
@@ -1065,8 +1109,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_presence-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'presence',
-      'friendly_name': 'Test Binary Sensor Presence',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'presence',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Presence',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_presence',
@@ -1078,8 +1122,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_rain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1097,6 +1142,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rain',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
@@ -1114,8 +1160,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_rain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'Test Binary Sensor Rain',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Rain',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_rain',
@@ -1127,8 +1173,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_replace_filter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1146,6 +1193,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Replace filter',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1163,8 +1211,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_replace_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Replace filter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Replace filter',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_replace_filter',
@@ -1176,8 +1224,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_smoke-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1195,6 +1244,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smoke',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -1212,8 +1262,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_smoke-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'smoke',
-      'friendly_name': 'Test Binary Sensor Smoke',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'smoke',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Smoke',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_smoke',
@@ -1225,8 +1275,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_storage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1244,6 +1295,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Storage',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1261,8 +1313,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_storage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Storage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Storage',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_storage',
@@ -1274,8 +1326,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_surge-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1293,6 +1346,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Surge',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1310,8 +1364,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_surge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Surge',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Surge',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_surge',
@@ -1323,8 +1377,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_tamper-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1342,6 +1397,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -1359,8 +1415,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_tamper-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'tamper',
-      'friendly_name': 'Test Binary Sensor Tamper',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tamper',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Tamper',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_tamper',
@@ -1372,8 +1428,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_voltage_drop-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1391,6 +1448,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage drop',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1408,8 +1466,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_voltage_drop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Voltage drop',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Voltage drop',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_voltage_drop',
@@ -1421,8 +1479,9 @@
 # ---
 # name: test_add_device[binary_sensor.test_binary_sensor_water-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1440,6 +1499,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
@@ -1457,8 +1517,8 @@
 # name: test_add_device[binary_sensor.test_binary_sensor_water-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'Test Binary Sensor Water',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Water',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_water',
@@ -1470,8 +1530,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1489,6 +1550,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -1506,8 +1568,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Test Binary Sensor Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Battery',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_battery',
@@ -1519,8 +1581,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_blackout-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1538,6 +1601,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Blackout',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1555,8 +1619,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_blackout-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Blackout',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Blackout',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_blackout',
@@ -1568,8 +1632,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1587,6 +1652,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1604,8 +1670,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Carbon dioxide',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Carbon dioxide',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_carbon_dioxide',
@@ -1617,8 +1683,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_carbon_monoxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1636,6 +1703,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon monoxide',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CO: 'carbon_monoxide'>,
@@ -1653,8 +1721,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_carbon_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'carbon_monoxide',
-      'friendly_name': 'Test Binary Sensor Carbon monoxide',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_monoxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Carbon monoxide',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_carbon_monoxide',
@@ -1666,8 +1734,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_flood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1685,6 +1754,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flood',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
@@ -1702,8 +1772,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_flood-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'Test Binary Sensor Flood',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Flood',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_flood',
@@ -1715,8 +1785,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_high_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1734,6 +1805,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High temperature',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
@@ -1751,8 +1823,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_high_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
-      'friendly_name': 'Test Binary Sensor High temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor High temperature',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_high_temperature',
@@ -1764,8 +1836,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_leak-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1783,6 +1856,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leak',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1800,8 +1874,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_leak-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Leak',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Leak',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_leak',
@@ -1813,8 +1887,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_load-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1832,6 +1907,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Load',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1849,7 +1925,7 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_load-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Binary Sensor Load',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Load',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_load',
@@ -1861,8 +1937,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1880,6 +1957,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
@@ -1897,8 +1975,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'lock',
-      'friendly_name': 'Test Binary Sensor Lock',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Lock',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_lock',
@@ -1910,8 +1988,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_low_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1929,6 +2008,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Low temperature',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.COLD: 'cold'>,
@@ -1946,8 +2026,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_low_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'cold',
-      'friendly_name': 'Test Binary Sensor Low temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'cold',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Low temperature',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_low_temperature',
@@ -1959,8 +2039,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_malfunction-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1978,6 +2059,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Malfunction',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1995,8 +2077,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_malfunction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Malfunction',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Malfunction',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_malfunction',
@@ -2008,8 +2090,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_maximum_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2027,6 +2110,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum level',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2044,8 +2128,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_maximum_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Maximum level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Maximum level',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_maximum_level',
@@ -2057,8 +2141,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_minimum_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2076,6 +2161,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Minimum level',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2093,8 +2179,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_minimum_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Minimum level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Minimum level',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_minimum_level',
@@ -2106,8 +2192,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2125,6 +2212,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -2142,8 +2230,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'Test Binary Sensor Motion',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_motion',
@@ -2155,8 +2243,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_motor_blocked-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2174,6 +2263,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motor blocked',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2191,8 +2281,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_motor_blocked-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Motor blocked',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Motor blocked',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_motor_blocked',
@@ -2204,8 +2294,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_opening-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2223,6 +2314,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opening',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
@@ -2240,8 +2332,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_opening-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'opening',
-      'friendly_name': 'Test Binary Sensor Opening',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'opening',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Opening',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_opening',
@@ -2253,8 +2345,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_overcurrent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2272,6 +2365,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overcurrent',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2289,8 +2383,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_overcurrent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Overcurrent',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Overcurrent',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_overcurrent',
@@ -2302,8 +2396,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_overload-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2321,6 +2416,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overload',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2338,8 +2434,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_overload-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Overload',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Overload',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_overload',
@@ -2351,8 +2447,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_plug-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2370,6 +2467,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
@@ -2387,8 +2485,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_plug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'plug',
-      'friendly_name': 'Test Binary Sensor Plug',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'plug',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Plug',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_plug',
@@ -2400,8 +2498,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2419,6 +2518,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -2436,8 +2536,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test Binary Sensor Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Power',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_power',
@@ -2449,8 +2549,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_presence-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2468,6 +2569,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Presence',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PRESENCE: 'presence'>,
@@ -2485,8 +2587,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_presence-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'presence',
-      'friendly_name': 'Test Binary Sensor Presence',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'presence',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Presence',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_presence',
@@ -2498,8 +2600,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_rain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2517,6 +2620,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rain',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
@@ -2534,8 +2638,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_rain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'Test Binary Sensor Rain',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Rain',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_rain',
@@ -2547,8 +2651,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_replace_filter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2566,6 +2671,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Replace filter',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2583,8 +2689,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_replace_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Replace filter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Replace filter',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_replace_filter',
@@ -2596,8 +2702,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_smoke-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2615,6 +2722,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smoke',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -2632,8 +2740,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_smoke-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'smoke',
-      'friendly_name': 'Test Binary Sensor Smoke',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'smoke',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Smoke',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_smoke',
@@ -2645,8 +2753,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_storage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2664,6 +2773,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Storage',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2681,8 +2791,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_storage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Storage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Storage',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_storage',
@@ -2694,8 +2804,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_surge-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2713,6 +2824,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Surge',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2730,8 +2842,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_surge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Surge',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Surge',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_surge',
@@ -2743,8 +2855,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_tamper-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2762,6 +2875,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -2779,8 +2893,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_tamper-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'tamper',
-      'friendly_name': 'Test Binary Sensor Tamper',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tamper',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Tamper',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_tamper',
@@ -2792,8 +2906,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_voltage_drop-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2811,6 +2926,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage drop',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2828,8 +2944,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_voltage_drop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Voltage drop',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Voltage drop',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_voltage_drop',
@@ -2841,8 +2957,9 @@
 # ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_water-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2860,6 +2977,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
@@ -2877,8 +2995,8 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_water-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'Test Binary Sensor Water',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Binary Sensor Water',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_water',

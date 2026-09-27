@@ -1,7 +1,7 @@
 """Test the snapcast config flow."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
 from snapcast.control.client import Snapclient
@@ -53,6 +53,8 @@ def mock_create_server(
         mock_server.streams = [mock_stream_1, mock_stream_2]
 
         def get_stream(identifier: str) -> AsyncMock:
+            if len(mock_server.streams) == 0:
+                raise KeyError(identifier)
             return {s.identifier: s for s in mock_server.streams}[identifier]
 
         def get_group(identifier: str) -> AsyncMock:
@@ -94,7 +96,7 @@ def mock_group_1(mock_stream_1: AsyncMock, streams: dict[str, AsyncMock]) -> Asy
     group.friendly_name = "Test Group 1"
     group.stream = mock_stream_1.identifier
     group.muted = False
-    group.stream_status = mock_stream_1.status
+    type(group).stream_status = PropertyMock(return_value=mock_stream_1.status)
     group.volume = 48
     group.streams_by_name.return_value = {s.friendly_name: s for s in streams.values()}
     return group
@@ -109,7 +111,7 @@ def mock_group_2(mock_stream_2: AsyncMock, streams: dict[str, AsyncMock]) -> Asy
     group.friendly_name = "Test Group 2"
     group.stream = mock_stream_2.identifier
     group.muted = False
-    group.stream_status = mock_stream_2.status
+    type(group).stream_status = PropertyMock(return_value=mock_stream_2.status)
     group.volume = 65
     group.streams_by_name.return_value = {s.friendly_name: s for s in streams.values()}
     return group

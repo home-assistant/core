@@ -1,18 +1,23 @@
 """Test the Anthropic config flow."""
 
-from unittest.mock import AsyncMock, Mock, patch
+import datetime
+from unittest.mock import AsyncMock, patch
 
 from anthropic import (
     APIConnectionError,
+    APIError,
     APIResponseValidationError,
     APITimeoutError,
     AuthenticationError,
     BadRequestError,
     InternalServerError,
+    NotFoundError,
     types,
 )
+from anthropic.types import ModelInfo
 from httpx import URL, Request, Response
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.components.anthropic.config_flow import (
@@ -21,11 +26,15 @@ from homeassistant.components.anthropic.config_flow import (
 )
 from homeassistant.components.anthropic.const import (
     CONF_CHAT_MODEL,
+    CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
-    CONF_PROMPT,
+    CONF_PROMPT_CACHING,
     CONF_RECOMMENDED,
-    CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
+    CONF_THINKING_EFFORT,
+    CONF_TOOL_SEARCH,
+    CONF_WEB_FETCH,
+    CONF_WEB_FETCH_MAX_USES,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -38,37 +47,27 @@ from homeassistant.components.anthropic.const import (
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_PROMPT
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
     """Test we get the form."""
-    # Pretend we already set up a config entry.
-    hass.config.components.add("anthropic")
-    MockConfigEntry(
-        domain=DOMAIN,
-        state=config_entries.ConfigEntryState.LOADED,
-    ).add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    with (
-        patch(
-            "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.list",
-            new_callable=AsyncMock,
-        ),
-        patch(
-            "homeassistant.components.anthropic.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
+    with patch(
+        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -99,13 +98,11 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_duplicate_entry(hass: HomeAssistant) -> None:
+async def test_duplicate_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test we abort on duplicate config entry."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_API_KEY: "bla"},
-    ).add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -113,13 +110,13 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     assert not result["errors"]
 
     with patch(
-        "anthropic.resources.models.AsyncModels.retrieve",
-        return_value=Mock(display_name="Claude 3.5 Sonnet"),
+        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_API_KEY: "bla",
+                CONF_API_KEY: mock_config_entry.data[CONF_API_KEY],
             },
         )
 
@@ -127,8 +124,10 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_creating_conversation_subentry(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test creating a conversation subentry."""
     result = await hass.config_entries.subentries.async_init(
@@ -154,9 +153,9 @@ async def test_creating_conversation_subentry(
     assert result2["data"] == processed_options
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_creating_conversation_subentry_not_loaded(
     hass: HomeAssistant,
-    mock_init_component,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test creating a conversation subentry when entry is not loaded."""
@@ -177,11 +176,17 @@ async def test_creating_conversation_subentry_not_loaded(
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (APIConnectionError(request=None), "cannot_connect"),
-        (APITimeoutError(request=None), "timeout_connect"),
-        (
+        pytest.param(
+            APIConnectionError(request=None), "cannot_connect", id="connection_error"
+        ),
+        pytest.param(APITimeoutError(request=None), "timeout_connect", id="timeout"),
+        pytest.param(
             BadRequestError(
-                message="Your credit balance is too low to access the Claude API. Please go to Plans & Billing to upgrade or purchase credits.",
+                message=(
+                    "Your credit balance is too low to access"
+                    " the Claude API. Please go to Plans &"
+                    " Billing to upgrade or purchase credits."
+                ),
                 response=Response(
                     status_code=400,
                     request=Request(method="POST", url=URL()),
@@ -189,8 +194,9 @@ async def test_creating_conversation_subentry_not_loaded(
                 body={"type": "error", "error": {"type": "invalid_request_error"}},
             ),
             "unknown",
+            id="insufficient_credit",
         ),
-        (
+        pytest.param(
             AuthenticationError(
                 message="invalid x-api-key",
                 response=Response(
@@ -200,8 +206,9 @@ async def test_creating_conversation_subentry_not_loaded(
                 body={"type": "error", "error": {"type": "authentication_error"}},
             ),
             "authentication_error",
+            id="authentication_error",
         ),
-        (
+        pytest.param(
             InternalServerError(
                 message=None,
                 response=Response(
@@ -211,8 +218,9 @@ async def test_creating_conversation_subentry_not_loaded(
                 body=None,
             ),
             "unknown",
+            id="server_error",
         ),
-        (
+        pytest.param(
             APIResponseValidationError(
                 response=Response(
                     status_code=200,
@@ -221,11 +229,17 @@ async def test_creating_conversation_subentry_not_loaded(
                 body=None,
             ),
             "unknown",
+            id="invalid_response",
         ),
     ],
 )
-async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> None:
-    """Test we handle invalid auth."""
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_api_error(
+    hass: HomeAssistant,
+    side_effect: APIError,
+    error: str,
+) -> None:
+    """Test that we handle API errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -235,19 +249,262 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
         new_callable=AsyncMock,
         side_effect=side_effect,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "api_key": "bla",
             },
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": error}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    with patch(
+        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "api_key": "blabla",
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "api_key": "blabla",
+    }
 
 
+@pytest.mark.usefixtures("mock_init_component")
+async def test_subentry_options_thinking_budget_more_than_max(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test error about thinking budget being more than max tokens."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    options = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    # Configure initial step
+    options = await hass.config_entries.subentries.async_configure(
+        options["flow_id"],
+        {
+            "prompt": "Speak like a pirate",
+            "recommended": False,
+        },
+    )
+    assert options["type"] is FlowResultType.FORM
+    assert options["step_id"] == "additional"
+
+    # Configure additional step
+    options = await hass.config_entries.subentries.async_configure(
+        options["flow_id"],
+        {"chat_model": "claude-sonnet-4-5"},
+    )
+    assert options["type"] is FlowResultType.FORM
+    assert options["step_id"] == "model"
+
+    # Configure model step
+    options = await hass.config_entries.subentries.async_configure(
+        options["flow_id"],
+        {
+            "max_tokens": 8192,
+            "thinking_budget": 16384,
+        },
+    )
+    await hass.async_block_till_done()
+    assert options["type"] is FlowResultType.FORM
+    assert options["errors"] == {"thinking_budget": "thinking_budget_too_large"}
+
+    # Try again
+    options = await hass.config_entries.subentries.async_configure(
+        options["flow_id"],
+        {
+            "max_tokens": 16384,
+            "thinking_budget": 8192,
+        },
+    )
+    await hass.async_block_till_done()
+    assert options["type"] is FlowResultType.ABORT
+    assert options["reason"] == "reconfigure_successful"
+    assert subentry.data["max_tokens"] == 16384
+    assert subentry.data["thinking_budget"] == 8192
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        pytest.param("claude-opus-5-5", id="opus_5_5"),
+        pytest.param("claude-fable-5", id="fable_5"),
+        pytest.param("claude-fable-5-1", id="fable_5_1"),
+    ],
+)
+@pytest.mark.parametrize(
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
+@pytest.mark.usefixtures("mock_init_component")
+async def test_creating_subentry_with_required_thinking(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    model: str,
+    subentry_type: str,
+) -> None:
+    """Test always-adaptive models cannot be configured without thinking."""
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, subentry_type),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_NAME: "Adaptive thinking", CONF_RECOMMENDED: False},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CHAT_MODEL: model}
+    )
+    assert result["step_id"] == "model"
+    assert (
+        "none"
+        not in (result["data_schema"].schema[CONF_THINKING_EFFORT].config["options"])
+    )
+    assert CONF_THINKING_BUDGET not in result["data_schema"].schema
+
+    with pytest.raises(InvalidData):
+        await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_THINKING_EFFORT: "none"}
+        )
+
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_THINKING_EFFORT] == "low"
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        pytest.param("claude-opus-4-6", id="opus_4_6"),
+        pytest.param("claude-opus-4-7", id="opus_4_7"),
+        pytest.param("claude-opus-4-8", id="opus_4_8"),
+        pytest.param("claude-opus-5", id="opus_5"),
+        pytest.param("claude-sonnet-4-6", id="sonnet_4_6"),
+        pytest.param("claude-sonnet-5", id="sonnet_5"),
+    ],
+)
+@pytest.mark.usefixtures("mock_init_component")
+async def test_subentry_with_optional_thinking(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    model: str,
+) -> None:
+    """Test thinking can still be disabled on supported adaptive models."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_RECOMMENDED: False}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CHAT_MODEL: model}
+    )
+    assert result["step_id"] == "model"
+    assert (
+        "none" in (result["data_schema"].schema[CONF_THINKING_EFFORT].config["options"])
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_THINKING_EFFORT: "none"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert subentry.data[CONF_THINKING_EFFORT] == "none"
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        pytest.param("claude-opus-5-5", id="opus_5_5"),
+        pytest.param("claude-fable-5", id="fable_5"),
+        pytest.param("claude-fable-5-1", id="fable_5_1"),
+    ],
+)
+@pytest.mark.parametrize(
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("current_effort", "user_input", "expected_effort"),
+    [
+        pytest.param("none", {}, "low", id="enable_thinking"),
+        pytest.param(
+            "high", {CONF_THINKING_EFFORT: "high"}, "high", id="preserve_thinking"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_init_component")
+async def test_reconfigure_subentry_with_required_thinking(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    model: str,
+    subentry_type: str,
+    current_effort: str,
+    user_input: dict[str, str],
+    expected_effort: str,
+) -> None:
+    """Test migrating to an always-adaptive model clears disabled thinking."""
+    subentry = next(
+        subentry
+        for subentry in mock_config_entry.subentries.values()
+        if subentry.subentry_type == subentry_type
+    )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_THINKING_EFFORT: current_effort,
+        },
+    )
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_RECOMMENDED: False}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CHAT_MODEL: model}
+    )
+    assert result["step_id"] == "model"
+    effort_key = next(
+        key for key in result["data_schema"].schema if key == CONF_THINKING_EFFORT
+    )
+    assert (effort_key.description or {}).get(
+        "suggested_value", effort_key.default()
+    ) == expected_effort
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert subentry.data[CONF_CHAT_MODEL] == model
+    assert subentry.data[CONF_THINKING_EFFORT] == expected_effort
+
+
+@pytest.mark.usefixtures("mock_init_component")
 async def test_subentry_web_search_user_location(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test fetching user location."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -263,18 +520,17 @@ async def test_subentry_web_search_user_location(
             "recommended": False,
         },
     )
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "advanced"
+    assert options["type"] is FlowResultType.FORM
+    assert options["step_id"] == "additional"
 
-    # Configure advanced step
+    # Configure additional step
     options = await hass.config_entries.subentries.async_configure(
         options["flow_id"],
         {
-            "max_tokens": 8192,
             "chat_model": "claude-sonnet-4-5",
         },
     )
-    assert options["type"] == FlowResultType.FORM
+    assert options["type"] is FlowResultType.FORM
     assert options["step_id"] == "model"
 
     hass.config.country = "US"
@@ -290,11 +546,12 @@ async def test_subentry_web_search_user_location(
             type="message",
             id="mock_message_id",
             role="assistant",
-            model="claude-sonnet-4-0",
+            model="claude-sonnet-4-5",
             usage=types.Usage(input_tokens=100, output_tokens=100),
             content=[
                 types.TextBlock(
-                    type="text", text='"city": "San Francisco", "region": "California"}'
+                    type="text",
+                    text='{"city": "San Francisco", "region": "California"}',
                 )
             ],
         ),
@@ -303,6 +560,7 @@ async def test_subentry_web_search_user_location(
         options = await hass.config_entries.subentries.async_configure(
             options["flow_id"],
             {
+                "max_tokens": 8192,
                 "web_search": True,
                 "web_search_max_uses": 5,
                 "user_location": True,
@@ -311,12 +569,7 @@ async def test_subentry_web_search_user_location(
 
     assert (
         mock_create.call_args.kwargs["messages"][0]["content"] == "Where are the "
-        "following coordinates located: (37.7749, -122.4194)? Please respond only "
-        "with a JSON object using the following schema:\n"
-        "{'type': 'object', 'properties': {'city': {'type': 'string', 'description': "
-        "'Free text input for the city, e.g. `San Francisco`'}, 'region': {'type': "
-        "'string', 'description': 'Free text input for the region, e.g. `California`'"
-        "}}, 'required': []}"
+        "following coordinates located: (37.7749, -122.4194)?"
     )
     assert options["type"] is FlowResultType.ABORT
     assert options["reason"] == "reconfigure_successful"
@@ -326,19 +579,26 @@ async def test_subentry_web_search_user_location(
         "country": "US",
         "max_tokens": 8192,
         "prompt": "You are a helpful assistant",
+        "prompt_caching": "prompt",
         "recommended": False,
         "region": "California",
-        "temperature": 1.0,
-        "thinking_budget": 0,
+        "thinking_budget": 1024,
         "timezone": "America/Los_Angeles",
+        "tool_search": False,
         "user_location": True,
+        "web_fetch": False,
+        "web_fetch_max_uses": 5,
         "web_search": True,
         "web_search_max_uses": 5,
+        "code_execution": False,
     }
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_model_list(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test fetching and processing the list of models."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -354,63 +614,40 @@ async def test_model_list(
             "recommended": False,
         },
     )
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "advanced"
-    assert options["data_schema"].schema["chat_model"].config["options"] == [
-        {
-            "label": "Claude Haiku 4.5",
-            "value": "claude-haiku-4-5",
-        },
-        {
-            "label": "Claude Sonnet 4.5",
-            "value": "claude-sonnet-4-5",
-        },
-        {
-            "label": "Claude Opus 4.1",
-            "value": "claude-opus-4-1",
-        },
-        {
-            "label": "Claude Opus 4",
-            "value": "claude-opus-4-0",
-        },
-        {
-            "label": "Claude Sonnet 4",
-            "value": "claude-sonnet-4-0",
-        },
-        {
-            "label": "Claude Sonnet 3.7",
-            "value": "claude-3-7-sonnet",
-        },
-        {
-            "label": "Claude Haiku 3.5",
-            "value": "claude-3-5-haiku",
-        },
-        {
-            "label": "Claude Haiku 3",
-            "value": "claude-3-haiku-20240307",
-        },
-        {
-            "label": "Claude Opus 3",
-            "value": "claude-3-opus-20240229",
-        },
-    ]
+    assert options["type"] is FlowResultType.FORM
+    assert options["step_id"] == "additional"
+    assert options["data_schema"].schema["chat_model"].config["options"] == snapshot
 
 
-async def test_model_list_error(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
+@pytest.mark.usefixtures("mock_init_component")
+async def test_invalid_model(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test exception handling during fetching the list of models."""
-    subentry = next(iter(mock_config_entry.subentries.values()))
-    options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
-        hass, subentry.subentry_id
+    """Test exceptions during fetching model info."""
+    options = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": config_entries.SOURCE_USER},
     )
 
     # Configure initial step
+    options = await hass.config_entries.subentries.async_configure(
+        options["flow_id"],
+        {
+            CONF_NAME: "Mock name",
+            **DEFAULT_CONVERSATION_OPTIONS,
+            CONF_RECOMMENDED: False,
+        },
+    )
+    assert options["type"] is FlowResultType.FORM
+    assert options["step_id"] == "additional"
+
+    # Configure additional step but with api error
     with patch(
-        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.list",
+        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.retrieve",
         new_callable=AsyncMock,
         side_effect=InternalServerError(
-            message=None,
+            message="Mock server error",
             response=Response(
                 status_code=500,
                 request=Request(method="POST", url=URL()),
@@ -419,21 +656,78 @@ async def test_model_list_error(
         ),
     ):
         options = await hass.config_entries.subentries.async_configure(
-            options_flow["flow_id"],
+            options["flow_id"],
             {
-                "prompt": "You are a helpful assistant",
-                "recommended": False,
+                CONF_CHAT_MODEL: "invalid-model-2-0",
             },
         )
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "advanced"
-    assert options["data_schema"].schema["chat_model"].config["options"] == []
+    assert options["type"] is FlowResultType.FORM
+    assert options["errors"] == {"chat_model": "api_error"}
+    assert options["description_placeholders"] == {"message": "Mock server error"}
+
+    # Try again
+    with patch(
+        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.retrieve",
+        new_callable=AsyncMock,
+        side_effect=NotFoundError(
+            message="Model not found",
+            response=Response(
+                status_code=404,
+                request=Request(method="GET", url=URL()),
+            ),
+            body={
+                "type": "error",
+                "error": {
+                    "type": "not_found_error",
+                    "message": "model: invalid-model-2-0",
+                },
+            },
+        ),
+    ):
+        options = await hass.config_entries.subentries.async_configure(
+            options["flow_id"],
+            {
+                CONF_CHAT_MODEL: "invalid-model-2-0",
+            },
+        )
+    assert options["type"] is FlowResultType.FORM
+    assert options["errors"] == {"chat_model": "model_not_found"}
+
+    # Try again with a valid model
+    with patch(
+        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.retrieve",
+        new_callable=AsyncMock,
+        return_value=ModelInfo(
+            type="model",
+            id="valid-model-4-5",
+            created_at=datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC),
+            display_name="Valid Model 4-5",
+        ),
+    ):
+        options = await hass.config_entries.subentries.async_configure(
+            options["flow_id"],
+            {
+                CONF_CHAT_MODEL: "valid-model-4-5",
+            },
+        )
+
+    assert options["type"] is FlowResultType.FORM
+    assert not options["errors"]
+    assert options["step_id"] == "model"
+
+    options = await hass.config_entries.subentries.async_configure(
+        options["flow_id"],
+        {},
+    )
+
+    assert options["type"] is FlowResultType.CREATE_ENTRY
+    assert options["data"][CONF_CHAT_MODEL] == "valid-model-4-5"
 
 
 @pytest.mark.parametrize(
     ("current_options", "new_options", "expected_options"),
     [
-        (  # Test converting single llm api format to list
+        pytest.param(  # Test converting single llm api format to list
             {
                 CONF_RECOMMENDED: True,
                 CONF_PROMPT: "",
@@ -451,36 +745,17 @@ async def test_model_list_error(
                 CONF_PROMPT: "",
                 CONF_LLM_HASS_API: ["assist"],
             },
+            id="recommended_to_recommended",
         ),
-        (  # Model with no model-specific options
-            {
-                CONF_RECOMMENDED: True,
-                CONF_PROMPT: "bla",
-                CONF_LLM_HASS_API: ["assist"],
-            },
-            (
-                {
-                    CONF_RECOMMENDED: False,
-                    CONF_PROMPT: "Speak like a pirate",
-                },
-                {
-                    CONF_CHAT_MODEL: "claude-3-opus",
-                    CONF_TEMPERATURE: 1.0,
-                },
-            ),
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 1.0,
-                CONF_CHAT_MODEL: "claude-3-opus",
-                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
-            },
-        ),
-        (  # Model with web search options
+        pytest.param(  # Model with web search options
             {
                 CONF_RECOMMENDED: False,
                 CONF_CHAT_MODEL: "claude-sonnet-4-5",
                 CONF_PROMPT: "bla",
+                CONF_PROMPT_CACHING: "prompt",
+                CONF_TOOL_SEARCH: False,
+                CONF_WEB_FETCH: True,
+                CONF_WEB_FETCH_MAX_USES: 6,
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_MAX_USES: 4,
                 CONF_WEB_SEARCH_USER_LOCATION: True,
@@ -496,35 +771,102 @@ async def test_model_list_error(
                     CONF_LLM_HASS_API: [],
                 },
                 {
-                    CONF_CHAT_MODEL: "claude-3-5-haiku-latest",
-                    CONF_TEMPERATURE: 1.0,
+                    CONF_CHAT_MODEL: "claude-haiku-4-5",
+                    CONF_PROMPT_CACHING: "off",
                 },
                 {
+                    CONF_WEB_FETCH: False,
+                    CONF_WEB_FETCH_MAX_USES: 7,
                     CONF_WEB_SEARCH: False,
                     CONF_WEB_SEARCH_MAX_USES: 10,
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_CODE_EXECUTION: False,
                 },
             ),
             {
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 1.0,
-                CONF_CHAT_MODEL: "claude-3-5-haiku-latest",
+                CONF_LLM_HASS_API: [],
+                CONF_PROMPT_CACHING: "off",
+                CONF_CHAT_MODEL: "claude-haiku-4-5",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
+                CONF_THINKING_BUDGET: DEFAULT[CONF_THINKING_BUDGET],
+                CONF_WEB_FETCH: False,
+                CONF_WEB_FETCH_MAX_USES: 7,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_EXECUTION: False,
             },
+            id="disable_web_tools",
         ),
-        (  # Model with thinking budget options
+        pytest.param(  # Model with thinking budget options
             {
                 CONF_RECOMMENDED: False,
                 CONF_CHAT_MODEL: "claude-sonnet-4-5",
                 CONF_PROMPT: "bla",
+                CONF_LLM_HASS_API: ["assist"],
+                CONF_PROMPT_CACHING: "off",
+                CONF_TOOL_SEARCH: False,
+                CONF_WEB_FETCH: False,
+                CONF_WEB_FETCH_MAX_USES: 5,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
                 CONF_THINKING_BUDGET: 4096,
+                CONF_CODE_EXECUTION: True,
+            },
+            (
+                {
+                    CONF_RECOMMENDED: False,
+                    CONF_PROMPT: "Speak like a pirate",
+                },
+                {
+                    CONF_CHAT_MODEL: "claude-sonnet-4-5",
+                    CONF_PROMPT_CACHING: "automatic",
+                },
+                {
+                    CONF_WEB_FETCH: False,
+                    CONF_WEB_FETCH_MAX_USES: 8,
+                    CONF_WEB_SEARCH: False,
+                    CONF_WEB_SEARCH_MAX_USES: 10,
+                    CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_TOOL_SEARCH: True,
+                    CONF_CODE_EXECUTION: False,
+                    CONF_THINKING_BUDGET: 2048,
+                },
+            ),
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_PROMPT_CACHING: "automatic",
+                CONF_CHAT_MODEL: "claude-sonnet-4-5",
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
+                CONF_THINKING_BUDGET: 2048,
+                CONF_TOOL_SEARCH: True,
+                CONF_WEB_FETCH: False,
+                CONF_WEB_FETCH_MAX_USES: 8,
+                CONF_WEB_SEARCH: False,
+                CONF_WEB_SEARCH_MAX_USES: 10,
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_EXECUTION: False,
+            },
+            id="update_thinking_budget",
+        ),
+        pytest.param(  # Model with thinking effort options
+            {
+                CONF_RECOMMENDED: False,
+                CONF_CHAT_MODEL: "claude-fable-5",
+                CONF_PROMPT: "bla",
+                CONF_PROMPT_CACHING: "automatic",
+                CONF_TOOL_SEARCH: True,
+                CONF_WEB_FETCH: False,
+                CONF_WEB_FETCH_MAX_USES: 5,
+                CONF_WEB_SEARCH: False,
+                CONF_WEB_SEARCH_MAX_USES: 5,
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_EXECUTION: False,
+                CONF_THINKING_EFFORT: "max",
             },
             (
                 {
@@ -533,29 +875,39 @@ async def test_model_list_error(
                     CONF_LLM_HASS_API: [],
                 },
                 {
-                    CONF_CHAT_MODEL: "claude-sonnet-4-5",
-                    CONF_TEMPERATURE: 1.0,
+                    CONF_CHAT_MODEL: "claude-opus-4-7",
+                    CONF_PROMPT_CACHING: "prompt",
                 },
                 {
+                    CONF_WEB_FETCH: False,
+                    CONF_WEB_FETCH_MAX_USES: 9,
                     CONF_WEB_SEARCH: False,
                     CONF_WEB_SEARCH_MAX_USES: 10,
                     CONF_WEB_SEARCH_USER_LOCATION: False,
-                    CONF_THINKING_BUDGET: 2048,
+                    CONF_TOOL_SEARCH: False,
+                    CONF_CODE_EXECUTION: True,
+                    CONF_THINKING_EFFORT: "xhigh",
                 },
             ),
             {
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 1.0,
-                CONF_CHAT_MODEL: "claude-sonnet-4-5",
+                CONF_LLM_HASS_API: [],
+                CONF_PROMPT_CACHING: "prompt",
+                CONF_CHAT_MODEL: "claude-opus-4-7",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
-                CONF_THINKING_BUDGET: 2048,
+                CONF_THINKING_EFFORT: "xhigh",
+                CONF_TOOL_SEARCH: False,
+                CONF_WEB_FETCH: False,
+                CONF_WEB_FETCH_MAX_USES: 9,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_EXECUTION: True,
             },
+            id="update_thinking_effort",
         ),
-        (  # Test switching from recommended to custom options
+        pytest.param(  # Test switching from recommended to custom options
             {
                 CONF_RECOMMENDED: True,
                 CONF_PROMPT: "bla",
@@ -567,32 +919,43 @@ async def test_model_list_error(
                     CONF_LLM_HASS_API: [],
                 },
                 {
-                    CONF_TEMPERATURE: 0.3,
+                    CONF_CHAT_MODEL: "claude-haiku-4-5",
+                    CONF_PROMPT_CACHING: "automatic",
                 },
                 {},
             ),
             {
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 0.3,
-                CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
-                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
-                CONF_WEB_SEARCH: False,
-                CONF_WEB_SEARCH_MAX_USES: 5,
-                CONF_WEB_SEARCH_USER_LOCATION: False,
-            },
-        ),
-        (  # Test switching from custom to recommended options
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 0.3,
-                CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
+                CONF_LLM_HASS_API: [],
+                CONF_PROMPT_CACHING: "automatic",
+                CONF_CHAT_MODEL: "claude-haiku-4-5",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_THINKING_BUDGET: DEFAULT[CONF_THINKING_BUDGET],
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_WEB_FETCH: False,
+                CONF_WEB_FETCH_MAX_USES: 5,
+                CONF_CODE_EXECUTION: False,
+            },
+            id="recommended_to_custom",
+        ),
+        pytest.param(  # Test switching from custom to recommended options
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_PROMPT_CACHING: "off",
+                CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
+                CONF_THINKING_BUDGET: DEFAULT[CONF_THINKING_BUDGET],
+                CONF_TOOL_SEARCH: True,
+                CONF_WEB_FETCH: False,
+                CONF_WEB_FETCH_MAX_USES: 5,
+                CONF_WEB_SEARCH: False,
+                CONF_WEB_SEARCH_MAX_USES: 5,
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_EXECUTION: True,
             },
             (
                 {
@@ -606,16 +969,17 @@ async def test_model_list_error(
                 CONF_LLM_HASS_API: ["assist"],
                 CONF_PROMPT: "",
             },
+            id="custom_to_recommended",
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_init_component")
 async def test_subentry_options_switching(
     hass: HomeAssistant,
-    mock_config_entry,
-    mock_init_component,
-    current_options,
-    new_options,
-    expected_options,
+    mock_config_entry: MockConfigEntry,
+    current_options: dict[str, str | int | bool | list[str]],
+    new_options: tuple[dict[str, str | int | bool | list[str]], ...],
+    expected_options: dict[str, str | int | bool | list[str]],
 ) -> None:
     """Test the subentry options form."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -630,7 +994,7 @@ async def test_subentry_options_switching(
     assert subentry_flow["step_id"] == "init"
 
     for step_options in new_options:
-        assert subentry_flow["type"] == FlowResultType.FORM
+        assert subentry_flow["type"] is FlowResultType.FORM
         assert not subentry_flow["errors"]
 
         # Test that current options are showed as suggested values:
@@ -657,10 +1021,10 @@ async def test_subentry_options_switching(
     assert subentry.data == expected_options
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_creating_ai_task_subentry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
 ) -> None:
     """Test creating an AI task subentry."""
     old_subentries = set(mock_config_entry.subentries)
@@ -715,12 +1079,12 @@ async def test_ai_task_subentry_not_loaded(
     assert result.get("reason") == "entry_not_loaded"
 
 
-async def test_creating_ai_task_subentry_advanced(
+@pytest.mark.usefixtures("mock_init_component")
+async def test_creating_ai_task_subentry_additional(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
 ) -> None:
-    """Test creating an AI task subentry with advanced settings."""
+    """Test creating an AI task subentry with additional settings."""
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "ai_task_data"),
         context={"source": config_entries.SOURCE_USER},
@@ -729,7 +1093,7 @@ async def test_creating_ai_task_subentry_advanced(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "init"
 
-    # Go to advanced settings
+    # Go to additional settings
     result2 = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
@@ -739,15 +1103,13 @@ async def test_creating_ai_task_subentry_advanced(
     )
 
     assert result2.get("type") is FlowResultType.FORM
-    assert result2.get("step_id") == "advanced"
+    assert result2.get("step_id") == "additional"
 
-    # Configure advanced settings
+    # Configure additional settings
     result3 = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
             CONF_CHAT_MODEL: "claude-sonnet-4-5",
-            CONF_MAX_TOKENS: 200,
-            CONF_TEMPERATURE: 0.5,
         },
     )
 
@@ -758,6 +1120,7 @@ async def test_creating_ai_task_subentry_advanced(
     result4 = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
+            CONF_MAX_TOKENS: 1200,
             CONF_WEB_SEARCH: False,
         },
     )
@@ -767,10 +1130,97 @@ async def test_creating_ai_task_subentry_advanced(
     assert result4.get("data") == {
         CONF_RECOMMENDED: False,
         CONF_CHAT_MODEL: "claude-sonnet-4-5",
-        CONF_MAX_TOKENS: 200,
-        CONF_TEMPERATURE: 0.5,
+        CONF_MAX_TOKENS: 1200,
+        CONF_TOOL_SEARCH: False,
+        CONF_WEB_FETCH: False,
+        CONF_WEB_FETCH_MAX_USES: 5,
         CONF_WEB_SEARCH: False,
         CONF_WEB_SEARCH_MAX_USES: 5,
         CONF_WEB_SEARCH_USER_LOCATION: False,
-        CONF_THINKING_BUDGET: 0,
+        CONF_THINKING_BUDGET: 1024,
+        CONF_CODE_EXECUTION: False,
+        CONF_PROMPT_CACHING: "prompt",
     }
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth(
+    hass: HomeAssistant,
+) -> None:
+    """Test we can reauthenticate."""
+    # Pretend we already set up a config entry.
+    hass.config.components.add("anthropic")
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        state=config_entries.ConfigEntryState.LOADED,
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "new_api_key",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
+
+
+@pytest.mark.parametrize(
+    ("current_llm_apis", "suggested_llm_apis", "expected_options"),
+    [
+        pytest.param("assist", ["assist"], ["assist"], id="assist_string"),
+        pytest.param(["assist"], ["assist"], ["assist"], id="assist_list"),
+        pytest.param("non-existent", [], ["assist"], id="unknown_string"),
+        pytest.param(["non-existent"], [], ["assist"], id="unknown_list"),
+        pytest.param(
+            ["assist", "non-existent"], ["assist"], ["assist"], id="mixed_list"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_init_component")
+async def test_reconfigure_conversation_subentry_llm_api_schema(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    current_llm_apis: str | list[str],
+    suggested_llm_apis: list[str],
+    expected_options: list[str],
+) -> None:
+    """Test llm_hass_api field values when reconfiguring a conversation subentry."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={CONF_LLM_HASS_API: current_llm_apis},
+    )
+    await hass.async_block_till_done()
+
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "init"
+
+    # Only valid LLM APIs should be suggested and shown as options
+    schema = subentry_flow["data_schema"].schema
+    key = next(k for k in schema if k == CONF_LLM_HASS_API)
+    assert key.description
+    assert key.description.get("suggested_value") == suggested_llm_apis
+    field_schema = schema[key]
+    assert field_schema.config
+    assert [
+        opt["value"] for opt in field_schema.config.get("options")
+    ] == expected_options

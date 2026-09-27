@@ -1,10 +1,8 @@
 """Static file handling for HTTP component."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Final
+from typing import Final, override
 
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.web import FileResponse, Request, StreamResponse
@@ -23,6 +21,7 @@ _GUESSER = CONTENT_TYPES.guess_file_type
 class CachingStaticResource(StaticResource):
     """Static Resource handler that will add cache headers."""
 
+    @override
     async def _handle(self, request: Request) -> StreamResponse:
         """Wrap base handler to cache file path resolution and content type guess."""
         rel_url = request.match_info["filename"]

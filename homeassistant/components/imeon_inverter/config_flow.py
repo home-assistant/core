@@ -1,11 +1,11 @@
 """Config flow for Imeon integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from imeon_inverter_api.inverter import Inverter
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -26,6 +26,7 @@ class ImeonInverterConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _host: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -75,21 +76,22 @@ class ImeonInverterConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
 
         host_schema: VolDictType = (
-            {vol.Required(CONF_HOST): str} if not self._host else {}
+            {probatio.Required(CONF_HOST): str} if not self._host else {}
         )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
                     **host_schema,
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:

@@ -13,7 +13,6 @@ from tests.typing import ClientSessionGenerator
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    bypass_api_fixture,
     setup_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:

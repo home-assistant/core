@@ -232,7 +232,7 @@ async def test_input_text_context(
 ) -> None:
     """Test that input_text context works."""
     assert await async_setup_component(
-        hass, "input_text", {"input_text": {"t1": {"initial": "bla"}}}
+        hass, DOMAIN, {"input_text": {"t1": {"initial": "bla"}}}
     )
 
     state = hass.states.get("input_text.t1")
@@ -297,7 +297,7 @@ async def test_reload(
         autospec=True,
         return_value={
             DOMAIN: {
-                "test_2": {"initial": "test reloaded", ATTR_MIN: 12},
+                "test_2": {"initial": "test reloaded", ATTR_MIN: 6},
                 "test_3": {"initial": "test 3", ATTR_MAX: 21},
             }
         },
@@ -326,7 +326,7 @@ async def test_reload(
     assert state_1 is None
     assert state_2 is not None
     assert state_3 is not None
-    assert state_2.attributes[ATTR_MIN] == 12
+    assert state_2.attributes[ATTR_MIN] == 6
     assert state_3.attributes[ATTR_MAX] == 21
 
 

@@ -1,15 +1,13 @@
 """Config flow for Homeassistant Analytics integration."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
+import probatio
 from python_homeassistant_analytics import (
     HomeassistantAnalyticsClient,
     HomeassistantAnalyticsConnectionError,
 )
 from python_homeassistant_analytics.models import Environment, IntegrationType
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -26,7 +24,7 @@ from homeassistant.helpers.selector import (
 
 from . import AnalyticsInsightsConfigEntry
 from .const import (
-    CONF_TRACKED_ADDONS,
+    CONF_TRACKED_APPS,
     CONF_TRACKED_CUSTOM_INTEGRATIONS,
     CONF_TRACKED_INTEGRATIONS,
     DOMAIN,
@@ -43,14 +41,18 @@ INTEGRATION_TYPES_WITHOUT_ANALYTICS = (
 class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Homeassistant Analytics."""
 
+    VERSION = 2
+
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: AnalyticsInsightsConfigEntry,
     ) -> HomeassistantAnalyticsOptionsFlowHandler:
         """Get the options flow for this handler."""
         return HomeassistantAnalyticsOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -59,7 +61,7 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if all(
                 [
-                    not user_input.get(CONF_TRACKED_ADDONS),
+                    not user_input.get(CONF_TRACKED_APPS),
                     not user_input.get(CONF_TRACKED_INTEGRATIONS),
                     not user_input.get(CONF_TRACKED_CUSTOM_INTEGRATIONS),
                 ]
@@ -70,7 +72,7 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
                     title="Home Assistant Analytics Insights",
                     data={},
                     options={
-                        CONF_TRACKED_ADDONS: user_input.get(CONF_TRACKED_ADDONS, []),
+                        CONF_TRACKED_APPS: user_input.get(CONF_TRACKED_APPS, []),
                         CONF_TRACKED_INTEGRATIONS: user_input.get(
                             CONF_TRACKED_INTEGRATIONS, []
                         ),
@@ -84,7 +86,7 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
             session=async_get_clientsession(self.hass)
         )
         try:
-            addons = await client.get_addons()
+            apps = await client.get_addons()
             integrations = await client.get_integrations(Environment.NEXT)
             custom_integrations = await client.get_custom_integrations()
         except HomeassistantAnalyticsConnectionError:
@@ -105,23 +107,23 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             errors=errors,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_TRACKED_ADDONS): SelectSelector(
+                    probatio.Optional(CONF_TRACKED_APPS): SelectSelector(
                         SelectSelectorConfig(
-                            options=list(addons),
+                            options=list(apps),
                             multiple=True,
                             sort=True,
                         )
                     ),
-                    vol.Optional(CONF_TRACKED_INTEGRATIONS): SelectSelector(
+                    probatio.Optional(CONF_TRACKED_INTEGRATIONS): SelectSelector(
                         SelectSelectorConfig(
                             options=options,
                             multiple=True,
                             sort=True,
                         )
                     ),
-                    vol.Optional(CONF_TRACKED_CUSTOM_INTEGRATIONS): SelectSelector(
+                    probatio.Optional(CONF_TRACKED_CUSTOM_INTEGRATIONS): SelectSelector(
                         SelectSelectorConfig(
                             options=list(custom_integrations),
                             multiple=True,
@@ -144,7 +146,7 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithReload):
         if user_input is not None:
             if all(
                 [
-                    not user_input.get(CONF_TRACKED_ADDONS),
+                    not user_input.get(CONF_TRACKED_APPS),
                     not user_input.get(CONF_TRACKED_INTEGRATIONS),
                     not user_input.get(CONF_TRACKED_CUSTOM_INTEGRATIONS),
                 ]
@@ -154,7 +156,7 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithReload):
                 return self.async_create_entry(
                     title="",
                     data={
-                        CONF_TRACKED_ADDONS: user_input.get(CONF_TRACKED_ADDONS, []),
+                        CONF_TRACKED_APPS: user_input.get(CONF_TRACKED_APPS, []),
                         CONF_TRACKED_INTEGRATIONS: user_input.get(
                             CONF_TRACKED_INTEGRATIONS, []
                         ),
@@ -168,7 +170,7 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithReload):
             session=async_get_clientsession(self.hass)
         )
         try:
-            addons = await client.get_addons()
+            apps = await client.get_addons()
             integrations = await client.get_integrations(Environment.NEXT)
             custom_integrations = await client.get_custom_integrations()
         except HomeassistantAnalyticsConnectionError:
@@ -187,23 +189,25 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithReload):
             step_id="init",
             errors=errors,
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Optional(CONF_TRACKED_ADDONS): SelectSelector(
+                        probatio.Optional(CONF_TRACKED_APPS): SelectSelector(
                             SelectSelectorConfig(
-                                options=list(addons),
+                                options=list(apps),
                                 multiple=True,
                                 sort=True,
                             )
                         ),
-                        vol.Optional(CONF_TRACKED_INTEGRATIONS): SelectSelector(
+                        probatio.Optional(CONF_TRACKED_INTEGRATIONS): SelectSelector(
                             SelectSelectorConfig(
                                 options=options,
                                 multiple=True,
                                 sort=True,
                             )
                         ),
-                        vol.Optional(CONF_TRACKED_CUSTOM_INTEGRATIONS): SelectSelector(
+                        probatio.Optional(
+                            CONF_TRACKED_CUSTOM_INTEGRATIONS
+                        ): SelectSelector(
                             SelectSelectorConfig(
                                 options=list(custom_integrations),
                                 multiple=True,

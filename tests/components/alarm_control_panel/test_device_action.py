@@ -25,11 +25,6 @@ from tests.common import (
 )
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.mark.parametrize(
     ("set_state", "features_reg", "features_state", "expected_action_types"),
     [
@@ -106,7 +101,9 @@ async def test_get_actions(
     )
     if set_state:
         hass.states.async_set(
-            f"{DOMAIN}.test_5678", "attributes", {"supported_features": features_state}
+            entity_entry.entity_id,
+            "attributes",
+            {"supported_features": features_state},
         )
     expected_actions = [
         {
@@ -189,7 +186,7 @@ async def test_get_actions_arm_night_only(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
     hass.states.async_set(
-        "alarm_control_panel.test_5678", "attributes", {"supported_features": 4}
+        entity_entry.entity_id, "attributes", {"supported_features": 4}
     )
     expected_actions = [
         {

@@ -3505,7 +3505,10 @@ async def test_no_current_target_temp_adjusting_temp(hass: HomeAssistant) -> Non
 
 
 async def test_thermostat_dual(hass: HomeAssistant) -> None:
-    """Test thermostat discovery with auto mode, with upper and lower target temperatures."""
+    """Test thermostat discovery with auto mode.
+
+    Uses upper and lower target temperatures.
+    """
     hass.config.units = US_CUSTOMARY_SYSTEM
     device = (
         "climate.test_thermostat",
@@ -3657,31 +3660,6 @@ async def test_include_filters(hass: HomeAssistant) -> None:
     msg = msg["event"]
 
     assert len(msg["payload"]["endpoints"]) == 3
-
-
-async def test_never_exposed_entities(hass: HomeAssistant) -> None:
-    """Test never exposed locks do not get discovered."""
-    request = get_new_request("Alexa.Discovery", "Discover")
-
-    # setup test devices
-    hass.states.async_set("group.all_locks", "on", {"friendly_name": "Blocked locks"})
-
-    hass.states.async_set("group.allow", "off", {"friendly_name": "Allowed group"})
-
-    alexa_config = MockConfig(hass)
-    alexa_config.should_expose = entityfilter.generate_filter(
-        include_domains=["group"],
-        include_entities=[],
-        exclude_domains=[],
-        exclude_entities=[],
-    )
-
-    msg = await smart_home.async_handle_message(hass, alexa_config, request)
-    await hass.async_block_till_done()
-
-    msg = msg["event"]
-
-    assert len(msg["payload"]["endpoints"]) == 1
 
 
 async def test_api_entity_not_exists(hass: HomeAssistant) -> None:

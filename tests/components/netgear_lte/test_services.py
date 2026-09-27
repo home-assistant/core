@@ -2,9 +2,12 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.netgear_lte.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from .conftest import HOST
 
@@ -54,3 +57,15 @@ async def test_set_option(hass: HomeAssistant, setup_integration: None) -> None:
             blocking=True,
         )
     assert len(mock_client.mock_calls) == 1
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            "delete_sms",
+            {CONF_HOST: "no-match", "sms_id": 1},
+            blocking=True,
+        )

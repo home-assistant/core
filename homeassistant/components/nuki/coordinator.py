@@ -1,11 +1,11 @@
 """Coordinator for the nuki component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from pynuki import NukiBridge, NukiLock, NukiOpener
 from pynuki.bridge import InvalidCredentialsException
@@ -25,16 +25,28 @@ _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=30)
 
+type NukiConfigEntry = ConfigEntry[NukiEntryData]
+
+
+@dataclass(slots=True)
+class NukiEntryData:
+    """Class to hold Nuki data."""
+
+    coordinator: NukiCoordinator
+    bridge: NukiBridge
+    locks: list[NukiLock]
+    openers: list[NukiOpener]
+
 
 class NukiCoordinator(DataUpdateCoordinator[None]):
     """Data Update Coordinator for the Nuki integration."""
 
-    config_entry: ConfigEntry
+    config_entry: NukiConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: NukiConfigEntry,
         bridge: NukiBridge,
         locks: list[NukiLock],
         openers: list[NukiOpener],
@@ -56,6 +68,7 @@ class NukiCoordinator(DataUpdateCoordinator[None]):
         """Return the parsed id of the Nuki bridge."""
         return parse_id(self.bridge.info()["ids"]["hardwareId"])
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from Nuki bridge."""
         try:
@@ -86,7 +99,8 @@ class NukiCoordinator(DataUpdateCoordinator[None]):
         """Update the Nuki devices.
 
         Returns:
-            A dict with the events to be fired. The event type is the key and the device ids are the value
+            A dict with the events to be fired. The event
+            type is the key and the device ids are the value
 
         """
 

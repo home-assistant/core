@@ -1,4 +1,15 @@
 {
+  "conditions": {
+    "config_parameter": {
+      "condition": "mdi:cog"
+    },
+    "node_status": {
+      "condition": "mdi:heart-pulse"
+    },
+    "value": {
+      "condition": "mdi:update"
+    }
+  },
   "entity": {
     "button": {
       "ping": {
@@ -63,6 +74,27 @@
     "clear_lock_usercode": {
       "service": "mdi:eraser"
     },
+    "delete_all_credentials": {
+      "service": "mdi:eraser-variant"
+    },
+    "delete_all_users": {
+      "service": "mdi:account-remove"
+    },
+    "delete_credential": {
+      "service": "mdi:eraser"
+    },
+    "delete_user": {
+      "service": "mdi:account-remove"
+    },
+    "get_credential_capabilities": {
+      "service": "mdi:information"
+    },
+    "get_lock_usercode": {
+      "service": "mdi:lock-smart"
+    },
+    "get_users": {
+      "service": "mdi:account-group"
+    },
     "invoke_cc_api": {
       "service": "mdi:api"
     },
@@ -84,14 +116,28 @@
     "set_config_parameter": {
       "service": "mdi:cog"
     },
+    "set_credential": {
+      "service": "mdi:lock-smart"
+    },
     "set_lock_configuration": {
       "service": "mdi:shield-lock"
     },
     "set_lock_usercode": {
       "service": "mdi:lock-smart"
     },
+    "set_user": {
+      "service": "mdi:account-plus"
+    },
     "set_value": {
       "service": "mdi:form-textbox"
+    }
+  },
+  "triggers": {
+    "event": {
+      "trigger": "mdi:z-wave"
+    },
+    "value_updated": {
+      "trigger": "mdi:update"
     }
   }
 }

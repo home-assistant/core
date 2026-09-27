@@ -1,7 +1,5 @@
 """The Hong Kong Observatory integration."""
 
-from __future__ import annotations
-
 from hko import LOCATIONS
 
 from homeassistant.const import CONF_LOCATION, Platform

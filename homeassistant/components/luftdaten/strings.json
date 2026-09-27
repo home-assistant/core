@@ -21,5 +21,16 @@
     "sensor": {
       "pressure_at_sealevel": { "name": "Pressure at sea level" }
     }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the Sensor.Community service."
+    },
+    "no_data_received": {
+      "message": "Did not receive sensor data from the Sensor.Community service."
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with the Sensor.Community service."
+    }
   }
 }

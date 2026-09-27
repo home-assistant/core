@@ -1,13 +1,11 @@
 """Config flow for Matter integration."""
 
-from __future__ import annotations
-
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from matter_server.client import MatterClient
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.hassio import (
     AddonError,
@@ -39,13 +37,15 @@ ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 40
 DEFAULT_URL = "ws://localhost:5580/ws"
 DEFAULT_TITLE = "Matter"
-ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
+ON_SUPERVISOR_SCHEMA = probatio.Schema(
+    {probatio.Optional(CONF_USE_ADDON, default=True): bool}
+)
 
 
-def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
+def get_manual_schema(user_input: dict[str, Any]) -> probatio.Schema:
     """Return a schema for the manual step."""
     default_url = user_input.get(CONF_URL, DEFAULT_URL)
-    return vol.Schema({vol.Required(CONF_URL, default=default_url): str})
+    return probatio.Schema({probatio.Required(CONF_URL, default=default_url): str})
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
@@ -196,6 +196,7 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return addon_info
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -234,6 +235,7 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="manual", data_schema=get_manual_schema(user_input), errors=errors
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -246,6 +248,7 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         return await self._async_step_discovery_without_unique_id()
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
@@ -290,10 +293,10 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         addon_info = await self._async_get_addon_info()
 
-        if addon_info.state == AddonState.RUNNING:
+        if addon_info.state is AddonState.RUNNING:
             return await self.async_step_finish_addon_setup()
 
-        if addon_info.state == AddonState.NOT_RUNNING:
+        if addon_info.state is AddonState.NOT_RUNNING:
             return await self.async_step_start_addon()
 
         return await self.async_step_install_addon()

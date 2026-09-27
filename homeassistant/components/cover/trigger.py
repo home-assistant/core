@@ -1,113 +1,113 @@
 """Provides triggers for covers."""
 
-from typing import Final
+from collections.abc import Mapping
+from typing import override
 
-import voluptuous as vol
-
-from homeassistant.const import CONF_OPTIONS
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.trigger import (
-    ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST,
     EntityTriggerBase,
+    NotTriggeredReasonReporter,
     Trigger,
-    TriggerConfig,
-)
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
-
-from . import ATTR_CURRENT_POSITION, CoverDeviceClass, CoverState
-from .const import DOMAIN
-
-ATTR_FULLY_OPENED: Final = "fully_opened"
-
-COVER_OPENED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
-    {
-        vol.Required(CONF_OPTIONS): {
-            vol.Required(ATTR_FULLY_OPENED, default=False): bool,
-        },
-    }
 )
 
-
-def get_device_class_or_undefined(
-    hass: HomeAssistant, entity_id: str
-) -> str | None | UndefinedType:
-    """Get the device class of an entity or UNDEFINED if not found."""
-    try:
-        return get_device_class(hass, entity_id)
-    except HomeAssistantError:
-        return UNDEFINED
+from .const import DOMAIN, CoverDeviceClass, CoverEntityStateAttribute
+from .models import CoverDomainSpec
 
 
-class CoverOpenedClosedTrigger(EntityTriggerBase):
-    """Class for cover opened and closed triggers."""
+class CoverTriggerBase(EntityTriggerBase):
+    """Base trigger for cover state changes."""
 
-    _attribute: str = ATTR_CURRENT_POSITION
-    _attribute_value: int | None = None
-    _device_class: CoverDeviceClass | None
-    _domain: str = DOMAIN
-    _to_states: set[str]
+    _domain_specs: Mapping[str, CoverDomainSpec]
 
-    def is_to_state(self, state: State) -> bool:
-        """Check if the state matches the target state."""
-        if state.state not in self._to_states:
+    def _get_value(self, state: State) -> str | bool | None:
+        """Extract the relevant value from state based on domain spec."""
+        domain_spec = self._domain_specs[state.domain]
+        if domain_spec.value_source is not None:
+            return state.attributes.get(domain_spec.value_source)
+        return state.state
+
+    @override
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
+        """Check if the state matches the target cover state."""
+        domain_spec = self._domain_specs[state.domain]
+        return self._get_value(state) == domain_spec.target_value
+
+    @override
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check that the relevant cover value changed."""
+        if (from_value := self._get_value(from_state)) is None:
             return False
-        if (
-            self._attribute_value is not None
-            and (value := state.attributes.get(self._attribute)) is not None
-            and value != self._attribute_value
-        ):
-            return False
-        return True
-
-    def entity_filter(self, entities: set[str]) -> set[str]:
-        """Filter entities of this domain."""
-        entities = super().entity_filter(entities)
-        return {
-            entity_id
-            for entity_id in entities
-            if get_device_class_or_undefined(self._hass, entity_id)
-            == self._device_class
-        }
-
-
-class CoverOpenedTrigger(CoverOpenedClosedTrigger):
-    """Class for cover opened triggers."""
-
-    _schema = COVER_OPENED_TRIGGER_SCHEMA
-    _to_states = {CoverState.OPEN, CoverState.OPENING}
-
-    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
-        """Initialize the state trigger."""
-        super().__init__(hass, config)
-        if self._options.get(ATTR_FULLY_OPENED):
-            self._attribute_value = 100
+        return from_value != self._get_value(to_state)
 
 
 def make_cover_opened_trigger(
-    device_class: CoverDeviceClass | None,
-) -> type[CoverOpenedTrigger]:
-    """Create an entity state attribute trigger class."""
+    *, device_classes: dict[str, str]
+) -> type[CoverTriggerBase]:
+    """Create a trigger cover_opened."""
 
-    class CustomTrigger(CoverOpenedTrigger):
-        """Trigger for entity state changes."""
+    class CoverOpenedTrigger(CoverTriggerBase):
+        """Trigger for cover opened state changes."""
 
-        _device_class = device_class
+        _domain_specs = {
+            domain: CoverDomainSpec(
+                device_class=dc,
+                value_source=(
+                    CoverEntityStateAttribute.IS_CLOSED if domain == DOMAIN else None
+                ),
+                target_value=False if domain == DOMAIN else STATE_ON,
+            )
+            for domain, dc in device_classes.items()
+        }
 
-    return CustomTrigger
+    return CoverOpenedTrigger
 
+
+def make_cover_closed_trigger(
+    *, device_classes: dict[str, str]
+) -> type[CoverTriggerBase]:
+    """Create a trigger cover_closed."""
+
+    class CoverClosedTrigger(CoverTriggerBase):
+        """Trigger for cover closed state changes."""
+
+        _domain_specs = {
+            domain: CoverDomainSpec(
+                device_class=dc,
+                value_source=(
+                    CoverEntityStateAttribute.IS_CLOSED if domain == DOMAIN else None
+                ),
+                target_value=True if domain == DOMAIN else STATE_OFF,
+            )
+            for domain, dc in device_classes.items()
+        }
+
+    return CoverClosedTrigger
+
+
+# Concrete triggers for cover device classes (cover-only, no binary sensor)
+
+DEVICE_CLASSES_AWNING: dict[str, str] = {DOMAIN: CoverDeviceClass.AWNING}
+DEVICE_CLASSES_BLIND: dict[str, str] = {DOMAIN: CoverDeviceClass.BLIND}
+DEVICE_CLASSES_CURTAIN: dict[str, str] = {DOMAIN: CoverDeviceClass.CURTAIN}
+DEVICE_CLASSES_SHADE: dict[str, str] = {DOMAIN: CoverDeviceClass.SHADE}
+DEVICE_CLASSES_SHUTTER: dict[str, str] = {DOMAIN: CoverDeviceClass.SHUTTER}
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "awning_opened": make_cover_opened_trigger(CoverDeviceClass.AWNING),
-    "blind_opened": make_cover_opened_trigger(CoverDeviceClass.BLIND),
-    "curtain_opened": make_cover_opened_trigger(CoverDeviceClass.CURTAIN),
-    "door_opened": make_cover_opened_trigger(CoverDeviceClass.DOOR),
-    "garage_opened": make_cover_opened_trigger(CoverDeviceClass.GARAGE),
-    "gate_opened": make_cover_opened_trigger(CoverDeviceClass.GATE),
-    "shade_opened": make_cover_opened_trigger(CoverDeviceClass.SHADE),
-    "shutter_opened": make_cover_opened_trigger(CoverDeviceClass.SHUTTER),
-    "window_opened": make_cover_opened_trigger(CoverDeviceClass.WINDOW),
+    "awning_opened": make_cover_opened_trigger(device_classes=DEVICE_CLASSES_AWNING),
+    "awning_closed": make_cover_closed_trigger(device_classes=DEVICE_CLASSES_AWNING),
+    "blind_opened": make_cover_opened_trigger(device_classes=DEVICE_CLASSES_BLIND),
+    "blind_closed": make_cover_closed_trigger(device_classes=DEVICE_CLASSES_BLIND),
+    "curtain_opened": make_cover_opened_trigger(device_classes=DEVICE_CLASSES_CURTAIN),
+    "curtain_closed": make_cover_closed_trigger(device_classes=DEVICE_CLASSES_CURTAIN),
+    "shade_opened": make_cover_opened_trigger(device_classes=DEVICE_CLASSES_SHADE),
+    "shade_closed": make_cover_closed_trigger(device_classes=DEVICE_CLASSES_SHADE),
+    "shutter_opened": make_cover_opened_trigger(device_classes=DEVICE_CLASSES_SHUTTER),
+    "shutter_closed": make_cover_closed_trigger(device_classes=DEVICE_CLASSES_SHUTTER),
 }
 
 

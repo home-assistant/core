@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aioautomower.model import MowerAttributes, WorkArea
 from aioautomower.session import AutomowerSession
@@ -171,11 +171,13 @@ class AutomowerNumberEntity(AutomowerControlEntity, NumberEntity):
         self._attr_unique_id = f"{mower_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the number."""
         return self.entity_description.value_fn(self.mower_attributes)
 
     @handle_sending_exception()
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         await self.entity_description.set_value_fn(
@@ -199,11 +201,15 @@ class WorkAreaNumberEntity(WorkAreaControlEntity, NumberEntity):
         super().__init__(mower_id, coordinator, work_area_id)
         self.entity_description = description
         self._attr_unique_id = f"{mower_id}_{work_area_id}_{description.key}"
+        if TYPE_CHECKING:
+            # Work area does not get created if it is None
+            assert self.work_area_attributes is not None
         self._attr_translation_placeholders = {
             "work_area": self.work_area_attributes.name
         }
 
     @property
+    @override
     def translation_key(self) -> str:
         """Return the translation key of the work area."""
         return self.entity_description.translation_key_fn(
@@ -211,11 +217,15 @@ class WorkAreaNumberEntity(WorkAreaControlEntity, NumberEntity):
         )
 
     @property
-    def native_value(self) -> float:
+    @override
+    def native_value(self) -> float | None:
         """Return the state of the number."""
-        return self.entity_description.value_fn(self.work_area_attributes)
+        if (work_area := self.work_area_attributes) is None:
+            return None
+        return self.entity_description.value_fn(work_area)
 
     @handle_sending_exception(poll_after_sending=True)
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         await self.entity_description.set_value_fn(

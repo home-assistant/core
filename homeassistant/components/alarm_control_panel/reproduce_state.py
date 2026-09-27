@@ -1,7 +1,5 @@
 """Reproduce an Alarm control panel state."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 import logging
@@ -19,7 +17,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, State
 
-from . import DOMAIN, AlarmControlPanelState
+from . import AlarmControlPanelState
+from .const import DOMAIN
 
 _LOGGER: Final = logging.getLogger(__name__)
 

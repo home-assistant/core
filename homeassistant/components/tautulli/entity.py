@@ -1,7 +1,5 @@
 """The Tautulli integration."""
 
-from __future__ import annotations
-
 from pytautulli import PyTautulliApiUser
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo

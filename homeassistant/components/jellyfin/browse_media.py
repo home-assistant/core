@@ -1,7 +1,5 @@
 """Support for media browsing."""
 
-from __future__ import annotations
-
 import asyncio
 from functools import partial
 from typing import Any
@@ -22,6 +20,7 @@ from .const import (
     CONTENT_TYPE_MAP,
     MEDIA_CLASS_MAP,
     MEDIA_TYPE_NONE,
+    SEARCH_ITEM_TYPE_MAP,
     SUPPORTED_COLLECTION_TYPES,
 )
 
@@ -38,6 +37,8 @@ PLAYABLE_MEDIA_TYPES = [
     MediaType.EPISODE,
     MediaType.MOVIE,
     MediaType.MUSIC,
+    MediaType.SEASON,
+    MediaType.TVSHOW,
 ]
 
 
@@ -94,16 +95,15 @@ async def build_item_response(
     hass: HomeAssistant,
     client: JellyfinClient,
     user_id: str,
-    media_content_type: str | None,
     media_content_id: str,
 ) -> BrowseMedia:
     """Create response payload for the provided media query."""
-    title, media, thumbnail = await get_media_info(
-        hass, client, user_id, media_content_type, media_content_id
+    title, media, thumbnail, media_type = await get_media_info(
+        hass, client, user_id, media_content_id
     )
 
     if title is None or media is None:
-        raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
+        raise BrowseError(f"Media not found: {media_content_id}")
 
     children = await asyncio.gather(
         *(item_payload(hass, client, user_id, media_item) for media_item in media)
@@ -111,12 +111,12 @@ async def build_item_response(
 
     response = BrowseMedia(
         media_class=CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS.get(
-            str(media_content_type), MediaClass.DIRECTORY
+            str(media_type), MediaClass.DIRECTORY
         ),
         media_content_id=media_content_id,
-        media_content_type=str(media_content_type),
+        media_content_type=str(media_type),
         title=title,
-        can_play=bool(media_content_type in PLAYABLE_MEDIA_TYPES and media_content_id),
+        can_play=bool(media_type in PLAYABLE_MEDIA_TYPES and media_content_id),
         can_expand=True,
         children=children,
         thumbnail=thumbnail,
@@ -166,9 +166,18 @@ async def search_items(
 
     items: list[dict[str, Any]] = []
     # Search for items based on media filter classes (or all if none specified)
-    media_types: list[MediaClass] | list[None] = []
+    media_types: list[str] | list[None] = []
     if query.media_filter_classes:
-        media_types = query.media_filter_classes
+        # Jellyfin ignores unknown item types and returns unfiltered results,
+        # so skip classes that have no Jellyfin item type. Classes can share an
+        # item type, so search each item type once.
+        media_types = list(
+            dict.fromkeys(
+                ",".join(SEARCH_ITEM_TYPE_MAP[media_class])
+                for media_class in query.media_filter_classes
+                if media_class in SEARCH_ITEM_TYPE_MAP
+            )
+        )
     else:
         media_types = [None]
 
@@ -207,18 +216,18 @@ async def get_media_info(
     hass: HomeAssistant,
     client: JellyfinClient,
     user_id: str,
-    media_content_type: str | None,
     media_content_id: str,
-) -> tuple[str | None, list[dict[str, Any]] | None, str | None]:
+) -> tuple[str | None, list[dict[str, Any]] | None, str | None, str | None]:
     """Fetch media info."""
     thumbnail: str | None = None
     title: str | None = None
     media: list[dict[str, Any]] | None = None
+    media_type: str | None = None
 
     item = await hass.async_add_executor_job(fetch_item, client, media_content_id)
 
     if item is None:
-        return None, None, None
+        return None, None, None, None
 
     title = item["Name"]
     thumbnail = get_artwork_url(client, item)
@@ -231,4 +240,6 @@ async def get_media_info(
     if not media or len(media) == 0:
         media = None
 
-    return title, media, thumbnail
+    media_type = CONTENT_TYPE_MAP.get(item["Type"], MEDIA_TYPE_NONE)
+
+    return title, media, thumbnail, media_type

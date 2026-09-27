@@ -6,7 +6,10 @@ from unittest.mock import patch
 
 from aiohttp import ClientSession, ClientWebSocketResponse
 from freezegun.api import FrozenDateTimeFactory
+from PIL import Image
+import pytest
 
+from homeassistant.components.image_upload import DOMAIN
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -31,7 +34,7 @@ async def test_upload_image(
         tempfile.TemporaryDirectory() as tempdir,
         patch.object(hass.config, "path", return_value=tempdir),
     ):
-        assert await async_setup_component(hass, "image_upload", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         ws_client: ClientWebSocketResponse = await hass_ws_client()
         client: ClientSession = await hass_client()
 
@@ -93,3 +96,57 @@ async def test_upload_image(
 
         # Ensure removed from disk
         assert not item_folder.is_dir()
+
+
+@pytest.mark.parametrize(
+    ("image_mode", "content_type"),
+    [
+        ("RGBA", "image/jpeg"),
+        ("LA", "image/jpeg"),
+        ("P", "image/jpeg"),
+    ],
+)
+async def test_upload_image_thumbnail_rgba_as_jpeg(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    hass_client: ClientSessionGenerator,
+    image_mode: str,
+    content_type: str,
+) -> None:
+    """Test thumbnail generation when image mode is incompatible with JPEG."""
+    now = dt_util.utcnow()
+    freezer.move_to(now)
+
+    with (
+        tempfile.TemporaryDirectory() as tempdir,
+        patch.object(hass.config, "path", return_value=tempdir),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        client: ClientSession = await hass_client()
+
+        with TEST_IMAGE.open("rb") as fp:
+            res = await client.post("/api/image/upload", data={"file": fp})
+
+        assert res.status == 200
+        item = await res.json()
+        image_id = item["id"]
+
+        tempdir = pathlib.Path(tempdir)
+        item_folder = tempdir / image_id
+
+        # Create an image file with the given mode to simulate the mismatch
+        original_path = item_folder / "original"
+        img = Image.new(image_mode, (300, 300))
+        img.save(original_path, format="png")
+
+        # Change the stored content_type to simulate the mismatch
+        hass.data[DOMAIN].data[image_id]["content_type"] = content_type
+
+        # Fetch the thumbnail; this should not raise an OSError
+        res = await client.get(f"/api/image/serve/{image_id}/256x256")
+        assert res.status == 200
+        assert (item_folder / "256x256").is_file()
+
+        # Verify the generated thumbnail is a valid JPEG
+        thumbnail = Image.open(item_folder / "256x256")
+        assert thumbnail.mode == "RGB"

@@ -1,7 +1,5 @@
 """Diagnostics support for Whirlpool."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from whirlpool.appliance import Appliance
@@ -12,13 +10,31 @@ from homeassistant.core import HomeAssistant
 from . import WhirlpoolConfigEntry
 
 TO_REDACT = {
+    "MAC_Address",
+    "SAID",
     "SERIAL_NUMBER",
+    "Serial",
+    "SerialNumber",
+    "UserId",
+    "WifiMacAddress",
+    "XCat_ApplianceInfoSetSerialNumber",
+    "XCat_PersistentInfoMacAddress",
+    "XCat_PersistentInfoSaid",
+    "_id",
+    "applianceId",
     "macaddress",
-    "username",
     "password",
+    "said",
+    "serial",
+    "serialNumber",
+    "serial_number",
+    "thingName",
     "token",
     "unique_id",
-    "SAID",
+    "userId",
+    "username",
+    "wifiMacAddress",
+    "wifi_mac",
 }
 
 
@@ -30,9 +46,9 @@ async def async_get_config_entry_diagnostics(
 
     def get_appliance_diagnostics(appliance: Appliance) -> dict[str, Any]:
         return {
-            "data_model": appliance.appliance_info.data_model,
             "category": appliance.appliance_info.category,
             "model_number": appliance.appliance_info.model_number,
+            "raw": appliance.get_raw_data(),
         }
 
     appliances_manager = config_entry.runtime_data
@@ -51,6 +67,10 @@ async def async_get_config_entry_diagnostics(
         "ovens": {
             oven.name: get_appliance_diagnostics(oven)
             for oven in appliances_manager.ovens
+        },
+        "refrigerators": {
+            refrigerator.name: get_appliance_diagnostics(refrigerator)
+            for refrigerator in appliances_manager.refrigerators
         },
     }
 

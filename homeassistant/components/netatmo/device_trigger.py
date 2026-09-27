@@ -1,8 +1,6 @@
 """Provides device automations for Netatmo."""
 
-from __future__ import annotations
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
@@ -57,9 +55,9 @@ TRIGGER_TYPES = OUTDOOR_CAMERA_TRIGGERS + INDOOR_CAMERA_TRIGGERS + CLIMATE_TRIGG
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
-        vol.Optional(CONF_SUBTYPE): str,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): probatio.In(TRIGGER_TYPES),
+        probatio.Optional(CONF_SUBTYPE): str,
     }
 )
 
@@ -71,7 +69,9 @@ async def async_validate_trigger_config(
     config = TRIGGER_SCHEMA(config)
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get(config[CONF_DEVICE_ID])
+    device = device_registry.async_get(
+        config[CONF_DEVICE_ID], include_child_devices=False
+    )
 
     if not device or device.model is None:
         raise InvalidDeviceAutomationConfig(
@@ -100,7 +100,7 @@ async def async_get_triggers(
 
     for entry in er.async_entries_for_device(registry, device_id):
         if (
-            device := device_registry.async_get(device_id)
+            device := device_registry.async_get(device_id, include_child_devices=False)
         ) is None or device.model is None:
             continue
 
@@ -139,7 +139,9 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get(config[CONF_DEVICE_ID])
+    device = device_registry.async_get(
+        config[CONF_DEVICE_ID], include_child_devices=False
+    )
 
     if not device:
         return lambda: None

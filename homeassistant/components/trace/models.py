@@ -1,11 +1,10 @@
 """Containers for a script or automation trace."""
 
-from __future__ import annotations
-
 import abc
-from collections import deque
+from collections.abc import Iterator
+from dataclasses import dataclass
 import datetime as dt
-from typing import Any
+from typing import Any, override
 
 from homeassistant.core import Context
 from homeassistant.helpers.trace import (
@@ -18,7 +17,7 @@ from homeassistant.helpers.trace import (
 from homeassistant.util import dt as dt_util, uuid as uuid_util
 from homeassistant.util.limited_size_dict import LimitedSizeDict
 
-type TraceData = dict[str, LimitedSizeDict[str, BaseTrace]]
+type TraceData = dict[str, TraceBuckets]
 
 
 class BaseTrace(abc.ABC):
@@ -27,6 +26,9 @@ class BaseTrace(abc.ABC):
     context: Context
     key: str
     run_id: str
+    # True for traces recording that a trigger evaluated a relevant change but
+    # did not fire. These are counted separately from actual runs.
+    not_triggered: bool = False
 
     def as_dict(self) -> dict[str, Any]:
         """Return an dictionary version of this ActionTrace for saving."""
@@ -44,6 +46,27 @@ class BaseTrace(abc.ABC):
         """Return a brief dictionary version of this ActionTrace."""
 
 
+@dataclass(slots=True)
+class TraceBuckets:
+    """The run and not-triggered traces for a single script or automation.
+
+    Not-triggered traces (a trigger evaluated a change but did not fire) are
+    counted and size-limited separately so they never evict actual run traces.
+    """
+
+    runs: LimitedSizeDict[str, BaseTrace]
+    not_triggered: LimitedSizeDict[str, BaseTrace]
+
+    def bucket(self, not_triggered: bool) -> LimitedSizeDict[str, BaseTrace]:
+        """Return the bucket holding traces of the requested kind."""
+        return self.not_triggered if not_triggered else self.runs
+
+    def all_traces(self) -> Iterator[BaseTrace]:
+        """Yield all traces, runs first then not-triggered."""
+        yield from self.runs.values()
+        yield from self.not_triggered.values()
+
+
 class ActionTrace(BaseTrace):
     """Base container for a script or automation trace."""
 
@@ -57,7 +80,7 @@ class ActionTrace(BaseTrace):
         context: Context,
     ) -> None:
         """Container for script trace."""
-        self._trace: dict[str, deque[TraceElement]] | None = None
+        self._trace: dict[str, list[TraceElement]] | None = None
         self._config = config
         self._blueprint_inputs = blueprint_inputs
         self.context: Context = context
@@ -74,7 +97,7 @@ class ActionTrace(BaseTrace):
             trace_set_child_id(self.key, self.run_id)
         trace_id_set((self.key, self.run_id))
 
-    def set_trace(self, trace: dict[str, deque[TraceElement]] | None) -> None:
+    def set_trace(self, trace: dict[str, list[TraceElement]] | None) -> None:
         """Set action trace."""
         self._trace = trace
 
@@ -87,7 +110,12 @@ class ActionTrace(BaseTrace):
         self._timestamp_finish = dt_util.utcnow()
         self._state = "stopped"
         self._script_execution = script_execution_get()
+        if self._trace:
+            for elements in self._trace.values():
+                for element in elements:
+                    element.finish()
 
+    @override
     def as_extended_dict(self) -> dict[str, Any]:
         """Return an extended dictionary version of this ActionTrace."""
         if self._dict:
@@ -114,6 +142,7 @@ class ActionTrace(BaseTrace):
             self._dict = result
         return result
 
+    @override
     def as_short_dict(self) -> dict[str, Any]:
         """Return a brief dictionary version of this ActionTrace."""
         if self._short_dict:
@@ -125,7 +154,7 @@ class ActionTrace(BaseTrace):
             last_step = list(self._trace)[-1]
         domain, item_id = self.key.split(".", 1)
 
-        result = {
+        result: dict[str, Any] = {
             "last_step": last_step,
             "run_id": self.run_id,
             "state": self._state,
@@ -137,6 +166,8 @@ class ActionTrace(BaseTrace):
             "domain": domain,
             "item_id": item_id,
         }
+        if self.not_triggered:
+            result["not_triggered"] = True
         if self._error is not None:
             result["error"] = str(self._error)
 
@@ -161,13 +192,16 @@ class RestoredTrace(BaseTrace):
         self.context = context
         self.key = f"{extended_dict['domain']}.{extended_dict['item_id']}"
         self.run_id = extended_dict["run_id"]
+        self.not_triggered = short_dict.get("not_triggered", False)
         self._dict = extended_dict
         self._short_dict = short_dict
 
+    @override
     def as_extended_dict(self) -> dict[str, Any]:
         """Return an extended dictionary version of this RestoredTrace."""
         return self._dict  # type: ignore[no-any-return]
 
+    @override
     def as_short_dict(self) -> dict[str, Any]:
         """Return a brief dictionary version of this RestoredTrace."""
         return self._short_dict  # type: ignore[no-any-return]

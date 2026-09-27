@@ -1,15 +1,14 @@
 """Sensor for Shelly."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Final, cast
+from datetime import timedelta
+from typing import Final, cast, override
 
 from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_PLATFORM,
+    DOMAIN as SENSOR_DOMAIN,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
@@ -18,10 +17,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     LIGHT_LUX,
-    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfApparentPower,
@@ -29,8 +26,10 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfFrequency,
+    UnitOfInformation,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
@@ -41,8 +40,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.dt import utcnow
 
-from .const import CONF_SLEEP_PERIOD, ROLE_GENERIC
+from .const import CONF_SLEEP_PERIOD, DRIVER_MISSING_ERROR, ROLE_GENERIC
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -53,7 +53,7 @@ from .entity import (
     ShellyRpcAttributeEntity,
     ShellySleepingBlockAttributeEntity,
     ShellySleepingRpcAttributeEntity,
-    async_setup_entry_attribute_entities,
+    async_setup_entry_block,
     async_setup_entry_rest,
     async_setup_entry_rpc,
     get_entity_rpc_device_info,
@@ -62,9 +62,6 @@ from .utils import (
     async_remove_orphaned_entities,
     get_blu_trv_device_info,
     get_device_entry_gen,
-    get_device_uptime,
-    get_entity_translation_attributes,
-    get_rpc_channel_name,
     get_shelly_air_lamp_life,
     get_virtual_component_unit,
     is_rpc_wifi_stations_disabled,
@@ -106,28 +103,17 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
         """Initialize select."""
         super().__init__(coordinator, key, attribute, description)
 
-        if not description.role:
-            translation_placeholders, translation_key = (
-                get_entity_translation_attributes(
-                    get_rpc_channel_name(coordinator.device, key),
-                    description.translation_key,
-                    description.device_class,
-                    self._default_to_device_class_name(),
-                )
-            )
-
-            if translation_placeholders:
-                self._attr_translation_placeholders = translation_placeholders
-                if translation_key:
-                    self._attr_translation_key = translation_key
-
         if self.option_map:
             if description.role == ROLE_GENERIC:
                 self._attr_options = list(self.option_map.values())
             else:
                 self._attr_options = list(self.option_map)
 
+        if not description.role:
+            self.configure_translation_attributes()
+
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         attribute_value = self.attribute_value
@@ -148,6 +134,7 @@ class RpcEnergyConsumedSensor(RpcSensor):
     """Represent a RPC energy consumed sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         total_energy = self.status["aenergy"]["total"]
@@ -165,6 +152,7 @@ class RpcPresenceSensor(RpcSensor):
     """Represent a RPC presence sensor."""
 
     @property
+    @override
     def available(self) -> bool:
         """Available."""
         available = super().available
@@ -208,14 +196,19 @@ class RpcBluTrvSensor(RpcSensor):
         ble_addr: str = coordinator.device.config[key]["addr"]
         fw_ver = coordinator.device.status[key].get("fw_ver")
         self._attr_device_info = get_blu_trv_device_info(
-            coordinator.device.config[key], ble_addr, coordinator.mac, fw_ver
+            coordinator.hass,
+            coordinator.config_entry.entry_id,
+            coordinator.device.config[key],
+            ble_addr,
+            coordinator.mac,
+            fw_ver,
         )
 
 
-SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
+BLOCK_SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ("device", "battery"): BlockSensorDescription(
         key="device|battery",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda settings, _: settings.get("external_power") == 1,
@@ -362,7 +355,7 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ("sensor", "concentration"): BlockSensorDescription(
         key="sensor|concentration",
         translation_key="gas_concentration",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ("sensor", "temp"): BlockSensorDescription(
@@ -379,17 +372,20 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        available=lambda block: cast(int, block.extTemp) != 999
-        and not getattr(block, "sensorError", False),
+        available=lambda block: (
+            cast(int, block.extTemp) != 999 and not getattr(block, "sensorError", False)
+        ),
     ),
     ("sensor", "humidity"): BlockSensorDescription(
         key="sensor|humidity",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        available=lambda block: cast(int, block.humidity) != 999
-        and not getattr(block, "sensorError", False),
+        available=lambda block: (
+            cast(int, block.humidity) != 999
+            and not getattr(block, "sensorError", False)
+        ),
     ),
     ("sensor", "luminosity"): BlockSensorDescription(
         key="sensor|luminosity",
@@ -407,7 +403,7 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ("relay", "totalWorkTime"): BlockSensorDescription(
         key="relay|totalWorkTime",
         translation_key="lamp_life",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value=get_shelly_air_lamp_life,
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -477,9 +473,8 @@ REST_SENSORS: Final = {
     ),
     "uptime": RestSensorDescription(
         key="uptime",
-        translation_key="last_restart",
-        value=lambda status, last: get_device_uptime(status["uptime"], last),
-        device_class=SensorDeviceClass.TIMESTAMP,
+        value=lambda status, _: utcnow() - timedelta(seconds=status["uptime"]),
+        device_class=SensorDeviceClass.UPTIME,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -539,7 +534,6 @@ RPC_SENSORS: Final = {
     "power_rgbcct": RpcSensorDescription(
         key="rgbcct",
         sub_key="apower",
-        name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -880,9 +874,7 @@ RPC_SENSORS: Final = {
         suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        removal_condition=lambda _, status, key: (
-            status[key].get("ret_aenergy") is None
-        ),
+        removal_condition=lambda _, status, key: status[key].get("ret_aenergy") is None,
     ),
     "consumed_energy_switch": RpcSensorDescription(
         key="switch",
@@ -896,9 +888,7 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
         entity_class=RpcEnergyConsumedSensor,
-        removal_condition=lambda _, status, key: (
-            status[key].get("ret_aenergy") is None
-        ),
+        removal_condition=lambda _, status, key: status[key].get("ret_aenergy") is None,
     ),
     "energy_light": RpcSensorDescription(
         key="light",
@@ -977,7 +967,6 @@ RPC_SENSORS: Final = {
     "energy_rgbcct": RpcSensorDescription(
         key="rgbcct",
         sub_key="aenergy",
-        name="Energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: status["total"],
@@ -1237,13 +1226,16 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         use_polling_coordinator=True,
     ),
-    "temperature_0": RpcSensorDescription(
+    "temperature_tc": RpcSensorDescription(
         key="temperature",
         sub_key="tC",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        removal_condition=lambda _, status, key: (
+            DRIVER_MISSING_ERROR in (status[key].get("errors") or [])
+        ),
     ),
     "rssi": RpcSensorDescription(
         key="wifi",
@@ -1259,30 +1251,32 @@ RPC_SENSORS: Final = {
     "uptime": RpcSensorDescription(
         key="sys",
         sub_key="uptime",
-        translation_key="last_restart",
-        value=get_device_uptime,
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
+        value=lambda status, _: utcnow() - timedelta(seconds=status),
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         use_polling_coordinator=True,
     ),
-    "humidity_0": RpcSensorDescription(
+    "humidity_rh": RpcSensorDescription(
         key="humidity",
         sub_key="rh",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
+        removal_condition=lambda _, status, key: (
+            DRIVER_MISSING_ERROR in (status[key].get("errors") or [])
+        ),
     ),
     "battery": RpcSensorDescription(
         key="devicepower",
         sub_key="battery",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value=lambda status, _: status["percent"],
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        removal_condition=lambda _, status, key: (status[key]["battery"] is None),
+        removal_condition=lambda _, status, key: status[key]["battery"] is None,
     ),
     "voltmeter": RpcSensorDescription(
         key="voltmeter",
@@ -1299,14 +1293,15 @@ RPC_SENSORS: Final = {
         key="voltmeter",
         sub_key="xvoltage",
         translation_key="voltmeter_value",
-        removal_condition=lambda _, status, key: (status[key].get("xvoltage") is None),
+        state_class=SensorStateClass.MEASUREMENT,
+        removal_condition=lambda _, status, key: status[key].get("xvoltage") is None,
         unit=lambda config: config["xvoltage"]["unit"] or None,
     ),
     "analoginput": RpcSensorDescription(
         key="input",
         sub_key="percent",
         translation_key="analog",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda config, _, key: (
             config[key]["type"] != "analog" or config[key]["enable"] is False
@@ -1316,6 +1311,7 @@ RPC_SENSORS: Final = {
         key="input",
         sub_key="xpercent",
         translation_key="analog_value",
+        state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda config, status, key: (
             config[key]["type"] != "analog"
             or config[key]["enable"] is False
@@ -1360,6 +1356,7 @@ RPC_SENSORS: Final = {
         key="input",
         sub_key="xfreq",
         translation_key="pulse_counter_frequency_value",
+        state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda config, status, key: (
             config[key]["type"] != "count"
             or config[key]["enable"] is False
@@ -1370,16 +1367,16 @@ RPC_SENSORS: Final = {
     "text_generic": RpcSensorDescription(
         key="text",
         sub_key="value",
-        removal_condition=lambda config, _, key: not is_view_for_platform(
-            config, key, SENSOR_PLATFORM
+        removal_condition=lambda config, _, key: (
+            not is_view_for_platform(config, key, SENSOR_DOMAIN)
         ),
         role=ROLE_GENERIC,
     ),
     "number_generic": RpcSensorDescription(
         key="number",
         sub_key="value",
-        removal_condition=lambda config, _, key: not is_view_for_platform(
-            config, key, SENSOR_PLATFORM
+        removal_condition=lambda config, _, key: (
+            not is_view_for_platform(config, key, SENSOR_DOMAIN)
         ),
         unit=get_virtual_component_unit,
         role=ROLE_GENERIC,
@@ -1387,8 +1384,8 @@ RPC_SENSORS: Final = {
     "enum_generic": RpcSensorDescription(
         key="enum",
         sub_key="value",
-        removal_condition=lambda config, _, key: not is_view_for_platform(
-            config, key, SENSOR_PLATFORM
+        removal_condition=lambda config, _, key: (
+            not is_view_for_platform(config, key, SENSOR_DOMAIN)
         ),
         device_class=SensorDeviceClass.ENUM,
         role=ROLE_GENERIC,
@@ -1397,17 +1394,18 @@ RPC_SENSORS: Final = {
         key="blutrv",
         sub_key="pos",
         translation_key="valve_position",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        removal_condition=lambda config, _, key: config[key].get("enable", False)
-        is False,
+        removal_condition=lambda config, _, key: (
+            config[key].get("enable", False) is False
+        ),
         entity_class=RpcBluTrvSensor,
     ),
     "blutrv_battery": RpcSensorDescription(
         key="blutrv",
         sub_key="battery",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -1437,8 +1435,8 @@ RPC_SENSORS: Final = {
         suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
         role="average_temperature",
-        removal_condition=lambda config, _s, _k: not config.get("service:0", {}).get(
-            "weather_api", False
+        removal_condition=lambda config, _s, _k: (
+            not config.get("service:0", {}).get("weather_api", False)
         ),
     ),
     "number_last_precipitation": RpcSensorDescription(
@@ -1448,14 +1446,14 @@ RPC_SENSORS: Final = {
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         role="last_precipitation",
-        removal_condition=lambda config, _s, _k: not config.get("service:0", {}).get(
-            "weather_api", False
+        removal_condition=lambda config, _s, _k: (
+            not config.get("service:0", {}).get("weather_api", False)
         ),
     ),
     "number_current_humidity": RpcSensorDescription(
         key="number",
         sub_key="value",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1693,10 +1691,12 @@ RPC_SENSORS: Final = {
         translation_key="left_slot_level",
         value=lambda status, _: status["left"]["vial"]["level"],
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        available=lambda status: (left := status["left"]) is not None
-        and left.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (left := status["left"]) is not None
+            and left.get("vial", {}).get("level", -1) != -1
+        ),
     ),
     "cury_left_vial": RpcSensorDescription(
         key="cury",
@@ -1704,8 +1704,10 @@ RPC_SENSORS: Final = {
         translation_key="left_slot_vial",
         value=lambda status, _: status["left"]["vial"]["name"],
         entity_category=EntityCategory.DIAGNOSTIC,
-        available=lambda status: (left := status["left"]) is not None
-        and left.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (left := status["left"]) is not None
+            and left.get("vial", {}).get("level", -1) != -1
+        ),
     ),
     "cury_right_level": RpcSensorDescription(
         key="cury",
@@ -1713,10 +1715,12 @@ RPC_SENSORS: Final = {
         translation_key="right_slot_level",
         value=lambda status, _: status["right"]["vial"]["level"],
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        available=lambda status: (right := status["right"]) is not None
-        and right.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (right := status["right"]) is not None
+            and right.get("vial", {}).get("level", -1) != -1
+        ),
     ),
     "cury_right_vial": RpcSensorDescription(
         key="cury",
@@ -1724,8 +1728,22 @@ RPC_SENSORS: Final = {
         translation_key="right_slot_vial",
         value=lambda status, _: status["right"]["vial"]["name"],
         entity_category=EntityCategory.DIAGNOSTIC,
-        available=lambda status: (right := status["right"]) is not None
-        and right.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (right := status["right"]) is not None
+            and right.get("vial", {}).get("level", -1) != -1
+        ),
+    ),
+    "storage_fs_free": RpcSensorDescription(
+        key="storage",
+        sub_key="fs_free",
+        translation_key="storage_free_space",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        removal_condition=lambda _, status, key: not status[key]["present"],
     ),
 }
 
@@ -1750,19 +1768,19 @@ def _async_setup_block_entry(
 ) -> None:
     """Set up entities for BLOCK device."""
     if config_entry.data[CONF_SLEEP_PERIOD]:
-        async_setup_entry_attribute_entities(
+        async_setup_entry_block(
             hass,
             config_entry,
             async_add_entities,
-            SENSORS,
+            BLOCK_SENSORS,
             BlockSleepingSensor,
         )
     else:
-        async_setup_entry_attribute_entities(
+        async_setup_entry_block(
             hass,
             config_entry,
             async_add_entities,
-            SENSORS,
+            BLOCK_SENSORS,
             BlockSensor,
         )
         async_setup_entry_rest(
@@ -1797,7 +1815,7 @@ def _async_setup_rpc_entry(
             hass,
             config_entry.entry_id,
             coordinator.mac,
-            SENSOR_PLATFORM,
+            SENSOR_DOMAIN,
             coordinator.device.status,
         )
 
@@ -1819,6 +1837,7 @@ class BlockSensor(ShellyBlockAttributeEntity, SensorEntity):
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.attribute_value
@@ -1830,6 +1849,7 @@ class RestSensor(ShellyRestAttributeEntity, SensorEntity):
     entity_description: RestSensorDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.attribute_value
@@ -1852,12 +1872,14 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):
         super().__init__(coordinator, block, attribute, description, entry)
         self.restored_data: SensorExtraStoredData | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self.restored_data = await self.async_get_last_sensor_data()
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         if self.block is not None:
@@ -1869,6 +1891,7 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):
         return cast(StateType, self.restored_data.native_value)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor, if any."""
         if self.block is not None:
@@ -1898,26 +1921,16 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
         self.restored_data: SensorExtraStoredData | None = None
 
         if coordinator.device.initialized:
-            translation_placeholders, translation_key = (
-                get_entity_translation_attributes(
-                    get_rpc_channel_name(coordinator.device, key),
-                    description.translation_key,
-                    description.device_class,
-                    self._default_to_device_class_name(),
-                )
-            )
+            self.configure_translation_attributes()
 
-            if translation_placeholders:
-                self._attr_translation_placeholders = translation_placeholders
-                if translation_key:
-                    self._attr_translation_key = translation_key
-
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self.restored_data = await self.async_get_last_sensor_data()
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         if self.coordinator.device.initialized:
@@ -1929,6 +1942,7 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
         return cast(StateType, self.restored_data.native_value)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor, if any."""
         return self.entity_description.native_unit_of_measurement

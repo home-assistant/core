@@ -1,7 +1,5 @@
 """Test for Sensibo integration setup."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock
@@ -96,18 +94,18 @@ async def test_device_remove_devices(
 ) -> None:
     """Test we can only remove a device that no longer exists."""
     assert await async_setup_component(hass, "config", {})
-    entity = entity_registry.entities["climate.hallway"]
+    entity = entity_registry.entities["climate.hallway_hallway"]
 
     device_entry = device_registry.async_get(entity.device_id)
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, load_int.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=load_int.entry_id,
         identifiers={(DOMAIN, "remove-device-id")},
     )
-    response = await client.remove_device(dead_device_entry.id, load_int.entry_id)
+    response = await client.remove_device(dead_device_entry.id)
     assert response["success"]
 
 
@@ -115,11 +113,11 @@ async def test_device_remove_devices(
     ("entity_id", "device_ids"),
     [
         # Device is ABC999111
-        ("climate.hallway", ["ABC999111"]),
-        ("binary_sensor.hallway_filter_clean_required", ["ABC999111"]),
-        ("number.hallway_temperature_calibration", ["ABC999111"]),
-        ("sensor.hallway_filter_last_reset", ["ABC999111"]),
-        ("update.hallway_firmware", ["ABC999111"]),
+        ("climate.hallway_hallway", ["ABC999111"]),
+        ("binary_sensor.hallway_hallway_filter_clean_required", ["ABC999111"]),
+        ("number.hallway_hallway_temperature_calibration", ["ABC999111"]),
+        ("sensor.hallway_hallway_filter_last_reset", ["ABC999111"]),
+        ("update.hallway_hallway_firmware", ["ABC999111"]),
         # Device is AABBCC belonging to device ABC999111
         ("binary_sensor.hallway_motion_sensor_motion", ["ABC999111", "AABBCC"]),
     ],
@@ -142,7 +140,9 @@ async def test_automatic_device_addition_and_removal(
     assert state
     assert entity_registry.async_get(entity_id)
     for device_id in device_ids:
-        assert device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+        assert device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), load_int.entry_id
+        )
 
     # Remove one of the devices
     new_device_list = [
@@ -164,7 +164,9 @@ async def test_automatic_device_addition_and_removal(
     assert not state
     assert not entity_registry.async_get(entity_id)
     for device_id in device_ids:
-        assert not device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+        assert not device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), load_int.entry_id
+        )
 
     # Add the device back
     mock_client.async_get_devices.return_value = get_data[2]
@@ -178,4 +180,6 @@ async def test_automatic_device_addition_and_removal(
     assert state
     assert entity_registry.async_get(entity_id)
     for device_id in device_ids:
-        assert device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+        assert device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), load_int.entry_id
+        )

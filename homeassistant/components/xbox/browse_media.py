@@ -1,7 +1,5 @@
 """Support for media browsing."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, NamedTuple
 
 from pythonxbox.api.client import XboxLiveClient
@@ -18,6 +16,8 @@ from pythonxbox.api.provider.smartglass.models import (
 )
 
 from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
+
+from .entity import to_https
 
 
 class MediaTypeDetails(NamedTuple):
@@ -151,5 +151,5 @@ def _find_media_image(images: list[Image]) -> str | None:
         if match := next(
             (image for image in images if image.image_purpose == purpose), None
         ):
-            return f"https:{match.uri}" if match.uri.startswith("/") else match.uri
+            return to_https(match.uri)
     return None

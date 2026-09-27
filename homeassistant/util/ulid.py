@@ -1,7 +1,5 @@
 """Helpers to generate ulids."""
 
-from __future__ import annotations
-
 from ulid_transform import (
     bytes_to_ulid,
     bytes_to_ulid_or_none,

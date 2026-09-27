@@ -20,11 +20,11 @@ class VenstarColorTouchMock:
         self.status = {}
         self.model = "COLORTOUCH"
         self._api_ver = 7
-        self._firmware_ver = tuple(5, 28)
+        self._firmware_ver = (5, 28)
         self.name = "TestVenstar"
         self._info = {}
         self._sensors = {}
-        self.alerts = {}
+        self.alerts = []
         self.MODE_OFF = 0
         self.MODE_HEAT = 1
         self.MODE_COOL = 2
@@ -52,9 +52,17 @@ class VenstarColorTouchMock:
         """Mock a update_info that raises Exception."""
         raise RequestException
 
+    def failed_update_info(self):
+        """Mock update_info returning False (silent failure)."""
+        return False
+
     def update_sensors(self):
         """Mock update_sensors."""
         return True
+
+    def failed_update_sensors(self):
+        """Mock update_sensors returning False (silent failure)."""
+        return False
 
     def update_runtimes(self):
         """Mock update_runtimes."""
@@ -62,8 +70,17 @@ class VenstarColorTouchMock:
 
     def update_alerts(self):
         """Mock update_alerts."""
+        self.alerts = []
         return True
+
+    def failed_update_alerts(self):
+        """Mock update_alerts returning False (silent failure)."""
+        return False
 
     def get_runtimes(self):
         """Mock get runtimes."""
-        return {}
+        return [{"heat1": 100, "cool1": 200}]
+
+    def failed_get_runtimes(self):
+        """Mock get_runtimes returning False (silent failure)."""
+        return False

@@ -1,10 +1,8 @@
 """The Recorder websocket API."""
 
-from __future__ import annotations
-
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -22,7 +20,7 @@ def async_setup(hass: HomeAssistant) -> None:
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "recorder/info",
+        probatio.Required("type"): "recorder/info",
     }
 )
 @websocket_api.async_response

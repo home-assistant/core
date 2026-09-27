@@ -1,13 +1,10 @@
 """Trigger an automation when a LiteJet switch is released."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime
 from typing import cast
 
-from pylitejet import LiteJet
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
@@ -25,12 +22,12 @@ CONF_HELD_LESS_THAN = "held_less_than"
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): "litejet",
-        vol.Required(CONF_NUMBER): cv.positive_int,
-        vol.Optional(CONF_HELD_MORE_THAN): vol.All(
+        probatio.Required(CONF_PLATFORM): "litejet",
+        probatio.Required(CONF_NUMBER): cv.positive_int,
+        probatio.Optional(CONF_HELD_MORE_THAN): probatio.All(
             cv.time_period, cv.positive_timedelta
         ),
-        vol.Optional(CONF_HELD_LESS_THAN): vol.All(
+        probatio.Optional(CONF_HELD_LESS_THAN): probatio.All(
             cv.time_period, cv.positive_timedelta
         ),
     }
@@ -109,7 +106,7 @@ async def async_attach_trigger(
         ):
             hass.add_job(call_action)
 
-    system: LiteJet = hass.data[DOMAIN]
+    system = hass.config_entries.async_loaded_entries(DOMAIN)[0].runtime_data
 
     system.on_switch_pressed(number, pressed)
     system.on_switch_released(number, released)

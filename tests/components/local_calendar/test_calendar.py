@@ -1,13 +1,18 @@
 """Tests for calendar platform of local calendar."""
 
 import datetime
+from datetime import timedelta
 import textwrap
+from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.local_calendar.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.template import DATE_STR_FORMAT
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
@@ -18,7 +23,7 @@ from .conftest import (
     event_fields,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_empty_calendar(
@@ -267,6 +272,42 @@ async def test_recurring_event(
             "recurrence_id": "20220919T090000",
         },
     ]
+
+
+@pytest.mark.parametrize(
+    "time_zone",
+    ["America/Los_Angeles", "America/New_York", "Europe/London", "Asia/Tokyo"],
+)
+async def test_recurring_event_with_until_non_utc_timezone(
+    ws_client: ClientFixture,
+    setup_integration: None,
+    hass: HomeAssistant,
+    get_events: GetEventsFn,
+) -> None:
+    """Test creating a recurring event with UNTIL in a non-UTC timezone.
+
+    Regression test: When HA is configured with a non-UTC timezone, creating
+    a recurring event with an UNTIL date was failing because _parse_event()
+    strips tzinfo from dtstart (making it floating) but was not stripping
+    tzinfo from UNTIL in the rrule, causing a naive/aware datetime mismatch.
+    """
+    client = await ws_client()
+    await client.cmd_result(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Weekly meeting",
+                "dtstart": "2022-08-29T09:00:00+00:00",
+                "dtend": "2022-08-29T10:00:00+00:00",
+                "rrule": "FREQ=WEEKLY;UNTIL=20220912T235959Z",
+            },
+        },
+    )
+
+    events = await get_events("2022-08-20T00:00:00", "2022-09-20T00:00:00")
+    summaries = [event["summary"] for event in events]
+    assert summaries.count("Weekly meeting") == 3
 
 
 async def test_websocket_delete(
@@ -1122,3 +1163,94 @@ async def test_invalid_event_duration(
             "end": {"dateTime": "1997-07-14T11:30:00-06:00"},
         }
     ]
+
+
+ADJACENT_EVENTS_ICS = """BEGIN:VCALENDAR
+PRODID:-//homeassistant.io//local_calendar 1.0//EN
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART:20260729T014500
+DTEND:20260729T020000
+SUMMARY:First
+UID:first
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260729T020000
+DTEND:20260729T021500
+SUMMARY:Second
+UID:second
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+@pytest.mark.parametrize("ics_content", [ADJACENT_EVENTS_ICS])
+async def test_adjacent_events_stay_on(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the state stays on when one event ends as the next one begins.
+
+    The scan interval is widened so the platform poll cannot reach the boundary
+    first: what is under test is the alarm scheduled for the end of the current
+    event, which has to be able to pick up the next one on its own.
+    """
+    freezer.move_to("2026-07-29 07:50:20+00:00")  # 01:50:20 in America/Regina
+
+    config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.calendar.SCAN_INTERVAL", timedelta(hours=1)):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+        state = hass.states.get(TEST_ENTITY)
+        assert state.state == STATE_ON
+        assert state.attributes["message"] == "First"
+
+        # 02:00:00 in America/Regina, the moment the first event ends and the
+        # second begins.
+        freezer.move_to("2026-07-29 08:00:00+00:00")
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+
+        state = hass.states.get(TEST_ENTITY)
+        assert state.state == STATE_ON
+        assert state.attributes["message"] == "Second"
+
+
+ICS_WITH_STATUS = """BEGIN:VCALENDAR
+BEGIN:VEVENT
+SUMMARY:Bastille Day Party
+DTSTART:19970714
+DTEND:19970715
+STATUS:{status}
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+@pytest.mark.parametrize(
+    ("ics_content", "expected_status"),
+    [
+        pytest.param(
+            ICS_WITH_STATUS.format(status="TENTATIVE"), "tentative", id="tentative"
+        ),
+        pytest.param(
+            ICS_WITH_STATUS.format(status="CONFIRMED"), "confirmed", id="confirmed"
+        ),
+        pytest.param(
+            ICS_WITH_STATUS.format(status="CANCELLED"),
+            None,
+            id="cancelled_is_not_reported",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_event_status(
+    get_events: GetEventsFn,
+    expected_status: str | None,
+) -> None:
+    """Test that the rfc5545 STATUS property is returned by the API."""
+    events = await get_events("1997-07-13T00:00:00", "1997-07-16T00:00:00")
+    assert len(events) == 1
+    assert events[0]["status"] == expected_status

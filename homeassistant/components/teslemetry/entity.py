@@ -1,12 +1,15 @@
 """Teslemetry parent entity class."""
 
 from abc import abstractmethod
-from typing import Any
+from typing import Any, override
 
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.router import VehicleRouter
+from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import StateType
@@ -28,7 +31,7 @@ class TeslemetryRootEntity(Entity):
     _attr_has_entity_name = True
     scoped: bool
 
-    def raise_for_scope(self, scope: Scope):
+    def raise_for_scope(self, scope: Scope) -> None:
         """Raise an error if a scope is not available."""
         if not self.scoped:
             raise ServiceValidationError(
@@ -64,6 +67,7 @@ class TeslemetryPollingEntity(
         self._async_update_attrs()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if sensor is available."""
         return self.coordinator.last_update_success and self._attr_available
@@ -88,6 +92,7 @@ class TeslemetryPollingEntity(
         """Return if the value is a literal None."""
         return self.get(self.key, False) is None
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_attrs()
@@ -102,7 +107,7 @@ class TeslemetryVehiclePollingEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Vehicle entities."""
 
     _last_update: int = 0
-    api: Vehicle
+    api: Vehicle | VehicleRouter
     vehicle: TeslemetryVehicleData
 
     def __init__(
@@ -125,6 +130,7 @@ class TeslemetryVehiclePollingEntity(TeslemetryPollingEntity):
         super().__init__(data.coordinator, key)
 
     @property
+    @override
     def _value(self) -> Any | None:
         """Return a specific value from coordinator data."""
         return self.coordinator.data.get(self.key)
@@ -133,7 +139,7 @@ class TeslemetryVehiclePollingEntity(TeslemetryPollingEntity):
 class TeslemetryEnergyLiveEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Energy Site Live entities."""
 
-    api: EnergySite
+    api: EnergySite | EnergySiteRouter
 
     def __init__(
         self,
@@ -154,7 +160,7 @@ class TeslemetryEnergyLiveEntity(TeslemetryPollingEntity):
 class TeslemetryEnergyInfoEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Energy Site Info Entities."""
 
-    api: EnergySite
+    api: EnergySite | EnergySiteRouter
 
     def __init__(
         self,
@@ -193,7 +199,7 @@ class TeslemetryWallConnectorEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Wall Connector Entities."""
 
     _attr_has_entity_name = True
-    api: EnergySite
+    api: EnergySite | EnergySiteRouter
 
     def __init__(
         self,
@@ -221,21 +227,27 @@ class TeslemetryWallConnectorEntity(TeslemetryPollingEntity):
             manufacturer="Tesla",
             configuration_url="https://teslemetry.com/console",
             name="Wall Connector",
-            via_device=(DOMAIN, str(data.id)),
-            serial_number=din.split("-")[-1],
+            via_device_id=dr.async_get_device_id_by_identifier(
+                data.live_coordinator.hass,
+                (DOMAIN, str(data.id)),
+                config_entry_id=data.live_coordinator.config_entry.entry_id,
+            ),
+            serial_number=din.rsplit("-", maxsplit=1)[-1],
             model=model,
         )
 
         super().__init__(data.live_coordinator, key)
 
     @property
+    @override
     def _value(self) -> StateType:
         """Return a specific wall connector value from coordinator data."""
-        return (
+        value: StateType = (
             self.coordinator.data.get("wall_connectors", {})
             .get(self.din, {})
             .get(self.key)
         )
+        return value
 
     @property
     def exists(self) -> bool:
@@ -248,7 +260,7 @@ class TeslemetryWallConnectorEntity(TeslemetryPollingEntity):
 class TeslemetryVehicleStreamEntity(TeslemetryRootEntity):
     """Parent class for Teslemetry Vehicle Stream entities."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
 
     def __init__(self, data: TeslemetryVehicleData, key: str) -> None:
         """Initialize common aspects of a Teslemetry entity."""

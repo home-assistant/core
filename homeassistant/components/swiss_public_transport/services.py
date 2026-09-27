@@ -1,8 +1,7 @@
 """Define services for the Swiss public transport integration."""
 
-import voluptuous as vol
+import probatio
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import (
     HomeAssistant,
@@ -11,7 +10,8 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import service
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -28,10 +28,10 @@ from .const import (
 )
 from .coordinator import SwissPublicTransportConfigEntry
 
-SERVICE_FETCH_CONNECTIONS_SCHEMA = vol.Schema(
+SERVICE_FETCH_CONNECTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Optional(ATTR_LIMIT, default=CONNECTIONS_COUNT): NumberSelector(
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Optional(ATTR_LIMIT, default=CONNECTIONS_COUNT): NumberSelector(
             NumberSelectorConfig(
                 min=1, max=CONNECTIONS_MAX, mode=NumberSelectorMode.BOX
             )
@@ -40,30 +40,13 @@ SERVICE_FETCH_CONNECTIONS_SCHEMA = vol.Schema(
 )
 
 
-def _async_get_entry(
-    hass: HomeAssistant, config_entry_id: str
-) -> SwissPublicTransportConfigEntry:
-    """Get the Swiss public transport config entry."""
-    if not (entry := hass.config_entries.async_get_entry(config_entry_id)):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="config_entry_not_found",
-            translation_placeholders={"target": config_entry_id},
-        )
-    if entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="not_loaded",
-            translation_placeholders={"target": entry.title},
-        )
-    return entry
-
-
 async def _async_fetch_connections(
     call: ServiceCall,
 ) -> ServiceResponse:
     """Fetch a set of connections."""
-    config_entry = _async_get_entry(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
+    config_entry: SwissPublicTransportConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
 
     limit = call.data.get(ATTR_LIMIT) or CONNECTIONS_COUNT
     try:

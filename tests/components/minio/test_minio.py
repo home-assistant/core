@@ -8,15 +8,14 @@ import pytest
 
 from homeassistant.components.minio import (
     CONF_ACCESS_KEY,
-    CONF_HOST,
     CONF_LISTEN,
     CONF_LISTEN_BUCKET,
-    CONF_PORT,
     CONF_SECRET_KEY,
     CONF_SECURE,
     DOMAIN,
     QueueListener,
 )
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 

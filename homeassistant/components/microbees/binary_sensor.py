@@ -1,5 +1,7 @@
 """BinarySensor integration microBees."""
 
+from typing import override
+
 from microBeesPy import Sensor
 
 from homeassistant.components.binary_sensor import (
@@ -7,11 +9,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import MicroBeesConfigEntry
 from .coordinator import MicroBeesUpdateCoordinator
 from .entity import MicroBeesEntity
 
@@ -37,13 +38,11 @@ BINARYSENSOR_TYPES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MicroBeesConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the microBees binary sensor platform."""
-    coordinator: MicroBeesUpdateCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ].coordinator
+    coordinator = entry.runtime_data.coordinator
     async_add_entities(
         MBBinarySensor(coordinator, entity_description, bee_id, binary_sensor.id)
         for bee_id, bee in coordinator.data.bees.items()
@@ -70,11 +69,13 @@ class MBBinarySensor(MicroBeesEntity, BinarySensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def name(self) -> str:
         """Name of the BinarySensor."""
         return self.sensor.name
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the BinarySensor."""
         return self.sensor.value

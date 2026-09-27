@@ -3,8 +3,13 @@
 from unittest import mock
 from unittest.mock import patch
 
-from homeassistant.components import datadog
-from homeassistant.components.datadog import async_setup_entry
+from homeassistant.components.datadog.const import (
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    DEFAULT_PREFIX,
+    DEFAULT_RATE,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_LOGBOOK_ENTRY, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -17,7 +22,7 @@ from tests.common import EVENT_STATE_CHANGED, MockConfigEntry
 async def test_invalid_config(hass: HomeAssistant) -> None:
     """Test invalid configuration."""
     entry = MockConfigEntry(
-        domain=datadog.DOMAIN,
+        domain=DOMAIN,
         data={"host1": "host1"},
     )
     entry.add_to_hass(hass)
@@ -30,7 +35,7 @@ async def test_datadog_setup_full(hass: HomeAssistant) -> None:
         patch("homeassistant.components.datadog.DogStatsd") as mock_dogstatsd,
     ):
         entry = MockConfigEntry(
-            domain=datadog.DOMAIN,
+            domain=DOMAIN,
             data={
                 "host": "host",
                 "port": 123,
@@ -56,7 +61,7 @@ async def test_datadog_setup_defaults(hass: HomeAssistant) -> None:
         patch("homeassistant.components.datadog.DogStatsd") as mock_dogstatsd,
     ):
         entry = MockConfigEntry(
-            domain=datadog.DOMAIN,
+            domain=DOMAIN,
             data=MOCK_DATA,
             options=MOCK_OPTIONS,
         )
@@ -79,14 +84,14 @@ async def test_logbook_entry(hass: HomeAssistant) -> None:
     ):
         mock_statsd = mock_statsd_class.return_value
         entry = MockConfigEntry(
-            domain=datadog.DOMAIN,
+            domain=DOMAIN,
             data={
-                "host": datadog.DEFAULT_HOST,
-                "port": datadog.DEFAULT_PORT,
+                "host": DEFAULT_HOST,
+                "port": DEFAULT_PORT,
             },
             options={
-                "rate": datadog.DEFAULT_RATE,
-                "prefix": datadog.DEFAULT_PREFIX,
+                "rate": DEFAULT_RATE,
+                "prefix": DEFAULT_PREFIX,
             },
         )
         entry.add_to_hass(hass)
@@ -119,12 +124,12 @@ async def test_state_changed(hass: HomeAssistant) -> None:
     ):
         mock_statsd = mock_statsd_class.return_value
         entry = MockConfigEntry(
-            domain=datadog.DOMAIN,
+            domain=DOMAIN,
             data={
                 "host": "host",
-                "port": datadog.DEFAULT_PORT,
+                "port": DEFAULT_PORT,
             },
-            options={"prefix": "ha", "rate": datadog.DEFAULT_RATE},
+            options={"prefix": "ha", "rate": DEFAULT_RATE},
         )
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -176,7 +181,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         patch("homeassistant.components.datadog.initialize"),
     ):
         entry = MockConfigEntry(
-            domain=datadog.DOMAIN,
+            domain=DOMAIN,
             data=MOCK_DATA,
             options=MOCK_OPTIONS,
         )
@@ -203,13 +208,13 @@ async def test_state_changed_skips_unknown(hass: HomeAssistant) -> None:
         ) as mock_dogstatsd,
     ):
         entry = MockConfigEntry(
-            domain=datadog.DOMAIN,
+            domain=DOMAIN,
             data=MOCK_DATA,
             options=MOCK_OPTIONS,
         )
         entry.add_to_hass(hass)
 
-        await async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
 
         # Test None state
         hass.bus.async_fire(EVENT_STATE_CHANGED, {"new_state": None})

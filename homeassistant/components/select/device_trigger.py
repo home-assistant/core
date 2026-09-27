@@ -1,8 +1,6 @@
 """Provides device triggers for Select."""
 
-from __future__ import annotations
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
@@ -29,17 +27,17 @@ from homeassistant.helpers.entity import get_capability
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .const import ATTR_OPTIONS, DOMAIN
+from .const import DOMAIN, SelectEntityCapabilityAttribute
 
 TRIGGER_TYPES = {"current_option_changed"}
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
-        vol.Optional(CONF_TO): vol.Any(vol.Coerce(str)),
-        vol.Optional(CONF_FROM): vol.Any(vol.Coerce(str)),
-        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): probatio.In(TRIGGER_TYPES),
+        probatio.Optional(CONF_TO): probatio.Any(probatio.Coerce(str)),
+        probatio.Optional(CONF_FROM): probatio.Any(probatio.Coerce(str)),
+        probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
@@ -91,21 +89,26 @@ async def async_attach_trigger(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List trigger capabilities."""
 
     try:
         entry = async_get_entity_registry_entry_or_raise(hass, config[CONF_ENTITY_ID])
-        options = get_capability(hass, entry.entity_id, ATTR_OPTIONS) or []
+        options = (
+            get_capability(
+                hass, entry.entity_id, SelectEntityCapabilityAttribute.OPTIONS
+            )
+            or []
+        )
     except HomeAssistantError:
         options = []
 
     return {
-        "extra_fields": vol.Schema(
+        "extra_fields": probatio.Schema(
             {
-                vol.Optional(CONF_FROM): vol.In(options),
-                vol.Optional(CONF_TO): vol.In(options),
-                vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+                probatio.Optional(CONF_FROM): probatio.In(options),
+                probatio.Optional(CONF_TO): probatio.In(options),
+                probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
             }
         )
     }

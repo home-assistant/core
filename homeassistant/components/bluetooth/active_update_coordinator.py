@@ -3,11 +3,9 @@
 Receives data from advertisements but can also poll.
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 import logging
-from typing import Any
+from typing import Any, override
 
 from bleak import BleakError
 from bluetooth_data_tools import monotonic_time_coarse
@@ -152,6 +150,7 @@ class ActiveBluetoothDataUpdateCoordinator[_T](PassiveBluetoothDataUpdateCoordin
         self.async_update_listeners()
 
     @callback
+    @override
     def _async_handle_bluetooth_event(
         self,
         service_info: BluetoothServiceInfoBleak,
@@ -169,6 +168,7 @@ class ActiveBluetoothDataUpdateCoordinator[_T](PassiveBluetoothDataUpdateCoordin
             self._debounced_poll.async_schedule_call()
 
     @callback
+    @override
     def _async_stop(self) -> None:
         """Cancel debouncer and stop the callbacks."""
         self._debounced_poll.async_cancel()

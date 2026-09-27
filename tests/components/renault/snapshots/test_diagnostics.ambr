@@ -14,8 +14,14 @@
         'plugStatus': 1,
         'timestamp': '2020-01-12T21:40:16Z',
       }),
+      'battery_soc': dict({
+        'socMin': 15,
+        'socTarget': 80,
+      }),
       'charge_mode': dict({
         'chargeMode': 'always',
+      }),
+      'charging_settings': dict({
       }),
       'cockpit': dict({
         'totalMileage': 49114.27,
@@ -197,6 +203,7 @@
       'data': dict({
         'kamereon_account_id': '**REDACTED**',
         'locale': 'fr_FR',
+        'login_token': '**REDACTED**',
         'password': '**REDACTED**',
         'username': '**REDACTED**',
       }),
@@ -217,8 +224,14 @@
             'plugStatus': 1,
             'timestamp': '2020-01-12T21:40:16Z',
           }),
+          'battery_soc': dict({
+            'socMin': 15,
+            'socTarget': 80,
+          }),
           'charge_mode': dict({
             'chargeMode': 'always',
+          }),
+          'charging_settings': dict({
           }),
           'cockpit': dict({
             'totalMileage': 49114.27,

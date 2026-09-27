@@ -1,12 +1,12 @@
 """Utils for sql."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from datetime import date
 from decimal import Decimal
 import logging
 from typing import Any
 
+import probatio
 import sqlalchemy
 from sqlalchemy import lambda_stmt
 from sqlalchemy.exc import SQLAlchemyError
@@ -14,7 +14,6 @@ from sqlalchemy.orm import Session, scoped_session, sessionmaker
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.util import LRUCache
 import sqlparse
-import voluptuous as vol
 
 from homeassistant.components.recorder import SupportedDialect, get_instance
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -52,7 +51,7 @@ def validate_sql_select(value: Template) -> Template:
         assert value.hass
         check_and_render_sql_query(value.hass, value)
     except (TemplateError, InvalidSqlQuery) as err:
-        raise vol.Invalid(str(err)) from err
+        raise probatio.Invalid(str(err)) from err
     return value
 
 
@@ -122,7 +121,8 @@ def validate_query(
     Args:
         hass: The Home Assistant instance.
         query_template: The SQL query string to be validated.
-        uses_recorder_db: A boolean indicating if the query is against the recorder database.
+        uses_recorder_db: A boolean indicating if the query is
+            against the recorder database.
         unique_id: The unique ID of the entity, used for creating issue registry keys.
 
     Raises:
@@ -137,7 +137,7 @@ def validate_query(
         query_str = Template(query_template, hass).async_render()
     redacted_query = redact_credentials(query_str)
 
-    issue_key = unique_id if unique_id else redacted_query
+    issue_key = unique_id or redacted_query
     # If the query has a unique id and they fix it we can dismiss the issue
     # but if it doesn't have a unique id they have to ignore it instead
 
@@ -261,7 +261,7 @@ def check_and_render_sql_query(hass: HomeAssistant, query: Template | str) -> st
         raise MultipleQueryError("Multiple SQL statements are not allowed")
     if (
         len(rendered_queries) == 0
-        or (query_type := rendered_queries[0].get_type()) == "UNKNOWN"
+        or (query_type := rendered_queries[0].get_type()) == "UNKNOWN"  # type: ignore[no-untyped-call]
     ):
         raise UnknownQueryTypeError("SQL query is empty or unknown type")
     if query_type != "SELECT":

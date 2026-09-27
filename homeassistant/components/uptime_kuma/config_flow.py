@@ -1,17 +1,16 @@
 """Config flow for the Uptime Kuma integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pythonkuma import (
     UptimeKuma,
     UptimeKumaAuthenticationException,
     UptimeKumaException,
+    UptimeKumaParseException,
 )
-import voluptuous as vol
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -29,19 +28,21 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): TextSelector(
+        probatio.Required(CONF_URL): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.URL,
                 autocomplete="url",
             ),
         ),
-        vol.Required(CONF_VERIFY_SSL, default=True): bool,
-        vol.Optional(CONF_API_KEY, default=""): str,
+        probatio.Required(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Optional(CONF_API_KEY, default=""): str,
     }
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Optional(CONF_API_KEY, default=""): str})
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {probatio.Optional(CONF_API_KEY, default=""): str}
+)
 PLACEHOLDER = {"example_url": "https://uptime.example.com:3001"}
 
 
@@ -60,6 +61,8 @@ async def validate_connection(
         await uptime_kuma.metrics()
     except UptimeKumaAuthenticationException:
         errors["base"] = "invalid_auth"
+    except UptimeKumaParseException:
+        errors["base"] = "invalid_data"
     except UptimeKumaException:
         errors["base"] = "cannot_connect"
     except Exception:
@@ -73,6 +76,7 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _hassio_discovery: HassioServiceInfo | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -175,10 +179,11 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=PLACEHOLDER,
         )
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
-        """Prepare configuration for Uptime Kuma add-on.
+        """Prepare configuration for Uptime Kuma app.
 
         This flow is triggered by the discovery component.
         """

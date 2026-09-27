@@ -3,14 +3,14 @@
 from collections.abc import Mapping
 from functools import partial
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from sense_energy import (
     ASyncSenseable,
     SenseAuthenticationException,
     SenseMFARequiredException,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_PASSWORD, CONF_TIMEOUT
@@ -20,11 +20,11 @@ from .const import ACTIVE_UPDATE_RATE, DEFAULT_TIMEOUT, DOMAIN, SENSE_CONNECT_EX
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_EMAIL): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
+        probatio.Required(CONF_EMAIL): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): probatio.Coerce(int),
     }
 )
 
@@ -118,10 +118,13 @@ class SenseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="validation",
-            data_schema=vol.Schema({vol.Required(CONF_CODE): vol.All(str, vol.Strip)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_CODE): probatio.All(str, probatio.Strip)}
+            ),
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -153,7 +156,7 @@ class SenseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_validate",
-            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_PASSWORD): str}),
             errors=errors,
             description_placeholders={
                 CONF_EMAIL: self._auth_data[CONF_EMAIL],

@@ -1,11 +1,9 @@
 """Config flow for VoIP integration."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
+import probatio
 from voip_utils import SIP_PORT
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -13,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_SIP_PORT, CONF_SIP_USER, DOMAIN
@@ -24,12 +22,16 @@ class VoIPConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         if user_input is None:
             return self.async_show_form(
@@ -43,6 +45,7 @@ class VoIPConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
@@ -70,23 +73,23 @@ class VoipOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_SIP_PORT,
                         default=self.config_entry.options.get(
                             CONF_SIP_PORT,
                             SIP_PORT,
                         ),
                     ): cv.port,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_SIP_USER,
                         description={
                             "suggested_value": self.config_entry.options.get(
                                 CONF_SIP_USER, None
                             )
                         },
-                    ): vol.Any(None, cv.string),
+                    ): probatio.Any(None, cv.string),
                 }
             ),
         )

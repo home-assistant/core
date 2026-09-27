@@ -1,10 +1,8 @@
 """The keenetic_ndms2 component."""
 
-from __future__ import annotations
-
 import logging
 
-from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL, Platform
+from homeassistant.const import CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -17,7 +15,6 @@ from .const import (
     DEFAULT_CONSIDER_HOME,
     DEFAULT_INTERFACE,
     DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
 )
 from .router import KeeneticConfigEntry, KeeneticRouter
 
@@ -27,7 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: KeeneticConfigEntry) -> bool:
     """Set up the component."""
-    hass.data.setdefault(DOMAIN, {})
     async_add_defaults(hass, entry)
 
     router = KeeneticRouter(hass, entry)
@@ -74,21 +70,23 @@ async def async_unload_entry(
                     _LOGGER.debug("Removing entity %s", entity_entry.entity_id)
 
                     ent_reg.async_remove(entity_entry.entity_id)
-                    if entity_entry.device_id:
-                        dev_reg.async_update_device(
-                            entity_entry.device_id,
-                            remove_config_entry_id=config_entry.entry_id,
-                        )
+                    # The tracker attaches to a device found by MAC, which may be
+                    # owned by another integration; only remove it if we own it.
+                    if (
+                        entity_entry.device_id
+                        and (device := dev_reg.async_get(entity_entry.device_id))
+                        is not None
+                        and device.config_entry_id == config_entry.entry_id
+                    ):
+                        dev_reg.async_remove_device(device.id)
 
         _LOGGER.debug("Finished cleaning device_tracker entities")
 
     return unload_ok
 
 
-def async_add_defaults(hass: HomeAssistant, entry: KeeneticConfigEntry):
+def async_add_defaults(hass: HomeAssistant, entry: KeeneticConfigEntry) -> None:
     """Populate default options."""
-    host: str = entry.data[CONF_HOST]
-    imported_options: dict = hass.data[DOMAIN].get(f"imported_options_{host}", {})
     options = {
         CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
         CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME,
@@ -96,7 +94,6 @@ def async_add_defaults(hass: HomeAssistant, entry: KeeneticConfigEntry):
         CONF_TRY_HOTSPOT: True,
         CONF_INCLUDE_ARP: True,
         CONF_INCLUDE_ASSOCIATED: True,
-        **imported_options,
         **entry.options,
     }
 

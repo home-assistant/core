@@ -1,10 +1,8 @@
 """Support for climate devices through the SmartThings cloud API."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
@@ -28,8 +26,13 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.unit_conversion import (
+    TemperatureConverter,
+    TemperatureDeltaConverter,
+)
 
 from . import FullDevice, SmartThingsConfigEntry
 from .const import DOMAIN, MAIN, UNIT_MAP
@@ -65,6 +68,7 @@ OPERATING_STATE_TO_ACTION = {
 
 AC_MODE_TO_STATE = {
     "auto": HVACMode.AUTO,
+    "aIComfort": HVACMode.AUTO,
     "cool": HVACMode.COOL,
     "dry": HVACMode.DRY,
     "coolClean": HVACMode.COOL,
@@ -111,6 +115,7 @@ PRESET_MODE_TO_HA = {
     "smart": "smart",
     "motionIndirect": "motion_indirect",
     "motionDirect": "motion_direct",
+    "dryComfort": "dry_comfort",
 }
 
 HA_MODE_TO_PRESET_MODE = {v: k for k, v in PRESET_MODE_TO_HA.items()}
@@ -167,7 +172,9 @@ async def async_setup_entry(
         )
     )
     entities.extend(
-        SmartThingsHeatPumpZone(entry_data.client, device, component)
+        SmartThingsHeatPumpZone(
+            hass, entry_data.client, device, component, entry.entry_id
+        )
         for device in entry_data.devices.values()
         for component in device.status
         if component in {"INDOOR", "INDOOR1", "INDOOR2"}
@@ -212,6 +219,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
             flags |= ClimateEntityFeature.FAN_MODE
         return flags
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         await self.execute_device_command(
@@ -220,6 +228,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
             argument=fan_mode,
         )
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         await self.execute_device_command(
@@ -228,6 +237,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
             argument=STATE_TO_MODE[hvac_mode],
         )
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new operation mode and target temperatures."""
         hvac_mode = self.hvac_mode
@@ -266,6 +276,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         await asyncio.gather(*tasks)
 
     @property
+    @override
     def current_humidity(self) -> float | None:
         """Return the current humidity."""
         if self.supports_capability(Capability.RELATIVE_HUMIDITY_MEASUREMENT):
@@ -275,6 +286,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.get_attribute_value(
@@ -282,6 +294,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         )
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         return self.get_attribute_value(
@@ -289,6 +302,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         )
 
     @property
+    @override
     def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
         return self.get_attribute_value(
@@ -296,6 +310,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         )
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
         if not self.supports_capability(Capability.THERMOSTAT_OPERATING_STATE):
@@ -308,6 +323,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         )
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
         return MODE_TO_STATE.get(
@@ -317,6 +333,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         )
 
     @property
+    @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
         if (
@@ -332,6 +349,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         ]
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVACMode.COOL:
@@ -345,6 +363,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
@@ -354,6 +373,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
@@ -363,6 +383,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         # Offline third party thermostats may not have a unit
@@ -395,6 +416,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
                 Capability.THERMOSTAT_COOLING_SETPOINT,
                 Capability.TEMPERATURE_MEASUREMENT,
                 Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
+                Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL,
                 Capability.DEMAND_RESPONSE_LOAD_CONTROL,
             },
         )
@@ -417,6 +439,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             features |= ClimateEntityFeature.PRESET_MODE
         return features
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         await self.execute_device_command(
@@ -425,6 +448,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             argument=fan_mode,
         )
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         if hvac_mode == HVACMode.OFF:
@@ -436,8 +460,23 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             tasks.append(self.async_turn_on())
 
         mode = STATE_TO_AC_MODE[hvac_mode]
-        # If new hvac_mode is HVAC_MODE_FAN_ONLY and AirConditioner support "wind" or "fan" mode the AirConditioner
-        # new mode has to be "wind" or "fan"
+
+        # If new hvac_mode is HVACMode.AUTO and
+        # AirConditioner doesn't support "auto"
+        # but supports "aIComfort", change mode to "aIComfort"
+        if hvac_mode == HVACMode.AUTO:
+            supported_modes = (
+                self.get_attribute_value(
+                    Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
+                )
+                or []
+            )
+            if "auto" not in supported_modes and "aIComfort" in supported_modes:
+                mode = "aIComfort"
+
+        # If new hvac_mode is HVAC_MODE_FAN_ONLY and
+        # AirConditioner supports "wind" or "fan" mode,
+        # the AirConditioner new mode has to be "wind" or "fan"
         if hvac_mode == HVACMode.FAN_ONLY:
             for fan_mode in (WIND, FAN):
                 if fan_mode in self.get_attribute_value(
@@ -455,6 +494,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         )
         await asyncio.gather(*tasks)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         tasks = []
@@ -479,6 +519,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         )
         await asyncio.gather(*tasks)
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn device on."""
         await self.execute_device_command(
@@ -486,6 +527,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             Command.ON,
         )
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn device off."""
         await self.execute_device_command(
@@ -494,6 +536,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         )
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.get_attribute_value(
@@ -501,6 +544,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device specific state attributes.
 
@@ -524,6 +568,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         return res
 
     @property
+    @override
     def fan_mode(self) -> str:
         """Return the fan setting."""
         return self.get_attribute_value(
@@ -531,6 +576,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         )
 
     @property
+    @override
     def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
         return self.get_attribute_value(
@@ -538,6 +584,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         )
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
         if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "off":
@@ -549,13 +596,98 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         )
 
     @property
+    @override
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self.get_attribute_value(
             Capability.THERMOSTAT_COOLING_SETPOINT, Attribute.COOLING_SETPOINT
         )
 
+    def _get_setpoint_range_value(self, key: str) -> float | None:
+        """Return a value from the cooling setpoint range, if the device reports it."""
+        if (
+            setpoint_range := self.get_attribute_value(
+                Capability.THERMOSTAT_COOLING_SETPOINT,
+                Attribute.COOLING_SETPOINT_RANGE,
+            )
+        ) is None:
+            return None
+        return setpoint_range.get(key)
+
     @property
+    def _setpoint_range_unit(self) -> str:
+        """Return the unit the cooling setpoint range is reported in."""
+        if (
+            unit := self._internal_state[Capability.THERMOSTAT_COOLING_SETPOINT][
+                Attribute.COOLING_SETPOINT_RANGE
+            ].unit
+        ) is None:
+            return self.temperature_unit
+        return UNIT_MAP[unit]
+
+    @property
+    @override
+    def target_temperature_step(self) -> float | None:
+        """Return the supported step of target temperature."""
+        if (step := self._get_setpoint_range_value("step")) is None:
+            return None
+        return TemperatureDeltaConverter.convert(
+            step, self._setpoint_range_unit, self.temperature_unit
+        )
+
+    def _get_custom_setpoint(self, attribute: Attribute) -> float | None:
+        """Return a setpoint bound from the custom setpoint control capability."""
+        if not self.supports_capability(Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL):
+            return None
+        setpoint = self.get_attribute_value(
+            Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL, attribute
+        )
+        # Devices report -1000 when the bound is not available
+        if setpoint is None or setpoint == -1000:
+            return None
+        unit = self._internal_state[Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL][
+            attribute
+        ].unit
+        return TemperatureConverter.convert(
+            setpoint,
+            UNIT_MAP[unit] if unit else self.temperature_unit,
+            self.temperature_unit,
+        )
+
+    @property
+    @override
+    def min_temp(self) -> float:
+        """Return the minimum temperature."""
+        if (minimum := self._get_setpoint_range_value("minimum")) is not None:
+            return TemperatureConverter.convert(
+                minimum, self._setpoint_range_unit, self.temperature_unit
+            )
+        if (
+            minimum := self._get_custom_setpoint(Attribute.MINIMUM_SETPOINT)
+        ) is not None:
+            return minimum
+        return TemperatureConverter.convert(
+            DEFAULT_MIN_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
+        )
+
+    @property
+    @override
+    def max_temp(self) -> float:
+        """Return the maximum temperature."""
+        if (maximum := self._get_setpoint_range_value("maximum")) is not None:
+            return TemperatureConverter.convert(
+                maximum, self._setpoint_range_unit, self.temperature_unit
+            )
+        if (
+            maximum := self._get_custom_setpoint(Attribute.MAXIMUM_SETPOINT)
+        ) is not None:
+            return maximum
+        return TemperatureConverter.convert(
+            DEFAULT_MAX_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
+        )
+
+    @property
+    @override
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         unit = self._internal_state[Capability.TEMPERATURE_MEASUREMENT][
@@ -575,6 +707,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             return None
         return [FAN_OSCILLATION_TO_SWING.get(m, SWING_OFF) for m in supported_modes]
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set swing mode."""
         await self.execute_device_command(
@@ -584,6 +717,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         )
 
     @property
+    @override
     def swing_mode(self) -> str:
         """Return the swing setting."""
         return FAN_OSCILLATION_TO_SWING.get(
@@ -594,6 +728,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         )
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         if self.supports_capability(Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE):
@@ -623,6 +758,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             return modes
         return None
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set optional AC modes."""
         await self.execute_device_command(
@@ -653,7 +789,14 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
 
     _attr_name = None
 
-    def __init__(self, client: SmartThings, device: FullDevice, component: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        client: SmartThings,
+        device: FullDevice,
+        component: str,
+        entry_id: str,
+    ) -> None:
         """Init the class."""
         super().__init__(
             client,
@@ -670,11 +813,16 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
         self._attr_hvac_modes = self._determine_hvac_modes()
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{device.device.device_id}_{component}")},
-            via_device=(DOMAIN, device.device.device_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass,
+                (DOMAIN, device.device.device_id),
+                config_entry_id=entry_id,
+            ),
             name=f"{device.device.label} {component}",
         )
 
     @property
+    @override
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         features = ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
@@ -688,6 +836,7 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
         return features
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         min_setpoint = self.get_attribute_value(
@@ -698,6 +847,7 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
         return min_setpoint
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         max_setpoint = self.get_attribute_value(
@@ -707,6 +857,7 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
             return DEFAULT_MAX_TEMP
         return max_setpoint
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         if hvac_mode == HVACMode.OFF:
@@ -721,6 +872,7 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
             argument=HA_MODE_TO_HEAT_PUMP_AC_MODE[hvac_mode],
         )
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self.execute_device_command(
@@ -729,6 +881,7 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
             argument=kwargs[ATTR_TEMPERATURE],
         )
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn device on."""
         await self.execute_device_command(
@@ -736,6 +889,7 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
             Command.ON,
         )
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn device off."""
         await self.execute_device_command(
@@ -744,6 +898,7 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
         )
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.get_attribute_value(
@@ -751,6 +906,7 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
         )
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
         if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "off":
@@ -762,6 +918,7 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
         )
 
     @property
+    @override
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self.get_attribute_value(
@@ -769,6 +926,7 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
         )
 
     @property
+    @override
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         unit = self._internal_state[Capability.TEMPERATURE_MEASUREMENT][

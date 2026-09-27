@@ -1,11 +1,9 @@
 """Config flow for Bosch Smart Home Controller integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from os import makedirs
-from typing import Any, cast
+from typing import Any, cast, override
 
 from boschshcpy import SHCRegisterClient, SHCSession
 from boschshcpy.exceptions import (
@@ -14,7 +12,7 @@ from boschshcpy.exceptions import (
     SHCRegistrationError,
     SHCSessionError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -33,9 +31,9 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-HOST_SCHEMA = vol.Schema(
+HOST_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 
@@ -121,6 +119,7 @@ class BoschSHCConfigFlow(ConfigFlow, domain=DOMAIN):
         self.info = await self._get_info(self.host)
         return await self.async_step_credentials()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -205,9 +204,9 @@ class BoschSHCConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             user_input = {}
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
                 ): str,
             }
@@ -217,6 +216,7 @@ class BoschSHCConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="credentials", data_schema=schema, errors=errors
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

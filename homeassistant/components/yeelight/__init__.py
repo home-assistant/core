@@ -1,10 +1,8 @@
 """Support for Xiaomi Yeelight WiFi color bulb."""
 
-from __future__ import annotations
-
 import logging
 
-import voluptuous as vol
+import probatio
 from yeelight import BulbException
 from yeelight.aio import AsyncBulb
 
@@ -37,9 +35,7 @@ from .const import (
     CONF_NIGHTLIGHT_SWITCH_TYPE,
     CONF_SAVE_ON_CHANGE,
     CONF_TRANSITION,
-    DATA_CONFIG_ENTRIES,
-    DATA_CUSTOM_EFFECTS,
-    DATA_DEVICE,
+    DATA_CUSTOM_EFFECTS_KEY,
     DEFAULT_MODE_MUSIC,
     DEFAULT_NAME,
     DEFAULT_NIGHTLIGHT_SWITCH,
@@ -56,70 +52,71 @@ from .const import (
 from .device import YeelightDevice, async_format_id
 from .scanner import YeelightScanner
 
+type YeelightConfigEntry = ConfigEntry[YeelightDevice]
+
 _LOGGER = logging.getLogger(__name__)
 
 
 YEELIGHT_FLOW_TRANSITION_SCHEMA: VolDictType = {
-    vol.Optional(ATTR_COUNT, default=0): cv.positive_int,
-    vol.Optional(ATTR_ACTION, default=ACTION_RECOVER): vol.Any(
+    probatio.Optional(ATTR_COUNT, default=0): cv.positive_int,
+    probatio.Optional(ATTR_ACTION, default=ACTION_RECOVER): probatio.Any(
         ACTION_RECOVER, ACTION_OFF, ACTION_STAY
     ),
-    vol.Required(ATTR_TRANSITIONS): [
+    probatio.Required(ATTR_TRANSITIONS): [
         {
-            vol.Exclusive(YEELIGHT_RGB_TRANSITION, CONF_TRANSITION): vol.All(
+            probatio.Exclusive(YEELIGHT_RGB_TRANSITION, CONF_TRANSITION): probatio.All(
                 cv.ensure_list, [cv.positive_int]
             ),
-            vol.Exclusive(YEELIGHT_HSV_TRANSACTION, CONF_TRANSITION): vol.All(
+            probatio.Exclusive(YEELIGHT_HSV_TRANSACTION, CONF_TRANSITION): probatio.All(
                 cv.ensure_list, [cv.positive_int]
             ),
-            vol.Exclusive(YEELIGHT_TEMPERATURE_TRANSACTION, CONF_TRANSITION): vol.All(
-                cv.ensure_list, [cv.positive_int]
-            ),
-            vol.Exclusive(YEELIGHT_SLEEP_TRANSACTION, CONF_TRANSITION): vol.All(
-                cv.ensure_list, [cv.positive_int]
-            ),
+            probatio.Exclusive(
+                YEELIGHT_TEMPERATURE_TRANSACTION, CONF_TRANSITION
+            ): probatio.All(cv.ensure_list, [cv.positive_int]),
+            probatio.Exclusive(
+                YEELIGHT_SLEEP_TRANSACTION, CONF_TRANSITION
+            ): probatio.All(cv.ensure_list, [cv.positive_int]),
         }
     ],
 }
 
-DEVICE_SCHEMA = vol.Schema(
+DEVICE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.positive_int,
-        vol.Optional(CONF_MODE_MUSIC, default=False): cv.boolean,
-        vol.Optional(CONF_SAVE_ON_CHANGE, default=False): cv.boolean,
-        vol.Optional(CONF_NIGHTLIGHT_SWITCH_TYPE): vol.Any(
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.positive_int,
+        probatio.Optional(CONF_MODE_MUSIC, default=False): cv.boolean,
+        probatio.Optional(CONF_SAVE_ON_CHANGE, default=False): cv.boolean,
+        probatio.Optional(CONF_NIGHTLIGHT_SWITCH_TYPE): probatio.Any(
             NIGHTLIGHT_SWITCH_TYPE_LIGHT
         ),
-        vol.Optional(CONF_MODEL): cv.string,
+        probatio.Optional(CONF_MODEL): cv.string,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
-                vol.Optional(CONF_CUSTOM_EFFECTS): [
+                probatio.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
+                probatio.Optional(CONF_CUSTOM_EFFECTS): [
                     {
-                        vol.Required(CONF_NAME): cv.string,
-                        vol.Required(CONF_FLOW_PARAMS): YEELIGHT_FLOW_TRANSITION_SCHEMA,
+                        probatio.Required(CONF_NAME): cv.string,
+                        probatio.Required(
+                            CONF_FLOW_PARAMS
+                        ): YEELIGHT_FLOW_TRANSITION_SCHEMA,
                     }
                 ],
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Yeelight bulbs."""
     conf = config.get(DOMAIN, {})
-    hass.data[DOMAIN] = {
-        DATA_CUSTOM_EFFECTS: conf.get(CONF_CUSTOM_EFFECTS, {}),
-        DATA_CONFIG_ENTRIES: {},
-    }
+    hass.data[DATA_CUSTOM_EFFECTS_KEY] = conf.get(CONF_CUSTOM_EFFECTS, [])
     # Make sure the scanner is always started in case we are
     # going to retry via ConfigEntryNotReady and the bulb has changed
     # ip
@@ -141,13 +138,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def _async_initialize(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: YeelightConfigEntry,
     device: YeelightDevice,
 ) -> None:
     """Initialize a Yeelight device."""
-    entry_data = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id] = {}
     await device.async_setup()
-    entry_data[DATA_DEVICE] = device
+    entry.runtime_data = device
 
     if (
         device.capabilities
@@ -160,7 +156,9 @@ async def _async_initialize(
 
 
 @callback
-def _async_normalize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+def _async_normalize_config_entry(
+    hass: HomeAssistant, entry: YeelightConfigEntry
+) -> None:
     """Move options from data for imported entries.
 
     Initialize options with default values for other entries.
@@ -203,7 +201,7 @@ def _async_normalize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> No
         )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: YeelightConfigEntry) -> bool:
     """Set up Yeelight from a config entry."""
     _async_normalize_config_entry(hass, entry)
 
@@ -235,15 +233,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: YeelightConfigEntry) -> bool:
     """Unload a config entry."""
-    data_config_entries = hass.data[DOMAIN][DATA_CONFIG_ENTRIES]
-    data_config_entries.pop(entry.entry_id)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def _async_get_device(
-    hass: HomeAssistant, host: str, entry: ConfigEntry
+    hass: HomeAssistant, host: str, entry: YeelightConfigEntry
 ) -> YeelightDevice:
     # Get model from config and capabilities
     model = entry.options.get(CONF_MODEL) or entry.data.get(CONF_DETECTED_MODEL)

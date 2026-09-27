@@ -1,7 +1,5 @@
 """The HERE Travel Time integration."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.const import CONF_API_KEY, CONF_MODE, Platform

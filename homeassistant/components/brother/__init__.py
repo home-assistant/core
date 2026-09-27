@@ -1,7 +1,5 @@
 """The Brother component."""
 
-from __future__ import annotations
-
 import logging
 
 from brother import Brother, SnmpError
@@ -22,7 +20,7 @@ from .coordinator import BrotherConfigEntry, BrotherDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> bool:

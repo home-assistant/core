@@ -1,6 +1,7 @@
 """Tests for the WLED switch platform."""
 
-from unittest.mock import MagicMock
+from collections.abc import Generator
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -16,14 +17,38 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import async_fire_time_changed, async_load_json_object_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 
 pytestmark = pytest.mark.usefixtures("init_integration")
+
+
+@pytest.fixture(autouse=True)
+def override_platforms() -> Generator[None]:
+    """Override PLATFORMS."""
+    with patch("homeassistant.components.wled.PLATFORMS", [Platform.SWITCH]):
+        yield
+
+
+@pytest.mark.parametrize("device_fixture", ["rgb_single_segment", "rgb"])
+async def test_snapshots(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test snapshot of the platform."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -34,6 +59,12 @@ pytestmark = pytest.mark.usefixtures("init_integration")
             "nightlight",
             {"on": True},
             {"on": False},
+        ),
+        (
+            "switch.wled_rgb_light_freeze",
+            "segment",
+            {"segment_id": 0, "freeze": True},
+            {"segment_id": 0, "freeze": False},
         ),
         (
             "switch.wled_rgb_light_reverse",
@@ -66,24 +97,14 @@ async def test_switch_state(
     called_with_on: dict[str, bool | int],
     called_with_off: dict[str, bool | int],
 ) -> None:
-    """Test the creation and values of the WLED switches."""
-    assert (state := hass.states.get(entity_id))
-    assert state == snapshot
-
-    assert (entity_entry := entity_registry.async_get(state.entity_id))
-    assert entity_entry == snapshot
-
-    assert entity_entry.device_id
-    assert (device_entry := device_registry.async_get(entity_entry.device_id))
-    assert device_entry == snapshot
-
+    """Test the behavior of the switch."""
     # Test on/off services
     method_mock = getattr(mock_wled, method)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: state.entity_id},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -93,7 +114,7 @@ async def test_switch_state(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: state.entity_id},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -106,12 +127,12 @@ async def test_switch_state(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: state.entity_id},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 
     assert method_mock.call_count == 3
-    assert (state := hass.states.get(state.entity_id))
+    assert (state := hass.states.get(entity_id))
     assert state.state != STATE_UNAVAILABLE
 
     # Test connection error, leading to becoming unavailable
@@ -137,8 +158,11 @@ async def test_switch_dynamically_handle_segments(
 ) -> None:
     """Test if a new/deleted segment is dynamically added/removed."""
 
-    assert (segment0 := hass.states.get("switch.wled_rgb_light_reverse"))
-    assert segment0.state == STATE_OFF
+    assert (segment0_freeze := hass.states.get("switch.wled_rgb_light_freeze"))
+    assert segment0_freeze.state == STATE_OFF
+    assert (segment0_reverse := hass.states.get("switch.wled_rgb_light_reverse"))
+    assert segment0_reverse.state == STATE_OFF
+    assert not hass.states.get("switch.wled_rgb_light_segment_1_freeze")
     assert not hass.states.get("switch.wled_rgb_light_segment_1_reverse")
 
     # Test adding a segment dynamically...
@@ -151,10 +175,18 @@ async def test_switch_dynamically_handle_segments(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (segment0 := hass.states.get("switch.wled_rgb_light_reverse"))
-    assert segment0.state == STATE_OFF
-    assert (segment1 := hass.states.get("switch.wled_rgb_light_segment_1_reverse"))
-    assert segment1.state == STATE_ON
+    assert (segment0_freeze := hass.states.get("switch.wled_rgb_light_freeze"))
+    assert segment0_freeze.state == STATE_OFF
+    assert (segment0_reverse := hass.states.get("switch.wled_rgb_light_reverse"))
+    assert segment0_reverse.state == STATE_OFF
+    assert (
+        segment1_freeze := hass.states.get("switch.wled_rgb_light_segment_1_freeze")
+    )
+    assert segment1_freeze.state == STATE_ON
+    assert (
+        segment1_reverse := hass.states.get("switch.wled_rgb_light_segment_1_reverse")
+    )
+    assert segment1_reverse.state == STATE_ON
 
     # Test remove segment again...
     mock_wled.update.return_value = return_value
@@ -162,7 +194,16 @@ async def test_switch_dynamically_handle_segments(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (segment0 := hass.states.get("switch.wled_rgb_light_reverse"))
-    assert segment0.state == STATE_OFF
-    assert (segment1 := hass.states.get("switch.wled_rgb_light_segment_1_reverse"))
-    assert segment1.state == STATE_UNAVAILABLE
+    assert (segment0_freeze := hass.states.get("switch.wled_rgb_light_freeze"))
+    assert segment0_freeze.state == STATE_OFF
+    assert (segment0_reverse := hass.states.get("switch.wled_rgb_light_reverse"))
+    assert segment0_reverse.state == STATE_OFF
+
+    assert (
+        segment1_freeze := hass.states.get("switch.wled_rgb_light_segment_1_freeze")
+    )
+    assert segment1_freeze.state == STATE_UNAVAILABLE
+    assert (
+        segment1_reverse := hass.states.get("switch.wled_rgb_light_segment_1_reverse")
+    )
+    assert segment1_reverse.state == STATE_UNAVAILABLE

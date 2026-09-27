@@ -25,6 +25,26 @@ TEST_SENSOR = Sensor(
     permissions={"read": True},
     model="Test",
 )
+TEST_STALE_SENSOR = Sensor(
+    name="Test",
+    device_id="1",
+    type="Test",
+    sensor_id="2",
+    sensor_field_names=["Temperature"],
+    location=Location(id="1", name="Test"),
+    data={
+        "data": {
+            "current": {
+                "Temperature": {
+                    "spot": {"value": "2", "time": 1767225600},
+                    "unit": "degrees_celsius",
+                }
+            }
+        }
+    },
+    permissions={"read": True},
+    model="Test",
+)
 TEST_NO_PERMISSION_SENSOR = Sensor(
     name="Test",
     device_id="1",

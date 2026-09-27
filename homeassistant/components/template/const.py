@@ -3,7 +3,7 @@
 from homeassistant.const import Platform
 from homeassistant.helpers.typing import ConfigType
 
-CONF_ADVANCED_OPTIONS = "advanced_options"
+CONF_ADDITIONAL_OPTIONS = "additional_options"
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 CONF_ATTRIBUTES = "attributes"
 CONF_AVAILABILITY = "availability"
@@ -25,7 +25,9 @@ PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.COVER,
+    Platform.DEVICE_TRACKER,
     Platform.EVENT,
     Platform.FAN,
     Platform.IMAGE,

@@ -19,6 +19,11 @@
       }
     }
   },
+  "exceptions": {
+    "update_failed": {
+      "message": "Update of data from the web site failed: {error}"
+    }
+  },
   "options": {
     "step": {
       "init": {

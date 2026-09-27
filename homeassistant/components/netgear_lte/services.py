@@ -1,9 +1,10 @@
 """Services for the Netgear LTE integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -14,7 +15,6 @@ from .const import (
     AUTOCONNECT_MODES,
     DOMAIN,
     FAILOVER_MODES,
-    LOGGER,
 )
 from .coordinator import NetgearLTEConfigEntry
 
@@ -23,27 +23,27 @@ SERVICE_SET_OPTION = "set_option"
 SERVICE_CONNECT_LTE = "connect_lte"
 SERVICE_DISCONNECT_LTE = "disconnect_lte"
 
-DELETE_SMS_SCHEMA = vol.Schema(
+DELETE_SMS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(ATTR_HOST): cv.string,
-        vol.Required(ATTR_SMS_ID): vol.All(cv.ensure_list, [cv.positive_int]),
+        probatio.Optional(ATTR_HOST): cv.string,
+        probatio.Required(ATTR_SMS_ID): probatio.All(cv.ensure_list, [cv.positive_int]),
     }
 )
 
-SET_OPTION_SCHEMA = vol.Schema(
-    vol.All(
+SET_OPTION_SCHEMA = probatio.Schema(
+    probatio.All(
         cv.has_at_least_one_key(ATTR_FAILOVER, ATTR_AUTOCONNECT),
         {
-            vol.Optional(ATTR_HOST): cv.string,
-            vol.Optional(ATTR_FAILOVER): vol.In(FAILOVER_MODES),
-            vol.Optional(ATTR_AUTOCONNECT): vol.In(AUTOCONNECT_MODES),
+            probatio.Optional(ATTR_HOST): cv.string,
+            probatio.Optional(ATTR_FAILOVER): probatio.In(FAILOVER_MODES),
+            probatio.Optional(ATTR_AUTOCONNECT): probatio.In(AUTOCONNECT_MODES),
         },
     )
 )
 
-CONNECT_LTE_SCHEMA = vol.Schema({vol.Optional(ATTR_HOST): cv.string})
+CONNECT_LTE_SCHEMA = probatio.Schema({probatio.Optional(ATTR_HOST): cv.string})
 
-DISCONNECT_LTE_SCHEMA = vol.Schema({vol.Optional(ATTR_HOST): cv.string})
+DISCONNECT_LTE_SCHEMA = probatio.Schema({probatio.Optional(ATTR_HOST): cv.string})
 
 
 async def _service_handler(call: ServiceCall) -> None:
@@ -56,8 +56,11 @@ async def _service_handler(call: ServiceCall) -> None:
             break
 
     if not entry or not (modem := entry.runtime_data.modem).token:
-        LOGGER.error("%s: host %s unavailable", call.service, host)
-        return
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_found",
+            translation_placeholders={"service": call.service},
+        )
 
     if call.service == SERVICE_DELETE_SMS:
         for sms_id in call.data[ATTR_SMS_ID]:

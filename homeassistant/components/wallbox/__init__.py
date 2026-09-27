@@ -1,7 +1,5 @@
 """The Wallbox integration."""
 
-from __future__ import annotations
-
 from wallbox import Wallbox
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -17,6 +15,7 @@ from .const import (
 from .coordinator import WallboxConfigEntry, WallboxCoordinator, check_token_validity
 
 PLATFORMS = [
+    Platform.BUTTON,
     Platform.LOCK,
     Platform.NUMBER,
     Platform.SELECT,

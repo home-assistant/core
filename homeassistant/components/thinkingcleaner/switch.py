@@ -1,13 +1,11 @@
 """Support for ThinkingCleaner switches."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import time
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pythinkingcleaner import Discovery, ThinkingCleaner
-import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.switch import (
@@ -42,7 +40,9 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     ),
 )
 
-PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
+    {probatio.Optional(CONF_HOST): cv.string}
+)
 
 
 def setup_platform(
@@ -123,7 +123,8 @@ class ThinkingCleanerSwitch(SwitchEntity):
         return True
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool:
         """Return true if device is on."""
         if self.entity_description.key == "clean":
             return (
@@ -134,6 +135,7 @@ class ThinkingCleanerSwitch(SwitchEntity):
 
         return False
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         sensor_type = self.entity_description.key
@@ -145,6 +147,7 @@ class ThinkingCleanerSwitch(SwitchEntity):
         elif sensor_type == "find":
             self._tc_object.find_me()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self.entity_description.key == "clean":

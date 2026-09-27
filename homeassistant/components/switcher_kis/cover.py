@@ -1,8 +1,6 @@
 """Switcher integration Cover platform."""
 
-from __future__ import annotations
-
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aioswitcher.device import DeviceCategory, ShutterDirection, SwitcherShutter
 
@@ -71,32 +69,37 @@ class SwitcherBaseCoverEntity(SwitcherEntity, CoverEntity):
     )
     _cover_id: int
 
+    @override
     def _update_data(self) -> None:
         """Update data from device."""
         data = cast(SwitcherShutter, self.coordinator.data)
         self._attr_current_cover_position = data.position[self._cover_id]
         self._attr_is_closed = data.position[self._cover_id] == 0
         self._attr_is_closing = (
-            data.direction[self._cover_id] == ShutterDirection.SHUTTER_DOWN
+            data.direction[self._cover_id] is ShutterDirection.SHUTTER_DOWN
         )
         self._attr_is_opening = (
-            data.direction[self._cover_id] == ShutterDirection.SHUTTER_UP
+            data.direction[self._cover_id] is ShutterDirection.SHUTTER_UP
         )
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         await self._async_call_api(API_SET_POSITION, 0, self._cover_id)
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         await self._async_call_api(API_SET_POSITION, 100, self._cover_id)
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self._async_call_api(
             API_SET_POSITION, kwargs[ATTR_POSITION], self._cover_id
         )
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._async_call_api(API_STOP, self._cover_id)

@@ -1,9 +1,8 @@
 """Support for esphome times."""
 
-from __future__ import annotations
-
 from datetime import time
 from functools import partial
+from typing import override
 
 from aioesphomeapi import TimeInfo, TimeState
 
@@ -19,6 +18,7 @@ class EsphomeTime(EsphomeEntity[TimeInfo, TimeState], TimeEntity):
 
     @property
     @esphome_state_property
+    @override
     def native_value(self) -> time | None:
         """Return the state of the entity."""
         state = self._state
@@ -26,6 +26,7 @@ class EsphomeTime(EsphomeEntity[TimeInfo, TimeState], TimeEntity):
             return None
         return time(state.hour, state.minute, state.second)
 
+    @override
     async def async_set_value(self, value: time) -> None:
         """Update the current time."""
         self._client.time_command(

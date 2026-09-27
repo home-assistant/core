@@ -1,16 +1,14 @@
 """Read the balance of your bank accounts via FinTS."""
 
-from __future__ import annotations
-
 from collections import namedtuple
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from fints.client import FinTS3PinTanClient
 from fints.models import SEPAAccount
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -39,22 +37,22 @@ ATTR_ACCOUNT = CONF_ACCOUNT
 ATTR_BANK = "bank"
 ATTR_ACCOUNT_TYPE = "account_type"
 
-SCHEMA_ACCOUNTS = vol.Schema(
+SCHEMA_ACCOUNTS = probatio.Schema(
     {
-        vol.Required(CONF_ACCOUNT): cv.string,
-        vol.Optional(CONF_NAME, default=None): vol.Any(None, cv.string),
+        probatio.Required(CONF_ACCOUNT): cv.string,
+        probatio.Optional(CONF_NAME, default=None): probatio.Any(None, cv.string),
     }
 )
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_BIN): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PIN): cv.string,
-        vol.Required(CONF_URL): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_ACCOUNTS, default=[]): cv.ensure_list(SCHEMA_ACCOUNTS),
-        vol.Optional(CONF_HOLDINGS, default=[]): cv.ensure_list(SCHEMA_ACCOUNTS),
+        probatio.Required(CONF_BIN): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PIN): cv.string,
+        probatio.Required(CONF_URL): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_ACCOUNTS, default=[]): cv.ensure_list(SCHEMA_ACCOUNTS),
+        probatio.Optional(CONF_HOLDINGS, default=[]): cv.ensure_list(SCHEMA_ACCOUNTS),
     }
 )
 
@@ -89,28 +87,24 @@ def setup_platform(
 
     for account in balance_accounts:
         if config[CONF_ACCOUNTS] and account.iban not in account_config:
-            _LOGGER.debug("Skipping account %s for bank %s", account.iban, fints_name)
+            _LOGGER.debug("Skipping account for bank %s", fints_name)
             continue
 
         if not (account_name := account_config.get(account.iban)):
             account_name = f"{fints_name} - {account.iban}"
         accounts.append(FinTsAccount(client, account, account_name))
-        _LOGGER.debug("Creating account %s for bank %s", account.iban, fints_name)
+        _LOGGER.debug("Creating account for bank %s", fints_name)
 
     for account in holdings_accounts:
         if config[CONF_HOLDINGS] and account.accountnumber not in holdings_config:
-            _LOGGER.debug(
-                "Skipping holdings %s for bank %s", account.accountnumber, fints_name
-            )
+            _LOGGER.debug("Skipping holdings for bank %s", fints_name)
             continue
 
         account_name = holdings_config.get(account.accountnumber)
         if not account_name:
             account_name = f"{fints_name} - {account.accountnumber}"
         accounts.append(FinTsHoldingsAccount(client, account, account_name))
-        _LOGGER.debug(
-            "Creating holdings %s for bank %s", account.accountnumber, fints_name
-        )
+        _LOGGER.debug("Creating holdings for bank %s", fints_name)
 
     add_entities(accounts, True)
 
@@ -218,9 +212,7 @@ class FinTsClient:
 
             else:
                 _LOGGER.warning(
-                    "Could not determine type of account %s from %s",
-                    account.iban,
-                    self.client.user_id,
+                    "Could not determine type of account for bank %s", self.name
                 )
 
         return balance_accounts, holdings_accounts
@@ -278,6 +270,7 @@ class FinTsHoldingsAccount(SensorEntity):
         self._attr_native_value = sum(h.total_value for h in self._holdings)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Additional attributes of the sensor.
 

@@ -1,13 +1,12 @@
 """Services for Nord Pool integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import date, datetime
 from functools import partial
 import logging
 from typing import TYPE_CHECKING
 
+import probatio
 from pynordpool import (
     AREAS,
     Currency,
@@ -18,9 +17,7 @@ from pynordpool import (
     NordPoolError,
     PriceIndicesData,
 )
-import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DATE
 from homeassistant.core import (
     HomeAssistant,
@@ -30,7 +27,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import ConfigEntrySelector
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
@@ -39,6 +36,22 @@ if TYPE_CHECKING:
     from . import NordPoolConfigEntry
 from .const import ATTR_RESOLUTION, DOMAIN
 
+
+def _validate_areas(areas: list[str]) -> list[str]:
+    """Validate the areas."""
+    validated_areas: list[str] = []
+
+    for area in areas:
+        validated_area = cv.string(area)
+        validated_area = validated_area.upper()
+        if validated_area not in AREAS:
+            raise probatio.Invalid(f"Area {area} is not valid")
+
+        validated_areas.append(validated_area)
+
+    return validated_areas
+
+
 _LOGGER = logging.getLogger(__name__)
 ATTR_CONFIG_ENTRY = "config_entry"
 ATTR_AREAS = "areas"
@@ -46,38 +59,30 @@ ATTR_CURRENCY = "currency"
 
 SERVICE_GET_PRICES_FOR_DATE = "get_prices_for_date"
 SERVICE_GET_PRICE_INDICES_FOR_DATE = "get_price_indices_for_date"
-SERVICE_GET_PRICES_SCHEMA = vol.Schema(
+SERVICE_GET_PRICES_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Required(ATTR_DATE): cv.date,
-        vol.Optional(ATTR_AREAS): vol.All(vol.In(list(AREAS)), cv.ensure_list, [str]),
-        vol.Optional(ATTR_CURRENCY): vol.All(
-            cv.string, vol.In([currency.value for currency in Currency])
+        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
+        probatio.Required(ATTR_DATE): cv.date,
+        probatio.Optional(ATTR_AREAS, default=[]): probatio.All(
+            cv.ensure_list, _validate_areas
+        ),
+        probatio.Optional(ATTR_CURRENCY): probatio.All(
+            cv.string,
+            probatio.Upper,
+            probatio.In([currency.value for currency in Currency]),
         ),
     }
 )
 SERVICE_GET_PRICE_INDICES_SCHEMA = SERVICE_GET_PRICES_SCHEMA.extend(
     {
-        vol.Optional(ATTR_RESOLUTION, default=60): vol.All(
-            cv.positive_int, vol.All(vol.Coerce(int), vol.In((15, 30, 60)))
+        probatio.Optional(ATTR_RESOLUTION, default=60): probatio.All(
+            cv.positive_int,
+            probatio.All(probatio.Coerce(int), probatio.In((15, 30, 60))),
         ),
     }
 )
-
-
-def get_config_entry(hass: HomeAssistant, entry_id: str) -> NordPoolConfigEntry:
-    """Return config entry."""
-    if not (entry := hass.config_entries.async_get_entry(entry_id)):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="entry_not_found",
-        )
-    if entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="entry_not_loaded",
-        )
-    return entry
 
 
 @callback
@@ -88,24 +93,20 @@ def async_setup_services(hass: HomeAssistant) -> None:
         call: ServiceCall,
     ) -> tuple[NordPoolClient, date, str, list[str], int]:
         """Return the parameters for the service."""
-        entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
+        entry: NordPoolConfigEntry = service.async_get_config_entry(
+            hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+        )
         client = entry.runtime_data.client
         asked_date: date = call.data[ATTR_DATE]
 
-        areas: list[str] = entry.data[ATTR_AREAS]
-        if _areas := call.data.get(ATTR_AREAS):
-            areas = _areas
+        areas = call.data.get(ATTR_AREAS)
+        areas = areas or entry.data[ATTR_AREAS]
 
-        currency: str = entry.data[ATTR_CURRENCY]
-        if _currency := call.data.get(ATTR_CURRENCY):
-            currency = _currency
+        currency = call.data.get(ATTR_CURRENCY)
+        currency = currency or entry.data[ATTR_CURRENCY]
 
-        resolution: int = 60
-        if _resolution := call.data.get(ATTR_RESOLUTION):
-            resolution = _resolution
-
-        areas = [area.upper() for area in areas]
-        currency = currency.upper()
+        resolution = call.data.get(ATTR_RESOLUTION)
+        resolution = resolution or 60
 
         return (client, asked_date, currency, areas, resolution)
 

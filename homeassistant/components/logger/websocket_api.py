@@ -2,10 +2,11 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
+from homeassistant.config_entries import DISCOVERY_SOURCES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.setup import async_get_loaded_integrations
@@ -29,11 +30,21 @@ def async_load_websocket_api(hass: HomeAssistant) -> None:
 
 
 @callback
-@websocket_api.websocket_command({vol.Required("type"): "logger/log_info"})
+@websocket_api.websocket_command({probatio.Required("type"): "logger/log_info"})
 def handle_integration_log_info(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations logger info."""
+    integrations = set(async_get_loaded_integrations(hass))
+
+    # Add discovered config flows that are not yet loaded
+    for flow in hass.config_entries.flow.async_progress():
+        if flow["context"].get("source") in DISCOVERY_SOURCES:
+            integrations.add(flow["handler"])
+
+    # Add integrations with custom log settings
+    integrations.update(hass.data[DATA_LOGGER].settings.async_get_integration_domains())
+
     connection.send_result(
         msg["id"],
         [
@@ -43,19 +54,20 @@ def handle_integration_log_info(
                     f"homeassistant.components.{integration}"
                 ).getEffectiveLevel(),
             }
-            for integration in async_get_loaded_integrations(hass)
+            for integration in integrations
         ],
     )
 
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "logger/integration_log_level",
-        vol.Required("integration"): str,
-        vol.Required("level"): vol.In(LOGSEVERITY),
-        vol.Required("persistence"): vol.Coerce(LogPersistance),
+        probatio.Required("type"): "logger/integration_log_level",
+        probatio.Required("integration"): str,
+        probatio.Required("level"): probatio.In(LOGSEVERITY),
+        probatio.Required("persistence"): probatio.Coerce(LogPersistance),
     }
 )
+@websocket_api.require_admin
 @websocket_api.async_response
 async def handle_integration_log_level(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
@@ -82,12 +94,13 @@ async def handle_integration_log_level(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "logger/log_level",
-        vol.Required("module"): str,
-        vol.Required("level"): vol.In(LOGSEVERITY),
-        vol.Required("persistence"): vol.Coerce(LogPersistance),
+        probatio.Required("type"): "logger/log_level",
+        probatio.Required("module"): str,
+        probatio.Required("level"): probatio.In(LOGSEVERITY),
+        probatio.Required("persistence"): probatio.Coerce(LogPersistance),
     }
 )
+@websocket_api.require_admin
 @websocket_api.async_response
 async def handle_module_log_level(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]

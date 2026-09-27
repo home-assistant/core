@@ -14,7 +14,7 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    DOMAIN as DOMAIN_CLIMATE,
+    DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACMode,
@@ -57,7 +57,7 @@ async def test_set_hvac_mode_heat(hass: HomeAssistant, entry: MockConfigEntry) -
 
     with patch.object(MockDeviceConnection, "lock_regulator") as lock_regulator:
         await hass.services.async_call(
-            DOMAIN_CLIMATE,
+            CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
             {
                 ATTR_ENTITY_ID: CLIMATE_CLIMATE1,
@@ -70,7 +70,7 @@ async def test_set_hvac_mode_heat(hass: HomeAssistant, entry: MockConfigEntry) -
         lock_regulator.return_value = False
 
         await hass.services.async_call(
-            DOMAIN_CLIMATE,
+            CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
             {
                 ATTR_ENTITY_ID: CLIMATE_CLIMATE1,
@@ -90,7 +90,7 @@ async def test_set_hvac_mode_heat(hass: HomeAssistant, entry: MockConfigEntry) -
         lock_regulator.return_value = True
 
         await hass.services.async_call(
-            DOMAIN_CLIMATE,
+            CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
             {
                 ATTR_ENTITY_ID: CLIMATE_CLIMATE1,
@@ -118,7 +118,7 @@ async def test_set_hvac_mode_off(hass: HomeAssistant, entry: MockConfigEntry) ->
         lock_regulator.return_value = False
 
         await hass.services.async_call(
-            DOMAIN_CLIMATE,
+            CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
             {
                 ATTR_ENTITY_ID: CLIMATE_CLIMATE1,
@@ -138,7 +138,7 @@ async def test_set_hvac_mode_off(hass: HomeAssistant, entry: MockConfigEntry) ->
         lock_regulator.return_value = True
 
         await hass.services.async_call(
-            DOMAIN_CLIMATE,
+            CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
             {
                 ATTR_ENTITY_ID: CLIMATE_CLIMATE1,
@@ -167,7 +167,7 @@ async def test_set_temperature(hass: HomeAssistant, entry: MockConfigEntry) -> N
 
         with pytest.raises(ServiceValidationError):
             await hass.services.async_call(
-                DOMAIN_CLIMATE,
+                CLIMATE_DOMAIN,
                 SERVICE_SET_TEMPERATURE,
                 {
                     ATTR_ENTITY_ID: CLIMATE_CLIMATE1,
@@ -184,7 +184,7 @@ async def test_set_temperature(hass: HomeAssistant, entry: MockConfigEntry) -> N
         var_abs.return_value = False
 
         await hass.services.async_call(
-            DOMAIN_CLIMATE,
+            CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {ATTR_ENTITY_ID: CLIMATE_CLIMATE1, ATTR_TEMPERATURE: 25.5},
             blocking=True,
@@ -201,7 +201,7 @@ async def test_set_temperature(hass: HomeAssistant, entry: MockConfigEntry) -> N
         var_abs.return_value = True
 
         await hass.services.async_call(
-            DOMAIN_CLIMATE,
+            CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {ATTR_ENTITY_ID: CLIMATE_CLIMATE1, ATTR_TEMPERATURE: 25.5},
             blocking=True,

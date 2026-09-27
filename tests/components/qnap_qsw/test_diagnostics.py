@@ -53,7 +53,6 @@ async def test_config_entry_diagnostics(
 ) -> None:
     """Test config entry diagnostics."""
     await async_init_integration(hass)
-    assert hass.data[DOMAIN]
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)

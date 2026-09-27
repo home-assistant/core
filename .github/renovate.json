@@ -1,0 +1,380 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+
+  "enabledManagers": [
+    "pep621",
+    "pip_requirements",
+    "pre-commit",
+    "dockerfile",
+    "npm",
+    "custom.regex",
+    "github-actions",
+    "homeassistant-manifest"
+  ],
+
+  "ignorePaths": ["**/node_modules/**"],
+
+  "pre-commit": {
+    "enabled": true
+  },
+
+  "pip_requirements": {
+    "managerFilePatterns": [
+      "/(^|/)requirements[\\w_-]*\\.txt$/",
+      "/(^|/)homeassistant/package_constraints\\.txt$/"
+    ]
+  },
+
+  "dockerfile": {
+    "managerFilePatterns": ["/^Dockerfile$/"]
+  },
+
+  "homeassistant-manifest": {
+    "managerFilePatterns": [
+      "/^homeassistant/components/[^/]+/manifest\\.json$/"
+    ]
+  },
+
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update ruff required-version in pyproject.toml",
+      "managerFilePatterns": ["/^pyproject\\.toml$/"],
+      "matchStrings": ["required-version = \">=(?<currentValue>[\\d.]+)\""],
+      "depNameTemplate": "ruff",
+      "datasourceTemplate": "pypi"
+    },
+    {
+      "customType": "regex",
+      "description": "Update go2rtc RECOMMENDED_VERSION in const.py alongside the Dockerfile pin",
+      "managerFilePatterns": ["/^homeassistant/components/go2rtc/const\\.py$/"],
+      "matchStrings": ["RECOMMENDED_VERSION = \"(?<currentValue>[\\d.]+)\""],
+      "depNameTemplate": "ghcr.io/alexxit/go2rtc",
+      "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "Update the newest MariaDB entry (the latest LTS) in the CI database test matrix",
+      "managerFilePatterns": ["/^\\.github/workflows/ci\\.yaml$/"],
+      "matchStrings": [
+        "MARIADB_VERSIONS: \".*'mariadb:(?<currentValue>\\d+\\.\\d+\\.\\d+)','mysql:"
+      ],
+      "depNameTemplate": "mariadb",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "Update the PostgreSQL entries in the CI database test matrix",
+      "managerFilePatterns": ["/^\\.github/workflows/ci\\.yaml$/"],
+      "matchStringsStrategy": "recursive",
+      "matchStrings": [
+        "POSTGRESQL_VERSIONS: \".*\"",
+        "postgres:(?<currentValue>\\d+\\.\\d+)"
+      ],
+      "depNameTemplate": "postgres",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    }
+  ],
+
+  "minimumReleaseAge": "7 days",
+  "prConcurrentLimit": 0,
+  "prHourlyLimit": 2,
+  "schedule": ["before 6am"],
+
+  "semanticCommits": "disabled",
+  "commitMessageAction": "Update",
+  "commitMessageTopic": "{{depName}}",
+  "commitMessageExtra": "to {{newVersion}}",
+
+  "automerge": false,
+
+  "vulnerabilityAlerts": {
+    "enabled": false
+  },
+
+  "packageRules": [
+    {
+      "description": "Deny all by default — allowlist below re-enables specific packages",
+      "matchPackageNames": ["*"],
+      "enabled": false
+    },
+    {
+      "description": "Core runtime dependencies (allowlisted)",
+      "matchPackageNames": [
+        "aiohttp",
+        "aiohttp-fast-zlib",
+        "aiohttp_cors",
+        "aiohttp-asyncmdnsresolver",
+        "yarl",
+        "httpx",
+        "requests",
+        "urllib3",
+        "certifi",
+        "orjson",
+        "PyYAML",
+        "Jinja2",
+        "cryptography",
+        "pyOpenSSL",
+        "PyJWT",
+        "SQLAlchemy",
+        "Pillow",
+        "attrs",
+        "uv",
+        "voluptuous",
+        "voluptuous-serialize",
+        "voluptuous-openapi",
+        "zeroconf"
+      ],
+      "enabled": true,
+      "labels": ["dependency", "core"]
+    },
+    {
+      "description": "Common Python utilities (allowlisted)",
+      "matchPackageNames": [
+        "astral",
+        "atomicwrites-homeassistant",
+        "audioop-lts",
+        "awesomeversion",
+        "bcrypt",
+        "ciso8601",
+        "cronsim",
+        "defusedxml",
+        "fnv-hash-fast",
+        "getmac",
+        "ical",
+        "ifaddr",
+        "lru-dict",
+        "mutagen",
+        "propcache",
+        "pyserial",
+        "python-slugify",
+        "PyTurboJPEG",
+        "securetar",
+        "standard-aifc",
+        "standard-telnetlib",
+        "ulid-transform",
+        "unidiff",
+        "url-normalize",
+        "xmltodict"
+      ],
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "Home Assistant ecosystem packages (core-maintained, no cooldown)",
+      "matchPackageNames": [
+        "hassil",
+        "home-assistant-bluetooth",
+        "home-assistant-frontend",
+        "home-assistant-intents",
+        "infrared-protocols",
+        "rf-protocols"
+      ],
+      "enabled": true,
+      "minimumReleaseAge": null,
+      "labels": ["dependency", "core"]
+    },
+    {
+      "description": "Test dependencies (allowlisted)",
+      "matchPackageNames": [
+        "pytest",
+        "pytest-asyncio",
+        "pytest-aiohttp",
+        "pytest-cov",
+        "pytest-freezer",
+        "pytest-github-actions-annotate-failures",
+        "pytest-socket",
+        "pytest-sugar",
+        "pytest-timeout",
+        "pytest-unordered",
+        "pytest-picked",
+        "pytest-xdist",
+        "pylint",
+        "pylint-per-file-ignores",
+        "astroid",
+        "coverage",
+        "freezegun",
+        "syrupy",
+        "respx",
+        "requests-mock",
+        "ruff",
+        "codespell",
+        "yamllint",
+        "zizmor",
+        "license-expression",
+        "mock-open",
+        "pipdeptree",
+        "prek",
+        "PyGithub",
+        "pytest-codspeed",
+        "tqdm"
+      ],
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "GitHub Actions used in our workflows (allowlisted). Runner labels and action version inputs are deliberately left out.",
+      "matchManagers": ["github-actions"],
+      "matchDepTypes": ["action", "workflow", "docker", "container", "service"],
+      "enabled": true,
+      "labels": ["dependency", "github_actions"]
+    },
+    {
+      "description": "Managed by gh aw compile. Version-locked to the gh-aw compiler; do not bump.",
+      "matchPackageNames": [
+        "github/gh-aw-actions",
+        "/^github\\/gh-aw-actions\\//",
+        "/^ghcr\\.io\\/github\\/gh-aw/"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "pnpm version pinned in the E2E tests packageManager field (allowlisted)",
+      "matchManagers": ["npm"],
+      "matchFileNames": ["tests/e2e/package.json"],
+      "matchDepTypes": ["packageManager"],
+      "matchPackageNames": ["pnpm"],
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "Playwright pinned in the E2E tests (allowlisted)",
+      "matchManagers": ["npm"],
+      "matchFileNames": ["tests/e2e/package.json"],
+      "matchPackageNames": ["@playwright/test"],
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "types-* stubs (allowlisted). Enabled without matchUpdateTypes, because update types are unknown when Renovate decides whether a package is enabled.",
+      "matchPackageNames": ["/^types-/"],
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "For types-* stubs, only allow patch updates. Major/minor bumps track the upstream runtime package version and must be manually coordinated with the corresponding pin.",
+      "matchPackageNames": ["/^types-/"],
+      "matchUpdateTypes": ["major", "minor"],
+      "enabled": false
+    },
+    {
+      "description": "Pre-commit hook repos (allowlisted, matched by owner/repo)",
+      "matchPackageNames": [
+        "astral-sh/ruff-pre-commit",
+        "codespell-project/codespell",
+        "adrienverge/yamllint",
+        "zizmorcore/zizmor-pre-commit",
+        "pre-commit/pre-commit-hooks",
+        "cdce8p/python-typing-update"
+      ],
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "Docker allowlist (ghcr.io exposes no release timestamps so the global cooldown needs to be bypassed)",
+      "matchPackageNames": ["ghcr.io/alexxit/go2rtc"],
+      "enabled": true,
+      "minimumReleaseAge": null,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "Latest MariaDB LTS tested in CI (allowlisted). Since MariaDB 12, only the x.3 series are LTS.",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["mariadb"],
+      "allowedVersions": "/^\\d+\\.3\\.\\d+$/",
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "Only open a MariaDB PR for a new LTS series, not for its patch releases",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["mariadb"],
+      "matchUpdateTypes": ["patch"],
+      "enabled": false
+    },
+    {
+      "description": "PostgreSQL versions tested in CI (allowlisted). Docker Hub returns no release timestamps for these tags, so the global cooldown needs to be bypassed.",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["postgres"],
+      "enabled": true,
+      "minimumReleaseAge": null,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "Keep each PostgreSQL entry on its major version. Adding a new major to the matrix is a deliberate choice.",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["postgres"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "description": "Group ruff pre-commit hook with its PyPI twin into one PR",
+      "matchPackageNames": ["astral-sh/ruff-pre-commit", "ruff"],
+      "groupName": "ruff",
+      "groupSlug": "ruff"
+    },
+    {
+      "description": "Group codespell pre-commit hook with its PyPI twin into one PR",
+      "matchPackageNames": ["codespell-project/codespell", "codespell"],
+      "groupName": "codespell",
+      "groupSlug": "codespell"
+    },
+    {
+      "description": "Group yamllint pre-commit hook with its PyPI twin into one PR",
+      "matchPackageNames": ["adrienverge/yamllint", "yamllint"],
+      "groupName": "yamllint",
+      "groupSlug": "yamllint"
+    },
+    {
+      "description": "Group zizmor pre-commit hook with its PyPI twin into one PR",
+      "matchPackageNames": ["zizmorcore/zizmor-pre-commit", "zizmor"],
+      "groupName": "zizmor",
+      "groupSlug": "zizmor"
+    },
+    {
+      "description": "Group pylint with astroid (their versions are linked and must move together)",
+      "matchPackageNames": ["pylint", "astroid"],
+      "groupName": "pylint",
+      "groupSlug": "pylint"
+    },
+    {
+      "description": "Group the github/codeql-action subactions into one PR (they share a release)",
+      "matchPackageNames": ["/^github\\/codeql-action(?:\\/|$)/"],
+      "groupName": "github/codeql-action",
+      "groupSlug": "codeql-action"
+    },
+    {
+      "description": "Group the actions/cache subactions into one PR (they share a release)",
+      "matchPackageNames": ["/^actions\\/cache(?:\\/|$)/"],
+      "groupName": "actions/cache",
+      "groupSlug": "actions-cache"
+    },
+    {
+      "description": "Group go2rtc Dockerfile pin with const.py RECOMMENDED_VERSION into one PR",
+      "matchPackageNames": ["ghcr.io/alexxit/go2rtc"],
+      "groupName": "go2rtc",
+      "groupSlug": "go2rtc"
+    },
+    {
+      "description": "Group the types-* stub updates into one PR",
+      "matchPackageNames": ["/^types-/"],
+      "groupName": "types stubs",
+      "groupSlug": "types-stubs"
+    },
+    {
+      "description": "Group the PostgreSQL CI matrix updates into one PR (all supported majors are released on the same day)",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["postgres"],
+      "groupName": "PostgreSQL CI matrix",
+      "groupSlug": "postgresql-ci"
+    },
+    {
+      "description": "uv and pnpm release almost daily, so the cooldown alone still gives a PR (and a full CI run) nearly every day. Limit them to one PR per week.",
+      "matchPackageNames": ["uv", "pnpm"],
+      "schedule": ["after 5pm on friday"]
+    }
+  ]
+}

@@ -1,8 +1,7 @@
 """Support for Notion."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from aionotion.bridge.models import Bridge
 from aionotion.listener.models import Listener, ListenerKind
@@ -51,7 +50,13 @@ class NotionEntity(CoordinatorEntity[NotionDataUpdateCoordinator]):
         )
 
         if bridge := self._async_get_bridge(bridge_id):
-            self._attr_device_info["via_device"] = (DOMAIN, bridge.hardware_id)
+            self._attr_device_info["via_device_id"] = (
+                dr.async_get_device_id_by_identifier(
+                    self.coordinator.hass,
+                    (DOMAIN, bridge.hardware_id),
+                    config_entry_id=self.coordinator.config_entry.entry_id,
+                )
+            )
 
         self._attr_extra_state_attributes = {}
         self._attr_unique_id = listener_id
@@ -61,6 +66,7 @@ class NotionEntity(CoordinatorEntity[NotionDataUpdateCoordinator]):
         self.entity_description = description
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
@@ -100,22 +106,20 @@ class NotionEntity(CoordinatorEntity[NotionDataUpdateCoordinator]):
         self._bridge_id = sensor.bridge.id
 
         device_registry = dr.async_get(self.hass)
-        this_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, sensor.hardware_id)}
-        )
         bridge = self.coordinator.data.bridges[self._bridge_id]
-        bridge_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, bridge.hardware_id)}
+        bridge_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, bridge.hardware_id), self.coordinator.config_entry.entry_id
         )
 
-        if not bridge_device or not this_device:
+        if not bridge_device or not self.device_entry:
             return
 
         device_registry.async_update_device(
-            this_device.id, via_device_id=bridge_device.id
+            self.device_entry.id, via_device_id=bridge_device.id
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Respond to a DataUpdateCoordinator update."""
         if self._listener_id in self.coordinator.data.listeners:

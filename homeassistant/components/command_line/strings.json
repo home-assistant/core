@@ -1,4 +1,12 @@
 {
+  "exceptions": {
+    "command_error": {
+      "message": "Error trying to execute command: {command}. Error: {error}"
+    },
+    "timeout_error": {
+      "message": "Timeout trying to execute command: {command}"
+    }
+  },
   "services": {
     "reload": {
       "description": "Reloads command line configuration from the YAML-configuration.",

@@ -5,8 +5,12 @@ from enum import StrEnum
 import logging
 
 from dns.resolver import LifetimeTimeout
-from mcstatus import BedrockServer, JavaServer
-from mcstatus.responses import BedrockStatusResponse, JavaStatusResponse
+from mcstatus import BedrockServer, JavaServer, LegacyServer
+from mcstatus.responses import (
+    BedrockStatusResponse,
+    JavaStatusResponse,
+    LegacyStatusResponse,
+)
 
 from homeassistant.core import HomeAssistant
 
@@ -43,6 +47,7 @@ class MinecraftServerType(StrEnum):
 
     BEDROCK_EDITION = "Bedrock Edition"
     JAVA_EDITION = "Java Edition"
+    LEGACY_JAVA_EDITION = "Legacy Java Edition"
 
 
 class MinecraftServerAddressError(Exception):
@@ -60,7 +65,7 @@ class MinecraftServerNotInitializedError(Exception):
 class MinecraftServer:
     """Minecraft Server wrapper class for 3rd party library mcstatus."""
 
-    _server: BedrockServer | JavaServer | None
+    _server: BedrockServer | JavaServer | LegacyServer | None
 
     def __init__(
         self, hass: HomeAssistant, server_type: MinecraftServerType, address: str
@@ -76,10 +81,12 @@ class MinecraftServer:
         try:
             if self._server_type == MinecraftServerType.JAVA_EDITION:
                 self._server = await JavaServer.async_lookup(self._address)
-            else:
+            elif self._server_type == MinecraftServerType.BEDROCK_EDITION:
                 self._server = await self._hass.async_add_executor_job(
                     BedrockServer.lookup, self._address
                 )
+            else:
+                self._server = await LegacyServer.async_lookup(self._address)
         except (ValueError, LifetimeTimeout) as error:
             raise MinecraftServerAddressError(
                 f"Lookup of '{self._address}' failed: {self._get_error_message(error)}"
@@ -94,7 +101,7 @@ class MinecraftServer:
         )
 
     async def async_is_online(self) -> bool:
-        """Check if the server is online, supporting both Java and Bedrock Edition servers."""
+        """Check if the server is online."""
         try:
             await self.async_get_data()
         except (
@@ -111,8 +118,10 @@ class MinecraftServer:
         return True
 
     async def async_get_data(self) -> MinecraftServerData:
-        """Get updated data from the server, supporting both Java and Bedrock Edition servers."""
-        status_response: BedrockStatusResponse | JavaStatusResponse
+        """Get updated data from the server."""
+        status_response: (
+            BedrockStatusResponse | JavaStatusResponse | LegacyStatusResponse
+        )
 
         if self._server is None:
             raise MinecraftServerNotInitializedError(
@@ -123,13 +132,16 @@ class MinecraftServer:
             status_response = await self._server.async_status(tries=DATA_UPDATE_RETRIES)
         except OSError as error:
             raise MinecraftServerConnectionError(
-                f"Status request to '{self._address}' failed: {self._get_error_message(error)}"
+                f"Status request to '{self._address}' failed: "
+                f"{self._get_error_message(error)}"
             ) from error
 
         if isinstance(status_response, JavaStatusResponse):
             data = self._extract_java_data(status_response)
-        else:
+        elif isinstance(status_response, BedrockStatusResponse):
             data = self._extract_bedrock_data(status_response)
+        else:
+            data = self._extract_legacy_data(status_response)
 
         return data
 
@@ -167,6 +179,19 @@ class MinecraftServer:
             edition=status_response.version.brand,
             game_mode=status_response.gamemode,
             map_name=status_response.map_name,
+        )
+
+    def _extract_legacy_data(
+        self, status_response: LegacyStatusResponse
+    ) -> MinecraftServerData:
+        """Extract legacy Java Edition server data out of status response."""
+        return MinecraftServerData(
+            latency=status_response.latency,
+            motd=status_response.motd.to_plain(),
+            players_max=status_response.players.max,
+            players_online=status_response.players.online,
+            protocol_version=status_response.version.protocol,
+            version=status_response.version.name,
         )
 
     def _get_error_message(self, error: BaseException) -> str:

@@ -4,6 +4,18 @@
       "battery_empty": {
         "default": "mdi:battery-clock"
       },
+      "cpu_pressure_some_avg10": {
+        "default": "mdi:gauge"
+      },
+      "cpu_pressure_some_avg300": {
+        "default": "mdi:gauge"
+      },
+      "cpu_pressure_some_avg60": {
+        "default": "mdi:gauge"
+      },
+      "cpu_pressure_some_total": {
+        "default": "mdi:timer-outline"
+      },
       "disk_free": {
         "default": "mdi:harddisk"
       },
@@ -16,6 +28,30 @@
       "fan_speed": {
         "default": "mdi:fan"
       },
+      "io_pressure_full_avg10": {
+        "default": "mdi:gauge"
+      },
+      "io_pressure_full_avg300": {
+        "default": "mdi:gauge"
+      },
+      "io_pressure_full_avg60": {
+        "default": "mdi:gauge"
+      },
+      "io_pressure_full_total": {
+        "default": "mdi:timer-outline"
+      },
+      "io_pressure_some_avg10": {
+        "default": "mdi:gauge"
+      },
+      "io_pressure_some_avg300": {
+        "default": "mdi:gauge"
+      },
+      "io_pressure_some_avg60": {
+        "default": "mdi:gauge"
+      },
+      "io_pressure_some_total": {
+        "default": "mdi:timer-outline"
+      },
       "ipv4_address": {
         "default": "mdi:ip-network"
       },
@@ -24,6 +60,30 @@
       },
       "memory_free": {
         "default": "mdi:memory"
+      },
+      "memory_pressure_full_avg10": {
+        "default": "mdi:gauge"
+      },
+      "memory_pressure_full_avg300": {
+        "default": "mdi:gauge"
+      },
+      "memory_pressure_full_avg60": {
+        "default": "mdi:gauge"
+      },
+      "memory_pressure_full_total": {
+        "default": "mdi:timer-outline"
+      },
+      "memory_pressure_some_avg10": {
+        "default": "mdi:gauge"
+      },
+      "memory_pressure_some_avg300": {
+        "default": "mdi:gauge"
+      },
+      "memory_pressure_some_avg60": {
+        "default": "mdi:gauge"
+      },
+      "memory_pressure_some_total": {
+        "default": "mdi:timer-outline"
       },
       "memory_use": {
         "default": "mdi:memory"

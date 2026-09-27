@@ -1,11 +1,9 @@
 """Event parser and human readable log generator."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import frontend
 from homeassistant.components.recorder import DOMAIN as RECORDER_DOMAIN
@@ -30,7 +28,6 @@ from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.event_type import EventType
 
 from . import rest_api, websocket_api
@@ -47,22 +44,21 @@ from .const import (  # noqa: F401
 )
 from .models import LazyEventPartialState, LogbookConfig
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=probatio.ALLOW_EXTRA
 )
 
 
-LOG_MESSAGE_SCHEMA = vol.Schema(
+LOG_MESSAGE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_NAME): cv.string,
-        vol.Required(ATTR_MESSAGE): cv.string,
-        vol.Optional(ATTR_DOMAIN): cv.slug,
-        vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
+        probatio.Required(ATTR_NAME): cv.string,
+        probatio.Required(ATTR_MESSAGE): cv.string,
+        probatio.Optional(ATTR_DOMAIN): cv.slug,
+        probatio.Optional(ATTR_ENTITY_ID): cv.entity_id,
     }
 )
 
 
-@bind_hass
 def log_entry(
     hass: HomeAssistant,
     name: str,
@@ -76,7 +72,6 @@ def log_entry(
 
 
 @callback
-@bind_hass
 def async_log_entry(
     hass: HomeAssistant,
     name: str,

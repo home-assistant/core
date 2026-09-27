@@ -1,11 +1,10 @@
 """UniFi Protect media sources."""
 
-from __future__ import annotations
-
 import asyncio
+from calendar import monthrange
 from datetime import date, datetime, timedelta
-from enum import Enum
-from typing import Any, NoReturn, cast
+from enum import StrEnum
+from typing import Any, NoReturn, cast, override
 
 from uiprotect.data import Camera, Event, EventType, SmartDetectObjectType
 from uiprotect.exceptions import NvrError
@@ -34,7 +33,7 @@ THUMBNAIL_WIDTH = 185
 THUMBNAIL_HEIGHT = 185
 
 
-class SimpleEventType(str, Enum):
+class SimpleEventType(StrEnum):
     """Enum to Camera Video events."""
 
     ALL = "all"
@@ -44,7 +43,7 @@ class SimpleEventType(str, Enum):
     AUDIO = "audio"
 
 
-class IdentifierType(str, Enum):
+class IdentifierType(StrEnum):
     """UniFi Protect identifier type."""
 
     EVENT = "event"
@@ -52,7 +51,7 @@ class IdentifierType(str, Enum):
     BROWSE = "browse"
 
 
-class IdentifierTimeType(str, Enum):
+class IdentifierTimeType(StrEnum):
     """UniFi Protect identifier subtype."""
 
     RECENT = "recent"
@@ -83,50 +82,57 @@ EVENT_NAME_MAP = {
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up UniFi Protect media source."""
+    # Public-only entries carry no private bootstrap and the public API has
+    # no event media; include only full-access entries.
     return ProtectMediaSource(
         hass,
         {
             entry.runtime_data.api.bootstrap.nvr.id: entry.runtime_data
             for entry in async_get_ufp_entries(hass)
+            if not entry.runtime_data.api.is_public_only
         },
     )
 
 
 @callback
 def _get_month_start_end(start: datetime) -> tuple[datetime, datetime]:
+    """Get the first day of the month for start and current time."""
     start = dt_util.as_local(start)
     end = dt_util.now()
 
-    start = start.replace(day=1, hour=0, minute=0, second=1, microsecond=0)
-    end = end.replace(day=1, hour=0, minute=0, second=2, microsecond=0)
+    start = start.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    end = end.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
     return start, end
 
 
 @callback
 def _bad_identifier(identifier: str, err: Exception | None = None) -> NoReturn:
-    msg = f"Unexpected identifier: {identifier}"
+    exc = BrowseError(
+        translation_domain=DOMAIN,
+        translation_key="unexpected_identifier",
+        translation_placeholders={"identifier": identifier},
+    )
     if err is None:
-        raise BrowseError(msg)
-    raise BrowseError(msg) from err
+        raise exc
+    raise exc from err
 
 
 @callback
 def _format_duration(duration: timedelta) -> str:
-    formatted = ""
     seconds = int(duration.total_seconds())
-    if seconds > 3600:
-        hours = seconds // 3600
-        formatted += f"{hours}h "
-        seconds -= hours * 3600
-    if seconds > 60:
-        minutes = seconds // 60
-        formatted += f"{minutes}m "
-        seconds -= minutes * 60
-    if seconds > 0:
-        formatted += f"{seconds}s "
+    hours, seconds = divmod(seconds, 3600)
+    minutes, seconds = divmod(seconds, 60)
 
-    return formatted.strip()
+    parts = []
+    if hours > 0:
+        parts.append(f"{hours}h")
+    if minutes > 0:
+        parts.append(f"{minutes}m")
+    if seconds > 0:
+        parts.append(f"{seconds}s")
+
+    return " ".join(parts) if parts else "0s"
 
 
 @callback
@@ -190,6 +196,7 @@ class ProtectMediaSource(MediaSource):
         self.data_sources = data_sources
         self._registry = None
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Return a streamable URL and associated mime type for a UniFi Protect event.
 
@@ -226,6 +233,7 @@ class ProtectMediaSource(MediaSource):
             )
         return PlayMedia(async_generate_event_video_url(event), "video/mp4")
 
+    @override
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return a browsable UniFi Protect media source.
 
@@ -263,11 +271,13 @@ class ProtectMediaSource(MediaSource):
         * {nvr_id}:browse:all|{camera_id}:all|{event_type}
             Root Camera(s) Event Type(s) browse source
         * {nvr_id}:browse:all|{camera_id}:all|{event_type}:recent:{day_count}
-            Listing of all events in last {day_count}, sorted in reverse chronological order
+            Listing of all events in last {day_count},
+            sorted in reverse chronological order
         * {nvr_id}:browse:all|{camera_id}:all|{event_type}:range:{year}:{month}
             List of folders for each day in month + all events for month
         * {nvr_id}:browse:all|{camera_id}:all|{event_type}:range:{year}:{month}:all|{day}
-            Listing of all events for give {day} + {month} + {year} combination in chronological order
+            All events for given day/month/year
+            in chronological order
         """
 
         if not item.identifier:
@@ -376,7 +386,10 @@ class ProtectMediaSource(MediaSource):
             _bad_identifier(f"{data.api.bootstrap.nvr.id}:{subtype}:{event_id}", err)
 
         if event.start is None or event.end is None:
-            raise BrowseError("Event is still ongoing")
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="event_ongoing",
+            )
 
         return await self._build_event(data, event, thumbnail_only)
 
@@ -588,20 +601,23 @@ class ProtectMediaSource(MediaSource):
         if not build_children:
             return source
 
-        if data.api.bootstrap.recording_start is not None:
-            recording_start = data.api.bootstrap.recording_start.date()
-        start = max(recording_start, start)
-
-        recording_end = dt_util.now().date()
-        end = start.replace(month=start.month + 1) - timedelta(days=1)
-        end = min(recording_end, end)
+        # The requested month bounds the days offered: recording may have
+        # started partway into it, and it cannot reach past today. Keep those
+        # bounds off `start` so every child stays within the month asked for.
+        end = min(
+            dt_util.now().date(),
+            start.replace(day=monthrange(start.year, start.month)[1]),
+        )
+        day = start
+        if (recording_start := data.api.bootstrap.recording_start) is not None:
+            day = max(dt_util.as_local(recording_start).date(), day)
 
         children = [self._build_days(data, camera_id, event_type, start, is_all=True)]
-        while start <= end:
+        while day <= end:
             children.append(
-                self._build_days(data, camera_id, event_type, start, is_all=False)
+                self._build_days(data, camera_id, event_type, day, is_all=False)
             )
-            start = start + timedelta(hours=24)
+            day = day + timedelta(days=1)
 
         camera: Camera | None = None
         if camera_id != "all":
@@ -660,10 +676,9 @@ class ProtectMediaSource(MediaSource):
             tzinfo=dt_util.get_default_time_zone(),
         )
         if is_all:
-            if start_dt.month < 12:
-                end_dt = start_dt.replace(month=start_dt.month + 1)
-            else:
-                end_dt = start_dt.replace(year=start_dt.year + 1, month=1)
+            # Move to first day of next month
+            days_in_month = monthrange(start_dt.year, start_dt.month)[1]
+            end_dt = start_dt + timedelta(days=days_in_month)
         else:
             end_dt = start_dt + timedelta(hours=24)
 
@@ -726,7 +741,7 @@ class ProtectMediaSource(MediaSource):
         ]
 
         start, end = _get_month_start_end(data.api.bootstrap.recording_start)
-        while end > start:
+        while end >= start:
             children.append(self._build_month(data, camera_id, event_type, end.date()))
             end = (end - timedelta(days=1)).replace(day=1)
 
@@ -786,7 +801,11 @@ class ProtectMediaSource(MediaSource):
         if camera_id != "all":
             camera = data.api.bootstrap.cameras.get(camera_id)
             if camera is None:
-                raise BrowseError(f"Unknown Camera ID: {camera_id}")
+                raise BrowseError(
+                    translation_domain=DOMAIN,
+                    translation_key="unknown_camera_id",
+                    translation_placeholders={"camera_id": camera_id},
+                )
             name = camera.name or camera.market_name or camera.type
             is_doorbell = camera.feature_flags.is_doorbell
             has_smart = camera.feature_flags.has_smart_detect

@@ -1,9 +1,7 @@
 """Sensor platform for Kaleidescape integration."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, override
 
 from kaleidescape import const as kaleidescape_const
 
@@ -47,18 +45,22 @@ class KaleidescapeRemote(KaleidescapeEntity, RemoteEntity):
     _attr_name = None
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._device.power.state == kaleidescape_const.DEVICE_POWER_STATE_ON
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._device.leave_standby()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._device.enter_standby()
 
+    @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to a device."""
         for cmd in command:

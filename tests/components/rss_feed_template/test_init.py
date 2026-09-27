@@ -6,6 +6,7 @@ from aiohttp.test_utils import TestClient
 from defusedxml import ElementTree
 import pytest
 
+from homeassistant.components.rss_feed_template import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -32,7 +33,7 @@ async def mock_http_client(
         }
     }
 
-    await async_setup_component(hass, "rss_feed_template", config)
+    await async_setup_component(hass, DOMAIN, config)
     return await hass_client()
 
 

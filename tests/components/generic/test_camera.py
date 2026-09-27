@@ -4,7 +4,7 @@ import asyncio
 from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
@@ -37,7 +37,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import Mock, MockConfigEntry
+from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -59,7 +59,7 @@ async def help_setup_mock_config_entry(
         CONF_VERIFY_SSL: options.get(CONF_VERIFY_SSL),
     }
     entry = MockConfigEntry(
-        domain="generic",
+        domain=DOMAIN,
         title=options[CONF_NAME],
         options=entry_options,
         unique_id=unique_id,
@@ -134,7 +134,7 @@ async def test_image_caching(
     freezer: FrozenDateTimeFactory,
     fakeimgbytes_png: bytes,
 ) -> None:
-    """Test that the image is cached and not fetched more often than the framerate indicates."""
+    """Test image is cached and not fetched more than framerate."""
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
 
     framerate = 5
@@ -334,7 +334,9 @@ async def test_stream_source(
         data={},
         options={
             CONF_STILL_IMAGE_URL: "http://example.com",
-            CONF_STREAM_SOURCE: 'http://example.com/{{ states.sensor.temp.state + "a" }}',
+            CONF_STREAM_SOURCE: (
+                'http://example.com/{{ states.sensor.temp.state + "a" }}'
+            ),
             CONF_LIMIT_REFETCH_TO_URL_CHANGE: True,
             CONF_FRAMERATE: 2,
             CONF_CONTENT_TYPE: "image/png",
@@ -353,10 +355,16 @@ async def test_stream_source(
     stream_source = await async_get_stream_source(hass, "camera.config_test")
     assert stream_source == "http://barney:betty@example.com/5a"
 
+    # Create a mock stream that doesn't actually try to connect
+    mock_stream = Mock()
+    mock_stream.add_provider = Mock()
+    mock_stream.start = AsyncMock()
+    mock_stream.endpoint_url = Mock(return_value="http://home.assistant/playlist.m3u8")
+
     with patch(
-        "homeassistant.components.camera.Stream.endpoint_url",
-        return_value="http://home.assistant/playlist.m3u8",
-    ) as mock_stream_url:
+        "homeassistant.components.camera.create_stream",
+        return_value=mock_stream,
+    ):
         # Request playlist through WebSocket
         client = await hass_ws_client(hass)
 
@@ -366,7 +374,7 @@ async def test_stream_source(
         msg = await client.receive_json()
 
         # Assert WebSocket response
-        assert mock_stream_url.call_count == 1
+        assert mock_stream.endpoint_url.call_count == 1
         assert msg["id"] == 1
         assert msg["type"] == TYPE_RESULT
         assert msg["success"]

@@ -1,6 +1,6 @@
 """Support for govee_ble event entities."""
 
-from __future__ import annotations
+from typing import override
 
 from govee_ble import ModelInfo, SensorType
 
@@ -70,6 +70,7 @@ class GoveeBluetoothEventEntity(EventEntity):
             self._address, self.entity_description.key
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
         await super().async_added_to_hass()

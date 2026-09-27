@@ -1,16 +1,14 @@
 """Config flow for PrusaLink integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 from awesomeversion import AwesomeVersion, AwesomeVersionException
 from httpx import HTTPError, InvalidURL
+import probatio
 from pyprusalink import PrusaLink
 from pyprusalink.types import InvalidAuth, VersionInfo
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -23,13 +21,13 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
         # "maker" is currently hardcoded in the firmware
         # https://github.com/prusa3d/Prusa-Firmware-Buddy/blob/bfb0ffc745ee6546e7efdba618d0e7c0f4c909cd/lib/WUI/wui_api.h#L19
-        vol.Required(CONF_USERNAME, default="maker"): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME, default="maker"): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -43,9 +41,11 @@ def ensure_printer_is_supported(version: VersionInfo) -> None:
 
         # Workaround to allow PrusaLink 0.7.2 on MK3 and MK2.5 that supports
         # the 2.0.0 API, but doesn't advertise it yet
-        if version.get("original", "").startswith(
-            ("PrusaLink I3MK3", "PrusaLink I3MK2")
-        ) and AwesomeVersion("0.7.2") <= AwesomeVersion(version["server"]):
+        original_value = version.get("original")
+        original = original_value if isinstance(original_value, str) else ""
+        if original.startswith(("PrusaLink I3MK3", "PrusaLink I3MK2")) and (
+            AwesomeVersion("0.7.2") <= AwesomeVersion(version["server"])
+        ):
             return
 
     except AwesomeVersionException as err:
@@ -85,6 +85,7 @@ class PrusaLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

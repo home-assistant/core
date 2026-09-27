@@ -1,12 +1,10 @@
 """DataUpdateCoordinator for the Trafikverket Camera integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 from io import BytesIO
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import aiohttp
 from pytrafikverket import (
@@ -59,6 +57,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[CameraData]):
         )
         self._id = config_entry.data[CONF_ID]
 
+    @override
     async def _async_update_data(self) -> CameraData:
         """Fetch data from Trafikverket."""
         camera_data: CameraInfoModel
@@ -74,8 +73,10 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[CameraData]):
             return CameraData(data=camera_data, image=None)
 
         image_url = camera_data.photourl
-        if camera_data.fullsizephoto:
-            image_url = f"{camera_data.photourl}?type=fullsize"
+        if camera_data.has_fullsizephoto:
+            if TYPE_CHECKING:
+                assert camera_data.photourlfullsize is not None
+            image_url = camera_data.photourlfullsize
 
         async with self.session.get(
             image_url, timeout=aiohttp.ClientTimeout(total=10)

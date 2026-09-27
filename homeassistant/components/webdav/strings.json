@@ -30,11 +30,11 @@
     }
   },
   "exceptions": {
+    "cannot_access_or_create_backup_path": {
+      "message": "Cannot access or create backup path"
+    },
     "cannot_connect": {
       "message": "Cannot connect to WebDAV server"
-    },
-    "failed_to_migrate_folder": {
-      "message": "Failed to migrate wrong encoded folder \"{wrong_path}\" to \"{correct_path}\"."
     },
     "invalid_username_password": {
       "message": "Invalid username or password"

@@ -1,6 +1,7 @@
 """Test the Z-Wave JS climate platform."""
 
 import copy
+from unittest.mock import MagicMock
 
 import pytest
 from zwave_js_server.const import CommandClass
@@ -55,6 +56,8 @@ from .common import (
     CLIMATE_RADIO_THERMOSTAT_ENTITY,
     replace_value_of_zwave_value,
 )
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -640,11 +643,29 @@ async def test_setpoint_thermostat(
     client.async_send_command_no_wait.reset_mock()
 
 
-async def test_thermostat_heatit_z_trm6(
-    hass: HomeAssistant, client, climate_heatit_z_trm6, integration
+@pytest.fixture
+def heatit_trm_node(request: pytest.FixtureRequest) -> Node:
+    """Resolve the parametrized Heatit Z-TRM node fixture before integration setup."""
+    return request.getfixturevalue(request.param)
+
+
+@pytest.mark.parametrize(
+    ("heatit_trm_node", "target_temperature"),
+    [
+        pytest.param("climate_heatit_z_trm6", 19.0, id="z-trm6"),
+        pytest.param("climate_heatit_z_trm7", 15.0, id="z-trm7"),
+    ],
+    indirect=["heatit_trm_node"],
+)
+async def test_thermostat_heatit_z_trm6_trm7(
+    hass: HomeAssistant,
+    client: MagicMock,
+    heatit_trm_node: Node,
+    integration: MockConfigEntry,
+    target_temperature: float,
 ) -> None:
-    """Test a heatit Z-TRM6 entity."""
-    node = climate_heatit_z_trm6
+    """Test Heatit Z-TRM6/Z-TRM7 current_temperature follows config sensor mode."""
+    node = heatit_trm_node
     state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
 
     assert state
@@ -655,7 +676,7 @@ async def test_thermostat_heatit_z_trm6(
         HVACMode.COOL,
     ]
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
-    assert state.attributes[ATTR_TEMPERATURE] == 19
+    assert state.attributes[ATTR_TEMPERATURE] == target_temperature
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -667,7 +688,7 @@ async def test_thermostat_heatit_z_trm6(
     assert state.attributes[ATTR_MIN_TEMP] == 5
     assert state.attributes[ATTR_MAX_TEMP] == 40
 
-    # Try switching to external sensor (not connected so defaults to 0)
+    # External with floor limit → endpoint 3 (not connected so defaults to 0)
     event = Event(
         type="value updated",
         data={
@@ -681,7 +702,7 @@ async def test_thermostat_heatit_z_trm6(
                 "property": 2,
                 "propertyName": "Sensor mode",
                 "newValue": 4,
-                "prevValue": 2,
+                "prevValue": 1,
             },
         },
     )
@@ -690,7 +711,7 @@ async def test_thermostat_heatit_z_trm6(
     assert state
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 0
 
-    # Try switching to floor sensor
+    # Floor → endpoint 4
     event = Event(
         type="value updated",
         data={
@@ -1001,3 +1022,329 @@ async def test_thermostat_unknown_values(
     state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
 
     assert ATTR_HVAC_ACTION not in state.attributes
+
+
+async def test_set_preset_mode_manufacturer_specific(
+    hass: HomeAssistant,
+    client: MagicMock,
+    climate_eurotronic_comet_z: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test setting preset mode to manufacturer specific.
+
+    This tests the Eurotronic Comet Z thermostat which has a
+    "Manufacturer specific" thermostat mode (value 31) that is
+    exposed as a preset mode.
+    """
+    node = climate_eurotronic_comet_z
+    entity_id = "climate.radiator_thermostat"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_TEMPERATURE] == 21
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+    # Test setting preset mode to "Manufacturer specific"
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_PRESET_MODE: "Manufacturer specific",
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 2
+    assert args["valueId"] == {
+        "commandClass": 64,
+        "endpoint": 0,
+        "property": "mode",
+    }
+    assert args["value"] == 31
+
+    client.async_send_command.reset_mock()
+
+    # Simulate the device updating to manufacturer specific mode
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 2,
+            "args": {
+                "commandClassName": "Thermostat Mode",
+                "commandClass": 64,
+                "endpoint": 0,
+                "property": "mode",
+                "propertyName": "mode",
+                "newValue": 31,
+                "prevValue": 1,
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(entity_id)
+    assert state
+    # Mode 31 is not in ZW_HVAC_MODE_MAP, so hvac_mode is unknown.
+    assert state.state == "unknown"
+    assert state.attributes[ATTR_PRESET_MODE] == "Manufacturer specific"
+
+    # Test restoring hvac mode by setting preset to none.
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_PRESET_MODE: PRESET_NONE,
+        },
+        blocking=True,
+    )
+
+    assert client.async_send_command.call_count == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 2
+    assert args["valueId"] == {
+        "commandClass": 64,
+        "endpoint": 0,
+        "property": "mode",
+    }
+    assert args["value"] == 1
+
+    client.async_send_command.reset_mock()
+
+
+async def test_preset_mode_mapped_to_unsupported_hvac_mode(
+    hass: HomeAssistant,
+    client: MagicMock,
+    climate_eurotronic_comet_z: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test preset mapping to an HVAC mode the entity doesn't support.
+
+    The Away mode (13) maps to HVACMode.HEAT_COOL in ZW_HVAC_MODE_MAP,
+    but the Comet Z only supports OFF and HEAT. The hvac_mode property
+    should return None for this unsupported mapping.
+    """
+    node = climate_eurotronic_comet_z
+    entity_id = "climate.radiator_thermostat"
+
+    # Simulate the device being set to Away mode (13).
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 2,
+            "args": {
+                "commandClassName": "Thermostat Mode",
+                "commandClass": 64,
+                "endpoint": 0,
+                "property": "mode",
+                "propertyName": "mode",
+                "newValue": 13,
+                "prevValue": 1,
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(entity_id)
+    assert state
+    # Away maps to HEAT_COOL which the device doesn't support,
+    # so hvac_mode returns None.
+    assert state.state == "unknown"
+
+
+async def test_set_preset_mode_mapped_preset(
+    hass: HomeAssistant,
+    client: MagicMock,
+    climate_eurotronic_comet_z: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that a preset mapping to a supported HVAC mode shows that mode.
+
+    The Eurotronic Comet Z has "Energy heat" (mode 11 = HEATING_ECON) which
+    maps to HVACMode.HEAT in ZW_HVAC_MODE_MAP. Since the device supports
+    heat, hvac_mode should return heat while in this preset.
+    """
+    node = climate_eurotronic_comet_z
+    entity_id = "climate.radiator_thermostat"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == HVACMode.HEAT
+
+    # Set preset mode to "Energy heat"
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_PRESET_MODE: "Energy heat",
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["value"] == 11
+
+    client.async_send_command.reset_mock()
+
+    # Simulate the device updating to energy heat mode
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 2,
+            "args": {
+                "commandClassName": "Thermostat Mode",
+                "commandClass": 64,
+                "endpoint": 0,
+                "property": "mode",
+                "propertyName": "mode",
+                "newValue": 11,
+                "prevValue": 1,
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(entity_id)
+    assert state
+    # Energy heat (HEATING_ECON) maps to HVACMode.HEAT which the device
+    # supports, so hvac_mode returns heat.
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_PRESET_MODE] == "Energy heat"
+
+    # Clear preset - should restore to heat (the mapped mode).
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_PRESET_MODE: PRESET_NONE,
+        },
+        blocking=True,
+    )
+
+    assert client.async_send_command.call_count == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["value"] == 1
+
+    client.async_send_command.reset_mock()
+
+
+async def test_set_preset_mode_none_while_in_hvac_mode(
+    hass: HomeAssistant,
+    client: MagicMock,
+    climate_eurotronic_comet_z: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test setting preset mode to none while already in an HVAC mode."""
+    entity_id = "climate.radiator_thermostat"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+    # Setting preset to none while already in an HVAC mode restores
+    # the current hvac mode.
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_PRESET_MODE: PRESET_NONE,
+        },
+        blocking=True,
+    )
+
+    assert client.async_send_command.call_count == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 2
+    assert args["valueId"] == {
+        "commandClass": 64,
+        "endpoint": 0,
+        "property": "mode",
+    }
+    assert args["value"] == 1
+
+
+async def test_set_preset_mode_none_unmapped_preset(
+    hass: HomeAssistant,
+    client: MagicMock,
+    climate_eurotronic_comet_z: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test clearing an unmapped preset falls back to first supported HVAC mode.
+
+    When the device is in a preset mode that has no mapping in ZW_HVAC_MODE_MAP
+    (e.g. "Manufacturer specific"), hvac_mode returns None. Setting preset to
+    none should fall back to the first supported non-off HVAC mode.
+    """
+    node = climate_eurotronic_comet_z
+    entity_id = "climate.radiator_thermostat"
+
+    # Simulate the device being externally changed to "Manufacturer specific"
+    # mode without HA having set a preset first.
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 2,
+            "args": {
+                "commandClassName": "Thermostat Mode",
+                "commandClass": 64,
+                "endpoint": 0,
+                "property": "mode",
+                "propertyName": "mode",
+                "newValue": 31,
+                "prevValue": 1,
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "unknown"
+    assert state.attributes[ATTR_PRESET_MODE] == "Manufacturer specific"
+
+    client.async_send_command.reset_mock()
+
+    # Setting preset to none should default to heat since there is no
+    # stored previous HVAC mode.
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_PRESET_MODE: PRESET_NONE,
+        },
+        blocking=True,
+    )
+
+    assert client.async_send_command.call_count == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 2
+    assert args["valueId"] == {
+        "commandClass": 64,
+        "endpoint": 0,
+        "property": "mode",
+    }
+    assert args["value"] == 1

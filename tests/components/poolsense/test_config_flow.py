@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
+
 from homeassistant.components.poolsense.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -38,15 +40,22 @@ async def test_full_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_invalid_credentials(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_poolsense_client: AsyncMock
+    hass: HomeAssistant, mock_poolsense_client: AsyncMock
 ) -> None:
     """Test we handle invalid credentials."""
     mock_poolsense_client.test_poolsense_credentials.return_value = False
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_EMAIL: "test@test.com", CONF_PASSWORD: "test"},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_EMAIL: "test@test.com", CONF_PASSWORD: "test"},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -70,9 +79,15 @@ async def test_duplicate_entry(
     """Test we can't add the same entry twice."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_EMAIL: "test@test.com", CONF_PASSWORD: "test"},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_EMAIL: "test@test.com", CONF_PASSWORD: "test"},
     )
     await hass.async_block_till_done()
 

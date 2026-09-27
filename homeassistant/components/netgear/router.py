@@ -1,7 +1,5 @@
 """Represent the Netgear router and its devices."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import logging
@@ -19,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -207,7 +206,9 @@ class NetgearRouter:
             if not self.devices.get(device_mac):
                 new_device = True
 
-            # ntg_device is a namedtuple from the collections module that needs conversion to a dict through ._asdict method
+            # ntg_device is a namedtuple from the collections
+            # module that needs conversion to a dict through
+            # ._asdict method
             self.devices[device_mac] = ntg_device._asdict()
             self.devices[device_mac]["mac"] = device_mac
             self.devices[device_mac]["last_seen"] = now
@@ -269,6 +270,24 @@ class NetgearRouter:
         """Update the router to the latest firmware."""
         async with self.api_lock:
             await self.hass.async_add_executor_job(self.api.update_new_firmware)
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information for the router."""
+        configuration_url = None
+        if host := self.entry.data[CONF_HOST]:
+            configuration_url = f"http://{host}/"
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Netgear",
+            name=self.device_name,
+            model=self.model,
+            serial_number=self.serial_number,
+            sw_version=self.firmware_version,
+            hw_version=self.hardware_version,
+            configuration_url=configuration_url,
+        )
 
     @property
     def port(self) -> int:

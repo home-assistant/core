@@ -1,13 +1,11 @@
 """Sensor for monitoring the contents of a folder."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import glob
 import logging
 import os
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -30,8 +28,8 @@ SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_FOLDER_PATHS): cv.isdir,
-        vol.Optional(CONF_FILTER, default=DEFAULT_FILTER): cv.string,
+        probatio.Required(CONF_FOLDER_PATHS): cv.isdir,
+        probatio.Optional(CONF_FILTER, default=DEFAULT_FILTER): cv.string,
     }
 )
 

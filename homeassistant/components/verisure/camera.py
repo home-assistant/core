@@ -1,16 +1,15 @@
 """Support for Verisure cameras."""
 
-from __future__ import annotations
-
 import errno
 import os
+from typing import override
 
 from verisure import Error as VerisureError
 
 from homeassistant.components.camera import Camera
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -19,16 +18,16 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_GIID, DOMAIN, LOGGER, SERVICE_CAPTURE_SMARTCAM
-from .coordinator import VerisureDataUpdateCoordinator
+from .coordinator import VerisureConfigEntry, VerisureDataUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VerisureConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Verisure sensors based on a config entry."""
-    coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     platform = async_get_current_platform()
     platform.async_register_entity_service(
@@ -65,20 +64,21 @@ class VerisureSmartcam(CoordinatorEntity[VerisureDataUpdateCoordinator], Camera)
         self._directory_path = directory_path
         self._image: str | None = None
         self._image_id: str | None = None
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this entity."""
-        area = self.coordinator.data["cameras"][self.serial_number]["device"]["area"]
-        return DeviceInfo(
+        area = coordinator.data["cameras"][serial_number]["device"]["area"]
+        self._attr_device_info = DeviceInfo(
             name=area,
             manufacturer="Verisure",
             model="SmartCam",
-            identifiers={(DOMAIN, self.serial_number)},
-            via_device=(DOMAIN, self.coordinator.config_entry.data[CONF_GIID]),
+            identifiers={(DOMAIN, serial_number)},
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.config_entry.data[CONF_GIID]),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
             configuration_url="https://mypages.verisure.com",
         )
 
+    @override
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -137,6 +137,7 @@ class VerisureSmartcam(CoordinatorEntity[VerisureDataUpdateCoordinator], Camera)
         except VerisureError as ex:
             LOGGER.error("Could not capture image, %s", ex)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity added to Home Assistant."""
         await super().async_added_to_hass()

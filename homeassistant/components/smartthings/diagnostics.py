@@ -1,7 +1,5 @@
 """Diagnostics support for SmartThings."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import asdict
 from typing import Any
@@ -9,7 +7,7 @@ from typing import Any
 from pysmartthings import DeviceEvent
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from . import SmartThingsConfigEntry
 from .const import DOMAIN
@@ -27,7 +25,7 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: SmartThingsConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: SmartThingsConfigEntry, device: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
     client = entry.runtime_data.client

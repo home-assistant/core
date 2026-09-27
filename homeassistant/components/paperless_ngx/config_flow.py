@@ -1,10 +1,9 @@
 """Config flow for the Paperless-ngx integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pypaperless import Paperless
 from pypaperless.exceptions import (
     InitializationError,
@@ -13,7 +12,6 @@ from pypaperless.exceptions import (
     PaperlessInactiveOrDeletedError,
     PaperlessInvalidTokenError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
@@ -21,11 +19,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): str,
-        vol.Required(CONF_API_KEY): str,
-        vol.Required(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Required(CONF_URL): str,
+        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_VERIFY_SSL, default=True): bool,
     }
 )
 
@@ -33,6 +31,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Paperless-ngx."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -123,14 +122,14 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
             errors=errors,
         )
 
     async def _validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
         errors: dict[str, str] = {}
 
-        client = Paperless(
+        client = Paperless(  # type: ignore[abstract]
             user_input[CONF_URL],
             user_input[CONF_API_KEY],
             session=async_get_clientsession(

@@ -60,9 +60,9 @@ _TOPIC_UDS_STATE = "cloudapp/QBUSMQTTGW/UL1/UL30/state"
 _TOPIC_POS_STATE = "cloudapp/QBUSMQTTGW/UL1/UL32/state"
 _TOPIC_SLAT_STATE = "cloudapp/QBUSMQTTGW/UL1/UL31/state"
 
-_ENTITY_ID_UDS = "cover.curtains"
-_ENTITY_ID_POS = "cover.blinds"
-_ENTITY_ID_SLAT = "cover.slats"
+_ENTITY_ID_UDS = "cover.guest_bedroom_curtains"
+_ENTITY_ID_POS = "cover.kitchen_blinds"
+_ENTITY_ID_SLAT = "cover.living_slats"
 
 
 async def test_cover_up_down_stop(

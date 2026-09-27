@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "dew_point": {
+        "default": "mdi:thermometer-water"
+      },
+      "flow": {
+        "default": "mdi:fan"
+      },
+      "inside_temperature": {
+        "default": "mdi:home-thermometer"
+      },
+      "outside_temperature": {
+        "default": "mdi:thermometer"
+      }
+    }
+  }
+}

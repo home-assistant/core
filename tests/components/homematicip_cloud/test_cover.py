@@ -7,7 +7,10 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_TILT_POSITION,
     CoverState,
 )
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.components.homematicip_cloud.entity import (
+    ATTR_GROUP_MEMBER_UNREACHABLE,
+)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
@@ -160,8 +163,8 @@ async def test_hmip_multi_cover_slats(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipCoverSlats."""
-    entity_id = "cover.wohnzimmer_fenster"
-    entity_name = "Wohnzimmer Fenster"
+    entity_id = "cover.jalousieaktor_1_fur_hutschienenmontage_4_fach_wohnzimmer_fenster"
+    entity_name = "Jalousieaktor 1 für Hutschienenmontage – 4-fach Wohnzimmer Fenster"
     device_model = "HmIP-DRBLI4"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Jalousieaktor 1 für Hutschienenmontage – 4-fach"]
@@ -504,8 +507,25 @@ async def test_hmip_cover_shutter_group(
         "cover", "close_cover", {"entity_id": entity_id}, blocking=True
     )
     assert len(hmip_device.mock_calls) == service_call_counter + 5
-    assert hmip_device.mock_calls[-1][0] == "set_shutter_level_async"
-    assert hmip_device.mock_calls[-1][1] == (1,)
+    assert hmip_device.mock_calls[-1][0] == "set_slats_level_async"
+    assert hmip_device.mock_calls[-1][2] == {"slatsLevel": 1, "shutterLevel": 1}
+    await async_manipulate_test_data(hass, hmip_device, "shutterLevel", 1)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == CoverState.CLOSED
+    assert ha_state.attributes[ATTR_CURRENT_POSITION] == 0
+
+    # set_cover_position with position=0 must route through the same
+    # slats-safe call as close_cover, otherwise the FBL slats regression
+    # (#114266) would still hit users moving the slider to fully closed.
+    await hass.services.async_call(
+        "cover",
+        "set_cover_position",
+        {"entity_id": entity_id, "position": "0"},
+        blocking=True,
+    )
+    assert len(hmip_device.mock_calls) == service_call_counter + 7
+    assert hmip_device.mock_calls[-1][0] == "set_slats_level_async"
+    assert hmip_device.mock_calls[-1][2] == {"slatsLevel": 1, "shutterLevel": 1}
     await async_manipulate_test_data(hass, hmip_device, "shutterLevel", 1)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == CoverState.CLOSED
@@ -514,7 +534,7 @@ async def test_hmip_cover_shutter_group(
     await hass.services.async_call(
         "cover", "stop_cover", {"entity_id": entity_id}, blocking=True
     )
-    assert len(hmip_device.mock_calls) == service_call_counter + 7
+    assert len(hmip_device.mock_calls) == service_call_counter + 9
     assert hmip_device.mock_calls[-1][0] == "set_shutter_stop_async"
     assert hmip_device.mock_calls[-1][1] == ()
 
@@ -596,3 +616,25 @@ async def test_hmip_cover_slats_group(
     assert len(hmip_device.mock_calls) == service_call_counter + 9
     assert hmip_device.mock_calls[-1][0] == "set_shutter_stop_async"
     assert hmip_device.mock_calls[-1][1] == ()
+
+
+async def test_hmip_cover_shutter_group_availability(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test cover shutter group stays available when group member is unreachable."""
+    entity_id = "cover.rollos_shuttergroup"
+    entity_name = "Rollos ShutterGroup"
+    device_model = None
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(test_groups=["Rollos"])
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state != STATE_UNAVAILABLE
+    assert not ha_state.attributes.get(ATTR_GROUP_MEMBER_UNREACHABLE)
+
+    await async_manipulate_test_data(hass, hmip_device, "unreach", True)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state != STATE_UNAVAILABLE
+    assert ha_state.attributes[ATTR_GROUP_MEMBER_UNREACHABLE]

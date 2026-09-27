@@ -1,11 +1,9 @@
 """Support for interacting with Linode nodes."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -34,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Node"
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_NODES): vol.All(cv.ensure_list, [cv.string])}
+    {probatio.Required(CONF_NODES): probatio.All(cv.ensure_list, [cv.string])}
 )
 
 
@@ -68,11 +66,13 @@ class LinodeSwitch(SwitchEntity):
         self.data = None
         self._attr_extra_state_attributes = {}
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Boot-up the Node."""
         if self.data.status != "running":
             self.data.boot()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Shutdown the nodes."""
         if self.data.status == "running":

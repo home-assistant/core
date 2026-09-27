@@ -27,7 +27,10 @@ set_temperature:
     operation_mode:
       example: eco
       selector:
-        text:
+        state:
+          hide_states:
+            - unavailable
+            - unknown
 
 set_operation_mode:
   target:
@@ -38,7 +41,10 @@ set_operation_mode:
       required: true
       example: eco
       selector:
-        text:
+        state:
+          hide_states:
+            - unavailable
+            - unknown
 
 turn_on:
   target:

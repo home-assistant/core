@@ -1,11 +1,12 @@
 """Intents for the fan integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
-from . import ATTR_PERCENTAGE, DOMAIN, SERVICE_TURN_ON
+from . import ATTR_PERCENTAGE, SERVICE_TURN_ON
+from .const import DOMAIN
 
 INTENT_FAN_SET_SPEED = "HassFanSetSpeed"
 
@@ -24,7 +25,9 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             required_slots={
                 ATTR_PERCENTAGE: intent.IntentSlotInfo(
                     description="The speed percentage of the fan",
-                    value_schema=vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+                    value_schema=probatio.All(
+                        probatio.Coerce(int), probatio.Range(min=0, max=100)
+                    ),
                 )
             },
         ),

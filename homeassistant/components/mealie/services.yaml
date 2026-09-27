@@ -1,3 +1,15 @@
+delete_mealplan:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: mealie
+    mealplan_id:
+      required: true
+      selector:
+        text:
+
 get_mealplan:
   fields:
     config_entry_id:
@@ -45,6 +57,12 @@ get_recipes:
           mode: box
           unit_of_measurement: recipes
 
+get_shopping_list_items:
+  target:
+    entity:
+      integration: mealie
+      domain: todo
+
 import_recipe:
   fields:
     config_entry_id:
@@ -78,6 +96,9 @@ set_random_mealplan:
             - lunch
             - dinner
             - side
+            - dessert
+            - snack
+            - drink
           translation_key: mealplan_entry_type
 
 set_mealplan:
@@ -98,6 +119,45 @@ set_mealplan:
             - lunch
             - dinner
             - side
+            - dessert
+            - snack
+            - drink
+          translation_key: mealplan_entry_type
+    recipe_id:
+      selector:
+        text:
+    note_title:
+      selector:
+        text:
+    note_text:
+      selector:
+        text:
+
+update_mealplan:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: mealie
+    mealplan_id:
+      required: true
+      selector:
+        text:
+    date:
+      selector:
+        date:
+    entry_type:
+      selector:
+        select:
+          options:
+            - breakfast
+            - lunch
+            - dinner
+            - side
+            - dessert
+            - snack
+            - drink
           translation_key: mealplan_entry_type
     recipe_id:
       selector:

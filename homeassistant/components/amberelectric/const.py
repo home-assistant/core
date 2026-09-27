@@ -16,8 +16,6 @@ ATTRIBUTION = "Data provided by Amber Electric"
 LOGGER = logging.getLogger(__package__)
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-SERVICE_GET_FORECASTS = "get_forecasts"
-
 GENERAL_CHANNEL = "general"
 CONTROLLED_LOAD_CHANNEL = "controlled_load"
 FEED_IN_CHANNEL = "feed_in"

@@ -1,15 +1,13 @@
 """Camera platform that receives images through HTTP POST."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import deque
 from datetime import timedelta
 import logging
-from typing import cast
+from typing import Any, cast, override
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import webhook
 from homeassistant.components.camera import (
@@ -40,13 +38,13 @@ PUSH_CAMERA_DATA = "push_camera"
 
 PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_BUFFER_SIZE, default=1): cv.positive_int,
-        vol.Optional(CONF_TIMEOUT, default=timedelta(seconds=5)): vol.All(
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_BUFFER_SIZE, default=1): cv.positive_int,
+        probatio.Optional(CONF_TIMEOUT, default=timedelta(seconds=5)): probatio.All(
             cv.time_period, cv.positive_timedelta
         ),
-        vol.Optional(CONF_IMAGE_FIELD, default="image"): cv.string,
-        vol.Required(CONF_WEBHOOK_ID): cv.string,
+        probatio.Optional(CONF_IMAGE_FIELD, default="image"): cv.string,
+        probatio.Required(CONF_WEBHOOK_ID): cv.string,
     }
 )
 
@@ -120,12 +118,13 @@ class PushCamera(Camera):
         self._filename = None
         self._expired_listener = None
         self._timeout = timeout
-        self.queue: deque[bytes] = deque([], buffer_size)
+        self.queue: deque[bytes] = deque(maxlen=buffer_size)
         self._current_image: bytes | None = None
         self._image_field = image_field
         self.webhook_id = webhook_id
         self.webhook_url = webhook.async_generate_url(hass, webhook_id)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self.hass.data[PUSH_CAMERA_DATA][self.webhook_id] = self
@@ -171,6 +170,7 @@ class PushCamera(Camera):
 
         self.async_write_ha_state()
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -183,7 +183,8 @@ class PushCamera(Camera):
         return self._current_image
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             name: value

@@ -1,7 +1,5 @@
 """The BlueMaestro integration."""
 
-from __future__ import annotations
-
 import logging
 
 from bluemaestro_ble import BlueMaestroBluetoothDeviceData

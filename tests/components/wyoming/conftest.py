@@ -50,7 +50,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def stt_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
-        domain="wyoming",
+        domain=DOMAIN,
         data={
             "host": "1.2.3.4",
             "port": 1234,
@@ -65,7 +65,7 @@ def stt_config_entry(hass: HomeAssistant) -> ConfigEntry:
 def tts_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
-        domain="wyoming",
+        domain=DOMAIN,
         data={
             "host": "1.2.3.4",
             "port": 1234,
@@ -80,7 +80,7 @@ def tts_config_entry(hass: HomeAssistant) -> ConfigEntry:
 def wake_word_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
-        domain="wyoming",
+        domain=DOMAIN,
         data={
             "host": "1.2.3.4",
             "port": 1234,
@@ -95,7 +95,7 @@ def wake_word_config_entry(hass: HomeAssistant) -> ConfigEntry:
 def intent_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
-        domain="wyoming",
+        domain=DOMAIN,
         data={
             "host": "1.2.3.4",
             "port": 1234,
@@ -110,7 +110,7 @@ def intent_config_entry(hass: HomeAssistant) -> ConfigEntry:
 def handle_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
-        domain="wyoming",
+        domain=DOMAIN,
         data={
             "host": "1.2.3.4",
             "port": 1234,
@@ -222,7 +222,7 @@ def metadata(hass: HomeAssistant) -> stt.SpeechMetadata:
 def satellite_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
-        domain="wyoming",
+        domain=DOMAIN,
         data={
             "host": "1.2.3.4",
             "port": 1234,
@@ -254,4 +254,4 @@ async def satellite_device(
     hass: HomeAssistant, init_satellite, satellite_config_entry: ConfigEntry
 ) -> SatelliteDevice:
     """Get a satellite device fixture."""
-    return hass.data[DOMAIN][satellite_config_entry.entry_id].device
+    return satellite_config_entry.runtime_data.device

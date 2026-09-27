@@ -1,5 +1,6 @@
 """Tests for switch platform."""
 
+from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 import zoneinfo
@@ -22,6 +23,7 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -62,8 +64,43 @@ async def test_switch_states(
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        state = hass.states.get("switch.test_mower_1_enable_schedule")
+        state = hass.states.get("switch.garden_test_mower_1_enable_schedule")
         assert state.state == expected_state
+
+
+async def test_work_area_and_stay_out_zone_entities_unavailable_without_data(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    values: dict[str, MowerAttributes],
+) -> None:
+    """Test entities become unavailable when capability data disappears."""
+    await setup_integration(hass, mock_config_entry)
+    original_values = deepcopy(values)
+    values[TEST_MOWER_ID].work_areas = None
+    values[TEST_MOWER_ID].stay_out_zones = None
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    for entity_id in (
+        "switch.garden_test_mower_1_my_lawn",
+        "switch.garden_test_mower_1_avoid_danger_zone",
+    ):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE
+
+    original_values[TEST_MOWER_ID].stay_out_zones.zones = None
+    mock_automower_client.get_status.return_value = original_values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.garden_test_mower_1_avoid_danger_zone")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -86,7 +123,7 @@ async def test_switch_commands(
     await hass.services.async_call(
         domain=SWITCH_DOMAIN,
         service=service,
-        service_data={ATTR_ENTITY_ID: "switch.test_mower_1_enable_schedule"},
+        service_data={ATTR_ENTITY_ID: "switch.garden_test_mower_1_enable_schedule"},
         blocking=True,
     )
     mocked_method = getattr(mock_automower_client.commands, aioautomower_command)
@@ -100,7 +137,7 @@ async def test_switch_commands(
         await hass.services.async_call(
             domain=SWITCH_DOMAIN,
             service=service,
-            service_data={ATTR_ENTITY_ID: "switch.test_mower_1_enable_schedule"},
+            service_data={ATTR_ENTITY_ID: "switch.garden_test_mower_1_enable_schedule"},
             blocking=True,
         )
     assert len(mocked_method.mock_calls) == 2
@@ -125,7 +162,7 @@ async def test_stay_out_zone_switch_commands(
     mower_time_zone: zoneinfo.ZoneInfo,
 ) -> None:
     """Test switch commands."""
-    entity_id = "switch.test_mower_1_avoid_danger_zone"
+    entity_id = "switch.garden_test_mower_1_avoid_danger_zone"
     await setup_integration(hass, mock_config_entry)
     values = mower_list_to_dictionary_dataclass(
         load_json_value_fixture("mower.json", DOMAIN),
@@ -182,7 +219,7 @@ async def test_work_area_switch_commands(
     values: dict[str, MowerAttributes],
 ) -> None:
     """Test switch commands."""
-    entity_id = "switch.test_mower_1_my_lawn"
+    entity_id = "switch.garden_test_mower_1_my_lawn"
     await setup_integration(hass, mock_config_entry)
     values = mower_list_to_dictionary_dataclass(
         load_json_value_fixture("mower.json", DOMAIN),

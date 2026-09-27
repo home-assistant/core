@@ -1,19 +1,23 @@
 """Support for the Swing2Sleep Smarla number entities."""
 
 from dataclasses import dataclass
+from typing import override
 
-from pysmarlaapi.federwiege.classes import Property
+from pysmarlaapi.federwiege.services.classes import Property
 
 from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
 )
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FederwiegeConfigEntry
 from .entity import SmarlaBaseEntity, SmarlaEntityDescription
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -30,6 +34,7 @@ NUMBERS: list[SmarlaNumberEntityDescription] = [
         native_max_value=100,
         native_min_value=0,
         native_step=1,
+        native_unit_of_measurement=PERCENTAGE,
         mode=NumberMode.SLIDER,
     ),
 ]
@@ -53,11 +58,13 @@ class SmarlaNumber(SmarlaBaseEntity, NumberEntity):
     _property: Property[int]
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         v = self._property.get()
         return float(v) if v is not None else None
 
+    @override
     def set_native_value(self, value: float) -> None:
         """Update to the smarla device."""
         self._property.set(int(value))

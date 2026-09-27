@@ -32,6 +32,7 @@ COMMAND_SHAKE = "shake"
 COMMAND_HOLD = "hold"
 COMMAND_SINGLE = "single"
 COMMAND_DOUBLE = "double"
+COMMAND_ATTRIBUTE_UPDATED = "attribute_updated"
 DOUBLE_PRESS = "remote_button_double_press"
 SHORT_PRESS = "remote_button_short_press"
 LONG_PRESS = "remote_button_long_press"
@@ -97,7 +98,9 @@ async def test_zha_logbook_event_device_with_triggers(
 
     ieee_address = str(zha_device.device.ieee)
 
-    reg_device = device_registry.async_get_device(identifiers={("zha", ieee_address)})
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", ieee_address), hass.config_entries.async_entries("zha")[0].entry_id
+    )
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
@@ -173,7 +176,9 @@ async def test_zha_logbook_event_device_no_triggers(
 
     _zigpy_device, zha_device = mock_devices
     ieee_address = str(zha_device.device.ieee)
-    reg_device = device_registry.async_get_device(identifiers={("zha", ieee_address)})
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", ieee_address), hass.config_entries.async_entries("zha")[0].entry_id
+    )
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
@@ -230,6 +235,22 @@ async def test_zha_logbook_event_device_no_triggers(
                     "cluster_id": 6,
                 },
             ),
+            MockRow(
+                ZHA_EVENT,
+                {
+                    CONF_DEVICE_ID: reg_device.id,
+                    COMMAND: COMMAND_ATTRIBUTE_UPDATED,
+                    "device_ieee": str(ieee_address),
+                    CONF_UNIQUE_ID: f"{ieee_address!s}:1:0x0006",
+                    "endpoint_id": 1,
+                    "cluster_id": 6,
+                    "args": {
+                        "attribute_id": 1234,
+                        "attribute_name": "name",
+                        "attribute_value": "value",
+                    },
+                },
+            ),
         ],
     )
 
@@ -253,6 +274,14 @@ async def test_zha_logbook_event_device_no_triggers(
     assert events[3]["name"] == "FakeManufacturer FakeModel"
     assert events[3]["domain"] == "zha"
     assert events[3]["message"] == "Zha Event was fired"
+
+    assert events[4]["name"] == "FakeManufacturer FakeModel"
+    assert events[4]["domain"] == "zha"
+    assert (
+        events[4]["message"] == "Attribute Updated event was fired with arguments:"
+        " {'attribute_id': 1234, 'attribute_name': 'name',"
+        " 'attribute_value': 'value'}"
+    )
 
 
 async def test_zha_logbook_event_device_no_device(

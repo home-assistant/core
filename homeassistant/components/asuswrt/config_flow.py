@@ -1,14 +1,12 @@
 """Config flow to configure the AsusWrt integration."""
 
-from __future__ import annotations
-
 import logging
 import os
 import socket
-from typing import Any, cast
+from typing import Any, cast, override
 
 from asusrouter import AsusRouterError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
@@ -25,6 +23,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -32,12 +31,12 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaOptionsFlowHandler,
 )
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
-from homeassistant.helpers.typing import VolDictType
 
 from .bridge import AsusWrtBridge
 from .const import (
     CONF_DNSMASQ,
     CONF_INTERFACE,
+    CONF_MORE_OPTIONS,
     CONF_REQUIRE_IP,
     CONF_SSH_KEY,
     CONF_TRACK_UNKNOWN,
@@ -60,34 +59,31 @@ ALLOWED_PROTOCOL = [
     PROTOCOL_TELNET,
 ]
 
-PASS_KEY = "pass_key"
-PASS_KEY_MSG = "Only provide password or SSH key file"
-
 RESULT_CONN_ERROR = "cannot_connect"
 RESULT_SUCCESS = "success"
 RESULT_UNKNOWN = "unknown"
 
 _LOGGER = logging.getLogger(__name__)
 
-LEGACY_SCHEMA = vol.Schema(
+LEGACY_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_MODE, default=MODE_ROUTER): vol.In(
+        probatio.Required(CONF_MODE, default=MODE_ROUTER): probatio.In(
             {MODE_ROUTER: "Router", MODE_AP: "Access Point"}
         ),
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(
+        probatio.Optional(
             CONF_CONSIDER_HOME, default=DEFAULT_CONSIDER_HOME.total_seconds()
-        ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900)),
-        vol.Optional(CONF_TRACK_UNKNOWN, default=DEFAULT_TRACK_UNKNOWN): bool,
+        ): probatio.All(probatio.Coerce(int), probatio.Clamp(min=0, max=900)),
+        probatio.Optional(CONF_TRACK_UNKNOWN, default=DEFAULT_TRACK_UNKNOWN): bool,
     }
 )
 
 
-async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def get_options_schema(handler: SchemaCommonFlowHandler) -> probatio.Schema:
     """Get options schema."""
     options_flow: SchemaOptionsFlowHandler
     options_flow = cast(SchemaOptionsFlowHandler, handler.parent_handler)
@@ -95,14 +91,14 @@ async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     if used_protocol in [PROTOCOL_SSH, PROTOCOL_TELNET]:
         data_schema = OPTIONS_SCHEMA.extend(
             {
-                vol.Required(CONF_INTERFACE, default=DEFAULT_INTERFACE): str,
-                vol.Required(CONF_DNSMASQ, default=DEFAULT_DNSMASQ): str,
+                probatio.Required(CONF_INTERFACE, default=DEFAULT_INTERFACE): str,
+                probatio.Required(CONF_DNSMASQ, default=DEFAULT_DNSMASQ): str,
             }
         )
         if options_flow.config_entry.data[CONF_MODE] == MODE_AP:
             return data_schema.extend(
                 {
-                    vol.Optional(CONF_REQUIRE_IP, default=True): bool,
+                    probatio.Optional(CONF_REQUIRE_IP, default=True): bool,
                 }
             )
         return data_schema
@@ -144,21 +140,13 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
 
         user_input = self._config_data
 
-        add_schema: VolDictType
-        if self.show_advanced_options:
-            add_schema = {
-                vol.Exclusive(CONF_PASSWORD, PASS_KEY, PASS_KEY_MSG): str,
-                vol.Optional(CONF_PORT): cv.port,
-                vol.Exclusive(CONF_SSH_KEY, PASS_KEY, PASS_KEY_MSG): str,
-            }
-        else:
-            add_schema = {vol.Required(CONF_PASSWORD): str}
-
         schema = {
-            vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
-            vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")): str,
-            **add_schema,
-            vol.Required(
+            probatio.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
+            probatio.Required(
+                CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
+            ): str,
+            probatio.Optional(CONF_PASSWORD): str,
+            probatio.Required(
                 CONF_PROTOCOL,
                 default=user_input.get(CONF_PROTOCOL, PROTOCOL_HTTPS),
             ): SelectSelector(
@@ -166,11 +154,20 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
                     options=ALLOWED_PROTOCOL, translation_key="protocols"
                 )
             ),
+            probatio.Required(CONF_MORE_OPTIONS): section(
+                probatio.Schema(
+                    {
+                        probatio.Optional(CONF_PORT): cv.port,
+                        probatio.Optional(CONF_SSH_KEY): str,
+                    }
+                ),
+                SectionConfig(collapsed=True),
+            ),
         }
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(schema),
+            data_schema=probatio.Schema(schema),
             errors={CONF_BASE: error} if error else None,
         )
 
@@ -189,7 +186,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             await api.async_connect()
 
-        except (AsusRouterError, OSError):
+        except AsusRouterError, OSError:
             _LOGGER.error(
                 "Error connecting to the AsusWrt router at %s using protocol %s",
                 host,
@@ -227,6 +224,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return RESULT_SUCCESS, unique_id
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -240,6 +238,10 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self._show_setup_form()
 
+        user_input = user_input.copy()
+        more_options = user_input.pop(CONF_MORE_OPTIONS, {})
+        user_input.update(more_options)
+
         self._config_data = user_input
         pwd: str | None = user_input.get(CONF_PASSWORD)
         ssh: str | None = user_input.get(CONF_SSH_KEY)
@@ -249,6 +251,8 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_setup_form(error="pwd_required")
         if not (pwd or ssh):
             return self._show_setup_form(error="pwd_or_ssh")
+        if pwd and ssh:
+            return self._show_setup_form(error="pwd_and_ssh")
         if ssh and not await self.hass.async_add_executor_job(_is_file, ssh):
             return self._show_setup_form(error="ssh_not_file")
 
@@ -294,6 +298,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> SchemaOptionsFlowHandler:

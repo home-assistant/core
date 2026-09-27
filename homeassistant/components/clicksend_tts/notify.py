@@ -1,13 +1,12 @@
 """clicksend_tts platform for notify component."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import json
 import logging
+from typing import Any, override
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
@@ -15,6 +14,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_LANGUAGE,
     CONF_NAME,
     CONF_RECIPIENT,
     CONF_USERNAME,
@@ -30,7 +30,6 @@ BASE_API_URL = "https://rest.clicksend.com/v3"
 
 HEADERS = {"Content-Type": CONTENT_TYPE_JSON}
 
-CONF_LANGUAGE = "language"
 CONF_VOICE = "voice"
 
 MALE_VOICE = "male"
@@ -43,14 +42,14 @@ TIMEOUT = 5
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_RECIPIENT): vol.All(
-            cv.string, vol.Match(r"^\+?[1-9]\d{1,14}$")
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_RECIPIENT): probatio.All(
+            cv.string, probatio.Match(r"^\+?[1-9]\d{1,14}$")
         ),
-        vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): cv.string,
-        vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): vol.In(
+        probatio.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): cv.string,
+        probatio.Optional(CONF_VOICE, default=DEFAULT_VOICE): probatio.In(
             [MALE_VOICE, FEMALE_VOICE]
         ),
     }
@@ -81,7 +80,8 @@ class ClicksendNotificationService(BaseNotificationService):
         self.language = config[CONF_LANGUAGE]
         self.voice = config[CONF_VOICE]
 
-    def send_message(self, message="", **kwargs):
+    @override
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a voice call to a user."""
         data = {
             "messages": [

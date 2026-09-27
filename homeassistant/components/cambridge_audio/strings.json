@@ -3,7 +3,6 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "wrong_device": "This Cambridge Audio device does not match the existing device ID. Please make sure you entered the correct IP address."
     },
     "error": {
@@ -35,6 +34,14 @@
     }
   },
   "entity": {
+    "number": {
+      "room_correction_intensity": {
+        "name": "Room correction intensity"
+      },
+      "volume_limit": {
+        "name": "Volume limit"
+      }
+    },
     "select": {
       "audio_output": {
         "name": "Audio output"
@@ -60,8 +67,14 @@
       "early_update": {
         "name": "Early update"
       },
+      "equalizer": {
+        "name": "Equalizer"
+      },
       "pre_amp": {
         "name": "Pre-Amp"
+      },
+      "room_correction": {
+        "name": "Room correction"
       }
     }
   },

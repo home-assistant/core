@@ -2,7 +2,7 @@
 # name: test_lock_operator_autorelock
   ReadOnlyDict({
     'autorelock': True,
-    'friendly_name': 'online_with_doorsense Name Operator',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'online_with_doorsense Name Operator',
     'keypad': False,
     'manual': False,
     'method': 'autorelock',
@@ -13,7 +13,7 @@
 # name: test_lock_operator_keypad
   ReadOnlyDict({
     'autorelock': False,
-    'friendly_name': 'online_with_doorsense Name Operator',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'online_with_doorsense Name Operator',
     'keypad': True,
     'manual': False,
     'method': 'keypad',
@@ -24,7 +24,7 @@
 # name: test_lock_operator_manual
   ReadOnlyDict({
     'autorelock': False,
-    'friendly_name': 'online_with_doorsense Name Operator',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'online_with_doorsense Name Operator',
     'keypad': False,
     'manual': True,
     'method': 'manual',
@@ -35,7 +35,7 @@
 # name: test_lock_operator_remote
   ReadOnlyDict({
     'autorelock': False,
-    'friendly_name': 'online_with_doorsense Name Operator',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'online_with_doorsense Name Operator',
     'keypad': False,
     'manual': False,
     'method': 'remote',
@@ -47,8 +47,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'autorelock': False,
-      'entity_picture': 'image.png',
-      'friendly_name': 'online_with_doorsense Name Operator',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'image.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'online_with_doorsense Name Operator',
       'keypad': False,
       'manual': False,
       'method': 'tag',
@@ -56,7 +56,7 @@
       'tag': True,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.online_with_doorsense_name_operator',
+    'entity_id': 'sensor.online_with_doorsense_name_online_with_doorsense_name_operator',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -67,7 +67,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'autorelock': False,
-      'friendly_name': 'online_with_doorsense Name Operator',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'online_with_doorsense Name Operator',
       'keypad': False,
       'manual': True,
       'method': 'manual',
@@ -75,7 +75,7 @@
       'tag': False,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.online_with_doorsense_name_operator',
+    'entity_id': 'sensor.online_with_doorsense_name_online_with_doorsense_name_operator',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -85,7 +85,7 @@
 # name: test_unlock_operator_tag
   ReadOnlyDict({
     'autorelock': False,
-    'friendly_name': 'online_with_doorsense Name Operator',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'online_with_doorsense Name Operator',
     'keypad': False,
     'manual': False,
     'method': 'tag',

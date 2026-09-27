@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.components.mopeka.const import CONF_MEDIUM_TYPE, DOMAIN, MediumType
@@ -254,9 +254,9 @@ async def test_async_step_reconfigure_options(hass: HomeAssistant) -> None:
     assert entry.data[CONF_MEDIUM_TYPE] == MediumType.AIR.value
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
-    schema: vol.Schema = result["data_schema"]
+    schema: probatio.Schema = result["data_schema"]
     medium_type_key = next(
         iter(key for key in schema.schema if key == CONF_MEDIUM_TYPE)
     )
@@ -266,7 +266,7 @@ async def test_async_step_reconfigure_options(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={CONF_MEDIUM_TYPE: MediumType.FRESH_WATER.value},
     )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
     # Verify the new configuration
     assert entry.data[CONF_MEDIUM_TYPE] == MediumType.FRESH_WATER.value

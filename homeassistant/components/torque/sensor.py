@@ -1,11 +1,9 @@
 """Support for the Torque OBD application."""
 
-from __future__ import annotations
-
 import re
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import (
@@ -36,8 +34,8 @@ VALUE_KEY = re.compile(SENSOR_VALUE_KEY)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_EMAIL): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_EMAIL): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -131,34 +129,15 @@ class TorqueReceiveDataView(HomeAssistantView):
 class TorqueSensor(SensorEntity):
     """Representation of a Torque sensor."""
 
+    _attr_icon = "mdi:car"
+
     def __init__(self, name, unit):
         """Initialize the sensor."""
-        self._name = name
-        self._unit = unit
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Return the default icon of the sensor."""
-        return "mdi:car"
+        self._attr_name = name
+        self._attr_native_unit_of_measurement = unit
 
     @callback
     def async_on_update(self, value):
         """Receive an update."""
-        self._state = value
+        self._attr_native_value = value
         self.async_write_ha_state()

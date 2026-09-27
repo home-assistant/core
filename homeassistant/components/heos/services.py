@@ -4,8 +4,8 @@ from dataclasses import dataclass
 import logging
 from typing import Final
 
+import probatio
 from pyheos import CommandAuthenticationError, Heos, HeosError
-import voluptuous as vol
 
 from homeassistant.components.media_player import ATTR_MEDIA_VOLUME_LEVEL
 from homeassistant.config_entries import ConfigEntryState
@@ -37,11 +37,14 @@ from .coordinator import HeosConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-HEOS_SIGN_IN_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_USERNAME): cv.string, vol.Required(ATTR_PASSWORD): cv.string}
+HEOS_SIGN_IN_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(ATTR_USERNAME): cv.string,
+        probatio.Required(ATTR_PASSWORD): cv.string,
+    }
 )
 
-HEOS_SIGN_OUT_SCHEMA = vol.Schema({})
+HEOS_SIGN_OUT_SCHEMA = probatio.Schema({})
 
 
 @callback
@@ -81,23 +84,23 @@ class EntityServiceDescription:
 
 
 REMOVE_FROM_QUEUE_SCHEMA: Final[VolDictType] = {
-    vol.Required(ATTR_QUEUE_IDS): vol.All(
+    probatio.Required(ATTR_QUEUE_IDS): probatio.All(
         cv.ensure_list,
-        [vol.All(cv.positive_int, vol.Range(min=1))],
-        vol.Unique(),
+        [probatio.All(cv.positive_int, probatio.Range(min=1))],
+        probatio.Unique(),
     )
 }
 GROUP_VOLUME_SET_SCHEMA: Final[VolDictType] = {
-    vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float
+    probatio.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float
 }
 MOVE_QEUEUE_ITEM_SCHEMA: Final[VolDictType] = {
-    vol.Required(ATTR_QUEUE_IDS): vol.All(
+    probatio.Required(ATTR_QUEUE_IDS): probatio.All(
         cv.ensure_list,
-        [vol.All(vol.Coerce(int), vol.Range(min=1, max=1000))],
-        vol.Unique(),
+        [probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=1000))],
+        probatio.Unique(),
     ),
-    vol.Required(ATTR_DESTINATION_POSITION): vol.All(
-        vol.Coerce(int), vol.Range(min=1, max=1000)
+    probatio.Required(ATTR_DESTINATION_POSITION): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=1, max=1000)
     ),
 }
 
@@ -133,7 +136,8 @@ def register_media_player_services() -> None:
 def _get_controller(hass: HomeAssistant) -> Heos:
     """Get the HEOS controller instance."""
     _LOGGER.warning(
-        "Actions 'heos.sign_in' and 'heos.sign_out' are deprecated and will be removed in the 2025.8.0 release"
+        "Actions 'heos.sign_in' and 'heos.sign_out' are deprecated"
+        " and will be removed in the 2025.8.0 release"
     )
     ir.async_create_issue(
         hass,
@@ -149,7 +153,7 @@ def _get_controller(hass: HomeAssistant) -> Heos:
         hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, DOMAIN)
     )
 
-    if not entry or not entry.state == ConfigEntryState.LOADED:
+    if not entry or entry.state is not ConfigEntryState.LOADED:
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="integration_not_loaded"
         )

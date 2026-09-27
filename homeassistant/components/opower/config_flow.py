@@ -1,10 +1,8 @@
 """Config flow for Opower integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from opower import (
     CannotConnect,
@@ -16,7 +14,7 @@ from opower import (
     get_supported_utility_names,
     select_utility,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
@@ -58,6 +56,7 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
         self._data: dict[str, Any] = {}
         self.mfa_handler: MfaHandlerBase | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -68,8 +67,12 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_UTILITY): vol.In(get_supported_utility_names())}
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_UTILITY): probatio.In(
+                        get_supported_utility_names()
+                    )
+                }
             ),
         )
 
@@ -103,16 +106,16 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self._async_create_opower_entry(self._data)
 
         schema_dict: VolDictType = {
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
+            probatio.Required(CONF_USERNAME): str,
+            probatio.Required(CONF_PASSWORD): str,
         }
         if utility.accepts_totp_secret():
-            schema_dict[vol.Optional(CONF_TOTP_SECRET)] = str
+            schema_dict[probatio.Optional(CONF_TOTP_SECRET)] = str
 
         return self.async_show_form(
             step_id="credentials",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(schema_dict), user_input
+                probatio.Schema(schema_dict), user_input
             ),
             errors=errors,
         )
@@ -139,7 +142,9 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="mfa_options",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema({vol.Required(CONF_MFA_METHOD): vol.In(mfa_options)}),
+                probatio.Schema(
+                    {probatio.Required(CONF_MFA_METHOD): probatio.In(mfa_options)}
+                ),
                 user_input,
             ),
             errors=errors,
@@ -170,7 +175,7 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="mfa_code",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema({vol.Required(CONF_MFA_CODE): str}), user_input
+                probatio.Schema({probatio.Required(CONF_MFA_CODE): str}), user_input
             ),
             errors=errors,
         )
@@ -220,16 +225,16 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         utility = select_utility(self._data[CONF_UTILITY])
         schema_dict: VolDictType = {
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
+            probatio.Required(CONF_USERNAME): str,
+            probatio.Required(CONF_PASSWORD): str,
         }
         if utility.accepts_totp_secret():
-            schema_dict[vol.Optional(CONF_TOTP_SECRET)] = str
+            schema_dict[probatio.Optional(CONF_TOTP_SECRET)] = str
 
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(schema_dict), self._data
+                probatio.Schema(schema_dict), self._data
             ),
             errors=errors,
             description_placeholders={CONF_NAME: reauth_entry.title},

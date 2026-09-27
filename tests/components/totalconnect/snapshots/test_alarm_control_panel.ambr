@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[alarm_control_panel.test-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -37,11 +39,11 @@
 # name: test_entities[alarm_control_panel.test-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'changed_by': None,
-      'code_arm_required': False,
-      'code_format': None,
-      'friendly_name': 'test',
-      'supported_features': <AlarmControlPanelEntityFeature: 7>,
+      <AlarmControlPanelEntityStateAttribute.CHANGED_BY: 'changed_by'>: None,
+      <AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: 'code_arm_required'>: False,
+      <AlarmControlPanelEntityStateAttribute.CODE_FORMAT: 'code_format'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <AlarmControlPanelEntityFeature: 7>,
     }),
     'context': <ANY>,
     'entity_id': 'alarm_control_panel.test',
@@ -53,8 +55,9 @@
 # ---
 # name: test_entities[alarm_control_panel.test_partition_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -72,6 +75,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Partition 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -89,11 +93,11 @@
 # name: test_entities[alarm_control_panel.test_partition_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'changed_by': None,
-      'code_arm_required': False,
-      'code_format': None,
-      'friendly_name': 'test Partition 2',
-      'supported_features': <AlarmControlPanelEntityFeature: 7>,
+      <AlarmControlPanelEntityStateAttribute.CHANGED_BY: 'changed_by'>: None,
+      <AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: 'code_arm_required'>: False,
+      <AlarmControlPanelEntityStateAttribute.CODE_FORMAT: 'code_format'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test Partition 2',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <AlarmControlPanelEntityFeature: 7>,
     }),
     'context': <ANY>,
     'entity_id': 'alarm_control_panel.test_partition_2',

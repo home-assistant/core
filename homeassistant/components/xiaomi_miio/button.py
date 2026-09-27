@@ -1,9 +1,7 @@
 """Support for Xiaomi buttons."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from miio import Device as MiioDevice
 from miio.integrations.vacuum.roborock.vacuum import Consumable
@@ -172,6 +170,7 @@ class XiaomiGenericCoordinatedButton(
         super().__init__(device, entry, unique_id, coordinator)
         self.entity_description = description
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         method = getattr(self._device, self.entity_description.method_press)

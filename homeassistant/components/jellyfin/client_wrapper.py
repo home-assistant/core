@@ -1,7 +1,5 @@
 """Utility methods for initializing a Jellyfin client."""
 
-from __future__ import annotations
-
 import socket
 from typing import Any
 
@@ -101,10 +99,12 @@ def get_artwork_url(
     parent_backdrop_id: str | None = item.get("ParentBackdropItemId")
 
     if "AlbumPrimaryImageTag" in item:
-        # jellyfin_apiclient_python doesn't support passing a specific tag to `.artwork`,
-        # so we don't use the actual value of AlbumPrimaryImageTag.
-        # However, its mere presence tells us that the album does have primary artwork,
-        # and the resulting URL will pull the primary album art even if the tag is not specified.
+        # jellyfin_apiclient_python doesn't support passing
+        # a specific tag to `.artwork`, so we don't use the
+        # actual value of AlbumPrimaryImageTag. However, its
+        # mere presence tells us that the album does have
+        # primary artwork, and the resulting URL will pull the
+        # primary album art even if the tag is not specified.
         artwork_type = "Primary"
         artwork_id = item["AlbumId"]
     elif "Backdrop" in item[ITEM_KEY_IMAGE_TAGS]:

@@ -1,13 +1,9 @@
 """The Nord Pool component."""
 
-from __future__ import annotations
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util
 
 from .const import CONF_AREAS, DOMAIN, LOGGER, PLATFORMS
 from .coordinator import NordPoolDataUpdateCoordinator
@@ -33,14 +29,7 @@ async def async_setup_entry(
     await cleanup_device(hass, config_entry)
 
     coordinator = NordPoolDataUpdateCoordinator(hass, config_entry)
-    await coordinator.fetch_data(dt_util.utcnow(), True)
-    await coordinator.update_listeners(dt_util.utcnow())
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="initial_update_failed",
-            translation_placeholders={"error": str(coordinator.last_exception)},
-        )
+    await coordinator.async_config_entry_first_refresh()
     config_entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -68,6 +57,4 @@ async def cleanup_device(
                 continue
 
             LOGGER.debug("Removing device %s", entry.name)
-            device_reg.async_update_device(
-                entry.id, remove_config_entry_id=config_entry.entry_id
-            )
+            device_reg.async_remove_device(entry.id)

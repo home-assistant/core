@@ -1,9 +1,8 @@
 """Tracking for bluetooth low energy devices."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 import binascii
+from typing import override
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
@@ -39,6 +38,7 @@ class BasePrivateDeviceEntity(Entity):
         self._irk = binascii.unhexlify(irk)
         self._last_info: bluetooth.BluetoothServiceInfoBleak | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Configure entity when it is added to Home Assistant."""
         coordinator = async_get_coordinator(self.hass)
@@ -72,4 +72,4 @@ class BasePrivateDeviceEntity(Entity):
         service_info: bluetooth.BluetoothServiceInfoBleak,
         change: bluetooth.BluetoothChange,
     ) -> None:
-        """Respond when the bluetooth device being tracked broadcasted updated information."""
+        """Respond when the tracked device broadcasted updated info."""

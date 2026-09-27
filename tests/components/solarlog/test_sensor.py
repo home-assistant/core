@@ -12,6 +12,7 @@ from solarlog_cli.solarlog_exceptions import (
 from solarlog_cli.solarlog_models import InverterData
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.solarlog.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -46,10 +47,10 @@ async def test_add_remove_entities(
     """Test if entities are added and old are removed."""
     await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
 
+    # test no changes (coordinator.py line 176)
     assert hass.states.get("sensor.inverter_1_consumption_year").state == "354.687"
 
-    # test no changes (coordinator.py line 114)
-    freezer.tick(delta=timedelta(minutes=1))
+    freezer.tick(delta=timedelta(hours=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -68,7 +69,7 @@ async def test_add_remove_entities(
     mock_solarlog_connector.device_name = {0: "Inv 1", 2: "Inverter 3"}.get
     mock_solarlog_connector.device_enabled = {0: True, 2: True}.get
 
-    freezer.tick(delta=timedelta(minutes=1))
+    freezer.tick(delta=timedelta(hours=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -76,6 +77,30 @@ async def test_add_remove_entities(
     assert hass.states.get("sensor.inv_1_consumption_year").state == "354.687"
     assert hass.states.get("sensor.inverter_2_consumption_year") is None
     assert hass.states.get("sensor.inverter_3_consumption_year").state == "0.454"
+
+
+@pytest.mark.usefixtures("mock_solarlog_connector")
+async def test_inverter_via_device_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: DeviceRegistry,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test inverter devices are linked to the controller device via via_device_id."""
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+
+    controller_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
+    assert controller_device is not None
+
+    entity = entity_registry.async_get("sensor.inverter_1_consumption_year")
+    assert entity is not None
+    assert entity.device_id is not None
+    inverter_device = device_registry.async_get(entity.device_id)
+    assert inverter_device is not None
+
+    assert inverter_device.via_device_id == controller_device.id
 
 
 @pytest.mark.parametrize(
@@ -95,9 +120,16 @@ async def test_connection_error(
     """Test connection error."""
     await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
 
-    mock_solarlog_connector.update_data.side_effect = exception
+    mock_solarlog_connector.update_basic_data.side_effect = exception
+    mock_solarlog_connector.update_basic_data.side_effect = exception
+    mock_solarlog_connector.update_energy_data.side_effect = exception
+    mock_solarlog_connector.update_inverter_data.side_effect = exception
 
-    freezer.tick(delta=timedelta(hours=12))
+    freezer.tick(delta=timedelta(hours=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    freezer.tick(delta=timedelta(hours=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

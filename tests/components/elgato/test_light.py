@@ -2,11 +2,12 @@
 
 from unittest.mock import MagicMock
 
-from elgato import ElgatoError
+from elgato import ElgatoConnectionError, ElgatoError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.elgato.const import DOMAIN, SERVICE_IDENTIFY
+from homeassistant.components.elgato.const import DOMAIN
+from homeassistant.components.elgato.services import SERVICE_IDENTIFY
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
@@ -59,7 +60,7 @@ async def test_light_state_temperature(
 @pytest.mark.parametrize(
     ("device_fixtures", "state_variant"), [("light-strip", "state-color-temperature")]
 )
-@pytest.mark.usefixtures("state_variant", "device_fixtures", "init_integration")
+@pytest.mark.usefixtures("state_variant", "device_fixtures")
 async def test_light_change_state_temperature(
     hass: HomeAssistant,
     mock_elgato: MagicMock,
@@ -127,10 +128,12 @@ async def test_light_unavailable(
     hass: HomeAssistant, mock_elgato: MagicMock, service: str
 ) -> None:
     """Test error/unavailable handling of an Elgato Light."""
-    mock_elgato.state.side_effect = ElgatoError
-    mock_elgato.light.side_effect = ElgatoError
+    mock_elgato.light.side_effect = ElgatoConnectionError
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError,
+        match="An error occurred while communicating with the Elgato device",
+    ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             service,
@@ -142,7 +145,6 @@ async def test_light_unavailable(
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.usefixtures("init_integration")
 async def test_light_identify(hass: HomeAssistant, mock_elgato: MagicMock) -> None:
     """Test identifying an Elgato Light."""
     await hass.services.async_call(
@@ -159,7 +161,8 @@ async def test_light_identify(hass: HomeAssistant, mock_elgato: MagicMock) -> No
     mock_elgato.identify.side_effect = ElgatoError
 
     with pytest.raises(
-        HomeAssistantError, match="An error occurred while identifying the Elgato Light"
+        HomeAssistantError,
+        match="An unknown error occurred while communicating with the Elgato device",
     ):
         await hass.services.async_call(
             DOMAIN,

@@ -77,7 +77,7 @@ async def test_setup_fails_when_userinfo_missing(
 
 
 class MockAppleDevice:
-    """Mock "Apple device" which implements the .status(...) method used by the account."""
+    """Mock Apple device implementing .status() used by the account."""
 
     def __init__(self, status_dict) -> None:
         """Set status."""
@@ -88,17 +88,22 @@ class MockAppleDevice:
         return self._status
 
     def __getitem__(self, key):
-        """Allow indexing the device itself (device[KEY]) to proxy into the raw status dict."""
+        """Allow indexing to proxy into the raw status dict."""
         return self._status.get(key)
 
 
 class MockDevicesContainer:
-    """Mock devices container which is iterable and indexable returning device status dicts."""
+    """Mock devices container, iterable and indexable."""
 
     def __init__(self, userinfo, devices) -> None:
         """Initialize with userinfo and list of device objects."""
         self.user_info = userinfo
         self._devices = devices
+        self.refresh_calls: list[bool] = []
+
+    def refresh(self, locate: bool = False) -> None:
+        """Record refresh calls made by the account."""
+        self.refresh_calls.append(locate)
 
     def __iter__(self):
         """Iterate returns device objects (each must have .status(...))."""
@@ -118,7 +123,7 @@ class MockDevicesContainer:
 
 @pytest.fixture(name="mock_icloud_service")
 def mock_icloud_service_fixture():
-    """Mock PyiCloudService with devices container that is iterable and indexable returning status dict."""
+    """Mock PyiCloudService with iterable and indexable devices."""
     with patch(
         "homeassistant.components.icloud.account.PyiCloudService",
     ) as service_mock:
@@ -165,3 +170,7 @@ async def test_setup_success_with_devices(
     assert account.owner_fullname == "user name"
     assert "johntravolta" in account.family_members_fullname
     assert account.family_members_fullname["johntravolta"] == "John TRAVOLTA"
+    # An active locate must be requested on every poll (pyicloud >= 2.3.0
+    # only locates at service creation, so the account has to ask for it)
+    assert mock_icloud_service.devices.refresh_calls == [True]
+    assert "device1" in account.devices

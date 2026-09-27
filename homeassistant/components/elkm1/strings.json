@@ -3,7 +3,6 @@
     "abort": {
       "address_already_configured": "An Elk-M1 with this address is already configured",
       "already_configured": "An Elk-M1 with this prefix is already configured",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "reconfigure_successful": "Successfully reconfigured Elk-M1 integration",
@@ -56,6 +55,16 @@
         "description": "Choose a discovered system or 'Manual Entry' if no devices have been discovered.",
         "title": "Connect to Elk-M1 Control"
       }
+    }
+  },
+  "issues": {
+    "deprecated_sensor": {
+      "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with `{replacement_entity_id}`.\n\nUpdate your dashboards, templates, automations and scripts to use the replacement entity, then disable the deprecated sensor to have it removed after the next restart.",
+      "title": "Deprecated sensor detected"
+    },
+    "deprecated_sensor_scripts": {
+      "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with `{replacement_entity_id}`.\n\nThe sensor was used in the following automations or scripts:\n{items}\n\nUpdate the above automations or scripts to use the replacement entity, then disable the deprecated sensor to have it removed after the next restart.",
+      "title": "[%key:component::elkm1::issues::deprecated_sensor::title%]"
     }
   },
   "services": {
@@ -200,6 +209,16 @@
         }
       },
       "name": "Speak word"
+    },
+    "switch_output_turn_on_for": {
+      "description": "Turns on an output for a specified length of time.",
+      "fields": {
+        "duration": {
+          "description": "Length of time to turn the output on for.",
+          "name": "Duration"
+        }
+      },
+      "name": "Switch output turn on for"
     }
   }
 }

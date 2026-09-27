@@ -1,9 +1,7 @@
 """Cover platform for Tessie integration."""
 
-from __future__ import annotations
-
 from itertools import chain
-from typing import Any
+from typing import Any, override
 
 from tessie_api import (
     close_charge_port,
@@ -74,6 +72,7 @@ class TessieWindowEntity(TessieEntity, CoverEntity):
         super().__init__(vehicle, "windows")
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         return (
@@ -83,6 +82,7 @@ class TessieWindowEntity(TessieEntity, CoverEntity):
             and self.get("vehicle_state_rp_window") == TessieCoverStates.CLOSED
         )
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open windows."""
         await self.run(vent_windows)
@@ -93,6 +93,7 @@ class TessieWindowEntity(TessieEntity, CoverEntity):
             ("vehicle_state_rp_window", TessieCoverStates.OPEN),
         )
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close windows."""
         await self.run(close_windows)
@@ -115,15 +116,18 @@ class TessieChargePortEntity(TessieEntity, CoverEntity):
         super().__init__(vehicle, "charge_state_charge_port_door_open")
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         return not self._value
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open windows."""
         await self.run(open_unlock_charge_port)
         self.set((self.key, True))
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close windows."""
         await self.run(close_charge_port)
@@ -141,10 +145,12 @@ class TessieFrontTrunkEntity(TessieEntity, CoverEntity):
         super().__init__(vehicle, "vehicle_state_ft")
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         return self._value == TessieCoverStates.CLOSED
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open front trunk."""
         await self.run(open_front_trunk)
@@ -162,16 +168,19 @@ class TessieRearTrunkEntity(TessieEntity, CoverEntity):
         super().__init__(vehicle, "vehicle_state_rt")
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         return self._value == TessieCoverStates.CLOSED
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open rear trunk."""
         if self.is_closed:
             await self.run(open_close_rear_trunk)
             self.set((self.key, TessieCoverStates.OPEN))
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close rear trunk."""
         if not self.is_closed:
@@ -190,20 +199,24 @@ class TessieSunroofEntity(TessieEntity, CoverEntity):
         super().__init__(vehicle, "vehicle_state_sun_roof_state")
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         return self._value == TessieCoverStates.CLOSED
 
     @property
+    @override
     def current_cover_position(self) -> bool | None:
         """Return the percentage open."""
         return self.get("vehicle_state_sun_roof_percent_open")
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open sunroof."""
         await self.run(vent_sunroof)
         self.set((self.key, TessieCoverStates.OPEN))
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close sunroof."""
         await self.run(close_sunroof)

@@ -1,4 +1,9 @@
 {
+  "conditions": {
+    "is_equal_to": {
+      "condition": "mdi:form-textbox"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:form-textbox"

@@ -1,0 +1,27 @@
+is_option_selected:
+  target:
+    entity:
+      - domain: select
+      - domain: input_select
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        automation_behavior:
+          mode: condition
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
+    option:
+      context:
+        filter_target: target
+      required: true
+      selector:
+        state:
+          hide_states:
+            - unavailable
+            - unknown
+          multiple: true

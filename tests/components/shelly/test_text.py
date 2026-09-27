@@ -9,7 +9,7 @@ import pytest
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.components.text import (
     ATTR_VALUE,
-    DOMAIN as TEXT_PLATFORM,
+    DOMAIN as TEXT_DOMAIN,
     SERVICE_SET_VALUE,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -72,7 +72,7 @@ async def test_rpc_device_virtual_text(
 
     monkeypatch.setitem(mock_rpc_device.status["text:203"], "value", "sed do eiusmod")
     await hass.services.async_call(
-        TEXT_PLATFORM,
+        TEXT_DOMAIN,
         SERVICE_SET_VALUE,
         {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: "sed do eiusmod"},
         blocking=True,
@@ -92,7 +92,7 @@ async def test_rpc_remove_virtual_text_when_mode_label(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test if the virtual text will be removed if the mode has been changed to a label."""
+    """Test virtual text removal when mode changes to label."""
     config = deepcopy(mock_rpc_device.config)
     config["text:200"] = {"name": None, "meta": {"ui": {"view": "label"}}}
     monkeypatch.setattr(mock_rpc_device, "config", config)
@@ -105,7 +105,7 @@ async def test_rpc_remove_virtual_text_when_mode_label(
     device_entry = register_device(device_registry, config_entry)
     entity_id = register_entity(
         hass,
-        TEXT_PLATFORM,
+        TEXT_DOMAIN,
         "test_name_text_200",
         "text:200-text_generic",
         config_entry,
@@ -124,12 +124,12 @@ async def test_rpc_remove_virtual_text_when_orphaned(
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
 ) -> None:
-    """Check whether the virtual text will be removed if it has been removed from the device configuration."""
+    """Test virtual text removal from device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
     device_entry = register_device(device_registry, config_entry)
     entity_id = register_entity(
         hass,
-        TEXT_PLATFORM,
+        TEXT_DOMAIN,
         "test_name_text_200",
         "text:200-text_generic",
         config_entry,
@@ -147,11 +147,13 @@ async def test_rpc_remove_virtual_text_when_orphaned(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while calling action for text.test_name_text_203 of Test name",
+            "Device communication error occurred while calling action"
+            " for text.test_name_text_203 of Test name",
         ),
         (
             RpcCallError(999),
-            "RPC call error occurred while calling action for text.test_name_text_203 of Test name",
+            "RPC call error occurred while calling action"
+            " for text.test_name_text_203 of Test name",
         ),
     ],
 )
@@ -180,10 +182,10 @@ async def test_text_set_exc(
 
     with pytest.raises(HomeAssistantError, match=error):
         await hass.services.async_call(
-            TEXT_PLATFORM,
+            TEXT_DOMAIN,
             SERVICE_SET_VALUE,
             {
-                ATTR_ENTITY_ID: f"{TEXT_PLATFORM}.test_name_text_203",
+                ATTR_ENTITY_ID: f"{TEXT_DOMAIN}.test_name_text_203",
                 ATTR_VALUE: "new value",
             },
             blocking=True,
@@ -212,10 +214,10 @@ async def test_text_set_reauth_error(
     mock_rpc_device.text_set.side_effect = InvalidAuthError
 
     await hass.services.async_call(
-        TEXT_PLATFORM,
+        TEXT_DOMAIN,
         SERVICE_SET_VALUE,
         {
-            ATTR_ENTITY_ID: f"{TEXT_PLATFORM}.test_name_text_203",
+            ATTR_ENTITY_ID: f"{TEXT_DOMAIN}.test_name_text_203",
             ATTR_VALUE: "new value",
         },
         blocking=True,

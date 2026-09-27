@@ -1,7 +1,5 @@
 """Test device template functions."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -40,7 +38,7 @@ async def test_device_entities(
     assert info.rate_limit is None
 
     # Test device with single entity, which has no state
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         "light",
         "hue",
         "5678",
@@ -48,7 +46,7 @@ async def test_device_entities(
         device_id=device_entry.id,
     )
     info = render_to_info(hass, f"{{{{ device_entities('{device_entry.id}') }}}}")
-    assert_result_info(info, ["light.hue_5678"], [])
+    assert_result_info(info, [entity_entry.entity_id], [])
     assert info.rate_limit is None
     info = render_to_info(
         hass,
@@ -57,11 +55,11 @@ async def test_device_entities(
             "| sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}"
         ),
     )
-    assert_result_info(info, "", ["light.hue_5678"])
+    assert_result_info(info, "", [entity_entry.entity_id])
     assert info.rate_limit is None
 
     # Test device with single entity, with state
-    hass.states.async_set("light.hue_5678", "happy")
+    hass.states.async_set(entity_entry.entity_id, "happy")
     info = render_to_info(
         hass,
         (
@@ -69,20 +67,20 @@ async def test_device_entities(
             "| sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}"
         ),
     )
-    assert_result_info(info, "light.hue_5678", ["light.hue_5678"])
+    assert_result_info(info, entity_entry.entity_id, [entity_entry.entity_id])
     assert info.rate_limit is None
 
     # Test device with multiple entities, which have a state
-    entity_registry.async_get_or_create(
+    entity_entry_2 = entity_registry.async_get_or_create(
         "light",
         "hue",
         "ABCD",
         config_entry=config_entry,
         device_id=device_entry.id,
     )
-    hass.states.async_set("light.hue_abcd", "camper")
+    hass.states.async_set(entity_entry_2.entity_id, "camper")
     info = render_to_info(hass, f"{{{{ device_entities('{device_entry.id}') }}}}")
-    assert_result_info(info, ["light.hue_5678", "light.hue_abcd"], [])
+    assert_result_info(info, [entity_entry.entity_id, entity_entry_2.entity_id], [])
     assert info.rate_limit is None
     info = render_to_info(
         hass,
@@ -92,7 +90,9 @@ async def test_device_entities(
         ),
     )
     assert_result_info(
-        info, "light.hue_5678, light.hue_abcd", ["light.hue_5678", "light.hue_abcd"]
+        info,
+        f"{entity_entry.entity_id}, {entity_entry_2.entity_id}",
+        [entity_entry.entity_id, entity_entry_2.entity_id],
     )
     assert info.rate_limit is None
 
@@ -327,3 +327,41 @@ async def test_device_attr(
     )
     assert_result_info(info, [device_entry.id])
     assert info.rate_limit is None
+
+
+async def test_device_functions_with_child_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test device functions with child devices."""
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent.id,
+        name="Outlet 1",
+    )
+
+    # device_id finds a child device by name
+    info = render_to_info(hass, "{{ device_id('Outlet 1') }}")
+    assert_result_info(info, child_device.id)
+
+    # device_name resolves a child device
+    info = render_to_info(hass, f"{{{{ device_name('{child_device.id}') }}}}")
+    assert_result_info(info, "Outlet 1")
+
+    # device_attr returns None for attributes a child device does not have
+    info = render_to_info(
+        hass, f"{{{{ device_attr('{child_device.id}', 'manufacturer') }}}}"
+    )
+    assert_result_info(info, None)
+    info = render_to_info(
+        hass, f"{{{{ device_attr('{child_device.id}', 'parent_device_id') }}}}"
+    )
+    assert_result_info(info, child_device.parent_device_id)

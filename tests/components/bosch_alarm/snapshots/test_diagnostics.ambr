@@ -28,6 +28,7 @@
           'open': False,
         }),
       ]),
+      'family': 'AMAX',
       'firmware_version': '1.0.0',
       'history_events': list([
       ]),
@@ -124,6 +125,7 @@
           'open': False,
         }),
       ]),
+      'family': 'BG_SERIES',
       'firmware_version': '1.0.0',
       'history_events': list([
       ]),
@@ -219,6 +221,7 @@
           'open': False,
         }),
       ]),
+      'family': 'SOLUTION',
       'firmware_version': '1.0.0',
       'history_events': list([
       ]),

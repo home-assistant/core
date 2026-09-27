@@ -1,7 +1,5 @@
 """The Local To-do integration."""
 
-from __future__ import annotations
-
 from pathlib import Path
 
 from homeassistant.config_entries import ConfigEntry
@@ -27,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalTodoConfigEntry) ->
     try:
         await store.async_load()
     except OSError as err:
-        raise ConfigEntryNotReady("Failed to load file {path}: {err}") from err
+        raise ConfigEntryNotReady(f"Failed to load file {path}: {err}") from err
 
     entry.runtime_data = store
 

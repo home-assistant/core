@@ -1,7 +1,5 @@
 """iAlarm integration."""
 
-from __future__ import annotations
-
 import asyncio
 
 from pyialarm import IAlarm

@@ -1,0 +1,216 @@
+# serializer version: 1
+# name: test_service_get_diskspace
+  dict({
+    'disks': dict({
+      'C:\\': dict({
+        'free_space': 282500067328.0,
+        'label': '',
+        'path': 'C:\\',
+        'total_space': 499738734592.0,
+        'unit': 'bytes',
+      }),
+    }),
+  })
+# ---
+# name: test_service_get_episodes
+  dict({
+    'episodes': dict({
+      'S01E01': dict({
+        'air_date': '1960-10-03 00:00:00',
+        'air_date_utc': '1960-10-03 00:00:00+00:00',
+        'episode_file_id': 0,
+        'episode_identifier': 'S01E01',
+        'episode_number': 1,
+        'has_file': False,
+        'id': 1001,
+        'monitored': True,
+        'overview': "Andy's housekeeper quits, and a new one arrives.",
+        'runtime': 25,
+        'season_number': 1,
+        'series_id': 105,
+        'title': 'The New Housekeeper',
+        'tvdb_id': 123456,
+      }),
+      'S01E02': dict({
+        'air_date': '1960-10-10 00:00:00',
+        'air_date_utc': '1960-10-10 00:00:00+00:00',
+        'episode_file_id': 5001,
+        'episode_identifier': 'S01E02',
+        'episode_number': 2,
+        'has_file': True,
+        'id': 1002,
+        'monitored': True,
+        'overview': 'Andy leads a manhunt for an escaped convict.',
+        'runtime': 25,
+        'season_number': 1,
+        'series_id': 105,
+        'title': 'The Manhunt',
+        'tvdb_id': 123457,
+      }),
+      'S02E01': dict({
+        'air_date': '1961-10-02 00:00:00',
+        'air_date_utc': '1961-10-02 00:00:00+00:00',
+        'episode_file_id': 0,
+        'episode_identifier': 'S02E01',
+        'episode_number': 1,
+        'finale_type': 'season',
+        'has_file': False,
+        'id': 1003,
+        'monitored': True,
+        'overview': 'Opie is being bullied at school.',
+        'runtime': 25,
+        'season_number': 2,
+        'series_id': 105,
+        'title': 'Opie and the Bully',
+        'tvdb_id': 123458,
+      }),
+    }),
+  })
+# ---
+# name: test_service_get_queue
+  dict({
+    'shows': dict({
+      'The.Andy.Griffith.Show.S01E01.x264-GROUP': dict({
+        'download_client': None,
+        'download_id': 'SABnzbd_nzo_Mq2f_b',
+        'download_title': 'The.Andy.Griffith.Show.S01E01.x264-GROUP',
+        'episode_has_file': None,
+        'episode_id': None,
+        'episode_number': 1,
+        'episode_title': 'The New Housekeeper',
+        'estimated_completion_time': '2016-02-05 22:46:52.440104',
+        'id': 1503378561,
+        'images': dict({
+          'banner': 'https://artworks.thetvdb.com/banners/graphical/77754-g.jpg',
+          'fanart': 'https://artworks.thetvdb.com/banners/fanart/original/77754-5.jpg',
+          'poster': 'https://artworks.thetvdb.com/banners/posters/77754-4.jpg',
+        }),
+        'indexer': None,
+        'progress': '100.00%',
+        'protocol': 'ProtocolType.USENET',
+        'quality': 'SD',
+        'season_number': None,
+        'series_id': None,
+        'size': 4472186820,
+        'size_left': 0,
+        'status': 'Downloading',
+        'time_left': '00:00:00',
+        'title': 'The Andy Griffith Show',
+        'tracked_download_state': 'downloading',
+        'tracked_download_status': 'Ok',
+      }),
+    }),
+  })
+# ---
+# name: test_service_get_series
+  dict({
+    'shows': dict({
+      'The Andy Griffith Show': dict({
+        'episode_count': 0,
+        'episode_file_count': 0,
+        'episodes_info': '0/0 Episodes',
+        'id': 105,
+        'images': dict({
+          'banner': 'https://artworks.thetvdb.com/banners/graphical/77754-g.jpg',
+          'fanart': 'https://artworks.thetvdb.com/banners/fanart/original/77754-5.jpg',
+          'poster': 'https://artworks.thetvdb.com/banners/posters/77754-1.jpg',
+        }),
+        'imdb_id': 'tt0053479',
+        'monitored': True,
+        'status': 'ended',
+        'tvdb_id': 77754,
+        'year': 1960,
+      }),
+    }),
+  })
+# ---
+# name: test_service_get_upcoming
+  dict({
+    'episodes': dict({
+      "Bob's Burgers S04E11": dict({
+        'air_date': '2014-01-26 00:00:00',
+        'air_date_utc': '2014-01-27 01:30:00+00:00',
+        'episode_identifier': 'S04E11',
+        'episode_number': 11,
+        'finale_type': None,
+        'has_file': False,
+        'id': 14402,
+        'images': dict({
+          'banner': 'http://192.168.1.189:8989http://slurm.trakt.us/images/banners/1387.6.jpg',
+          'fanart': 'http://192.168.1.189:8989http://slurm.trakt.us/images/fanart/1387.6.jpg',
+          'poster': 'http://192.168.1.189:8989http://slurm.trakt.us/images/posters/1387.6-300.jpg',
+        }),
+        'monitored': True,
+        'network': 'FOX',
+        'overview': 'To compete with fellow "restaurateur," Jimmy Pesto, and his blowout Super Bowl event, Bob is determined to create a Bob\'s Burgers commercial to air during the "big game." In an effort to outshine Pesto, the Belchers recruit Randy, a documentarian, to assist with the filmmaking and hire on former pro football star Connie Frye to be the celebrity endorser.',
+        'runtime': None,
+        'season_number': 4,
+        'series_id': 3,
+        'series_imdb_id': 'tt1561755',
+        'series_status': 'continuing',
+        'series_title': "Bob's Burgers",
+        'series_tvdb_id': 194031,
+        'series_year': 2011,
+        'title': 'Easy Com-mercial, Easy Go-mercial',
+      }),
+    }),
+  })
+# ---
+# name: test_service_get_wanted
+  dict({
+    'episodes': dict({
+      "Bob's Burgers S04E11": dict({
+        'air_date': '2014-01-26 00:00:00',
+        'air_date_utc': '2014-01-27 01:30:00+00:00',
+        'episode_identifier': 'S04E11',
+        'episode_number': 11,
+        'has_file': False,
+        'id': 14402,
+        'images': dict({
+          'banner': 'http://192.168.1.189:8989http://slurm.trakt.us/images/banners/1387.6.jpg',
+          'fanart': 'http://192.168.1.189:8989http://slurm.trakt.us/images/fanart/1387.6.jpg',
+          'poster': 'http://192.168.1.189:8989http://slurm.trakt.us/images/posters/1387.6-300.jpg',
+        }),
+        'monitored': True,
+        'network': 'FOX',
+        'overview': 'To compete with fellow "restaurateur," Jimmy Pesto, and his blowout Super Bowl event, Bob is determined to create a Bob\'s Burgers commercial to air during the "big game." In an effort to outshine Pesto, the Belchers recruit Randy, a documentarian, to assist with the filmmaking and hire on former pro football star Connie Frye to be the celebrity endorser.',
+        'runtime': None,
+        'season_number': 4,
+        'series_id': 3,
+        'series_imdb_id': 'tt1561755',
+        'series_status': 'continuing',
+        'series_title': "Bob's Burgers",
+        'series_tvdb_id': 194031,
+        'series_year': 2011,
+        'title': 'Easy Com-mercial, Easy Go-mercial',
+        'tvdb_id': None,
+      }),
+      'The Andy Griffith Show S01E01': dict({
+        'air_date': '1960-10-03 00:00:00',
+        'air_date_utc': '1960-10-03 01:00:00+00:00',
+        'episode_identifier': 'S01E01',
+        'episode_number': 1,
+        'has_file': False,
+        'id': 889,
+        'images': dict({
+          'banner': 'http://192.168.1.189:8989https://artworks.thetvdb.com/banners/graphical/77754-g.jpg',
+          'fanart': 'http://192.168.1.189:8989https://artworks.thetvdb.com/banners/fanart/original/77754-5.jpg',
+          'poster': 'http://192.168.1.189:8989https://artworks.thetvdb.com/banners/posters/77754-4.jpg',
+        }),
+        'monitored': True,
+        'network': 'CBS',
+        'overview': "Sheriff Andy Taylor and his young son Opie are in need of a new housekeeper. Andy's Aunt Bee looks like the perfect candidate and moves in, but her presence causes friction with Opie.",
+        'runtime': None,
+        'season_number': 1,
+        'series_id': 17,
+        'series_imdb_id': '',
+        'series_status': 'ended',
+        'series_title': 'The Andy Griffith Show',
+        'series_tvdb_id': 77754,
+        'series_year': 1960,
+        'title': 'The New Housekeeper',
+        'tvdb_id': None,
+      }),
+    }),
+  })
+# ---

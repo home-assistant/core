@@ -1,6 +1,6 @@
 """Test the init file for the Insteon component."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -78,6 +78,9 @@ async def test_import_frontend_dev_url(hass: HomeAssistant) -> None:
         patch.object(insteon, "async_connect", new=mock_successful_connection),
         patch.object(insteon, "async_close") as mock_close,
         patch.object(insteon, "devices", new=MockDevices()),
+        patch.object(
+            insteon.api, "async_register_insteon_frontend", new=AsyncMock()
+        ) as mock_register_frontend,
     ):
         assert await async_setup_component(
             hass,
@@ -85,7 +88,7 @@ async def test_import_frontend_dev_url(hass: HomeAssistant) -> None:
             {},
         )
         await hass.async_block_till_done()
-        assert hass.data[DOMAIN][CONF_DEV_PATH] == "/some/path"
+        mock_register_frontend.assert_awaited_once_with(hass, "/some/path")
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
         assert insteon.devices.async_save.call_count == 1

@@ -12,18 +12,20 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
-pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info", "wan_get_info")
+from tests.common import snapshot_platform
+
+pytestmark = pytest.mark.usefixtures(
+    "system_get_info", "dsl_get_info", "voip_get_info", "wan_get_info"
+)
 
 
 @pytest.fixture(autouse=True)
 def override_platforms() -> Generator[None]:
-    """Override PLATFORMS_WITH_AUTH."""
+    """Override PLATFORMS."""
     with (
-        patch(
-            "homeassistant.components.sfr_box.PLATFORMS_WITH_AUTH", [Platform.BUTTON]
-        ),
+        patch("homeassistant.components.sfr_box.PLATFORMS", [Platform.BUTTON]),
         patch("homeassistant.components.sfr_box.coordinator.SFRBox.authenticate"),
     ):
         yield
@@ -32,7 +34,6 @@ def override_platforms() -> Generator[None]:
 async def test_buttons(
     hass: HomeAssistant,
     config_entry_with_auth: ConfigEntry,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -40,21 +41,23 @@ async def test_buttons(
     await hass.config_entries.async_setup(config_entry_with_auth.entry_id)
     await hass.async_block_till_done()
 
-    # Ensure devices are correctly registered
-    device_entries = dr.async_entries_for_config_entry(
-        device_registry, config_entry_with_auth.entry_id
+    await snapshot_platform(
+        hass, entity_registry, snapshot, config_entry_with_auth.entry_id
     )
-    assert device_entries == snapshot
 
-    # Ensure entities are correctly registered
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry_with_auth.entry_id
-    )
-    assert entity_entries == snapshot
 
-    # Ensure entity states are correct
-    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
-    assert states == snapshot
+async def test_buttons_no_auth(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test for SFR Box buttons."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Ensure auth-only entities are not registered
+    assert len(entity_registry.entities) == 0
 
 
 async def test_reboot(hass: HomeAssistant, config_entry_with_auth: ConfigEntry) -> None:

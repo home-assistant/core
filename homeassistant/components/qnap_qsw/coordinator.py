@@ -1,11 +1,10 @@
 """The QNAP QSW coordinator."""
 
-from __future__ import annotations
-
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioqsw.exceptions import QswError
 from aioqsw.localapi import QnapQswApi
@@ -22,13 +21,24 @@ FW_SCAN_INTERVAL = timedelta(hours=12)
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class QnapQswData:
+    """Data for the QNAP QSW integration."""
+
+    data_coordinator: QswDataCoordinator
+    firmware_coordinator: QswFirmwareCoordinator
+
+
+type QnapQswConfigEntry = ConfigEntry[QnapQswData]
+
+
 class QswDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the QNAP QSW device."""
 
-    config_entry: ConfigEntry
+    config_entry: QnapQswConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, qsw: QnapQswApi
+        self, hass: HomeAssistant, config_entry: QnapQswConfigEntry, qsw: QnapQswApi
     ) -> None:
         """Initialize."""
         self.qsw = qsw
@@ -41,6 +51,7 @@ class QswDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=DATA_SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         async with asyncio.timeout(QSW_TIMEOUT_SEC):
@@ -54,10 +65,10 @@ class QswDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 class QswFirmwareCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching firmware data from the QNAP QSW device."""
 
-    config_entry: ConfigEntry
+    config_entry: QnapQswConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, qsw: QnapQswApi
+        self, hass: HomeAssistant, config_entry: QnapQswConfigEntry, qsw: QnapQswApi
     ) -> None:
         """Initialize."""
         self.qsw = qsw
@@ -70,6 +81,7 @@ class QswFirmwareCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=FW_SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update firmware data via library."""
         async with asyncio.timeout(QSW_TIMEOUT_SEC):

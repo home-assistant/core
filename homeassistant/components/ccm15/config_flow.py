@@ -1,25 +1,24 @@
 """Config flow for Midea ccm15 AC Controller integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from ccm15 import CCM15Device
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DEFAULT_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_PORT, default=80): cv.port,
+        probatio.Required(CONF_HOST): str,
+        probatio.Optional(CONF_PORT, default=80): cv.port,
     }
 )
 
@@ -29,6 +28,7 @@ class CCM15ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -37,7 +37,10 @@ class CCM15ConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._async_abort_entries_match(user_input)
             ccm15 = CCM15Device(
-                user_input[CONF_HOST], user_input[CONF_PORT], DEFAULT_TIMEOUT
+                user_input[CONF_HOST],
+                user_input[CONF_PORT],
+                DEFAULT_TIMEOUT,
+                client=get_async_client(self.hass),
             )
             try:
                 if not await ccm15.async_test_connection():

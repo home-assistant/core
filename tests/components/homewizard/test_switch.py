@@ -149,7 +149,7 @@ async def test_switch_entities(
 
     with pytest.raises(
         HomeAssistantError,
-        match=r"^An error occurred while communicating with your HomeWizard Energy device$",
+        match=r"^An error occurred while communicating with your HomeWizard device$",
     ):
         await hass.services.async_call(
             switch.DOMAIN,
@@ -160,7 +160,7 @@ async def test_switch_entities(
 
     with pytest.raises(
         HomeAssistantError,
-        match=r"^An error occurred while communicating with your HomeWizard Energy device$",
+        match=r"^An error occurred while communicating with your HomeWizard device$",
     ):
         await hass.services.async_call(
             switch.DOMAIN,

@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Iterable
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyatv.const import InputAction
 
@@ -51,19 +51,25 @@ async def async_setup_entry(
 class AppleTVRemote(AppleTVEntity, RemoteEntity):
     """Device that sends commands to an Apple TV."""
 
+    _attr_name = None
+
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self.atv is not None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.manager.connect()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.manager.disconnect()
 
+    @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
         num_repeats = kwargs[ATTR_NUM_REPEATS]

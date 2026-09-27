@@ -1,29 +1,24 @@
 """Diagnostics support for Modern Forms."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .coordinator import ModernFormsDataUpdateCoordinator
+from .coordinator import ModernFormsConfigEntry
 
 REDACT_CONFIG = {CONF_MAC}
 REDACT_DEVICE_INFO = {"mac_address", "owner"}
+REDACT_DEVICE_STATUS = {"name", "schedule", "user_data"}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: ModernFormsConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: ModernFormsDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    if TYPE_CHECKING:
-        assert coordinator is not None
+    coordinator = entry.runtime_data
 
     return {
         "config_entry": async_redact_data(entry.as_dict(), REDACT_CONFIG),
@@ -31,6 +26,8 @@ async def async_get_config_entry_diagnostics(
             "info": async_redact_data(
                 asdict(coordinator.modern_forms.info), REDACT_DEVICE_INFO
             ),
-            "status": asdict(coordinator.modern_forms.status),
+            "status": async_redact_data(
+                asdict(coordinator.modern_forms.status), REDACT_DEVICE_STATUS
+            ),
         },
     }

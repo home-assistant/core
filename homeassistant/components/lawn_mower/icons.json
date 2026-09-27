@@ -1,4 +1,24 @@
 {
+  "conditions": {
+    "is_docked": {
+      "condition": "mdi:home-import-outline"
+    },
+    "is_encountering_an_error": {
+      "condition": "mdi:alert-circle-outline"
+    },
+    "is_idle": {
+      "condition": "mdi:stop"
+    },
+    "is_mowing": {
+      "condition": "mdi:play"
+    },
+    "is_paused": {
+      "condition": "mdi:pause"
+    },
+    "is_returning": {
+      "condition": "mdi:home-import-outline"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:robot-mower"
@@ -13,11 +33,14 @@
     },
     "start_mowing": {
       "service": "mdi:play"
+    },
+    "stop": {
+      "service": "mdi:stop"
     }
   },
   "triggers": {
-    "docked": {
-      "trigger": "mdi:home-import-outline"
+    "became_idle": {
+      "trigger": "mdi:stop"
     },
     "errored": {
       "trigger": "mdi:alert-circle-outline"
@@ -25,8 +48,14 @@
     "paused_mowing": {
       "trigger": "mdi:pause"
     },
+    "returned_to_dock": {
+      "trigger": "mdi:home-import-outline"
+    },
     "started_mowing": {
       "trigger": "mdi:play"
+    },
+    "started_returning": {
+      "trigger": "mdi:home-import-outline"
     }
   }
 }

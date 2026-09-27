@@ -1,9 +1,7 @@
 """Text to speech support for Google Generative AI."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from google.genai import types
 from google.genai.errors import APIError, ClientError
@@ -20,7 +18,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_CHAT_MODEL, LOGGER, RECOMMENDED_TTS_MODEL
+from .const import (
+    CONF_CHAT_MODEL,
+    CONF_TEMPERATURE,
+    LOGGER,
+    RECOMMENDED_TEMPERATURE,
+    RECOMMENDED_TTS_MODEL,
+)
 from .entity import GoogleGenerativeAILLMBaseEntity
 from .helpers import convert_to_wav
 
@@ -51,31 +55,86 @@ class GoogleGenerativeAITextToSpeechEntity(
     # Note the documentation might not be up to date, e.g. el-GR is not listed
     # there but is supported.
     _attr_supported_languages = [
+        "af-ZA",
+        "am-ET",
         "ar-EG",
+        "az-AZ",
+        "be-BY",
+        "bg-BG",
         "bn-BD",
+        "ca-ES",
+        "ceb-PH",
+        "cmn-CN",
+        "cs-CZ",
+        "da-DK",
         "de-DE",
         "el-GR",
         "en-IN",
         "en-US",
+        "es-ES",
         "es-US",
+        "et-EE",
+        "eu-ES",
+        "fa-IR",
+        "fi-FI",
+        "fil-PH",
         "fr-FR",
+        "gl-ES",
+        "gu-IN",
         "he-IL",
         "hi-IN",
+        "hr-HR",
+        "ht-HT",
+        "hu-HU",
+        "hy-AM",
         "id-ID",
+        "is-IS",
         "it-IT",
         "ja-JP",
+        "jv-ID",
+        "ka-GE",
+        "kn-IN",
         "ko-KR",
+        "kok-IN",
+        "la-VA",
+        "lb-LU",
+        "lo-LA",
+        "lt-LT",
+        "lv-LV",
+        "mai-IN",
+        "mg-MG",
+        "mk-MK",
+        "ml-IN",
+        "mn-MN",
         "mr-IN",
+        "ms-MY",
+        "my-MM",
+        "nb-NO",
+        "ne-NP",
         "nl-NL",
+        "nn-NO",
+        "or-IN",
+        "pa-IN",
         "pl-PL",
+        "ps-AF",
         "pt-BR",
+        "pt-PT",
         "ro-RO",
         "ru-RU",
+        "sd-PK",
+        "si-LK",
+        "sk-SK",
+        "sl-SI",
+        "sq-AL",
+        "sr-RS",
+        "sv-SE",
+        "sw-KE",
         "ta-IN",
         "te-IN",
         "th-TH",
         "tr-TR",
         "uk-UA",
+        "ur-PK",
         "vi-VN",
     ]
     # Unused, but required by base class.
@@ -123,22 +182,28 @@ class GoogleGenerativeAITextToSpeechEntity(
         super().__init__(config_entry, subentry, RECOMMENDED_TTS_MODEL)
 
     @callback
+    @override
     def async_get_supported_voices(self, language: str) -> list[Voice]:
         """Return a list of supported voices for a language."""
         return self._supported_voices
 
     @cached_property
+    @override
     def default_options(self) -> Mapping[str, Any]:
         """Return a mapping with the default options."""
         return {
             ATTR_VOICE: self._supported_voices[0].voice_id,
         }
 
+    @override
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from the engine."""
-        config = self.create_generate_content_config()
+        config = types.GenerateContentConfig()
+        config.temperature = self.subentry.data.get(
+            CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
+        )
         config.response_modalities = ["AUDIO"]
         config.speech_config = types.SpeechConfig(
             voice_config=types.VoiceConfig(

@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from bleak.backends.device import BLEDevice
+from HueBLE import ConnectionError, HueBleError
 import pytest
 
 from homeassistant.components.hue_ble.const import DOMAIN
@@ -19,7 +20,7 @@ from tests.components.bluetooth import generate_ble_device
 @pytest.mark.parametrize(
     (
         "ble_device",
-        "scanner_count",
+        "reachability_reason",
         "connect_result",
         "poll_state_result",
         "message",
@@ -27,47 +28,42 @@ from tests.components.bluetooth import generate_ble_device
     [
         (
             None,
-            2,
+            "Bad vibes",
             True,
-            True,
-            "The light was not found.",
-        ),
-        (
             None,
-            0,
-            True,
-            True,
-            "No Bluetooth scanners are available to search for the light.",
+            f"The light {TEST_DEVICE_NAME} ({TEST_DEVICE_MAC}) was not found: Bad vibes",
         ),
         (
             generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME),
-            2,
+            None,
             False,
-            True,
+            ConnectionError,
             "Device found but unable to connect.",
         ),
         (
             generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME),
-            2,
+            None,
             True,
-            False,
-            "Device found but unable to connect.",
+            HueBleError,
+            "Device found and connected but unable to poll values from it.",
         ),
     ],
-    ids=["no_device", "no_scanners", "error_connect", "error_poll"],
+    ids=["no_device", "error_connect", "error_poll"],
 )
 async def test_setup_error(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    reachability_reason: str,
     ble_device: BLEDevice | None,
-    scanner_count: int,
-    connect_result: bool,
-    poll_state_result: bool,
+    connect_result: Exception | None,
+    poll_state_result: Exception | None,
     message: str,
 ) -> None:
     """Test that ConfigEntryNotReady is raised if there is an error condition."""
 
-    entry = MockConfigEntry(domain=DOMAIN, unique_id="abcd", data={})
+    entry = MockConfigEntry(
+        domain=DOMAIN, title=TEST_DEVICE_NAME, unique_id=TEST_DEVICE_MAC, data={}
+    )
     entry.add_to_hass(hass)
     with (
         patch(
@@ -75,16 +71,16 @@ async def test_setup_error(
             return_value=ble_device,
         ),
         patch(
-            "homeassistant.components.hue_ble.async_scanner_count",
-            return_value=scanner_count,
+            "homeassistant.components.hue_ble.bluetooth.async_address_reachability_diagnostics",
+            return_value=reachability_reason,
         ),
         patch(
             "homeassistant.components.hue_ble.HueBleLight.connect",
-            return_value=connect_result,
+            side_effect=[connect_result],
         ),
         patch(
             "homeassistant.components.hue_ble.HueBleLight.poll_state",
-            return_value=poll_state_result,
+            side_effect=[poll_state_result],
         ),
     ):
         assert await async_setup_component(hass, DOMAIN, {}) is True
@@ -106,16 +102,12 @@ async def test_setup(
             return_value=generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME),
         ),
         patch(
-            "homeassistant.components.hue_ble.async_scanner_count",
-            return_value=1,
-        ),
-        patch(
             "homeassistant.components.hue_ble.HueBleLight.connect",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.hue_ble.HueBleLight.poll_state",
-            return_value=True,
+            return_value=None,
         ),
     ):
         assert await async_setup_component(hass, DOMAIN, {}) is True

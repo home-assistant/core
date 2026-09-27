@@ -1,0 +1,56 @@
+# serializer version: 1
+# name: test_generate_structured_data
+  dict({
+    'container': None,
+    'max_tokens': 3000,
+    'messages': list([
+      dict({
+        'content': 'Generate test data',
+        'role': 'user',
+      }),
+      dict({
+        'content': '{"characters": ["Mario", "Luigi"]}',
+        'role': 'assistant',
+      }),
+    ]),
+    'model': 'claude-haiku-4-5',
+    'output_config': dict({
+      'format': dict({
+        'schema': dict({
+          'additionalProperties': False,
+          'properties': dict({
+            'characters': dict({
+              'items': dict({
+                'type': 'string',
+              }),
+              'type': 'array',
+            }),
+          }),
+          'required': list([
+            'characters',
+          ]),
+          'type': 'object',
+        }),
+        'type': 'json_schema',
+      }),
+    }),
+    'stream': True,
+    'system': list([
+      dict({
+        'cache_control': dict({
+          'type': 'ephemeral',
+        }),
+        'text': '''
+          You are a Home Assistant expert and help users with their tasks.
+          Current time is 04:00:00. Today's date is 2026-01-01.
+        ''',
+        'type': 'text',
+      }),
+    ]),
+    'thinking': dict({
+      'budget_tokens': 1024,
+      'display': 'summarized',
+      'type': 'enabled',
+    }),
+  })
+# ---

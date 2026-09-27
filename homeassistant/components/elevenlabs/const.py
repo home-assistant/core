@@ -1,9 +1,6 @@
 """Constants for the ElevenLabs text-to-speech integration."""
 
-ATTR_MODEL = "model"
-
 CONF_VOICE = "voice"
-CONF_MODEL = "model"
 CONF_CONFIGURE_VOICE = "configure_voice"
 CONF_STABILITY = "stability"
 CONF_SIMILARITY = "similarity"
@@ -17,12 +14,12 @@ DEFAULT_TTS_MODEL = "eleven_multilingual_v2"
 DEFAULT_STABILITY = 0.5
 DEFAULT_SIMILARITY = 0.75
 DEFAULT_STT_AUTO_LANGUAGE = False
-DEFAULT_STT_MODEL = "scribe_v1"
+DEFAULT_STT_MODEL = "scribe_v2"
 DEFAULT_STYLE = 0
 DEFAULT_USE_SPEAKER_BOOST = True
 
 MAX_REQUEST_IDS = 3
-MODELS_PREVIOUS_INFO_NOT_SUPPORTED = ("eleven_v3",)
+MODELS_PREVIOUS_INFO_NOT_SUPPORTED = ("eleven_v3", "eleven_v3_conversational")
 
 STT_LANGUAGES = [
     "af-ZA",  # Afrikaans
@@ -129,4 +126,5 @@ STT_LANGUAGES = [
 STT_MODELS = {
     "scribe_v1": "Scribe v1",
     "scribe_v1_experimental": "Scribe v1 Experimental",
+    "scribe_v2": "Scribe v2 Realtime",
 }

@@ -10,7 +10,6 @@ from spotifyaio.models import (
     Artist,
     Devices,
     FollowedArtistResponse,
-    NewReleasesResponse,
     NewReleasesResponseInner,
     PlaybackState,
     PlayedTrackResponse,
@@ -27,6 +26,7 @@ from spotifyaio.models import (
 )
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -60,7 +60,6 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
                 "expires_at": expires_at,
                 "scope": SCOPES,
             },
-            "id": "1112264111",
             "name": "spotify_account_1",
         },
         entry_id="01J5TX5A0FF6G5V0QJX6HBC94T",
@@ -70,7 +69,7 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
 @pytest.fixture
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,
@@ -141,9 +140,6 @@ def mock_spotify() -> Generator[AsyncMock]:
         client.get_followed_artists.return_value = FollowedArtistResponse.from_json(
             load_fixture("followed_artists.json", DOMAIN)
         ).artists.items
-        client.get_new_releases.return_value = NewReleasesResponse.from_json(
-            load_fixture("new_releases.json", DOMAIN)
-        ).albums.items
         client.get_devices.return_value = Devices.from_json(
             load_fixture("devices.json", DOMAIN)
         ).devices

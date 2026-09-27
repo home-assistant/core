@@ -1,4 +1,4 @@
-"""Constants for Glances component."""
+"""Constants for Glances integration."""
 
 from datetime import timedelta
 import sys
@@ -9,5 +9,6 @@ CONF_VERSION = "version"
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 61208
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
+DEFAULT_TIMEOUT = 30
 
 CPU_ICON = f"mdi:cpu-{64 if sys.maxsize > 2**32 else 32}-bit"

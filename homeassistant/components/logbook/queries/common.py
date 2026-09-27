@@ -1,19 +1,20 @@
 """Queries for logbook."""
 
-from __future__ import annotations
-
+from collections.abc import Collection
 from typing import Final
 
 import sqlalchemy
-from sqlalchemy import select
+from sqlalchemy import lambda_stmt, select, union_all
 from sqlalchemy.sql.elements import BooleanClauseList, ColumnElement
 from sqlalchemy.sql.expression import literal
+from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Select
 
 from homeassistant.components.recorder.db_schema import (
     EVENTS_CONTEXT_ID_BIN_INDEX,
     OLD_FORMAT_ATTRS_JSON,
     OLD_STATE,
+    SHARED_ATTR_OR_LEGACY_ATTRIBUTES,
     SHARED_ATTRS_JSON,
     SHARED_DATA_OR_LEGACY_EVENT_DATA,
     STATES_CONTEXT_ID_BIN_INDEX,
@@ -65,12 +66,14 @@ STATE_COLUMNS = (
     States.state.label("state"),
     StatesMeta.entity_id.label("entity_id"),
     ICON_OR_OLD_FORMAT_ICON_JSON,
+    SHARED_ATTR_OR_LEGACY_ATTRIBUTES,
 )
 
 STATE_CONTEXT_ONLY_COLUMNS = (
     States.state.label("state"),
     StatesMeta.entity_id.label("entity_id"),
     literal(value=None, type_=sqlalchemy.String).label("icon"),
+    literal(value=None, type_=sqlalchemy.String).label("attributes"),
 )
 
 EVENT_COLUMNS_FOR_STATE_SELECT = (
@@ -93,6 +96,7 @@ EMPTY_STATE_COLUMNS = (
     literal(value=None, type_=sqlalchemy.String).label("state"),
     literal(value=None, type_=sqlalchemy.String).label("entity_id"),
     literal(value=None, type_=sqlalchemy.String).label("icon"),
+    literal(value=None, type_=sqlalchemy.String).label("attributes"),
 )
 
 
@@ -119,6 +123,26 @@ def select_events_context_id_subquery(
         .where(Events.event_type_id.in_(event_type_ids))
         .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
         .outerjoin(EventData, (Events.data_id == EventData.data_id))
+    )
+
+
+def select_context_user_ids_for_context_ids(
+    context_ids: Collection[bytes],
+) -> StatementLambdaElement:
+    """Select (context_id_bin, context_user_id_bin) for the given context ids.
+
+    Union of events and states since a parent context can originate from
+    either table (e.g., a state set directly via the API).
+    """
+    return lambda_stmt(
+        lambda: union_all(
+            select(Events.context_id_bin, Events.context_user_id_bin)
+            .where(Events.context_id_bin.in_(context_ids))
+            .where(Events.context_user_id_bin.is_not(None)),
+            select(States.context_id_bin, States.context_user_id_bin)
+            .where(States.context_id_bin.in_(context_ids))
+            .where(States.context_user_id_bin.is_not(None)),
+        )
     )
 
 

@@ -1,6 +1,6 @@
 """Support for SimpliSafe alarm control panels."""
 
-from __future__ import annotations
+from typing import override
 
 from simplipy.errors import SimplipyError
 from simplipy.system import SystemStates
@@ -28,12 +28,11 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SimpliSafe
+from . import SimpliSafe, SimpliSafeConfigEntry
 from .const import (
     ATTR_ALARM_DURATION,
     ATTR_ALARM_VOLUME,
@@ -44,7 +43,6 @@ from .const import (
     ATTR_EXIT_DELAY_HOME,
     ATTR_LIGHT,
     ATTR_VOICE_PROMPT_VOLUME,
-    DOMAIN,
     LOGGER,
 )
 from .entity import SimpliSafeEntity
@@ -104,11 +102,11 @@ WEBSOCKET_EVENTS_TO_LISTEN_FOR = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SimpliSafeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a SimpliSafe alarm control panel based on a config entry."""
-    simplisafe = hass.data[DOMAIN][entry.entry_id]
+    simplisafe = entry.runtime_data
     async_add_entities(
         [SimpliSafeAlarm(simplisafe, system) for system in simplisafe.systems.values()],
         True,
@@ -148,6 +146,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             LOGGER.warning("Unexpected system state (REST API): %s", self._system.state)
             self.async_increment_error_count()
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         try:
@@ -160,6 +159,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         self._attr_alarm_state = AlarmControlPanelState.DISARMED
         self.async_write_ha_state()
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         try:
@@ -172,6 +172,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         self._attr_alarm_state = AlarmControlPanelState.ARMED_HOME
         self.async_write_ha_state()
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         try:
@@ -185,6 +186,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         self.async_write_ha_state()
 
     @callback
+    @override
     def async_update_from_rest_api(self) -> None:
         """Update the entity with the provided REST API data."""
         if isinstance(self._system, SystemV3):
@@ -218,6 +220,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         self._set_state_from_system_data()
 
     @callback
+    @override
     def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
         """Update the entity when new data comes from the websocket."""
         self._attr_changed_by = event.changed_by

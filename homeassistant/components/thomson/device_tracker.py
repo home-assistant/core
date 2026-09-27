@@ -1,12 +1,11 @@
 """Support for THOMSON routers."""
 
-from __future__ import annotations
-
 import logging
 import re
+from typing import override
 
+import probatio
 import telnetlib  # pylint: disable=deprecated-module
-import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -32,9 +31,9 @@ _DEVICES_REGEX = re.compile(
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
     }
 )
 
@@ -60,11 +59,13 @@ class ThomsonDeviceScanner(DeviceScanner):
         data = self.get_thomson_data()
         self.success_init = data is not None
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
         return [client["mac"] for client in self.last_results]
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         if not self.last_results:

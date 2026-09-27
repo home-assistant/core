@@ -119,7 +119,9 @@ async def test_auto_on_off_switches(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
             {
-                ATTR_ENTITY_ID: f"switch.{serial_number}_auto_on_off_{wake_up_sleep_entry_id}",
+                ATTR_ENTITY_ID: (
+                    f"switch.{serial_number}_auto_on_off_{wake_up_sleep_entry_id}"
+                ),
             },
             blocking=True,
         )
@@ -138,7 +140,9 @@ async def test_auto_on_off_switches(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
             {
-                ATTR_ENTITY_ID: f"switch.{serial_number}_auto_on_off_{wake_up_sleep_entry_id}",
+                ATTR_ENTITY_ID: (
+                    f"switch.{serial_number}_auto_on_off_{wake_up_sleep_entry_id}"
+                ),
             },
             blocking=True,
         )

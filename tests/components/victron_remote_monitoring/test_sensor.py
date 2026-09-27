@@ -3,8 +3,6 @@
 Consolidates most per-sensor assertions into snapshot-based regression tests.
 """
 
-from __future__ import annotations
-
 import pytest
 from syrupy.assertion import SnapshotAssertion
 

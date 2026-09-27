@@ -13,6 +13,5 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Mock an unsuccessful entry setup."""
-    asyncio.current_task().cancel()
-    await asyncio.sleep(0)
+    """Mock an leaked cancellation, without our own task being cancelled."""
+    raise asyncio.CancelledError

@@ -1,7 +1,5 @@
 """Shared class to maintain Plex server instances."""
 
-from __future__ import annotations
-
 from copy import copy
 import logging
 import ssl
@@ -114,7 +112,7 @@ class PlexServer:
         if not self._plex_account and self._use_plex_tv:
             try:
                 self._plex_account = plexapi.myplex.MyPlexAccount(token=self._token)
-            except (BadRequest, Unauthorized):
+            except BadRequest, Unauthorized:
                 self._use_plex_tv = False
                 _LOGGER.error("Not authorized to access plex.tv with provided token")
                 raise
@@ -193,8 +191,9 @@ class PlexServer:
                     error = error.__context__
                 if isinstance(error, ssl.SSLCertVerificationError):
                     domain = urlparse(self._url).netloc.split(":")[0]
-                    if domain.endswith("plex.direct") and error.args[0].startswith(
-                        f"hostname '{domain}' doesn't match"
+                    # OpenSSL's own wording for X509_V_ERR_HOSTNAME_MISMATCH
+                    if domain.endswith("plex.direct") and "Hostname mismatch" in str(
+                        error
                     ):
                         _LOGGER.warning(
                             "Plex SSL certificate's hostname changed, updating"
@@ -402,7 +401,7 @@ class PlexServer:
                     identifier=machine_identifier,
                     token=self._plex_server.createToken(),
                 )
-            except (NotFound, requests.exceptions.ConnectionError):
+            except NotFound, requests.exceptions.ConnectionError:
                 _LOGGER.error(
                     "Direct client connection failed, will try again: %s (%s)",
                     name,

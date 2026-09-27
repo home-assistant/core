@@ -1,11 +1,9 @@
 """Support for AdGuard Home."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -19,10 +17,11 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_FORCE,
@@ -34,17 +33,20 @@ from .const import (
     SERVICE_REMOVE_URL,
 )
 
-SERVICE_URL_SCHEMA = vol.Schema({vol.Required(CONF_URL): vol.Any(cv.url, cv.path)})
-SERVICE_ADD_URL_SCHEMA = vol.Schema(
+SERVICE_URL_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_URL): probatio.Any(cv.url, cv.path)}
+)
+SERVICE_ADD_URL_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_URL): vol.Any(cv.url, cv.path),
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Required(CONF_URL): probatio.Any(cv.url, cv.path),
     }
 )
-SERVICE_REFRESH_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_FORCE, default=False): cv.boolean}
+SERVICE_REFRESH_SCHEMA = probatio.Schema(
+    {probatio.Optional(CONF_FORCE, default=False): cv.boolean}
 )
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
 type AdGuardConfigEntry = ConfigEntry[AdGuardData]
 
@@ -57,8 +59,100 @@ class AdGuardData:
     version: str
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+
+    def _get_adguard_instances(hass: HomeAssistant) -> list[AdGuardHome]:
+        """Get the AdGuardHome instances."""
+        entries: list[AdGuardConfigEntry] = hass.config_entries.async_loaded_entries(
+            DOMAIN
+        )
+        if not entries:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="config_entry_not_loaded"
+            )
+        return [entry.runtime_data.client for entry in entries]
+
+    async def add_url(call: ServiceCall) -> None:
+        """Service call to add a new filter subscription to AdGuard Home."""
+        for adguard in _get_adguard_instances(call.hass):
+            await adguard.filtering.add_url(
+                allowlist=False, name=call.data[CONF_NAME], url=call.data[CONF_URL]
+            )
+
+    async def remove_url(call: ServiceCall) -> None:
+        """Service call to remove a filter subscription from AdGuard Home."""
+        for adguard in _get_adguard_instances(call.hass):
+            await adguard.filtering.remove_url(allowlist=False, url=call.data[CONF_URL])
+
+    async def enable_url(call: ServiceCall) -> None:
+        """Service call to enable a filter subscription in AdGuard Home."""
+        for adguard in _get_adguard_instances(call.hass):
+            await adguard.filtering.enable_url(allowlist=False, url=call.data[CONF_URL])
+
+    async def disable_url(call: ServiceCall) -> None:
+        """Service call to disable a filter subscription in AdGuard Home."""
+        for adguard in _get_adguard_instances(call.hass):
+            await adguard.filtering.disable_url(
+                allowlist=False, url=call.data[CONF_URL]
+            )
+
+    async def refresh(call: ServiceCall) -> None:
+        """Service call to refresh the filter subscriptions in AdGuard Home."""
+        for adguard in _get_adguard_instances(call.hass):
+            await adguard.filtering.refresh(
+                allowlist=False, force=call.data[CONF_FORCE]
+            )
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_ADD_URL, add_url, schema=SERVICE_ADD_URL_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_REMOVE_URL, remove_url, schema=SERVICE_URL_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_ENABLE_URL, enable_url, schema=SERVICE_URL_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_DISABLE_URL, disable_url, schema=SERVICE_URL_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_REFRESH, refresh, schema=SERVICE_REFRESH_SCHEMA
+    )
+    return True
+
+
+@callback
+def _async_migrate_device_identifiers(
+    hass: HomeAssistant, entry: AdGuardConfigEntry
+) -> None:
+    """Migrate devices identified by host, port and base path to the entry ID.
+
+    Those identifiers had four parts, while the device registry only supports two.
+    """
+    device_registry = dr.async_get(hass)
+    identifiers = {(DOMAIN, entry.entry_id)}
+    migrated = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
+
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        if device.identifiers == identifiers:
+            continue
+
+        # Downgrading recreates the old device, leaving a duplicate behind. Its
+        # entities move back to the migrated device when the platforms set up.
+        if migrated is not None:
+            device_registry.async_remove_device(device.id)
+            continue
+
+        device_registry.async_update_device(device.id, new_identifiers=identifiers)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> bool:
     """Set up AdGuard Home from a config entry."""
+    _async_migrate_device_identifiers(hass, entry)
+
     session = async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL])
     adguard = AdGuardHome(
         entry.data[CONF_HOST],
@@ -79,56 +173,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async def add_url(call: ServiceCall) -> None:
-        """Service call to add a new filter subscription to AdGuard Home."""
-        await adguard.filtering.add_url(
-            allowlist=False, name=call.data[CONF_NAME], url=call.data[CONF_URL]
-        )
-
-    async def remove_url(call: ServiceCall) -> None:
-        """Service call to remove a filter subscription from AdGuard Home."""
-        await adguard.filtering.remove_url(allowlist=False, url=call.data[CONF_URL])
-
-    async def enable_url(call: ServiceCall) -> None:
-        """Service call to enable a filter subscription in AdGuard Home."""
-        await adguard.filtering.enable_url(allowlist=False, url=call.data[CONF_URL])
-
-    async def disable_url(call: ServiceCall) -> None:
-        """Service call to disable a filter subscription in AdGuard Home."""
-        await adguard.filtering.disable_url(allowlist=False, url=call.data[CONF_URL])
-
-    async def refresh(call: ServiceCall) -> None:
-        """Service call to refresh the filter subscriptions in AdGuard Home."""
-        await adguard.filtering.refresh(allowlist=False, force=call.data[CONF_FORCE])
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_ADD_URL, add_url, schema=SERVICE_ADD_URL_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_REMOVE_URL, remove_url, schema=SERVICE_URL_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_ENABLE_URL, enable_url, schema=SERVICE_URL_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_DISABLE_URL, disable_url, schema=SERVICE_URL_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_REFRESH, refresh, schema=SERVICE_REFRESH_SCHEMA
-    )
-
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> bool:
     """Unload AdGuard Home config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        # This is the last loaded instance of AdGuard, deregister any services
-        hass.services.async_remove(DOMAIN, SERVICE_ADD_URL)
-        hass.services.async_remove(DOMAIN, SERVICE_REMOVE_URL)
-        hass.services.async_remove(DOMAIN, SERVICE_ENABLE_URL)
-        hass.services.async_remove(DOMAIN, SERVICE_DISABLE_URL)
-        hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

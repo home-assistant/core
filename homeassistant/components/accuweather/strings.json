@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     },
     "create_entry": {
       "default": "Some sensors are not enabled by default. You can enable them in the entity registry after the integration configuration."
@@ -25,8 +24,7 @@
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]",
-          "name": "[%key:common::config_flow::data::name%]"
+          "longitude": "[%key:common::config_flow::data::longitude%]"
         },
         "data_description": {
           "api_key": "API key generated in the AccuWeather APIs portal."

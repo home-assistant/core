@@ -1,8 +1,6 @@
 """Store backup configuration."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict, override
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
@@ -16,7 +14,7 @@ if TYPE_CHECKING:
 STORE_DELAY_SAVE = 30
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 7
+STORAGE_VERSION_MINOR = 8
 
 
 class StoredBackupData(TypedDict):
@@ -29,15 +27,23 @@ class StoredBackupData(TypedDict):
 class _BackupStore(Store[StoredBackupData]):
     """Class to help storing backup data."""
 
+    # Maximum version we support reading for forward compatibility.
+    # This allows reading data written by a newer HA version after downgrade.
+    _MAX_READABLE_VERSION = 2
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize storage class."""
         super().__init__(
             hass,
             STORAGE_VERSION,
             STORAGE_KEY,
+            max_readable_version=self._MAX_READABLE_VERSION,
             minor_version=STORAGE_VERSION_MINOR,
+            # The store persists the automatic backup password in plaintext.
+            private=True,
         )
 
+    @override
     async def _async_migrate_func(
         self,
         old_major_version: int,
@@ -81,13 +87,16 @@ class _BackupStore(Store[StoredBackupData]):
                 for backup in data["backups"]:
                     backup["failed_addons"] = []
                     backup["failed_folders"] = []
+            # Version 1.8 does not change the data. The minor version was bumped
+            # so that stores written before the store was made private are
+            # rewritten once, with mode 0600, on the first load.
 
         # Note: We allow reading data with major version 2 in which the unused key
         # data["config"]["schedule"]["state"] will be removed. The bump to 2 is
         # planned to happen after a 6 month quiet period with no minor version
         # changes.
-        # Reject if major version is higher than 2.
-        if old_major_version > 2:
+        # Reject if major version is higher than _MAX_READABLE_VERSION.
+        if old_major_version > self._MAX_READABLE_VERSION:
             raise NotImplementedError
         return data
 

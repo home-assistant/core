@@ -8,10 +8,7 @@ import pytest
 
 from homeassistant.components.repairs import repairs_flow_manager
 from homeassistant.components.repairs.const import DOMAIN
-from homeassistant.components.repairs.issue_handler import (
-    RepairsFlowManager,
-    async_process_repairs_platforms,
-)
+from homeassistant.components.repairs.issue_handler import RepairsFlowManager
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -481,9 +478,8 @@ async def test_non_compliant_platform(
     )
     assert await async_setup_component(hass, DOMAIN, {})
 
-    await async_process_repairs_platforms(hass)
-
-    assert list(hass.data[DOMAIN]["platforms"].keys()) == ["fake_integration"]
+    platforms = await hass.data[DOMAIN]["platforms"].async_get_platforms()
+    assert list(platforms) == ["fake_integration"]
 
 
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])

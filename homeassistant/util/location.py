@@ -3,8 +3,6 @@
 detect_location_info and elevation are mocked by default during tests.
 """
 
-from __future__ import annotations
-
 from functools import lru_cache
 import math
 from typing import Any, NamedTuple
@@ -166,12 +164,12 @@ async def _get_whoami(session: aiohttp.ClientSession) -> dict[str, Any] | None:
             WHOAMI_URL_DEV if HA_VERSION.endswith("0.dev0") else WHOAMI_URL,
             timeout=aiohttp.ClientTimeout(total=30),
         )
-    except (aiohttp.ClientError, TimeoutError):
+    except aiohttp.ClientError, TimeoutError:
         return None
 
     try:
         raw_info = await resp.json()
-    except (aiohttp.ClientError, ValueError):
+    except aiohttp.ClientError, ValueError:
         return None
 
     return {

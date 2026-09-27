@@ -1,8 +1,7 @@
 """Sensor for RymPro meters."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -10,7 +9,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -18,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import RymProDataUpdateCoordinator
+from .coordinator import RymProConfigEntry, RymProDataUpdateCoordinator
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -61,11 +59,11 @@ SENSOR_DESCRIPTIONS: tuple[RymProSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RymProConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for device."""
-    coordinator: RymProDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     async_add_entities(
         RymProSensor(coordinator, meter_id, description, config_entry.entry_id)
         for meter_id, meter in coordinator.data.items()
@@ -102,6 +100,7 @@ class RymProSensor(CoordinatorEntity[RymProDataUpdateCoordinator], SensorEntity)
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.coordinator.data[self._meter_id][self.entity_description.value_key]

@@ -21,7 +21,6 @@ say:
       selector:
         text:
     options:
-      advanced: true
       example: platform specific
       selector:
         object:
@@ -50,7 +49,6 @@ speak:
       selector:
         text:
     options:
-      advanced: true
       example: platform specific
       selector:
         object:

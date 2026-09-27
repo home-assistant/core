@@ -1,28 +1,26 @@
 """Support for Verisure Smartplugs."""
 
-from __future__ import annotations
-
 from time import monotonic
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_GIID, DOMAIN
-from .coordinator import VerisureDataUpdateCoordinator
+from .coordinator import VerisureConfigEntry, VerisureDataUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VerisureConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Verisure alarm control panel from a config entry."""
-    coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         VerisureSmartplug(coordinator, serial_number)
         for serial_number in coordinator.data["smart_plugs"]
@@ -45,23 +43,22 @@ class VerisureSmartplug(CoordinatorEntity[VerisureDataUpdateCoordinator], Switch
         self.serial_number = serial_number
         self._change_timestamp: float = 0
         self._state = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this entity."""
-        area = self.coordinator.data["smart_plugs"][self.serial_number]["device"][
-            "area"
-        ]
-        return DeviceInfo(
+        area = coordinator.data["smart_plugs"][serial_number]["device"]["area"]
+        self._attr_device_info = DeviceInfo(
             name=area,
             manufacturer="Verisure",
             model="SmartPlug",
-            identifiers={(DOMAIN, self.serial_number)},
-            via_device=(DOMAIN, self.coordinator.config_entry.data[CONF_GIID]),
+            identifiers={(DOMAIN, serial_number)},
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.config_entry.data[CONF_GIID]),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
             configuration_url="https://mypages.verisure.com",
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if on."""
         if monotonic() - self._change_timestamp < 10:
@@ -73,6 +70,7 @@ class VerisureSmartplug(CoordinatorEntity[VerisureDataUpdateCoordinator], Switch
         return self._state
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
@@ -80,10 +78,12 @@ class VerisureSmartplug(CoordinatorEntity[VerisureDataUpdateCoordinator], Switch
             and self.serial_number in self.coordinator.data["smart_plugs"]
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the smartplug on."""
         await self.async_set_plug_state(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the smartplug off."""
         await self.async_set_plug_state(False)

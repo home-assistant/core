@@ -1,6 +1,6 @@
 """Support for Tellstick lights."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
@@ -52,20 +52,24 @@ class TellstickLight(TellstickDevice, LightEntity):
         self._brightness = 255
 
     @property
-    def brightness(self):
+    @override
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return self._brightness
 
+    @override
     def _parse_ha_data(self, kwargs):
         """Turn the value from HA into something useful."""
         return kwargs.get(ATTR_BRIGHTNESS)
 
+    @override
     def _parse_tellcore_data(self, tellcore_data):
         """Turn the value received from tellcore into something useful."""
         if tellcore_data:
             return int(tellcore_data)  # brightness
         return None
 
+    @override
     def _update_model(self, new_state, data):
         """Update the device entity state to match the arguments."""
         if new_state:
@@ -74,12 +78,13 @@ class TellstickLight(TellstickDevice, LightEntity):
 
             # _brightness is not defined when called from super
             try:
-                self._state = self._brightness > 0
+                self._attr_is_on = self._brightness > 0
             except AttributeError:
-                self._state = True
+                self._attr_is_on = True
         else:
-            self._state = False
+            self._attr_is_on = False
 
+    @override
     def _send_device_command(self, requested_state, requested_data):
         """Let tellcore update the actual device to the requested state."""
         if requested_state:

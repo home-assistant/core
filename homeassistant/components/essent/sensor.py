@@ -1,11 +1,9 @@
 """Sensor platform for Essent integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from essent_dynamic_pricing.models import EnergyData, Tariff
 
@@ -102,6 +100,7 @@ SENSORS: tuple[EssentSensorEntityDescription, ...] = (
         key="average_today",
         translation_key="average_today",
         value_fn=lambda energy_data: energy_data.avg_price,
+        energy_types=(EnergyType.ELECTRICITY,),
     ),
     EssentSensorEntityDescription(
         key="lowest_price_today",
@@ -205,11 +204,13 @@ class EssentSensor(EssentEntity, SensorEntity):
         self._attr_translation_key = f"{energy_type}_{description.translation_key}"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
         return self.entity_description.value_fn(self.energy_data)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return f"{CURRENCY_EURO}/{self.energy_data.unit}"

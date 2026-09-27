@@ -1,58 +1,179 @@
 """Test Gardena Bluetooth sensor."""
 
 from collections.abc import Awaitable, Callable
+from datetime import datetime
 
-from gardena_bluetooth.const import Battery, Sensor, Valve
+from gardena_bluetooth.const import (
+    AquaContourBattery,
+    AquaContourErrorCode,
+    AquaContourWatering,
+    Battery,
+    EventHistory,
+    FlowStatistics,
+    Pump,
+    Sensor,
+    Spray,
+    Valve,
+)
+from gardena_bluetooth.parse import ActivationReason, ErrorData, SkipReason
+from habluetooth import BluetoothServiceInfo
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from . import setup_entry
+from . import (
+    AQUA_CONTOUR_SERVICE_INFO,
+    PRESSURE_TANK_SERVICE_INFO,
+    WATER_TIMER_SERVICE_INFO,
+    setup_entry,
+)
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
+
+pytestmark = pytest.mark.usefixtures("constant_advertisements")
 
 
 @pytest.mark.parametrize(
-    ("uuid", "raw", "entity_id"),
+    ("service_info", "unique_id", "raw", "entity_id"),
     [
-        (
-            Battery.battery_level.uuid,
+        pytest.param(
+            WATER_TIMER_SERVICE_INFO,
+            Battery.battery_level.unique_id,
             [Battery.battery_level.encode(100), Battery.battery_level.encode(10)],
             "sensor.mock_title_battery",
+            id="standard_sensor",
         ),
-        (
-            Valve.remaining_open_time.uuid,
+        pytest.param(
+            WATER_TIMER_SERVICE_INFO,
+            Valve.remaining_open_time.unique_id,
             [
                 Valve.remaining_open_time.encode(100),
                 Valve.remaining_open_time.encode(10),
                 Valve.remaining_open_time.encode(0),
             ],
             "sensor.mock_title_valve_closing",
+            id="valve_sensor",
         ),
     ],
 )
 async def test_setup(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_entry: MockConfigEntry,
     mock_read_char_raw: dict[str, bytes],
     scan_step: Callable[[], Awaitable[None]],
-    uuid: str,
+    service_info: BluetoothServiceInfo,
+    unique_id: str,
     raw: list[bytes],
     entity_id: str,
 ) -> None:
     """Test setup creates expected entities."""
-
-    mock_read_char_raw[uuid] = raw[0]
-    await setup_entry(hass, mock_entry, [Platform.SENSOR])
+    mock_read_char_raw[unique_id] = raw[0]
+    await setup_entry(hass, platforms=[Platform.SENSOR], service_info=service_info)
     assert hass.states.get(entity_id) == snapshot
 
     for char_raw in raw[1:]:
-        mock_read_char_raw[uuid] = char_raw
+        mock_read_char_raw[unique_id] = char_raw
         await scan_step()
         assert hass.states.get(entity_id) == snapshot
+
+
+@pytest.mark.parametrize(
+    ("service_info", "raw"),
+    [
+        pytest.param(
+            WATER_TIMER_SERVICE_INFO,
+            {
+                Battery.battery_level.unique_id: Battery.battery_level.encode(100),
+                Valve.remaining_open_time.unique_id: Valve.remaining_open_time.encode(
+                    10
+                ),
+                Valve.activation_reason.unique_id: Valve.activation_reason.encode(
+                    ActivationReason.SCHEDULE
+                ),
+            },
+            id="timer",
+        ),
+        pytest.param(
+            AQUA_CONTOUR_SERVICE_INFO,
+            {
+                AquaContourBattery.battery_level.unique_id: (
+                    AquaContourBattery.battery_level.encode(100)
+                ),
+                FlowStatistics.overall.unique_id: FlowStatistics.overall.encode(111),
+                FlowStatistics.current.unique_id: FlowStatistics.overall.encode(222),
+                Spray.current_distance.unique_id: Spray.current_distance.encode(333),
+                Spray.current_sector.unique_id: Spray.current_sector.encode(2),
+                EventHistory.error.unique_id: EventHistory.error.encode(
+                    ErrorData(
+                        1, 1, datetime(2000, 1, 1), AquaContourErrorCode.FLASH_ERROR
+                    )
+                ),
+                AquaContourWatering.remaining_watering_time.unique_id: (
+                    AquaContourWatering.remaining_watering_time.encode(100)
+                ),
+                AquaContourWatering.activation_reason.unique_id: AquaContourWatering.activation_reason.encode(
+                    ActivationReason.SCHEDULE
+                ),
+                AquaContourWatering.skipped_reason.unique_id: AquaContourWatering.skipped_reason.encode(
+                    SkipReason.RAIN_SENSOR
+                ),
+            },
+            id="aqua_contour",
+        ),
+        pytest.param(
+            PRESSURE_TANK_SERVICE_INFO,
+            {
+                Pump.tank_preassure.unique_id: Pump.tank_preassure.encode(3312),
+                Pump.water_temperature.unique_id: Pump.water_temperature.encode(21),
+            },
+            id="pressure_tank",
+        ),
+    ],
+)
+async def test_sensors(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_read_char_raw: dict[str, bytes],
+    service_info: BluetoothServiceInfo,
+    raw: dict[str, bytes],
+) -> None:
+    """Test setup creates expected entities."""
+    mock_read_char_raw.update(raw)
+    mock_entry = await setup_entry(
+        hass, platforms=[Platform.SENSOR], service_info=service_info
+    )
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_entry.entry_id)
+
+
+async def test_missing_connected_state(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    mock_read_char_raw: dict[str, bytes],
+    scan_step: Callable[[], Awaitable[None]],
+) -> None:
+    """Verify a device lacking the connected state characteristic still polls.
+
+    Entities are created on their primary characteristic alone, so their context
+    can name a connected state the device does not expose.
+    """
+
+    mock_read_char_raw[Sensor.battery_level.unique_id] = Sensor.battery_level.encode(45)
+
+    await setup_entry(hass, mock_entry, [Platform.SENSOR])
+    await scan_step()
+
+    coordinator = mock_entry.runtime_data
+    assert coordinator.last_update_success
+
+    # The primary characteristic still reports, so the entity stays available.
+    state = hass.states.get("sensor.mock_title_sensor_battery")
+    assert state
+    assert state.state == "45"
 
 
 async def test_connected_state(
@@ -64,16 +185,16 @@ async def test_connected_state(
 ) -> None:
     """Verify that a connectivity error makes all entities unavailable."""
 
-    mock_read_char_raw[Sensor.connected_state.uuid] = Sensor.connected_state.encode(
-        False
+    mock_read_char_raw[Sensor.connected_state.unique_id] = (
+        Sensor.connected_state.encode(False)
     )
-    mock_read_char_raw[Sensor.battery_level.uuid] = Sensor.battery_level.encode(45)
+    mock_read_char_raw[Sensor.battery_level.unique_id] = Sensor.battery_level.encode(45)
 
     await setup_entry(hass, mock_entry, [Platform.SENSOR])
     assert hass.states.get("sensor.mock_title_sensor_battery") == snapshot
 
-    mock_read_char_raw[Sensor.connected_state.uuid] = Sensor.connected_state.encode(
-        True
+    mock_read_char_raw[Sensor.connected_state.unique_id] = (
+        Sensor.connected_state.encode(True)
     )
 
     await scan_step()

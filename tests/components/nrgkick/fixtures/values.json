@@ -1,0 +1,37 @@
+{
+  "powerflow": {
+    "power": {
+      "total": 11000,
+      "l1": 3666,
+      "l2": 3667,
+      "l3": 3667
+    },
+    "current": {
+      "total": 16.0,
+      "l1": 5.33,
+      "l2": 5.33,
+      "l3": 5.34
+    },
+    "voltage": {
+      "total": 230.0,
+      "l1": 230.0,
+      "l2": 230.0,
+      "l3": 230.0
+    },
+    "frequency": 50.0,
+    "power_factor": 0.98
+  },
+  "energy": {
+    "charged_energy": 5000,
+    "session_energy": 2500
+  },
+  "status": {
+    "charging_status": 3
+  },
+  "temperatures": {
+    "housing": 35.0,
+    "connector_l1": 28.0,
+    "connector_l2": 29.0,
+    "connector_l3": 28.5
+  }
+}

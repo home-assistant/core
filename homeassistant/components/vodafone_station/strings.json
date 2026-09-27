@@ -6,8 +6,6 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "model_not_supported": "The device model is currently unsupported.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
@@ -65,6 +63,14 @@
         "name": "Internet key reconnect"
       }
     },
+    "image": {
+      "guest": {
+        "name": "Guest network"
+      },
+      "guest_5g": {
+        "name": "Guest 5GHz network"
+      }
+    },
     "sensor": {
       "active_connection": {
         "name": "Active connection",
@@ -105,11 +111,22 @@
       "sys_reboot_cause": {
         "name": "Reboot cause"
       },
-      "sys_uptime": {
-        "name": "Uptime"
-      },
       "up_stream": {
         "name": "WAN upload rate"
+      }
+    },
+    "switch": {
+      "guest": {
+        "name": "Guest network"
+      },
+      "guest_5g": {
+        "name": "Guest 5GHz network"
+      },
+      "main": {
+        "name": "Main network"
+      },
+      "main_5g": {
+        "name": "Main 5GHz network"
       }
     }
   },

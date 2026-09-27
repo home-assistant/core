@@ -1,17 +1,33 @@
 """Common fixtures for the LibreHardwareMonitor tests."""
 
 from collections.abc import Generator
+from dataclasses import replace
 from unittest.mock import AsyncMock, patch
 
 from librehardwaremonitor_api.parser import LibreHardwareMonitorParser
 import pytest
 
 from homeassistant.components.libre_hardware_monitor.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
 VALID_CONFIG = {CONF_HOST: "192.168.0.20", CONF_PORT: 8085}
+
+AUTH_INPUT = {
+    CONF_USERNAME: "lhm-user",
+    CONF_PASSWORD: "lhm-password",
+}
+
+VALID_CONFIG_WITH_AUTH = {
+    **VALID_CONFIG,
+    **AUTH_INPUT,
+}
+
+REAUTH_INPUT = {
+    CONF_USERNAME: "new-username",
+    CONF_PASSWORD: "new-password",
+}
 
 
 @pytest.fixture
@@ -31,6 +47,18 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="192.168.0.20:8085",
         data=VALID_CONFIG,
+        entry_id="test_entry_id",
+        version=2,
+    )
+
+
+@pytest.fixture
+def mock_auth_config_entry() -> MockConfigEntry:
+    """Config entry fixture."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="192.168.0.20:8085",
+        data=VALID_CONFIG_WITH_AUTH,
         entry_id="test_entry_id",
         version=2,
     )
@@ -57,3 +85,12 @@ def mock_lhm_client() -> Generator[AsyncMock]:
         client.get_data.return_value = test_data
 
         yield client
+
+
+@pytest.fixture
+def mock_deprecated_lhm_client(mock_lhm_client: AsyncMock) -> AsyncMock:
+    """Mock a LibreHardwareMonitor client reporting a deprecated version."""
+    mock_lhm_client.get_data.return_value = replace(
+        mock_lhm_client.get_data.return_value, is_deprecated_version=True
+    )
+    return mock_lhm_client

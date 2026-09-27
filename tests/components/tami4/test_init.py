@@ -46,7 +46,7 @@ async def test_init_error_raised(
     """Test init when an error is raised."""
 
     entry = await create_config_entry(hass)
-    assert entry.state == expected_state
+    assert entry.state is expected_state
 
 
 async def test_load_unload(mock_api, hass: HomeAssistant) -> None:

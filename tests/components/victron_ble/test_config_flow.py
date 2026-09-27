@@ -1,6 +1,6 @@
 """Test the Victron Bluetooth Low Energy config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from home_assistant_bluetooth import BluetoothServiceInfo
 import pytest
@@ -14,7 +14,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .fixtures import (
     NOT_VICTRON_SERVICE_INFO,
-    VICTRON_INVERTER_SERVICE_INFO,
+    VICTRON_INVERTER_RS_SERVICE_INFO,
     VICTRON_TEST_WRONG_TOKEN,
     VICTRON_VEBUS_SERVICE_INFO,
     VICTRON_VEBUS_TOKEN,
@@ -28,32 +28,60 @@ def mock_bluetooth(enable_bluetooth: None) -> None:
     """Mock bluetooth for all tests in this module."""
 
 
-async def test_async_step_bluetooth_valid_device(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
     """Test discovery via bluetooth with a valid device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
         data=VICTRON_VEBUS_SERVICE_INFO,
     )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "access_token"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "access_token"
 
     # test valid access token
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_ACCESS_TOKEN: VICTRON_VEBUS_TOKEN},
     )
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == VICTRON_VEBUS_SERVICE_INFO.name
-    flow_result = result.get("result")
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == VICTRON_VEBUS_SERVICE_INFO.name
+    flow_result = result["result"]
     assert flow_result is not None
     assert flow_result.unique_id == VICTRON_VEBUS_SERVICE_INFO.address
     assert flow_result.data == {
         CONF_ACCESS_TOKEN: VICTRON_VEBUS_TOKEN,
     }
     assert set(flow_result.data.keys()) == {CONF_ACCESS_TOKEN}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_async_step_bluetooth_invalid_key_retry(hass: HomeAssistant) -> None:
+    """Test wrong key via bluetooth discovery shows error and allows retry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=VICTRON_VEBUS_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "access_token"
+
+    # enter wrong key
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACCESS_TOKEN: VICTRON_TEST_WRONG_TOKEN},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "access_token"
+    assert result["errors"] == {"base": "invalid_access_token"}
+
+    # retry with correct key
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACCESS_TOKEN: VICTRON_VEBUS_TOKEN},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == VICTRON_VEBUS_SERVICE_INFO.name
 
 
 @pytest.mark.parametrize(
@@ -66,7 +94,7 @@ async def test_async_step_bluetooth_valid_device(
         ),
         (
             SOURCE_BLUETOOTH,
-            VICTRON_INVERTER_SERVICE_INFO,
+            VICTRON_INVERTER_RS_SERVICE_INFO,
             "not_supported",
         ),
         (
@@ -89,34 +117,48 @@ async def test_abort_scenarios(
         context={"source": source},
         data=service_info,
     )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == expected_reason
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_async_step_user_with_devices_found(
     hass: HomeAssistant, mock_discovered_service_info: AsyncMock
 ) -> None:
     """Test setup from service info cache with devices found."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "user"
+    with patch(
+        "homeassistant.components.victron_ble.config_flow.bluetooth.async_request_active_scan"
+    ) as mock_request_active_scan:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    mock_request_active_scan.assert_awaited_once_with(hass)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_ADDRESS: VICTRON_VEBUS_SERVICE_INFO.address},
     )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "access_token"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "access_token"
 
-    # test invalid access token (valid already tested above)
+    # test invalid access token shows error and allows retry
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_ACCESS_TOKEN: VICTRON_TEST_WRONG_TOKEN}
     )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "invalid_access_token"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "access_token"
+    assert result["errors"] == {"base": "invalid_access_token"}
+
+    # test retry with valid access token succeeds
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACCESS_TOKEN: VICTRON_VEBUS_TOKEN},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == VICTRON_VEBUS_SERVICE_INFO.name
 
 
 async def test_async_step_user_device_added_between_steps(
@@ -129,8 +171,8 @@ async def test_async_step_user_device_added_between_steps(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "user"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
     mock_config_entry.add_to_hass(hass)
 
@@ -138,8 +180,8 @@ async def test_async_step_user_device_added_between_steps(
         result["flow_id"],
         user_input={"address": VICTRON_VEBUS_SERVICE_INFO.address},
     )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_async_step_user_with_found_devices_already_setup(
@@ -152,8 +194,8 @@ async def test_async_step_user_with_found_devices_already_setup(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "no_devices_found"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
 
 
 async def test_async_step_bluetooth_devices_already_setup(
@@ -166,8 +208,8 @@ async def test_async_step_bluetooth_devices_already_setup(
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=VICTRON_VEBUS_SERVICE_INFO,
     )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_async_step_bluetooth_already_in_progress(hass: HomeAssistant) -> None:
@@ -177,13 +219,112 @@ async def test_async_step_bluetooth_already_in_progress(hass: HomeAssistant) -> 
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=VICTRON_VEBUS_SERVICE_INFO,
     )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "access_token"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "access_token"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=VICTRON_VEBUS_SERVICE_INFO,
     )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "already_in_progress"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+
+
+async def test_async_step_reauth_valid_key(
+    hass: HomeAssistant,
+    mock_discovered_service_info: AsyncMock,
+) -> None:
+    """Test reauth flow with a valid new key."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: VICTRON_VEBUS_SERVICE_INFO.address,
+            CONF_ACCESS_TOKEN: VICTRON_TEST_WRONG_TOKEN,
+        },
+        unique_id=VICTRON_VEBUS_SERVICE_INFO.address,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACCESS_TOKEN: VICTRON_VEBUS_TOKEN},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_ACCESS_TOKEN] == VICTRON_VEBUS_TOKEN
+
+
+async def test_async_step_reauth_invalid_key(
+    hass: HomeAssistant,
+    mock_config_entry_added_to_hass: MockConfigEntry,
+    mock_discovered_service_info: AsyncMock,
+) -> None:
+    """Test reauth flow with an invalid key shows error and allows retry."""
+    result = await mock_config_entry_added_to_hass.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    # Submit wrong key
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACCESS_TOKEN: VICTRON_TEST_WRONG_TOKEN},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "invalid_access_token"}
+
+    # Now submit correct key
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACCESS_TOKEN: VICTRON_VEBUS_TOKEN},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+async def test_async_step_reauth_device_not_found(
+    hass: HomeAssistant,
+    mock_config_entry_added_to_hass: MockConfigEntry,
+) -> None:
+    """Test reauth flow when device is not currently broadcasting."""
+    # No mock_discovered_service_info, so no devices will be found
+    with patch(
+        "homeassistant.components.victron_ble.config_flow.async_discovered_service_info",
+        return_value=[],
+    ):
+        result = await mock_config_entry_added_to_hass.start_reauth_flow(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_ACCESS_TOKEN: VICTRON_VEBUS_TOKEN},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+        assert result["errors"] == {"base": "no_devices_found"}
+
+
+async def test_reauth_flow_sets_title_placeholders(
+    hass: HomeAssistant,
+    mock_config_entry_added_to_hass: MockConfigEntry,
+    mock_discovered_service_info: AsyncMock,
+) -> None:
+    """Test that reauth flow has title_placeholders set for flow_title rendering.
+
+    Regression test for https://github.com/home-assistant/core/issues/167105 where
+    the flow_title used '{title}' but HA only automatically provides 'name' in
+    title_placeholders for reauth flows, causing a frontend MISSING_VALUE error.
+    """
+    await mock_config_entry_added_to_hass.start_reauth_flow(hass)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["title_placeholders"]["name"] == (
+        mock_config_entry_added_to_hass.title
+    )

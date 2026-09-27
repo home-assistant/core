@@ -2,16 +2,16 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiotedee import (
     TedeeAuthException,
-    TedeeClient,
     TedeeClientException,
     TedeeDataUpdateException,
     TedeeLocalAuthException,
+    TedeeLocalClient,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.webhook import async_generate_id as webhook_generate_id
 from homeassistant.config_entries import (
@@ -34,6 +34,7 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -46,14 +47,14 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 host = user_input[CONF_HOST]
             local_access_token = user_input[CONF_LOCAL_ACCESS_TOKEN]
-            tedee_client = TedeeClient(
+            tedee_client = TedeeLocalClient(
                 local_token=local_access_token,
                 local_ip=host,
                 session=async_get_clientsession(self.hass),
             )
             try:
                 local_bridge = await tedee_client.get_local_bridge()
-            except (TedeeAuthException, TedeeLocalAuthException):
+            except TedeeAuthException, TedeeLocalAuthException:
                 errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_api_key"
             except TedeeClientException:
                 errors[CONF_HOST] = "invalid_host"
@@ -80,12 +81,12 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_HOST,
                     ): str,
-                    vol.Required(
+                    probatio.Required(
                         CONF_LOCAL_ACCESS_TOKEN,
                     ): str,
                 }
@@ -106,9 +107,9 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
         if not user_input:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(
+                        probatio.Required(
                             CONF_LOCAL_ACCESS_TOKEN,
                             default=self._get_reauth_entry().data[
                                 CONF_LOCAL_ACCESS_TOKEN
@@ -127,12 +128,12 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
             reconfigure_entry = self._get_reconfigure_entry()
             return self.async_show_form(
                 step_id="reconfigure",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(
+                        probatio.Required(
                             CONF_HOST, default=reconfigure_entry.data[CONF_HOST]
                         ): str,
-                        vol.Required(
+                        probatio.Required(
                             CONF_LOCAL_ACCESS_TOKEN,
                             default=reconfigure_entry.data[CONF_LOCAL_ACCESS_TOKEN],
                         ): str,

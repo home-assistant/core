@@ -1,14 +1,15 @@
 """Repairs platform for the Workday integration."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from holidays import list_supported_countries
-import voluptuous as vol
+import probatio
 
-from homeassistant import data_entry_flow
-from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
+from homeassistant.components.repairs import (
+    ConfirmRepairFlow,
+    RepairsFlow,
+    RepairsFlowResult,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import HomeAssistant
@@ -33,7 +34,7 @@ class CountryFixFlow(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         if self.country:
             return await self.async_step_province()
@@ -41,7 +42,7 @@ class CountryFixFlow(RepairsFlow):
 
     async def async_step_country(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the country step of a fix flow."""
         if user_input is not None:
             all_countries = list_supported_countries(include_aliases=False)
@@ -58,9 +59,9 @@ class CountryFixFlow(RepairsFlow):
 
         return self.async_show_form(
             step_id="country",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_COUNTRY): SelectSelector(
+                    probatio.Required(CONF_COUNTRY): SelectSelector(
                         SelectSelectorConfig(
                             options=sorted(
                                 list_supported_countries(include_aliases=False)
@@ -75,7 +76,7 @@ class CountryFixFlow(RepairsFlow):
 
     async def async_step_province(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the province step of a fix flow."""
         if user_input is not None:
             user_input.setdefault(CONF_PROVINCE, None)
@@ -91,9 +92,9 @@ class CountryFixFlow(RepairsFlow):
         ]
         return self.async_show_form(
             step_id="province",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_PROVINCE): SelectSelector(
+                    probatio.Optional(CONF_PROVINCE): SelectSelector(
                         SelectSelectorConfig(
                             options=country_provinces,
                             mode=SelectSelectorMode.DROPDOWN,
@@ -123,13 +124,13 @@ class HolidayFixFlow(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         return await self.async_step_fix_remove_holiday()
 
     async def async_step_fix_remove_holiday(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the options step of a fix flow."""
         errors: dict[str, str] = {}
         if user_input:
@@ -153,9 +154,9 @@ class HolidayFixFlow(RepairsFlow):
             value for value in remove_holidays if value != self.named_holiday
         ]
         new_schema = self.add_suggested_values_to_schema(
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Optional(CONF_REMOVE_HOLIDAYS, default=[]): SelectSelector(
+                    probatio.Optional(CONF_REMOVE_HOLIDAYS, default=[]): SelectSelector(
                         SelectSelectorConfig(
                             options=[],
                             multiple=True,
@@ -171,7 +172,7 @@ class HolidayFixFlow(RepairsFlow):
             step_id="fix_remove_holiday",
             data_schema=new_schema,
             description_placeholders={
-                CONF_COUNTRY: self.country if self.country else "-",
+                CONF_COUNTRY: self.country or "-",
                 CONF_REMOVE_HOLIDAYS: self.named_holiday,
                 "title": self.entry.title,
             },

@@ -1,8 +1,6 @@
 """Support for the Dynalite networks."""
 
-from __future__ import annotations
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
@@ -56,11 +54,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_REQUEST_AREA_PRESET,
         _request_area_preset,
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Optional(ATTR_HOST): cv.string,
-                vol.Required(ATTR_AREA): int,
-                vol.Optional(ATTR_CHANNEL): int,
+                probatio.Optional(ATTR_HOST): cv.string,
+                probatio.Required(ATTR_AREA): int,
+                probatio.Optional(ATTR_CHANNEL): int,
             }
         ),
     )
@@ -69,11 +67,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_REQUEST_CHANNEL_LEVEL,
         _request_channel_level,
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Optional(ATTR_HOST): cv.string,
-                vol.Required(ATTR_AREA): int,
-                vol.Required(ATTR_CHANNEL): int,
+                probatio.Optional(ATTR_HOST): cv.string,
+                probatio.Required(ATTR_AREA): int,
+                probatio.Required(ATTR_CHANNEL): int,
             }
         ),
     )

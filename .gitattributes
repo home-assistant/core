@@ -14,11 +14,12 @@ Dockerfile.dev linguist-language=Dockerfile
 
 # Generated files
 CODEOWNERS linguist-generated=true
-Dockerfile linguist-generated=true
 homeassistant/generated/*.py linguist-generated=true
+pylint/plugins/pylint_home_assistant/generated/*.py linguist-generated=true
+machine/* linguist-generated=true
 mypy.ini linguist-generated=true
 requirements.txt linguist-generated=true
 requirements_all.txt linguist-generated=true
-requirements_test_all.txt linguist-generated=true
 requirements_test_pre_commit.txt linguist-generated=true
 script/hassfest/docker/Dockerfile linguist-generated=true
+.github/workflows/*.lock.yml linguist-generated=true

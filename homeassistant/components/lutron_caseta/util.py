@@ -1,7 +1,5 @@
 """Support for Lutron Caseta."""
 
-from __future__ import annotations
-
 from .const import UNASSIGNED_AREA
 
 

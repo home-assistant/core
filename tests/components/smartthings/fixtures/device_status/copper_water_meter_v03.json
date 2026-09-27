@@ -1,0 +1,46 @@
+{
+  "components": {
+    "main": {
+      "healthCheck": {
+        "checkInterval": {
+          "value": 60,
+          "unit": "s",
+          "data": {
+            "deviceScheme": "UNTRACKED",
+            "protocol": "cloud"
+          },
+          "timestamp": "2025-02-27T14:06:11.702Z"
+        },
+        "healthStatus": {
+          "value": null
+        },
+        "DeviceWatch-Enroll": {
+          "value": null
+        },
+        "DeviceWatch-DeviceStatus": {
+          "value": "online",
+          "data": {},
+          "timestamp": "2026-03-26T02:30:01.037Z"
+        }
+      },
+      "refresh": {},
+      "mirrorhappy40050.copperWaterMeter": {
+        "energyUsageDay": {
+          "value": 49.75,
+          "unit": "gal",
+          "timestamp": "2026-03-26T02:50:00.599Z"
+        },
+        "energyUsageMonth": {
+          "value": 1276.75,
+          "unit": "gal",
+          "timestamp": "2026-03-26T02:50:00.599Z"
+        },
+        "powerCurrent": {
+          "value": 0.06,
+          "unit": "gpm",
+          "timestamp": "2026-03-26T02:55:00.575Z"
+        }
+      }
+    }
+  }
+}

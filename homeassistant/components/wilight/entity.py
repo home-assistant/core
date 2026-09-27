@@ -1,6 +1,6 @@
 """The WiLight integration."""
 
-from typing import Any
+from typing import Any, override
 
 from pywilight.wilight_device import PyWiLightDevice
 
@@ -35,10 +35,10 @@ class WiLightDevice(Entity):
             model=api_device.model,
             manufacturer="WiLight",
             sw_version=api_device.swversion,
-            via_device=(DOMAIN, self._device_id),
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return bool(self._client.is_connected)
@@ -53,6 +53,7 @@ class WiLightDevice(Entity):
         """Synchronize state with api_device."""
         await self._client.status(self._index)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
         self._client.register_status_callback(self.handle_event_callback, self._index)

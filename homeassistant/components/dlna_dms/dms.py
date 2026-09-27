@@ -1,13 +1,11 @@
 """Wrapper for media_source around async_upnp_client's DmsDevice ."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import StrEnum
 import functools
-from typing import Any, cast
+from typing import Any
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.client import UpnpRequester
@@ -38,6 +36,7 @@ from .const import (
     DLNA_RESOLVE_FILTER,
     DLNA_SORT_CRITERIA,
     DOMAIN,
+    DOMAIN_DATA,
     LOGGER,
     MEDIA_CLASS_MAP,
     PATH_OBJECT_ID_FLAG,
@@ -92,12 +91,17 @@ class DlnaDmsData:
 
 @callback
 def get_domain_data(hass: HomeAssistant) -> DlnaDmsData:
-    """Obtain this integration's domain data, creating it if needed."""
-    if DOMAIN in hass.data:
-        return cast(DlnaDmsData, hass.data[DOMAIN])
+    """Obtain this integration's domain data, creating it if needed.
 
-    data = DlnaDmsData(hass)
-    hass.data[DOMAIN] = data
+    Creation is deferred to the first caller rather than done at setup, to
+    avoid building DlnaDmsData and its dependencies until a device is
+    actually connected to. This module is imported to run the config flow
+    for any DMS device discovered on the network, including ignored ones.
+    """
+    if (data := hass.data.get(DOMAIN_DATA)) is not None:
+        return data
+
+    data = hass.data[DOMAIN_DATA] = DlnaDmsData(hass)
     return data
 
 
@@ -234,10 +238,10 @@ class DmsDeviceSource:
         try:
             bootid_str = info.ssdp_headers[ssdp.ATTR_SSDP_BOOTID]
             bootid: int | None = int(bootid_str, 10)
-        except (KeyError, ValueError):
+        except KeyError, ValueError:
             bootid = None
 
-        if change == ssdp.SsdpChange.UPDATE:
+        if change is ssdp.SsdpChange.UPDATE:
             # This is an announcement that bootid is about to change
             if self._bootid is not None and self._bootid == bootid:
                 # Store the new value (because our old value matches) so that we
@@ -245,7 +249,7 @@ class DmsDeviceSource:
                 try:
                     next_bootid_str = info.ssdp_headers[ssdp.ATTR_SSDP_NEXTBOOTID]
                     self._bootid = int(next_bootid_str, 10)
-                except (KeyError, ValueError):
+                except KeyError, ValueError:
                     pass
             # Nothing left to do until ssdp:alive comes through
             return
@@ -259,7 +263,7 @@ class DmsDeviceSource:
                 await self.device_disconnect()
         self._bootid = bootid
 
-        if change == ssdp.SsdpChange.BYEBYE:
+        if change is ssdp.SsdpChange.BYEBYE:
             # Device is going away
             if self._device:
                 # Disconnect from gone device
@@ -268,7 +272,7 @@ class DmsDeviceSource:
             self._ssdp_connect_failed = False
 
         if (
-            change == ssdp.SsdpChange.ALIVE
+            change is ssdp.SsdpChange.ALIVE
             and not self._device
             and not self._ssdp_connect_failed
         ):
@@ -567,7 +571,7 @@ class DmsDeviceSource:
         # can_play is False).
         try:
             child_count = int(item.child_count)
-        except (AttributeError, TypeError, ValueError):
+        except AttributeError, TypeError, ValueError:
             child_count = 0
         can_expand = (
             bool(children) or child_count > 0 or isinstance(item, didl_lite.Container)

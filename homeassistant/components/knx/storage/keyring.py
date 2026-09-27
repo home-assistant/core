@@ -10,9 +10,10 @@ from xknx.secure.keyring import Keyring, sync_load_keyring
 
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from ..const import DOMAIN
+from ..const import DOMAIN, REPAIR_ISSUE_DATA_SECURE_GROUP_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,4 +46,11 @@ async def save_uploaded_knxkeys_file(
             shutil.move(file_path, dest_file)
         return keyring
 
-    return await hass.async_add_executor_job(_process_upload)
+    keyring = await hass.async_add_executor_job(_process_upload)
+
+    # If there is an existing DataSecure group key issue, remove it.
+    # GAs might not be DataSecure anymore after uploading a valid keyring,
+    # if they are, we raise the issue again when receiving a telegram.
+    ir.async_delete_issue(hass, DOMAIN, REPAIR_ISSUE_DATA_SECURE_GROUP_KEY)
+
+    return keyring

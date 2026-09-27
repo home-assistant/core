@@ -1,30 +1,22 @@
 """Onkyo services."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
-from aioonkyo import Zone
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN, LEGACY_REV_HDMI_OUTPUT_MAPPING
-
-if TYPE_CHECKING:
-    from .media_player import OnkyoMediaPlayer
-
-DATA_MP_ENTITIES: HassKey[dict[str, dict[Zone, OnkyoMediaPlayer]]] = HassKey(DOMAIN)
+from .const import LEGACY_REV_HDMI_OUTPUT_MAPPING
+from .media_player import DATA_MP_ENTITIES, OnkyoMediaPlayer
 
 ATTR_HDMI_OUTPUT = "hdmi_output"
-ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
+ONKYO_SELECT_OUTPUT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_HDMI_OUTPUT): vol.In(LEGACY_REV_HDMI_OUTPUT_MAPPING),
+        probatio.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        probatio.Required(ATTR_HDMI_OUTPUT): probatio.In(
+            LEGACY_REV_HDMI_OUTPUT_MAPPING
+        ),
     }
 )
 SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"

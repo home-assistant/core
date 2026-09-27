@@ -1,7 +1,5 @@
 """The IKEA Idasen Desk integration."""
 
-from __future__ import annotations
-
 import logging
 
 from bleak.exc import BleakError
@@ -40,7 +38,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: IdasenDeskConfigEntry) -
         service_info: bluetooth.BluetoothServiceInfoBleak,
         change: bluetooth.BluetoothChange,
     ) -> None:
-        """Update from a Bluetooth callback to ensure that a new BLEDevice is fetched."""
+        """Update from a Bluetooth callback.
+
+        Ensures that a new BLEDevice is fetched.
+        """
         _LOGGER.debug("Bluetooth callback triggered")
         hass.async_create_task(coordinator.async_connect_if_expected())
 

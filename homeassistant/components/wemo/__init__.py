@@ -1,14 +1,12 @@
 """Support for WeMo device discovery."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Sequence
 from datetime import datetime
 import logging
 from typing import Any
 
+import probatio
 import pywemo
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
@@ -56,7 +54,7 @@ def coerce_host_port(value: str) -> HostPortTuple:
     host, _, port_str = value.partition(":")
 
     if not host:
-        raise vol.Invalid("host cannot be empty")
+        raise probatio.Invalid("host cannot be empty")
 
     port = cv.port(port_str) if port_str else None
 
@@ -67,18 +65,20 @@ CONF_STATIC = "static"
 
 DEFAULT_DISCOVERY = True
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_STATIC, default=[]): vol.Schema(
-                    [vol.All(cv.string, coerce_host_port)]
+                probatio.Optional(CONF_STATIC, default=[]): probatio.Schema(
+                    [probatio.All(cv.string, coerce_host_port)]
                 ),
-                vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
+                probatio.Optional(
+                    CONF_DISCOVERY, default=DEFAULT_DISCOVERY
+                ): cv.boolean,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -99,7 +99,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_hass_stop)
 
     yaml_config = config.get(DOMAIN, {})
-    hass.data[DOMAIN] = WemoData(
+    hass.data[DATA_WEMO] = WemoData(
         discovery_enabled=yaml_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY),
         static_config=yaml_config.get(CONF_STATIC, []),
         registry=registry,
@@ -126,7 +126,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         dispatcher=dispatcher,
     )
 
-    # Need to do this at least once in case statistics are defined and discovery is disabled
+    # Need to do this at least once in case statistics
+    # are defined and discovery is disabled
     await discovery.discover_statics()
 
     if wemo_data.discovery_enabled:
@@ -200,7 +201,8 @@ class WemoDispatcher:
             # Three cases:
             # - Platform is loaded, dispatch discovery
             # - Platform is being loaded, add to backlog
-            # - First time we see platform, we need to load it and initialize the backlog
+            # - First time we see platform, we need to load
+            #   it and initialize the backlog
 
             if platform in self._dispatch_callbacks:
                 await self._dispatch_callbacks[platform](coordinator)
@@ -221,7 +223,7 @@ class WemoDispatcher:
     async def async_connect_platform(
         self, platform: Platform, dispatch: DispatchCallback
     ) -> None:
-        """Consider a platform as loaded and dispatch any backlog of discovered devices."""
+        """Mark platform loaded and dispatch backlog of discovered devices."""
         self._dispatch_callbacks[platform] = dispatch
 
         await gather_with_limited_concurrency(

@@ -1,8 +1,6 @@
 """Config flow for PG LAB Electronics integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components import mqtt
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -16,6 +14,7 @@ class PGLabFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
     ) -> ConfigFlowResult:
@@ -33,6 +32,7 @@ class PGLabFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm_from_mqtt()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

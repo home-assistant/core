@@ -68,9 +68,7 @@ async def test_user_flow_no_new_device(
     valid_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=None,
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     await hass.async_block_till_done()
@@ -103,7 +101,7 @@ async def test_user_flow_device_not_found(
     mock_get_device: MagicMock,
     mock_search_for_devices: MagicMock,
 ) -> None:
-    """Test configuration flow when the given device_id does not match any found devices."""
+    """Test config flow when device_id does not match any found devices."""
 
     mock_get_device.return_value = None
 

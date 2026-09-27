@@ -1,10 +1,10 @@
 """ConfigFlow for Energenie-Power-Sockets devices."""
 
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pyegps import get_device, search_for_devices
 from pyegps.exceptions import MissingLibrary, UsbError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
@@ -14,6 +14,9 @@ from .const import CONF_DEVICE_API_ID, DOMAIN, LOGGER
 class EGPSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the config flow for EGPS devices."""
 
+    VERSION = 2
+
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -35,7 +38,7 @@ class EGPSConfigFlow(ConfigFlow, domain=DOMAIN):
         currently_configured = self._async_current_ids(include_ignore=True)
         try:
             found_devices = await self.hass.async_add_executor_job(search_for_devices)
-        except (MissingLibrary, UsbError):
+        except MissingLibrary, UsbError:
             LOGGER.exception("Unable to access USB devices")
             return self.async_abort(reason="usb_error")
 
@@ -48,8 +51,10 @@ class EGPSConfigFlow(ConfigFlow, domain=DOMAIN):
         LOGGER.debug("Found %d devices", len(devices))
         if len(devices) > 0:
             options = {d.device_id: f"{d.name} ({d.device_id})" for d in devices}
-            data_schema = {CONF_DEVICE_API_ID: vol.In(options)}
+            data_schema = {CONF_DEVICE_API_ID: probatio.In(options)}
         else:
             return self.async_abort(reason="no_device")
 
-        return self.async_show_form(step_id="user", data_schema=vol.Schema(data_schema))
+        return self.async_show_form(
+            step_id="user", data_schema=probatio.Schema(data_schema)
+        )

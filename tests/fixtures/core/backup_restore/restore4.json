@@ -1,0 +1,7 @@
+{
+  "path": "test",
+  "password": null,
+  "remove_after_restore": true,
+  "restore_database": true,
+  "restore_homeassistant": false
+}

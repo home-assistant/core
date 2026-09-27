@@ -51,7 +51,13 @@ def b2_fixture():
 
     with (
         patch("b2sdk.v2.B2Api", return_value=sim) as mock_client,
+        patch(
+            "homeassistant.components.backblaze_b2.b2_client.B2Api", return_value=sim
+        ),
         patch("homeassistant.components.backblaze_b2.B2Api", return_value=sim),
+        patch(
+            "homeassistant.components.backblaze_b2.config_flow.B2Api", return_value=sim
+        ),
         patch.object(
             RawSimulator,
             "get_bucket_by_name",
@@ -166,7 +172,9 @@ def b2_fixture():
                         return MockDownloadedFile(metadata_json_content_bytes)
                     return MockDownloadedFile(test_backup_data)
             raise ValueError(
-                f"Mocked download_file_by_id: File with id {file_id} or name {file_name} not found."
+                "Mocked download_file_by_id: "
+                f"File with id {file_id} or name "
+                f"{file_name} not found."
             )
 
         def ls(

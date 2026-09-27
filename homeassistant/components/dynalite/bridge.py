@@ -1,7 +1,5 @@
 """Code to handle a Dynalite bridge."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from typing import Any
 
@@ -66,7 +64,9 @@ class DynaliteBridge:
     def update_device(self, device: DynaliteBaseDevice | None = None) -> None:
         """Call when a device or all devices should be updated."""
         if not device:
-            # This is used to signal connection or disconnection, so all devices may become available or not.
+            # This is used to signal connection or
+            # disconnection, so all devices may become
+            # available or not.
             log_string = (
                 "Connected" if self.dynalite_devices.connected else "Disconnected"
             )
@@ -104,7 +104,10 @@ class DynaliteBridge:
             self.async_add_devices[platform](self.waiting_devices[platform])
 
     def add_devices_when_registered(self, devices: list[DynaliteBaseDevice]) -> None:
-        """Add the devices to HA if the add devices callback was registered, otherwise queue until it is."""
+        """Add the devices to HA if the add devices callback was registered.
+
+        Otherwise queue until it is.
+        """
         for platform in PLATFORMS:
             platform_devices = [
                 device for device in devices if device.category == platform

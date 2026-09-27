@@ -1,8 +1,7 @@
 """Support for ESPHome binary sensors."""
 
-from __future__ import annotations
-
 from functools import partial
+from typing import override
 
 from aioesphomeapi import BinarySensorInfo, BinarySensorState, EntityInfo
 
@@ -24,6 +23,7 @@ class EsphomeBinarySensor(
     """A binary sensor implementation for ESPHome."""
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if self._static_info.is_status_binary_sensor:
@@ -35,6 +35,7 @@ class EsphomeBinarySensor(
         return self._state.state
 
     @callback
+    @override
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
@@ -43,6 +44,7 @@ class EsphomeBinarySensor(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._static_info.is_status_binary_sensor or super().available

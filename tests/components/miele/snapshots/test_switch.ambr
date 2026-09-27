@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switch_states[platforms0][switch.freezer_superfreezing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Superfreezing',
     'options': dict({
     }),
     'original_device_class': None,
@@ -37,7 +39,7 @@
 # name: test_switch_states[platforms0][switch.freezer_superfreezing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Freezer Superfreezing',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freezer Superfreezing',
     }),
     'context': <ANY>,
     'entity_id': 'switch.freezer_superfreezing',
@@ -49,8 +51,9 @@
 # ---
 # name: test_switch_states[platforms0][switch.hood_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': None,
@@ -85,7 +89,7 @@
 # name: test_switch_states[platforms0][switch.hood_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hood Power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Power',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hood_power',
@@ -97,8 +101,9 @@
 # ---
 # name: test_switch_states[platforms0][switch.oven_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': None,
@@ -133,7 +139,7 @@
 # name: test_switch_states[platforms0][switch.oven_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Oven Power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Power',
     }),
     'context': <ANY>,
     'entity_id': 'switch.oven_power',
@@ -145,8 +151,9 @@
 # ---
 # name: test_switch_states[platforms0][switch.refrigerator_supercooling-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -164,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supercooling',
     'options': dict({
     }),
     'original_device_class': None,
@@ -181,7 +189,7 @@
 # name: test_switch_states[platforms0][switch.refrigerator_supercooling-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Supercooling',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Supercooling',
     }),
     'context': <ANY>,
     'entity_id': 'switch.refrigerator_supercooling',
@@ -193,8 +201,9 @@
 # ---
 # name: test_switch_states[platforms0][switch.washing_machine_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -212,6 +221,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': None,
@@ -229,7 +239,7 @@
 # name: test_switch_states[platforms0][switch.washing_machine_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washing machine Power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing machine Power',
     }),
     'context': <ANY>,
     'entity_id': 'switch.washing_machine_power',
@@ -241,8 +251,9 @@
 # ---
 # name: test_switch_states_api_push[platforms0][switch.freezer_superfreezing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -260,6 +271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Superfreezing',
     'options': dict({
     }),
     'original_device_class': None,
@@ -277,7 +289,7 @@
 # name: test_switch_states_api_push[platforms0][switch.freezer_superfreezing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Freezer Superfreezing',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freezer Superfreezing',
     }),
     'context': <ANY>,
     'entity_id': 'switch.freezer_superfreezing',
@@ -289,8 +301,9 @@
 # ---
 # name: test_switch_states_api_push[platforms0][switch.hood_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -308,6 +321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': None,
@@ -325,7 +339,7 @@
 # name: test_switch_states_api_push[platforms0][switch.hood_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hood Power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Power',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hood_power',
@@ -337,8 +351,9 @@
 # ---
 # name: test_switch_states_api_push[platforms0][switch.oven_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -356,6 +371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': None,
@@ -373,7 +389,7 @@
 # name: test_switch_states_api_push[platforms0][switch.oven_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Oven Power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Power',
     }),
     'context': <ANY>,
     'entity_id': 'switch.oven_power',
@@ -385,8 +401,9 @@
 # ---
 # name: test_switch_states_api_push[platforms0][switch.refrigerator_supercooling-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -404,6 +421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supercooling',
     'options': dict({
     }),
     'original_device_class': None,
@@ -421,7 +439,7 @@
 # name: test_switch_states_api_push[platforms0][switch.refrigerator_supercooling-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Supercooling',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Supercooling',
     }),
     'context': <ANY>,
     'entity_id': 'switch.refrigerator_supercooling',
@@ -433,8 +451,9 @@
 # ---
 # name: test_switch_states_api_push[platforms0][switch.washing_machine_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -452,6 +471,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': None,
@@ -469,7 +489,7 @@
 # name: test_switch_states_api_push[platforms0][switch.washing_machine_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washing machine Power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing machine Power',
     }),
     'context': <ANY>,
     'entity_id': 'switch.washing_machine_power',

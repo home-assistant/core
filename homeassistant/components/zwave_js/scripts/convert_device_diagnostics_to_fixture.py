@@ -1,7 +1,5 @@
 """Script to convert a device diagnostics file to a fixture."""
 
-from __future__ import annotations
-
 import argparse
 import json
 from pathlib import Path
@@ -35,7 +33,9 @@ def get_fixtures_dir_path(data: dict) -> Path:
         f"{device_config['manufacturer']}-{device_config['label']}_state"
     )
     path = Path(__file__).parents[1]
-    index = path.parts.index("homeassistant")
+    # Use the rightmost "homeassistant" component to handle repo paths
+    # that themselves contain a "homeassistant" segment.
+    index = len(path.parts) - 1 - path.parts[::-1].index("homeassistant")
     return Path(
         *path.parts[:index],
         "tests",

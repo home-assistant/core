@@ -1,14 +1,13 @@
 """ISY Services and Commands."""
 
-from __future__ import annotations
-
 from typing import Any
 
+import probatio
 from pyisy.constants import COMMAND_FRIENDLY_NAME
-import voluptuous as vol
 
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_CODE,
     CONF_COMMAND,
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
@@ -20,7 +19,7 @@ from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.service import entity_service_call
 from homeassistant.helpers.typing import VolDictType
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 from .models import IsyConfigEntry
 
 # Common Services for All Platforms:
@@ -40,7 +39,6 @@ SERVICE_DELETE_ZWAVE_LOCK_USER_CODE = "delete_zwave_lock_user_code"
 CONF_PARAMETER = "parameter"
 CONF_PARAMETERS = "parameters"
 CONF_USER_NUM = "user_num"
-CONF_CODE = "code"
 CONF_VALUE = "value"
 CONF_INIT = "init"
 CONF_ISY = "isy"
@@ -78,49 +76,57 @@ def valid_isy_commands(value: Any) -> str:
     if value in COMMAND_FRIENDLY_NAME:
         assert isinstance(value, str)
         return value
-    raise vol.Invalid("Invalid ISY Command.")
+    raise probatio.Invalid("Invalid ISY Command.")
 
 
 SCHEMA_GROUP = "name-address"
 
 SERVICE_SEND_RAW_NODE_COMMAND_SCHEMA = {
-    vol.Required(CONF_COMMAND): vol.All(cv.string, valid_isy_commands),
-    vol.Optional(CONF_VALUE): vol.All(vol.Coerce(int), vol.Range(0, 255)),
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.All(vol.Coerce(int), vol.Range(0, 120)),
-    vol.Optional(CONF_PARAMETERS, default={}): {cv.string: cv.string},
+    probatio.Required(CONF_COMMAND): probatio.All(cv.string, valid_isy_commands),
+    probatio.Optional(CONF_VALUE): probatio.All(
+        probatio.Coerce(int), probatio.Range(0, 255)
+    ),
+    probatio.Optional(CONF_UNIT_OF_MEASUREMENT): probatio.All(
+        probatio.Coerce(int), probatio.Range(0, 120)
+    ),
+    probatio.Optional(CONF_PARAMETERS, default={}): {cv.string: cv.string},
 }
 
 SERVICE_SEND_NODE_COMMAND_SCHEMA = {
-    vol.Required(CONF_COMMAND): vol.In(VALID_NODE_COMMANDS)
+    probatio.Required(CONF_COMMAND): probatio.In(VALID_NODE_COMMANDS)
 }
 
-SERVICE_RENAME_NODE_SCHEMA = {vol.Required(CONF_NAME): cv.string}
+SERVICE_RENAME_NODE_SCHEMA = {probatio.Required(CONF_NAME): cv.string}
 
-SERVICE_GET_ZWAVE_PARAMETER_SCHEMA = {vol.Required(CONF_PARAMETER): vol.Coerce(int)}
+SERVICE_GET_ZWAVE_PARAMETER_SCHEMA = {
+    probatio.Required(CONF_PARAMETER): probatio.Coerce(int)
+}
 
 SERVICE_SET_ZWAVE_PARAMETER_SCHEMA = {
-    vol.Required(CONF_PARAMETER): vol.Coerce(int),
-    vol.Required(CONF_VALUE): vol.Coerce(int),
-    vol.Required(CONF_SIZE): vol.All(vol.Coerce(int), vol.In(VALID_PARAMETER_SIZES)),
+    probatio.Required(CONF_PARAMETER): probatio.Coerce(int),
+    probatio.Required(CONF_VALUE): probatio.Coerce(int),
+    probatio.Required(CONF_SIZE): probatio.All(
+        probatio.Coerce(int), probatio.In(VALID_PARAMETER_SIZES)
+    ),
 }
 
 SERVICE_SET_USER_CODE_SCHEMA: VolDictType = {
-    vol.Required(CONF_USER_NUM): vol.Coerce(int),
-    vol.Required(CONF_CODE): vol.Coerce(int),
+    probatio.Required(CONF_USER_NUM): probatio.Coerce(int),
+    probatio.Required(CONF_CODE): probatio.Coerce(int),
 }
 
 SERVICE_DELETE_USER_CODE_SCHEMA: VolDictType = {
-    vol.Required(CONF_USER_NUM): vol.Coerce(int)
+    probatio.Required(CONF_USER_NUM): probatio.Coerce(int)
 }
 
-SERVICE_SEND_PROGRAM_COMMAND_SCHEMA = vol.All(
+SERVICE_SEND_PROGRAM_COMMAND_SCHEMA = probatio.All(
     cv.has_at_least_one_key(CONF_ADDRESS, CONF_NAME),
-    vol.Schema(
+    probatio.Schema(
         {
-            vol.Exclusive(CONF_NAME, SCHEMA_GROUP): cv.string,
-            vol.Exclusive(CONF_ADDRESS, SCHEMA_GROUP): cv.string,
-            vol.Required(CONF_COMMAND): vol.In(VALID_PROGRAM_COMMANDS),
-            vol.Optional(CONF_ISY): cv.string,
+            probatio.Exclusive(CONF_NAME, SCHEMA_GROUP): cv.string,
+            probatio.Exclusive(CONF_ADDRESS, SCHEMA_GROUP): cv.string,
+            probatio.Required(CONF_COMMAND): probatio.In(VALID_PROGRAM_COMMANDS),
+            probatio.Optional(CONF_ISY): cv.string,
         }
     ),
 )
@@ -158,7 +164,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             if program is not None:
                 await getattr(program, command)()
                 return
-        _LOGGER.error("Could not send program command; not found or enabled on the ISY")
+        LOGGER.error("Could not send program command; not found or enabled on the ISY")
 
     hass.services.async_register(
         domain=DOMAIN,

@@ -1,0 +1,73 @@
+.condition_common: &condition_common
+  target: &target_battery_binary_sensor
+    entity:
+      - domain: binary_sensor
+        device_class: battery
+    primary_entities_only: false
+  fields:
+    behavior: &condition_behavior
+      required: true
+      default: any
+      selector:
+        automation_behavior:
+          mode: condition
+    for: &condition_for
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
+
+.battery_threshold_entity: &battery_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "%"
+  - domain: sensor
+    device_class: battery
+  - domain: number
+    device_class: battery
+
+.battery_threshold_number: &battery_threshold_number
+  min: 0
+  max: 100
+  mode: box
+  unit_of_measurement: "%"
+
+is_low: *condition_common
+
+is_not_low: *condition_common
+
+is_charging:
+  target:
+    entity:
+      - domain: binary_sensor
+        device_class: battery_charging
+    primary_entities_only: false
+  fields:
+    behavior: *condition_behavior
+    for: *condition_for
+
+is_not_charging:
+  target:
+    entity:
+      - domain: binary_sensor
+        device_class: battery_charging
+    primary_entities_only: false
+  fields:
+    behavior: *condition_behavior
+    for: *condition_for
+
+is_level:
+  target:
+    entity:
+      - domain: sensor
+        device_class: battery
+    primary_entities_only: false
+  fields:
+    behavior: *condition_behavior
+    for: *condition_for
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *battery_threshold_entity
+          mode: is
+          number: *battery_threshold_number

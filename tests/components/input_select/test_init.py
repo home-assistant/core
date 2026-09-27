@@ -424,7 +424,7 @@ async def test_input_select_context(
     """Test that input_select context works."""
     assert await async_setup_component(
         hass,
-        "input_select",
+        DOMAIN,
         {
             "input_select": {
                 "s1": {"options": ["first option", "middle option", "last option"]}

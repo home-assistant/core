@@ -1,14 +1,12 @@
 """Config flow for the Duck DNS integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -16,25 +14,29 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from . import _update_duckdns
 from .const import DOMAIN
-from .issue import deprecate_yaml_issue
+from .helpers import update_duckdns
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_DOMAIN): TextSelector(
+        probatio.Required(CONF_DOMAIN): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, suffix=".duckdns.org")
         ),
-        vol.Required(CONF_ACCESS_TOKEN): str,
+        probatio.Required(CONF_ACCESS_TOKEN): str,
     }
+)
+
+STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_ACCESS_TOKEN): str}
 )
 
 
 class DuckDnsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Duck DNS."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -44,7 +46,7 @@ class DuckDnsConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_DOMAIN: user_input[CONF_DOMAIN]})
             session = async_get_clientsession(self.hass)
             try:
-                if not await _update_duckdns(
+                if not await update_duckdns(
                     session,
                     user_input[CONF_DOMAIN],
                     user_input[CONF_ACCESS_TOKEN],
@@ -68,14 +70,36 @@ class DuckDnsConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"url": "https://www.duckdns.org/"},
         )
 
-    async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
-        """Import config from yaml."""
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfigure flow."""
+        errors: dict[str, str] = {}
 
-        self._async_abort_entries_match({CONF_DOMAIN: import_info[CONF_DOMAIN]})
-        result = await self.async_step_user(import_info)
-        if errors := result.get("errors"):
-            deprecate_yaml_issue(self.hass, import_success=False)
-            return self.async_abort(reason=errors["base"])
+        entry = self._get_reconfigure_entry()
 
-        deprecate_yaml_issue(self.hass, import_success=True)
-        return result
+        if user_input is not None:
+            session = async_get_clientsession(self.hass)
+            try:
+                if not await update_duckdns(
+                    session,
+                    entry.data[CONF_DOMAIN],
+                    user_input[CONF_ACCESS_TOKEN],
+                ):
+                    errors["base"] = "update_failed"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates=user_input,
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=STEP_RECONFIGURE_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={CONF_NAME: entry.title},
+        )

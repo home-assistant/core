@@ -1,7 +1,5 @@
 """The laundrify integration."""
 
-from __future__ import annotations
-
 import logging
 
 from laundrify_aio import LaundrifyAPI

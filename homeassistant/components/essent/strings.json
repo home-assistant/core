@@ -3,7 +3,6 @@
     "abort": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_data": "Received invalid data from Essent",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -43,9 +42,6 @@
       },
       "electricity_next_price": {
         "name": "Next electricity price"
-      },
-      "gas_average_today": {
-        "name": "Average gas price today"
       },
       "gas_current_price": {
         "name": "Current gas price"

@@ -1,5 +1,6 @@
 """Fixtures for Waze Travel Time tests."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
@@ -12,6 +13,16 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(autouse=True)
+def no_api_call_delay() -> Generator[None]:
+    """Skip the delay between Waze API calls."""
+    with patch(
+        "homeassistant.components.waze_travel_time.coordinator.SECONDS_BETWEEN_API_CALLS",
+        0,
+    ):
+        yield
+
+
 @pytest.fixture(name="mock_config")
 async def mock_config_fixture(hass: HomeAssistant, data, options):
     """Mock a Waze Travel Time config entry."""
@@ -21,6 +32,7 @@ async def mock_config_fixture(hass: HomeAssistant, data, options):
         options=options,
         entry_id="test",
         version=WazeConfigFlow.VERSION,
+        minor_version=WazeConfigFlow.MINOR_VERSION,
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)

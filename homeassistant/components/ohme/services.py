@@ -3,9 +3,8 @@
 from typing import Final
 
 from ohme import OhmeApiClient
-import voluptuous as vol
+import probatio
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -13,8 +12,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import selector
+from homeassistant.helpers import selector, service
 
 from .const import DOMAIN
 from .coordinator import OhmeConfigEntry
@@ -23,9 +21,9 @@ ATTR_CONFIG_ENTRY: Final = "config_entry"
 ATTR_PRICE_CAP: Final = "price_cap"
 
 SERVICE_LIST_CHARGE_SLOTS = "list_charge_slots"
-SERVICE_LIST_CHARGE_SLOTS_SCHEMA: Final = vol.Schema(
+SERVICE_LIST_CHARGE_SLOTS_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
+        probatio.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
             {
                 "integration": DOMAIN,
             }
@@ -34,39 +32,23 @@ SERVICE_LIST_CHARGE_SLOTS_SCHEMA: Final = vol.Schema(
 )
 
 SERVICE_SET_PRICE_CAP = "set_price_cap"
-SERVICE_SET_PRICE_CAP_SCHEMA: Final = vol.Schema(
+SERVICE_SET_PRICE_CAP_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
+        probatio.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
             {
                 "integration": DOMAIN,
             }
         ),
-        vol.Required(ATTR_PRICE_CAP): vol.Coerce(float),
+        probatio.Required(ATTR_PRICE_CAP): probatio.Coerce(float),
     }
 )
 
 
 def __get_client(call: ServiceCall) -> OhmeApiClient:
     """Get the client from the config entry."""
-    entry_id: str = call.data[ATTR_CONFIG_ENTRY]
-    entry: OhmeConfigEntry | None = call.hass.config_entries.async_get_entry(entry_id)
-
-    if not entry:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_config_entry",
-            translation_placeholders={
-                "config_entry": entry_id,
-            },
-        )
-    if entry.state != ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="unloaded_config_entry",
-            translation_placeholders={
-                "config_entry": entry.title,
-            },
-        )
+    entry: OhmeConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+    )
 
     return entry.runtime_data.charge_session_coordinator.client
 

@@ -1,7 +1,5 @@
 """Provides diagnostics for Z-Wave JS."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 from typing import Any
 
@@ -28,7 +26,7 @@ from .helpers import (
 )
 from .models import ZwaveJSConfigEntry
 
-KEYS_TO_REDACT = {"homeId", "location"}
+KEYS_TO_REDACT = {"homeId", "location", "dsk"}
 
 VALUES_TO_REDACT = (
     ZwaveValueMatcher(property_="userCode", command_class=CommandClass.USER_CODE),
@@ -76,7 +74,7 @@ def get_device_entities(
     hass: HomeAssistant,
     node: Node,
     config_entry: ZwaveJSConfigEntry,
-    device: dr.DeviceEntry,
+    device: dr.AnyDeviceEntry,
 ) -> list[dict[str, Any]]:
     """Get entities for a device."""
     entity_entries = er.async_entries_for_device(
@@ -147,7 +145,7 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, config_entry: ZwaveJSConfigEntry, device: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: ZwaveJSConfigEntry, device: dr.AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
     client: Client = config_entry.runtime_data.client

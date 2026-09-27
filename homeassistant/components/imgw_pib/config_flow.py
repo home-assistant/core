@@ -1,14 +1,12 @@
 """Config flow for IMGW-PIB integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 from imgw_pib import ImgwPib
 from imgw_pib.exceptions import ApiError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -29,6 +27,7 @@ class ImgwPibFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -50,7 +49,7 @@ class ImgwPibFlowHandler(ConfigFlow, domain=DOMAIN):
                     hydrological_details=False,
                 )
                 hydrological_data = await imgwpib.get_hydrological_data()
-            except (ClientError, TimeoutError, ApiError):
+            except ClientError, TimeoutError, ApiError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -62,7 +61,7 @@ class ImgwPibFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             imgwpib = await ImgwPib.create(client_session)
             await imgwpib.update_hydrological_stations()
-        except (ClientError, TimeoutError, ApiError):
+        except ClientError, TimeoutError, ApiError:
             return self.async_abort(reason="cannot_connect")
 
         options: list[SelectOptionDict] = [
@@ -70,9 +69,9 @@ class ImgwPibFlowHandler(ConfigFlow, domain=DOMAIN):
             for station_id, station_name in imgwpib.hydrological_stations.items()
         ]
 
-        schema: vol.Schema = vol.Schema(
+        schema: probatio.Schema = probatio.Schema(
             {
-                vol.Required(CONF_STATION_ID): SelectSelector(
+                probatio.Required(CONF_STATION_ID): SelectSelector(
                     SelectSelectorConfig(
                         options=options,
                         multiple=False,

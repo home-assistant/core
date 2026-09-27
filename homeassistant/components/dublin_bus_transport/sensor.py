@@ -4,15 +4,13 @@ For more info on the API see :
 https://data.gov.ie/dataset/real-time-passenger-information-rtpi-for-dublin-bus-bus-eireann-luas-and-irish-rail/resource/4b9f2c4f-6bf5-4958-a43a-f12dab04cf61
 """
 
-from __future__ import annotations
-
 from contextlib import suppress
 from datetime import datetime, timedelta
 from http import HTTPStatus
-from typing import Any
+from typing import Any, override
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -44,9 +42,9 @@ TIME_STR_FORMAT = "%H:%M"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_STOP_ID): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_ROUTE, default=""): cv.string,
+        probatio.Required(CONF_STOP_ID): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_ROUTE, default=""): cv.string,
     }
 )
 
@@ -93,16 +91,19 @@ class DublinPublicTransportSensor(SensorEntity):
         self._times = self._state = None
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self._times is not None:
@@ -121,6 +122,7 @@ class DublinPublicTransportSensor(SensorEntity):
         return None
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return UnitOfTime.MINUTES

@@ -1,10 +1,8 @@
 """Support for Android IP Webcam settings."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pydroid_ipcam import PyDroidIPCam
 
@@ -146,15 +144,18 @@ class IPWebcamSettingSwitch(AndroidIPCamBaseEntity, SwitchEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if settings is on or off."""
         return bool(self.cam.current_settings.get(self.entity_description.key))
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         await self.entity_description.on_func(self.cam)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         await self.entity_description.off_func(self.cam)

@@ -1,75 +1,192 @@
 """Tests for the Anthropic integration."""
 
-from typing import Any
+from typing import TypedDict
 from unittest.mock import patch
 
 from anthropic import (
     APIConnectionError,
+    APIError,
     APITimeoutError,
     AuthenticationError,
     BadRequestError,
 )
+import attr
+import httpx
 from httpx import URL, Request, Response
 import pytest
 
+from homeassistant.components.anthropic.config_flow import AnthropicConfigFlow
 from homeassistant.components.anthropic.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryDisabler, ConfigSubentryData
+from homeassistant.config_entries import (
+    ConfigEntryDisabler,
+    ConfigEntryState,
+    ConfigSubentryData,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
+MINOR_VERSION = AnthropicConfigFlow.MINOR_VERSION
+
+
+class ConversationSubentryExpectation(TypedDict):
+    """Expected registry state for a migrated conversation subentry."""
+
+    conversation_entity_id: str
+    device_disabled_by: DeviceEntryDisabler | None
+    entity_disabled_by: RegistryEntryDisabler | None
+    device: int
+
 
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (APIConnectionError(request=None), "Connection error"),
-        (APITimeoutError(request=None), "Request timed out"),
-        (
+        pytest.param(
+            APIConnectionError(request=None), "Connection error", id="connection_error"
+        ),
+        pytest.param(APITimeoutError(request=None), "Request timed out", id="timeout"),
+        pytest.param(
             BadRequestError(
-                message="Your credit balance is too low to access the Claude API. Please go to Plans & Billing to upgrade or purchase credits.",
+                message=(
+                    "Your credit balance is too low to access"
+                    " the Claude API. Please go to Plans &"
+                    " Billing to upgrade or purchase credits."
+                ),
                 response=Response(
                     status_code=400,
                     request=Request(method="POST", url=URL()),
                 ),
                 body={"type": "error", "error": {"type": "invalid_request_error"}},
             ),
-            "anthropic integration not ready yet: Your credit balance is too low to access the Claude API",
-        ),
-        (
-            AuthenticationError(
-                message="invalid x-api-key",
-                response=Response(
-                    status_code=401,
-                    request=Request(method="POST", url=URL()),
-                ),
-                body={"type": "error", "error": {"type": "authentication_error"}},
-            ),
-            "Invalid API key",
+            "Your credit balance is too low to access the Claude API",
+            id="insufficient_credit",
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_config_entry")
 async def test_init_error(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
-    side_effect,
-    error,
+    side_effect: APIError,
+    error: str,
 ) -> None:
     """Test initialization errors."""
     with patch(
-        "anthropic.resources.models.AsyncModels.retrieve",
+        "anthropic.resources.models.AsyncModels.list",
         side_effect=side_effect,
     ):
-        assert await async_setup_component(hass, "anthropic", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         assert error in caplog.text
 
 
+async def test_init_auth_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test auth error during init errors."""
+    with patch(
+        "anthropic.resources.models.AsyncModels.list",
+        side_effect=AuthenticationError(
+            response=httpx.Response(
+                status_code=500, request=httpx.Request(method="GET", url="test")
+            ),
+            body=None,
+            message="",
+        ),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_init_repair_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that repair issue is created on deprecated model."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            "chat_model": "claude-opus-4-20250514",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated")
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_downgrade_from_v3_to_v2(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that migration from future versions is skipped."""
+    # Create a v3 config entry
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "test-api-key"},
+        version=3,
+        minor_version=0,
+        subentries_data=[
+            {
+                "data": {
+                    "recommended": True,
+                    "llm_hass_api": ["assist"],
+                    "prompt": "You are a helpful assistant",
+                    "chat_model": "claude-haiku-4-5",
+                },
+                "subentry_id": "mock_id",
+                "subentry_type": "conversation",
+                "title": "Claude haiku",
+                "unique_id": None,
+            },
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    conversation_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        config_subentry_id="mock_id",
+        identifiers={(DOMAIN, mock_config_entry.entry_id)},
+        name=mock_config_entry.title,
+        manufacturer="Anthropic",
+        model="Claude",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+    entity_registry.async_get_or_create(
+        "conversation",
+        DOMAIN,
+        mock_config_entry.entry_id,
+        config_entry=mock_config_entry,
+        config_subentry_id="mock_id",
+        device_id=conversation_device.id,
+        suggested_object_id="claude",
+    )
+
+    # Run migration
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify migration was skipped and version was not updated
+    assert mock_config_entry.version == 3
+    assert mock_config_entry.minor_version == 0
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_migration_from_v1_to_v2(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -81,7 +198,7 @@ async def test_migration_from_v1_to_v2(
         "recommended": True,
         "llm_hass_api": ["assist"],
         "prompt": "You are a helpful assistant",
-        "chat_model": "claude-3-haiku-20240307",
+        "chat_model": "claude-haiku-4-5",
     }
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -110,15 +227,11 @@ async def test_migration_from_v1_to_v2(
     )
 
     # Run migration
-    with patch(
-        "homeassistant.components.anthropic.async_setup_entry",
-        return_value=True,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.version == 2
-    assert mock_config_entry.minor_version == 3
+    assert mock_config_entry.minor_version == MINOR_VERSION
     assert mock_config_entry.data == {"api_key": "1234"}
     assert mock_config_entry.options == {}
 
@@ -137,20 +250,18 @@ async def test_migration_from_v1_to_v2(
     assert migrated_entity.unique_id == subentry.subentry_id
 
     # Check device migration
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
     assert (
-        migrated_device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        migrated_device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert migrated_device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert migrated_device.id == device.id
-    assert migrated_device.config_entries == {mock_config_entry.entry_id}
-    assert migrated_device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert migrated_device.config_entry_id == mock_config_entry.entry_id
+    assert migrated_device.config_subentry_id == subentry.subentry_id
 
 
 @pytest.mark.parametrize(
@@ -163,7 +274,7 @@ async def test_migration_from_v1_to_v2(
         "main_config_entry",
     ),
     [
-        (
+        pytest.param(
             [ConfigEntryDisabler.USER, None],
             [DeviceEntryDisabler.CONFIG_ENTRY, None],
             [RegistryEntryDisabler.CONFIG_ENTRY, None],
@@ -183,8 +294,9 @@ async def test_migration_from_v1_to_v2(
                 },
             ],
             1,
+            id="first_entry_disabled",
         ),
-        (
+        pytest.param(
             [None, ConfigEntryDisabler.USER],
             [None, DeviceEntryDisabler.CONFIG_ENTRY],
             [None, RegistryEntryDisabler.CONFIG_ENTRY],
@@ -204,8 +316,9 @@ async def test_migration_from_v1_to_v2(
                 },
             ],
             0,
+            id="second_entry_disabled",
         ),
-        (
+        pytest.param(
             [ConfigEntryDisabler.USER, ConfigEntryDisabler.USER],
             [DeviceEntryDisabler.CONFIG_ENTRY, DeviceEntryDisabler.CONFIG_ENTRY],
             [RegistryEntryDisabler.CONFIG_ENTRY, RegistryEntryDisabler.CONFIG_ENTRY],
@@ -225,9 +338,11 @@ async def test_migration_from_v1_to_v2(
                 },
             ],
             0,
+            id="both_entries_disabled",
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_migration_from_v1_disabled(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -236,7 +351,7 @@ async def test_migration_from_v1_disabled(
     device_disabled_by: list[DeviceEntryDisabler | None],
     entity_disabled_by: list[RegistryEntryDisabler | None],
     merged_config_entry_disabled_by: ConfigEntryDisabler | None,
-    conversation_subentry_data: list[dict[str, Any]],
+    conversation_subentry_data: list[ConversationSubentryExpectation],
     main_config_entry: int,
 ) -> None:
     """Test migration where the config entries are disabled."""
@@ -245,7 +360,7 @@ async def test_migration_from_v1_disabled(
         "recommended": True,
         "llm_hass_api": ["assist"],
         "prompt": "You are a helpful assistant",
-        "chat_model": "claude-3-haiku-20240307",
+        "chat_model": "claude-haiku-4-5",
     }
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -308,19 +423,19 @@ async def test_migration_from_v1_disabled(
     devices = [device_1, device_2]
 
     # Run migration
-    with patch(
-        "homeassistant.components.anthropic.async_setup_entry",
-        return_value=True,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     entry = entries[0]
     assert entry.disabled_by is merged_config_entry_disabled_by
     assert entry.version == 2
-    assert entry.minor_version == 3
+    assert (
+        entry.minor_version == 3
+        if merged_config_entry_disabled_by is not None
+        else MINOR_VERSION
+    )
     assert not entry.options
     assert entry.title == "Claude conversation"
     assert len(entry.subentries) == 2
@@ -335,10 +450,10 @@ async def test_migration_from_v1_disabled(
         assert subentry.data == options
         assert "Claude" in subentry.title
 
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry_2.entry_id)}
     )
 
@@ -351,21 +466,19 @@ async def test_migration_from_v1_disabled(
         assert entity.disabled_by is subentry_data["entity_disabled_by"]
 
         assert (
-            device := device_registry.async_get_device(
-                identifiers={(DOMAIN, subentry.subentry_id)}
+            device := device_registry.async_get_device_by_identifier(
+                (DOMAIN, subentry.subentry_id),
+                mock_config_entries[main_config_entry].entry_id,
             )
         )
         assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
         assert device.id == devices[subentry_data["device"]].id
-        assert device.config_entries == {
-            mock_config_entries[main_config_entry].entry_id
-        }
-        assert device.config_entries_subentries == {
-            mock_config_entries[main_config_entry].entry_id: {subentry.subentry_id}
-        }
+        assert device.config_entry_id == mock_config_entries[main_config_entry].entry_id
+        assert device.config_subentry_id == subentry.subentry_id
         assert device.disabled_by is subentry_data["device_disabled_by"]
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_migration_from_v1_to_v2_with_multiple_keys(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -377,7 +490,7 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
         "recommended": True,
         "llm_hass_api": ["assist"],
         "prompt": "You are a helpful assistant",
-        "chat_model": "claude-3-haiku-20240307",
+        "chat_model": "claude-haiku-4-5",
     }
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -431,19 +544,15 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
     )
 
     # Run migration
-    with patch(
-        "homeassistant.components.anthropic.async_setup_entry",
-        return_value=True,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 2
 
     for idx, entry in enumerate(entries):
         assert entry.version == 2
-        assert entry.minor_version == 3
+        assert entry.minor_version == MINOR_VERSION
         assert not entry.options
         assert len(entry.subentries) == 1
         subentry = list(entry.subentries.values())[0]
@@ -451,26 +560,30 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
         assert subentry.data == options
         assert subentry.title == f"Claude {idx + 1}"
 
-        dev = device_registry.async_get_device(
-            identifiers={(DOMAIN, list(entry.subentries.values())[0].subentry_id)}
+        dev = device_registry.async_get_device_by_identifier(
+            (DOMAIN, list(entry.subentries.values())[0].subentry_id), entry.entry_id
         )
         assert dev is not None
-        assert dev.config_entries == {entry.entry_id}
-        assert dev.config_entries_subentries == {entry.entry_id: {subentry.subentry_id}}
+        assert dev.config_entry_id == entry.entry_id
+        assert dev.config_subentry_id == subentry.subentry_id
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_migration_from_v1_to_v2_with_same_keys(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test migration from version 1 to version 2 with same API keys consolidates entries."""
+    """Test migration v1 to v2 with same API keys.
+
+    Consolidates entries.
+    """
     # Create two v1 config entries with the same API key
     options = {
         "recommended": True,
         "llm_hass_api": ["assist"],
         "prompt": "You are a helpful assistant",
-        "chat_model": "claude-3-haiku-20240307",
+        "chat_model": "claude-haiku-4-5",
     }
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -524,12 +637,8 @@ async def test_migration_from_v1_to_v2_with_same_keys(
     )
 
     # Run migration
-    with patch(
-        "homeassistant.components.anthropic.async_setup_entry",
-        return_value=True,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Should have only one entry left (consolidated)
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -537,7 +646,7 @@ async def test_migration_from_v1_to_v2_with_same_keys(
 
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 3
+    assert entry.minor_version == MINOR_VERSION
     assert not entry.options
     assert len(entry.subentries) == 2  # Two subentries from the two original entries
 
@@ -552,33 +661,27 @@ async def test_migration_from_v1_to_v2_with_same_keys(
         assert subentry.data == options
 
         # Check devices were migrated correctly
-        dev = device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        dev = device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
         assert dev is not None
-        assert dev.config_entries == {mock_config_entry.entry_id}
-        assert dev.config_entries_subentries == {
-            mock_config_entry.entry_id: {subentry.subentry_id}
-        }
+        assert dev.config_entry_id == mock_config_entry.entry_id
+        assert dev.config_subentry_id == subentry.subentry_id
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_migration_from_v2_1_to_v2_2(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test migration from version 2.1 to version 2.2.
-
-    This tests we clean up the broken migration in Home Assistant Core
-    2025.7.0b0-2025.7.0b1:
-    - Fix device registry (Fixed in Home Assistant Core 2025.7.0b2)
-    """
+    """Test migration from version 2.1 to version 2.2."""
     # Create a v2.1 config entry with 2 subentries, devices and entities
     options = {
         "recommended": True,
         "llm_hass_api": ["assist"],
         "prompt": "You are a helpful assistant",
-        "chat_model": "claude-3-haiku-20240307",
+        "chat_model": "claude-haiku-4-5",
     }
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -615,10 +718,6 @@ async def test_migration_from_v2_1_to_v2_2(
         model="Claude",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
-    device_1 = device_registry.async_update_device(
-        device_1.id, add_config_entry_id="mock_entry_id", add_config_subentry_id=None
-    )
-    assert device_1.config_entries_subentries == {"mock_entry_id": {None, "mock_id_1"}}
     entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,
@@ -649,18 +748,14 @@ async def test_migration_from_v2_1_to_v2_2(
     )
 
     # Run migration
-    with patch(
-        "homeassistant.components.anthropic.async_setup_entry",
-        return_value=True,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 3
+    assert entry.minor_version == MINOR_VERSION
     assert not entry.options
     assert entry.title == "Claude"
     assert len(entry.subentries) == 2
@@ -682,20 +777,18 @@ async def test_migration_from_v2_1_to_v2_2(
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
 
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_1.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
     subentry = conversation_subentries[1]
 
@@ -703,20 +796,18 @@ async def test_migration_from_v2_1_to_v2_2(
     assert entity.unique_id == subentry.subentry_id
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_2.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
 
 @pytest.mark.parametrize(
@@ -732,48 +823,52 @@ async def test_migration_from_v2_1_to_v2_2(
     ),
     [
         # Config entry not disabled, update device and entity disabled by config entry
-        (
+        pytest.param(
             None,
             DeviceEntryDisabler.CONFIG_ENTRY,
             RegistryEntryDisabler.CONFIG_ENTRY,
             True,
-            3,
+            MINOR_VERSION,
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
+            id="enabled_entry_stale_flags",
         ),
-        (
+        pytest.param(
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
             True,
-            3,
+            MINOR_VERSION,
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
+            id="enabled_entry_device_disabled",
         ),
-        (
+        pytest.param(
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.USER,
             True,
-            3,
+            MINOR_VERSION,
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.USER,
+            id="enabled_entry_entity_disabled",
         ),
-        (
+        pytest.param(
             None,
             None,
             None,
             True,
-            3,
+            MINOR_VERSION,
             None,
             None,
             None,
+            id="enabled_entry_no_disabled_flags",
         ),
         # Config entry disabled, migration does not run
-        (
+        pytest.param(
             ConfigEntryDisabler.USER,
             DeviceEntryDisabler.CONFIG_ENTRY,
             RegistryEntryDisabler.CONFIG_ENTRY,
@@ -782,8 +877,9 @@ async def test_migration_from_v2_1_to_v2_2(
             ConfigEntryDisabler.USER,
             DeviceEntryDisabler.CONFIG_ENTRY,
             RegistryEntryDisabler.CONFIG_ENTRY,
+            id="disabled_entry_config_entry_flags",
         ),
-        (
+        pytest.param(
             ConfigEntryDisabler.USER,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
@@ -792,8 +888,9 @@ async def test_migration_from_v2_1_to_v2_2(
             ConfigEntryDisabler.USER,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
+            id="disabled_entry_device_disabled",
         ),
-        (
+        pytest.param(
             ConfigEntryDisabler.USER,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.USER,
@@ -802,8 +899,9 @@ async def test_migration_from_v2_1_to_v2_2(
             ConfigEntryDisabler.USER,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.USER,
+            id="disabled_entry_entity_disabled",
         ),
-        (
+        pytest.param(
             ConfigEntryDisabler.USER,
             None,
             None,
@@ -812,9 +910,11 @@ async def test_migration_from_v2_1_to_v2_2(
             ConfigEntryDisabler.USER,
             None,
             None,
+            id="disabled_entry_no_disabled_flags",
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_migrate_entry_to_v2_3(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -825,7 +925,7 @@ async def test_migrate_entry_to_v2_3(
     setup_result: bool,
     minor_version_after_migration: int,
     config_entry_disabled_by_after_migration: ConfigEntryDisabler | None,
-    device_disabled_by_after_migration: ConfigEntryDisabler | None,
+    device_disabled_by_after_migration: DeviceEntryDisabler | None,
     entity_disabled_by_after_migration: RegistryEntryDisabler | None,
 ) -> None:
     """Test migration to version 2.3."""
@@ -843,7 +943,7 @@ async def test_migrate_entry_to_v2_3(
                     "recommended": True,
                     "llm_hass_api": ["assist"],
                     "prompt": "You are a helpful assistant",
-                    "chat_model": "claude-3-haiku-20240307",
+                    "chat_model": "claude-haiku-4-5",
                 },
                 "subentry_id": conversation_subentry_id,
                 "subentry_type": "conversation",
@@ -857,13 +957,19 @@ async def test_migrate_entry_to_v2_3(
     conversation_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         config_subentry_id=conversation_subentry_id,
-        disabled_by=device_disabled_by,
         identifiers={(DOMAIN, mock_config_entry.entry_id)},
         name=mock_config_entry.title,
         manufacturer="Anthropic",
         model="Claude",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
+    # A stale disabled_by flag can't be set through the registry API, which
+    # validates it against the config entry's disabled state; write it
+    # directly to simulate existing storage.
+    conversation_device = attr.evolve(
+        conversation_device, disabled_by=device_disabled_by
+    )
+    device_registry._devices[conversation_device.id] = conversation_device
     conversation_entity = entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,
@@ -884,13 +990,9 @@ async def test_migrate_entry_to_v2_3(
     assert conversation_entity.disabled_by == entity_disabled_by
 
     # Run setup to trigger migration
-    with patch(
-        "homeassistant.components.anthropic.async_setup_entry",
-        return_value=True,
-    ):
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        assert result is setup_result
-        await hass.async_block_till_done()
+    result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert result is setup_result
+    await hass.async_block_till_done()
 
     # Verify migration completed
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -907,3 +1009,69 @@ async def test_migrate_entry_to_v2_3(
     assert mock_config_entry.disabled_by == config_entry_disabled_by_after_migration
     assert conversation_device.disabled_by == device_disabled_by_after_migration
     assert conversation_entity.disabled_by == entity_disabled_by_after_migration
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_migrate_entry_to_v2_4(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration to version 2.4."""
+    # Create a v2.3 config entry
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "test-api-key"},
+        version=2,
+        minor_version=3,
+        subentries_data=[
+            {
+                "data": {
+                    "recommended": True,
+                    "llm_hass_api": ["assist"],
+                    "prompt": "You are a helpful assistant",
+                    "chat_model": "claude-haiku-4-5",
+                },
+                "subentry_id": "mock_id_1",
+                "subentry_type": "conversation",
+                "title": "Claude haiku default",
+                "unique_id": None,
+            },
+            {
+                "data": {
+                    "recommended": False,
+                    "llm_hass_api": ["assist"],
+                    "prompt": "You are a helpful assistant",
+                    "chat_model": "claude-haiku-4-5",
+                    "temperature": 0.5,
+                },
+                "subentry_id": "mock_id_2",
+                "subentry_type": "conversation",
+                "title": "Claude haiku non-default",
+                "unique_id": None,
+            },
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    # Run migration
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check that minor version was updated
+    assert mock_config_entry.version == 2
+    assert mock_config_entry.minor_version == MINOR_VERSION
+
+    # Verify data was not changed for the first subentry
+    assert mock_config_entry.subentries["mock_id_1"].data == {
+        "recommended": True,
+        "llm_hass_api": ["assist"],
+        "prompt": "You are a helpful assistant",
+        "chat_model": "claude-haiku-4-5",
+    }
+
+    # Verify that temperature was removed from the second subentry
+    assert mock_config_entry.subentries["mock_id_2"].data == {
+        "recommended": False,
+        "llm_hass_api": ["assist"],
+        "prompt": "You are a helpful assistant",
+        "chat_model": "claude-haiku-4-5",
+    }

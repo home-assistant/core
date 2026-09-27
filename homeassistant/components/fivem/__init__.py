@@ -1,7 +1,5 @@
 """The FiveM integration."""
 
-from __future__ import annotations
-
 import logging
 
 from fivem import FiveMServerOfflineError

@@ -1,8 +1,7 @@
 """Support for button entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
+from typing import override
 
 from gardena_bluetooth.const import Reset
 from gardena_bluetooth.parse import CharacteristicBool
@@ -25,12 +24,12 @@ class GardenaBluetoothButtonEntityDescription(ButtonEntityDescription):
     @property
     def context(self) -> set[str]:
         """Context needed for update coordinator."""
-        return {self.char.uuid}
+        return {self.char.unique_id}
 
 
 DESCRIPTIONS = (
     GardenaBluetoothButtonEntityDescription(
-        key=Reset.factory_reset.uuid,
+        key=Reset.factory_reset.unique_id,
         translation_key="factory_reset",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -49,7 +48,7 @@ async def async_setup_entry(
     entities = [
         GardenaBluetoothButton(coordinator, description, description.context)
         for description in DESCRIPTIONS
-        if description.key in coordinator.characteristics
+        if description.char.unique_id in coordinator.characteristics
     ]
     async_add_entities(entities)
 
@@ -59,6 +58,7 @@ class GardenaBluetoothButton(GardenaBluetoothDescriptorEntity, ButtonEntity):
 
     entity_description: GardenaBluetoothButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Trigger button action."""
         await self.coordinator.write(self.entity_description.char, True)

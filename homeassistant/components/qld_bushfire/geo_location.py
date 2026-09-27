@@ -1,17 +1,15 @@
 """Support for Queensland Bushfire Alert Feeds."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from georss_qld_bushfire_alert_client import (
     QldBushfireAlertFeedEntry,
     QldBushfireAlertFeedManager,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.geo_location import (
     PLATFORM_SCHEMA as GEO_LOCATION_PLATFORM_SCHEMA,
@@ -61,11 +59,13 @@ VALID_CATEGORIES = [
 
 PLATFORM_SCHEMA = GEO_LOCATION_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
-        vol.Optional(CONF_CATEGORIES, default=[]): vol.All(
-            cv.ensure_list, [vol.In(VALID_CATEGORIES)]
+        probatio.Optional(CONF_LATITUDE): cv.latitude,
+        probatio.Optional(CONF_LONGITUDE): cv.longitude,
+        probatio.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): probatio.Coerce(
+            float
+        ),
+        probatio.Optional(CONF_CATEGORIES, default=[]): probatio.All(
+            cv.ensure_list, [probatio.In(VALID_CATEGORIES)]
         ),
     }
 )
@@ -176,6 +176,7 @@ class QldBushfireLocationEvent(GeolocationEvent):
         self._remove_signal_delete: Callable[[], None]
         self._remove_signal_update: Callable[[], None]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self._remove_signal_delete = async_dispatcher_connect(
@@ -221,6 +222,7 @@ class QldBushfireLocationEvent(GeolocationEvent):
         self._status = feed_entry.status
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {

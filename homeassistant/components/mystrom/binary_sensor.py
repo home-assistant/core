@@ -1,7 +1,5 @@
 """Support for the myStrom buttons."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
 
@@ -36,7 +34,7 @@ class MyStromView(HomeAssistantView):
 
     def __init__(self, add_entities):
         """Initialize the myStrom URL endpoint."""
-        self.buttons = {}
+        self.buttons: dict[str, MyStromBinarySensor] = {}
         self.add_entities = add_entities
 
     async def get(self, request):
@@ -80,21 +78,10 @@ class MyStromBinarySensor(BinarySensorEntity):
 
     def __init__(self, button_id):
         """Initialize the myStrom Binary sensor."""
-        self._button_id = button_id
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._button_id
-
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        return self._state
+        self._attr_name = button_id
 
     @callback
     def async_on_update(self, value):
         """Receive an update."""
-        self._state = value
+        self._attr_is_on = value
         self.async_write_ha_state()

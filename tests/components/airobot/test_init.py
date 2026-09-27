@@ -26,7 +26,7 @@ async def test_setup_entry_success(
 @pytest.mark.parametrize(
     ("exception", "expected_state"),
     [
-        (AirobotAuthError("Authentication failed"), ConfigEntryState.SETUP_RETRY),
+        (AirobotAuthError("Authentication failed"), ConfigEntryState.SETUP_ERROR),
         (AirobotConnectionError("Connection failed"), ConfigEntryState.SETUP_RETRY),
     ],
 )
@@ -48,6 +48,26 @@ async def test_setup_entry_exceptions(
     assert mock_config_entry.state is expected_state
 
 
+async def test_setup_entry_auth_error_triggers_reauth(
+    hass: HomeAssistant,
+    mock_airobot_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup with auth error triggers reauth flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_airobot_client.get_statuses.side_effect = AirobotAuthError(
+        "Authentication failed"
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_unload_entry(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
@@ -65,12 +85,13 @@ async def test_unload_entry(
 async def test_device_entry(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device registry entry."""
     assert (
-        device_entry := device_registry.async_get_device(
-            identifiers={(DOMAIN, "T01A1B2C3")}
+        device_entry := device_registry.async_get_device_by_identifier(
+            (DOMAIN, "T01A1B2C3"), mock_config_entry.entry_id
         )
     )
     assert device_entry == snapshot

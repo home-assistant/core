@@ -1,7 +1,5 @@
 """Support for the Hive devices and services."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 import logging
@@ -18,7 +16,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
+from .const import DOMAIN, PLATFORMS
 from .entity import HiveEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,24 +44,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool
     except HiveReauthRequired as err:
         raise ConfigEntryAuthFailed from err
 
+    hub_data = devices["parent"][0]
+    connections: set[tuple[str, str]] = set()
+    if mac := hub_data.get("macAddress"):
+        connections.add((dr.CONNECTION_NETWORK_MAC, mac))
+
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, devices["parent"][0]["device_id"])},
-        name=devices["parent"][0]["hiveName"],
-        model=devices["parent"][0]["deviceData"]["model"],
-        sw_version=devices["parent"][0]["deviceData"]["version"],
-        manufacturer=devices["parent"][0]["deviceData"]["manufacturer"],
+        identifiers={(DOMAIN, hub_data["device_id"])},
+        connections=connections,
+        name=hub_data["hiveName"],
+        model=hub_data["deviceData"]["model"],
+        sw_version=hub_data["deviceData"]["version"],
+        manufacturer=hub_data["deviceData"]["manufacturer"],
     )
 
-    await hass.config_entries.async_forward_entry_setups(
-        entry,
-        [
-            ha_type
-            for ha_type, hive_type in PLATFORM_LOOKUP.items()
-            if devices.get(hive_type)
-        ],
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -83,7 +80,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> Non
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: HiveConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: HiveConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
     return True

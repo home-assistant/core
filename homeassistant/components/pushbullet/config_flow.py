@@ -1,11 +1,9 @@
 """Config flow for pushbullet integration."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
+import probatio
 from pushbullet import InvalidKeyError, PushBullet, PushbulletError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_NAME
@@ -13,10 +11,12 @@ from homeassistant.helpers import selector
 
 from .const import DEFAULT_NAME, DOMAIN
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): selector.TextSelector(),
-        vol.Required(CONF_API_KEY): selector.TextSelector(),
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=home-assistant-config-flow-name-field
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): selector.TextSelector(),
+        probatio.Required(CONF_API_KEY): selector.TextSelector(),
     }
 )
 
@@ -24,6 +24,7 @@ CONFIG_SCHEMA = vol.Schema(
 class PushBulletConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for pushbullet integration."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

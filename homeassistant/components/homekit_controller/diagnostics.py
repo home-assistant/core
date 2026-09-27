@@ -1,8 +1,6 @@
 """Diagnostics support for HomeKit Controller."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohomekit.model.characteristics.characteristic_types import CharacteristicsTypes
 
@@ -10,7 +8,7 @@ from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
 
 from .connection import HKDevice
 from .const import KNOWN_DEVICES
@@ -35,9 +33,13 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: ConfigEntry, device: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
+    if TYPE_CHECKING:
+        # homekit_controller does not create child devices
+        assert isinstance(device, DeviceEntry)
+
     return _async_get_diagnostics(hass, entry, device)
 
 
@@ -124,7 +126,11 @@ def _async_get_diagnostics(
 
         devices = data["devices"] = []
         for device_id in connection.devices.values():
-            if not (device := device_registry.async_get(device_id)):
+            if not (
+                device := device_registry.async_get(
+                    device_id, include_child_devices=False
+                )
+            ):
                 continue
             devices.append(_async_get_diagnostics_for_device(hass, device))
 

@@ -1,12 +1,12 @@
 """Ecovacs util functions."""
 
-from __future__ import annotations
-
+from collections.abc import Mapping
 from enum import Enum
 import random
 import string
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
+from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
@@ -20,8 +20,12 @@ if TYPE_CHECKING:
     from .controller import EcovacsController
 
 
-def get_client_device_id(hass: HomeAssistant, self_hosted: bool) -> str:
+def get_client_device_id(
+    hass: HomeAssistant, self_hosted: bool, config: Mapping[str, Any]
+) -> str:
     """Get client device id."""
+    if device_id := config.get(CONF_DEVICE_ID):
+        return cast(str, device_id)
     if self_hosted:
         return f"HA-{slugify(hass.config.location_name)}"
 

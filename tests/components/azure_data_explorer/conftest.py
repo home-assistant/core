@@ -72,7 +72,7 @@ async def _entry(hass: HomeAssistant, filter_schema: dict[str, Any], entry) -> N
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {CONF_FILTER: filter_schema}}
     )
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     # Clear the component_loaded event from the queue.
     async_fire_time_changed(
@@ -87,7 +87,7 @@ async def mock_entry_with_one_event(
     hass: HomeAssistant, entry_managed
 ) -> MockConfigEntry:
     """Use the entry and add a single test event to the queue."""
-    assert entry_managed.state == ConfigEntryState.LOADED
+    assert entry_managed.state is ConfigEntryState.LOADED
     hass.states.async_set("sensor.test", STATE_ON)
     return entry_managed
 

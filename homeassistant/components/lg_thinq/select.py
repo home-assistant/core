@@ -1,8 +1,7 @@
 """Support for select entities."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from thinqconnect import DeviceType
 from thinqconnect.devices.const import Property as ThinQProperty
@@ -135,7 +134,7 @@ DEVICE_TYPE_SELECT_MAP: dict[DeviceType, tuple[SelectEntityDescription, ...]] = 
     ),
     DeviceType.WASHER: (OPERATION_SELECT_DESC[ThinQProperty.WASHER_OPERATION_MODE],),
     DeviceType.WASHTOWER_DRYER: (
-        OPERATION_SELECT_DESC[ThinQProperty.WASHER_OPERATION_MODE],
+        OPERATION_SELECT_DESC[ThinQProperty.DRYER_OPERATION_MODE],
     ),
     DeviceType.WASHTOWER: (
         OPERATION_SELECT_DESC[ThinQProperty.DRYER_OPERATION_MODE],
@@ -190,6 +189,7 @@ class ThinQSelectEntity(ThinQEntity, SelectEntity):
 
         self._attr_options = self.data.options if self.data.options is not None else []
 
+    @override
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
@@ -208,6 +208,7 @@ class ThinQSelectEntity(ThinQEntity, SelectEntity):
             self.options,
         )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         _LOGGER.debug(

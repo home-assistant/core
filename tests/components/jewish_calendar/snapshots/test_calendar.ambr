@@ -1,0 +1,537 @@
+# serializer version: 1
+# name: test_candle_lighting_on_friday[calendar_events0-New York]
+  list([
+    dict({
+      'description': 'Candle lighting time: 16:31',
+      'end': '2024-01-12T21:31:00+00:00',
+      'start': '2024-01-12T21:31:00+00:00',
+      'summary': 'Candle Lighting',
+    }),
+  ])
+# ---
+# name: test_daily_events[Jerusalem]
+  list([
+    dict({
+      'description': "Hebrew date: 5 Sh'vat 5784",
+      'end': '2024-01-16',
+      'start': '2024-01-15',
+      'summary': "5 Sh'vat 5784",
+    }),
+    dict({
+      'description': 'Netz Hachama: 06:40',
+      'end': '2024-01-15T04:40:00+00:00',
+      'start': '2024-01-15T04:40:00+00:00',
+      'summary': 'Netz Hachama',
+    }),
+    dict({
+      'description': 'Shkia: 16:57',
+      'end': '2024-01-15T14:57:00+00:00',
+      'start': '2024-01-15T14:57:00+00:00',
+      'summary': 'Shkia',
+    }),
+    dict({
+      'description': 'Nightfall: 17:26',
+      'end': '2024-01-15T15:26:00+00:00',
+      'start': '2024-01-15T15:26:00+00:00',
+      'summary': 'End of fast',
+    }),
+  ])
+# ---
+# name: test_daily_events[New York]
+  list([
+    dict({
+      'description': "Hebrew date: 5 Sh'vat 5784",
+      'end': '2024-01-16',
+      'start': '2024-01-15',
+      'summary': "5 Sh'vat 5784",
+    }),
+    dict({
+      'description': 'Netz Hachama: 07:18',
+      'end': '2024-01-15T12:18:00+00:00',
+      'start': '2024-01-15T12:18:00+00:00',
+      'summary': 'Netz Hachama',
+    }),
+    dict({
+      'description': 'Shkia: 16:53',
+      'end': '2024-01-15T21:53:00+00:00',
+      'start': '2024-01-15T21:53:00+00:00',
+      'summary': 'Shkia',
+    }),
+    dict({
+      'description': 'Nightfall: 17:26',
+      'end': '2024-01-15T22:26:00+00:00',
+      'start': '2024-01-15T22:26:00+00:00',
+      'summary': 'End of fast',
+    }),
+  ])
+# ---
+# name: test_entities[Jerusalem][calendar.jewish_calendar_daily_events-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.jewish_calendar_daily_events',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Daily events',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Daily events',
+    'platform': 'jewish_calendar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'daily_events',
+    'unique_id': '01JJJJJJJJJJJJJJJJJJJJJJJJ-daily_events',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[Jerusalem][calendar.jewish_calendar_daily_events-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: True,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: "Hebrew date: 5 Sh'vat 5784",
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-16 00:00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jewish Calendar Daily events',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: "5 Sh'vat 5784",
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-15 00:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.jewish_calendar_daily_events',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[Jerusalem][calendar.jewish_calendar_learning_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.jewish_calendar_learning_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Learning schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Learning schedule',
+    'platform': 'jewish_calendar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'learning_schedule',
+    'unique_id': '01JJJJJJJJJJJJJJJJJJJJJJJJ-learning_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[Jerusalem][calendar.jewish_calendar_learning_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: True,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: 'Daf Yomi: Bava Kamma 74',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-16 00:00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jewish Calendar Learning schedule',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Bava Kamma 74',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-15 00:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.jewish_calendar_learning_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[Jerusalem][calendar.jewish_calendar_yearly_events-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.jewish_calendar_yearly_events',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Yearly events',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Yearly events',
+    'platform': 'jewish_calendar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'yearly_events',
+    'unique_id': '01JJJJJJJJJJJJJJJJJJJJJJJJ-yearly_events',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[Jerusalem][calendar.jewish_calendar_yearly_events-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: False,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: 'Candle lighting time: 16:21',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-19 16:21:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jewish Calendar Yearly events',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Candle Lighting',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-19 16:21:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.jewish_calendar_yearly_events',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[New York][calendar.jewish_calendar_daily_events-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.jewish_calendar_daily_events',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Daily events',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Daily events',
+    'platform': 'jewish_calendar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'daily_events',
+    'unique_id': '01JJJJJJJJJJJJJJJJJJJJJJJJ-daily_events',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[New York][calendar.jewish_calendar_daily_events-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: True,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: "Hebrew date: 5 Sh'vat 5784",
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-16 00:00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jewish Calendar Daily events',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: "5 Sh'vat 5784",
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-15 00:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.jewish_calendar_daily_events',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[New York][calendar.jewish_calendar_learning_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.jewish_calendar_learning_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Learning schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Learning schedule',
+    'platform': 'jewish_calendar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'learning_schedule',
+    'unique_id': '01JJJJJJJJJJJJJJJJJJJJJJJJ-learning_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[New York][calendar.jewish_calendar_learning_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: True,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: 'Daf Yomi: Bava Kamma 74',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-16 00:00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jewish Calendar Learning schedule',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Bava Kamma 74',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-15 00:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.jewish_calendar_learning_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[New York][calendar.jewish_calendar_yearly_events-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.jewish_calendar_yearly_events',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Yearly events',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Yearly events',
+    'platform': 'jewish_calendar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'yearly_events',
+    'unique_id': '01JJJJJJJJJJJJJJJJJJJJJJJJ-yearly_events',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[New York][calendar.jewish_calendar_yearly_events-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: False,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: 'Candle lighting time: 16:39',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-19 16:39:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jewish Calendar Yearly events',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Candle Lighting',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-19 16:39:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.jewish_calendar_yearly_events',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_havdalah_on_saturday[calendar_events0-New York]
+  list([
+    dict({
+      'description': 'Havdalah time: 17:35',
+      'end': '2024-01-13T22:35:00+00:00',
+      'start': '2024-01-13T22:35:00+00:00',
+      'summary': 'Havdalah',
+    }),
+  ])
+# ---
+# name: test_holiday[Jerusalem]
+  list([
+    dict({
+      'description': '''
+        Jewish Holiday: Shushan Purim
+        Holiday type: Work-permitted holiday
+      ''',
+      'end': '2024-03-26',
+      'start': '2024-03-25',
+      'summary': 'Shushan Purim',
+    }),
+  ])
+# ---
+# name: test_learning_schedule_events[Jerusalem]
+  list([
+    dict({
+      'description': 'Daf Yomi: Bava Basra 20',
+      'end': '2024-07-16',
+      'start': '2024-07-15',
+      'summary': 'Bava Basra 20',
+    }),
+  ])
+# ---
+# name: test_omer_count[calendar_events0-New York]
+  list([
+    dict({
+      'description': 'Sefirat HaOmer: Today is the first day of the Omer',
+      'end': '2024-04-25',
+      'start': '2024-04-24',
+      'summary': '1 of the Omer',
+    }),
+  ])
+# ---
+# name: test_weekly_portion_on_shabbat[Jerusalem]
+  list([
+    dict({
+      'description': 'Parshat Hashavua: Vaera',
+      'end': '2024-01-14',
+      'start': '2024-01-13',
+      'summary': 'Vaera',
+    }),
+    dict({
+      'description': 'Havdalah time: 17:35',
+      'end': '2024-01-13T15:35:00+00:00',
+      'start': '2024-01-13T15:35:00+00:00',
+      'summary': 'Havdalah',
+    }),
+  ])
+# ---
+# name: test_weekly_portion_on_shabbat[New York]
+  list([
+    dict({
+      'description': 'Parshat Hashavua: Vaera',
+      'end': '2024-01-14',
+      'start': '2024-01-13',
+      'summary': 'Vaera',
+    }),
+    dict({
+      'description': 'Havdalah time: 17:35',
+      'end': '2024-01-13T22:35:00+00:00',
+      'start': '2024-01-13T22:35:00+00:00',
+      'summary': 'Havdalah',
+    }),
+  ])
+# ---
+# name: test_weekly_portion_on_simchat_torah_diaspora[New York]
+  list([
+    dict({
+      'description': '''
+        Jewish Holiday: Simchat Torah
+        Holiday type: Yom Tov
+      ''',
+      'end': '2024-10-26',
+      'start': '2024-10-25',
+      'summary': 'Simchat Torah',
+    }),
+    dict({
+      'description': 'Parshat Hashavua: Vezot Habracha',
+      'end': '2024-10-26',
+      'start': '2024-10-25',
+      'summary': 'Vezot Habracha',
+    }),
+    dict({
+      'description': 'Candle lighting time: 17:42',
+      'end': '2024-10-25T21:42:00+00:00',
+      'start': '2024-10-25T21:42:00+00:00',
+      'summary': 'Candle Lighting',
+    }),
+  ])
+# ---
+# name: test_weekly_portion_on_simchat_torah_israel[Jerusalem]
+  list([
+    dict({
+      'description': '''
+        Jewish Holiday: Shmini Atzeret
+        Holiday type: Yom Tov
+      ''',
+      'end': '2024-10-25',
+      'start': '2024-10-24',
+      'summary': 'Shmini Atzeret',
+    }),
+    dict({
+      'description': '''
+        Jewish Holiday: Simchat Torah
+        Holiday type: Yom Tov
+      ''',
+      'end': '2024-10-25',
+      'start': '2024-10-24',
+      'summary': 'Simchat Torah',
+    }),
+    dict({
+      'description': 'Parshat Hashavua: Vezot Habracha',
+      'end': '2024-10-25',
+      'start': '2024-10-24',
+      'summary': 'Vezot Habracha',
+    }),
+    dict({
+      'description': 'Havdalah time: 18:34',
+      'end': '2024-10-24T15:34:00+00:00',
+      'start': '2024-10-24T15:34:00+00:00',
+      'summary': 'Havdalah',
+    }),
+  ])
+# ---

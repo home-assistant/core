@@ -1,7 +1,5 @@
 """The Elexa Guardian integration."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 
@@ -117,6 +115,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: GuardianConfigEntry) -> 
         paired_sensor_manager=paired_sensor_manager,
     )
 
+    # Register the valve controller device up front so paired sensors can resolve
+    # it as their via device when they are added:
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.data[CONF_UID])},
+        manufacturer="Elexa",
+        name=f"Guardian valve controller {entry.data[CONF_UID]}",
+        sw_version=valve_controller_coordinators[API_SYSTEM_DIAGNOSTICS].data[
+            "firmware"
+        ],
+    )
+
     # Set up all of the Guardian entity platforms:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -190,7 +201,8 @@ class PairedSensorManager:
         try:
             uids = set(self._sensor_pair_dump_coordinator.data["paired_uids"])
         except KeyError:
-            # Sometimes the paired_uids key can fail to exist; the user can't do anything
+            # Sometimes the paired_uids key can fail to exist;
+            # the user can't do anything
             # about it, so in this case, we quietly abort and return:
             return
 

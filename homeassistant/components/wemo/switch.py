@@ -1,9 +1,7 @@
 """Support for WeMo switches."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, override
 
 from pywemo import CoffeeMaker, Insight, Maker, StandbyState, Switch
 
@@ -54,6 +52,7 @@ class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
     wemo: Switch
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
         attr: dict[str, Any] = {}
@@ -113,18 +112,19 @@ class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
         raise RuntimeError
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return the icon of device based on its type."""
         if isinstance(self.wemo, CoffeeMaker):
             return "mdi:coffee"
         return None
 
-    def turn_on(self, **kwargs: Any) -> None:
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        with self._wemo_call_wrapper("turn on"):
-            self.wemo.on()
+        await self._async_wemo_call("turn on", self.wemo.on)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        with self._wemo_call_wrapper("turn off"):
-            self.wemo.off()
+        await self._async_wemo_call("turn off", self.wemo.off)

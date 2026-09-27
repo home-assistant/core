@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[sensor.baumarkt_discount_only-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Discount only',
     'options': dict({
     }),
     'original_device_class': None,
@@ -37,8 +39,8 @@
 # name: test_setup[sensor.baumarkt_discount_only-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Baumarkt Discount only',
-      'unit_of_measurement': 'items',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Baumarkt Discount only',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'items',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.baumarkt_discount_only',
@@ -50,11 +52,12 @@
 # ---
 # name: test_setup[sensor.baumarkt_list_access-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'registered',
         'shared',
         'invitation',
@@ -75,6 +78,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'List access',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -92,9 +96,9 @@
 # name: test_setup[sensor.baumarkt_list_access-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Baumarkt List access',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Baumarkt List access',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'registered',
         'shared',
         'invitation',
@@ -110,8 +114,9 @@
 # ---
 # name: test_setup[sensor.baumarkt_on_occasion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -129,6 +134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On occasion',
     'options': dict({
     }),
     'original_device_class': None,
@@ -146,8 +152,8 @@
 # name: test_setup[sensor.baumarkt_on_occasion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Baumarkt On occasion',
-      'unit_of_measurement': 'items',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Baumarkt On occasion',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'items',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.baumarkt_on_occasion',
@@ -159,11 +165,12 @@
 # ---
 # name: test_setup[sensor.baumarkt_region_language-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'de-at',
         'de-ch',
         'de-de',
@@ -201,6 +208,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Region & language',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -218,9 +226,9 @@
 # name: test_setup[sensor.baumarkt_region_language-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Baumarkt Region & language',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Baumarkt Region & language',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'de-at',
         'de-ch',
         'de-de',
@@ -253,8 +261,9 @@
 # ---
 # name: test_setup[sensor.baumarkt_urgent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -272,6 +281,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Urgent',
     'options': dict({
     }),
     'original_device_class': None,
@@ -289,8 +299,8 @@
 # name: test_setup[sensor.baumarkt_urgent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Baumarkt Urgent',
-      'unit_of_measurement': 'items',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Baumarkt Urgent',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'items',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.baumarkt_urgent',
@@ -302,8 +312,9 @@
 # ---
 # name: test_setup[sensor.einkauf_discount_only-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -321,6 +332,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Discount only',
     'options': dict({
     }),
     'original_device_class': None,
@@ -338,8 +350,8 @@
 # name: test_setup[sensor.einkauf_discount_only-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Einkauf Discount only',
-      'unit_of_measurement': 'items',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Einkauf Discount only',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'items',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.einkauf_discount_only',
@@ -351,11 +363,12 @@
 # ---
 # name: test_setup[sensor.einkauf_list_access-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'registered',
         'shared',
         'invitation',
@@ -376,6 +389,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'List access',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -393,9 +407,9 @@
 # name: test_setup[sensor.einkauf_list_access-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Einkauf List access',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Einkauf List access',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'registered',
         'shared',
         'invitation',
@@ -411,8 +425,9 @@
 # ---
 # name: test_setup[sensor.einkauf_on_occasion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -430,6 +445,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On occasion',
     'options': dict({
     }),
     'original_device_class': None,
@@ -447,8 +463,8 @@
 # name: test_setup[sensor.einkauf_on_occasion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Einkauf On occasion',
-      'unit_of_measurement': 'items',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Einkauf On occasion',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'items',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.einkauf_on_occasion',
@@ -460,11 +476,12 @@
 # ---
 # name: test_setup[sensor.einkauf_region_language-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'de-at',
         'de-ch',
         'de-de',
@@ -502,6 +519,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Region & language',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -519,9 +537,9 @@
 # name: test_setup[sensor.einkauf_region_language-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Einkauf Region & language',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Einkauf Region & language',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'de-at',
         'de-ch',
         'de-de',
@@ -554,8 +572,9 @@
 # ---
 # name: test_setup[sensor.einkauf_urgent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -573,6 +592,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Urgent',
     'options': dict({
     }),
     'original_device_class': None,
@@ -590,8 +610,8 @@
 # name: test_setup[sensor.einkauf_urgent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Einkauf Urgent',
-      'unit_of_measurement': 'items',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Einkauf Urgent',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'items',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.einkauf_urgent',

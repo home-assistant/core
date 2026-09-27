@@ -1,13 +1,11 @@
 """Support for ANEL PwrCtrl switches."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from anel_pwrctrl import Device, DeviceMaster, Switch
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -29,11 +27,11 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_PORT_RECV): cv.port,
-        vol.Required(CONF_PORT_SEND): cv.port,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_HOST): cv.string,
+        probatio.Required(CONF_PORT_RECV): cv.port,
+        probatio.Required(CONF_PORT_SEND): cv.port,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_HOST): cv.string,
     }
 )
 
@@ -88,10 +86,12 @@ class PwrCtrlSwitch(SwitchEntity):
         self._parent_device.update()
         self._attr_is_on = self._port.get_state()
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._port.on()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._port.off()

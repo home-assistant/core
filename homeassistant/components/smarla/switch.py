@@ -1,16 +1,22 @@
 """Support for the Swing2Sleep Smarla switch entities."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
-from pysmarlaapi.federwiege.classes import Property
+from pysmarlaapi.federwiege.services.classes import Property
 
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FederwiegeConfigEntry
 from .entity import SmarlaBaseEntity, SmarlaEntityDescription
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -24,12 +30,14 @@ SWITCHES: list[SmarlaSwitchEntityDescription] = [
         name=None,
         service="babywiege",
         property="swing_active",
+        device_class=SwitchDeviceClass.SWITCH,
     ),
     SmarlaSwitchEntityDescription(
         key="smart_mode",
         translation_key="smart_mode",
         service="babywiege",
         property="smart_mode",
+        device_class=SwitchDeviceClass.SWITCH,
     ),
 ]
 
@@ -52,14 +60,17 @@ class SmarlaSwitch(SmarlaBaseEntity, SwitchEntity):
     _property: Property[bool]
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the entity value to represent the entity state."""
         return self._property.get()
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._property.set(True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._property.set(False)

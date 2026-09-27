@@ -1,19 +1,16 @@
 """Support for the Hive switches."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from apyhiveapi import Hive
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import EntityCategory
+from homeassistant.const import ATTR_MODE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HiveConfigEntry, refresh_system
-from .const import ATTR_MODE
 from .entity import HiveEntity
 
 PARALLEL_UPDATES = 0
@@ -44,7 +41,7 @@ async def async_setup_entry(
         return
     async_add_entities(
         (
-            HiveSwitch(hive, dev, description)
+            HiveSwitch(hass, entry, hive, dev, description)
             for dev in devices
             for description in SWITCH_TYPES
             if dev["hiveType"] == description.key
@@ -58,20 +55,24 @@ class HiveSwitch(HiveEntity, SwitchEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
+        entry: HiveConfigEntry,
         hive: Hive,
         hive_device: dict[str, Any],
         entity_description: SwitchEntityDescription,
     ) -> None:
         """Initialise hive switch."""
-        super().__init__(hive, hive_device)
+        super().__init__(hass, entry, hive, hive_device)
         self.entity_description = entity_description
 
     @refresh_system
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.hive.switch.turnOn(self.device)
 
     @refresh_system
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.hive.switch.turnOff(self.device)
