@@ -184,6 +184,14 @@ class Light(HomeAccessory):
         if self.adaptive_lighting:
             self.adaptive_lighting.schedule_restore()
 
+    @override
+    @callback
+    def async_stop(self) -> None:
+        """Cancel subscriptions and the adaptive lighting timers."""
+        super().async_stop()
+        if self.adaptive_lighting:
+            self.adaptive_lighting.stop()
+
     @callback
     def async_set_adaptive_color_temperature(self, mireds: int) -> None:
         """Apply a colour temperature computed from the transition curve."""
