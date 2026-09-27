@@ -143,7 +143,10 @@ rules:
     comment: |
       Integration does not create entities.
   reconfiguration-flow: done
-  repair-issues: done
+  repair-issues:
+    status: exempt
+    comment: |
+      Integration does not raise repair issues.
   stale-devices:
     status: exempt
     comment: |
