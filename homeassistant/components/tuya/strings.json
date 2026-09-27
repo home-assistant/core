@@ -29,6 +29,11 @@
       }
     }
   },
+  "device": {
+    "channel": {
+      "name": "Channel {index}"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "bag_full": {
@@ -223,9 +228,6 @@
       },
       "indexed_cook_temperature": {
         "name": "Cooking temperature {index}"
-      },
-      "indexed_irrigation_duration": {
-        "name": "Irrigation duration {index}"
       },
       "indexed_maximum_brightness": {
         "name": "Maximum brightness {index}"
@@ -1277,9 +1279,6 @@
       }
     },
     "valve": {
-      "indexed_valve": {
-        "name": "Valve {index}"
-      },
       "valve": {
         "name": "Valve"
       }
