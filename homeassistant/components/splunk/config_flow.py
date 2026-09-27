@@ -64,27 +64,6 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle import from YAML configuration."""
-        # Single instance integration - manifest prevents duplicates
-        # Validate the imported configuration
-        errors = await self._async_validate_input(import_config)
-
-        if errors:
-            # Map error keys to abort reasons for issue creation
-            error_key = errors.get("base", "unknown")
-            _LOGGER.error("Failed to import Splunk configuration from YAML: %s", errors)
-            return self.async_abort(reason=error_key)
-
-        host = import_config.get(CONF_HOST, DEFAULT_HOST)
-        port = import_config.get(CONF_PORT, DEFAULT_PORT)
-        return self.async_create_entry(
-            title=f"{host}:{port}",
-            data=import_config,
-        )
-
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
