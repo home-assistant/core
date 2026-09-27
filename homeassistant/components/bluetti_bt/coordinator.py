@@ -1,8 +1,9 @@
 """Coordinator for Bluetti BT integration."""
 
 from datetime import timedelta
+from enum import Enum
 import logging
-from typing import Any, override
+from typing import override
 
 from bluetti_bt_lib import DeviceReader, DeviceReaderConfig
 from bluetti_bt_lib.base_devices import BaseDeviceV1, BaseDeviceV2
@@ -63,7 +64,9 @@ class PollingCoordinator(DataUpdateCoordinator):
         )
 
     @override
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(
+        self,
+    ) -> dict[str, bool | int | float | Enum | str | bytes]:
         """Fetch data from bluetooth device."""
 
         if (
@@ -73,4 +76,11 @@ class PollingCoordinator(DataUpdateCoordinator):
             self.last_update_success = False
             raise UpdateFailed("Device not connected")
 
-        return await self.reader.read()
+        data: (
+            dict[str, bool | int | float | Enum | str | bytes] | None
+        ) = await self.reader.read()
+
+        if data is None:
+            return {}
+
+        return data
