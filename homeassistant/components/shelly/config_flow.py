@@ -69,6 +69,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.util.network import is_ip_address
 
 from .ble_provisioning import (
     ProvisioningState,
@@ -718,12 +719,16 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_discovered_mac(self, mac: str, host: str) -> None:
         """Abort and reconnect soon if the device with the mac is already configured."""
-        if (
-            current_entry := await self.async_set_unique_id(mac)
-        ) and current_entry.data.get(CONF_HOST) == host:
+        current_entry = await self.async_set_unique_id(mac)
+        current_host = current_entry.data.get(CONF_HOST) if current_entry else None
+        # A user-configured hostname must not be replaced by the resolved IP
+        keep_hostname = current_host is not None and not is_ip_address(current_host)
+        if current_entry and (current_host == host or keep_hostname):
             LOGGER.debug("async_reconnect_soon: host: %s, mac: %s", host, mac)
             await async_reconnect_soon(self.hass, current_entry)
-        if host == INTERNAL_WIFI_AP_IP:
+        if keep_hostname:
+            self._abort_if_unique_id_configured()
+        elif host == INTERNAL_WIFI_AP_IP:
             # If the device is broadcasting the internal wifi ap ip
             # we can't connect to it, so we should not update the
             # entry with the new host as it will be unreachable

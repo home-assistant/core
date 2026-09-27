@@ -7,6 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/sofar",
   "integration_type": "device",
   "iot_class": "local_polling",
+  "loggers": ["modbus_connection", "sofar_modbus", "tmodbus"],
   "quality_scale": "platinum",
-  "requirements": ["sofar-modbus==0.15.0"]
+  "requirements": ["sofar-modbus==0.15.1"]
 }
