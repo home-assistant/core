@@ -1202,7 +1202,24 @@ async def test_blu_trv_update_check_errors(
     """Test BLU TRV update entity when checking for updates fails."""
     entity_id = "update.trv_name_firmware"
 
+    mock_blu_trv.blu_trv_check_for_updates.side_effect = exc
+
     await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    # No firmware check has succeeded yet, so the installed version is reported
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_LATEST_VERSION] == "v1.2.10"
+
+    mock_blu_trv.blu_trv_check_for_updates.side_effect = None
+
+    freezer.tick(timedelta(seconds=BLU_TRV_UPDATE_CHECK_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_LATEST_VERSION] == "v1.3.0"
 
     mock_blu_trv.blu_trv_check_for_updates.side_effect = exc
 
