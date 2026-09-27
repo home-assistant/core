@@ -4,7 +4,6 @@ from typing import override
 from unittest.mock import AsyncMock, MagicMock
 
 from google.genai import interactions
-from google.genai.types import HarmCategory
 import probatio
 import pytest
 
@@ -119,11 +118,11 @@ def test_create_safety_settings() -> None:
     }
     settings = create_safety_settings(options)
     assert len(settings) == 4
-    categories = {s.category: s.threshold for s in settings}
-    assert categories[HarmCategory.HARM_CATEGORY_HATE_SPEECH] == "BLOCK_LOW_AND_ABOVE"
-    assert categories[HarmCategory.HARM_CATEGORY_HARASSMENT] == "BLOCK_MEDIUM_AND_ABOVE"
-    assert categories[HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT] == "BLOCK_ONLY_HIGH"
-    assert categories[HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT] == "BLOCK_NONE"
+    types = {s.type: s.threshold for s in settings}
+    assert types["hate_speech"] == "block_low_and_above"
+    assert types["harassment"] == "block_medium_and_above"
+    assert types["dangerous_content"] == "block_only_high"
+    assert types["sexually_explicit"] == "block_none"
 
 
 def test_build_interaction_request_store_false_enforced() -> None:
