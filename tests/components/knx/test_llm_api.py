@@ -146,6 +146,7 @@ async def test_tools_declare_their_safety_hints(
 
     tool = _tool(instance.tools, tool_name)
     assert tool.integration == "knx"
+    assert tool.title  # forwarded by the MCP server as the display name
     assert tool.annotations == llm.ToolAnnotations(
         read_only=read_only,
         destructive=destructive,
