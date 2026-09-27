@@ -106,6 +106,35 @@ async def test_form_exceptions(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_device_info_error_closes_session(
+    hass: HomeAssistant, mock_sma_client: MagicMock
+) -> None:
+    """Test the session is closed when reading the device info fails."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    mock_sma_client.device_info.side_effect = SmaReadException
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_retrieve_device_info"}
+    mock_sma_client.close_session.assert_called_once()
+
+    mock_sma_client.device_info.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_sma_client.close_session.call_count == 2
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_already_configured(
     hass: HomeAssistant, mock_sma_client: AsyncMock
 ) -> None:
