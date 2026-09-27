@@ -844,6 +844,7 @@
         'away',
         'home_boost',
         'kitchen_boost',
+        'bypass_boost',
       ]),
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -852,6 +853,7 @@
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
+        'prog',
         'manual',
       ]),
     }),
@@ -895,6 +897,7 @@
         'away',
         'home_boost',
         'kitchen_boost',
+        'bypass_boost',
       ]),
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ventilation',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
@@ -905,6 +908,7 @@
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'auto',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
+        'prog',
         'manual',
       ]),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 408>,
