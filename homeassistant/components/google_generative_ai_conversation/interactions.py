@@ -134,6 +134,36 @@ def format_image_content(
     )
 
 
+def format_audio_content(
+    *,
+    data: bytes | str | None = None,
+    uri: str | None = None,
+    mime_type: interactions.AudioContentMimeType | str | None = None,
+    channels: int | None = None,
+    sample_rate: int | None = None,
+) -> interactions.AudioContent:
+    """Format audio content for the Gemini Interactions API."""
+    if uri is None and data is None:
+        raise ValueError("Either uri or data must be provided")
+
+    b64_data: str | None = None
+    if data is not None:
+        b64_data = (
+            base64.b64encode(data).decode("ascii") if isinstance(data, bytes) else data
+        )
+
+    return interactions.AudioContent(
+        type="audio",
+        uri=uri,
+        data=b64_data,
+        mime_type=cast(interactions.AudioContentMimeType, mime_type)
+        if mime_type is not None
+        else None,
+        channels=channels,
+        sample_rate=sample_rate,
+    )
+
+
 def format_image_response_format(
     *,
     mime_type: Literal["image/jpeg"] | None = None,

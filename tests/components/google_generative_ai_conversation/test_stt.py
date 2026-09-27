@@ -1,14 +1,16 @@
 """Tests for the Google Generative AI Conversation STT entity."""
 
+import base64
 from collections.abc import AsyncIterable, Generator
 from unittest.mock import AsyncMock, Mock, patch
 
-from google.genai import types
+from google.genai import interactions, types
 import pytest
 
 from homeassistant.components import stt
 from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_CHAT_MODEL,
+    CONF_USE_INTERACTIONS_API,
     DEFAULT_STT_PROMPT,
     DOMAIN,
     RECOMMENDED_STT_MODEL,
@@ -35,6 +37,14 @@ def mock_genai_client() -> Generator[AsyncMock]:
     """Mock genai.Client."""
     client = Mock()
     client.aio.models.get = AsyncMock()
+    client.aio.interactions.create = AsyncMock(
+        return_value=Mock(
+            id="interaction_123",
+            status="completed",
+            output_text="This is a test transcription.",
+            steps=[],
+        )
+    )
     client.aio.models.generate_content = AsyncMock(
         return_value=types.GenerateContentResponse(
             candidates=[
@@ -326,3 +336,219 @@ async def test_stt_uses_default_model(
 
     call_args = mock_genai_client.aio.models.generate_content.call_args
     assert call_args.kwargs["model"] == RECOMMENDED_STT_MODEL
+
+
+@pytest.mark.parametrize(
+    ("audio_format", "call_convert_to_wav"),
+    [
+        (stt.AudioFormats.WAV, True),
+        (stt.AudioFormats.OGG, False),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_stt_process_audio_stream_interactions_success(
+    hass: HomeAssistant,
+    mock_genai_client: AsyncMock,
+    audio_format: stt.AudioFormats,
+    call_convert_to_wav: bool,
+) -> None:
+    """Test STT processing audio stream successfully with Interactions API."""
+    entity = hass.data[stt.DOMAIN].get_entity("stt.google_ai_stt")
+    hass.config_entries.async_update_entry(
+        entity.entry, options={CONF_USE_INTERACTIONS_API: True}
+    )
+
+    metadata = stt.SpeechMetadata(
+        language="en-US",
+        format=audio_format,
+        codec=stt.AudioCodecs.PCM,
+        bit_rate=stt.AudioBitRates.BITRATE_16,
+        sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+        channel=stt.AudioChannels.CHANNEL_MONO,
+    )
+    audio_stream = _async_get_audio_stream(b"test_audio_bytes")
+
+    with patch(
+        "homeassistant.components.google_generative_ai_conversation.stt.convert_to_wav",
+        return_value=b"converted_wav_bytes",
+    ) as mock_convert_to_wav:
+        result = await entity.async_process_audio_stream(metadata, audio_stream)
+
+    assert result.result == stt.SpeechResultState.SUCCESS
+    assert result.text == "This is a test transcription."
+
+    if call_convert_to_wav:
+        mock_convert_to_wav.assert_called_once_with(
+            b"test_audio_bytes", "audio/L16;rate=16000"
+        )
+    else:
+        mock_convert_to_wav.assert_not_called()
+
+    mock_genai_client.aio.interactions.create.assert_called_once()
+    call_args = mock_genai_client.aio.interactions.create.call_args
+    assert call_args.kwargs["model"] == TEST_CHAT_MODEL
+    assert call_args.kwargs["stream"] is False
+    assert call_args.kwargs["store"] is False
+
+    input_step = call_args.kwargs["input"][0]
+    assert isinstance(input_step, interactions.UserInputStep)
+    assert len(input_step.content) == 2
+    assert isinstance(input_step.content[0], interactions.TextContent)
+    assert TEST_PROMPT in input_step.content[0].text
+    assert "en-US" in input_step.content[0].text
+    assert isinstance(input_step.content[1], interactions.AudioContent)
+    assert input_step.content[1].type == "audio"
+    assert input_step.content[1].mime_type == f"audio/{audio_format.value}"
+    expected_bytes = (
+        b"converted_wav_bytes" if call_convert_to_wav else b"test_audio_bytes"
+    )
+    assert input_step.content[1].data == base64.b64encode(expected_bytes).decode(
+        "ascii"
+    )
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_stt_process_audio_stream_interactions_fallback_steps(
+    hass: HomeAssistant,
+    mock_genai_client: AsyncMock,
+) -> None:
+    """Test STT processing extracts text from ModelOutputStep if output_text is None."""
+    entity = hass.data[stt.DOMAIN].get_entity("stt.google_ai_stt")
+    hass.config_entries.async_update_entry(
+        entity.entry, options={CONF_USE_INTERACTIONS_API: True}
+    )
+    mock_genai_client.aio.interactions.create.return_value = Mock(
+        id="interaction_123",
+        status="completed",
+        output_text=None,
+        steps=[
+            interactions.ModelOutputStep(
+                type="model_output",
+                content=[
+                    interactions.TextContent(
+                        type="text", text="Fallback step transcription."
+                    )
+                ],
+            )
+        ],
+    )
+
+    metadata = stt.SpeechMetadata(
+        language="en-US",
+        format=stt.AudioFormats.OGG,
+        codec=stt.AudioCodecs.OPUS,
+        bit_rate=stt.AudioBitRates.BITRATE_16,
+        sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+        channel=stt.AudioChannels.CHANNEL_MONO,
+    )
+    audio_stream = _async_get_audio_stream(b"test_audio_bytes")
+
+    result = await entity.async_process_audio_stream(metadata, audio_stream)
+
+    assert result.result == stt.SpeechResultState.SUCCESS
+    assert result.text == "Fallback step transcription."
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        API_ERROR_500,
+        CLIENT_ERROR_BAD_REQUEST,
+        ValueError("Test value error"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_stt_process_audio_stream_interactions_api_error(
+    hass: HomeAssistant,
+    mock_genai_client: AsyncMock,
+    side_effect: Exception,
+) -> None:
+    """Test STT processing audio stream with API errors using Interactions API."""
+    entity = hass.data[stt.DOMAIN].get_entity("stt.google_ai_stt")
+    hass.config_entries.async_update_entry(
+        entity.entry, options={CONF_USE_INTERACTIONS_API: True}
+    )
+    mock_genai_client.aio.interactions.create.side_effect = side_effect
+
+    metadata = stt.SpeechMetadata(
+        language="en-US",
+        format=stt.AudioFormats.OGG,
+        codec=stt.AudioCodecs.OPUS,
+        bit_rate=stt.AudioBitRates.BITRATE_16,
+        sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+        channel=stt.AudioChannels.CHANNEL_MONO,
+    )
+    audio_stream = _async_get_audio_stream(b"test_audio_bytes")
+
+    result = await entity.async_process_audio_stream(metadata, audio_stream)
+
+    assert result.result == stt.SpeechResultState.ERROR
+    assert result.text is None
+
+
+@pytest.mark.parametrize("status", ["failed", "cancelled"])
+@pytest.mark.usefixtures("setup_integration")
+async def test_stt_process_audio_stream_interactions_failed_status(
+    hass: HomeAssistant,
+    mock_genai_client: AsyncMock,
+    status: str,
+) -> None:
+    """Test STT processing with failed or cancelled interaction status."""
+    entity = hass.data[stt.DOMAIN].get_entity("stt.google_ai_stt")
+    hass.config_entries.async_update_entry(
+        entity.entry, options={CONF_USE_INTERACTIONS_API: True}
+    )
+    mock_genai_client.aio.interactions.create.return_value = Mock(
+        id="interaction_failed",
+        status=status,
+        output_text="Ignored text",
+        steps=[],
+    )
+
+    metadata = stt.SpeechMetadata(
+        language="en-US",
+        format=stt.AudioFormats.OGG,
+        codec=stt.AudioCodecs.OPUS,
+        bit_rate=stt.AudioBitRates.BITRATE_16,
+        sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+        channel=stt.AudioChannels.CHANNEL_MONO,
+    )
+    audio_stream = _async_get_audio_stream(b"test_audio_bytes")
+
+    result = await entity.async_process_audio_stream(metadata, audio_stream)
+
+    assert result.result == stt.SpeechResultState.ERROR
+    assert result.text is None
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_stt_process_audio_stream_interactions_empty_response(
+    hass: HomeAssistant,
+    mock_genai_client: AsyncMock,
+) -> None:
+    """Test STT processing with empty response using Interactions API."""
+    entity = hass.data[stt.DOMAIN].get_entity("stt.google_ai_stt")
+    hass.config_entries.async_update_entry(
+        entity.entry, options={CONF_USE_INTERACTIONS_API: True}
+    )
+    mock_genai_client.aio.interactions.create.return_value = Mock(
+        id="interaction_123",
+        status="completed",
+        output_text="",
+        steps=[],
+    )
+
+    metadata = stt.SpeechMetadata(
+        language="en-US",
+        format=stt.AudioFormats.OGG,
+        codec=stt.AudioCodecs.OPUS,
+        bit_rate=stt.AudioBitRates.BITRATE_16,
+        sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+        channel=stt.AudioChannels.CHANNEL_MONO,
+    )
+    audio_stream = _async_get_audio_stream(b"test_audio_bytes")
+
+    result = await entity.async_process_audio_stream(metadata, audio_stream)
+
+    assert result.result == stt.SpeechResultState.ERROR
+    assert result.text is None
