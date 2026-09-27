@@ -27,6 +27,7 @@ from homeassistant.components.tesla_fleet.coordinator import (
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .conftest import UID
@@ -584,13 +585,20 @@ async def test_resume_valid_prefix_after_failure(
     ]
 
 
-@pytest.mark.parametrize("time_zone", [None, "", "Invalid/Timezone"])
+@pytest.mark.parametrize(
+    ("time_zone", "translation_key"),
+    [
+        (None, "history_time_zone_missing"),
+        ("", "history_time_zone_missing"),
+        ("Invalid/Timezone", "history_time_zone_unknown"),
+    ],
+)
 async def test_invalid_site_timezone(
     coordinator: TeslaFleetEnergySiteStatisticsCoordinator,
     hass: HomeAssistant,
     mock_energy_site: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
     time_zone: str | None,
+    translation_key: str,
 ) -> None:
     """Report unusable timezone metadata without guessing a zone."""
     mock_energy_site.energy_history.return_value = _history(
@@ -598,4 +606,5 @@ async def test_invalid_site_timezone(
     )
     await _refresh(hass, coordinator)
     assert await _get_hourly_stats(hass, {GRID_STATISTIC_ID}) == {}
-    assert "timezone" in caplog.text
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert coordinator.last_exception.translation_key == translation_key

@@ -502,9 +502,16 @@ class TeslaFleetEnergySiteStatisticsCoordinator(DataUpdateCoordinator[None]):
             not isinstance((time_zone := data.get("installation_time_zone")), str)
             or not time_zone
         ):
-            raise UpdateFailed("Energy history did not include the site's timezone")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="history_time_zone_missing",
+            )
         if (site_time_zone := await dt_util.async_get_time_zone(time_zone)) is None:
-            raise UpdateFailed("Energy history included an unknown site timezone")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="history_time_zone_unknown",
+                translation_placeholders={"time_zone": time_zone},
+            )
         today = period_start.astimezone(site_time_zone).replace(
             hour=0, minute=0, second=0, microsecond=0
         )
@@ -542,7 +549,11 @@ class TeslaFleetEnergySiteStatisticsCoordinator(DataUpdateCoordinator[None]):
                     (next_day - timedelta(seconds=1)).isoformat()
                 )
                 if history_start.astimezone(site_time_zone).date() != day.date():
-                    raise UpdateFailed("Energy history did not match the requested day")
+                    raise UpdateFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="history_wrong_day",
+                        translation_placeholders={"date": day.date().isoformat()},
+                    )
                 # Leave the boundary hour for the next day's overlapping window.
                 window_end = dt_util.as_utc(next_day).replace(
                     minute=0, second=0, microsecond=0
