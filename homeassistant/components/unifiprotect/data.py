@@ -55,7 +55,7 @@ from .const import (
 from .utils import async_get_devices_by_type
 
 _LOGGER = logging.getLogger(__name__)
-type ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
+type ProtectDeviceType = ProtectAdoptableDeviceModel | NVR | PublicDeviceModel
 type UFPConfigEntry = ConfigEntry[ProtectData]
 
 
@@ -847,7 +847,7 @@ class ProtectData:
 
     @callback
     def async_get_public_device(
-        self, device: ProtectDeviceType | PublicDeviceModel
+        self, device: ProtectDeviceType
     ) -> PublicDeviceModel | None:
         """Return the public-API object matching a device, if available."""
         api = self.api

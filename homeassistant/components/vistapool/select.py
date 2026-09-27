@@ -41,10 +41,8 @@ class VistapoolSelectEntityDescription(SelectEntityDescription):
     """Describes a Vistapool select entity."""
 
     value_path: str
-    # A capability flag that must be set, such as main.hasPH.
-    exists_path: str | tuple[str, ...] | None = None
-    # A field the controller only reports when it supports the feature. Unlike
-    # exists_path this is a presence check, so a valid zero still counts.
+    # A field the controller only reports when it supports the feature. This
+    # is a presence check, so a valid zero still counts.
     presence_path: str | None = None
     value_map: dict[str, int] | None = None
 
@@ -93,14 +91,6 @@ def _build_select_entities(
     """Build the select entities for a single pool."""
     entities: list[SelectEntity] = []
     for description in SELECT_DESCRIPTIONS:
-        if description.exists_path is not None:
-            required = (
-                (description.exists_path,)
-                if isinstance(description.exists_path, str)
-                else description.exists_path
-            )
-            if not all(coordinator.get_value(path) for path in required):
-                continue
         if (
             description.presence_path is not None
             and coordinator.get_value(description.presence_path) is None
@@ -135,13 +125,14 @@ async def async_setup_entry(
 
 
 def _to_index(raw: Any) -> int | None:
-    """Convert a coordinator value into an options-list index, or None if not possible."""
+    """Convert a coordinator value into an options-list index, or None if missing.
+
+    Every select path is typed in the library's coercion map, so get_value
+    already returns an int or None; an unparsable value never reaches here.
+    """
     if raw is None:
         return None
-    try:
-        return int(raw)
-    except TypeError, ValueError:
-        return None
+    return int(raw)
 
 
 class VistapoolSelect(VistapoolEntity, SelectEntity):

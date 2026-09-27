@@ -20,7 +20,7 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
 
 from . import trace
-from .const import ChatLogEventType
+from .const import DOMAIN, ChatLogEventType
 from .models import ConversationInput, ConversationResult
 
 DATA_CHAT_LOGS: HassKey[dict[str, ChatLog]] = HassKey("conversation_chat_logs")
@@ -298,7 +298,20 @@ class ToolResultContent:
 
     @property
     def tool_result(self) -> JsonObjectType:
-        """Return the data of the result."""
+        """Return the data of the result.
+
+        Deprecated compatibility shim: the result is available as `result`.
+        It can be removed in HA Core 2027.11.
+        """
+        frame.report_usage(
+            "accesses `ToolResultContent.tool_result`, which is deprecated; "
+            "use `ToolResultContent.result` instead",
+            breaks_in_ha_version="2027.11.0",
+            core_behavior=frame.ReportBehavior.ERROR,
+            core_integration_behavior=frame.ReportBehavior.ERROR,
+            custom_integration_behavior=frame.ReportBehavior.LOG,
+            exclude_integrations={DOMAIN},
+        )
         return self.result.data
 
     def as_dict(self) -> dict[str, Any]:
@@ -309,6 +322,7 @@ class ToolResultContent:
             "tool_call_id": self.tool_call_id,
             "tool_name": self.tool_name,
             "result": asdict(self.result),
+            # Deprecated, can be removed in HA Core 2027.11.
             "tool_result": self.result.data,
             "created": self.created,
         }
@@ -594,6 +608,15 @@ class ChatLog:
                         self.delta_listener(self, filtered_delta)
             elif delta["role"] == "tool_result":
                 if (result := delta.get("result")) is None:
+                    frame.report_usage(
+                        "sets `tool_result` on a tool result delta, which is "
+                        "deprecated; set `result` to a ToolResult instead",
+                        breaks_in_ha_version="2027.11.0",
+                        core_behavior=frame.ReportBehavior.ERROR,
+                        core_integration_behavior=frame.ReportBehavior.ERROR,
+                        custom_integration_behavior=frame.ReportBehavior.LOG,
+                        exclude_integrations={DOMAIN},
+                    )
                     result = llm.ToolResult(data=delta["tool_result"])
                 content = ToolResultContent(
                     agent_id=agent_id,

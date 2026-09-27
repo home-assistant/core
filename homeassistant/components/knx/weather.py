@@ -1,6 +1,6 @@
 """Support for KNX weather entities."""
 
-from typing import override
+from typing import Any, override
 
 from xknx.devices import Weather as XknxWeather
 
@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_SYNC_STATE, DOMAIN, KNX_MODULE_KEY
+from .const import CONF_SYNC_STATE, KNX_MODULE_KEY
 from .entity import (
     KnxUiEntity,
     KnxUiEntityPlatformController,
@@ -30,7 +30,6 @@ from .entity import (
 from .knx_module import KNXModule
 from .schema import WeatherSchema
 from .storage.const import (
-    CONF_ENTITY,
     CONF_GA_AIR_PRESSURE,
     CONF_GA_BRIGHTNESS_EAST,
     CONF_GA_BRIGHTNESS_NORTH,
@@ -46,6 +45,7 @@ from .storage.const import (
     CONF_GA_WIND_SPEED,
     CONF_INVERT_DAY_NIGHT,
 )
+from .storage.entity_store_schema import KnxEntityData
 from .storage.util import ConfigExtractor
 
 
@@ -190,18 +190,18 @@ class KnxUiWeather(_KnxWeather, KnxUiEntity):
     _device: XknxWeather
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: ConfigType
+        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
     ) -> None:
         """Initialize of a KNX weather device."""
         super().__init__(
             knx_module=knx_module,
             unique_id=unique_id,
-            entity_config=config[CONF_ENTITY],
+            entity_config=config.entity,
         )
-        knx_conf = ConfigExtractor(config[DOMAIN])
+        knx_conf = ConfigExtractor(config.knx)
         self._device = XknxWeather(
             knx_module.xknx,
-            name=config[CONF_ENTITY][CONF_NAME],
+            name=config.entity.xknx_name,
             sync_state=knx_conf.get(CONF_SYNC_STATE),
             group_address_temperature=knx_conf.get_state_and_passive(
                 CONF_GA_TEMPERATURE

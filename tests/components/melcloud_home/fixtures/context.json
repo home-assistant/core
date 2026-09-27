@@ -46,7 +46,7 @@
             "hasOutdoorTemperatureSensor": true,
             "hasVaneVertical": true,
             "hasVaneHorizontal": true,
-            "hasStandbyMode": false
+            "hasStandbyMode": true
           },
           "frostProtection": {
             "active": false,
@@ -189,7 +189,7 @@
             "hasCoolingMode": true,
             "minSetTankTemperature": 40,
             "maxSetTankTemperature": 60,
-            "hasStandbyMode": false,
+            "hasStandbyMode": true,
             "hasEnergyConsumedMeter": true
           },
           "rssi": -52,
