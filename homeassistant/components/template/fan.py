@@ -5,7 +5,7 @@ from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
@@ -28,7 +28,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import validators as template_validators
+from . import validators as tcv
 from .const import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
@@ -74,29 +74,31 @@ SCRIPT_FIELDS = (
     CONF_SET_PRESET_MODE_ACTION,
 )
 
-FAN_COMMON_SCHEMA = vol.Schema(
+FAN_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_DIRECTION): cv.template,
-        vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_OSCILLATING): cv.template,
-        vol.Optional(CONF_PERCENTAGE): cv.template,
-        vol.Optional(CONF_PRESET_MODE): cv.template,
-        vol.Optional(CONF_PRESET_MODES): cv.ensure_list,
-        vol.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_SET_PERCENTAGE_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_SET_PRESET_MODE_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_SPEED_COUNT): vol.Coerce(int),
-        vol.Optional(CONF_STATE): cv.template,
+        probatio.Optional(CONF_DIRECTION): cv.template,
+        probatio.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_OSCILLATING): cv.template,
+        probatio.Optional(CONF_PERCENTAGE): cv.template,
+        probatio.Optional(CONF_PRESET_MODE): cv.template,
+        probatio.Optional(CONF_PRESET_MODES): cv.ensure_list,
+        probatio.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_SET_PERCENTAGE_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_SET_PRESET_MODE_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_SPEED_COUNT): probatio.Coerce(int),
+        probatio.Optional(CONF_STATE): cv.template,
     }
+)
+
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=(FanEntityStateAttribute, FanEntityCapabilityAttribute),
 )
 
 FAN_YAML_SCHEMA = FAN_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
     make_template_entity_common_schema(
-        FAN_DOMAIN,
-        DEFAULT_NAME,
-        (FanEntityStateAttribute, FanEntityCapabilityAttribute),
+        FAN_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
     ).schema
 )
 
@@ -201,6 +203,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
     _state_option = CONF_STATE
     _restore_state_extra_data = FanExtraStoredData
     _restore_state_properties = ("_attr_is_on",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -211,7 +214,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
         """Initialize the features."""
         self.setup_state_template(
             "_attr_is_on",
-            template_validators.boolean(self, CONF_STATE),
+            tcv.boolean(self, CONF_STATE),
         )
 
         # Ensure legacy template entity functionality by
@@ -221,7 +224,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
         self.setup_template(
             CONF_PERCENTAGE,
             "_attr_percentage",
-            template_validators.number(self, CONF_PERCENTAGE, 0, 100),
+            tcv.number(self, CONF_PERCENTAGE, 0, 100),
         )
 
         # List of valid preset modes
@@ -229,23 +232,21 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
         self.setup_template(
             CONF_PRESET_MODE,
             "_attr_preset_mode",
-            template_validators.item_in_list(
-                self, CONF_PRESET_MODE, self._attr_preset_modes
-            ),
+            tcv.item_in_list(self, CONF_PRESET_MODE, self._attr_preset_modes),
         )
 
         # Oscillating boolean
         self.setup_template(
             CONF_OSCILLATING,
             "_attr_oscillating",
-            template_validators.boolean(self, CONF_OSCILLATING),
+            tcv.boolean(self, CONF_OSCILLATING),
         )
 
         # Forward/Reverse Directions
         self.setup_template(
             CONF_DIRECTION,
             "_attr_current_direction",
-            template_validators.item_in_list(self, CONF_DIRECTION, _VALID_DIRECTIONS),
+            tcv.item_in_list(self, CONF_DIRECTION, _VALID_DIRECTIONS),
         )
 
         # Number of valid speeds

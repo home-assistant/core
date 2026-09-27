@@ -4,7 +4,7 @@ from http import HTTPStatus
 import json
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
@@ -26,7 +26,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_VALIDATOR): cv.string, vol.Required(CONF_SECRET): cv.string}
+    {
+        probatio.Required(CONF_VALIDATOR): cv.string,
+        probatio.Required(CONF_SECRET): cv.string,
+    }
 )
 
 

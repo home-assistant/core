@@ -7,8 +7,8 @@ import logging
 from typing import Any
 from urllib.parse import urljoin
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -30,9 +30,9 @@ DEFAULT_NAME = "sigfox"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_LOGIN): cv.string,
-        vol.Required(CONF_API_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_API_LOGIN): cv.string,
+        probatio.Required(CONF_API_PASSWORD): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 

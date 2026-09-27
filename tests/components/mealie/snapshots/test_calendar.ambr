@@ -44,6 +44,7 @@
       'start': dict({
         'date': '2024-01-22',
       }),
+      'status': None,
       'summary': 'Zoete aardappel curry traybake',
       'uid': None,
     }),
@@ -58,6 +59,7 @@
       'start': dict({
         'date': '2024-01-23',
       }),
+      'status': None,
       'summary': 'Εύκολη μακαρονάδα με κεφτεδάκια στον φούρνο (1)',
       'uid': None,
     }),
@@ -72,6 +74,7 @@
       'start': dict({
         'date': '2024-01-23',
       }),
+      'status': None,
       'summary': 'Pampered Chef Double Chocolate Mocha Trifle',
       'uid': None,
     }),
@@ -86,6 +89,7 @@
       'start': dict({
         'date': '2024-01-22',
       }),
+      'status': None,
       'summary': 'Cheeseburger Sliders (Easy, 30-min Recipe)',
       'uid': None,
     }),
@@ -100,6 +104,7 @@
       'start': dict({
         'date': '2024-01-23',
       }),
+      'status': None,
       'summary': 'All-American Beef Stew Recipe',
       'uid': None,
     }),
@@ -114,6 +119,7 @@
       'start': dict({
         'date': '2024-01-23',
       }),
+      'status': None,
       'summary': 'Miso Udon Noodles with Spinach and Tofu',
       'uid': None,
     }),
@@ -128,6 +134,7 @@
       'start': dict({
         'date': '2024-01-21',
       }),
+      'status': None,
       'summary': 'Aquavite',
       'uid': None,
     }),

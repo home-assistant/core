@@ -1,6 +1,5 @@
 """Test services in Nord Pool."""
 
-import json
 from typing import Any
 from unittest.mock import patch
 
@@ -26,7 +25,7 @@ from homeassistant.const import ATTR_DATE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_SERVICE_DATA = {
@@ -228,8 +227,8 @@ async def test_service_call_for_price_indices(
 ) -> None:
     """Test get_price_indices_for_date service call."""
 
-    fixture_60 = json.loads(await async_load_fixture(hass, "indices_60.json", DOMAIN))
-    fixture_15 = json.loads(await async_load_fixture(hass, "indices_15.json", DOMAIN))
+    fixture_60 = await async_load_json_object_fixture(hass, "indices_60.json", DOMAIN)
+    fixture_15 = await async_load_json_object_fixture(hass, "indices_15.json", DOMAIN)
 
     aioclient_mock.request(
         "GET",

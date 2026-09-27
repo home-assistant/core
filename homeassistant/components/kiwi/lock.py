@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from kiwiki import KiwiClient, KiwiException
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.lock import (
     PLATFORM_SCHEMA as LOCK_PLATFORM_SCHEMA,
@@ -32,7 +32,10 @@ ATTR_CAN_INVITE = "can_invite_others"
 UNLOCK_MAINTAIN_TIME = 5
 
 PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
+    {
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+    }
 )
 
 

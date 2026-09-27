@@ -3,19 +3,19 @@
 from collections.abc import Mapping
 from typing import Any, override
 
+import probatio
 from pysmarlaapi import Connection
 from pysmarlaapi.connection.exceptions import (
     AuthenticationException,
     ConnectionException,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN
 
 from .const import DOMAIN, HOST
 
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
+STEP_USER_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_ACCESS_TOKEN): str})
 
 
 class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):

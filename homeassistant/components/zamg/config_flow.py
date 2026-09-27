@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from zamg import ZamgData
 from zamg.exceptions import ZamgApiError, ZamgNoDataError
 
@@ -41,9 +41,11 @@ class ZamgConfigFlow(ConfigFlow, domain=DOMAIN):
             LOGGER.debug("config_flow: closest station = %s", closest_station_id)
             user_input = {}
 
-            schema = vol.Schema(
+            schema = probatio.Schema(
                 {
-                    vol.Required(CONF_STATION_ID, default=closest_station_id): vol.In(
+                    probatio.Required(
+                        CONF_STATION_ID, default=closest_station_id
+                    ): probatio.In(
                         {
                             station: f"{stations[station][2]} ({station})"
                             for station in stations

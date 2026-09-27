@@ -1,6 +1,6 @@
 """Shark IQ services."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -22,8 +22,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_CLEAN_ROOM,
         entity_domain=VACUUM_DOMAIN,
         schema={
-            vol.Required(ATTR_ROOMS): vol.All(
-                cv.ensure_list, vol.Length(min=1), [cv.string]
+            probatio.Required(ATTR_ROOMS): probatio.All(
+                cv.ensure_list, probatio.Length(min=1), [cv.string]
             ),
         },
         func="async_clean_room",

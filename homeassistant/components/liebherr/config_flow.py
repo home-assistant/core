@@ -4,12 +4,12 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from pyliebherrhomeapi import Device, LiebherrClient
 from pyliebherrhomeapi.exceptions import (
     LiebherrAuthenticationError,
     LiebherrConnectionError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
@@ -19,9 +19,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_API_KEY): str,
     }
 )
 

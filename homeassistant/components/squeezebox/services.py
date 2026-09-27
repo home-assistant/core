@@ -1,6 +1,6 @@
 """Support for interfacing to the SqueezeBox API."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.const import ATTR_COMMAND
@@ -24,9 +24,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_CALL_METHOD,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            vol.Required(ATTR_COMMAND): cv.string,
-            vol.Optional(ATTR_PARAMETERS): vol.All(
-                cv.ensure_list, vol.Length(min=1), [cv.string]
+            probatio.Required(ATTR_COMMAND): cv.string,
+            probatio.Optional(ATTR_PARAMETERS): probatio.All(
+                cv.ensure_list, probatio.Length(min=1), [cv.string]
             ),
         },
         func="async_call_method",
@@ -37,9 +37,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_CALL_QUERY,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            vol.Required(ATTR_COMMAND): cv.string,
-            vol.Optional(ATTR_PARAMETERS): vol.All(
-                cv.ensure_list, vol.Length(min=1), [cv.string]
+            probatio.Required(ATTR_COMMAND): cv.string,
+            probatio.Optional(ATTR_PARAMETERS): probatio.All(
+                cv.ensure_list, probatio.Length(min=1), [cv.string]
             ),
         },
         func="async_call_query",

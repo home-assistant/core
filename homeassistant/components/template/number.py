@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.number import (
     DEFAULT_MAX_VALUE,
@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import TriggerUpdateCoordinator, validators as tcv
 from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -53,26 +53,27 @@ DEFAULT_OPTIMISTIC = False
 
 SCRIPT_FIELDS = (CONF_SET_VALUE,)
 
-NUMBER_COMMON_SCHEMA = vol.Schema(
+NUMBER_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): cv.template,
-        vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): cv.template,
-        vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_STATE): cv.template,
-        vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.template,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): cv.template,
+        probatio.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): cv.template,
+        probatio.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_STATE): cv.template,
+        probatio.Optional(CONF_STEP, default=DEFAULT_STEP): cv.template,
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
+)
+
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=NumberEntityCapabilityAttribute, device_class=True
 )
 
 NUMBER_YAML_SCHEMA = NUMBER_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
 ).extend(
     make_template_entity_common_schema(
-        NUMBER_DOMAIN,
-        DEFAULT_NAME,
-        NumberEntityCapabilityAttribute,
-        block_device_class=True,
+        NUMBER_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
     ).schema
 )
 
@@ -134,6 +135,7 @@ class AbstractTemplateNumber(AbstractTemplateEntity, RestoreNumber):
     _state_option = CONF_STATE
     _restore_state_extra_data = NumberExtraStoredData
     _restore_state_properties = ("_attr_native_value",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -150,16 +152,14 @@ class AbstractTemplateNumber(AbstractTemplateEntity, RestoreNumber):
 
         self.setup_state_template(
             "_attr_native_value",
-            template_validators.number(self, CONF_STATE),
+            tcv.number(self, CONF_STATE),
         )
         for option, attribute in (
             (CONF_STEP, "_attr_native_step"),
             (CONF_MIN, "_attr_native_min_value"),
             (CONF_MAX, "_attr_native_max_value"),
         ):
-            self.setup_template(
-                option, attribute, template_validators.number(self, option)
-            )
+            self.setup_template(option, attribute, tcv.number(self, option))
 
         self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], name, DOMAIN)
 

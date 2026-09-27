@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, IMPLAUSIBLE_WATER_TEMP_F, LOGGER
 
 type FloConfigEntry = ConfigEntry[FloRuntimeData]
 
@@ -144,9 +144,12 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         return self._device_information["telemetry"]["current"]["psi"]
 
     @property
-    def temperature(self) -> float:
-        """Return the current temperature in degrees F."""
-        return self._device_information["telemetry"]["current"]["tempF"]
+    def temperature(self) -> float | None:
+        """Return the current temperature in degrees F, or None if not measured."""
+        temperature = self._device_information["telemetry"]["current"]["tempF"]
+        if temperature is None or temperature >= IMPLAUSIBLE_WATER_TEMP_F:
+            return None
+        return temperature
 
     @property
     def humidity(self) -> float:
@@ -247,6 +250,9 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         start_date = datetime(today.year, today.month, today.day, 0, 0)
         end_date = datetime(today.year, today.month, today.day, 23, 59, 59, 999000)
         self._water_usage = await self.api_client.water.get_consumption_info(
-            self._flo_location_id, start_date, end_date
+            self._flo_location_id,
+            start_date,
+            end_date,
+            device_mac_address=self.mac_address,
         )
         LOGGER.debug("Updated Flo consumption data: %s", self._water_usage)

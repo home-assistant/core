@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from rflink.parser import PACKET_FIELDS, UNITS
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     DOMAIN as PLATFORM_DOMAIN,
@@ -268,14 +268,14 @@ SENSOR_TYPES = (
 SENSOR_TYPES_DICT = {desc.key: desc for desc in SENSOR_TYPES}
 
 RFLINK_PLATFORM = {
-    vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
-    vol.Optional(CONF_DEVICES, default={}): {
-        cv.string: vol.Schema(
+    probatio.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
+    probatio.Optional(CONF_DEVICES, default={}): {
+        cv.string: probatio.Schema(
             {
-                vol.Optional(CONF_NAME): cv.string,
-                vol.Required(CONF_SENSOR_TYPE): cv.string,
-                vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-                vol.Optional(CONF_ALIASES, default=[]): vol.All(
+                probatio.Optional(CONF_NAME): cv.string,
+                probatio.Required(CONF_SENSOR_TYPE): cv.string,
+                probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                probatio.Optional(CONF_ALIASES, default=[]): probatio.All(
                     cv.ensure_list, [cv.string]
                 ),
             }
@@ -285,7 +285,7 @@ RFLINK_PLATFORM = {
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     RFLINK_PLATFORM,
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

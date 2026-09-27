@@ -115,6 +115,36 @@ SWITCHES = (
         state=lambda data: data.block_parked_domains,
     ),
     NextDnsSwitchEntityDescription(
+        key="block_data_drop_services",
+        translation_key="block_data_drop_services",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_data_drop_services,
+    ),
+    NextDnsSwitchEntityDescription(
+        key="block_decentralized_web_gateways",
+        translation_key="block_decentralized_web_gateways",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_decentralized_web_gateways,
+    ),
+    NextDnsSwitchEntityDescription(
+        key="block_free_hosting_domains",
+        translation_key="block_free_hosting_domains",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_free_hosting_domains,
+    ),
+    NextDnsSwitchEntityDescription(
+        key="block_residential_hosting",
+        translation_key="block_residential_hosting",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_residential_hosting,
+    ),
+    NextDnsSwitchEntityDescription(
+        key="block_tunneling_endpoints",
+        translation_key="block_tunneling_endpoints",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_tunneling_endpoints,
+    ),
+    NextDnsSwitchEntityDescription(
         key="cryptojacking_protection",
         translation_key="cryptojacking_protection",
         entity_category=EntityCategory.CONFIG,

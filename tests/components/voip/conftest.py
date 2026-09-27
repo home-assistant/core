@@ -1,6 +1,8 @@
 """Test helpers for VoIP integration."""
 
+import asyncio
 from collections.abc import Generator
+import contextlib
 from unittest.mock import AsyncMock, Mock, create_autospec, patch
 
 import pytest
@@ -133,7 +135,7 @@ async def voip_device(
 
 
 @pytest.fixture
-def satellite(
+async def satellite(
     hass: HomeAssistant,
     voip_device: VoIPDevice,
 ):
@@ -146,8 +148,14 @@ def satellite(
 
     yield satellite
 
-    if satellite.voip_device.is_active:
-        satellite.disconnect()
+    task = satellite._sender_task
+    if task is not None:
+        task.cancel()
+    satellite.disconnect()
+    if task is not None:
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 def async_get_satellite_entity(

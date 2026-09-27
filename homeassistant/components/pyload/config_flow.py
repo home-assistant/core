@@ -5,8 +5,8 @@ import logging
 from typing import Any, override
 
 from aiohttp import CookieJar
+import probatio
 from pyloadapi import CannotConnect, InvalidAuth, ParserError, PyLoadAPI
-import voluptuous as vol
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -31,23 +31,23 @@ from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): TextSelector(
+        probatio.Required(CONF_URL): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.URL,
                 autocomplete="url",
             ),
         ),
-        vol.Required(CONF_VERIFY_SSL, default=True): bool,
-        vol.Exclusive(CONF_API_KEY, "credentials"): cv.string,
-        vol.Exclusive(CONF_USERNAME, "credentials"): TextSelector(
+        probatio.Required(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Exclusive(CONF_API_KEY, "credentials"): cv.string,
+        probatio.Exclusive(CONF_USERNAME, "credentials"): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 autocomplete="username",
             ),
         ),
-        vol.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -56,16 +56,16 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-REAUTH_SCHEMA = vol.Schema(
+REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Exclusive(CONF_API_KEY, "credentials"): cv.string,
-        vol.Exclusive(CONF_USERNAME, "credentials"): TextSelector(
+        probatio.Exclusive(CONF_API_KEY, "credentials"): cv.string,
+        probatio.Exclusive(CONF_USERNAME, "credentials"): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 autocomplete="username",
             ),
         ),
-        vol.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",

@@ -1,7 +1,7 @@
 """Support for vacuum cleaner robots (botvacs)."""
 
 from enum import IntFlag, StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util.hass_dict import HassKey
@@ -9,7 +9,7 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from . import StateVacuumEntity
 
-DOMAIN = "vacuum"
+DOMAIN: Final = "vacuum"
 
 DATA_COMPONENT: HassKey[EntityComponent[StateVacuumEntity]] = HassKey(DOMAIN)
 

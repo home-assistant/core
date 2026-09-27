@@ -5,12 +5,12 @@ from datetime import timedelta
 import logging
 from typing import Any, override
 
+import probatio
 from RMVtransport import RMVtransport
 from RMVtransport.rmvtransport import (
     RMVtransportApiConnectionError,
     RMVtransportDataError,
 )
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -59,25 +59,25 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_NEXT_DEPARTURE): [
+        probatio.Required(CONF_NEXT_DEPARTURE): [
             {
-                vol.Required(CONF_STATION): cv.string,
-                vol.Optional(CONF_DESTINATIONS, default=[]): vol.All(
+                probatio.Required(CONF_STATION): cv.string,
+                probatio.Optional(CONF_DESTINATIONS, default=[]): probatio.All(
                     cv.ensure_list, [cv.string]
                 ),
-                vol.Optional(CONF_DIRECTION): cv.string,
-                vol.Optional(CONF_LINES, default=[]): vol.All(
+                probatio.Optional(CONF_DIRECTION): cv.string,
+                probatio.Optional(CONF_LINES, default=[]): probatio.All(
                     cv.ensure_list, [cv.positive_int, cv.string]
                 ),
-                vol.Optional(CONF_PRODUCTS, default=VALID_PRODUCTS): vol.All(
-                    cv.ensure_list, [vol.In(VALID_PRODUCTS)]
+                probatio.Optional(CONF_PRODUCTS, default=VALID_PRODUCTS): probatio.All(
+                    cv.ensure_list, [probatio.In(VALID_PRODUCTS)]
                 ),
-                vol.Optional(CONF_TIME_OFFSET, default=0): cv.positive_int,
-                vol.Optional(CONF_MAX_JOURNEYS, default=5): cv.positive_int,
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                probatio.Optional(CONF_TIME_OFFSET, default=0): cv.positive_int,
+                probatio.Optional(CONF_MAX_JOURNEYS, default=5): cv.positive_int,
+                probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             }
         ],
-        vol.Optional(CONF_TIMEOUT, default=10): cv.positive_int,
+        probatio.Optional(CONF_TIMEOUT, default=10): cv.positive_int,
     }
 )
 

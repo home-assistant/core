@@ -1,0 +1,789 @@
+# serializer version: 1
+# name: test_format_structured_output[array-of-unions]
+  dict({
+    'name': 'test',
+    'schema': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'value': dict({
+          'items': dict({
+            'anyOf': list([
+              dict({
+                'additionalProperties': False,
+                'properties': dict({
+                  'name': dict({
+                    'type': list([
+                      'string',
+                      'null',
+                    ]),
+                  }),
+                }),
+                'required': list([
+                  'name',
+                ]),
+                'type': 'object',
+              }),
+              dict({
+                'type': 'null',
+              }),
+            ]),
+          }),
+          'type': list([
+            'array',
+            'null',
+          ]),
+        }),
+      }),
+      'required': list([
+        'value',
+      ]),
+      'type': 'object',
+    }),
+    'strict': True,
+  })
+# ---
+# name: test_format_structured_output[nullable-enum]
+  dict({
+    'name': 'test',
+    'schema': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'value': dict({
+          'enum': list([
+            'a',
+            None,
+          ]),
+          'type': list([
+            'string',
+            'null',
+          ]),
+        }),
+      }),
+      'required': list([
+        'value',
+      ]),
+      'type': 'object',
+    }),
+    'strict': True,
+  })
+# ---
+# name: test_format_structured_output[nullable-object]
+  dict({
+    'name': 'test',
+    'schema': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'value': dict({
+          'anyOf': list([
+            dict({
+              'anyOf': list([
+                dict({
+                  'additionalProperties': False,
+                  'properties': dict({
+                    'name': dict({
+                      'type': list([
+                        'string',
+                        'null',
+                      ]),
+                    }),
+                  }),
+                  'required': list([
+                    'name',
+                  ]),
+                  'type': 'object',
+                }),
+                dict({
+                  'type': 'null',
+                }),
+              ]),
+            }),
+            dict({
+              'type': 'null',
+            }),
+          ]),
+        }),
+      }),
+      'required': list([
+        'value',
+      ]),
+      'type': 'object',
+    }),
+    'strict': True,
+  })
+# ---
+# name: test_format_structured_output[nullable-string]
+  dict({
+    'name': 'test',
+    'schema': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'value': dict({
+          'anyOf': list([
+            dict({
+              'anyOf': list([
+                dict({
+                  'type': 'string',
+                }),
+                dict({
+                  'type': 'null',
+                }),
+              ]),
+            }),
+            dict({
+              'type': 'null',
+            }),
+          ]),
+        }),
+      }),
+      'required': list([
+        'value',
+      ]),
+      'type': 'object',
+    }),
+    'strict': True,
+  })
+# ---
+# name: test_format_structured_output[recursive-reference]
+  dict({
+    'name': 'test',
+    'schema': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'value': dict({
+          'anyOf': list([
+            dict({
+              '$ref': '#',
+            }),
+            dict({
+              'type': 'null',
+            }),
+          ]),
+        }),
+      }),
+      'required': list([
+        'value',
+      ]),
+      'type': 'object',
+    }),
+    'strict': True,
+  })
+# ---
+# name: test_format_structured_output[tuple]
+  dict({
+    'name': 'test',
+    'schema': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'value': dict({
+          'items': False,
+          'prefixItems': list([
+            dict({
+              'additionalProperties': False,
+              'properties': dict({
+                'name': dict({
+                  'type': list([
+                    'string',
+                    'null',
+                  ]),
+                }),
+              }),
+              'required': list([
+                'name',
+              ]),
+              'type': 'object',
+            }),
+            dict({
+              'type': 'integer',
+            }),
+          ]),
+          'type': list([
+            'array',
+            'null',
+          ]),
+        }),
+      }),
+      'required': list([
+        'value',
+      ]),
+      'type': 'object',
+    }),
+    'strict': True,
+  })
+# ---
+# name: test_nested_schemas[nullable]
+  dict({
+    '$defs': dict({
+      'child': dict({
+        'properties': dict({
+          'name': dict({
+            'type': list([
+              'string',
+              'null',
+            ]),
+          }),
+        }),
+        'required': list([
+          'name',
+        ]),
+        'type': 'object',
+      }),
+    }),
+    'properties': dict({
+      'children': dict({
+        'items': dict({
+          'anyOf': list([
+            dict({
+              '$ref': '#/$defs/child',
+            }),
+            dict({
+              'type': 'null',
+            }),
+          ]),
+        }),
+        'type': list([
+          'array',
+          'null',
+        ]),
+      }),
+      'value': dict({
+        'type': 'string',
+      }),
+    }),
+    'required': list([
+      'value',
+      'children',
+    ]),
+    'type': list([
+      'object',
+      'null',
+    ]),
+  })
+# ---
+# name: test_nested_schemas[object]
+  dict({
+    '$defs': dict({
+      'child': dict({
+        'properties': dict({
+          'name': dict({
+            'type': list([
+              'string',
+              'null',
+            ]),
+          }),
+        }),
+        'required': list([
+          'name',
+        ]),
+        'type': 'object',
+      }),
+    }),
+    'properties': dict({
+      'children': dict({
+        'items': dict({
+          'anyOf': list([
+            dict({
+              '$ref': '#/$defs/child',
+            }),
+            dict({
+              'type': 'null',
+            }),
+          ]),
+        }),
+        'type': list([
+          'array',
+          'null',
+        ]),
+      }),
+      'value': dict({
+        'type': 'string',
+      }),
+    }),
+    'required': list([
+      'value',
+      'children',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_optional_fields[all-of]
+  dict({
+    '$defs': dict({
+      'value': dict({
+        'type': 'string',
+      }),
+    }),
+    'properties': dict({
+      'value': dict({
+        'anyOf': list([
+          dict({
+            'allOf': list([
+              dict({
+                'enum': list([
+                  'a',
+                  'b',
+                ]),
+              }),
+            ]),
+            'type': 'string',
+          }),
+          dict({
+            'type': 'null',
+          }),
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_optional_fields[any-of]
+  dict({
+    '$defs': dict({
+      'value': dict({
+        'type': 'string',
+      }),
+    }),
+    'properties': dict({
+      'value': dict({
+        'anyOf': list([
+          dict({
+            'anyOf': list([
+              dict({
+                'type': 'string',
+              }),
+              dict({
+                'type': 'null',
+              }),
+            ]),
+          }),
+          dict({
+            'type': 'null',
+          }),
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_optional_fields[constant]
+  dict({
+    '$defs': dict({
+      'value': dict({
+        'type': 'string',
+      }),
+    }),
+    'properties': dict({
+      'value': dict({
+        'anyOf': list([
+          dict({
+            'const': 'a',
+            'type': 'string',
+          }),
+          dict({
+            'type': 'null',
+          }),
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_optional_fields[enum]
+  dict({
+    '$defs': dict({
+      'value': dict({
+        'type': 'string',
+      }),
+    }),
+    'properties': dict({
+      'value': dict({
+        'enum': list([
+          'a',
+          'b',
+          None,
+        ]),
+        'type': list([
+          'string',
+          'null',
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_optional_fields[multiple-types]
+  dict({
+    '$defs': dict({
+      'value': dict({
+        'type': 'string',
+      }),
+    }),
+    'properties': dict({
+      'value': dict({
+        'type': list([
+          'string',
+          'integer',
+          'null',
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_optional_fields[negation]
+  dict({
+    '$defs': dict({
+      'value': dict({
+        'type': 'string',
+      }),
+    }),
+    'properties': dict({
+      'value': dict({
+        'anyOf': list([
+          dict({
+            'not': dict({
+              'enum': list([
+                None,
+                'b',
+              ]),
+            }),
+            'type': 'string',
+          }),
+          dict({
+            'type': 'null',
+          }),
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_optional_fields[nullable-enum]
+  dict({
+    '$defs': dict({
+      'value': dict({
+        'type': 'string',
+      }),
+    }),
+    'properties': dict({
+      'value': dict({
+        'enum': list([
+          'a',
+          None,
+        ]),
+        'type': list([
+          'string',
+          'null',
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_optional_fields[nullable]
+  dict({
+    '$defs': dict({
+      'value': dict({
+        'type': 'string',
+      }),
+    }),
+    'properties': dict({
+      'value': dict({
+        'type': list([
+          'string',
+          'null',
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_optional_fields[one-of]
+  dict({
+    '$defs': dict({
+      'value': dict({
+        'type': 'string',
+      }),
+    }),
+    'properties': dict({
+      'value': dict({
+        'anyOf': list([
+          dict({
+            'oneOf': list([
+              dict({
+                'type': 'string',
+              }),
+              dict({
+                'type': 'null',
+              }),
+            ]),
+          }),
+          dict({
+            'type': 'null',
+          }),
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_optional_fields[reference]
+  dict({
+    '$defs': dict({
+      'value': dict({
+        'type': 'string',
+      }),
+    }),
+    'properties': dict({
+      'value': dict({
+        'anyOf': list([
+          dict({
+            '$ref': '#/$defs/value',
+          }),
+          dict({
+            'type': 'null',
+          }),
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_optional_fields[string]
+  dict({
+    '$defs': dict({
+      'value': dict({
+        'type': 'string',
+      }),
+    }),
+    'properties': dict({
+      'value': dict({
+        'type': list([
+          'string',
+          'null',
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_optional_fields[untyped-enum]
+  dict({
+    '$defs': dict({
+      'value': dict({
+        'type': 'string',
+      }),
+    }),
+    'properties': dict({
+      'value': dict({
+        'anyOf': list([
+          dict({
+            'enum': list([
+              'a',
+              1,
+            ]),
+          }),
+          dict({
+            'type': 'null',
+          }),
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_optional_untyped_fields[empty]
+  dict({
+    'properties': dict({
+      'value': dict({
+        'anyOf': list([
+          dict({
+          }),
+          dict({
+            'type': 'null',
+          }),
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_optional_untyped_fields[false]
+  dict({
+    'properties': dict({
+      'value': dict({
+        'anyOf': list([
+          False,
+          dict({
+            'type': 'null',
+          }),
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_optional_untyped_fields[null]
+  dict({
+    'properties': dict({
+      'value': dict({
+        'type': list([
+          'null',
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_optional_untyped_fields[true]
+  dict({
+    'properties': dict({
+      'value': dict({
+        'anyOf': list([
+          True,
+          dict({
+            'type': 'null',
+          }),
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_recursive_reference_targets
+  dict({
+    '$defs': dict({
+      '__ha_ref_0': dict({
+        'type': 'string',
+      }),
+      '_ha_ref_0': dict({
+        'type': 'integer',
+      }),
+      '_ha_ref_1': dict({
+        'properties': dict({
+          'child': dict({
+            'anyOf': list([
+              dict({
+                '$ref': '#/$defs/_ha_ref_1',
+              }),
+              dict({
+                'type': 'null',
+              }),
+            ]),
+          }),
+          'value': dict({
+            '$ref': '#/$defs/__ha_ref_0',
+          }),
+        }),
+        'required': list([
+          'value',
+          'child',
+        ]),
+        'type': 'object',
+      }),
+    }),
+    'definitions': dict({
+      'value': dict({
+        'type': 'string',
+      }),
+    }),
+    'examples': list([
+      dict({
+        '$ref': 'This is literal data',
+      }),
+    ]),
+    'properties': dict({
+      'alias': dict({
+        '$ref': '#/$defs/_ha_ref_1',
+      }),
+      'node': dict({
+        'anyOf': list([
+          dict({
+            'anyOf': list([
+              dict({
+                'properties': dict({
+                  'child': dict({
+                    'anyOf': list([
+                      dict({
+                        '$ref': '#/$defs/_ha_ref_1',
+                      }),
+                      dict({
+                        'type': 'null',
+                      }),
+                    ]),
+                  }),
+                  'value': dict({
+                    '$ref': '#/$defs/__ha_ref_0',
+                  }),
+                }),
+                'required': list([
+                  'value',
+                  'child',
+                ]),
+                'type': 'object',
+              }),
+              dict({
+                'type': 'null',
+              }),
+            ]),
+          }),
+          dict({
+            'type': 'null',
+          }),
+        ]),
+      }),
+    }),
+    'required': list([
+      'alias',
+      'node',
+    ]),
+    'type': 'object',
+  })
+# ---

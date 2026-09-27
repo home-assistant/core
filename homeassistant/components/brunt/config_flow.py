@@ -7,7 +7,7 @@ from typing import Any, override
 from aiohttp import ClientResponseError
 from aiohttp.client_exceptions import ServerDisconnectedError
 from brunt import BruntClientAsync
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
@@ -16,10 +16,10 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_USERNAME): str, probatio.Required(CONF_PASSWORD): str}
 )
-REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+REAUTH_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
 
 
 async def validate_input(user_input: dict[str, Any]) -> dict[str, str] | None:

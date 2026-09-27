@@ -17,6 +17,11 @@
         "default": "mdi:delete-sweep"
       }
     },
+    "event": {
+      "docker_event": {
+        "default": "mdi:docker"
+      }
+    },
     "sensor": {
       "api_version": {
         "default": "mdi:api"

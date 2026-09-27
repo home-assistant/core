@@ -1,7 +1,7 @@
 """Support for controlling Global Cache gc100."""
 
 import gc100
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -16,16 +16,16 @@ DOMAIN = "gc100"
 
 DATA_GC100: HassKey[GC100Device] = HassKey("gc100")
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                probatio.Required(CONF_HOST): cv.string,
+                probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

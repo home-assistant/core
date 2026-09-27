@@ -33,12 +33,13 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             "energyflip.EnergyFlip.authenticate", return_value=None
         ) as mock_authenticate,
         patch(
-            "energyflip.EnergyFlip.is_authenticated", return_value=True
-        ) as mock_is_authenticated,
-        patch(
             "energyflip.EnergyFlip.current_measurements",
             return_value=MOCK_CURRENT_MEASUREMENTS,
         ) as mock_current_measurements,
+        patch(
+            "energyflip.EnergyFlip.customer_overview",
+            return_value=None,
+        ) as mock_customer_overview,
     ):
         config_entry = MockConfigEntry(
             version=1,
@@ -68,66 +69,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
         assert (
             current_power.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
-        )
-
-        current_power_in = hass.states.get("sensor.current_power_in_peak")
-        assert current_power_in.state == "1011.66666666667"
-        assert (
-            current_power_in.attributes.get(ATTR_DEVICE_CLASS)
-            == SensorDeviceClass.POWER
-        )
-        assert (
-            current_power_in.attributes.get(ATTR_STATE_CLASS)
-            is SensorStateClass.MEASUREMENT
-        )
-        assert (
-            current_power_in.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            == UnitOfPower.WATT
-        )
-
-        current_power_in_low = hass.states.get("sensor.current_power_in_off_peak")
-        assert current_power_in_low.state == "unknown"
-        assert (
-            current_power_in_low.attributes.get(ATTR_DEVICE_CLASS)
-            == SensorDeviceClass.POWER
-        )
-        assert (
-            current_power_in_low.attributes.get(ATTR_STATE_CLASS)
-            is SensorStateClass.MEASUREMENT
-        )
-        assert (
-            current_power_in_low.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            == UnitOfPower.WATT
-        )
-
-        current_power_out = hass.states.get("sensor.current_power_out_peak")
-        assert current_power_out.state == "unknown"
-        assert (
-            current_power_out.attributes.get(ATTR_DEVICE_CLASS)
-            == SensorDeviceClass.POWER
-        )
-        assert (
-            current_power_out.attributes.get(ATTR_STATE_CLASS)
-            is SensorStateClass.MEASUREMENT
-        )
-        assert (
-            current_power_out.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            == UnitOfPower.WATT
-        )
-
-        current_power_out_low = hass.states.get("sensor.current_power_out_off_peak")
-        assert current_power_out_low.state == "unknown"
-        assert (
-            current_power_out_low.attributes.get(ATTR_DEVICE_CLASS)
-            == SensorDeviceClass.POWER
-        )
-        assert (
-            current_power_out_low.attributes.get(ATTR_STATE_CLASS)
-            is SensorStateClass.MEASUREMENT
-        )
-        assert (
-            current_power_out_low.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            == UnitOfPower.WATT
         )
 
         energy_consumption_peak_today = hass.states.get(
@@ -312,8 +253,8 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
 
         # Assert mocks are called
         assert len(mock_authenticate.mock_calls) == 1
-        assert len(mock_is_authenticated.mock_calls) == 1
         assert len(mock_current_measurements.mock_calls) == 1
+        assert len(mock_customer_overview.mock_calls) == 1
 
 
 async def test_setup_entry_absent_measurement(hass: HomeAssistant) -> None:
@@ -323,8 +264,9 @@ async def test_setup_entry_absent_measurement(hass: HomeAssistant) -> None:
             "energyflip.EnergyFlip.authenticate", return_value=None
         ) as mock_authenticate,
         patch(
-            "energyflip.EnergyFlip.is_authenticated", return_value=True
-        ) as mock_is_authenticated,
+            "energyflip.EnergyFlip.customer_overview",
+            return_value=None,
+        ) as mock_customer_overview,
         patch(
             "energyflip.EnergyFlip.current_measurements",
             return_value=MOCK_LIMITED_CURRENT_MEASUREMENTS,
@@ -348,10 +290,6 @@ async def test_setup_entry_absent_measurement(hass: HomeAssistant) -> None:
 
         # Assert data is loaded
         assert hass.states.get("sensor.current_power").state == "1011.66666666667"
-        assert hass.states.get("sensor.current_power_in_peak").state == "unknown"
-        assert hass.states.get("sensor.current_power_in_off_peak").state == "unknown"
-        assert hass.states.get("sensor.current_power_out_peak").state == "unknown"
-        assert hass.states.get("sensor.current_power_out_off_peak").state == "unknown"
         assert hass.states.get("sensor.current_gas").state == "unknown"
         assert hass.states.get("sensor.energy_today").state == "3.296665869"
         assert (
@@ -370,5 +308,5 @@ async def test_setup_entry_absent_measurement(hass: HomeAssistant) -> None:
 
         # Assert mocks are called
         assert len(mock_authenticate.mock_calls) == 1
-        assert len(mock_is_authenticated.mock_calls) == 1
         assert len(mock_current_measurements.mock_calls) == 1
+        assert len(mock_customer_overview.mock_calls) == 1

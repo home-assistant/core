@@ -1,0 +1,49 @@
+{
+  "entity": {
+    "button": {
+      "iv_curve_scan": {
+        "default": "mdi:chart-bell-curve"
+      },
+      "rtc_sync": {
+        "default": "mdi:home-clock"
+      }
+    },
+    "sensor": {
+      "bat_config_capacity": {
+        "default": "mdi:battery-check-outline"
+      },
+      "bat_config_depth_of_discharge": {
+        "default": "mdi:battery-check-outline"
+      },
+      "bat_config_end_of_discharge": {
+        "default": "mdi:battery-check-outline"
+      },
+      "bat_config_eps_buffer": {
+        "default": "mdi:battery-check-outline"
+      },
+      "bat_config_tempco": {
+        "default": "mdi:battery-check-outline"
+      },
+      "battery_state_of_health_total": {
+        "default": "mdi:battery-heart"
+      },
+      "state_of_health": {
+        "default": "mdi:battery-heart"
+      }
+    }
+  },
+  "services": {
+    "set_active_power_limit": {
+      "service": "mdi:speedometer-slow"
+    },
+    "set_feed_in_limit": {
+      "service": "mdi:transmission-tower-export"
+    },
+    "set_passive_mode_power": {
+      "service": "mdi:home-battery"
+    },
+    "set_passive_mode_timeout": {
+      "service": "mdi:timer-cog-outline"
+    }
+  }
+}

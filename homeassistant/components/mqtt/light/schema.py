@@ -1,13 +1,13 @@
 """Shared schema code."""
 
-import voluptuous as vol
+import probatio
 
 from ..const import CONF_SCHEMA
 
-MQTT_LIGHT_SCHEMA_SCHEMA = vol.Schema(
+MQTT_LIGHT_SCHEMA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_SCHEMA, default="basic"): vol.All(
-            vol.Lower, vol.Any("basic", "json", "template")
+        probatio.Optional(CONF_SCHEMA, default="basic"): probatio.All(
+            probatio.Lower, probatio.Any("basic", "json", "template")
         )
     }
 )

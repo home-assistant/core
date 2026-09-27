@@ -14,12 +14,21 @@ from homeassistant.components.harbor.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
 SERIAL = "1234567890"
 CERT_PEM = "-----BEGIN CERTIFICATE-----\nMIIBdummy\n-----END CERTIFICATE-----"
 KEY_PEM = "-----BEGIN PRIVATE KEY-----\nMIIBdummy\n-----END PRIVATE KEY-----"
+
+IP_ADDRESS = "192.168.1.10"
+
+DHCP_DISCOVERY = DhcpServiceInfo(
+    ip=IP_ADDRESS,
+    hostname=f"harborc-{SERIAL}",
+    macaddress="aabbccddeeff",
+)
 
 HEARTBEAT_TOPIC = f"cameras/{SERIAL}/events/heartbeat"
 LIVEKIT_TOPIC = f"cameras/{SERIAL}/events/local_livekit_heartbeat"
@@ -121,6 +130,6 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_SERIAL: SERIAL,
             CONF_CERT_PEM: CERT_PEM,
             CONF_KEY_PEM: KEY_PEM,
-            CONF_IP_ADDRESS: "192.168.1.10",
+            CONF_IP_ADDRESS: IP_ADDRESS,
         },
     )

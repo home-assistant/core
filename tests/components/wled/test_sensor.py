@@ -93,9 +93,10 @@ async def test_no_current_measurement(
     mock_config_entry: MockConfigEntry,
     mock_wled: MagicMock,
 ) -> None:
-    """Test missing current information when no max power is defined."""
+    """Test missing current information when the device estimates no current."""
     device = mock_wled.update.return_value
     device.info.leds.max_power = 0
+    device.info.leds.power = 0
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -103,6 +104,27 @@ async def test_no_current_measurement(
 
     assert hass.states.get("sensor.wled_rgb_light_max_current") is None
     assert hass.states.get("sensor.wled_rgb_light_estimated_current") is None
+
+
+async def test_current_measurement_with_per_output_limiters(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wled: MagicMock,
+) -> None:
+    """Test estimated current is available when limiting current per output."""
+    # Per output limiters leave the global power budget unset, while the
+    # device keeps estimating and reporting the current it draws.
+    device = mock_wled.update.return_value
+    device.info.leds.max_power = 0
+    device.info.leds.power = 3193
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.wled_rgb_light_max_current") is None
+    assert (state := hass.states.get("sensor.wled_rgb_light_estimated_current"))
+    assert state.state == "3193"
 
 
 async def test_fail_when_other_device(

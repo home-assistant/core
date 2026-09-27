@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
@@ -33,8 +33,8 @@ TIME_STR_FORMAT = "%H:%M"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_DISPLAY_OPTIONS, default=["time"]): vol.All(
-            cv.ensure_list, [vol.In(OPTION_TYPES)]
+        probatio.Optional(CONF_DISPLAY_OPTIONS, default=["time"]): probatio.All(
+            cv.ensure_list, [probatio.In(OPTION_TYPES)]
         )
     }
 )

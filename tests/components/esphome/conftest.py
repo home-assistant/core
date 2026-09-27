@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Protocol
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aioesphomeapi import (
+    ZERO_NOISE_PSK,
     APIClient,
     APIVersion,
     BluetoothProxyFeature,
@@ -16,6 +17,7 @@ from aioesphomeapi import (
     EntityState,
     HomeassistantServiceCall,
     LogLevel,
+    OutgoingConnectionServer,
     ReconnectLogic,
     UserService,
     VoiceAssistantAnnounceFinished,
@@ -92,6 +94,21 @@ _ONE_SECOND = 16000 * 2  # 16Khz 16-bit
 @pytest.fixture(autouse=True)
 def mock_bluetooth(enable_bluetooth: None) -> None:
     """Auto mock bluetooth."""
+
+
+@pytest.fixture(autouse=True)
+def mock_outgoing_connection_server() -> Generator[MagicMock]:
+    """Patch the shared dial-in listener so tests never bind a real socket."""
+    server = MagicMock(spec=OutgoingConnectionServer)
+    # A real unregister callback returns None
+    server.register.return_value.return_value = None
+    with patch(
+        "homeassistant.components.esphome.outgoing_connection.OutgoingConnectionServer",
+        return_value=server,
+    ) as server_class:
+        # Tests assert the singleton builds exactly one server
+        server.constructor = server_class
+        yield server
 
 
 @pytest.fixture(autouse=True)
@@ -186,6 +203,7 @@ def mock_client(mock_device_info) -> Generator[APIClient]:
         noise_psk: str | None = None,
         expected_name: str | None = None,
         timezone: str | None = None,
+        outgoing_connection_target: bool = False,
     ) -> None:
         """Fake the client constructor."""
         mock_client.host = address
@@ -194,6 +212,12 @@ def mock_client(mock_device_info) -> Generator[APIClient]:
         mock_client.zeroconf_instance = zeroconf_instance
         mock_client.noise_psk = noise_psk
         mock_client.timezone = timezone
+        # Mirror the real constructor's gate on a real key
+        mock_client.outgoing_connection_target = (
+            outgoing_connection_target
+            and bool(noise_psk)
+            and noise_psk != ZERO_NOISE_PSK
+        )
         return mock_client
 
     mock_client.side_effect = mock_constructor

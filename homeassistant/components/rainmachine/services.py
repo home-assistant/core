@@ -4,15 +4,14 @@ from collections.abc import Callable, Coroutine
 from functools import wraps
 from typing import TYPE_CHECKING, Any
 
+import probatio
 from regenmaschine.controller import Controller
 from regenmaschine.errors import RainMachineError
-import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.util.dt import as_timestamp, utcnow
 
 from .const import CONF_DURATION, DATA_PROGRAMS, DATA_ZONES, DOMAIN
@@ -49,12 +48,24 @@ CV_FLOW_METER_VALID_UNITS = {
     "m3",
 }
 
-CV_WX_DATA_VALID_PERCENTAGE = vol.All(vol.Coerce(int), vol.Range(min=0, max=100))
-CV_WX_DATA_VALID_TEMP_RANGE = vol.All(vol.Coerce(float), vol.Range(min=-40.0, max=40.0))
-CV_WX_DATA_VALID_RAIN_RANGE = vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1000.0))
-CV_WX_DATA_VALID_WIND_SPEED = vol.All(vol.Coerce(float), vol.Range(min=0.0, max=65.0))
-CV_WX_DATA_VALID_PRESSURE = vol.All(vol.Coerce(float), vol.Range(min=60.0, max=110.0))
-CV_WX_DATA_VALID_SOLARRAD = vol.All(vol.Coerce(float), vol.Range(min=0.0, max=100.0))
+CV_WX_DATA_VALID_PERCENTAGE = probatio.All(
+    probatio.Coerce(int), probatio.Range(min=0, max=100)
+)
+CV_WX_DATA_VALID_TEMP_RANGE = probatio.All(
+    probatio.Coerce(float), probatio.Range(min=-40.0, max=40.0)
+)
+CV_WX_DATA_VALID_RAIN_RANGE = probatio.All(
+    probatio.Coerce(float), probatio.Range(min=0.0, max=1000.0)
+)
+CV_WX_DATA_VALID_WIND_SPEED = probatio.All(
+    probatio.Coerce(float), probatio.Range(min=0.0, max=65.0)
+)
+CV_WX_DATA_VALID_PRESSURE = probatio.All(
+    probatio.Coerce(float), probatio.Range(min=60.0, max=110.0)
+)
+CV_WX_DATA_VALID_SOLARRAD = probatio.All(
+    probatio.Coerce(float), probatio.Range(min=0.0, max=100.0)
+)
 
 SERVICE_NAME_PAUSE_WATERING = "pause_watering"
 SERVICE_NAME_PUSH_FLOW_METER_DATA = "push_flow_meter_data"
@@ -64,49 +75,49 @@ SERVICE_NAME_STOP_ALL = "stop_all"
 SERVICE_NAME_UNPAUSE_WATERING = "unpause_watering"
 SERVICE_NAME_UNRESTRICT_WATERING = "unrestrict_watering"
 
-SERVICE_SCHEMA = vol.Schema(
+SERVICE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_DEVICE_ID): cv.string,
+        probatio.Required(CONF_DEVICE_ID): cv.string,
     }
 )
 
 SERVICE_PAUSE_WATERING_SCHEMA = SERVICE_SCHEMA.extend(
     {
-        vol.Required(CONF_SECONDS): cv.positive_int,
+        probatio.Required(CONF_SECONDS): cv.positive_int,
     }
 )
 
 SERVICE_PUSH_FLOW_METER_DATA_SCHEMA = SERVICE_SCHEMA.extend(
     {
-        vol.Required(CONF_VALUE): cv.positive_float,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.All(
-            cv.string, vol.In(CV_FLOW_METER_VALID_UNITS)
+        probatio.Required(CONF_VALUE): cv.positive_float,
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): probatio.All(
+            cv.string, probatio.In(CV_FLOW_METER_VALID_UNITS)
         ),
     }
 )
 
 SERVICE_PUSH_WEATHER_DATA_SCHEMA = SERVICE_SCHEMA.extend(
     {
-        vol.Optional(CONF_TIMESTAMP): cv.positive_float,
-        vol.Optional(CONF_MINTEMP): CV_WX_DATA_VALID_TEMP_RANGE,
-        vol.Optional(CONF_MAXTEMP): CV_WX_DATA_VALID_TEMP_RANGE,
-        vol.Optional(CONF_TEMPERATURE): CV_WX_DATA_VALID_TEMP_RANGE,
-        vol.Optional(CONF_WIND): CV_WX_DATA_VALID_WIND_SPEED,
-        vol.Optional(CONF_SOLARRAD): CV_WX_DATA_VALID_SOLARRAD,
-        vol.Optional(CONF_QPF): CV_WX_DATA_VALID_RAIN_RANGE,
-        vol.Optional(CONF_RAIN): CV_WX_DATA_VALID_RAIN_RANGE,
-        vol.Optional(CONF_ET): CV_WX_DATA_VALID_RAIN_RANGE,
-        vol.Optional(CONF_MINRH): CV_WX_DATA_VALID_PERCENTAGE,
-        vol.Optional(CONF_MAXRH): CV_WX_DATA_VALID_PERCENTAGE,
-        vol.Optional(CONF_CONDITION): cv.string,
-        vol.Optional(CONF_PRESSURE): CV_WX_DATA_VALID_PRESSURE,
-        vol.Optional(CONF_DEWPOINT): CV_WX_DATA_VALID_TEMP_RANGE,
+        probatio.Optional(CONF_TIMESTAMP): cv.positive_float,
+        probatio.Optional(CONF_MINTEMP): CV_WX_DATA_VALID_TEMP_RANGE,
+        probatio.Optional(CONF_MAXTEMP): CV_WX_DATA_VALID_TEMP_RANGE,
+        probatio.Optional(CONF_TEMPERATURE): CV_WX_DATA_VALID_TEMP_RANGE,
+        probatio.Optional(CONF_WIND): CV_WX_DATA_VALID_WIND_SPEED,
+        probatio.Optional(CONF_SOLARRAD): CV_WX_DATA_VALID_SOLARRAD,
+        probatio.Optional(CONF_QPF): CV_WX_DATA_VALID_RAIN_RANGE,
+        probatio.Optional(CONF_RAIN): CV_WX_DATA_VALID_RAIN_RANGE,
+        probatio.Optional(CONF_ET): CV_WX_DATA_VALID_RAIN_RANGE,
+        probatio.Optional(CONF_MINRH): CV_WX_DATA_VALID_PERCENTAGE,
+        probatio.Optional(CONF_MAXRH): CV_WX_DATA_VALID_PERCENTAGE,
+        probatio.Optional(CONF_CONDITION): cv.string,
+        probatio.Optional(CONF_PRESSURE): CV_WX_DATA_VALID_PRESSURE,
+        probatio.Optional(CONF_DEWPOINT): CV_WX_DATA_VALID_TEMP_RANGE,
     }
 )
 
 SERVICE_RESTRICT_WATERING_SCHEMA = SERVICE_SCHEMA.extend(
     {
-        vol.Required(CONF_DURATION): cv.time_period,
+        probatio.Required(CONF_DURATION): cv.time_period,
     }
 )
 
@@ -131,20 +142,11 @@ def async_get_entry_for_service_call(
     hass: HomeAssistant, call: ServiceCall
 ) -> RainMachineConfigEntry:
     """Get the controller related to a service call (by device ID)."""
-    device_id = call.data[CONF_DEVICE_ID]
-    device_registry = dr.async_get(hass)
-
-    if (device_entry := device_registry.async_get(device_id)) is None:
-        raise ValueError(f"Invalid RainMachine device ID: {device_id}")
-
-    entry: RainMachineConfigEntry | None
-    for entry_id in device_entry.config_entries:
-        if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
-            continue
-        if entry.domain == DOMAIN and entry.state is ConfigEntryState.LOADED:
-            return entry
-
-    raise ValueError(f"No controller for device ID: {device_id}")
+    config_entry: RainMachineConfigEntry
+    _, config_entry = service.async_get_device_and_config_entry(
+        hass, DOMAIN, call.data[CONF_DEVICE_ID]
+    )
+    return config_entry
 
 
 @callback

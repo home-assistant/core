@@ -188,6 +188,12 @@ def climate_heatit_z_trm6_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("climate_heatit_z_trm6_state.json", DOMAIN)
 
 
+@pytest.fixture(name="climate_heatit_z_trm7_state", scope="package")
+def climate_heatit_z_trm7_state_fixture() -> dict[str, Any]:
+    """Load the climate HEATIT Z-TRM7 thermostat node state fixture data."""
+    return load_json_object_fixture("climate_heatit_z_trm7_state.json", DOMAIN)
+
+
 @pytest.fixture(name="climate_heatit_z_trm3_state", scope="package")
 def climate_heatit_z_trm3_state_fixture() -> dict[str, Any]:
     """Load the climate HEATIT Z-TRM3 thermostat node state fixture data."""
@@ -509,6 +515,12 @@ def lock_home_connect_620_state_fixture() -> dict[str, Any]:
 def switch_zooz_zen72_state_fixture() -> dict[str, Any]:
     """Load the Zooz Zen72 switch node state fixture data."""
     return load_json_object_fixture("switch_zooz_zen72_state.json", DOMAIN)
+
+
+@pytest.fixture(name="zooz_zse43_state", scope="package")
+def zooz_zse43_state_fixture() -> dict[str, Any]:
+    """Load the Zooz ZSE43 tilt/shock sensor node state fixture data."""
+    return load_json_object_fixture("zooz_zse43_state.json", DOMAIN)
 
 
 @pytest.fixture(name="indicator_test_state", scope="package")
@@ -915,6 +927,16 @@ def climate_eurotronic_comet_z_fixture(
 def climate_heatit_z_trm6_fixture(client, climate_heatit_z_trm6_state) -> Node:
     """Mock a climate radio HEATIT Z-TRM6 node."""
     node = Node(client, copy.deepcopy(climate_heatit_z_trm6_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="climate_heatit_z_trm7")
+def climate_heatit_z_trm7_fixture(
+    client: MagicMock, climate_heatit_z_trm7_state: dict[str, Any]
+) -> Node:
+    """Mock a climate HEATIT Z-TRM7 node."""
+    node = Node(client, copy.deepcopy(climate_heatit_z_trm7_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
@@ -1415,6 +1437,14 @@ def lock_home_connect_620_fixture(client, lock_home_connect_620_state) -> Node:
 def switch_zooz_zen72_fixture(client, switch_zooz_zen72_state) -> Node:
     """Mock a Zooz Zen72 switch node."""
     node = Node(client, copy.deepcopy(switch_zooz_zen72_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="zooz_zse43")
+def zooz_zse43_fixture(client: MagicMock, zooz_zse43_state: NodeDataType) -> Node:
+    """Mock a Zooz ZSE43 tilt/shock sensor node."""
+    node = Node(client, copy.deepcopy(zooz_zse43_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 

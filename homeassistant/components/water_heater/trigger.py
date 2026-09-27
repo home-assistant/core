@@ -2,7 +2,7 @@
 
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_OPTIONS, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
@@ -28,9 +28,9 @@ CONF_OPERATION_MODE = "operation_mode"
 _OPERATION_MODE_CHANGED_TRIGGER_SCHEMA = (
     ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
         {
-            vol.Required(CONF_OPTIONS): {
-                vol.Required(CONF_OPERATION_MODE): vol.All(
-                    cv.ensure_list, vol.Length(min=1), [str]
+            probatio.Required(CONF_OPTIONS): {
+                probatio.Required(CONF_OPERATION_MODE): probatio.All(
+                    cv.ensure_list, probatio.Length(min=1), [str]
                 ),
             },
         }
@@ -57,7 +57,7 @@ class _WaterHeaterTargetTemperatureTriggerMixin(
 
     _base_unit = UnitOfTemperature.CELSIUS
     _domain_specs = {
-        DOMAIN: DomainSpec(value_source=WaterHeaterStateAttribute.TEMPERATURE)
+        DOMAIN: DomainSpec(value_source=WaterHeaterStateAttribute.TARGET_TEMPERATURE)
     }
     _unit_converter = TemperatureConverter
 
@@ -66,7 +66,8 @@ class _WaterHeaterTargetTemperatureTriggerMixin(
         """Skip water heater entities that do not expose a target temperature."""
         return (
             super()._should_include(state)
-            and state.attributes.get(WaterHeaterStateAttribute.TEMPERATURE) is not None
+            and state.attributes.get(WaterHeaterStateAttribute.TARGET_TEMPERATURE)
+            is not None
         )
 
     @override

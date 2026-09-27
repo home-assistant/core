@@ -15,6 +15,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import condition, template
@@ -33,6 +34,7 @@ _PICTURE_TEMPLATE = '/local/picture_o{{ "n" if value=="on" else "ff" }}'
 class TestEntity(trigger_entity.TriggerEntity):
     """Test entity class."""
 
+    domain = "test"
     __test__ = False
     _entity_id_format = "test.{}"
     extra_template_keys = (CONF_STATE,)
@@ -370,3 +372,153 @@ async def test_reload_stops_script_and_unsubscribes_triggers(
     # Old trigger should be unsubscribed
     listeners = hass.bus.async_listeners()
     assert listeners.get("test_event", 0) == 0
+
+
+async def test_entity_conditions_with_multiple_entities(hass: HomeAssistant) -> None:
+    """Test entity conditions with multiple entities."""
+    with assert_setup_component(1, DOMAIN):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "template": {
+                    "triggers": {
+                        "trigger": "state",
+                        "entity_id": ["sensor.trigger"],
+                    },
+                    "sensor": [
+                        {
+                            "name": "a",
+                            "state": "{{ states('sensor.trigger') }}",
+                            "conditions": {
+                                "condition": "numeric_state",
+                                "entity_id": "sensor.trigger",
+                                "above": 1,
+                            },
+                        },
+                        {
+                            "name": "b",
+                            "state": "{{ trigger.to_state.state }}",
+                            "conditions": {
+                                "condition": "numeric_state",
+                                "entity_id": "sensor.trigger",
+                                "below": 1,
+                            },
+                        },
+                    ],
+                },
+            },
+        )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.a")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    state = hass.states.get("sensor.b")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    await async_trigger(hass, "sensor.trigger", "2")
+
+    state = hass.states.get("sensor.a")
+    assert state
+    assert state.state == "2"
+
+    state = hass.states.get("sensor.b")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    await async_trigger(hass, "sensor.trigger", "0")
+
+    state = hass.states.get("sensor.a")
+    assert state
+    assert state.state == "2"
+
+    state = hass.states.get("sensor.b")
+    assert state
+    assert state.state == "0"
+
+
+async def test_entity_conditions_variables(hass: HomeAssistant) -> None:
+    """Test entity conditions variables."""
+    await async_trigger(hass, "sensor.start", "0")
+    with assert_setup_component(1, DOMAIN):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "template": {
+                    "triggers": {
+                        "trigger": "state",
+                        "entity_id": ["sensor.trigger", "sensor.start"],
+                    },
+                    "variables": {"a": "{{ states('sensor.start') }}"},
+                    "sensor": [
+                        {
+                            "name": "test",
+                            "state": "{{ states('sensor.start') }}",
+                            "variables": {"b": "{{ a + 1 }}"},
+                            "conditions": {
+                                "condition": "template",
+                                "value_template": "{{ b > 1 }}",
+                            },
+                            "attributes": {
+                                "a": "{{ a }}",
+                                "b": "{{ b }}",
+                            },
+                        },
+                    ],
+                },
+            },
+        )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert "a" not in state.attributes
+    assert "b" not in state.attributes
+
+    await async_trigger(hass, "sensor.trigger", "anything")
+
+    state = hass.states.get("sensor.test")
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert "a" not in state.attributes
+    assert "b" not in state.attributes
+
+    await async_trigger(hass, "sensor.start", "1")
+
+    state = hass.states.get("sensor.test")
+    assert state
+    assert state.state == "1"
+    assert state.attributes["a"] == 1
+    assert state.attributes["b"] == 2
+
+    await async_trigger(hass, "sensor.start", "0")
+
+    state = hass.states.get("sensor.test")
+    assert state
+    assert state.state == "1"
+    assert state.attributes["a"] == 1
+    assert state.attributes["b"] == 2
+
+
+async def test_entity_remove_unloads_condition(
+    hass: HomeAssistant,
+) -> None:
+    """Test that removing the entity unloads the condition."""
+    coordinator = TriggerUpdateCoordinator(hass, {})
+
+    mock_cond = Mock(spec=condition.ConditionsChecker)
+
+    entity = TestEntity(hass, coordinator, {})
+    entity._cond_func = mock_cond
+    await entity.async_will_remove_from_hass()
+
+    mock_cond.async_unload.assert_called_once()

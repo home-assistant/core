@@ -88,6 +88,13 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
                 "select.x8_pro_omni_active_map",
             ],
         ),
+        (
+            "twunby",
+            [
+                "select.t90_pro_omni_work_mode",
+                "select.t90_pro_omni_auto_empty_frequency",
+            ],
+        ),
     ],
 )
 async def test_selects(

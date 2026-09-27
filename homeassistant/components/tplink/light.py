@@ -8,7 +8,7 @@ from typing import Any, override
 from kasa import Device, DeviceType, KasaException, LightState, Module
 from kasa.interfaces import LightEffect
 from kasa.iot import IotDevice
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -48,74 +48,76 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_RANDOM_EFFECT = "random_effect"
 SERVICE_SEQUENCE_EFFECT = "sequence_effect"
 
-HUE = vol.Range(min=0, max=360)
-SAT = vol.Range(min=0, max=100)
-VAL = vol.Range(min=0, max=100)
-TRANSITION = vol.Range(min=0, max=6000)
-HSV_SEQUENCE = vol.ExactSequence((HUE, SAT, VAL))
+HUE = probatio.Range(min=0, max=360)
+SAT = probatio.Range(min=0, max=100)
+VAL = probatio.Range(min=0, max=100)
+TRANSITION = probatio.Range(min=0, max=6000)
+HSV_SEQUENCE = probatio.ExactSequence((HUE, SAT, VAL))
 
 BASE_EFFECT_DICT: VolDictType = {
-    vol.Optional("brightness", default=100): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=100)
+    probatio.Optional("brightness", default=100): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=0, max=100)
     ),
-    vol.Optional("duration", default=0): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=5000)
+    probatio.Optional("duration", default=0): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=0, max=5000)
     ),
-    vol.Optional("transition", default=0): vol.All(vol.Coerce(int), TRANSITION),
-    vol.Optional("segments", default=[0]): vol.All(
+    probatio.Optional("transition", default=0): probatio.All(
+        probatio.Coerce(int), TRANSITION
+    ),
+    probatio.Optional("segments", default=[0]): probatio.All(
         cv.ensure_list_csv,
-        vol.Length(min=1, max=80),
-        [vol.All(vol.Coerce(int), vol.Range(min=0, max=80))],
+        probatio.Length(min=1, max=80),
+        [probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=80))],
     ),
 }
 
 SEQUENCE_EFFECT_DICT: VolDictType = {
     **BASE_EFFECT_DICT,
-    vol.Required("sequence"): vol.All(
+    probatio.Required("sequence"): probatio.All(
         cv.ensure_list,
-        vol.Length(min=1, max=16),
-        [vol.All(vol.Coerce(tuple), HSV_SEQUENCE)],
+        probatio.Length(min=1, max=16),
+        [probatio.All(probatio.Coerce(tuple), HSV_SEQUENCE)],
     ),
-    vol.Optional("repeat_times", default=0): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=10)
+    probatio.Optional("repeat_times", default=0): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=0, max=10)
     ),
-    vol.Optional("spread", default=1): vol.All(
-        vol.Coerce(int), vol.Range(min=1, max=16)
+    probatio.Optional("spread", default=1): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=1, max=16)
     ),
-    vol.Optional("direction", default=4): vol.All(
-        vol.Coerce(int), vol.Range(min=1, max=4)
+    probatio.Optional("direction", default=4): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=1, max=4)
     ),
 }
 
 RANDOM_EFFECT_DICT: VolDictType = {
     **BASE_EFFECT_DICT,
-    vol.Optional("fadeoff", default=0): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=3000)
+    probatio.Optional("fadeoff", default=0): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=0, max=3000)
     ),
-    vol.Optional("hue_range"): vol.All(
-        cv.ensure_list_csv, [vol.Coerce(int)], vol.ExactSequence((HUE, HUE))
+    probatio.Optional("hue_range"): probatio.All(
+        cv.ensure_list_csv, [probatio.Coerce(int)], probatio.ExactSequence((HUE, HUE))
     ),
-    vol.Optional("saturation_range"): vol.All(
-        cv.ensure_list_csv, [vol.Coerce(int)], vol.ExactSequence((SAT, SAT))
+    probatio.Optional("saturation_range"): probatio.All(
+        cv.ensure_list_csv, [probatio.Coerce(int)], probatio.ExactSequence((SAT, SAT))
     ),
-    vol.Optional("brightness_range"): vol.All(
-        cv.ensure_list_csv, [vol.Coerce(int)], vol.ExactSequence((VAL, VAL))
+    probatio.Optional("brightness_range"): probatio.All(
+        cv.ensure_list_csv, [probatio.Coerce(int)], probatio.ExactSequence((VAL, VAL))
     ),
-    vol.Optional("transition_range"): vol.All(
+    probatio.Optional("transition_range"): probatio.All(
         cv.ensure_list_csv,
-        [vol.Coerce(int)],
-        vol.ExactSequence((TRANSITION, TRANSITION)),
+        [probatio.Coerce(int)],
+        probatio.ExactSequence((TRANSITION, TRANSITION)),
     ),
-    vol.Required("init_states"): vol.All(
-        cv.ensure_list_csv, [vol.Coerce(int)], HSV_SEQUENCE
+    probatio.Required("init_states"): probatio.All(
+        cv.ensure_list_csv, [probatio.Coerce(int)], HSV_SEQUENCE
     ),
-    vol.Optional("random_seed", default=100): vol.All(
-        vol.Coerce(int), vol.Range(min=1, max=600)
+    probatio.Optional("random_seed", default=100): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=1, max=600)
     ),
-    vol.Optional("backgrounds"): vol.All(
+    probatio.Optional("backgrounds"): probatio.All(
         cv.ensure_list,
-        vol.Length(min=1, max=16),
-        [vol.All(vol.Coerce(tuple), HSV_SEQUENCE)],
+        probatio.Length(min=1, max=16),
+        [probatio.All(probatio.Coerce(tuple), HSV_SEQUENCE)],
     ),
 }
 
