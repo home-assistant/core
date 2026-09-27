@@ -83,6 +83,7 @@ from .const import (
     CONF_MAX_HEIGHT,
     CONF_MAX_WIDTH,
     CONF_MIN_COLOR_TEMP_KELVIN,
+    CONF_RGB_BELOW_KELVIN,
     CONF_STREAM_ADDRESS,
     CONF_STREAM_COUNT,
     CONF_STREAM_SOURCE,
@@ -93,6 +94,7 @@ from .const import (
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
     CONF_VIDEO_PROFILE_NAMES,
+    CONF_WARM_RGB_COLOR,
     DEFAULT_AUDIO_CODEC,
     DEFAULT_AUDIO_MAP,
     DEFAULT_AUDIO_PACKET_SIZE,
@@ -155,6 +157,10 @@ BASIC_INFO_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_ADAPTIVE_LIGHTING): cv.boolean,
         probatio.Optional(CONF_MIN_COLOR_TEMP_KELVIN): cv.positive_int,
         probatio.Optional(CONF_MAX_COLOR_TEMP_KELVIN): cv.positive_int,
+        probatio.Inclusive(CONF_RGB_BELOW_KELVIN, "warm_rgb"): cv.positive_int,
+        probatio.Inclusive(CONF_WARM_RGB_COLOR, "warm_rgb"): probatio.All(
+            probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 3)
+        ),
         probatio.Optional(CONF_LINKED_BATTERY_SENSOR): cv.entity_domain(SENSOR_DOMAIN),
         probatio.Optional(CONF_LINKED_BATTERY_CHARGING_SENSOR): cv.entity_domain(
             BINARY_SENSOR_DOMAIN

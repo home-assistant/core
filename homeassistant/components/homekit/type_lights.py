@@ -10,6 +10,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
+    ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_WHITE,
@@ -33,6 +34,7 @@ from homeassistant.util.color import (
     color_temperature_kelvin_to_mired,
     color_temperature_mired_to_kelvin,
     color_temperature_to_hs,
+    color_temperature_to_rgb,
     color_temperature_to_rgbww,
 )
 
@@ -47,6 +49,8 @@ from .const import (
     CONF_ADAPTIVE_LIGHTING,
     CONF_MAX_COLOR_TEMP_KELVIN,
     CONF_MIN_COLOR_TEMP_KELVIN,
+    CONF_RGB_BELOW_KELVIN,
+    CONF_WARM_RGB_COLOR,
     PROP_MAX_VALUE,
     PROP_MIN_VALUE,
     SERV_LIGHTBULB,
@@ -290,7 +294,9 @@ class Light(HomeAccessory):
             bright_val = round(
                 ((brightness_pct or self.char_brightness.value) * 255) / 100
             )
-            if self.color_temp_supported:
+            if (rgb := self._warm_rgb_color(temp)) is not None:
+                params[ATTR_RGB_COLOR] = rgb
+            elif self.color_temp_supported:
                 params[ATTR_COLOR_TEMP_KELVIN] = color_temperature_mired_to_kelvin(temp)
             elif self.rgbww_supported:
                 params[ATTR_RGBWW_COLOR] = color_temperature_to_rgbww(
@@ -324,6 +330,25 @@ class Light(HomeAccessory):
             "Calling light service with params: %s -> %s", char_values, params
         )
         self.async_call_service(LIGHT_DOMAIN, service, params, ", ".join(events))
+
+    def _warm_rgb_color(self, mireds: int) -> tuple[int, ...] | None:
+        """Return the colour for a temperature below the white channel's floor.
+
+        Some bulbs clamp or go dark below a colour temperature they still
+        advertise, but can show a warmer tone in colour mode. Below the
+        configured floor the temperature is blended towards that colour.
+        """
+        floor = self.config.get(CONF_RGB_BELOW_KELVIN)
+        kelvin = color_temperature_mired_to_kelvin(mireds)
+        if not floor or not self.color_supported or kelvin >= floor:
+            return None
+        warmest = color_temperature_mired_to_kelvin(self.max_mireds)
+        ratio = min(1, (floor - kelvin) / max(1, floor - warmest))
+        white = color_temperature_to_rgb(floor)
+        return tuple(
+            round(start + (end - start) * ratio)
+            for start, end in zip(white, self.config[CONF_WARM_RGB_COLOR], strict=True)
+        )
 
     @callback
     @override
