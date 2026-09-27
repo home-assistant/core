@@ -676,8 +676,8 @@ async def test_state_listener_removed_with_entity(hass: HomeAssistant) -> None:
     entity = hass.data[MEDIA_DOMAIN].get_entity("media_player.media_group")
     await entity.async_remove()
 
-    with patch.object(entity, "async_update_group_state") as mock_update:
-        hass.states.async_set("media_player.player_1", STATE_ON)
-        await hass.async_block_till_done()
+    assert entity.state is None
+    hass.states.async_set("media_player.player_1", STATE_ON)
+    await hass.async_block_till_done()
 
-    mock_update.assert_not_called()
+    assert entity.state is None
