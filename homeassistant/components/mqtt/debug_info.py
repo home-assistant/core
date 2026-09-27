@@ -75,6 +75,11 @@ def log_message(
         entity_info["transmitted"][topic] = {
             "messages": [],
         }
+    if (
+        isinstance(payload, (str, bytes, bytearray))
+        and len(payload) > MAX_STORED_PAYLOAD_SIZE
+    ):
+        payload = payload[:MAX_STORED_PAYLOAD_SIZE]
     msg = TimestampedPublishMessage(
         topic,
         payload,

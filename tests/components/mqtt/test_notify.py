@@ -7,6 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import notify
+from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.notify import ATTR_MESSAGE
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_UNKNOWN
@@ -85,6 +86,42 @@ async def test_sending_mqtt_commands(
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("notify.test_notify")
     assert state.state == "2021-11-08T13:31:44+00:00"
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            DOMAIN: {
+                notify.DOMAIN: {
+                    "command_topic": "command-topic",
+                    "name": "test",
+                    "default_entity_id": "notify.test_notify",
+                }
+            }
+        }
+    ],
+)
+async def test_debug_info_large_message(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test debug info only stores the start of a large sent message."""
+    mqtt_mock = await mqtt_mock_entry()
+    message = "x" * (debug_info.MAX_STORED_PAYLOAD_SIZE + 1)
+
+    await hass.services.async_call(
+        notify.DOMAIN,
+        notify.SERVICE_SEND_MESSAGE,
+        {ATTR_MESSAGE: message, ATTR_ENTITY_ID: "notify.test_notify"},
+        blocking=True,
+    )
+
+    assert mqtt_mock.async_publish.call_args.args[1] == message
+    debug_info_data = debug_info.info_for_config_entry(hass)
+    transmitted = debug_info_data["entities"][0]["transmitted"]
+    assert [msg["payload"] for msg in transmitted[0]["messages"]] == [
+        message[: debug_info.MAX_STORED_PAYLOAD_SIZE]
+    ]
 
 
 @pytest.mark.parametrize(
