@@ -20,26 +20,35 @@ ENTRY_DATA = {
 
 
 @pytest.mark.parametrize(
-    ("unique_id", "expected_unique_id"),
+    ("unique_id", "mac", "expected_unique_id"),
     [
         # Stored without a CID: adopts the MAC address.
-        ("", "aa:bb:cc:dd:ee:ff"),
+        ("", "AA:BB:CC:DD:EE:FF", "aa:bb:cc:dd:ee:ff"),
         # Stored with a CID: left alone.
-        ("very_unique_string", "very_unique_string"),
+        ("very_unique_string", "AA:BB:CC:DD:EE:FF", "very_unique_string"),
+        # Stored without a CID and a MAC address: nothing to adopt.
+        ("", "", ""),
     ],
 )
 async def test_migrate_unique_id(
-    hass: HomeAssistant, unique_id: str, expected_unique_id: str
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    unique_id: str,
+    mac: str,
+    expected_unique_id: str,
 ) -> None:
     """Test only an entry stored without a CID gets a new unique ID."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=unique_id,
-        data=ENTRY_DATA,
+        data=ENTRY_DATA | {CONF_MAC: mac},
         version=1,
         minor_version=1,
     )
     config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "media_player", DOMAIN, unique_id, config_entry=config_entry
+    )
 
     with (
         patch("homeassistant.components.braviatv.BraviaClient", autospec=True),
