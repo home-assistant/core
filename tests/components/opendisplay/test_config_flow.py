@@ -15,15 +15,34 @@ from opendisplay import (
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.opendisplay.config_flow import CONNECT_TIMEOUT
 from homeassistant.components.opendisplay.const import CONF_ENCRYPTION_KEY, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.util import dt as dt_util
 
-from . import ENCRYPTION_KEY, NOT_OPENDISPLAY_SERVICE_INFO, VALID_SERVICE_INFO
+from . import (
+    ENCRYPTION_KEY,
+    OPENDISPLAY_MANUFACTURER_ID,
+    TEST_NAME,
+    VALID_SERVICE_INFO,
+    make_service_info,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+UNSUPPORTED_SERVICE_INFOS = [
+    pytest.param(make_service_info(name="Other Device"), id="wrong_name"),
+    pytest.param(
+        make_service_info(manufacturer_data={0x1234: b"\x00\x01"}),
+        id="wrong_manufacturer_id",
+    ),
+    pytest.param(
+        make_service_info(manufacturer_data={OPENDISPLAY_MANUFACTURER_ID: b"\x00\x01"}),
+        id="malformed_advertisement",
+    ),
+]
 
 
 @pytest.fixture(autouse=True)
@@ -36,7 +55,9 @@ def mock_setup_entry() -> Generator[None]:
         yield
 
 
-async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
+async def test_bluetooth_discovery(
+    hass: HomeAssistant, mock_opendisplay_device_class: MagicMock
+) -> None:
     """Test discovery via Bluetooth with a valid device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -45,15 +66,34 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
+    # Discovery alone must not occupy a BLE connection slot.
+    mock_opendisplay_device_class.assert_not_called()
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "OpenDisplay 1234"
+    assert result["title"] == TEST_NAME
     assert result["data"] == {}
     assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
+
+
+@pytest.mark.parametrize("service_info", UNSUPPORTED_SERVICE_INFOS)
+async def test_bluetooth_discovery_not_opendisplay(
+    hass: HomeAssistant,
+    mock_opendisplay_device_class: MagicMock,
+    service_info: BluetoothServiceInfoBleak,
+) -> None:
+    """Test discovery aborts for devices that are not OpenDisplay devices."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=service_info,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_supported"
+    mock_opendisplay_device_class.assert_not_called()
 
 
 async def test_bluetooth_discovery_already_configured(
@@ -130,22 +170,6 @@ async def test_bluetooth_confirm_connection_error(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_bluetooth_discovery_does_not_connect(
-    hass: HomeAssistant,
-    mock_opendisplay_device_class: MagicMock,
-) -> None:
-    """Test that discovery alone never opens a connection to the device."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=VALID_SERVICE_INFO,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "bluetooth_confirm"
-    mock_opendisplay_device_class.assert_not_called()
-
-
 async def test_bluetooth_confirm_ble_device_not_found(
     hass: HomeAssistant,
 ) -> None:
@@ -166,6 +190,11 @@ async def test_bluetooth_confirm_ble_device_not_found(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_bluetooth_confirm_connection_timeout(
@@ -194,6 +223,12 @@ async def test_bluetooth_confirm_connection_timeout(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
+    mock_opendisplay_device.read_firmware_version.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_step_with_devices(hass: HomeAssistant) -> None:
     """Test user step with discovered devices."""
@@ -215,7 +250,7 @@ async def test_user_step_with_devices(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "OpenDisplay 1234"
+    assert result["title"] == TEST_NAME
     assert result["data"] == {}
     assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
 
@@ -235,11 +270,14 @@ async def test_user_step_no_devices(hass: HomeAssistant) -> None:
     assert result["reason"] == "no_devices_found"
 
 
-async def test_user_step_filters_unsupported(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("service_info", UNSUPPORTED_SERVICE_INFOS)
+async def test_user_step_filters_unsupported(
+    hass: HomeAssistant, service_info: BluetoothServiceInfoBleak
+) -> None:
     """Test user step filters out unsupported devices."""
     with patch(
         "homeassistant.components.opendisplay.config_flow.async_discovered_service_info",
-        return_value=[NOT_OPENDISPLAY_SERVICE_INFO],
+        return_value=[service_info],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -573,3 +611,10 @@ async def test_reauth_invalid_key_format(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_ENCRYPTION_KEY: "invalid_key_format"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ENCRYPTION_KEY: ENCRYPTION_KEY},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
