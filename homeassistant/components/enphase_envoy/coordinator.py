@@ -135,7 +135,6 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         if not fresh:
             if not self.manual_token:
-                # create config entry task so it will be canceled on unload
                 self.config_entry.async_create_background_task(
                     self.hass,
                     self._async_try_refresh_token(),
@@ -193,7 +192,6 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @callback
     def _async_refresh_firmware(self, now: datetime.datetime) -> None:
         """Proactively check for firmware changes in Envoy."""
-        # create config entry task so it will be canceled on unload
         self.config_entry.async_create_background_task(
             self.hass,
             self._async_try_refresh_firmware(),
@@ -210,9 +208,9 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.debug("%s: Error reading firmware: %s", err, self.name)
             return
         except RuntimeError as err:
-            # Don't raise on session closed next runs will try again
+            # We may get session is closed if we still run at unload
             if "Session is closed" in str(err):
-                _LOGGER.debug("Client is closed when reading firmware: %s", self.name)
+                _LOGGER.debug("%s: Client is closed when reading firmware", self.name)
                 return
             raise
         if (current_firmware := self.envoy_firmware) and current_firmware != (
@@ -244,7 +242,6 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @callback
     def _async_verify_mac(self, now: datetime.datetime) -> None:
         """Verify Envoy active interface mac address in background."""
-        # create config entry task so it will be canceled on unload
         self.config_entry.async_create_background_task(
             self.hass,
             self._async_fetch_and_compare_mac(),
@@ -261,7 +258,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # We may get session is closed if we still run at unload
             if "Session is closed" in str(err):
                 _LOGGER.debug(
-                    "Client is closed when reading interface information: %s", self.name
+                    "%s: Client is closed when reading interface information", self.name
                 )
                 return
             raise
@@ -318,7 +315,6 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.async_cancel_token_refresh()
         if not isinstance(self.envoy.auth, EnvoyTokenAuth):
             return
-        # this is the timer that creates a background task when firing
         self._cancel_token_refresh = async_track_time_interval(
             self.hass,
             self._async_refresh_token_if_needed,
