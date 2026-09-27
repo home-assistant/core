@@ -84,4 +84,6 @@ class PollingCoordinator(DataUpdateCoordinator):
             self.last_update_success = False
             raise UpdateFailed("Device returned no data")
 
+        self.logger.debug("Device data: %s", data)
+
         return data
