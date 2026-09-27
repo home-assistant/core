@@ -45,6 +45,7 @@ from anthropic.types import (
     ServerToolUseBlock,
     ServerToolUseBlockParam,
     SignatureDelta,
+    StopReason,
     TextBlock,
     TextBlockParam,
     TextCitation,
@@ -529,6 +530,7 @@ class AnthropicDeltaStream:
         """Initialize the delta stream."""
         self._chat_log: conversation.ChatLog = chat_log
         self._stream: AsyncStream[MessageStreamEvent] = stream
+        self.stop_reason: StopReason | None = None
 
         self._buffer: deque[
             conversation.AssistantContentDeltaDict
@@ -846,7 +848,10 @@ class AnthropicDeltaStream:
     def on_message_delta_event(self, delta: Delta, usage: MessageDeltaUsage) -> None:
         """Handle RawMessageDeltaEvent."""
         self._chat_log.async_trace(self._create_token_stats(self._input_usage, usage))
-        self._content_details.container = delta.container
+        if delta.container is not None:
+            self._content_details.container = delta.container
+        if delta.stop_reason is not None:
+            self.stop_reason = delta.stop_reason
         if delta.stop_reason == "refusal":
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="api_refusal"
@@ -1129,16 +1134,17 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
         client = coordinator.client
 
         # To prevent infinite loops, we limit the number of iterations
-        for _iteration in range(max_iterations):
+        for iteration in range(max_iterations):
             try:
                 stream = await client.messages.create(**model_args)
+                delta_stream = AnthropicDeltaStream(chat_log, stream)
 
                 new_messages, model_args["container"] = _convert_content(
                     [
                         content
                         async for content in chat_log.async_add_delta_content_stream(
                             self.entity_id,
-                            AnthropicDeltaStream(chat_log, stream),
+                            delta_stream,
                         )
                     ]
                 )
@@ -1173,6 +1179,15 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                         else str(err)
                     },
                 ) from err
+
+            if delta_stream.stop_reason == "pause_turn":
+                if iteration == max_iterations - 1:
+                    coordinator.async_set_updated_data(coordinator.data)
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="response_incomplete",
+                    )
+                continue
 
             if not chat_log.unresponded_tool_results:
                 coordinator.async_set_updated_data(coordinator.data)

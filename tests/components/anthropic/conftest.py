@@ -2,6 +2,7 @@
 
 from collections.abc import AsyncGenerator, Generator, Iterable
 import datetime
+from typing import Unpack
 from unittest.mock import DEFAULT, AsyncMock, patch
 
 from anthropic.pagination import AsyncPage
@@ -18,6 +19,7 @@ from anthropic.types import (
     ToolUseBlock,
     Usage,
 )
+from anthropic.types.message_create_params import MessageCreateParamsStreaming
 from anthropic.types.raw_message_delta_event import Delta
 import pytest
 
@@ -120,16 +122,20 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_create_stream() -> Generator[AsyncMock]:
     """Mock stream response."""
 
-    async def mock_generator(events: Iterable[RawMessageStreamEvent], **kwargs):
+    async def mock_generator(
+        events: Iterable[RawMessageStreamEvent],
+        **kwargs: Unpack[MessageCreateParamsStreaming],
+    ) -> AsyncGenerator[RawMessageStreamEvent]:
         """Create a stream of messages with the specified content blocks."""
         stop_reason = "end_turn"
         container = None
+        has_message_delta = False
         refusal_magic_string = (
             "ANTHROPIC_MAGIC_STRING_TRIGGER_REFUSAL_"
             "1FAEFB6177B4672DEE07F9D3AFC62588"
             "CCD2631EDCF22E8CCC1FB35B501C9C86"
         )
-        for message in kwargs.get("messages"):
+        for message in kwargs["messages"]:
             if message["role"] != "user":
                 continue
             if isinstance(message["content"], str):
@@ -156,6 +162,8 @@ def mock_create_stream() -> Generator[AsyncMock]:
             type="message_start",
         )
         for event in events:
+            if isinstance(event, RawMessageDeltaEvent):
+                has_message_delta = True
             if isinstance(event, RawContentBlockStartEvent) and isinstance(
                 event.content_block, ToolUseBlock
             ):
@@ -171,20 +179,21 @@ def mock_create_stream() -> Generator[AsyncMock]:
                 ]
             ):
                 container = Container(
-                    id=kwargs.get("container_id", "container_1234567890ABCDEFGHIJKLMN"),
+                    id=kwargs.get("container") or "container_1234567890ABCDEFGHIJKLMN",
                     expires_at=dt_util.utcnow() + datetime.timedelta(minutes=5),
                 )
 
             yield event
-        yield RawMessageDeltaEvent(
-            type="message_delta",
-            delta=Delta(
-                stop_reason=stop_reason,
-                stop_sequence="",
-                container=container,
-            ),
-            usage=MessageDeltaUsage(output_tokens=0),
-        )
+        if not has_message_delta:
+            yield RawMessageDeltaEvent(
+                type="message_delta",
+                delta=Delta(
+                    stop_reason=stop_reason,
+                    stop_sequence="",
+                    container=container,
+                ),
+                usage=MessageDeltaUsage(output_tokens=0),
+            )
         yield RawMessageStopEvent(type="message_stop")
 
     with patch(
