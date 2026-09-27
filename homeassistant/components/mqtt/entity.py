@@ -506,7 +506,8 @@ class MqttAttributesMixin(Entity):
                 _LOGGER.info(
                     "Group member update received for entity %s, "
                     "but this entity was not initialized with the `group` option. "
-                    "Reload the MQTT integration or restart Home Assistant to activate"
+                    "Reload the MQTT integration or restart Home Assistant to activate",
+                    self.entity_id,
                 )
 
         self._attributes_config = config
