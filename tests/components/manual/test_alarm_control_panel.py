@@ -1872,6 +1872,45 @@ async def test_code_used_event_fired(
     assert events[1]["code_id"] == expected_code_id
 
 
+@pytest.mark.parametrize(
+    ("service", "state"),
+    [
+        pytest.param(
+            SERVICE_ALARM_ARM_AWAY, AlarmControlPanelState.ARMED_AWAY, id="arm_away"
+        ),
+        pytest.param(
+            SERVICE_ALARM_ARM_HOME, AlarmControlPanelState.ARMED_HOME, id="arm_home"
+        ),
+    ],
+)
+async def test_code_used_event_not_fired_without_state_change(
+    hass: HomeAssistant, service: str, state: AlarmControlPanelState
+) -> None:
+    """Test that repeating a command the panel already satisfies fires no event."""
+    await _setup_manual_alarm(hass, CODE_MAPPING)
+
+    events: list[dict[str, Any]] = []
+
+    @callback
+    def event_listener(event: Event) -> None:
+        events.append(event.data)
+
+    hass.bus.async_listen("manual_alarm_code_used", event_listener)
+
+    for _ in range(3):
+        await hass.services.async_call(
+            ALARM_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_CODE: "2222"},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == state
+    assert len(events) == 1
+    assert events[0]["target_state"] == state
+
+
 async def test_code_used_event_not_fired_on_bad_code(hass: HomeAssistant) -> None:
     """Test that no code used event is fired when the code is rejected."""
     await _setup_manual_alarm(hass, CODE_LIST)

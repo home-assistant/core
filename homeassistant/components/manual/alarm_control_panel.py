@@ -471,6 +471,11 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
 
     def _async_fire_code_used(self, state: str, code_id: str | None) -> None:
         """Fire an event telling which code was accepted for a state change."""
+        # The state update returns early when the panel already is in the
+        # requested state, and a code that changed nothing is not a state change
+        if self._state == state:
+            return
+
         self.hass.bus.async_fire(
             EVENT_CODE_USED, self._code_event_data(state) | {ATTR_CODE_ID: code_id}
         )
