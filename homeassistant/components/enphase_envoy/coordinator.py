@@ -185,7 +185,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # If the token actually ends up expiring, we'll
             # re-authenticate with username/password and get a new token
             # or log an error if that fails
-            _LOGGER.debug("%s: Error refreshing token: %s", err, self.name)
+            _LOGGER.debug("%s: Error refreshing token: %s", self.name, err)
             return
         self._async_update_saved_token()
 
@@ -205,7 +205,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             await self.envoy.setup()
         except EnvoyError as err:
             # just try again next time
-            _LOGGER.debug("%s: Error reading firmware: %s", err, self.name)
+            _LOGGER.debug("%s: Error reading firmware: %s", self.name, err)
             return
         except EnvoyClientClosedError:
             _LOGGER.debug("%s: Client is closed when reading firmware", self.name)
