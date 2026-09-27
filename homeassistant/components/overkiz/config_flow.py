@@ -82,14 +82,6 @@ TOKEN_DOCS_URL = (
 )
 
 
-def _gateway_option_label(candidate: GatewayCandidate) -> str:
-    """Return a gateway's display label, suffixed with its country when known."""
-    label = candidate.label or candidate.gateway_id
-    if candidate.country:
-        return f"{label} ({candidate.country})"
-    return label
-
-
 class OverkizConfigFlow(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
@@ -443,7 +435,11 @@ class OverkizConfigFlow(
                             options=[
                                 SelectOptionDict(
                                     value=candidate.gateway_id,
-                                    label=_gateway_option_label(candidate),
+                                    label=(
+                                        f"{candidate.label or candidate.gateway_id} ({candidate.country})"
+                                        if candidate.country
+                                        else candidate.label or candidate.gateway_id
+                                    ),
                                 )
                                 for candidate in candidates
                             ],
