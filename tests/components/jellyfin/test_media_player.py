@@ -625,6 +625,17 @@ async def test_search_media(
             },
             id="artist",
         ),
+        pytest.param(
+            "artists-by-name.json",
+            {
+                "media_class": MediaClass.ARTIST,
+                "media_content_type": MediaType.ARTIST,
+                "can_play": True,
+                "can_expand": False,
+                "can_search": True,
+            },
+            id="artist_by_name",
+        ),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -652,6 +663,37 @@ async def test_search_media_result_types(
     assert response["success"]
     result = response["result"]["result"][0]
     assert {key: result[key] for key in expected} == expected
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_search_media_in_artist(
+    hass_ws_client: WebSocketGenerator,
+    mock_api: MagicMock,
+) -> None:
+    """Test Jellyfin search inside an artist filters on the artist."""
+    client = await hass_ws_client()
+
+    await client.send_json_auto_id(
+        {
+            "type": "media_player/search_media",
+            "entity_id": "media_player.jellyfin_device",
+            "media_content_id": "ARTIST-UUID",
+            "media_content_type": MediaType.ARTIST,
+            "search_query": "Fake Item 1",
+            "media_filter_classes": ["album"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["result"][0]["media_content_id"] == "FOLDER-UUID"
+    mock_api.search_media_items.assert_not_called()
+    assert mock_api.user_items.call_args.kwargs["params"] == {
+        "searchTerm": "Fake Item 1",
+        "Recursive": True,
+        "IncludeItemTypes": "MusicAlbum",
+        "Limit": 20,
+        "ArtistIds": "ARTIST-UUID",
+    }
 
 
 @pytest.mark.parametrize(

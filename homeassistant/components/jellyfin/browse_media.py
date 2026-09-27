@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from .client_wrapper import get_artwork_url
 from .const import (
     CONTENT_TYPE_MAP,
+    ITEM_TYPE_ARTIST,
     MEDIA_CLASS_MAP,
     MEDIA_TYPE_NONE,
     SEARCH_ITEM_TYPE_MAP,
@@ -69,8 +70,8 @@ async def item_payload(
         media_class=MEDIA_CLASS_MAP.get(item["Type"], MediaClass.DIRECTORY),
         can_play=bool(media_content_type in PLAYABLE_MEDIA_TYPES and media_content_id),
         can_expand=bool(item.get("IsFolder")),
-        # Search can scope to any folder with parent_id.
-        can_search=bool(item.get("IsFolder")),
+        # Search can scope to any folder or artist.
+        can_search=bool(item.get("IsFolder") or item["Type"] == ITEM_TYPE_ARTIST),
         children_media_class=None,
         thumbnail=thumbnail,
     )
@@ -191,14 +192,27 @@ async def search_items(
         media_types = [None]
 
     for media_type in media_types:
-        items_dict: dict[str, Any] = await hass.async_add_executor_job(
-            partial(
+        if query.media_content_type == MediaType.ARTIST:
+            # The items of a by-name artist are not its descendants, so a
+            # parentId search finds nothing. Filter on the artist instead.
+            search = partial(
+                client.jellyfin.user_items,
+                params={
+                    "searchTerm": query.search_query,
+                    "Recursive": True,
+                    "IncludeItemTypes": media_type,
+                    "Limit": 20,
+                    "ArtistIds": query.media_content_id,
+                },
+            )
+        else:
+            search = partial(
                 client.jellyfin.search_media_items,
                 term=query.search_query,
                 media=media_type,
                 parent_id=query.media_content_id,
             )
-        )
+        items_dict: dict[str, Any] = await hass.async_add_executor_job(search)
         items.extend(items_dict.get("Items", []))
 
     return [await item_payload(hass, client, user_id, item) for item in items]
