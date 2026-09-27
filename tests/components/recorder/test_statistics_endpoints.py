@@ -75,7 +75,7 @@ async def test_endpoint_query_batches(
     with patch.object(
         statistics, "execute_stmt_lambda_element", wraps=execute_stmt_lambda_element
     ) as execute:
-        rows = statistics._get_statistics_period_endpoints(
+        rows = statistics._get_statistics_period_rows(
             endpoint_session,
             start,
             start + timedelta(days=days),
@@ -112,7 +112,7 @@ async def test_endpoint_parameter_budget(endpoint_session: Session) -> None:
     with patch.object(
         statistics, "execute_stmt_lambda_element", wraps=execute_stmt_lambda_element
     ) as execute:
-        rows = statistics._get_statistics_period_endpoints(
+        rows = statistics._get_statistics_period_rows(
             endpoint_session,
             start,
             start + timedelta(days=5),
@@ -240,7 +240,7 @@ async def test_endpoint_results_match_original(
     await async_wait_recording_done(hass)
     with patch.object(
         statistics,
-        "_get_statistics_period_endpoints",
+        "_get_statistics_period_rows",
         side_effect=_unreduced_statistics,
     ) as baseline:
         expected = statistics.statistics_during_period(
@@ -276,10 +276,10 @@ def test_endpoint_statement_cache_key(
     same_key: bool,
 ) -> None:
     """Cache by query structure, without retaining sensor or timestamp values."""
-    baseline = statistics._generate_statistics_period_endpoints_stmt(
+    baseline = statistics._generate_statistics_period_stmt(
         [1], ((0.0, 86400.0),), {"sum"}
     )._generate_cache_key()
-    actual = statistics._generate_statistics_period_endpoints_stmt(
+    actual = statistics._generate_statistics_period_stmt(
         metadata_ids, bounds, types
     )._generate_cache_key()
     assert baseline is not None
@@ -321,14 +321,12 @@ async def test_endpoint_cached_statement_parameters(endpoint_session: Session) -
     endpoint_session.commit()
     first = execute_stmt_lambda_element(
         endpoint_session,
-        statistics._generate_statistics_period_endpoints_stmt(
-            [1], ((0.0, 86400.0),), {"sum"}
-        ),
+        statistics._generate_statistics_period_stmt([1], ((0.0, 86400.0),), {"sum"}),
         orm_rows=False,
     )
     second = execute_stmt_lambda_element(
         endpoint_session,
-        statistics._generate_statistics_period_endpoints_stmt(
+        statistics._generate_statistics_period_stmt(
             [2], ((86400.0, 172800.0),), {"sum"}
         ),
         orm_rows=False,
@@ -373,7 +371,7 @@ async def test_endpoint_unbounded_sensor_filter(
     with patch.object(
         statistics, "execute_stmt_lambda_element", wraps=execute_stmt_lambda_element
     ) as execute:
-        rows = statistics._get_statistics_period_endpoints(
+        rows = statistics._get_statistics_period_rows(
             endpoint_session,
             start + timedelta(hours=offset),
             None,
@@ -384,3 +382,227 @@ async def test_endpoint_unbounded_sensor_filter(
         )
     assert execute.call_count == queries
     assert [(row.metadata_id, row.sum) for row in rows] == expected
+
+
+@pytest.mark.parametrize("timezone", ["UTC", "Europe/Amsterdam", "America/Havana"])
+@pytest.mark.parametrize("start_month", [3, 10])
+@pytest.mark.parametrize("unit", ["W", "kW"])
+@pytest.mark.parametrize("statistic_ids", [None, {"test:energy_1", "test:energy_2"}])
+@pytest.mark.parametrize("bounded", [False, True])
+async def test_power_means_match_original(
+    endpoint_session: Session,
+    hass: HomeAssistant,
+    timezone: str,
+    start_month: int,
+    unit: str,
+    statistic_ids: set[str] | None,
+    bounded: bool,
+) -> None:
+    """Preserve calendar boundaries, missing values, conversion and future imports."""
+    await hass.config.async_set_time_zone(timezone)
+    endpoint_session.query(StatisticsMeta).update(
+        {
+            StatisticsMeta.mean_type: StatisticMeanType.ARITHMETIC,
+            StatisticsMeta.unit_class: "power",
+            StatisticsMeta.unit_of_measurement: "W",
+            StatisticsMeta.has_sum: False,
+        }
+    )
+    start = datetime(2024, start_month, 26, 7, tzinfo=dt_util.UTC)
+    samples = [
+        (0, -1500.0),
+        (1, 3000.0),
+        (18, None),
+        (24, 400.0),
+        (25, 900.0),
+        (48, None),
+        (49, None),
+        (120, 100.0),
+        (20000, 700.0),
+    ]
+    endpoint_session.add_all(
+        Statistics(
+            metadata_id=metadata_id,
+            start_ts=(start + timedelta(hours=hour)).timestamp(),
+            mean=value,
+            mean_weight=float(hour + 1),
+        )
+        for metadata_id in (1, 2)
+        for hour, value in samples
+    )
+    endpoint_session.commit()
+    end_time = {False: None, True: start + timedelta(days=10)}[bounded]
+    with patch.object(
+        statistics, "_get_statistics_period_rows", side_effect=_unreduced_statistics
+    ) as baseline:
+        expected = statistics._statistics_during_period_with_session(
+            hass,
+            endpoint_session,
+            start,
+            end_time,
+            statistic_ids,
+            "day",
+            {"power": unit},
+            {"mean"},
+        )
+    assert baseline.call_count == 1
+    actual = statistics._statistics_during_period_with_session(
+        hass,
+        endpoint_session,
+        start,
+        end_time,
+        statistic_ids,
+        "day",
+        {"power": unit},
+        {"mean"},
+    )
+    assert actual.keys() == expected.keys()
+    for statistic_id, rows in expected.items():
+        assert len(actual[statistic_id]) == len(rows)
+        for actual_row, expected_row in zip(actual[statistic_id], rows, strict=True):
+            assert actual_row == pytest.approx(expected_row, rel=1e-12, abs=1e-12)
+
+
+@pytest.mark.parametrize(
+    ("days", "budget", "queries"), [(401, 4000, 2), (5, 4, 5), (5, 3, 10)]
+)
+async def test_power_mean_query_limits(
+    endpoint_session: Session, days: int, budget: int, queries: int
+) -> None:
+    """Bound UNION terms and bind parameters without weighting arithmetic means."""
+    start = datetime(2024, 1, 1, tzinfo=dt_util.UTC)
+    endpoint_session.add_all(
+        Statistics(
+            metadata_id=metadata_id,
+            start_ts=(start + timedelta(days=day, hours=hour)).timestamp(),
+            mean=value,
+            mean_weight=weight,
+        )
+        for metadata_id in (1, 2)
+        for day in range(days)
+        for hour, value, weight in ((0, 100.0, 1.0), (1, 300.0, 99.0), (2, None, 0.0))
+    )
+    endpoint_session.commit()
+    with patch.object(
+        statistics, "execute_stmt_lambda_element", wraps=execute_stmt_lambda_element
+    ) as execute:
+        rows = statistics._get_statistics_period_rows(
+            endpoint_session,
+            start,
+            start + timedelta(days=days),
+            [1, 2],
+            statistics.reduce_day_ts_factory()[1],
+            {"mean"},
+            budget,
+        )
+    assert execute.call_count == queries
+    assert [(r.metadata_id, r.start_ts, r.mean) for r in rows] == [
+        (metadata_id, (start + timedelta(days=day)).timestamp(), 200.0)
+        for metadata_id in (1, 2)
+        for day in range(days)
+    ]
+    for call in execute.call_args_list:
+        compiled = call.args[1].compile(
+            dialect=endpoint_session.get_bind().dialect,
+            compile_kwargs={"render_postcompile": True},
+        )
+        assert len(compiled.positiontup or compiled.params) <= budget
+
+
+@pytest.mark.parametrize(
+    ("unit_class", "unit", "mean_type", "period", "types"),
+    [
+        pytest.param(
+            "power", "W", StatisticMeanType.ARITHMETIC, "hour", {"mean"}, id="hour"
+        ),
+        pytest.param(
+            "power", "W", StatisticMeanType.ARITHMETIC, "month", {"mean"}, id="month"
+        ),
+        pytest.param(
+            "power",
+            "W",
+            StatisticMeanType.ARITHMETIC,
+            "day",
+            {"mean", "min"},
+            id="mixed-types",
+        ),
+        pytest.param(
+            "angle", "°", StatisticMeanType.CIRCULAR, "day", {"mean"}, id="circular"
+        ),
+        pytest.param(
+            "temperature",
+            "°C",
+            StatisticMeanType.ARITHMETIC,
+            "day",
+            {"mean"},
+            id="other-units",
+        ),
+    ],
+)
+async def test_power_mean_fallback(
+    endpoint_session: Session,
+    hass: HomeAssistant,
+    unit_class: str,
+    unit: str,
+    mean_type: StatisticMeanType,
+    period: Literal["hour", "month", "day"],
+    types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
+) -> None:
+    """Retain the existing path for unoptimized requests."""
+    endpoint_session.query(StatisticsMeta).filter(StatisticsMeta.id == 1).update(
+        {
+            StatisticsMeta.unit_class: unit_class,
+            StatisticsMeta.unit_of_measurement: unit,
+            StatisticsMeta.mean_type: mean_type,
+        }
+    )
+    start = datetime(2024, 1, 1, tzinfo=dt_util.UTC)
+    endpoint_session.add(
+        Statistics(
+            metadata_id=1,
+            start_ts=start.timestamp(),
+            mean=100.0,
+            mean_weight=1.0,
+            min=50.0,
+        )
+    )
+    endpoint_session.commit()
+    with patch.object(statistics, "_get_statistics_period_rows") as optimized:
+        result = statistics._statistics_during_period_with_session(
+            hass,
+            endpoint_session,
+            start,
+            start + timedelta(hours=1),
+            {"test:energy_1"},
+            period,
+            None,
+            types,
+        )
+    optimized.assert_not_called()
+    assert result["test:energy_1"]
+
+
+async def test_power_mean_cached_parameters(endpoint_session: Session) -> None:
+    """Do not leak sensor or time bounds between equal query shapes."""
+    endpoint_session.add_all(
+        [
+            Statistics(metadata_id=1, start_ts=0.0, mean=10.0),
+            Statistics(metadata_id=2, start_ts=0.0, mean=30.0),
+            Statistics(metadata_id=2, start_ts=86400.0, mean=20.0),
+        ]
+    )
+    endpoint_session.commit()
+    first = execute_stmt_lambda_element(
+        endpoint_session,
+        statistics._generate_statistics_period_stmt([1], ((0.0, 86400.0),), {"mean"}),
+        orm_rows=False,
+    )
+    second = execute_stmt_lambda_element(
+        endpoint_session,
+        statistics._generate_statistics_period_stmt(
+            [2], ((86400.0, 172800.0),), {"mean"}
+        ),
+        orm_rows=False,
+    )
+    assert [tuple(row) for row in first] == [(1, 0.0, 10.0)]
+    assert [tuple(row) for row in second] == [(2, 86400.0, 20.0)]
