@@ -1708,6 +1708,30 @@ async def test_debug_info_same_topic_large_payload(
     ] * 2
 
 
+async def test_debug_info_large_multibyte_payload(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test a large multibyte payload is limited in bytes, not characters."""
+    await mqtt_mock_entry()
+    config = {
+        "name": "test",
+        "state_topic": "sensor/status",
+        "unique_id": "veryunique",
+    }
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", json.dumps(config))
+    await hass.async_block_till_done()
+    # Each character takes 3 bytes when encoded
+    payload = "€" * debug_info.MAX_STORED_PAYLOAD_SIZE
+
+    async_fire_mqtt_message(hass, "sensor/status", payload)
+
+    debug_info_data = debug_info.info_for_config_entry(hass)
+    messages = debug_info_data["entities"][0]["subscriptions"][0]["messages"]
+    assert [message["payload"] for message in messages] == [
+        "€" * (debug_info.MAX_STORED_PAYLOAD_SIZE // 3)
+    ]
+
+
 async def test_debug_info_qos_retain(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

@@ -3,7 +3,7 @@
 from dataclasses import dataclass, replace
 import datetime as dt
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -39,13 +39,30 @@ def _append_message[_T](messages: list[_T], msg: _T) -> None:
     messages.append(msg)
 
 
+def _limit_payload[_T](payload: _T) -> _T:
+    """Return the payload, truncated to MAX_STORED_PAYLOAD_SIZE bytes."""
+    if isinstance(payload, str):
+        # A character takes at most 4 bytes, skip encoding short payloads
+        if len(payload) * 4 <= MAX_STORED_PAYLOAD_SIZE:
+            return payload
+        encoded = payload.encode()
+        if len(encoded) <= MAX_STORED_PAYLOAD_SIZE:
+            return payload
+        return cast(_T, encoded[:MAX_STORED_PAYLOAD_SIZE].decode(errors="ignore"))
+    if (
+        isinstance(payload, (bytes, bytearray))
+        and len(payload) > MAX_STORED_PAYLOAD_SIZE
+    ):
+        return cast(_T, payload[:MAX_STORED_PAYLOAD_SIZE])
+    return payload
+
+
 def log_received_message(messages: list[ReceiveMessage], msg: ReceiveMessage) -> None:
     """Log an incoming MQTT message."""
-    if len(msg.payload) <= MAX_STORED_PAYLOAD_SIZE:
+    if (payload := _limit_payload(msg.payload)) is msg.payload:
         if msg not in messages:
             _append_message(messages, msg)
         return
-    payload = msg.payload[:MAX_STORED_PAYLOAD_SIZE]
     # The truncated copy is a new object, so the identity based check above
     # can't detect a message received by multiple handlers of one entity
     if not any(
@@ -75,14 +92,9 @@ def log_message(
         entity_info["transmitted"][topic] = {
             "messages": [],
         }
-    if (
-        isinstance(payload, (str, bytes, bytearray))
-        and len(payload) > MAX_STORED_PAYLOAD_SIZE
-    ):
-        payload = payload[:MAX_STORED_PAYLOAD_SIZE]
     msg = TimestampedPublishMessage(
         topic,
-        payload,
+        _limit_payload(payload),
         qos,
         retain,
         timestamp=time.monotonic(),
