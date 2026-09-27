@@ -1,12 +1,13 @@
 """Tuya Home Assistant Base Device Model."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, override
 
 from tuya_device_handlers.device_wrapper import DeviceWrapper
 from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
@@ -16,6 +17,31 @@ from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY
 @dataclass(frozen=True)
 class TuyaEntityDescription(EntityDescription):
     """Describes a Tuya entity."""
+
+    channel_index: int | None = None
+    channel_condition: Callable[[CustomerDevice], bool] | None = None
+
+
+def get_child_device_info(
+    device: CustomerDevice,
+    parent_device_id: str,
+    description: TuyaEntityDescription,
+) -> ChildDeviceInfo | None:
+    """Get the device info for a single channel of a Tuya device.
+
+    Returns None for entities belonging to the device itself, and for devices
+    that do not expose more than one channel.
+    """
+    if (channel_index := description.channel_index) is None:
+        return None
+    if description.channel_condition and not description.channel_condition(device):
+        return None
+    return ChildDeviceInfo(
+        identifiers={(DOMAIN, f"{device.id}_channel_{channel_index}")},
+        parent_device_id=parent_device_id,
+        translation_key="channel",
+        translation_placeholders={"index": str(channel_index)},
+    )
 
 
 class TuyaEntity(Entity):
@@ -29,9 +55,13 @@ class TuyaEntity(Entity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaEntityDescription,
+        *,
+        device_info: ChildDeviceInfo | None = None,
     ) -> None:
         """Init TuyaEntity."""
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device.id)})
+        self._attr_device_info = device_info or DeviceInfo(
+            identifiers={(DOMAIN, device.id)}
+        )
         self._attr_unique_id = f"tuya.{device.id}{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self.entity_description = description
         # TuyaEntity initialize mq can subscribe
