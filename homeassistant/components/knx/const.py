@@ -77,9 +77,10 @@ KNX_TELEGRAM_DB_RETENTION_DEFAULT: Final = 10  # days
 KNX_TELEGRAM_LOAD_HOURS_DEFAULT: Final = 24  # 1 day
 KNX_TELEGRAM_DB_PATH_SQLITE: Final = "knx/telegrams.db"  # relative to STORAGE_DIR
 
-# dispatcher signal for KNX interface device triggers
+# Event for KNX telegram sender attribution in Activity.
 EVENT_KNX_TELEGRAM_RECEIVED = "knx_telegram_received"
 
+# dispatcher signal for KNX interface device triggers
 SIGNAL_KNX_TELEGRAM: SignalType[Telegram, TelegramDict] = SignalType("knx_telegram")
 SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM: SignalType[Telegram, TelegramDict] = SignalType(
     "knx_data_secure_issue_telegram"
