@@ -2,6 +2,7 @@
 
 import base64
 from collections.abc import AsyncGenerator, AsyncIterator, Callable, Mapping, Sequence
+from contextlib import suppress
 from dataclasses import dataclass, field
 import datetime
 import json
@@ -9,8 +10,15 @@ from typing import TYPE_CHECKING, Any, Literal, cast
 
 from google.genai import interactions
 from google.genai.errors import APIError, ClientError
-from google.genai.types import File, HarmCategory, SafetySetting
+from google.genai.types import File
 import probatio
+
+with suppress(ImportError, AttributeError):
+    import google.genai._gaos.utils as _gaos_utils
+    import google.genai._gaos.utils.security as _gaos_security
+
+    _gaos_utils.get_security = _gaos_security.get_security
+    _gaos_utils.get_security_from_env = _gaos_security.get_security_from_env
 
 if TYPE_CHECKING:
     from google.genai._gaos.types.interactions.interaction import Interaction
@@ -229,32 +237,46 @@ def extract_output_audio(
     raise ValueError("Interaction did not contain output audio")
 
 
-def create_safety_settings(options: Mapping[str, Any]) -> list[SafetySetting]:
+def create_safety_settings(
+    options: Mapping[str, Any],
+) -> list[interactions.SafetySetting]:
     """Create safety settings from integration options."""
     return [
-        SafetySetting(
-            category=HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-            threshold=options.get(
-                CONF_HATE_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
+        interactions.SafetySetting(
+            type="hate_speech",
+            threshold=cast(
+                interactions.Threshold,
+                options.get(
+                    CONF_HATE_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
+                ).lower(),
             ),
         ),
-        SafetySetting(
-            category=HarmCategory.HARM_CATEGORY_HARASSMENT,
-            threshold=options.get(
-                CONF_HARASSMENT_BLOCK_THRESHOLD,
-                RECOMMENDED_HARM_BLOCK_THRESHOLD,
+        interactions.SafetySetting(
+            type="harassment",
+            threshold=cast(
+                interactions.Threshold,
+                options.get(
+                    CONF_HARASSMENT_BLOCK_THRESHOLD,
+                    RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                ).lower(),
             ),
         ),
-        SafetySetting(
-            category=HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-            threshold=options.get(
-                CONF_DANGEROUS_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
+        interactions.SafetySetting(
+            type="dangerous_content",
+            threshold=cast(
+                interactions.Threshold,
+                options.get(
+                    CONF_DANGEROUS_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
+                ).lower(),
             ),
         ),
-        SafetySetting(
-            category=HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-            threshold=options.get(
-                CONF_SEXUAL_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
+        interactions.SafetySetting(
+            type="sexually_explicit",
+            threshold=cast(
+                interactions.Threshold,
+                options.get(
+                    CONF_SEXUAL_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
+                ).lower(),
             ),
         ),
     ]
@@ -279,7 +301,7 @@ def build_interaction_request(
         | Sequence[interactions.ResponseFormat]
         | None
     ) = None,
-    safety_settings: list[SafetySetting] | None = None,
+    safety_settings: list[interactions.SafetySetting] | None = None,
     default_max_tokens: int | None = None,
     stream: bool = True,
     store: bool = False,
