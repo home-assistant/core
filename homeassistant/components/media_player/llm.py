@@ -43,6 +43,8 @@ from .const import (
 )
 
 # Intents owned by this integration that are exposed as LLM tools.
+# HassMediaSearchAndPlay is not listed because the search media and play media
+# tools cover it.
 LLM_INTENTS = {
     INTENT_MEDIA_NEXT: "Next track",
     INTENT_MEDIA_PAUSE: "Pause media",
