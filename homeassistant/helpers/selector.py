@@ -2378,21 +2378,26 @@ dumper.add_representer(
 
 
 @cache
-def _units_set(dict_name: str, key_filter: tuple[str, ...] | None) -> set[str | None]:
-    """Return a cached lookup of a sensor units dictionary.
+def _units_set(dict_name: str, keys: tuple[str, ...]) -> set[str | None] | None:
+    """Return a cached lookup of the units allowed for any of the keys.
 
+    Returns None if one of the keys does not limit the units.
     This will import a module from disk and is run from an executor when
     loading the services schema files.
     """
     module = importlib.import_module("homeassistant.components.sensor")
     units_dict: dict[str, set[str | None]] = getattr(module, dict_name)
+    non_numeric_device_classes: set[str] = module.NON_NUMERIC_DEVICE_CLASSES
 
-    return {
-        unit
-        for key, units in units_dict.items()
-        if key_filter is None or key in key_filter
-        for unit in units
-    }
+    units: set[str | None] = set()
+    for key in keys:
+        if key in units_dict:
+            units |= units_dict[key]
+        elif key in non_numeric_device_classes:
+            units.add(None)
+        else:
+            return None
+    return units
 
 
 class UnitOfMeasurementSelectorConfig(BaseSelectorConfig, total=False):
@@ -2447,22 +2452,18 @@ class UnitOfMeasurementSelector(Selector[UnitOfMeasurementSelectorConfig]):
         """Validate the passed selection."""
 
         valid_units_set: set[str | None] | None = None
-        device_class_units: set[str | None] | None = None
         # The config schema ensures a list
         if device_classes := cast(list[str] | None, self.config.get("device_classes")):
-            # limit valid units to device class units
-            device_class_units = _units_set("DEVICE_CLASS_UNITS", tuple(device_classes))
-            valid_units_set = device_class_units
+            valid_units_set = _units_set("DEVICE_CLASS_UNITS", tuple(device_classes))
         if (
             state_classes := cast(list[str] | None, self.config.get("state_classes"))
         ) and (
             state_class_units := _units_set("STATE_CLASS_UNITS", tuple(state_classes))
-        ):
-            # limit valid units to state class units
+        ) is not None:
             valid_units_set = (
-                device_class_units & state_class_units
-                if device_class_units is not None
-                else state_class_units
+                state_class_units
+                if valid_units_set is None
+                else valid_units_set & state_class_units
             )
 
         unit: str | None

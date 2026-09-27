@@ -1893,8 +1893,6 @@ def test_uom_selector_validate_schema(
     schema: dict, raises: AbstractContextManager
 ) -> None:
     """Test unit of measurement class selector schemas."""
-    # Validate selector configuration
-
     with raises:
         selector.validate_selector({"unit_of_measurement": schema})
 
@@ -1935,7 +1933,7 @@ def test_uom_selector_validate_schema(
         ),
         (
             {"device_classes": "enum"},
-            (),
+            (None,),
             (
                 "cats",
                 "dogs",
@@ -1947,7 +1945,7 @@ def test_uom_selector_validate_schema(
         ),
         (
             {"device_classes": "date"},
-            (),
+            (None,),
             (
                 "cats",
                 "dogs",
@@ -2016,12 +2014,11 @@ def test_uom_selector_validate_schema(
                 "device_classes": ["battery", "humidity"],
                 "state_classes": ["measurement_angle", "measurement"],
             },
-            (),
+            (PERCENTAGE,),
             (
                 "cats",
                 "dogs",
                 DEGREE,
-                PERCENTAGE,
                 UnitOfTemperature.KELVIN,
                 UnitOfTemperature.CELSIUS,
                 UnitOfTemperature.FAHRENHEIT,
@@ -2055,10 +2052,22 @@ def test_uom_selector_validate_schema(
             id="device_class_without_unit",
         ),
         pytest.param(
-            {"device_classes": "enum"},
-            (),
-            (None,),
-            id="device_class_without_units_rejects_none",
+            {"device_classes": "monetary"},
+            ("EUR", "USD", None),
+            (5,),
+            id="device_class_without_unit_limit",
+        ),
+        pytest.param(
+            {"device_classes": ["temperature", "monetary"]},
+            (UnitOfTemperature.CELSIUS, "EUR"),
+            (5,),
+            id="device_classes_mixed_unrestricted",
+        ),
+        pytest.param(
+            {"device_classes": ["temperature", "enum"]},
+            (UnitOfTemperature.CELSIUS, None),
+            ("cats",),
+            id="device_classes_mixed_non_numeric",
         ),
         pytest.param(
             {"state_classes": "measurement_angle"},
@@ -2068,9 +2077,9 @@ def test_uom_selector_validate_schema(
         ),
         pytest.param(
             {"state_classes": ["measurement_angle", "measurement"]},
-            (DEGREE,),
-            (PERCENTAGE, "cats"),
-            id="state_classes_mixed_limited",
+            (DEGREE, PERCENTAGE, "cats", None),
+            (5,),
+            id="state_classes_mixed_unrestricted",
         ),
     ],
 )
