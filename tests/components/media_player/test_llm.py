@@ -2,7 +2,6 @@
 
 from typing import Any
 
-import probatio
 import pytest
 
 from homeassistant.components import llm as llm_component
@@ -199,28 +198,7 @@ async def test_no_tools_for_other_api(hass: HomeAssistant) -> None:
     assert media_player_llm.async_get_tools(hass, _llm_context(), "other") is None
 
 
-@pytest.mark.parametrize(
-    ("tool_args", "service_data"),
-    [
-        pytest.param(
-            {"search_query": "queen"},
-            {"entity_id": ENTITY_ID, "search_query": "queen"},
-            id="query",
-        ),
-        pytest.param(
-            {"search_query": "queen", "media_class": "album"},
-            {
-                "entity_id": ENTITY_ID,
-                "search_query": "queen",
-                "media_filter_classes": ["album"],
-            },
-            id="media_class",
-        ),
-    ],
-)
-async def test_search_media(
-    hass: HomeAssistant, tool_args: dict[str, Any], service_data: dict[str, Any]
-) -> None:
+async def test_search_media(hass: HomeAssistant) -> None:
     """Test the search tool returns the playable results of the player."""
     search_calls = async_mock_service(
         hass,
@@ -229,7 +207,9 @@ async def test_search_media(
         response={ENTITY_ID: SearchMedia(result=[TRACK, ARTIST, ALBUM])},
     )
 
-    result = await _async_call_tool(hass, "media_player__search_media", tool_args)
+    result = await _async_call_tool(
+        hass, "media_player__search_media", {"search_query": "queen"}
+    )
 
     assert result == llm.ToolResult(
         data={
@@ -255,11 +235,11 @@ async def test_search_media(
         }
     )
     assert len(search_calls) == 1
-    assert search_calls[0].data == service_data
+    assert search_calls[0].data == {"entity_id": ENTITY_ID, "search_query": "queen"}
 
 
 async def test_search_media_limits_results(hass: HomeAssistant) -> None:
-    """Test the search tool returns at most 20 playable results."""
+    """Test the search tool returns at most 35 playable results."""
     tracks = [
         BrowseMedia(
             title=f"Track {index}",
@@ -269,7 +249,7 @@ async def test_search_media_limits_results(hass: HomeAssistant) -> None:
             can_play=True,
             can_expand=False,
         )
-        for index in range(25)
+        for index in range(40)
     ]
     async_mock_service(
         hass,
@@ -283,7 +263,7 @@ async def test_search_media_limits_results(hass: HomeAssistant) -> None:
     )
 
     assert [item["title"] for item in result.data["results"]] == [
-        f"Track {index}" for index in range(20)
+        f"Track {index}" for index in range(35)
     ]
 
 
@@ -301,19 +281,6 @@ async def test_search_media_no_results(hass: HomeAssistant) -> None:
     )
 
     assert result == llm.ToolResult(data={"results": []})
-
-
-async def test_search_media_invalid_media_class(hass: HomeAssistant) -> None:
-    """Test the search tool rejects an unknown media class."""
-    search_calls = async_mock_service(hass, DOMAIN, SERVICE_SEARCH_MEDIA)
-
-    with pytest.raises(probatio.Invalid):
-        await _async_call_tool(
-            hass,
-            "media_player__search_media",
-            {"search_query": "queen", "media_class": "invalid"},
-        )
-    assert not search_calls
 
 
 @pytest.mark.parametrize(
@@ -359,7 +326,7 @@ async def test_blank_target_values_omitted(hass: HomeAssistant) -> None:
     await _async_call_tool(
         hass,
         "media_player__search_media",
-        {"search_query": "queen", "media_class": "", **blank_target},
+        {"search_query": "queen", **blank_target},
     )
     await _async_call_tool(
         hass,

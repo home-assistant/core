@@ -25,7 +25,6 @@ from .browse_media import SearchMedia
 from .const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_FILTER_CLASSES,
     ATTR_MEDIA_SEARCH_QUERY,
     DOMAIN,
     INTENT_MEDIA_NEXT,
@@ -38,7 +37,6 @@ from .const import (
     INTENT_SET_VOLUME_RELATIVE,
     SERVICE_PLAY_MEDIA,
     SERVICE_SEARCH_MEDIA,
-    MediaClass,
     MediaPlayerEntityFeature,
 )
 
@@ -81,7 +79,8 @@ SEARCH_PLAY_FEATURES = (
 )
 
 # Some players return hundreds of results, which would fill the LLM context.
-MAX_SEARCH_RESULTS = 20
+# This fits a full Music Assistant search: 5 results for each of 7 media types.
+MAX_SEARCH_RESULTS = 35
 
 TARGET_SCHEMA = {
     probatio.Optional("player_name"): cv.string,
@@ -139,9 +138,6 @@ class MediaSearchTool(Tool):
                 ATTR_MEDIA_SEARCH_QUERY,
                 description="What to search for, such as a song, artist or album",
             ): cv.string,
-            probatio.Optional(
-                "media_class", description="Only return media of this class"
-            ): probatio.In([cls.value for cls in MediaClass]),
             **TARGET_SCHEMA,
         }
     )
@@ -160,8 +156,6 @@ class MediaSearchTool(Tool):
             ATTR_ENTITY_ID: entity_id,
             ATTR_MEDIA_SEARCH_QUERY: args[ATTR_MEDIA_SEARCH_QUERY],
         }
-        if media_class := args.get("media_class"):
-            service_data[ATTR_MEDIA_FILTER_CLASSES] = [media_class]
 
         service_result = await hass.services.async_call(
             DOMAIN,
