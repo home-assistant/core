@@ -28,6 +28,7 @@ from homeassistant.components.bluetooth import (
     async_ble_device_from_address,
     async_get_fallback_availability_interval,
     async_get_learned_advertising_interval,
+    async_register_advertisement_callback,
     async_scanner_count,
     async_set_fallback_availability_interval,
     async_track_unavailable,
@@ -2063,3 +2064,27 @@ async def test_repair_issue_deleted_when_passive_mode_resolved(
     assert issue is None
 
     cancel()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_async_register_advertisement_callback(hass: HomeAssistant) -> None:
+    """Advertisement callbacks fire for every packet, even when unchanged."""
+    address = "44:44:33:11:23:45"
+    device = generate_ble_device(address, "wohand")
+    adv = generate_advertisement_data(local_name="wohand", service_uuids=[])
+    seen: list[str] = []
+
+    @callback
+    def _advertisement_callback(service_info: BluetoothServiceInfoBleak) -> None:
+        seen.append(service_info.address)
+
+    cancel = async_register_advertisement_callback(
+        hass, _advertisement_callback, address
+    )
+    inject_advertisement_with_source(hass, device, adv, "hci0")
+    inject_advertisement_with_source(hass, device, adv, "hci0")
+    assert seen == [address, address]
+
+    cancel()
+    inject_advertisement_with_source(hass, device, adv, "hci0")
+    assert len(seen) == 2

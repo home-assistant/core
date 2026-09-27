@@ -1,17 +1,24 @@
 """Test the Teslemetry sensor platform."""
 
 from copy import deepcopy
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from teslemetry_stream import Signal
+from teslemetry_stream.const import EnergyHistoryTotals
 
-from homeassistant.components.teslemetry.const import DOMAIN
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
+from homeassistant.components.teslemetry.const import DOMAIN, ENERGY_HISTORY_FIELDS
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
@@ -19,13 +26,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import assert_entities, assert_entities_alt, setup_platform
 from .const import (
-    ENERGY_HISTORY_EMPTY,
+    ENERGY_TOTALS,
+    ENERGY_TOTALS_NULL,
     LIVE_STATUS,
     METADATA,
     PRODUCTS,
+    SITE_INFO,
     VEHICLE_DATA_ALT,
 )
 
@@ -33,6 +43,12 @@ from tests.common import async_fire_time_changed
 
 # VIN used across the Teslemetry test fixtures.
 VEHICLE_VIN = "LRW3F7EK4NC700000"
+
+ENERGY_HISTORY_ENTITY = "sensor.energy_site_battery_discharged"
+# Midnight in Australia/Brisbane, the timezone site_info.json declares. Home
+# Assistant runs on US/Pacific in tests, so a last_reset derived from its clock
+# or from the event's created_at cannot produce this.
+SITE_MIDNIGHT = "2024-09-18T00:00:00+10:00"
 
 
 def _products_with_driver_assist(driver_assist: str) -> dict:
@@ -103,6 +119,7 @@ async def test_sensors(
     freezer: FrozenDateTimeFactory,
     mock_vehicle_data: AsyncMock,
     mock_legacy: AsyncMock,
+    mock_energy_totals_stream: MagicMock,
 ) -> None:
     """Tests that the sensor entities with the legacy polling are correct."""
 
@@ -111,6 +128,9 @@ async def test_sensors(
     await hass.async_block_till_done()
 
     entry = await setup_platform(hass, [Platform.SENSOR])
+
+    mock_energy_totals_stream.send()
+    await hass.async_block_till_done()
 
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
@@ -491,26 +511,169 @@ async def test_streaming_enum_none_clears_state(
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
-async def test_energy_history_no_time_series(
+def test_energy_history_fields_match_stream_totals() -> None:
+    """The sensor key list mirrors the totals the stream event carries."""
+    assert list(EnergyHistoryTotals.__dataclass_fields__) == ENERGY_HISTORY_FIELDS
+
+
+async def test_energy_history_stream_updates(
+    hass: HomeAssistant,
+    mock_energy_totals_stream: MagicMock,
+) -> None:
+    """A streamed energy_totals event drives the history sensors and their last_reset."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    # Nothing has streamed yet, so the sensors are available but hold no value.
+    assert (state := hass.states.get(ENERGY_HISTORY_ENTITY))
+    assert state.state == STATE_UNKNOWN
+    assert "last_reset" not in state.attributes
+
+    mock_energy_totals_stream.send()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENERGY_HISTORY_ENTITY))
+    assert state.state == "0.036"
+    assert state.attributes["state_class"] == "total"
+    assert state.attributes["last_reset"] == SITE_MIDNIGHT
+    assert hass.states.get("sensor.energy_site_solar_generated").state == "0.724"
+
+
+async def test_energy_history_late_event_keeps_previous_day(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    mock_energy_history: AsyncMock,
+    mock_energy_totals_stream: MagicMock,
 ) -> None:
-    """Test energy history coordinator when time_series is not a list."""
-    # Mock energy history to return data without time_series as a list
+    """A late event finalising the previous day keeps that day's last_reset.
 
-    entry = await setup_platform(hass, [Platform.SENSOR])
-    assert entry.state is ConfigEntryState.LOADED
+    The server finalises a day after the site's local midnight. Deriving
+    last_reset from the current day instead would start a second cycle and bank
+    the whole of the previous day again.
+    """
+    # 00:05 on the 19th in Brisbane, so "today" at the site is no longer the 18th.
+    freezer.move_to("2024-09-18T14:05:00+00:00")
+    await setup_platform(hass, [Platform.SENSOR])
 
-    entity_id = "sensor.energy_site_battery_discharged"
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_UNKNOWN
+    mock_energy_totals_stream.send(date="2024-09-18")
+    await hass.async_block_till_done()
 
-    mock_energy_history.return_value = ENERGY_HISTORY_EMPTY
+    assert (state := hass.states.get(ENERGY_HISTORY_ENTITY))
+    assert state.attributes["last_reset"] == SITE_MIDNIGHT
 
-    freezer.tick(VEHICLE_INTERVAL)
+
+async def test_energy_history_cache_snapshot_populates_sensors(
+    hass: HomeAssistant,
+    mock_energy_totals_stream: MagicMock,
+) -> None:
+    """The connect-time snapshot is applied exactly like a live update."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    mock_energy_totals_stream.send(is_cache=True)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENERGY_HISTORY_ENTITY))
+    assert state.state == "0.036"
+    assert state.attributes["last_reset"] == SITE_MIDNIGHT
+
+
+@pytest.mark.parametrize(
+    ("totals", "expected"),
+    [
+        pytest.param(ENERGY_TOTALS, "0.0", id="absent_field_sent_as_zero"),
+        pytest.param(ENERGY_TOTALS_NULL, STATE_UNKNOWN, id="empty_day_sent_as_null"),
+    ],
+)
+async def test_energy_history_zero_and_null_totals(
+    hass: HomeAssistant,
+    mock_energy_totals_stream: MagicMock,
+    totals: dict[str, float | None],
+    expected: str,
+) -> None:
+    """A zero total reads as zero and a null total reads as unknown, never unavailable."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    mock_energy_totals_stream.send(totals)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.energy_site_grid_imported"))
+    assert state.state == expected
+    assert state.attributes["last_reset"] == SITE_MIDNIGHT
+
+
+@pytest.mark.parametrize(
+    "installation_time_zone",
+    [pytest.param("", id="not_provided"), pytest.param("Mars/Olympus", id="unknown")],
+)
+async def test_energy_history_time_zone_fallback(
+    hass: HomeAssistant,
+    mock_site_info: AsyncMock,
+    mock_energy_totals_stream: MagicMock,
+    installation_time_zone: str,
+) -> None:
+    """Without a usable site timezone, last_reset falls back to Home Assistant's."""
+    site_info = deepcopy(SITE_INFO)
+    site_info["response"]["installation_time_zone"] = installation_time_zone
+    mock_site_info.side_effect = lambda: deepcopy(site_info)
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    mock_energy_totals_stream.send()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENERGY_HISTORY_ENTITY))
+    # Home Assistant runs on US/Pacific in tests, which was in PDT on this date.
+    assert state.attributes["last_reset"] == "2024-09-18T00:00:00-07:00"
+
+
+async def test_energy_history_update_entity_service_is_a_noop(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_energy_totals_stream: MagicMock,
+) -> None:
+    """The generic update service keeps the streamed totals instead of failing.
+
+    The coordinator has nothing to fetch, so the service must not leave the
+    sensors unavailable on a stream that is perfectly healthy.
+    """
+    await setup_platform(hass, [Platform.SENSOR])
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+
+    mock_energy_totals_stream.send()
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENERGY_HISTORY_ENTITY},
+        blocking=True,
+    )
+    # The coordinator debounces refresh requests, so let the deferred one land.
+    freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_UNAVAILABLE
+    assert "NotImplementedError" not in caplog.text
+    assert (state := hass.states.get(ENERGY_HISTORY_ENTITY))
+    assert state.state == "0.036"
+    assert state.attributes["last_reset"] == SITE_MIDNIGHT
+
+
+async def test_energy_history_unavailable_while_stream_disconnected(
+    hass: HomeAssistant,
+    mock_add_connection_listener: MagicMock,
+    mock_energy_totals_stream: MagicMock,
+) -> None:
+    """A dropped stream makes the history sensors unavailable until a snapshot returns."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    mock_energy_totals_stream.send()
+    await hass.async_block_till_done()
+    assert hass.states.get(ENERGY_HISTORY_ENTITY).state == "0.036"
+
+    mock_add_connection_listener.send(False)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENERGY_HISTORY_ENTITY).state == STATE_UNAVAILABLE
+
+    mock_energy_totals_stream.send(is_cache=True)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENERGY_HISTORY_ENTITY).state == "0.036"

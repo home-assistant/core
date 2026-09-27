@@ -221,7 +221,7 @@ async def test_create_entry_with_nearest_method(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (TimeoutError(), "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (ClientConnectorError(Mock(), OSError("test")), "cannot_connect"),
     ],
 )
@@ -305,3 +305,120 @@ async def test_unknown_error(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_reauth_successful(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_airly_client: MagicMock,
+) -> None:
+    """Test starting a reauthentication flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "new_api_key"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
+    assert mock_config_entry.data[CONF_LATITUDE] == 12.3
+    assert mock_config_entry.data[CONF_LONGITUDE] == 45.6
+    mock_airly_client.create_measurements_session_point.assert_called_once_with(
+        latitude=12.3, longitude=45.6
+    )
+
+
+async def test_reauth_with_nearest_method(
+    hass: HomeAssistant,
+    mock_airly_client: MagicMock,
+) -> None:
+    """Test that reauthentication validates the API key with the nearest method."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        unique_id="12.3-45.6",
+        data={**CONFIG, CONF_USE_NEAREST: True},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "new_api_key"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_API_KEY] == "new_api_key"
+    mock_airly_client.create_measurements_session_nearest.assert_called_once_with(
+        latitude=12.3, longitude=45.6, max_distance_km=5
+    )
+    mock_airly_client.create_measurements_session_point.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (
+            AirlyError(
+                HTTPStatus.UNAUTHORIZED,
+                {"message": "Invalid authentication credentials"},
+            ),
+            "invalid_api_key",
+        ),
+        (
+            AirlyError(HTTPStatus.INTERNAL_SERVER_ERROR, {"message": "Server error"}),
+            "unknown",
+        ),
+        (TimeoutError, "cannot_connect"),
+        (ClientConnectorError(Mock(), OSError("test")), "cannot_connect"),
+        (Exception("unexpected"), "unknown"),
+    ],
+)
+async def test_reauth_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_airly_client: MagicMock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test reauthentication flow with errors."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    point_measurements = (
+        mock_airly_client.create_measurements_session_point.return_value
+    )
+    point_measurements.update.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "new_api_key"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error}
+    assert mock_config_entry.data[CONF_API_KEY] == "foo"
+
+    point_measurements.update.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "new_api_key"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
