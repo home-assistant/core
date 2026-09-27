@@ -97,8 +97,9 @@ async def test_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.usefixtures("mock_hass_splunk")
-async def test_setup_without_yaml(hass: HomeAssistant) -> None:
+async def test_setup_without_yaml(
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock
+) -> None:
     """Test setup without YAML succeeds."""
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
