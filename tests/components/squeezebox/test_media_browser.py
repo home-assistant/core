@@ -341,10 +341,18 @@ async def test_async_search_media_invalid_filter(
         assert len(response["result"]["result"]) == 0
 
 
+@pytest.mark.parametrize(
+    "media_content_type",
+    [
+        pytest.param("Fake Type", id="unknown"),
+        pytest.param("artist tracks", id="internal"),
+    ],
+)
 async def test_async_search_media_invalid_type(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
+    media_content_type: str,
 ) -> None:
     """Test search_media action with invalid media_content_type."""
     with patch(
@@ -358,7 +366,7 @@ async def test_async_search_media_invalid_type(
                 "type": "media_player/search_media",
                 "entity_id": "media_player.test_player",
                 "media_content_id": "",
-                "media_content_type": "Fake Type",
+                "media_content_type": media_content_type,
                 "search_query": "Fake Item 1",
             },
         )
@@ -366,6 +374,7 @@ async def test_async_search_media_invalid_type(
         assert not response["success"]
         err_message = "If specified, Media content type must be one of"
         assert err_message in response["error"]["message"]
+        assert "artist tracks" not in response["error"]["message"]
 
 
 async def test_async_search_media_not_found(
