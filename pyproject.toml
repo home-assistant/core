@@ -48,9 +48,9 @@ dependencies = [
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
   "hass-nabucasa==2.7.0",
-  # When bumping httpx, please check the version pins of
-  # httpcore, anyio, and h11 in gen_requirements_all
-  "httpx==0.28.1",
+  # When bumping httpx2, please check the version pins of
+  # anyio and h11 in gen_requirements_all
+  "httpx2==2.13.1",
   "home-assistant-bluetooth==2.0.0",
   "ifaddr==0.2.0",
   "Jinja2==3.1.6",
@@ -446,7 +446,8 @@ max-line-length-suggestions = 72
 override-dependencies = ["rich>=13.8.1"]
 
 [tool.pytest.ini_options]
-pythonpath = ["pylint/plugins"]
+addopts = ["-p", "tests.httpx2_bootstrap"]
+pythonpath = [".", "pylint/plugins"]
 testpaths = ["tests"]
 norecursedirs = [".git", "testing_config"]
 log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"

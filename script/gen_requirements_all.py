@@ -99,15 +99,11 @@ enum34==1000000000.0.0
 typing==1000000000.0.0
 uuid==1000000000.0.0
 
-# httpx requires httpcore, and httpcore requires anyio and h11,
-# but the version constraints on these requirements are quite
-# loose. As the entire stack has some outstanding issues, and
-# even newer versions seem to introduce new issues, it's useful
-# for us to pin all these
-# requirements so we can directly link HA versions to these library versions.
+# Pin loosely constrained dependencies used by HTTPX2/HTTPCore2 so upgrades
+# are deliberate and each Home Assistant release has known versions for
+# diagnosing HTTP regressions.
 anyio==4.14.2
 h11==0.16.0
-httpcore==1.0.9
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
