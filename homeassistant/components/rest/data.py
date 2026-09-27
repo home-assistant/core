@@ -119,7 +119,7 @@ class RestData:
                     # For backward compatibility with httpx
                     # behavior, convert non-primitive types to
                     # strings. This maintains compatibility
-                    # after switching from httpx2 to aiohttp.
+                    # after switching from httpx to aiohttp.
                     # See
                     # https://github.com/home-assistant/core/issues/148153
                     _LOGGER.debug(
