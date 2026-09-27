@@ -1,6 +1,5 @@
 """Helper to handle a set of topics to subscribe to."""
 
-from collections import deque
 from dataclasses import dataclass, replace
 import datetime as dt
 import time
@@ -32,11 +31,19 @@ class TimestampedPublishMessage:
     kwargs: dict[str, Any]
 
 
-def log_received_message(messages: deque[ReceiveMessage], msg: ReceiveMessage) -> None:
+def _append_message[_T](messages: list[_T], msg: _T) -> None:
+    """Append a message, keeping only the last STORED_MESSAGES messages."""
+    # A list is used as a deque always allocates room for 64 items
+    if len(messages) >= STORED_MESSAGES:
+        del messages[0]
+    messages.append(msg)
+
+
+def log_received_message(messages: list[ReceiveMessage], msg: ReceiveMessage) -> None:
     """Log an incoming MQTT message."""
     if len(msg.payload) <= MAX_STORED_PAYLOAD_SIZE:
         if msg not in messages:
-            messages.append(msg)
+            _append_message(messages, msg)
         return
     payload = msg.payload[:MAX_STORED_PAYLOAD_SIZE]
     # The truncated copy is a new object, so the identity based check above
@@ -47,7 +54,7 @@ def log_received_message(messages: deque[ReceiveMessage], msg: ReceiveMessage) -
         and stored.payload == payload
         for stored in messages
     ):
-        messages.append(replace(msg, payload=payload))
+        _append_message(messages, replace(msg, payload=payload))
 
 
 def log_message(
@@ -66,7 +73,7 @@ def log_message(
     )
     if topic not in entity_info["transmitted"]:
         entity_info["transmitted"][topic] = {
-            "messages": deque(maxlen=STORED_MESSAGES),
+            "messages": [],
         }
     msg = TimestampedPublishMessage(
         topic,
@@ -77,7 +84,7 @@ def log_message(
         encoding=encoding,
         kwargs=kwargs,
     )
-    entity_info["transmitted"][topic]["messages"].append(msg)
+    _append_message(entity_info["transmitted"][topic]["messages"], msg)
 
 
 def add_subscription(
@@ -91,7 +98,7 @@ def add_subscription(
         if subscription not in entity_info["subscriptions"]:
             entity_info["subscriptions"][subscription] = {
                 "count": 1,
-                "messages": deque(maxlen=STORED_MESSAGES),
+                "messages": [],
             }
         else:
             entity_info["subscriptions"][subscription]["count"] += 1

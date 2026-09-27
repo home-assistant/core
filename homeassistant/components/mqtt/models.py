@@ -163,7 +163,7 @@ type MessageCallbackType = Callable[[ReceiveMessage], None]
 class SubscriptionDebugInfo(TypedDict):
     """Class for holding subscription debug info."""
 
-    messages: deque[ReceiveMessage]
+    messages: list[ReceiveMessage]
     count: int
 
 
@@ -172,7 +172,7 @@ class EntityDebugInfo(TypedDict):
 
     subscriptions: dict[str, SubscriptionDebugInfo]
     discovery_data: DiscoveryInfoType
-    transmitted: dict[str, dict[str, deque[TimestampedPublishMessage]]]
+    transmitted: dict[str, dict[str, list[TimestampedPublishMessage]]]
 
 
 class TriggerDebugInfo(TypedDict):
