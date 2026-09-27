@@ -268,57 +268,52 @@ async def async_migrate_entry(
             LOGGER.exception("Failed to fetch devices during migration")
             return False
 
-        _async_migrate_go_to_alias_button_unique_ids(hass, entry, setup.devices)
+        entity_registry = er.async_get(hass)
+        legacy_suffix = f"-{OverkizCommand.GO_TO_ALIAS}"
+
+        # The legacy button hardcoded alias id 1, which is the favorite1 ("My
+        # position") slot. Devices advertising any other type never had a working
+        # button, so those entities have no counterpart to migrate to.
+        devices_with_favorite = {
+            device.device_url
+            for device in setup.devices
+            if any(
+                alias.type == "favorite1" for alias in device.get_supported_aliases()
+            )
+        }
+
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
+        ):
+            if entity_entry.domain != Platform.BUTTON or not (
+                entity_entry.unique_id.endswith(legacy_suffix)
+            ):
+                continue
+
+            if entity_entry.unique_id.removesuffix(legacy_suffix) in (
+                devices_with_favorite
+            ):
+                new_unique_id = f"{entity_entry.unique_id}_favorite1"
+                LOGGER.debug(
+                    "Migrating entity '%s' unique_id from '%s' to '%s'",
+                    entity_entry.entity_id,
+                    entity_entry.unique_id,
+                    new_unique_id,
+                )
+                entity_registry.async_update_entity(
+                    entity_entry.entity_id, new_unique_id=new_unique_id
+                )
+                continue
+
+            LOGGER.debug(
+                "Removing entity '%s', device does not expose a favorite1 alias",
+                entity_entry.entity_id,
+            )
+            entity_registry.async_remove(entity_entry.entity_id)
+
         hass.config_entries.async_update_entry(entry, minor_version=3)
 
     return True
-
-
-@callback
-def _async_migrate_go_to_alias_button_unique_ids(
-    hass: HomeAssistant,
-    config_entry: OverkizDataConfigEntry,
-    devices: list[Device],
-) -> None:
-    """Migrate the legacy goToAlias button to the per-alias-type unique_id."""
-    entity_registry = er.async_get(hass)
-    legacy_suffix = f"-{OverkizCommand.GO_TO_ALIAS}"
-
-    # The legacy button hardcoded alias id 1, which is the favorite1 ("My
-    # position") slot. Devices advertising any other type never had a working
-    # button, so those entities have no counterpart to migrate to.
-    devices_with_favorite = {
-        device.device_url
-        for device in devices
-        if any(alias.type == "favorite1" for alias in device.get_supported_aliases())
-    }
-
-    for entry in er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    ):
-        if entry.domain != Platform.BUTTON or not entry.unique_id.endswith(
-            legacy_suffix
-        ):
-            continue
-
-        if entry.unique_id.removesuffix(legacy_suffix) in devices_with_favorite:
-            new_unique_id = f"{entry.unique_id}_favorite1"
-            LOGGER.debug(
-                "Migrating entity '%s' unique_id from '%s' to '%s'",
-                entry.entity_id,
-                entry.unique_id,
-                new_unique_id,
-            )
-            entity_registry.async_update_entity(
-                entry.entity_id, new_unique_id=new_unique_id
-            )
-            continue
-
-        LOGGER.debug(
-            "Removing entity '%s', device does not expose a favorite1 alias",
-            entry.entity_id,
-        )
-        entity_registry.async_remove(entry.entity_id)
 
 
 async def _async_migrate_strenum_unique_ids(
