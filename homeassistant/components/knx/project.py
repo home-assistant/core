@@ -93,10 +93,6 @@ class KNXProject:
     ) -> None:
         """Load project data from storage."""
         if project := data or await self._store.async_load():
-            # Keep what was just read: get_knxproject() would otherwise re-read
-            # and re-parse the same multi-megabyte store on first use, leaving a
-            # second copy of it in memory alongside the parts referenced below.
-            self._project = project
             self.devices = project["devices"]
             self.info = project["info"]
             GroupAddress.address_format = self.get_address_format()
@@ -134,7 +130,9 @@ class KNXProject:
         project = await self.hass.async_add_executor_job(_parse_project)
         async with self._project_lock:
             await self._store.async_save(project)
-            self._project = project
+            # Invalidate rather than populate: whether the full project is held
+            # is left to whoever asks for it.
+            self._project = None
             await self.load_project(xknx, data=project)
 
     async def remove_project_file(self) -> None:
@@ -144,11 +142,10 @@ class KNXProject:
             self.initial_state()
 
     async def get_knxproject(self) -> KNXProjectModel | None:
-        """Return the full project, loading it from local storage on first use.
+        """Return the full project, reading it from local storage on first use.
 
-        `Store.async_load` re-reads and re-parses the file on every call - its
-        cache is skipped for keys containing "/" - and the full project is
-        multiple megabytes, so it is kept in memory once something asks for it.
+        `Store.async_load` skips its own cache for keys containing "/", so it
+        would re-parse the multi-megabyte file on every call.
         """
         async with self._project_lock:
             if self._project is None:

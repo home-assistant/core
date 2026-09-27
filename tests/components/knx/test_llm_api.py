@@ -4,7 +4,7 @@ from dataclasses import fields
 from datetime import UTC, date, datetime, time
 import json
 from typing import Any
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 from knx_telegram_store.mcp import (
     QueryTelegramsInput,
@@ -17,13 +17,12 @@ import pytest
 from xknx.dpt import DPTArray, DPTTime
 
 from homeassistant.components.knx import llm_api
+from homeassistant.components.knx.const import KNX_MODULE_KEY
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 
 from .conftest import KNXTestKit
-
-from tests.common import MockUser
 
 _BUS_TOOLS = {"read_group_value", "send_group_value_read", "send_group_value_write"}
 # The complete set, asserted exactly: a subset check cannot notice a tool that
@@ -67,10 +66,10 @@ def _mock_knx(
     return knx
 
 
-def _llm_context(user_id: str | None = None) -> llm.LLMContext:
+def _llm_context() -> llm.LLMContext:
     return llm.LLMContext(
         platform="knx",
-        context=Context(user_id=user_id),
+        context=Context(),
         language="en",
         assistant="conversation",
         device_id=None,
@@ -97,23 +96,62 @@ def _telegram_summary(destination: str) -> TelegramSummary:
     )
 
 
+async def _api_instance(hass: HomeAssistant) -> llm.APIInstance:
+    """The registered KNX API, as a conversation agent or MCP client gets it."""
+    return await llm.async_get_api(hass, llm_api.LLM_API_ID, _llm_context())
+
+
 async def test_llm_api_registered_after_setup(
-    hass: HomeAssistant, knx: KNXTestKit, hass_admin_user: MockUser
+    hass: HomeAssistant, knx: KNXTestKit
 ) -> None:
     """Setup registers the API with all tools; unload deregisters it."""
     await knx.setup_integration()
 
-    instance = await llm.async_get_api(
-        hass, llm_api.LLM_API_ID, _llm_context(hass_admin_user.id)
-    )
-    tool_names = {tool.name for tool in instance.tools}
-    assert tool_names == _EXPECTED_TOOLS
-    assert tool_names >= _BUS_TOOLS
+    instance = await _api_instance(hass)
+    assert {tool.name for tool in instance.tools} == _EXPECTED_TOOLS
 
     await hass.config_entries.async_unload(knx.mock_config_entry.entry_id)
     await hass.async_block_till_done()
     with pytest.raises(HomeAssistantError, match="not found"):
         await llm.async_get_api(hass, llm_api.LLM_API_ID, _llm_context())
+
+
+@pytest.mark.parametrize(
+    ("tool_name", "read_only", "destructive", "idempotent", "open_world"),
+    [
+        pytest.param("query_telegrams", True, False, True, False, id="store_read"),
+        pytest.param("list_dpts", True, False, True, False, id="dpt_lookup"),
+        pytest.param("get_topology", True, False, True, False, id="project_read"),
+        pytest.param("read_group_value", False, False, True, True, id="bus_read"),
+        pytest.param(
+            "send_group_value_read", False, False, True, True, id="bus_read_request"
+        ),
+        pytest.param(
+            "send_group_value_write", False, True, False, True, id="bus_write"
+        ),
+    ],
+)
+async def test_tools_declare_their_safety_hints(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    tool_name: str,
+    read_only: bool,
+    destructive: bool,
+    idempotent: bool,
+    open_world: bool,
+) -> None:
+    """The MCP server forwards these, and the defaults claim the least safe case."""
+    await knx.setup_integration()
+    instance = await _api_instance(hass)
+
+    tool = _tool(instance.tools, tool_name)
+    assert tool.integration == "knx"
+    assert tool.annotations == llm.ToolAnnotations(
+        read_only=read_only,
+        destructive=destructive,
+        idempotent=idempotent,
+        open_world=open_world,
+    )
 
 
 def test_schema_from_dataclass_defaults_and_descriptions() -> None:
@@ -336,14 +374,14 @@ def test_schema_required_field_is_enforced() -> None:
         tool.parameters({})
 
 
-async def test_describe_dpt_tool_call(hass: HomeAssistant) -> None:
+async def test_describe_dpt_tool_call(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """A DPT tool needs no KNX runtime state and returns a serialized result."""
-    tool = _tool(llm_api._build_tools(_mock_knx()), "describe_dpt")
+    await knx.setup_integration()
+    instance = await _api_instance(hass)
+
     result = (
-        await tool.async_call(
-            hass,
-            llm.ToolInput(tool_name="describe_dpt", tool_args={"dpt": "9.001"}),
-            _llm_context(),
+        await instance.async_call_tool(
+            llm.ToolInput(tool_name="describe_dpt", tool_args={"dpt": "9.001"})
         )
     ).data
     assert result["found"] is True
@@ -351,28 +389,26 @@ async def test_describe_dpt_tool_call(hass: HomeAssistant) -> None:
     assert result["dpt"]["unit"] == "°C"
 
 
-async def test_query_telegrams_tool_call(hass: HomeAssistant) -> None:
+async def test_query_telegrams_tool_call(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """The store tool passes a typed input to the library and serializes the result."""
-    store = Mock()
     lib_result = QueryTelegramsResult(
         telegrams=[], total_count=0, offset=0, next_offset=None, limit_reached=False
     )
-    knx = _mock_knx(store=store)
 
-    with pytest.MonkeyPatch.context() as mp:
-        query = AsyncMock(return_value=lib_result)
-        # Patch before building the tool: the factory captures the function reference.
-        mp.setattr(llm_api.kts_mcp, "query_telegrams", query)
-        tool = _tool(llm_api._build_tools(knx), "query_telegrams")
+    # The patch has to span setup: the tools are built once when the API is
+    # registered, and each one captures its library function then.
+    with patch.object(
+        llm_api.kts_mcp, "query_telegrams", AsyncMock(return_value=lib_result)
+    ) as query:
+        await knx.setup_integration()
+        instance = await _api_instance(hass)
         result = (
-            await tool.async_call(
-                hass,
-                llm.ToolInput(tool_name="query_telegrams", tool_args={"limit": 5}),
-                _llm_context(),
+            await instance.async_call_tool(
+                llm.ToolInput(tool_name="query_telegrams", tool_args={"limit": 5})
             )
         ).data
 
-    assert query.await_args.args[0] is store
+    assert query.await_args.args[0] is hass.data[KNX_MODULE_KEY].telegrams.store
     # The schema constructs the library input, so the tool never builds one.
     assert isinstance(query.await_args.args[1], QueryTelegramsInput)
     assert query.await_args.args[1].limit == 5
@@ -396,29 +432,30 @@ async def test_store_tool_without_store_raises(hass: HomeAssistant) -> None:
     assert err.value.translation_key == "llm_telegram_store_unavailable"
 
 
-async def test_project_tool_without_project_raises(hass: HomeAssistant) -> None:
-    """A project tool errors clearly when no ETS project is loaded."""
-    tool = _tool(
-        llm_api._build_tools(_mock_knx(project=None)),
-        "get_project_info",
-    )
-    with pytest.raises(HomeAssistantError, match="llm_no_project_loaded") as err:
-        await tool.async_call(
-            hass,
-            llm.ToolInput(tool_name="get_project_info", tool_args={}),
-            _llm_context(),
+async def test_project_tool_without_project_raises(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """A project tool errors clearly when no ETS project is loaded.
+
+    The `load_knxproj` fixture is deliberately absent, so this is the state of
+    an installation that never uploaded one.
+    """
+    await knx.setup_integration()
+    instance = await _api_instance(hass)
+
+    with pytest.raises(HomeAssistantError, match="No ETS project is loaded") as err:
+        await instance.async_call_tool(
+            llm.ToolInput(tool_name="get_project_info", tool_args={})
         )
     assert err.value.translation_key == "llm_no_project_loaded"
 
 
 async def test_bus_write_tool_call_reaches_the_bus(
-    hass: HomeAssistant, knx: KNXTestKit, hass_admin_user: MockUser
+    hass: HomeAssistant, knx: KNXTestKit
 ) -> None:
     """A bus tool called through the registered API sends a telegram."""
     await knx.setup_integration()
-    instance = await llm.async_get_api(
-        hass, llm_api.LLM_API_ID, _llm_context(hass_admin_user.id)
-    )
+    instance = await _api_instance(hass)
 
     result = await instance.async_call_tool(
         llm.ToolInput(
@@ -453,16 +490,15 @@ async def test_bus_write_tool_call_reaches_the_bus(
     ],
 )
 async def test_library_errors_become_translated_tool_errors(
-    hass: HomeAssistant, tool_name: str, tool_args: dict[str, Any]
+    hass: HomeAssistant, knx: KNXTestKit, tool_name: str, tool_args: dict[str, Any]
 ) -> None:
     """A library exception is reported to the model as a KNX tool failure."""
-    tool = _tool(llm_api._build_tools(_mock_knx()), tool_name)
+    await knx.setup_integration()
+    instance = await _api_instance(hass)
 
     with pytest.raises(HomeAssistantError) as err:
-        await tool.async_call(
-            hass,
-            llm.ToolInput(tool_name=tool_name, tool_args=tool_args),
-            _llm_context(),
+        await instance.async_call_tool(
+            llm.ToolInput(tool_name=tool_name, tool_args=tool_args)
         )
     assert err.value.translation_key == "llm_tool_failed"
 
@@ -484,10 +520,9 @@ async def test_get_last_values_is_paginated(
     telegrams = [_telegram_summary(f"1/1/{index}") for index in range(2500)]
     knx = _mock_knx(store=Mock())
 
-    with pytest.MonkeyPatch.context() as mp:
-        mp.setattr(
-            llm_api.kts_mcp, "get_last_values", AsyncMock(return_value=telegrams)
-        )
+    with patch.object(
+        llm_api.kts_mcp, "get_last_values", AsyncMock(return_value=telegrams)
+    ):
         tool = _tool(llm_api._build_tools(knx), "get_last_values")
         result = (
             await tool.async_call(
@@ -507,10 +542,9 @@ async def test_get_last_values_is_ordered(hass: HomeAssistant) -> None:
     telegrams = [_telegram_summary(f"1/1/{index}") for index in (3, 1, 2)]
     knx = _mock_knx(store=Mock())
 
-    with pytest.MonkeyPatch.context() as mp:
-        mp.setattr(
-            llm_api.kts_mcp, "get_last_values", AsyncMock(return_value=telegrams)
-        )
+    with patch.object(
+        llm_api.kts_mcp, "get_last_values", AsyncMock(return_value=telegrams)
+    ):
         tool = _tool(llm_api._build_tools(knx), "get_last_values")
         result = (
             await tool.async_call(

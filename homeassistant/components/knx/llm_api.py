@@ -9,19 +9,20 @@ stay single-sourced in the libraries.
 """
 
 from collections.abc import Awaitable, Callable, Mapping
-from dataclasses import asdict, dataclass, fields, is_dataclass
+from dataclasses import asdict, dataclass, field as dc_field, fields, is_dataclass
 from datetime import date, time
 from enum import Enum
 from typing import TYPE_CHECKING, Any, cast, override
 
 from knx_telegram_store import KnxTelegramStoreException, TelegramStore, mcp as kts_mcp
 import probatio
+from probatio.dataclass_schema import constructed_mapping
 from xknx import mcp as xknx_mcp
 from xknx.exceptions import XKNXException
 from xknxproject import mcp as xknxproject_mcp
 from xknxproject.models import KNXProject as KNXProjectModel
 
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.util.json import JsonObjectType
@@ -43,6 +44,21 @@ API_PROMPT = (
 
 
 type _ToolFunc = Callable[["KNXModule", Any], Awaitable[Any]]
+type _ToolSpec = tuple[str, str, probatio.Schema, _ToolFunc, llm.ToolAnnotations]
+
+# Forwarded by the MCP server as the tool hints, so they have to be stated: the
+# defaults describe the least safe case and would advertise every read as a
+# destructive write. The two bus reads transmit a telegram but change no state;
+# writing does, and some DPTs (step, trigger, scene) are not idempotent.
+_READ_ONLY = llm.ToolAnnotations(
+    read_only=True, destructive=False, idempotent=True, open_world=False
+)
+_BUS_PROBE = llm.ToolAnnotations(
+    read_only=False, destructive=False, idempotent=True, open_world=True
+)
+_BUS_WRITE = llm.ToolAnnotations(
+    read_only=False, destructive=True, idempotent=False, open_world=True
+)
 
 # The library ``_paginate`` helpers treat a negative limit as "no limit", which
 # would return a whole ETS project or telegram history in a single tool result,
@@ -79,12 +95,11 @@ def _apply_field_descriptions(schema: probatio.Schema, input_type: type) -> None
 
     The libraries keep their parameter descriptions in ``dataclasses.field``
     metadata rather than in probatio's ``Annotated``/``Key``, so
-    ``DataclassSchema`` cannot pick them up. Its markers live in the mapping
-    schema it wraps together with the dataclass constructor, and probatio
-    exposes no accessor for that mapping - hence reaching in here.
+    ``DataclassSchema`` cannot pick them up itself.
     """
-    mapping = schema.schema.validators[0].schema
-    for marker in mapping:
+    mapping = constructed_mapping(schema)
+    assert mapping is not None  # a DataclassSchema always constructs
+    for marker in mapping.schema:
         if (description := _field_description(input_type, str(marker))) is not None:
             marker.description = description
 
@@ -168,11 +183,14 @@ class KNXTool(llm.Tool):
         description: str,
         parameters: probatio.Schema,
         func: _ToolFunc,
+        annotations: llm.ToolAnnotations,
     ) -> None:
         """Initialize the tool."""
         self.name = name
         self.description = description
         self.parameters = parameters
+        self.annotations = annotations
+        self.integration = DOMAIN
         self._knx = knx
         self._func = func
 
@@ -263,6 +281,18 @@ def _dpt_func(
     return _call
 
 
+def _address_order(address: str) -> tuple[int, ...] | tuple[()]:
+    """Sort key putting "1/1/2" before "1/1/10" rather than after it.
+
+    Any address style splits on "/"; anything unparsable sorts first, which
+    only has to be stable for paging to hold.
+    """
+    try:
+        return tuple(int(part) for part in address.split("/"))
+    except ValueError:
+        return ()
+
+
 def _last_values_func() -> _ToolFunc:
     """Page through the last values, which knx-telegram-store returns in full.
 
@@ -277,7 +307,7 @@ def _last_values_func() -> _ToolFunc:
             _require_store(knx),
             kts_mcp.LastValuesInput(destinations=args["destinations"]),
         )
-        telegrams.sort(key=lambda telegram: telegram.destination)
+        telegrams.sort(key=lambda telegram: _address_order(telegram.destination))
         return _paginate(telegrams, args, "telegrams")
 
     return _call
@@ -315,7 +345,7 @@ def _xknx_func(lib_func: Callable, *, takes_input: bool = True) -> _ToolFunc:
     return _call
 
 
-def _tool_specs() -> list[tuple[str, str, probatio.Schema, _ToolFunc]]:
+def _tool_specs() -> list[_ToolSpec]:
     return [
         (
             "query_telegrams",
@@ -323,6 +353,7 @@ def _tool_specs() -> list[tuple[str, str, probatio.Schema, _ToolFunc]]:
             "type, direction and DPT, with optional context windows around matches.",
             _schema_from_dataclass(kts_mcp.QueryTelegramsInput),
             _store_func(kts_mcp.query_telegrams),
+            _READ_ONLY,
         ),
         (
             "get_last_values",
@@ -341,36 +372,42 @@ def _tool_specs() -> list[tuple[str, str, probatio.Schema, _ToolFunc]]:
                 }
             ),
             _last_values_func(),
+            _READ_ONLY,
         ),
         (
             "get_store_stats",
             "Telegram count, covered time range, on-disk size, backend and retention.",
             probatio.Schema({}),
             _store_func(kts_mcp.get_store_stats, takes_input=False),
+            _READ_ONLY,
         ),
         (
             "get_store_capabilities",
             "What the telegram-store backend supports (time range, pagination, size, …).",
             probatio.Schema({}),
             _store_func(kts_mcp.get_store_capabilities, takes_input=False),
+            _READ_ONLY,
         ),
         (
             "count_telegrams",
             "Total number of stored telegrams.",
             probatio.Schema({}),
             _store_func(kts_mcp.count_telegrams, takes_input=False),
+            _READ_ONLY,
         ),
         (
             "get_project_info",
             "Loaded ETS project metadata and top-level entity counts.",
             probatio.Schema({}),
             _project_func(xknxproject_mcp.get_project_info, takes_input=False),
+            _READ_ONLY,
         ),
         (
             "list_group_addresses",
             "List project group addresses. Text matches address/name/description.",
             _schema_from_dataclass(xknxproject_mcp.GroupAddressFilter),
             _project_func(xknxproject_mcp.list_group_addresses),
+            _READ_ONLY,
         ),
         (
             "describe_group_address",
@@ -385,12 +422,14 @@ def _tool_specs() -> list[tuple[str, str, probatio.Schema, _ToolFunc]]:
             _project_func(
                 xknxproject_mcp.describe_group_address, positional=("address",)
             ),
+            _READ_ONLY,
         ),
         (
             "list_devices",
             "List project devices. Text matches individual address/name/manufacturer.",
             _schema_from_dataclass(xknxproject_mcp.DeviceFilter),
             _project_func(xknxproject_mcp.list_devices),
+            _READ_ONLY,
         ),
         (
             "list_communication_objects",
@@ -398,6 +437,7 @@ def _tool_specs() -> list[tuple[str, str, probatio.Schema, _ToolFunc]]:
             "group address.",
             _schema_from_dataclass(xknxproject_mcp.CommunicationObjectFilter),
             _project_func(xknxproject_mcp.list_communication_objects),
+            _READ_ONLY,
         ),
         (
             "get_topology",
@@ -405,12 +445,14 @@ def _tool_specs() -> list[tuple[str, str, probatio.Schema, _ToolFunc]]:
             "device addresses.",
             probatio.Schema(dict(_PAGINATION_MARKERS)),
             _topology_func(),
+            _READ_ONLY,
         ),
         (
             "list_functions",
             "List project functions/functional blocks. Text matches identifier/name/type.",
             _schema_from_dataclass(xknxproject_mcp.FunctionFilter),
             _project_func(xknxproject_mcp.list_functions),
+            _READ_ONLY,
         ),
         (
             "describe_function",
@@ -427,6 +469,7 @@ def _tool_specs() -> list[tuple[str, str, probatio.Schema, _ToolFunc]]:
             _project_func(
                 xknxproject_mcp.describe_function, positional=("identifier",)
             ),
+            _READ_ONLY,
         ),
         (
             "list_dpts",
@@ -434,6 +477,7 @@ def _tool_specs() -> list[tuple[str, str, probatio.Schema, _ToolFunc]]:
             "matches the DPT number/value type/unit.",
             _schema_from_dataclass(xknx_mcp.DptFilter),
             _dpt_func(xknx_mcp.list_dpts),
+            _READ_ONLY,
         ),
         (
             "describe_dpt",
@@ -448,52 +492,56 @@ def _tool_specs() -> list[tuple[str, str, probatio.Schema, _ToolFunc]]:
                 }
             ),
             _dpt_func(xknx_mcp.describe_dpt, positional=("dpt",)),
+            _READ_ONLY,
         ),
         (
             "encode_value",
             "Encode a native value using a specific DPT into its raw payload bytes.",
             _schema_from_dataclass(xknx_mcp.EncodeDptPayloadInput),
             _dpt_func(xknx_mcp.encode_dpt_payload),
+            _READ_ONLY,
         ),
         (
             "decode_payload",
             "Decode raw payload bytes (or an integer) using a specific DPT.",
             _schema_from_dataclass(xknx_mcp.DecodeDptPayloadInput),
             _dpt_func(xknx_mcp.decode_dpt_payload),
+            _READ_ONLY,
         ),
         (
             "get_connection_status",
             "KNX bus connection state, connection type and local individual address.",
             probatio.Schema({}),
             _xknx_func(xknx_mcp.get_connection_status, takes_input=False),
+            _READ_ONLY,
         ),
         (
             "read_group_value",
             "Read a group address live from the bus (sends a GroupValueRead and waits).",
             _schema_from_dataclass(xknx_mcp.GroupValueReadInput),
             _xknx_func(xknx_mcp.read_group_value),
+            _BUS_PROBE,
         ),
         (
             "send_group_value_read",
             "Queue a GroupValueRead telegram to trigger a response on the bus.",
             _schema_from_dataclass(xknx_mcp.GroupAddressInput),
             _xknx_func(xknx_mcp.send_group_value_read),
+            _BUS_PROBE,
         ),
         (
             "send_group_value_write",
             "Write a value to a group address (queues a GroupValueWrite).",
             _schema_from_dataclass(xknx_mcp.GroupValueWriteInput),
             _xknx_func(xknx_mcp.send_group_value_write),
+            _BUS_WRITE,
         ),
     ]
 
 
 def _build_tools(knx: KNXModule) -> list[llm.Tool]:
     """Build the KNX LLM tools for the given module."""
-    return [
-        KNXTool(knx, name, description, parameters, func)
-        for name, description, parameters, func in _tool_specs()
-    ]
+    return [KNXTool(knx, *spec) for spec in _tool_specs()]
 
 
 @dataclass(kw_only=True)
@@ -501,6 +549,15 @@ class KNXLLMAPI(llm.API):
     """LLM API exposing the KNX tools."""
 
     knx: KNXModule
+    _tools: list[llm.Tool] = dc_field(init=False)
+
+    def __post_init__(self) -> None:
+        """Build the tools once.
+
+        Nothing about them depends on the request, and compiling the schemas on
+        every conversation turn and every MCP call is wasted work.
+        """
+        self._tools = _build_tools(self.knx)
 
     @override
     async def async_get_api_instance(
@@ -511,10 +568,11 @@ class KNXLLMAPI(llm.API):
             api=self,
             api_prompt=API_PROMPT,
             llm_context=llm_context,
-            tools=_build_tools(self.knx),
+            tools=self._tools,
         )
 
 
+@callback
 def async_register_llm_api(hass: HomeAssistant, knx: KNXModule) -> CALLBACK_TYPE:
     """Register the KNX LLM API and return a callback to unregister it."""
     return llm.async_register_api(
