@@ -1,5 +1,6 @@
 """Test Enphase Envoy runtime."""
 
+import asyncio
 from datetime import timedelta
 import logging
 from unittest.mock import AsyncMock, MagicMock, call, patch
@@ -918,3 +919,42 @@ async def test_retry_timeout_settings(
     assert mock_envoy.mock_calls[-1] == call.set_retry_policy(
         max_delay=OPERATIONAL_RETRY_TIMEOUT
     )
+
+
+@respx.mock
+async def test_background_task_cancel_at_unload(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator background tasks cancel at unload."""
+    await setup_integration(hass, config_entry)
+    caplog.set_level(logging.DEBUG)
+    logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
+        logging.DEBUG
+    )
+    shared_event = asyncio.Event()
+
+    async def mock_interface_settings() -> None:
+        logging.getLogger("homeassistant.components.enphase_envoy.coordinator").debug(
+            "Mock Interface settings start"
+        )
+        await shared_event.wait()
+        # should not log if canceled while waiting
+        logging.getLogger("homeassistant.components.enphase_envoy.coordinator").debug(
+            "Mock Interface settings end"
+        )
+
+    mock_envoy.interface_settings.side_effect = mock_interface_settings
+    freezer.tick(MAC_VERIFICATION_DELAY)
+    async_fire_time_changed(hass)
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    shared_event.set()
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Mock Interface settings start" in caplog.text
+    assert "Mock Interface settings end" not in caplog.text
