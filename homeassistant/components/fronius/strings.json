@@ -16,10 +16,12 @@
       },
       "reconfigure": {
         "data": {
+          "auto_revert_power_limit": "[%key:component::fronius::config::step::user::data::auto_revert_power_limit%]",
           "host": "[%key:common::config_flow::data::host%]",
           "modbus_port": "[%key:component::fronius::config::step::user::data::modbus_port%]"
         },
         "data_description": {
+          "auto_revert_power_limit": "[%key:component::fronius::config::step::user::data_description::auto_revert_power_limit%]",
           "host": "[%key:component::fronius::config::step::user::data_description::host%]",
           "modbus_port": "[%key:component::fronius::config::step::user::data_description::modbus_port%]"
         },
@@ -27,10 +29,12 @@
       },
       "user": {
         "data": {
+          "auto_revert_power_limit": "Revert the AC power limit if Home Assistant stops",
           "host": "[%key:common::config_flow::data::host%]",
           "modbus_port": "Modbus port"
         },
         "data_description": {
+          "auto_revert_power_limit": "The inverter drops the AC power limit an hour after it last received it, and returns to its own settings. Home Assistant sends the limit again every 15 minutes, so this only takes effect once it stops sending - because Home Assistant is down, or because the integration was removed. Battery setpoints are not affected - the inverter supports no timeout for them.",
           "host": "The IP address or hostname of your Fronius device.",
           "modbus_port": "Port of the device's Modbus TCP interface. Only used when Modbus is enabled on the device's web interface."
         },
@@ -72,7 +76,7 @@
         "name": "Grid export tariff"
       },
       "co2_factor": {
-        "name": "CO\u2082 factor"
+        "name": "CO₂ factor"
       },
       "current_ac": {
         "name": "AC current"
@@ -175,8 +179,8 @@
           "hardware_id_problem": "Hardware ID problem",
           "hid_range_error": "HID range error",
           "initialisation_error_file_system_error_on_usb": "Initialization error in file system on USB flash drive",
-          "initialisation_error_usb_flash_drive_not_supported": "Initialization error \u2013 USB flash drive is not supported",
-          "initialisation_error_usb_stick_over_current": "Initialization error \u2013 Overcurrent on USB stick",
+          "initialisation_error_usb_flash_drive_not_supported": "Initialization error – USB flash drive is not supported",
+          "initialisation_error_usb_stick_over_current": "Initialization error – Overcurrent on USB stick",
           "insulation_error_on_solar_panels": "Insulation error on the solar panels",
           "insulation_fault": "Insulation fault",
           "insulation_measurement_triggered": "Insulation measurement triggered",

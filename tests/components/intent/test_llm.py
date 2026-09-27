@@ -111,6 +111,42 @@ async def test_timer_intents_offered_for_timer_device(hass: HomeAssistant) -> No
     assert "intent__HassTimerStatus" in names
 
 
+async def test_tool_annotations(hass: HomeAssistant) -> None:
+    """Test the intent tools declare how they behave."""
+
+    @callback
+    def handle_timer(*args: object) -> None:
+        pass
+
+    async_register_timer_handler(hass, "test_device", handle_timer)
+
+    result = await llm_component.async_get_tools(
+        hass, _llm_context(device_id="test_device"), "assist"
+    )
+    tools = {tool.name: tool for tool in result.tools}
+
+    assert tools["intent__HassTurnOn"].title == "Turn on"
+    assert tools["intent__HassTurnOn"].integration == "intent"
+    # Turning on a button entity presses it, so the call is not idempotent.
+    assert tools["intent__HassTurnOn"].annotations == llm.ToolAnnotations(
+        open_world=False
+    )
+    assert tools["intent__HassTurnOff"].annotations == llm.ToolAnnotations(
+        idempotent=True, open_world=False
+    )
+    # Adding time only adds, and has an effect on every call.
+    assert tools["intent__HassIncreaseTimer"].annotations == llm.ToolAnnotations(
+        destructive=False, open_world=False
+    )
+    # A started timer can carry a command to run when it finishes.
+    assert tools["intent__HassStartTimer"].annotations == llm.ToolAnnotations(
+        open_world=False
+    )
+    assert tools["intent__HassTimerStatus"].annotations == llm.ToolAnnotations(
+        read_only=True, open_world=False
+    )
+
+
 async def test_set_position_requires_exposed_cover(hass: HomeAssistant) -> None:
     """Test intent__HassSetPosition is only exposed when a cover/valve is exposed."""
     assert "intent__HassSetPosition" in await _tool_names(hass)

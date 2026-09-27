@@ -2,9 +2,11 @@
 
 import dataclasses
 import datetime
+from datetime import timedelta
 from typing import Any
 import zoneinfo
 
+from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -36,6 +38,7 @@ from homeassistant.setup import async_setup_component
 
 from . import create_mock_platform
 
+from tests.common import async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 TEST_TIMEZONE = zoneinfo.ZoneInfo("America/Regina")
@@ -1314,6 +1317,7 @@ async def test_async_subscribe_updates(
     hass: HomeAssistant, test_entity: TodoListEntity
 ) -> None:
     """Test async_subscribe_updates delivers list updates to listeners."""
+    test_entity._attr_todo_items = []
     await create_mock_platform(hass, [test_entity])
 
     received_updates: list[list[TodoItem] | None] = []
@@ -1324,10 +1328,15 @@ async def test_async_subscribe_updates(
     unsub = test_entity.async_subscribe_updates(listener)
 
     # Trigger an update
+    test_entity._attr_todo_items = [
+        TodoItem(summary="Item #1", uid="1", status=TodoItemStatus.NEEDS_ACTION),
+        TodoItem(summary="Item #2", uid="2", status=TodoItemStatus.COMPLETED),
+    ]
     test_entity.async_write_ha_state()
 
     assert len(received_updates) == 1
     items = received_updates[0]
+    assert items is not None
     assert len(items) == 2
     assert isinstance(items[0], TodoItem)
     assert items[0].summary == "Item #1"
@@ -1374,5 +1383,61 @@ async def test_async_subscribe_updates(
 
     # Unsubscribe and verify no more updates
     unsub()
+    test_entity._attr_todo_items = []
     test_entity.async_write_ha_state()
     assert len(received_updates) == 4
+
+
+async def test_subscribe_duplicate_state_write_does_not_broadcast(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entity: TodoListEntity,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that unchanged items on update interval do not broadcast duplicates."""
+    await create_mock_platform(hass, [test_entity])
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "todo/item/subscribe",
+            "entity_id": test_entity.entity_id,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    subscription_id = msg["id"]
+
+    # Initial update
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    assert len(msg["event"]["items"]) == 2
+
+    # Advance time to trigger the entity platform's polling update interval (60s)
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # The update interval ran, but items did not change: no broadcast should occur.
+    # The next message received should be the pong for our ping.
+    await client.send_json_auto_id({"type": "ping"})
+    msg = await client.receive_json()
+    assert msg["type"] == "pong"
+
+    # Now update items and advance time again
+    assert test_entity.todo_items is not None
+    test_entity._attr_todo_items = [
+        *test_entity.todo_items,
+        TodoItem(summary="Item #3", uid="3", status=TodoItemStatus.NEEDS_ACTION),
+    ]
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Items changed, so a broadcast should now occur
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    assert len(msg["event"]["items"]) == 3

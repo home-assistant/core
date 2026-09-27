@@ -27,12 +27,20 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "night": {
+        "name": "Night"
+      }
+    },
     "sensor": {
       "ambient_temperature": {
         "name": "Ambient temperature"
       },
       "binmode": {
         "name": "Binning mode"
+      },
+      "camera_id": {
+        "name": "Camera ID"
       },
       "camera_sensor_temp": {
         "name": "Camera sensor temperature"
@@ -45,6 +53,9 @@
       },
       "cpu_temperature": {
         "name": "CPU temperature"
+      },
+      "create_date": {
+        "name": "Exposure creation time"
       },
       "device_sqm": {
         "name": "Device SQM"

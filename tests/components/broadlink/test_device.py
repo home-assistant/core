@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.components.broadlink.device import get_domains
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.const import ATTR_FRIENDLY_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -38,6 +38,23 @@ async def test_device_setup(hass: HomeAssistant) -> None:
     assert mock_forward.call_count == 1
     assert forward_entries == domains
     assert mock_init.call_count == 0
+
+
+async def test_device_setup_rm5plus(hass: HomeAssistant) -> None:
+    """Test an RM5 Plus sets up with the IR remote platforms and no sensors."""
+    device = get_device("Study")
+
+    with patch.object(
+        hass.config_entries, "async_forward_entry_setups"
+    ) as mock_forward:
+        mock_setup = await device.setup_entry(hass)
+
+    assert mock_setup.entry.state is ConfigEntryState.LOADED
+    assert set(mock_forward.mock_calls[0][1][1]) == {
+        Platform.INFRARED,
+        Platform.REMOTE,
+        Platform.SWITCH,
+    }
 
 
 async def test_device_setup_authentication_error(hass: HomeAssistant) -> None:

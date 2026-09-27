@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
+from datetime import datetime
 import re
 from typing import Any, override
 
@@ -23,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .coordinator import (
     IndiAllSkyConfigEntry,
@@ -34,11 +36,20 @@ from .entity import IndiAllSkyEntity
 PARALLEL_UPDATES = 0
 
 
+def _parse_timestamp(data: IndiAllSkyData) -> datetime | None:
+    if data.exposure and data.exposure.create_date:
+        if dt := dt_util.parse_datetime(data.exposure.create_date):
+            if dt.tzinfo is None:
+                return dt.replace(tzinfo=dt_util.UTC)
+            return dt_util.as_utc(dt)
+    return None
+
+
 @dataclass(frozen=True, kw_only=True)
 class IndiAllSkySensorEntityDescription(SensorEntityDescription):
     """Class describing INDI Allsky hardware sensor entities."""
 
-    value_fn: Callable[[IndiAllSkyData], StateType]
+    value_fn: Callable[[IndiAllSkyData], StateType | datetime]
 
 
 PREDEFINED_SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = (
@@ -48,6 +59,21 @@ PREDEFINED_SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = 
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.exposure.binmode if data.exposure else None,
+    ),
+    IndiAllSkySensorEntityDescription(
+        key="camera_id",
+        translation_key="camera_id",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.exposure.camera_id if data.exposure else None,
+    ),
+    IndiAllSkySensorEntityDescription(
+        key="create_date",
+        translation_key="create_date",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=_parse_timestamp,
     ),
     IndiAllSkySensorEntityDescription(
         key="exposure",
@@ -337,7 +363,7 @@ class IndiAllSkySensor(IndiAllSkyEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
 
