@@ -133,7 +133,8 @@ class MediaSearchTool(Tool):
     title = "Search media"
     description = (
         "Searches a media player for media. "
-        "Can also search inside a result, such as an artist or an album."
+        "Can also search inside a result of an earlier search, "
+        "such as an artist or an album."
     )
     parameters = probatio.Schema(
         {
