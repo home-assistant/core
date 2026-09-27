@@ -536,20 +536,21 @@ async def test_search_media(
 @pytest.mark.parametrize(
     ("media_filter_classes", "expected_item_types"),
     [
-        pytest.param([], {None}, id="no_filter"),
-        pytest.param(["album"], {"MusicAlbum"}, id="album"),
-        pytest.param(["artist"], {"MusicArtist"}, id="artist"),
-        pytest.param(["track"], {"Audio"}, id="track"),
-        pytest.param(["movie"], {"Movie"}, id="movie"),
+        pytest.param([], [None], id="no_filter"),
+        pytest.param(["album"], ["MusicAlbum"], id="album"),
+        pytest.param(["artist"], ["MusicArtist"], id="artist"),
+        pytest.param(["track"], ["Audio"], id="track"),
+        pytest.param(["movie"], ["Movie"], id="movie"),
         pytest.param(
             ["directory"],
-            {"CollectionFolder,AggregateFolder,Folder,BoxSet"},
+            ["CollectionFolder,AggregateFolder,Folder,BoxSet"],
             id="multiple_item_types",
         ),
         pytest.param(
-            ["album", "tv_show"], {"MusicAlbum", "Series"}, id="multiple_classes"
+            ["album", "tv_show"], ["MusicAlbum", "Series"], id="multiple_classes"
         ),
-        pytest.param(["podcast"], set(), id="unmapped_class"),
+        pytest.param(["music", "track"], ["Audio"], id="shared_item_type"),
+        pytest.param(["podcast"], [], id="unmapped_class"),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -557,7 +558,7 @@ async def test_search_media_item_types(
     hass_ws_client: WebSocketGenerator,
     mock_api: MagicMock,
     media_filter_classes: list[str],
-    expected_item_types: set[str | None],
+    expected_item_types: list[str | None],
 ) -> None:
     """Test Jellyfin search maps media filter classes to Jellyfin item types."""
     client = await hass_ws_client()
@@ -574,10 +575,14 @@ async def test_search_media_item_types(
     )
     response = await client.receive_json()
     assert response["success"]
-    assert {
-        search_call.kwargs["media"]
-        for search_call in mock_api.search_media_items.call_args_list
-    } == expected_item_types
+    # The filter classes arrive as a set, so the search order is not fixed.
+    assert sorted(
+        (
+            search_call.kwargs["media"]
+            for search_call in mock_api.search_media_items.call_args_list
+        ),
+        key=str,
+    ) == sorted(expected_item_types, key=str)
 
 
 async def test_new_client_connected(

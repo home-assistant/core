@@ -169,12 +169,15 @@ async def search_items(
     media_types: list[str] | list[None] = []
     if query.media_filter_classes:
         # Jellyfin ignores unknown item types and returns unfiltered results,
-        # so skip classes that have no Jellyfin item type.
-        media_types = [
-            ",".join(SEARCH_ITEM_TYPE_MAP[media_class])
-            for media_class in query.media_filter_classes
-            if media_class in SEARCH_ITEM_TYPE_MAP
-        ]
+        # so skip classes that have no Jellyfin item type. Classes can share an
+        # item type, so search each item type once.
+        media_types = list(
+            dict.fromkeys(
+                ",".join(SEARCH_ITEM_TYPE_MAP[media_class])
+                for media_class in query.media_filter_classes
+                if media_class in SEARCH_ITEM_TYPE_MAP
+            )
+        )
     else:
         media_types = [None]
 
