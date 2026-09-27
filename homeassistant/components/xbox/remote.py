@@ -3,13 +3,16 @@
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from functools import wraps
-from http import HTTPStatus
 import logging
 from typing import Any, Concatenate, override
 
 from httpx import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.provider.smartglass import SmartglassProvider
-from pythonxbox.api.provider.smartglass.models import InputKeyType, PowerState
+from pythonxbox.api.provider.smartglass.models import (
+    CommandResponse,
+    InputKeyType,
+    PowerState,
+)
 
 from homeassistant.components.remote import (
     ATTR_DELAY_SECS,
@@ -29,7 +32,12 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
-MAP_COMMAND: dict[str, Callable[[SmartglassProvider], Callable]] = {
+MAP_COMMAND: dict[
+    str,
+    Callable[
+        [SmartglassProvider], Callable[[str], Coroutine[Any, Any, CommandResponse]]
+    ],
+] = {
     "WakeUp": lambda x: x.wake_up,
     "TurnOff": lambda x: x.turn_off,
     "Reboot": lambda x: x.reboot,
@@ -120,15 +128,16 @@ class XboxRemote(XboxConsoleBaseEntity, RemoteEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the Xbox on."""
-        try:
-            await self.client.smartglass.wake_up(self._console.id)
-        except HTTPStatusError as e:
-            if e.response.status_code == HTTPStatus.NOT_FOUND:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="turn_on_failed",
-                ) from e
-            raise
+        if (
+            err := await self.client.smartglass.wake_up(self._console.id)
+        ).status.error_code != "OK":
+            _LOGGER.debug(
+                "Xbox error: %s (%s)", err.status.error_message, err.status.error_code
+            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="turn_on_failed",
+            )
 
     @exception_handler
     @override
@@ -149,9 +158,20 @@ class XboxRemote(XboxConsoleBaseEntity, RemoteEntity):
                     button = InputKeyType(single_command)
                     await self.client.smartglass.press_button(self._console.id, button)
                 elif single_command in MAP_COMMAND:
-                    await MAP_COMMAND[single_command](self.client.smartglass)(
-                        self._console.id
-                    )
+                    if (
+                        err := await MAP_COMMAND[single_command](
+                            self.client.smartglass
+                        )(self._console.id)
+                    ).status.error_code != "OK":
+                        _LOGGER.debug(
+                            "Xbox error: %s (%s)",
+                            err.status.error_message,
+                            err.status.error_code,
+                        )
+                        raise HomeAssistantError(
+                            translation_domain=DOMAIN,
+                            translation_key="command_failed",
+                        )
                 else:
                     await self.client.smartglass.insert_text(
                         self._console.id, single_command.removeprefix("text:")

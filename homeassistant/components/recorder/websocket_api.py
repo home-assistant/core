@@ -5,7 +5,7 @@ from datetime import datetime as dt
 import logging
 from typing import Any, Literal, cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import messages
@@ -70,55 +70,73 @@ _LOGGER = logging.getLogger(__name__)
 CLEAR_STATISTICS_TIME_OUT = 10
 UPDATE_STATISTICS_METADATA_TIME_OUT = 10
 
-UNIT_SCHEMA = vol.Schema(
+UNIT_SCHEMA = probatio.Schema(
     {
-        vol.Optional("apparent_power"): vol.In(ApparentPowerConverter.VALID_UNITS),
-        vol.Optional("area"): vol.In(AreaConverter.VALID_UNITS),
-        vol.Optional("blood_glucose_concentration"): vol.In(
+        probatio.Optional("apparent_power"): probatio.In(
+            ApparentPowerConverter.VALID_UNITS
+        ),
+        probatio.Optional("area"): probatio.In(AreaConverter.VALID_UNITS),
+        probatio.Optional("blood_glucose_concentration"): probatio.In(
             BloodGlucoseConcentrationConverter.VALID_UNITS
         ),
-        vol.Optional("carbon_monoxide"): vol.In(
+        probatio.Optional("carbon_monoxide"): probatio.In(
             CarbonMonoxideConcentrationConverter.VALID_UNITS
         ),
-        vol.Optional("concentration"): vol.In(
+        probatio.Optional("concentration"): probatio.In(
             MassVolumeConcentrationConverter.VALID_UNITS
         ),
-        vol.Optional("conductivity"): vol.In(ConductivityConverter.VALID_UNITS),
-        vol.Optional("data_rate"): vol.In(DataRateConverter.VALID_UNITS),
-        vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
-        vol.Optional("duration"): vol.In(DurationConverter.VALID_UNITS),
-        vol.Optional("electric_current"): vol.In(ElectricCurrentConverter.VALID_UNITS),
-        vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
-        vol.Optional("energy_distance"): vol.In(EnergyDistanceConverter.VALID_UNITS),
-        vol.Optional("frequency"): vol.In(FrequencyConverter.VALID_UNITS),
-        vol.Optional("information"): vol.In(InformationConverter.VALID_UNITS),
-        vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
-        vol.Optional("nitrogen_dioxide"): vol.In(
+        probatio.Optional("conductivity"): probatio.In(
+            ConductivityConverter.VALID_UNITS
+        ),
+        probatio.Optional("data_rate"): probatio.In(DataRateConverter.VALID_UNITS),
+        probatio.Optional("distance"): probatio.In(DistanceConverter.VALID_UNITS),
+        probatio.Optional("duration"): probatio.In(DurationConverter.VALID_UNITS),
+        probatio.Optional("electric_current"): probatio.In(
+            ElectricCurrentConverter.VALID_UNITS
+        ),
+        probatio.Optional("energy"): probatio.In(EnergyConverter.VALID_UNITS),
+        probatio.Optional("energy_distance"): probatio.In(
+            EnergyDistanceConverter.VALID_UNITS
+        ),
+        probatio.Optional("frequency"): probatio.In(FrequencyConverter.VALID_UNITS),
+        probatio.Optional("information"): probatio.In(InformationConverter.VALID_UNITS),
+        probatio.Optional("mass"): probatio.In(MassConverter.VALID_UNITS),
+        probatio.Optional("nitrogen_dioxide"): probatio.In(
             NitrogenDioxideConcentrationConverter.VALID_UNITS
         ),
-        vol.Optional("nitrogen_monoxide"): vol.In(
+        probatio.Optional("nitrogen_monoxide"): probatio.In(
             NitrogenMonoxideConcentrationConverter.VALID_UNITS
         ),
-        vol.Optional("ozone"): vol.In(OzoneConcentrationConverter.VALID_UNITS),
-        vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
-        vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
-        vol.Optional("radiation_concentration"): vol.In(
+        probatio.Optional("ozone"): probatio.In(
+            OzoneConcentrationConverter.VALID_UNITS
+        ),
+        probatio.Optional("power"): probatio.In(PowerConverter.VALID_UNITS),
+        probatio.Optional("pressure"): probatio.In(PressureConverter.VALID_UNITS),
+        probatio.Optional("radiation_concentration"): probatio.In(
             RadiationConcentrationConverter.VALID_UNITS
         ),
-        vol.Optional("reactive_energy"): vol.In(ReactiveEnergyConverter.VALID_UNITS),
-        vol.Optional("reactive_power"): vol.In(ReactivePowerConverter.VALID_UNITS),
-        vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
-        vol.Optional("sulphur_dioxide"): vol.In(
+        probatio.Optional("reactive_energy"): probatio.In(
+            ReactiveEnergyConverter.VALID_UNITS
+        ),
+        probatio.Optional("reactive_power"): probatio.In(
+            ReactivePowerConverter.VALID_UNITS
+        ),
+        probatio.Optional("speed"): probatio.In(SpeedConverter.VALID_UNITS),
+        probatio.Optional("sulphur_dioxide"): probatio.In(
             SulphurDioxideConcentrationConverter.VALID_UNITS
         ),
-        vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
-        vol.Optional("temperature_delta"): vol.In(
+        probatio.Optional("temperature"): probatio.In(TemperatureConverter.VALID_UNITS),
+        probatio.Optional("temperature_delta"): probatio.In(
             TemperatureDeltaConverter.VALID_UNITS
         ),
-        vol.Optional("unitless"): vol.In(UnitlessRatioConverter.VALID_UNITS),
-        vol.Optional("voltage"): vol.In(ElectricPotentialConverter.VALID_UNITS),
-        vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
-        vol.Optional("volume_flow_rate"): vol.In(VolumeFlowRateConverter.VALID_UNITS),
+        probatio.Optional("unitless"): probatio.In(UnitlessRatioConverter.VALID_UNITS),
+        probatio.Optional("voltage"): probatio.In(
+            ElectricPotentialConverter.VALID_UNITS
+        ),
+        probatio.Optional("volume"): probatio.In(VolumeConverter.VALID_UNITS),
+        probatio.Optional("volume_flow_rate"): probatio.In(
+            VolumeFlowRateConverter.VALID_UNITS
+        ),
     }
 )
 
@@ -161,12 +179,12 @@ def _ws_get_statistic_during_period(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "recorder/statistic_during_period",
-        vol.Required("statistic_id"): str,
-        vol.Optional("types"): vol.All(
-            [vol.Any("max", "mean", "min", "change")], vol.Coerce(set)
+        probatio.Required("type"): "recorder/statistic_during_period",
+        probatio.Required("statistic_id"): str,
+        probatio.Optional("types"): probatio.All(
+            [probatio.Any("max", "mean", "min", "change")], probatio.Coerce(set)
         ),
-        vol.Optional("units"): UNIT_SCHEMA,
+        probatio.Optional("units"): UNIT_SCHEMA,
         **PERIOD_SCHEMA.schema,
     }
 )
@@ -267,17 +285,21 @@ async def ws_handle_get_statistics_during_period(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "recorder/statistics_during_period",
-        vol.Required("start_time"): str,
-        vol.Optional("end_time"): str,
-        vol.Required("statistic_ids"): vol.All([str], vol.Length(min=1)),
-        vol.Required("period"): vol.Any(
+        probatio.Required("type"): "recorder/statistics_during_period",
+        probatio.Required("start_time"): str,
+        probatio.Optional("end_time"): str,
+        probatio.Required("statistic_ids"): probatio.All([str], probatio.Length(min=1)),
+        probatio.Required("period"): probatio.Any(
             "5minute", "hour", "day", "week", "month", "year"
         ),
-        vol.Optional("units"): UNIT_SCHEMA,
-        vol.Optional("types"): vol.All(
-            [vol.Any("change", "last_reset", "max", "mean", "min", "state", "sum")],
-            vol.Coerce(set),
+        probatio.Optional("units"): UNIT_SCHEMA,
+        probatio.Optional("types"): probatio.All(
+            [
+                probatio.Any(
+                    "change", "last_reset", "max", "mean", "min", "state", "sum"
+                )
+            ],
+            probatio.Coerce(set),
         ),
     }
 )
@@ -319,8 +341,8 @@ async def ws_handle_list_statistic_ids(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "recorder/list_statistic_ids",
-        vol.Optional("statistic_type"): vol.Any("sum", "mean"),
+        probatio.Required("type"): "recorder/list_statistic_ids",
+        probatio.Optional("statistic_type"): probatio.Any("sum", "mean"),
     }
 )
 @websocket_api.async_response
@@ -333,7 +355,7 @@ async def ws_list_statistic_ids(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "recorder/validate_statistics",
+        probatio.Required("type"): "recorder/validate_statistics",
     }
 )
 @websocket_api.async_response
@@ -351,7 +373,7 @@ async def ws_validate_statistics(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "recorder/update_statistics_issues",
+        probatio.Required("type"): "recorder/update_statistics_issues",
     }
 )
 @websocket_api.async_response
@@ -370,8 +392,8 @@ async def ws_update_statistics_issues(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "recorder/clear_statistics",
-        vol.Required("statistic_ids"): [str],
+        probatio.Required("type"): "recorder/clear_statistics",
+        probatio.Required("statistic_ids"): [str],
     }
 )
 @websocket_api.async_response
@@ -405,8 +427,8 @@ async def ws_clear_statistics(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "recorder/get_statistics_metadata",
-        vol.Optional("statistic_ids"): [str],
+        probatio.Required("type"): "recorder/get_statistics_metadata",
+        probatio.Optional("statistic_ids"): [str],
     }
 )
 @websocket_api.async_response
@@ -423,10 +445,10 @@ async def ws_get_statistics_metadata(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "recorder/update_statistics_metadata",
-        vol.Required("statistic_id"): str,
-        vol.Optional("unit_class"): vol.Any(str, None),
-        vol.Required("unit_of_measurement"): vol.Any(str, None),
+        probatio.Required("type"): "recorder/update_statistics_metadata",
+        probatio.Required("statistic_id"): str,
+        probatio.Optional("unit_class"): probatio.Any(str, None),
+        probatio.Required("unit_of_measurement"): probatio.Any(str, None),
     }
 )
 @websocket_api.async_response
@@ -474,10 +496,10 @@ async def ws_update_statistics_metadata(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "recorder/change_statistics_unit",
-        vol.Required("statistic_id"): str,
-        vol.Required("new_unit_of_measurement"): vol.Any(str, None),
-        vol.Required("old_unit_of_measurement"): vol.Any(str, None),
+        probatio.Required("type"): "recorder/change_statistics_unit",
+        probatio.Required("statistic_id"): str,
+        probatio.Required("new_unit_of_measurement"): probatio.Any(str, None),
+        probatio.Required("old_unit_of_measurement"): probatio.Any(str, None),
     }
 )
 @websocket_api.async_response
@@ -500,11 +522,11 @@ async def ws_change_statistics_unit(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "recorder/adjust_sum_statistics",
-        vol.Required("statistic_id"): str,
-        vol.Required("start_time"): str,
-        vol.Required("adjustment"): vol.Any(int, float),
-        vol.Required("adjustment_unit_of_measurement"): vol.Any(str, None),
+        probatio.Required("type"): "recorder/adjust_sum_statistics",
+        probatio.Required("statistic_id"): str,
+        probatio.Required("start_time"): str,
+        probatio.Required("adjustment"): probatio.Any(int, float),
+        probatio.Required("adjustment_unit_of_measurement"): probatio.Any(str, None),
     }
 )
 @websocket_api.async_response
@@ -566,29 +588,29 @@ async def ws_adjust_sum_statistics(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "recorder/import_statistics",
-        vol.Required("metadata"): {
-            vol.Optional("has_mean"): bool,
-            vol.Optional("mean_type"): vol.All(
-                vol.In(StatisticMeanType.__members__.values()),
-                vol.Coerce(StatisticMeanType),
+        probatio.Required("type"): "recorder/import_statistics",
+        probatio.Required("metadata"): {
+            probatio.Optional("has_mean"): bool,
+            probatio.Optional("mean_type"): probatio.All(
+                probatio.In(StatisticMeanType.__members__.values()),
+                probatio.Coerce(StatisticMeanType),
             ),
-            vol.Required("has_sum"): bool,
-            vol.Required("name"): vol.Any(str, None),
-            vol.Required("source"): str,
-            vol.Required("statistic_id"): str,
-            vol.Optional("unit_class"): vol.Any(str, None),
-            vol.Required("unit_of_measurement"): vol.Any(str, None),
+            probatio.Required("has_sum"): bool,
+            probatio.Required("name"): probatio.Any(str, None),
+            probatio.Required("source"): str,
+            probatio.Required("statistic_id"): str,
+            probatio.Optional("unit_class"): probatio.Any(str, None),
+            probatio.Required("unit_of_measurement"): probatio.Any(str, None),
         },
-        vol.Required("stats"): [
+        probatio.Required("stats"): [
             {
-                vol.Required("start"): cv.datetime,
-                vol.Optional("mean"): vol.Any(int, float),
-                vol.Optional("min"): vol.Any(int, float),
-                vol.Optional("max"): vol.Any(int, float),
-                vol.Optional("last_reset"): vol.Any(cv.datetime, None),
-                vol.Optional("state"): vol.Any(int, float),
-                vol.Optional("sum"): vol.Any(int, float),
+                probatio.Required("start"): cv.datetime,
+                probatio.Optional("mean"): probatio.Any(int, float),
+                probatio.Optional("min"): probatio.Any(int, float),
+                probatio.Optional("max"): probatio.Any(int, float),
+                probatio.Optional("last_reset"): probatio.Any(cv.datetime, None),
+                probatio.Optional("state"): probatio.Any(int, float),
+                probatio.Optional("sum"): probatio.Any(int, float),
             }
         ],
     }

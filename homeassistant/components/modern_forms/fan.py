@@ -3,10 +3,11 @@
 from typing import Any, override
 
 from aiomodernforms.const import FAN_POWER_OFF, FAN_POWER_ON
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
@@ -19,6 +20,7 @@ from . import modernforms_exception_handler
 from .const import (
     ATTR_SLEEP_TIME,
     CLEAR_TIMER,
+    DOMAIN,
     OPT_ON,
     OPT_SPEED,
     OPT_WIND,
@@ -46,8 +48,8 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_FAN_SLEEP_TIMER,
         {
-            vol.Required(ATTR_SLEEP_TIME): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=1440)
+            probatio.Required(ATTR_SLEEP_TIME): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=1, max=1440)
             ),
         },
         "async_set_fan_sleep_timer",
@@ -186,6 +188,11 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
         sleep_time: int,
     ) -> None:
         """Set a Modern Forms light sleep timer."""
+        if not self.coordinator.data.has_sleep_timer():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="sleep_timer_not_supported",
+            )
         await self.coordinator.modern_forms.fan(sleep=sleep_time * 60)
 
     @modernforms_exception_handler
@@ -193,4 +200,9 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
         self,
     ) -> None:
         """Clear a Modern Forms fan sleep timer."""
+        if not self.coordinator.data.has_sleep_timer():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="sleep_timer_not_supported",
+            )
         await self.coordinator.modern_forms.fan(sleep=CLEAR_TIMER)

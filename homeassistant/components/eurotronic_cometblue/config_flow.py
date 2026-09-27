@@ -7,7 +7,7 @@ from bleak.exc import BleakError
 from eurotronic_cometblue_ha import AsyncCometBlue
 from eurotronic_cometblue_ha.const import SERVICE
 from habluetooth import BluetoothServiceInfoBleak
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.bluetooth import (
     async_ble_device_from_address,
@@ -27,11 +27,11 @@ from .const import DOMAIN
 LOGGER = logging.getLogger(__name__)
 
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PIN, default="000000"): vol.All(
+        probatio.Required(CONF_PIN, default="000000"): probatio.All(
             TextSelector(TextSelectorConfig(type=TextSelectorType.NUMBER)),
-            vol.Length(min=6, max=6),
+            probatio.Length(min=6, max=6),
         ),
     }
 )
@@ -172,8 +172,12 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="pick_device",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_ADDRESS): vol.In(list(self._discovered_devices))}
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_ADDRESS): probatio.In(
+                        list(self._discovered_devices)
+                    )
+                }
             ),
         )
 

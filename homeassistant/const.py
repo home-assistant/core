@@ -533,6 +533,7 @@ class UnitOfEnergy(StrEnum):
     KILO_CALORIE = "kcal"
     MEGA_CALORIE = "Mcal"
     GIGA_CALORIE = "Gcal"
+    THERM = "thm"
 
 
 # Reactive energy units
@@ -647,6 +648,7 @@ class UnitOfPressure(StrEnum):
     INHG = "inHg"
     INH2O = "inH₂O"
     PSI = "psi"
+    ATM = "atm"
 
 
 # Sound pressure units

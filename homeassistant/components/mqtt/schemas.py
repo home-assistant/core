@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_DEVICE,
@@ -76,37 +76,39 @@ SHARED_OPTIONS = [
 ]
 
 
-_MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
+_MQTT_AVAILABILITY_SINGLE_SCHEMA = probatio.Schema(
     {
-        vol.Exclusive(CONF_AVAILABILITY_TOPIC, "availability"): valid_subscribe_topic,
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
-        vol.Optional(
+        probatio.Exclusive(
+            CONF_AVAILABILITY_TOPIC, "availability"
+        ): valid_subscribe_topic,
+        probatio.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
+        probatio.Optional(
             CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
         ): cv.string,
-        vol.Optional(
+        probatio.Optional(
             CONF_PAYLOAD_NOT_AVAILABLE, default=DEFAULT_PAYLOAD_NOT_AVAILABLE
         ): cv.string,
     }
 )
 
-_MQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
+_MQTT_AVAILABILITY_LIST_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_AVAILABILITY_MODE, default=AVAILABILITY_LATEST): vol.All(
-            cv.string, vol.In(AVAILABILITY_MODES)
-        ),
-        vol.Exclusive(CONF_AVAILABILITY, "availability"): vol.All(
+        probatio.Optional(
+            CONF_AVAILABILITY_MODE, default=AVAILABILITY_LATEST
+        ): probatio.All(cv.string, probatio.In(AVAILABILITY_MODES)),
+        probatio.Exclusive(CONF_AVAILABILITY, "availability"): probatio.All(
             cv.ensure_list,
             [
                 {
-                    vol.Required(CONF_TOPIC): valid_subscribe_topic,
-                    vol.Optional(
+                    probatio.Required(CONF_TOPIC): valid_subscribe_topic,
+                    probatio.Optional(
                         CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
                     ): cv.string,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_PAYLOAD_NOT_AVAILABLE,
                         default=DEFAULT_PAYLOAD_NOT_AVAILABLE,
                     ): cv.string,
-                    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+                    probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
                 }
             ],
         ),
@@ -122,44 +124,44 @@ def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType
     """Validate that a device info entry has at least one identifying value."""
     if value.get(CONF_IDENTIFIERS) or value.get(CONF_CONNECTIONS):
         return value
-    raise vol.Invalid(
+    raise probatio.Invalid(
         "Device must have at least one identifying value in "
         "'identifiers' and/or 'connections'"
     )
 
 
-MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
+MQTT_ENTITY_DEVICE_INFO_SCHEMA = probatio.All(
     cv.deprecated(CONF_DEPRECATED_VIA_HUB, CONF_VIA_DEVICE),
-    vol.Schema(
+    probatio.Schema(
         {
-            vol.Optional(CONF_IDENTIFIERS, default=list): vol.All(
+            probatio.Optional(CONF_IDENTIFIERS, default=list): probatio.All(
                 cv.ensure_list, [cv.string]
             ),
-            vol.Optional(CONF_CONNECTIONS, default=list): vol.All(
-                cv.ensure_list, [vol.All(vol.Length(2), [cv.string])]
+            probatio.Optional(CONF_CONNECTIONS, default=list): probatio.All(
+                cv.ensure_list, [probatio.All(probatio.Length(2), [cv.string])]
             ),
-            vol.Optional(CONF_MANUFACTURER): cv.string,
-            vol.Optional(CONF_MODEL): cv.string,
-            vol.Optional(CONF_MODEL_ID): cv.string,
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_HW_VERSION): cv.string,
-            vol.Optional(CONF_SERIAL_NUMBER): cv.string,
-            vol.Optional(CONF_SW_VERSION): cv.string,
-            vol.Optional(CONF_VIA_DEVICE): cv.string,
-            vol.Optional(CONF_SUGGESTED_AREA): cv.string,
-            vol.Optional(CONF_CONFIGURATION_URL): cv.configuration_url,
+            probatio.Optional(CONF_MANUFACTURER): cv.string,
+            probatio.Optional(CONF_MODEL): cv.string,
+            probatio.Optional(CONF_MODEL_ID): cv.string,
+            probatio.Optional(CONF_NAME): cv.string,
+            probatio.Optional(CONF_HW_VERSION): cv.string,
+            probatio.Optional(CONF_SERIAL_NUMBER): cv.string,
+            probatio.Optional(CONF_SW_VERSION): cv.string,
+            probatio.Optional(CONF_VIA_DEVICE): cv.string,
+            probatio.Optional(CONF_SUGGESTED_AREA): cv.string,
+            probatio.Optional(CONF_CONFIGURATION_URL): cv.configuration_url,
         }
     ),
     validate_device_has_at_least_one_identifier,
 )
 
 
-MQTT_ORIGIN_INFO_SCHEMA = vol.All(
-    vol.Schema(
+MQTT_ORIGIN_INFO_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Required(CONF_NAME): cv.string,
-            vol.Optional(CONF_SW_VERSION): cv.string,
-            vol.Optional(CONF_SUPPORT_URL): cv.configuration_url,
+            probatio.Required(CONF_NAME): cv.string,
+            probatio.Optional(CONF_SW_VERSION): cv.string,
+            probatio.Optional(CONF_SUPPORT_URL): cv.configuration_url,
         }
     ),
 )
@@ -174,23 +176,23 @@ def valid_message_expiry_interval(value: Any) -> int:
 
 MQTT_ENTITY_COMMON_SCHEMA = _MQTT_AVAILABILITY_SCHEMA.extend(
     {
-        vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-        vol.Optional(CONF_ENTITY_PICTURE): cv.url,
-        vol.Optional(CONF_ORIGIN): MQTT_ORIGIN_INFO_SCHEMA,
-        vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
-        vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
-        vol.Optional(CONF_ICON): cv.icon,
-        vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
-        vol.Optional(CONF_DEFAULT_ENTITY_ID): cv.string,
-        vol.Optional(CONF_MESSAGE_EXPIRY_INTERVAL): valid_message_expiry_interval,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_VISIBLE_BY_DEFAULT, default=True): cv.boolean,
+        probatio.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        probatio.Optional(CONF_ENTITY_PICTURE): cv.url,
+        probatio.Optional(CONF_ORIGIN): MQTT_ORIGIN_INFO_SCHEMA,
+        probatio.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
+        probatio.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+        probatio.Optional(CONF_ICON): cv.icon,
+        probatio.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
+        probatio.Optional(CONF_DEFAULT_ENTITY_ID): cv.string,
+        probatio.Optional(CONF_MESSAGE_EXPIRY_INTERVAL): valid_message_expiry_interval,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_VISIBLE_BY_DEFAULT, default=True): cv.boolean,
     }
 )
 
-_UNIQUE_ID_SCHEMA = vol.Schema(
-    {vol.Required(CONF_UNIQUE_ID): cv.string},
+_UNIQUE_ID_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_UNIQUE_ID): cv.string},
 ).extend({}, extra=True)
 
 
@@ -202,22 +204,24 @@ def check_unique_id(config: dict[str, Any]) -> dict[str, Any]:
     return config
 
 
-_COMPONENT_CONFIG_SCHEMA = vol.All(
-    vol.Schema(
-        {vol.Required(CONF_PLATFORM): vol.In(SUPPORTED_COMPONENTS)},
+_COMPONENT_CONFIG_SCHEMA = probatio.All(
+    probatio.Schema(
+        {probatio.Required(CONF_PLATFORM): probatio.In(SUPPORTED_COMPONENTS)},
     ).extend({}, extra=True),
     check_unique_id,
 )
 
 DEVICE_DISCOVERY_SCHEMA = _MQTT_AVAILABILITY_SCHEMA.extend(
     {
-        vol.Required(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-        vol.Required(CONF_COMPONENTS): vol.Schema({str: _COMPONENT_CONFIG_SCHEMA}),
-        vol.Required(CONF_ORIGIN): MQTT_ORIGIN_INFO_SCHEMA,
-        vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_MESSAGE_EXPIRY_INTERVAL): valid_message_expiry_interval,
-        vol.Optional(CONF_QOS): valid_qos_schema,
-        vol.Optional(CONF_ENCODING): cv.string,
+        probatio.Required(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        probatio.Required(CONF_COMPONENTS): probatio.Schema(
+            {str: _COMPONENT_CONFIG_SCHEMA}
+        ),
+        probatio.Required(CONF_ORIGIN): MQTT_ORIGIN_INFO_SCHEMA,
+        probatio.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_MESSAGE_EXPIRY_INTERVAL): valid_message_expiry_interval,
+        probatio.Optional(CONF_QOS): valid_qos_schema,
+        probatio.Optional(CONF_ENCODING): cv.string,
     }
 )

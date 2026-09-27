@@ -3,13 +3,13 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
+from probatio import MultipleInvalid
 from pyportainer import (
     PortainerAuthenticationError,
     PortainerConnectionError,
     PortainerTimeoutError,
 )
 import pytest
-from voluptuous import MultipleInvalid
 
 from homeassistant.components.portainer.const import DOMAIN
 from homeassistant.components.portainer.services import (

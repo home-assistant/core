@@ -12,7 +12,7 @@ from async_upnp_client.client import UpnpError
 from async_upnp_client.profiles.dlna import DmrDevice
 from async_upnp_client.profiles.profile import find_device_of_type
 from getmac import get_mac_address
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import ssdp
 from homeassistant.config_entries import (
@@ -111,8 +111,8 @@ class DlnaDmrFlowHandler(ConfigFlow, domain=DOMAIN):
             for discovery in discoveries
         }
 
-        data_schema = vol.Schema(
-            {vol.Optional(CONF_HOST): vol.In(self._discoveries.keys())}
+        data_schema = probatio.Schema(
+            {probatio.Optional(CONF_HOST): probatio.In(self._discoveries.keys())}
         )
         return self.async_show_form(step_id="user", data_schema=data_schema)
 
@@ -133,7 +133,7 @@ class DlnaDmrFlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 return self._create_entry()
 
-        data_schema = vol.Schema({CONF_URL: str})
+        data_schema = probatio.Schema({CONF_URL: str})
         return self.async_show_form(
             step_id="manual", data_schema=data_schema, errors=errors
         )
@@ -355,7 +355,7 @@ class DlnaDmrOptionsFlowHandler(OptionsFlow):
                 # extra validation here
                 if callback_url_override:
                     cv.url(callback_url_override)
-            except vol.Invalid:
+            except probatio.Invalid:
                 errors["base"] = "invalid_url"
 
             options[CONF_LISTEN_PORT] = listen_port
@@ -375,12 +375,16 @@ class DlnaDmrOptionsFlowHandler(OptionsFlow):
             For bools, use the existing value as default, or fallback to False.
             """
             if validator is bool:
-                fields[vol.Required(key, default=options.get(key, False))] = validator
+                fields[probatio.Required(key, default=options.get(key, False))] = (
+                    validator
+                )
             elif (suggested_value := options.get(key)) is None:
-                fields[vol.Optional(key)] = validator
+                fields[probatio.Optional(key)] = validator
             else:
                 fields[
-                    vol.Optional(key, description={"suggested_value": suggested_value})
+                    probatio.Optional(
+                        key, description={"suggested_value": suggested_value}
+                    )
                 ] = validator
 
         # listen_port can be blank or 0 for "bind any free port"
@@ -391,7 +395,7 @@ class DlnaDmrOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(fields),
+            data_schema=probatio.Schema(fields),
             errors=errors,
         )
 

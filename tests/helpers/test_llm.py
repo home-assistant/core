@@ -1,10 +1,10 @@
 """Tests for the llm helpers."""
 
 from decimal import Decimal
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
@@ -25,7 +25,7 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockModule, mock_integration
 
 
 @pytest.fixture(autouse=True)
@@ -143,6 +143,306 @@ async def test_call_tool_no_existing(
         )
 
 
+async def test_call_non_intent_tool_preserves_blank_arguments(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test blank arguments are preserved for non-intent tools."""
+    tool_args = {"name": "", "response": " ", "other": None}
+    tool = MagicMock(spec=llm.Tool)
+    tool.name = "test_tool"
+    tool.async_call = AsyncMock(
+        return_value=llm.ToolResult(data={"tool_args": tool_args})
+    )
+    instance = llm.APIInstance(
+        MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool]
+    )
+
+    result = await instance.async_call_tool(llm.ToolInput(tool.name, tool_args))
+
+    assert result.data == {"tool_args": tool_args}
+    assert tool.async_call.await_args.args[1].tool_args is tool_args
+
+
+async def test_call_tool_result(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test a tool result is returned as is."""
+    expected = llm.ToolResult(data={"answer": 42}, error=True)
+    tool = MagicMock(spec=llm.Tool)
+    tool.name = "test_tool"
+    tool.async_call = AsyncMock(return_value=expected)
+    instance = llm.APIInstance(
+        MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool]
+    )
+
+    assert await instance.async_call_tool(llm.ToolInput(tool.name, {})) == expected
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_call_tool_deprecated_json_object(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test returning a JSON object from a tool is reported."""
+    tool = MagicMock(spec=llm.Tool)
+    tool.name = "test_tool"
+    tool.async_call = AsyncMock(return_value={"answer": 42})
+    instance = llm.APIInstance(
+        MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool]
+    )
+
+    with pytest.raises(RuntimeError, match="returns a JSON object from a tool"):
+        await instance.async_call_tool(llm.ToolInput(tool.name, {}))
+
+
+async def test_call_tool_deprecated_json_object_custom_integration(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a custom integration tool returning a JSON object is logged, not raised."""
+    mock_integration(hass, MockModule("my_custom"), built_in=False)
+
+    class CustomTool(llm.Tool):
+        """Tool provided by a custom integration."""
+
+        name = "test_tool"
+
+        async def async_call(
+            self,
+            hass: HomeAssistant,
+            tool_input: llm.ToolInput,
+            llm_context: llm.LLMContext,
+        ) -> JsonObjectType:
+            """Return a plain JSON object."""
+            return {"answer": 42}
+
+    # The tool call has returned by the time it is reported, so the domain is
+    # taken from the tool rather than the stack.
+    CustomTool.__module__ = "custom_components.my_custom.llm"
+    tool = CustomTool()
+    instance = llm.APIInstance(
+        MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool]
+    )
+
+    assert await instance.async_call_tool(
+        llm.ToolInput(tool.name, {})
+    ) == llm.ToolResult(data={"answer": 42})
+    assert "returns a JSON object from a tool" in caplog.text
+
+
+def _untagged_tool(module: str) -> llm.Tool:
+    """Return a tool that does not record the integration providing it."""
+
+    class UntaggedTool(llm.Tool):
+        """Tool that declares no integration."""
+
+        name = "test_tool"
+
+        async def async_call(
+            self, hass: HomeAssistant, tool_input: llm.ToolInput, _: llm.LLMContext
+        ) -> llm.ToolResult:
+            return llm.ToolResult(data={})
+
+    # The tool is reported against the integration its class comes from.
+    UntaggedTool.__module__ = module
+    return UntaggedTool()
+
+
+async def test_api_instance_reports_untagged_tool_for_custom_integration(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a custom integration is warned about a tool without an integration."""
+    mock_integration(hass, MockModule("my_custom"), built_in=False)
+    tool = _untagged_tool("custom_components.my_custom.llm")
+
+    llm.APIInstance(MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool])
+
+    assert "provides the LLM tool test_tool without an integration" in caplog.text
+
+
+async def test_api_instance_raises_untagged_tool_for_core_integration(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+) -> None:
+    """Test a core integration must record the integration on its tools."""
+    mock_integration(hass, MockModule("my_core"))
+    tool = _untagged_tool("homeassistant.components.my_core.llm")
+
+    with pytest.raises(
+        RuntimeError, match="provides the LLM tool test_tool without an integration"
+    ):
+        llm.APIInstance(
+            MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool]
+        )
+
+
+async def test_api_instance_reports_untagged_tool_from_the_api(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a tool defined outside an integration is reported against its API."""
+    mock_integration(hass, MockModule("my_custom"), built_in=False)
+    tool = _untagged_tool("homeassistant.helpers.llm")
+
+    class CustomAPI(MyAPI):
+        """API provided by a custom integration."""
+
+    CustomAPI.__module__ = "custom_components.my_custom.llm_api"
+    llm.APIInstance(
+        CustomAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool]
+    )
+
+    assert (
+        "custom integration 'my_custom' provides the LLM tool test_tool without an "
+        "integration" in caplog.text
+    )
+    # The tool carries the domain until the requirement is enforced.
+    assert tool.integration == "my_custom"
+
+
+async def test_merged_api_reports_untagged_tool_once(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a merged API reports the wrapped tool under its own name."""
+    mock_integration(hass, MockModule("my_custom"), built_in=False)
+
+    api = MyAPI(hass=hass, id="api-1", name="API 1")
+    api.tools = [_untagged_tool("custom_components.my_custom.llm")]
+    llm.async_register_api(hass, api)
+    other = MyAPI(hass=hass, id="api-2", name="API 2")
+    llm.async_register_api(hass, other)
+
+    await llm.async_get_api(hass, ["api-1", "api-2"], llm_context)
+
+    assert "provides the LLM tool test_tool without an integration" in caplog.text
+    # The wrapper reports the tool it wraps, so the report is not repeated.
+    assert caplog.text.count("without an integration") == 1
+
+
+def test_tool_metadata_defaults() -> None:
+    """Test a tool that declares no metadata is taken to be unsafe."""
+
+    class MyTool(llm.Tool):
+        name = "test_tool"
+
+        async def async_call(
+            self, hass: HomeAssistant, tool_input: llm.ToolInput, _: llm.LLMContext
+        ) -> llm.ToolResult:
+            return llm.ToolResult(data={})
+
+    tool = MyTool()
+    assert tool.title is None
+    assert tool.integration is None
+    assert tool.annotations == llm.ToolAnnotations(
+        read_only=False, destructive=True, idempotent=False, open_world=True
+    )
+
+
+def test_intent_tool_metadata() -> None:
+    """Test an intent tool takes the metadata of the integration exposing it."""
+
+    class MyIntentHandler(intent.IntentHandler):
+        intent_type = "test_intent"
+
+    annotations = llm.ToolAnnotations(read_only=True, open_world=False)
+    tool = llm.IntentTool(
+        "test_tool",
+        MyIntentHandler(),
+        title="Test tool",
+        integration="my_integration",
+        annotations=annotations,
+    )
+
+    assert tool.title == "Test tool"
+    assert tool.integration == "my_integration"
+    assert tool.annotations == annotations
+
+    # An intent tool that declares nothing keeps the unsafe defaults.
+    tool = llm.IntentTool("test_tool", MyIntentHandler())
+    assert tool.title is None
+    assert tool.integration is None
+    assert tool.annotations == llm.ToolAnnotations()
+
+
+def test_namespaced_tool_keeps_metadata() -> None:
+    """Test a namespaced tool carries the metadata of the tool it wraps."""
+
+    class MyTool(llm.Tool):
+        name = "test_tool"
+        title = "Test tool"
+        annotations = llm.ToolAnnotations(read_only=True, open_world=False)
+        integration = "my_integration"
+
+        async def async_call(
+            self, hass: HomeAssistant, tool_input: llm.ToolInput, _: llm.LLMContext
+        ) -> llm.ToolResult:
+            return llm.ToolResult(data={})
+
+    tool = MyTool()
+    namespaced = llm.NamespacedTool("test_api", tool)
+
+    assert namespaced.name == "test_api__test_tool"
+    assert namespaced.title == tool.title
+    assert namespaced.annotations == tool.annotations
+    assert namespaced.integration == tool.integration
+
+
+@pytest.mark.parametrize("namespaced", [False, True])
+async def test_intent_tool_omits_blank_arguments(
+    hass: HomeAssistant, llm_context: llm.LLMContext, namespaced: bool
+) -> None:
+    """Test direct and namespaced intent tools omit blank arguments."""
+
+    class MyIntentHandler(intent.IntentHandler):
+        intent_type = "test_intent"
+        slot_schema = {
+            probatio.Optional("name"): intent.non_empty_string,
+            probatio.Optional("response"): cv.string,
+            probatio.Optional("count"): probatio.Coerce(int),
+            probatio.Optional("enabled"): cv.boolean,
+        }
+
+    intent_tool = llm.IntentTool("test_intent", MyIntentHandler(), integration="test")
+    tool: llm.Tool = (
+        llm.NamespacedTool("test_api", intent_tool) if namespaced else intent_tool
+    )
+    tool_args = {
+        "name": "",
+        "response": " \t",
+        "other": None,
+        "count": 0,
+        "enabled": False,
+    }
+    tool_input = llm.ToolInput(tool.name, tool_args)
+    instance = llm.APIInstance(
+        MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool]
+    )
+    intent_response = intent.IntentResponse("*")
+
+    with patch(
+        "homeassistant.helpers.intent.async_handle", return_value=intent_response
+    ) as mock_intent_handle:
+        await instance.async_call_tool(tool_input)
+
+    assert mock_intent_handle.await_args.kwargs["slots"] == {
+        "count": {"value": 0},
+        "enabled": {"value": False},
+    }
+    assert tool_input.tool_args is tool_args
+    assert tool_args == {
+        "name": "",
+        "response": " \t",
+        "other": None,
+        "count": 0,
+        "enabled": False,
+    }
+
+
 async def test_assist_api(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -161,10 +461,10 @@ async def test_assist_api(
         device_id=None,
     )
     schema = {
-        vol.Optional("area"): cv.string,
-        vol.Optional("floor"): cv.string,
-        vol.Optional("preferred_area_id"): cv.string,
-        vol.Optional("preferred_floor_id"): cv.string,
+        probatio.Optional("area"): cv.string,
+        probatio.Optional("floor"): cv.string,
+        probatio.Optional("preferred_area_id"): cv.string,
+        probatio.Optional("preferred_floor_id"): cv.string,
     }
 
     class MyIntentHandler(intent.IntentHandler):
@@ -173,13 +473,13 @@ async def test_assist_api(
 
     intent_handler = MyIntentHandler()
 
-    tool = llm.IntentTool("test_intent", intent_handler)
+    tool = llm.IntentTool("test_intent", intent_handler, integration="test")
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
-    assert tool.parameters == vol.Schema(
+    assert tool.parameters == probatio.Schema(
         {
-            vol.Optional("area"): cv.string,
-            vol.Optional("floor"): cv.string,
+            probatio.Optional("area"): cv.string,
+            probatio.Optional("floor"): cv.string,
             # No preferred_area_id, preferred_floor_id
         }
     )
@@ -226,7 +526,7 @@ async def test_assist_api(
         assistant="conversation",
         device_id=None,
     )
-    assert response == {
+    assert response.data == {
         "data": {
             "failed": [],
             "success": [],
@@ -284,7 +584,7 @@ async def test_assist_api(
         assistant="conversation",
         device_id=device.id,
     )
-    assert response == {
+    assert response.data == {
         "data": {
             "failed": [],
             "success": [],
@@ -335,7 +635,7 @@ async def test_assist_api_description(
         intent_type = "test_intent"
         description = "my intent handler"
 
-    tool = llm.IntentTool("test_intent", MyIntentHandler())
+    tool = llm.IntentTool("test_intent", MyIntentHandler(), integration="test")
     assert tool.name == "test_intent"
     assert tool.description == "my intent handler"
 
@@ -682,8 +982,8 @@ Static Context: An overview of the areas and the devices in this smart home:
     )
     dynamic_context_prompt = (
         "You ARE equipped to answer questions about the"
-        " current state of\nthe home using the"
-        " `homeassistant__GetLiveContext` tool. This is a primary"
+        " current state of\nthe home by retrieving"
+        " live context. This is a primary"
         " function. Do not state you lack the\n"
         "functionality if the question requires live"
         " data.\nIf the user asks about device"
@@ -695,7 +995,7 @@ Static Context: An overview of the areas and the devices in this smart home:
         ' "What mode is the thermostat in?", "What'
         ' is the temperature outside?"):\n'
         "    1.  Recognize this requires live data.\n"
-        "    2.  You MUST call `homeassistant__GetLiveContext`. This"
+        "    2.  You MUST use the provided tool to retrieve live context. This"
         " tool will provide the needed real-time"
         " information (like temperature from the local"
         " weather, lock status, etc.).\n"
@@ -720,10 +1020,7 @@ Static Context: An overview of the areas and the devices in this smart home:
     result = await api.async_call_tool(
         llm.ToolInput(tool_name="homeassistant__GetLiveContext", tool_args={})
     )
-    assert result == {
-        "success": True,
-        "result": exposed_entities_prompt,
-    }
+    assert result.data == {"result": exposed_entities_prompt}
 
     # Fake that request is made from a specific device ID with an area
     llm_context.device_id = device.id
@@ -851,20 +1148,20 @@ async def test_action_tool(
         == "This is a test script. Aliases: ['script alias', 'script name']"
     )
     schema = {
-        vol.Required("beer", description="Number of beers"): cv.string,
-        vol.Optional("wine"): selector.NumberSelector({"min": 0, "max": 3}),
-        vol.Optional("where"): selector.AreaSelector(),
-        vol.Optional("area_list"): selector.AreaSelector({"multiple": True}),
-        vol.Optional("floor"): selector.FloorSelector(),
-        vol.Optional("floor_list"): selector.FloorSelector({"multiple": True}),
-        vol.Optional("extra_field"): selector.AreaSelector(),
+        probatio.Required("beer", description="Number of beers"): cv.string,
+        probatio.Optional("wine"): selector.NumberSelector({"min": 0, "max": 3}),
+        probatio.Optional("where"): selector.AreaSelector(),
+        probatio.Optional("area_list"): selector.AreaSelector({"multiple": True}),
+        probatio.Optional("floor"): selector.FloorSelector(),
+        probatio.Optional("floor_list"): selector.FloorSelector({"multiple": True}),
+        probatio.Optional("extra_field"): selector.AreaSelector(),
     }
     assert tool.parameters.schema == schema
 
     # The parameter cache stores the base description; ScriptTool appends aliases.
     assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
-        "test_script": ("This is a test script", vol.Schema(schema)),
-        "script_with_no_fields": ("This is another test script", vol.Schema({})),
+        "test_script": ("This is a test script", probatio.Schema(schema)),
+        "script_with_no_fields": ("This is another test script", probatio.Schema({})),
     }
 
     # Test script with response
@@ -901,10 +1198,7 @@ async def test_action_tool(
         blocking=True,
         return_response=True,
     )
-    assert response == {
-        "success": True,
-        "result": {"drinks": 2},
-    }
+    assert response.data == {"result": {"drinks": 2}}
 
     # Test script with no response
     tool_input = llm.ToolInput(
@@ -926,10 +1220,7 @@ async def test_action_tool(
         blocking=True,
         return_response=True,
     )
-    assert response == {
-        "success": True,
-        "result": {},
-    }
+    assert response.data == {"result": {}}
 
     # Test reload script with new parameters
     config = {
@@ -969,12 +1260,12 @@ async def test_action_tool(
         tool.description
         == "This is a new test script. Aliases: ['script alias', 'script name']"
     )
-    schema = {vol.Required("beer", description="Number of beers"): cv.string}
+    schema = {probatio.Required("beer", description="Number of beers"): cv.string}
     assert tool.parameters.schema == schema
 
     assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
-        "test_script": ("This is a new test script", vol.Schema(schema)),
-        "script_with_no_fields": ("This is another test script", vol.Schema({})),
+        "test_script": ("This is a new test script", probatio.Schema(schema)),
+        "script_with_no_fields": ("This is another test script", probatio.Schema({})),
     }
 
 
@@ -1286,11 +1577,14 @@ async def test_merged_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> N
         def __init__(self, name: str, description: str) -> None:
             self.name = name
             self.description = description
+            self.integration = "test"
 
         async def async_call(
             self, hass: HomeAssistant, tool_input: llm.ToolInput, _: llm.LLMContext
-        ) -> JsonObjectType:
-            return {"result": {tool_input.tool_name: tool_input.tool_args}}
+        ) -> llm.ToolResult:
+            return llm.ToolResult(
+                data={"result": {tool_input.tool_name: tool_input.tool_args}}
+            )
 
     api1 = MyAPI(hass=hass, id="api-1", name="API 1")
     api1.prompt = "This is prompt 1"
@@ -1325,12 +1619,12 @@ This is prompt 2
     result = await instance.async_call_tool(
         llm.ToolInput(tool_name="api-1__Tool_1", tool_args={"arg1": "value1"})
     )
-    assert result == {"result": {"Tool_1": {"arg1": "value1"}}}
+    assert result.data == {"result": {"Tool_1": {"arg1": "value1"}}}
 
     result = await instance.async_call_tool(
         llm.ToolInput(tool_name="api-2__Tool_2", tool_args={"arg2": "value2"})
     )
-    assert result == {"result": {"Tool_2": {"arg2": "value2"}}}
+    assert result.data == {"result": {"Tool_2": {"arg2": "value2"}}}
 
 
 async def test_deprecated_async_render_no_api_prompt(

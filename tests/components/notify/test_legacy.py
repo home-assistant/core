@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 import yaml
 
 from homeassistant import config as hass_config
@@ -552,7 +552,7 @@ async def test_setup_platform_after_notify_setup(
 async def test_sending_none_message(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test send with None as message."""
     send_message_mock = await help_setup_notify(hass, tmp_path)
-    with pytest.raises(vol.Invalid) as exc:
+    with pytest.raises(probatio.Invalid) as exc:
         await hass.services.async_call(
             notify.DOMAIN, notify.SERVICE_NOTIFY, {notify.ATTR_MESSAGE: None}
         )

@@ -6,12 +6,12 @@ from typing import Any, override
 import uuid
 
 from aiohttp import ClientSession
+import probatio
 from pylamarzocco import LaMarzoccoCloudClient
 from pylamarzocco.const import DeviceType
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 from pylamarzocco.models import Thing
 from pylamarzocco.util import InstallationKey, generate_installation_key
-import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfo,
@@ -144,14 +144,14 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME): TextSelector(
+                    probatio.Required(CONF_USERNAME): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.EMAIL, autocomplete="username"
                         )
                     ),
-                    vol.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(CONF_PASSWORD): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -209,9 +209,9 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             for thing in self._things.values()
         ]
 
-        machine_selection_schema = vol.Schema(
+        machine_selection_schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_MACHINE, default=machine_options[0]["value"]
                 ): SelectSelector(
                     SelectSelectorConfig(
@@ -251,9 +251,9 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="bluetooth_selection",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_MAC): SelectSelector(
+                    probatio.Required(CONF_MAC): SelectSelector(
                         SelectSelectorConfig(
                             options=bt_options,
                             mode=SelectSelectorMode.DROPDOWN,
@@ -329,9 +329,9 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         if not user_input:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(CONF_PASSWORD): str,
+                        probatio.Required(CONF_PASSWORD): str,
                     }
                 ),
             )
@@ -346,16 +346,16 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             reconfigure_entry = self._get_reconfigure_entry()
             return self.async_show_form(
                 step_id="reconfigure",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(
+                        probatio.Required(
                             CONF_USERNAME, default=reconfigure_entry.data[CONF_USERNAME]
                         ): TextSelector(
                             TextSelectorConfig(
                                 type=TextSelectorType.EMAIL, autocomplete="username"
                             ),
                         ),
-                        vol.Required(
+                        probatio.Required(
                             CONF_PASSWORD, default=reconfigure_entry.data[CONF_PASSWORD]
                         ): TextSelector(
                             TextSelectorConfig(
@@ -395,13 +395,13 @@ class LmOptionsFlowHandler(OptionsFlowWithReload):
                 errors[CONF_USE_BLUETOOTH] = "bluetooth_required_offline"
             else:
                 return self.async_create_entry(title="", data=user_input)
-        options_schema = vol.Schema(
+        options_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_USE_BLUETOOTH,
                     default=self.config_entry.options.get(CONF_USE_BLUETOOTH, True),
                 ): cv.boolean,
-                vol.Optional(
+                probatio.Optional(
                     CONF_OFFLINE_MODE,
                     default=self.config_entry.options.get(CONF_OFFLINE_MODE, False),
                 ): cv.boolean,

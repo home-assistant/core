@@ -275,10 +275,10 @@
     'area_id': None,
     'capabilities': dict({
       <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
-        'Low',
-        'Medium',
-        'High',
-        'Auto',
+        'low',
+        'medium',
+        'high',
+        'auto',
       ]),
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
@@ -335,12 +335,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
-      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'High',
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'high',
       <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
-        'Low',
-        'Medium',
-        'High',
-        'Auto',
+        'low',
+        'medium',
+        'high',
+        'auto',
       ]),
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MDV Wi-Fi Controller',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([

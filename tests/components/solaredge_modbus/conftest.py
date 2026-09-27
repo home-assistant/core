@@ -30,12 +30,19 @@ PORT = 1502
 UNIT_ID = 1
 SERIAL_NUMBER = "7E123ABC"
 METER_SERIAL_NUMBER = "7E4A11C2"
+BATTERY_SERIAL_NUMBERS = ("7E7C33E4", "7E8D44F5")
 
 # Where a meter's block starts, how far the next one sits, and where in it the
 # serial number lives, as SunSpec lays them out.
 METER_BASE = 40121
 METER_STRIDE = 174
 METER_SERIAL_BASE = 40171
+
+# The same for the batteries, whose blocks sit at fixed offsets rather than a
+# stride, with the rated-energy register the probe counts them by.
+BATTERY_SERIAL_BASE = 57648
+BATTERY_RATED_ENERGY = 57666
+BATTERY_OFFSETS = (0, 256, 768)
 
 
 def tcp_data(unit_id: int = UNIT_ID) -> dict[str, Any]:

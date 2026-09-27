@@ -7,7 +7,7 @@ from typing import Any, override
 
 from aioaquacell import ApiException, AquacellApi, AuthenticationFailed
 from aioaquacell.const import SUPPORTED_BRANDS, Brand
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -22,19 +22,19 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_BRAND, default=Brand.AQUACELL): vol.In(
+        probatio.Required(CONF_BRAND, default=Brand.AQUACELL): probatio.In(
             {key: brand.name for key, brand in SUPPORTED_BRANDS.items()}
         ),
-        vol.Required(CONF_EMAIL): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_EMAIL): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
-STEP_REAUTH_SCHEMA = vol.Schema(
+STEP_REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 

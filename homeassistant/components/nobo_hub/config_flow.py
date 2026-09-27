@@ -3,8 +3,8 @@
 import ipaddress
 from typing import TYPE_CHECKING, Any, override
 
+import probatio
 from pynobo import PynoboConnectionError, nobo
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntryState,
@@ -79,9 +79,9 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
 
         hubs = self._hubs()
         hubs["manual"] = "Manual"
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required("device"): vol.In(hubs),
+                probatio.Required("device"): probatio.In(hubs),
             }
         )
         return self.async_show_form(
@@ -187,9 +187,9 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         return self.async_show_form(
             step_id="selected",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         "serial_suffix", default=user_input.get("serial_suffix")
                     ): str,
                 }
@@ -253,7 +253,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema({vol.Required(CONF_IP_ADDRESS): str}),
+                probatio.Schema({probatio.Required(CONF_IP_ADDRESS): str}),
                 user_input or reconfigure_entry.data,
             ),
             errors=errors,
@@ -278,10 +278,12 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         return self.async_show_form(
             step_id="manual",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_SERIAL, default=user_input.get(CONF_SERIAL)): str,
-                    vol.Required(
+                    probatio.Required(
+                        CONF_SERIAL, default=user_input.get(CONF_SERIAL)
+                    ): str,
+                    probatio.Required(
                         CONF_IP_ADDRESS, default=user_input.get(CONF_IP_ADDRESS)
                     ): str,
                 }
@@ -374,9 +376,11 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             CONF_OVERRIDE_TYPE, OVERRIDE_TYPE_CONSTANT
         )
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_OVERRIDE_TYPE, default=override_type): SelectSelector(
+                probatio.Required(
+                    CONF_OVERRIDE_TYPE, default=override_type
+                ): SelectSelector(
                     SelectSelectorConfig(
                         options=[OVERRIDE_TYPE_CONSTANT, OVERRIDE_TYPE_NOW],
                         translation_key=CONF_OVERRIDE_TYPE,

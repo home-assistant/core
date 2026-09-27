@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, override
 
 from PIL import Image, ImageDraw, UnidentifiedImageError
+import probatio
 import simplehound.core as hound
-import voluptuous as vol
 
 from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
@@ -42,10 +42,10 @@ PROD = "prod"
 
 PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_ACCOUNT_TYPE, default=DEV): vol.In([DEV, PROD]),
-        vol.Optional(CONF_SAVE_FILE_FOLDER): cv.isdir,
-        vol.Optional(CONF_SAVE_TIMESTAMPTED_FILE, default=False): cv.boolean,
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Optional(CONF_ACCOUNT_TYPE, default=DEV): probatio.In([DEV, PROD]),
+        probatio.Optional(CONF_SAVE_FILE_FOLDER): cv.isdir,
+        probatio.Optional(CONF_SAVE_TIMESTAMPTED_FILE, default=False): cv.boolean,
     }
 )
 

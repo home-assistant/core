@@ -2,7 +2,7 @@
 
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
@@ -41,7 +41,9 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
                         " light between 0 and 100, where 0"
                         " is off and 100 is fully lit"
                     ),
-                    value_schema=vol.All(vol.Coerce(int), vol.Range(0, 100)),
+                    value_schema=probatio.All(
+                        probatio.Coerce(int), probatio.Range(0, 100)
+                    ),
                 ),
             },
             description="Sets the brightness percentage or color of a light",

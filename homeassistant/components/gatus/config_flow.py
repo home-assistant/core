@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from gatus_api import GatusAuthError, GatusClient, GatusClientError
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -23,27 +23,27 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): TextSelector(
+        probatio.Required(CONF_URL): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.URL,
                 autocomplete="url",
             ),
         ),
-        vol.Optional(CONF_USERNAME): TextSelector(
+        probatio.Optional(CONF_USERNAME): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 autocomplete="username",
             ),
         ),
-        vol.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
             ),
         ),
-        vol.Optional(CONF_TOKEN): TextSelector(
+        probatio.Optional(CONF_TOKEN): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
             ),
@@ -195,21 +195,21 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates=user_input,
                 )
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Optional(CONF_USERNAME): TextSelector(
+                probatio.Optional(CONF_USERNAME): TextSelector(
                     TextSelectorConfig(
                         type=TextSelectorType.TEXT,
                         autocomplete="username",
                     ),
                 ),
-                vol.Optional(CONF_PASSWORD): TextSelector(
+                probatio.Optional(CONF_PASSWORD): TextSelector(
                     TextSelectorConfig(
                         type=TextSelectorType.PASSWORD,
                         autocomplete="current-password",
                     ),
                 ),
-                vol.Optional(CONF_TOKEN): TextSelector(
+                probatio.Optional(CONF_TOKEN): TextSelector(
                     TextSelectorConfig(
                         type=TextSelectorType.PASSWORD,
                     ),

@@ -11,6 +11,8 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import wave
 
 from freezegun.api import FrozenDateTimeFactory
+import mutagen
+from mutagen.id3 import TIT2, TPE1, Encoding
 import pytest
 
 from homeassistant.components import ffmpeg, tts
@@ -44,10 +46,21 @@ from .common import (
     retrieve_media,
 )
 
-from tests.common import MockModule, async_mock_service, mock_integration, mock_platform
+from tests.common import (
+    MockModule,
+    async_mock_service,
+    load_fixture_bytes,
+    mock_integration,
+    mock_platform,
+)
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 ORIG_WRITE_TAGS = tts.SpeechManager.write_tags
+
+
+async def get_stream_data(stream: tts.ResultStream) -> bytes:
+    """Get all data of a result stream."""
+    return b"".join([chunk async for chunk in stream.async_stream_result()])
 
 
 async def test_config_entry_unload(
@@ -835,11 +848,10 @@ async def test_service_receive_voice(
     assert req.status == HTTPStatus.OK
     assert await req.read() == tts_data
 
-    extension, data = await tts.async_get_media_source_audio(
-        hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
-    )
-    assert extension == "mp3"
-    assert tts_data == data
+    stream = tts.async_get_stream(hass, url.rsplit("/", 1)[-1])
+    assert stream is not None
+    assert stream.extension == "mp3"
+    assert tts_data == b"".join([chunk async for chunk in stream.async_stream_result()])
 
 
 @pytest.mark.parametrize(
@@ -1441,25 +1453,21 @@ async def test_legacy_fetching_in_async(
 
     await mock_setup(hass, ProviderWithAsyncFetching(DEFAULT_LANG))
 
-    # Test async_get_media_source_audio
-    media_source_id = tts.generate_media_source_id(
-        hass,
-        "test message",
-        "test",
-        "en_US",
-        cache=None,
-    )
+    def create_stream(message: str) -> tts.ResultStream:
+        stream = tts.async_create_stream(hass, "test", "en_US")
+        stream.async_set_message(message)
+        return stream
 
-    task = hass.async_create_task(
-        tts.async_get_media_source_audio(hass, media_source_id)
-    )
-    task2 = hass.async_create_task(
-        tts.async_get_media_source_audio(hass, media_source_id)
-    )
+    # Streams for the same message share a single fetch
+    stream = create_stream("test message")
+    stream2 = create_stream("test message")
+    stream3 = create_stream("test message")
 
-    url = await get_media_source_url(hass, media_source_id)
+    task = hass.async_create_task(get_stream_data(stream))
+    task2 = hass.async_create_task(get_stream_data(stream2))
+
     client = await hass_client()
-    client_get_task = hass.async_create_task(client.get(url))
+    client_get_task = hass.async_create_task(client.get(stream3.url))
 
     # Make sure that tasks are waiting for our future to resolve
     done, pending = await asyncio.wait((task, task2, client_get_task), timeout=0.1)
@@ -1468,28 +1476,23 @@ async def test_legacy_fetching_in_async(
 
     tts_audio.set_result(b"test")
 
-    assert await task == ("mp3", b"test")
-    assert await task2 == ("mp3", b"test")
+    assert stream.extension == "mp3"
+    assert await task == b"test"
+    assert await task2 == b"test"
 
     req = await client_get_task
     assert req.status == HTTPStatus.OK
     assert await req.read() == b"test"
 
     # Test error is not cached
-    media_source_id = tts.generate_media_source_id(
-        hass, "test message 2", "test", "en_US", None, None
-    )
     tts_audio = asyncio.Future()
     tts_audio.set_exception(HomeAssistantError("test error"))
     with pytest.raises(HomeAssistantError):
-        assert await tts.async_get_media_source_audio(hass, media_source_id)
+        await get_stream_data(create_stream("test message 2"))
 
     tts_audio = asyncio.Future()
     tts_audio.set_result(b"test 2")
-    assert await tts.async_get_media_source_audio(hass, media_source_id) == (
-        "mp3",
-        b"test 2",
-    )
+    assert await get_stream_data(create_stream("test message 2")) == b"test 2"
 
 
 async def test_fetching_in_async(
@@ -1508,25 +1511,21 @@ async def test_fetching_in_async(
 
     await mock_config_entry_setup(hass, EntityWithAsyncFetching(DEFAULT_LANG))
 
-    # Test async_get_media_source_audio
-    media_source_id = tts.generate_media_source_id(
-        hass,
-        "test message",
-        "tts.test",
-        "en_US",
-        cache=None,
-    )
+    def create_stream(message: str) -> tts.ResultStream:
+        stream = tts.async_create_stream(hass, "tts.test", "en_US")
+        stream.async_set_message(message)
+        return stream
 
-    task = hass.async_create_task(
-        tts.async_get_media_source_audio(hass, media_source_id)
-    )
-    task2 = hass.async_create_task(
-        tts.async_get_media_source_audio(hass, media_source_id)
-    )
+    # Streams for the same message share a single fetch
+    stream = create_stream("test message")
+    stream2 = create_stream("test message")
+    stream3 = create_stream("test message")
 
-    url = await get_media_source_url(hass, media_source_id)
+    task = hass.async_create_task(get_stream_data(stream))
+    task2 = hass.async_create_task(get_stream_data(stream2))
+
     client = await hass_client()
-    client_get_task = hass.async_create_task(client.get(url))
+    client_get_task = hass.async_create_task(client.get(stream3.url))
 
     # Make sure that tasks are waiting for our future to resolve
     done, pending = await asyncio.wait((task, task2, client_get_task), timeout=0.1)
@@ -1535,28 +1534,23 @@ async def test_fetching_in_async(
 
     tts_audio.set_result(b"test")
 
-    assert await task == ("mp3", b"test")
-    assert await task2 == ("mp3", b"test")
+    assert stream.extension == "mp3"
+    assert await task == b"test"
+    assert await task2 == b"test"
 
     req = await client_get_task
     assert req.status == HTTPStatus.OK
     assert await req.read() == b"test"
 
     # Test error is not cached
-    media_source_id = tts.generate_media_source_id(
-        hass, "test message 2", "tts.test", "en_US", None, None
-    )
     tts_audio = asyncio.Future()
     tts_audio.set_exception(HomeAssistantError("test error"))
     with pytest.raises(HomeAssistantError):
-        assert await tts.async_get_media_source_audio(hass, media_source_id)
+        await get_stream_data(create_stream("test message 2"))
 
     tts_audio = asyncio.Future()
     tts_audio.set_result(b"test 2")
-    assert await tts.async_get_media_source_audio(hass, media_source_id) == (
-        "mp3",
-        b"test 2",
-    )
+    assert await get_stream_data(create_stream("test message 2")) == b"test 2"
 
 
 @pytest.mark.parametrize(
@@ -1926,6 +1920,8 @@ async def test_async_convert_audio_probe_size(
         "1",
         "-sample_fmt",
         "s16",
+        "-fflags",
+        "+bitexact",
         "pipe:1",
     ]
 
@@ -1974,6 +1970,8 @@ async def test_async_convert_audio_mp3_bitrate(
         "-ac",
         "1",
         *expected_encoder_args,
+        "-fflags",
+        "+bitexact",
         "pipe:1",
     ]
 
@@ -2316,3 +2314,130 @@ async def test_stream_override_with_conversion(
         assert wav_reader.readframes(wav_reader.getnframes()) == bytes(
             22050 * 2 * 2
         )  # 1 second @ 22.5Khz/stereo
+
+
+def test_write_tags_keeps_single_id3_tag() -> None:
+    """Test tagging audio that already carries an ID3 tag does not add a second one."""
+    data = load_fixture_bytes("tagged.mp3", DOMAIN)
+    assert data.startswith(b"ID3")
+    assert data.count(b"ID3") == 1
+
+    tagged = ORIG_WRITE_TAGS(
+        "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3",
+        data,
+        "Test",
+        "There is someone at the door.",
+        "en",
+        None,
+    )
+
+    assert tagged.startswith(b"ID3")
+    assert tagged.count(b"ID3") == 1
+
+
+def test_write_tags_sets_standard_id3_frames() -> None:
+    """Test tagging audio carrying only the encoder frame sets standard frames."""
+    data = load_fixture_bytes("tagged.mp3", DOMAIN)
+    assert list(mutagen.File(io.BytesIO(data)).tags) == ["TSSE"]
+
+    tagged = ORIG_WRITE_TAGS(
+        "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3",
+        data,
+        "Test",
+        "There is someone at the door.",
+        "en",
+        None,
+    )
+
+    tags = mutagen.File(io.BytesIO(tagged)).tags
+    assert tags["TPE1"].text == ["en"]
+    assert tags["TALB"].text == ["Test"]
+    assert tags["TIT2"].text == ["There is someone at the door."]
+    assert "TSSE" in tags
+
+
+def test_write_tags_adds_tag_to_untagged_audio() -> None:
+    """Test audio arriving without an ID3 tag gets one holding the frames."""
+    data = load_fixture_bytes("untagged.mp3", DOMAIN)
+    assert not data.startswith(b"ID3")
+
+    tagged = ORIG_WRITE_TAGS(
+        "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3",
+        data,
+        "Test",
+        "There is someone at the door.",
+        "en",
+        None,
+    )
+
+    assert tagged.startswith(b"ID3")
+    assert tagged.count(b"ID3") == 1
+    tags = mutagen.File(io.BytesIO(tagged)).tags
+    assert tags["TPE1"].text == ["en"]
+    assert tags["TALB"].text == ["Test"]
+    assert tags["TIT2"].text == ["There is someone at the door."]
+
+
+def test_write_tags_overwrites_id3v1_metadata() -> None:
+    """Test audio arriving with only an ID3v1 trailer gets the frames rewritten."""
+    data = load_fixture_bytes("id3v1.mp3", DOMAIN)
+    assert not data.startswith(b"ID3")
+    assert data[-128:-125] == b"TAG"
+
+    tagged = ORIG_WRITE_TAGS(
+        "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3",
+        data,
+        "Test",
+        "There is someone at the door.",
+        "en",
+        None,
+    )
+
+    assert tagged.startswith(b"ID3")
+    tags = mutagen.File(io.BytesIO(tagged)).tags
+    assert tags["TPE1"].text == ["en"]
+    assert tags["TALB"].text == ["Test"]
+    assert tags["TIT2"].text == ["There is someone at the door."]
+
+
+def test_write_tags_replaces_existing_frames() -> None:
+    """Test frames carried through conversion from the provider are replaced."""
+    data = load_fixture_bytes("untagged.mp3", DOMAIN)
+    source = io.BytesIO(data)
+    source.name = "source.mp3"
+    source_file = mutagen.File(source)
+    source_file.add_tags()
+    source_file.tags.add(TIT2(encoding=Encoding.UTF8, text="Provider title"))
+    source_file.tags.add(TPE1(encoding=Encoding.UTF8, text="Provider artist"))
+    source.seek(0)
+    source_file.save(source)
+
+    tagged = ORIG_WRITE_TAGS(
+        "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3",
+        source.getvalue(),
+        "Test",
+        "There is someone at the door.",
+        "en",
+        None,
+    )
+
+    tags = mutagen.File(io.BytesIO(tagged)).tags
+    assert tags["TIT2"].text == ["There is someone at the door."]
+    assert tags["TPE1"].text == ["en"]
+
+
+def test_write_tags_uses_voice_as_artist() -> None:
+    """Test the voice option replaces the language as the artist frame."""
+    data = load_fixture_bytes("tagged.mp3", DOMAIN)
+
+    tagged = ORIG_WRITE_TAGS(
+        "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3",
+        data,
+        "Test",
+        "There is someone at the door.",
+        "en",
+        {"voice": "JennyNeural"},
+    )
+
+    tags = mutagen.File(io.BytesIO(tagged)).tags
+    assert tags["TPE1"].text == ["JennyNeural"]

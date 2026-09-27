@@ -3,7 +3,7 @@
 import logging
 from typing import override
 
-import voluptuous as vol
+import probatio
 from wirelesstagpy import SensorTag
 
 from homeassistant.components.sensor import (
@@ -66,8 +66,8 @@ SENSOR_KEYS: list[str] = list(SENSOR_TYPES)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)]
+        probatio.Required(CONF_MONITORED_CONDITIONS, default=[]): probatio.All(
+            cv.ensure_list, [probatio.In(SENSOR_KEYS)]
         )
     }
 )

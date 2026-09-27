@@ -458,14 +458,15 @@ async def test_remote_sensors(hass: HomeAssistant) -> None:
 
 
 async def test_remote_sensor_devices(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test remote sensor devices."""
     await setup_platform(hass, [const.Platform.CLIMATE, const.Platform.SENSOR])
     freezer.tick(100)
     async_fire_time_changed(hass)
     state = hass.states.get(ENTITY_ID)
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     for device in device_registry.devices:
         if device.name == "Remote Sensor 1":
             remote_sensor_1_id = device.id
@@ -545,7 +546,9 @@ async def test_remote_sensor_ids_names(hass: HomeAssistant) -> None:
     assert sorted(name_by_user_list) == sorted(["Remote Sensor 1", "ecobee"])
 
 
-async def test_remote_sensors_ignore_non_ecobee_devices(hass: HomeAssistant) -> None:
+async def test_remote_sensors_ignore_non_ecobee_devices(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Devices from other integrations sharing a sensor's name are not matched.
 
     Regression test: the remote-sensor device lookup matched by device name across
@@ -553,7 +556,6 @@ async def test_remote_sensors_ignore_non_ecobee_devices(hass: HomeAssistant) -> 
     an ecobee sensor's name was wrongly reported as a participating sensor.
     """
     await setup_platform(hass, [const.Platform.CLIMATE, const.Platform.SENSOR])
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     # A device from another integration that shares the ecobee sensor's name.
     other_entry = MockConfigEntry(domain="other")
@@ -579,11 +581,12 @@ async def test_remote_sensors_ignore_non_ecobee_devices(hass: HomeAssistant) -> 
     assert sorted(name_by_user_list) == sorted(["Remote Sensor 1", "ecobee"])
 
 
-async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
+async def test_set_sensors_used_in_climate(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test set sensors used in climate."""
     # Get device_id of remote sensor from the device registry.
     await setup_platform(hass, [const.Platform.CLIMATE, const.Platform.SENSOR])
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     for device in device_registry.devices:
         if device.name == "Remote Sensor 1":
             remote_sensor_1_id = device.id

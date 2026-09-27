@@ -1216,3 +1216,41 @@ async def test_adjacent_events_stay_on(
         state = hass.states.get(TEST_ENTITY)
         assert state.state == STATE_ON
         assert state.attributes["message"] == "Second"
+
+
+ICS_WITH_STATUS = """BEGIN:VCALENDAR
+BEGIN:VEVENT
+SUMMARY:Bastille Day Party
+DTSTART:19970714
+DTEND:19970715
+STATUS:{status}
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+@pytest.mark.parametrize(
+    ("ics_content", "expected_status"),
+    [
+        pytest.param(
+            ICS_WITH_STATUS.format(status="TENTATIVE"), "tentative", id="tentative"
+        ),
+        pytest.param(
+            ICS_WITH_STATUS.format(status="CONFIRMED"), "confirmed", id="confirmed"
+        ),
+        pytest.param(
+            ICS_WITH_STATUS.format(status="CANCELLED"),
+            None,
+            id="cancelled_is_not_reported",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_event_status(
+    get_events: GetEventsFn,
+    expected_status: str | None,
+) -> None:
+    """Test that the rfc5545 STATUS property is returned by the API."""
+    events = await get_events("1997-07-13T00:00:00", "1997-07-16T00:00:00")
+    assert len(events) == 1
+    assert events[0]["status"] == expected_status

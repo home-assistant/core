@@ -99,6 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     assert entry.unique_id
 
     device_registry = dr.async_get(hass)
+
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.unique_id)},
@@ -113,6 +114,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
             f"{coordinator_info.data.device.article_number}{coordinator_info.data.article_suffix}"
         ),
     )
+
+    for line_id, line_info in info_api.data.lines.items():
+        line_unique_id = f"{entry.unique_id}-line{line_id}"
+
+        extra_info: dict = {}
+        if line_info.device.serial != info_api.data.device.serial:
+            extra_info.update(
+                serial_number=str(line_info.device.serial),
+                hw_version=line_info.device.pcb,
+                model_id=(
+                    f"{line_info.device.article_number}{line_info.device.article_info}"
+                ),
+            )
+
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, line_unique_id)},
+            name=f"DALI Line {line_id}",
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, entry.unique_id), config_entry_id=entry.entry_id
+            ),
+            **extra_info,
+        )
 
     devices_api = Devices(auth_api, info_api.data.version)
     coordinator_devices = LunatoneDevicesDataUpdateCoordinator(hass, entry, devices_api)

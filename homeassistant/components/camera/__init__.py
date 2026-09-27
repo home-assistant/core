@@ -6,7 +6,6 @@ from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from enum import IntFlag
 from functools import partial
 import logging
 import os
@@ -16,8 +15,8 @@ from typing import Any, Final, final, override
 
 from aiohttp import hdrs, web
 import attr
+import probatio
 from propcache.api import cached_property, under_cached_property
-import voluptuous as vol
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components import websocket_api
@@ -69,6 +68,7 @@ from .const import (
     PREF_ORIENTATION,
     PREF_PRELOAD_STREAM,
     SERVICE_RECORD,
+    CameraEntityFeature,
     CameraEntityStateAttribute,
     CameraState,
     StreamType,
@@ -114,13 +114,6 @@ ATTR_MEDIA_PLAYER: Final = "media_player"
 ATTR_FORMAT: Final = "format"
 
 
-class CameraEntityFeature(IntFlag):
-    """Supported features of the camera entity."""
-
-    ON_OFF = 1
-    STREAM = 2
-
-
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
 ENTITY_IMAGE_URL: Final = "/api/camera_proxy/{0}?token={1}"
 
@@ -129,17 +122,17 @@ _RND: Final = SystemRandom()
 
 MIN_STREAM_INTERVAL: Final = 0.5  # seconds
 
-CAMERA_SERVICE_SNAPSHOT: VolDictType = {vol.Required(ATTR_FILENAME): cv.template}
+CAMERA_SERVICE_SNAPSHOT: VolDictType = {probatio.Required(ATTR_FILENAME): cv.template}
 
 CAMERA_SERVICE_PLAY_STREAM: VolDictType = {
-    vol.Required(ATTR_MEDIA_PLAYER): cv.entities_domain(MP_DOMAIN),
-    vol.Optional(ATTR_FORMAT, default="hls"): vol.In(OUTPUT_FORMATS),
+    probatio.Required(ATTR_MEDIA_PLAYER): cv.entities_domain(MP_DOMAIN),
+    probatio.Optional(ATTR_FORMAT, default="hls"): probatio.In(OUTPUT_FORMATS),
 }
 
 CAMERA_SERVICE_RECORD: VolDictType = {
-    vol.Required(CONF_FILENAME): cv.template,
-    vol.Optional(CONF_DURATION, default=30): vol.Coerce(int),
-    vol.Optional(CONF_LOOKBACK, default=0): vol.Coerce(int),
+    probatio.Required(CONF_FILENAME): cv.template,
+    probatio.Optional(CONF_DURATION, default=30): probatio.Coerce(int),
+    probatio.Optional(CONF_LOOKBACK, default=0): probatio.Coerce(int),
 }
 
 
@@ -934,8 +927,8 @@ class CameraMjpegStream(CameraView):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "camera/capabilities",
-        vol.Required("entity_id"): cv.entity_id,
+        probatio.Required("type"): "camera/capabilities",
+        probatio.Required("entity_id"): cv.entity_id,
     }
 )
 @websocket_api.async_response
@@ -952,9 +945,9 @@ async def ws_camera_capabilities(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "camera/stream",
-        vol.Required("entity_id"): cv.entity_id,
-        vol.Optional("format", default="hls"): vol.In(OUTPUT_FORMATS),
+        probatio.Required("type"): "camera/stream",
+        probatio.Required("entity_id"): cv.entity_id,
+        probatio.Optional("format", default="hls"): probatio.In(OUTPUT_FORMATS),
     }
 )
 @websocket_api.async_response
@@ -981,7 +974,10 @@ async def ws_camera_stream(
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "camera/get_prefs", vol.Required("entity_id"): cv.entity_id}
+    {
+        probatio.Required("type"): "camera/get_prefs",
+        probatio.Required("entity_id"): cv.entity_id,
+    }
 )
 @websocket_api.async_response
 async def websocket_get_prefs(
@@ -994,10 +990,10 @@ async def websocket_get_prefs(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "camera/update_prefs",
-        vol.Required("entity_id"): cv.entity_id,
-        vol.Optional(PREF_PRELOAD_STREAM): bool,
-        vol.Optional(PREF_ORIENTATION): vol.Coerce(Orientation),
+        probatio.Required("type"): "camera/update_prefs",
+        probatio.Required("entity_id"): cv.entity_id,
+        probatio.Optional(PREF_PRELOAD_STREAM): bool,
+        probatio.Optional(PREF_ORIENTATION): probatio.Coerce(Orientation),
     }
 )
 @websocket_api.require_admin

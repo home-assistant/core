@@ -6,7 +6,7 @@ from typing import Any, override
 import aioptdevices
 from aioptdevices.configuration import Configuration
 from aioptdevices.interface import Interface
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
@@ -18,9 +18,9 @@ from .const import DEFAULT_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-_CONF_SCHEMA = vol.Schema(
+_CONF_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_TOKEN): str,
+        probatio.Required(CONF_API_TOKEN): str,
     }
 )
 

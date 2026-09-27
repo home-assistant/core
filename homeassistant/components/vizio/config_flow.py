@@ -5,6 +5,7 @@ import copy
 import logging
 from typing import Any, override
 
+import probatio
 from vizaio import (
     AppRecord,
     PairChallenge,
@@ -14,7 +15,6 @@ from vizaio import (
     async_resolve_host,
 )
 from vizaio.apps import APP_HOME, BUNDLED_APPS
-import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.config_entries import (
@@ -56,7 +56,7 @@ from .coordinator import VizioConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_config_schema(input_dict: dict[str, Any] | None = None) -> vol.Schema:
+def _get_config_schema(input_dict: dict[str, Any] | None = None) -> probatio.Schema:
     """Return schema defaults for init step based on user input/config dict.
 
     Retain info already provided for future form views by setting them
@@ -65,23 +65,23 @@ def _get_config_schema(input_dict: dict[str, Any] | None = None) -> vol.Schema:
     if input_dict is None:
         input_dict = {}
 
-    return vol.Schema(
+    return probatio.Schema(
         {
             # Name field is no longer allowed in config flow schemas
             # pylint: disable-next=home-assistant-config-flow-name-field
-            vol.Required(
+            probatio.Required(
                 CONF_NAME, default=input_dict.get(CONF_NAME, DEFAULT_NAME)
             ): str,
-            vol.Required(CONF_HOST, default=input_dict.get(CONF_HOST)): str,
-            vol.Optional(
+            probatio.Required(CONF_HOST, default=input_dict.get(CONF_HOST)): str,
+            probatio.Optional(
                 CONF_ACCESS_TOKEN, default=input_dict.get(CONF_ACCESS_TOKEN, "")
             ): str,
         },
-        extra=vol.REMOVE_EXTRA,
+        extra=probatio.REMOVE_EXTRA,
     )
 
 
-def _get_pairing_schema(input_dict: dict[str, Any] | None = None) -> vol.Schema:
+def _get_pairing_schema(input_dict: dict[str, Any] | None = None) -> probatio.Schema:
     """Return schema defaults for pairing data based on user input.
 
     Retain info already provided for future form views by setting
@@ -90,8 +90,8 @@ def _get_pairing_schema(input_dict: dict[str, Any] | None = None) -> vol.Schema:
     if input_dict is None:
         input_dict = {}
 
-    return vol.Schema(
-        {vol.Required(CONF_PIN, default=input_dict.get(CONF_PIN, "")): str}
+    return probatio.Schema(
+        {probatio.Required(CONF_PIN, default=input_dict.get(CONF_PIN, "")): str}
     )
 
 
@@ -174,14 +174,14 @@ class VizioOptionsConfigFlow(OptionsFlow):
 
             return self.async_create_entry(title="", data=user_input)
 
-        options = vol.Schema(
+        options = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_VOLUME_STEP,
                     default=self.config_entry.options.get(
                         CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP
                     ),
-                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10))
+                ): probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=10))
             }
         )
 
@@ -194,13 +194,14 @@ class VizioOptionsConfigFlow(OptionsFlow):
             )
             options = options.extend(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_INCLUDE_OR_EXCLUDE,
                         default=default_include_or_exclude.title(),
-                    ): vol.All(
-                        vol.In([CONF_INCLUDE.title(), CONF_EXCLUDE.title()]), vol.Lower
+                    ): probatio.All(
+                        probatio.In([CONF_INCLUDE.title(), CONF_EXCLUDE.title()]),
+                        probatio.Lower,
                     ),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_APPS_TO_INCLUDE_OR_EXCLUDE,
                         default=self.config_entry.options.get(CONF_APPS, {}).get(
                             default_include_or_exclude, []
@@ -234,7 +235,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize config flow."""
-        self._user_schema: vol.Schema | None = None
+        self._user_schema: probatio.Schema | None = None
         self._must_show_form: bool | None = None
         self._pair_challenge: PairChallenge | None = None
         self._data: dict[str, Any] | None = None
@@ -249,8 +250,8 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self._data
             return self.async_show_form(
                 step_id="reconfigure",
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_HOST, default=self._data[CONF_HOST]): str}
+                data_schema=probatio.Schema(
+                    {probatio.Required(CONF_HOST, default=self._data[CONF_HOST]): str}
                 ),
                 errors=errors,
             )

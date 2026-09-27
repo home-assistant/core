@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -31,27 +31,27 @@ MESSAGE_FORMATS = [FORMAT_HTML, FORMAT_TEXT]
 DEFAULT_MESSAGE_FORMAT = FORMAT_TEXT
 
 
-SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
+SERVICE_SCHEMA_SEND_MESSAGE = probatio.Schema(
     {
-        vol.Required(ATTR_MESSAGE): cv.string,
-        vol.Optional(ATTR_DATA, default={}): {
-            vol.Optional(ATTR_FORMAT, default=DEFAULT_MESSAGE_FORMAT): vol.In(
+        probatio.Required(ATTR_MESSAGE): cv.string,
+        probatio.Optional(ATTR_DATA, default={}): {
+            probatio.Optional(ATTR_FORMAT, default=DEFAULT_MESSAGE_FORMAT): probatio.In(
                 MESSAGE_FORMATS
             ),
-            vol.Optional(ATTR_IMAGES): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(ATTR_THREAD_ID): cv.string,
+            probatio.Optional(ATTR_IMAGES): probatio.All(cv.ensure_list, [cv.string]),
+            probatio.Optional(ATTR_THREAD_ID): cv.string,
         },
-        vol.Required(ATTR_TARGET): vol.All(
+        probatio.Required(ATTR_TARGET): probatio.All(
             cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
         ),
     }
 )
 
-SERVICE_SCHEMA_REACT = vol.Schema(
+SERVICE_SCHEMA_REACT = probatio.Schema(
     {
-        vol.Required(ATTR_REACTION): cv.string,
-        vol.Required(ATTR_ROOM): cv.matches_regex(CONF_ROOMS_REGEX),
-        vol.Required(ATTR_MESSAGE_ID): cv.string,
+        probatio.Required(ATTR_REACTION): cv.string,
+        probatio.Required(ATTR_ROOM): cv.matches_regex(CONF_ROOMS_REGEX),
+        probatio.Required(ATTR_MESSAGE_ID): cv.string,
     }
 )
 

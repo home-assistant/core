@@ -12,7 +12,7 @@ from typing import Final
 
 import evohomeasync as ec1
 import evohomeasync2 as ec2
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -34,25 +34,27 @@ from .const import (
     SCAN_INTERVAL_MINIMUM,
 )
 from .coordinator import EvoDataUpdateCoordinator
-from .services import setup_service_functions
+from .services import async_setup_services
 from .storage import TokenManager
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA: Final = vol.Schema(
+CONFIG_SCHEMA: Final = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_LOCATION_IDX, default=0): cv.positive_int,
-                vol.Optional(
+                probatio.Required(CONF_USERNAME): cv.string,
+                probatio.Required(CONF_PASSWORD): cv.string,
+                probatio.Optional(CONF_LOCATION_IDX, default=0): cv.positive_int,
+                probatio.Optional(
                     CONF_SCAN_INTERVAL, default=SCAN_INTERVAL_DEFAULT
-                ): vol.All(cv.time_period, vol.Range(min=SCAN_INTERVAL_MINIMUM)),
+                ): probatio.All(
+                    cv.time_period, probatio.Range(min=SCAN_INTERVAL_MINIMUM)
+                ),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -110,6 +112,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
         )
 
-    setup_service_functions(hass, coordinator)
+    async_setup_services(hass, coordinator)
 
     return True

@@ -3,9 +3,9 @@
 from collections import namedtuple
 import logging
 
+import probatio
 from tellcore import telldus
 import tellcore.constants as tellcore_constants
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -40,21 +40,21 @@ DEFAULT_TEMPERATURE_SCALE = UnitOfTemperature.CELSIUS
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(
+        probatio.Optional(
             CONF_TEMPERATURE_SCALE, default=DEFAULT_TEMPERATURE_SCALE
         ): cv.string,
-        vol.Optional(
+        probatio.Optional(
             CONF_DATATYPE_MASK, default=DEFAULT_DATATYPE_MASK
         ): cv.positive_int,
-        vol.Optional(CONF_ONLY_NAMED, default=[]): vol.All(
+        probatio.Optional(CONF_ONLY_NAMED, default=[]): probatio.All(
             cv.ensure_list,
             [
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_ID): cv.positive_int,
-                        vol.Required(CONF_NAME): cv.string,
-                        vol.Optional(CONF_PROTOCOL): cv.string,
-                        vol.Optional(CONF_MODEL): cv.string,
+                        probatio.Required(CONF_ID): cv.positive_int,
+                        probatio.Required(CONF_NAME): cv.string,
+                        probatio.Optional(CONF_PROTOCOL): cv.string,
+                        probatio.Optional(CONF_MODEL): cv.string,
                     }
                 )
             ],

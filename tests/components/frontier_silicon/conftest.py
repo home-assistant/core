@@ -56,6 +56,8 @@ def mock_afsapi() -> Generator[AsyncMock]:
         client.get_volume.return_value = 3
         client.get_volume_steps.return_value = 2
         client.get_play_caps.return_value = PlayCaps(0)
+        client.get_dst.return_value = True
+        client.set_dst.return_value = True
 
         modes = [
             PlayerMode(

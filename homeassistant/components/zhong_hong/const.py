@@ -1,5 +1,6 @@
 """Constants for the ZhongHong integration."""
 
+from datetime import timedelta
 import logging
 from typing import Final
 
@@ -38,3 +39,7 @@ FAN_MODE_REVERSE_MAP: Final = {v: k for k, v in FAN_MODE_MAP.items()}
 
 DEFAULT_PORT: Final = 9999
 DEFAULT_GATEWAY_ADDRESS: Final = 1
+
+# The gateway pushes state changes, so polling only has to cover pushes that
+# were missed while the connection was down.
+SCAN_INTERVAL: Final = timedelta(seconds=60)

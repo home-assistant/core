@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientError, ClientResponseError
 import aiosolaredge
+import probatio
 from solaredge_web import SolarEdgeWeb
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -157,23 +157,27 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             user_input = {}
 
-        data_schema_dict: dict[vol.Marker, Any] = {}
+        data_schema_dict: dict[probatio.Marker, Any] = {}
         if self.source != SOURCE_RECONFIGURE:
             data_schema_dict[
                 # Name field is no longer allowed in config flow schemas
                 # pylint: disable-next=home-assistant-config-flow-name-field
-                vol.Required(CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME))
+                probatio.Required(
+                    CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
+                )
             ] = str
             data_schema_dict[
-                vol.Required(CONF_SITE_ID, default=user_input.get(CONF_SITE_ID, ""))
+                probatio.Required(
+                    CONF_SITE_ID, default=user_input.get(CONF_SITE_ID, "")
+                )
             ] = str
 
         data_schema_dict.update(
             {
-                vol.Optional(CONF_SECTION_API_AUTH): section(
-                    vol.Schema(
+                probatio.Optional(CONF_SECTION_API_AUTH): section(
+                    probatio.Schema(
                         {
-                            vol.Optional(
+                            probatio.Optional(
                                 CONF_API_KEY,
                                 default=user_input.get(CONF_SECTION_API_AUTH, {}).get(
                                     CONF_API_KEY, ""
@@ -183,17 +187,17 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                     options={"collapsed": False},
                 ),
-                vol.Optional(CONF_SECTION_WEB_AUTH): section(
-                    vol.Schema(
+                probatio.Optional(CONF_SECTION_WEB_AUTH): section(
+                    probatio.Schema(
                         {
-                            vol.Inclusive(
+                            probatio.Inclusive(
                                 CONF_USERNAME,
                                 "web_account",
                                 default=user_input.get(CONF_SECTION_WEB_AUTH, {}).get(
                                     CONF_USERNAME, ""
                                 ),
                             ): str,
-                            vol.Inclusive(
+                            probatio.Inclusive(
                                 CONF_PASSWORD,
                                 "web_account",
                                 default=user_input.get(CONF_SECTION_WEB_AUTH, {}).get(
@@ -206,7 +210,7 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
             }
         )
-        data_schema = vol.Schema(data_schema_dict)
+        data_schema = probatio.Schema(data_schema_dict)
 
         step_id = "user"
         description_placeholders = {}

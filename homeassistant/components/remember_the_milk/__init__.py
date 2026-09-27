@@ -4,7 +4,7 @@ from copy import deepcopy
 from typing import Any
 
 from aiortm import AioRTMClient, AioRTMError, Auth, AuthError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
@@ -35,26 +35,26 @@ from .storage import RememberTheMilkConfiguration
 
 PLATFORMS = [Platform.TODO]
 
-RTM_SCHEMA = vol.Schema(
+RTM_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_SHARED_SECRET): cv.string,
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_SHARED_SECRET): cv.string,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [RTM_SCHEMA])}, extra=vol.ALLOW_EXTRA
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.All(cv.ensure_list, [RTM_SCHEMA])}, extra=probatio.ALLOW_EXTRA
 )
 
 SERVICE_CREATE_TASK = "create_task"
 SERVICE_COMPLETE_TASK = "complete_task"
 
-SERVICE_SCHEMA_CREATE_TASK = vol.Schema(
-    {vol.Required(CONF_NAME): cv.string, vol.Optional(CONF_ID): cv.string}
+SERVICE_SCHEMA_CREATE_TASK = probatio.Schema(
+    {probatio.Required(CONF_NAME): cv.string, probatio.Optional(CONF_ID): cv.string}
 )
 
-SERVICE_SCHEMA_COMPLETE_TASK = vol.Schema({vol.Required(CONF_ID): cv.string})
+SERVICE_SCHEMA_COMPLETE_TASK = probatio.Schema({probatio.Required(CONF_ID): cv.string})
 
 DATA_COMPONENT = "component"
 DATA_STORAGE = "storage"

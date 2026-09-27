@@ -1,13 +1,12 @@
 """Support for water heater devices."""
 
 from datetime import timedelta
-from enum import IntFlag
 import functools as ft
 import logging
 from typing import Any, final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -30,7 +29,12 @@ from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import DOMAIN, WaterHeaterCapabilityAttribute, WaterHeaterStateAttribute
+from .const import (
+    DOMAIN,
+    WaterHeaterCapabilityAttribute,
+    WaterHeaterEntityFeature,
+    WaterHeaterStateAttribute,
+)
 
 DATA_COMPONENT: HassKey[EntityComponent[WaterHeaterEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -53,15 +57,6 @@ STATE_HEAT_PUMP = "heat_pump"
 STATE_GAS = "gas"
 
 
-class WaterHeaterEntityFeature(IntFlag):
-    """Supported features of the water heater entity."""
-
-    TARGET_TEMPERATURE = 1
-    OPERATION_MODE = 2
-    AWAY_MODE = 4
-    ON_OFF = 8
-
-
 ATTR_MAX_TEMP = "max_temp"
 ATTR_MIN_TEMP = "min_temp"
 ATTR_AWAY_MODE = "away_mode"
@@ -77,14 +72,14 @@ CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE]
 _LOGGER = logging.getLogger(__name__)
 
 SET_AWAY_MODE_SCHEMA: VolDictType = {
-    vol.Required(ATTR_AWAY_MODE): cv.boolean,
+    probatio.Required(ATTR_AWAY_MODE): cv.boolean,
 }
 SET_TEMPERATURE_SCHEMA: VolDictType = {
-    vol.Required(ATTR_TEMPERATURE, "temperature"): vol.Coerce(float),
-    vol.Optional(ATTR_OPERATION_MODE): cv.string,
+    probatio.Required(ATTR_TEMPERATURE, "temperature"): probatio.Coerce(float),
+    probatio.Optional(ATTR_OPERATION_MODE): cv.string,
 }
 SET_OPERATION_MODE_SCHEMA: VolDictType = {
-    vol.Required(ATTR_OPERATION_MODE): cv.string,
+    probatio.Required(ATTR_OPERATION_MODE): cv.string,
 }
 
 # mypy: disallow-any-generics

@@ -6,8 +6,8 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from PIL import Image
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import conversation
 from homeassistant.components.cloud.const import AI_TASK_ENTITY_UNIQUE_ID, DOMAIN
@@ -57,7 +57,7 @@ class DummyTool(llm.Tool):
 
     name = "do_something"
     description = "Test tool"
-    parameters = vol.Schema({vol.Required("value"): str})
+    parameters = probatio.Schema({probatio.Required("value"): str})
 
     async def async_call(self, hass: HomeAssistant, tool_input, llm_context):
         """No-op implementation."""
@@ -66,13 +66,13 @@ class DummyTool(llm.Tool):
 
 async def test_format_structured_output() -> None:
     """Test that structured output schemas are normalized."""
-    schema = vol.Schema(
+    schema = probatio.Schema(
         {
-            vol.Required("name"): selector.TextSelector(),
-            vol.Optional("age"): selector.NumberSelector(
+            probatio.Required("name"): selector.TextSelector(),
+            probatio.Optional("age"): selector.NumberSelector(
                 config=selector.NumberSelectorConfig(min=0, max=120),
             ),
-            vol.Required("stuff"): selector.ObjectSelector(
+            probatio.Required("stuff"): selector.ObjectSelector(
                 {
                     "multiple": True,
                     "fields": {
@@ -244,12 +244,14 @@ async def test_prepare_chat_for_generation_passes_messages_through(
             agent_id="agent",
             tool_call_id="mock-tool-call-id",
             tool_name="HassGetCurrentTime",
-            tool_result={
-                "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
-                "response_type": "action_done",
-                "speech_slots": {"time": datetime.time(12, 0)},
-                "data": {"success": [], "failed": []},
-            },
+            result=llm.ToolResult(
+                data={
+                    "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
+                    "response_type": "action_done",
+                    "speech_slots": {"time": datetime.time(12, 0)},
+                    "data": {"success": [], "failed": []},
+                }
+            ),
         )
     )
     chat_log.async_add_assistant_content_without_tools(
@@ -325,3 +327,40 @@ async def test_async_handle_chat_log_service_sets_structured_output_non_strict(
     _, kwargs = cloud.llm.async_generate_data.call_args
 
     assert kwargs["response_format"]["json_schema"]["strict"] is False
+
+
+@pytest.mark.parametrize(
+    ("result", "expected_output"),
+    [
+        pytest.param(
+            llm.ToolResult(data={"temperature": 21}),
+            '{"data":{"temperature":21},"error":false}',
+            id="success",
+        ),
+        pytest.param(
+            llm.ToolResult(data={"error": "Not found"}, error=True),
+            '{"data":{"error":"Not found"},"error":true}',
+            id="error",
+        ),
+    ],
+)
+def test_convert_tool_result_to_param(
+    result: llm.ToolResult, expected_output: str
+) -> None:
+    """Test the tool result is sent with its error flag."""
+    content = [
+        conversation.ToolResultContent(
+            agent_id="agent",
+            tool_call_id="mock-tool-call-id",
+            tool_name="HassGetState",
+            result=result,
+        )
+    ]
+
+    assert _convert_content_to_param(content) == [
+        {
+            "type": "function_call_output",
+            "call_id": "mock-tool-call-id",
+            "output": expected_output,
+        }
+    ]

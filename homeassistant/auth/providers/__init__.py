@@ -5,8 +5,8 @@ import logging
 import types
 from typing import Any
 
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant import requirements
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
@@ -34,14 +34,14 @@ DATA_REQS: HassKey[set[str]] = HassKey("auth_prov_reqs_processed")
 
 AUTH_PROVIDERS: Registry[str, type[AuthProvider]] = Registry()
 
-AUTH_PROVIDER_SCHEMA = vol.Schema(
+AUTH_PROVIDER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TYPE): str,
-        vol.Optional(CONF_NAME): str,
+        probatio.Required(CONF_TYPE): str,
+        probatio.Optional(CONF_NAME): str,
         # Specify ID if you have two auth providers for same type.
-        vol.Optional(CONF_ID): str,
+        probatio.Optional(CONF_ID): str,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -148,7 +148,7 @@ async def auth_provider_from_config(
 
     try:
         config = module.CONFIG_SCHEMA(config)
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         _LOGGER.error(
             "Invalid configuration for auth provider %s: %s",
             provider_name,
@@ -237,8 +237,8 @@ class LoginFlow[_AuthProviderT: AuthProvider = AuthProvider](
 
         return self.async_show_form(
             step_id="select_mfa_module",
-            data_schema=vol.Schema(
-                {"multi_factor_auth_module": vol.In(self.available_mfa_modules)}
+            data_schema=probatio.Schema(
+                {"multi_factor_auth_module": probatio.In(self.available_mfa_modules)}
             ),
             errors=errors,
         )

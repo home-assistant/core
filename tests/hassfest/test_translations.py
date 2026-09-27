@@ -1,7 +1,7 @@
 """Tests for hassfest translations."""
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from script.hassfest import translations
 from script.hassfest.model import Config
@@ -11,9 +11,9 @@ from . import get_integration
 
 def test_string_with_no_placeholders_in_single_quotes() -> None:
     """Test string with no placeholders in single quotes."""
-    schema = vol.Schema(translations.string_no_single_quoted_placeholders)
+    schema = probatio.Schema(translations.string_no_single_quoted_placeholders)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema("This has '{placeholder}' in single quotes")
 
     for value in (
@@ -435,9 +435,9 @@ def test_gen_strings_schema(
 )
 def test_no_placeholders_used_for_urls(translation_string: str) -> None:
     """Test that translation strings containing URLs are rejected."""
-    schema = vol.Schema(translations.translation_value_validator)
+    schema = probatio.Schema(translations.translation_value_validator)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema(translation_string)
 
 
@@ -453,7 +453,7 @@ def test_no_placeholders_used_for_urls(translation_string: str) -> None:
 )
 def test_allow_urls_in_translation_value(translation_string: str) -> None:
     """Test that URLs are allowed when allow_urls=True."""
-    schema = vol.Schema(
+    schema = probatio.Schema(
         translations.custom_translation_value_validator(allow_urls=True)
     )
 

@@ -2,10 +2,10 @@
 
 from typing import Any, override
 
+import probatio
 from regenmaschine import Client
 from regenmaschine.controller import Controller
 from regenmaschine.errors import RainMachineError
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -113,13 +113,15 @@ class RainMachineFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user()
 
     @callback
-    def _async_generate_schema(self) -> vol.Schema:
+    def _async_generate_schema(self) -> probatio.Schema:
         """Generate schema."""
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Required(CONF_IP_ADDRESS, default=self.discovered_ip_address): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                probatio.Required(
+                    CONF_IP_ADDRESS, default=self.discovered_ip_address
+                ): str,
+                probatio.Required(CONF_PASSWORD): str,
+                probatio.Optional(CONF_PORT, default=DEFAULT_PORT): int,
             }
         )
 
@@ -182,19 +184,19 @@ class RainMachineOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_DEFAULT_ZONE_RUN_TIME,
                         default=self.config_entry.options.get(
                             CONF_DEFAULT_ZONE_RUN_TIME
                         ),
                     ): cv.positive_int,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_USE_APP_RUN_TIMES,
                         default=self.config_entry.options.get(CONF_USE_APP_RUN_TIMES),
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
                         default=self.config_entry.options.get(
                             CONF_ALLOW_INACTIVE_ZONES_TO_RUN
