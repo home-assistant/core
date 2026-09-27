@@ -2783,8 +2783,9 @@ async def test_commit_before_commits_pending_writes(
 
 async def test_all_tables_use_default_table_args(hass: HomeAssistant) -> None:
     """Test that all tables use the default table args."""
-    for table in db_schema.Base.metadata.tables.values():
-        assert table.kwargs.items() >= db_schema._DEFAULT_TABLE_ARGS.items()
+    for base in (db_schema.Base, db_schema.LegacyBase):
+        for table in base.metadata.tables.values():
+            assert table.info.items() >= db_schema._DEFAULT_TABLE_ARGS["info"].items()
 
 
 async def test_empty_entity_id(
