@@ -83,6 +83,19 @@ MEDIA_CLASS_MAP = {
     "Episode": MediaClass.EPISODE,
     "Season": MediaClass.SEASON,
 }
+SEARCH_ITEM_TYPE_MAP: dict[MediaClass, list[str]] = {
+    MediaClass.ALBUM: [ITEM_TYPE_ALBUM],
+    MediaClass.ARTIST: [ITEM_TYPE_ARTIST],
+    MediaClass.DIRECTORY: ["CollectionFolder", "AggregateFolder", "Folder", "BoxSet"],
+    MediaClass.EPISODE: [ITEM_TYPE_EPISODE],
+    MediaClass.MOVIE: [ITEM_TYPE_MOVIE],
+    MediaClass.MUSIC: [ITEM_TYPE_AUDIO],
+    MediaClass.PLAYLIST: ["Playlist"],
+    MediaClass.SEASON: [ITEM_TYPE_SEASON],
+    MediaClass.TRACK: [ITEM_TYPE_AUDIO],
+    MediaClass.TV_SHOW: [ITEM_TYPE_SERIES],
+    MediaClass.VIDEO: ["Video"],
+}
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE, Platform.SENSOR]
 LOGGER = logging.getLogger(__package__)
