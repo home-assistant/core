@@ -13,11 +13,7 @@ import pytest
 from homeassistant.components import conversation
 from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_CHAT_MODEL,
-    CONF_DANGEROUS_BLOCK_THRESHOLD,
-    CONF_HARASSMENT_BLOCK_THRESHOLD,
-    CONF_HATE_BLOCK_THRESHOLD,
     CONF_MAX_TOKENS,
-    CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
     CONF_THINKING_LEVEL,
     CONF_TOP_K,
@@ -31,7 +27,6 @@ from homeassistant.components.google_generative_ai_conversation.entity import (
 from homeassistant.components.google_generative_ai_conversation.interactions import (
     build_interaction_request,
     convert_chat_log_to_interactions_steps,
-    create_safety_settings,
     extract_output_audio,
     extract_output_image,
     format_audio_response_format,
@@ -117,23 +112,6 @@ def test_format_response_format() -> None:
     )
 
 
-def test_create_safety_settings() -> None:
-    """Test creating safety settings from options."""
-    options = {
-        CONF_HATE_BLOCK_THRESHOLD: "BLOCK_LOW_AND_ABOVE",
-        CONF_HARASSMENT_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
-        CONF_DANGEROUS_BLOCK_THRESHOLD: "BLOCK_ONLY_HIGH",
-        CONF_SEXUAL_BLOCK_THRESHOLD: "BLOCK_NONE",
-    }
-    settings = create_safety_settings(options)
-    assert len(settings) == 4
-    types = {s.type: s.threshold for s in settings}
-    assert types["hate_speech"] == "block_low_and_above"
-    assert types["harassment"] == "block_medium_and_above"
-    assert types["dangerous_content"] == "block_only_high"
-    assert types["sexually_explicit"] == "block_none"
-
-
 def test_build_interaction_request_store_false_enforced() -> None:
     """Test build_interaction_request strictly enforces store=False."""
     request = build_interaction_request(
@@ -164,7 +142,6 @@ def test_build_interaction_request_full_parameters() -> None:
         CONF_MAX_TOKENS: 1500,
         CONF_THINKING_LEVEL: "high",
     }
-    safety_settings = create_safety_settings({})
     tools = [interactions.GoogleSearch()]
     response_format = interactions.TextResponseFormat(
         type="text", mime_type="application/json", schema_={}
@@ -179,7 +156,6 @@ def test_build_interaction_request_full_parameters() -> None:
         system_instruction="You are a helpful assistant.",
         tools=tools,
         response_format=response_format,
-        safety_settings=safety_settings,
         stream=True,
     )
 
@@ -189,7 +165,7 @@ def test_build_interaction_request_full_parameters() -> None:
     assert request["system_instruction"] == "You are a helpful assistant."
     assert request["tools"] == tools
     assert request["response_format"] == response_format
-    assert request["safety_settings"] == safety_settings
+    assert "safety_settings" not in request
     assert request["generation_config"] == {
         "temperature": 0.7,
         "top_p": 0.9,
