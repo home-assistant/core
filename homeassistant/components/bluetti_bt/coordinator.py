@@ -80,7 +80,8 @@ class PollingCoordinator(DataUpdateCoordinator):
             dict[str, bool | int | float | Enum | str | bytes] | None
         ) = await self.reader.read()
 
-        if data is None:
-            return {}
+        if not data:
+            self.last_update_success = False
+            raise UpdateFailed("Device returned no data")
 
         return data
