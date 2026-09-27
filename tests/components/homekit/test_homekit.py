@@ -33,6 +33,7 @@ from homeassistant.components.homekit.const import (
     HOMEKIT_MODE_BRIDGE,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     SERVICE_HOMEKIT_UNPAIR,
+    SIGNAL_RELOAD_ENTITIES,
 )
 from homeassistant.components.homekit.models import HomeKitEntryData
 from homeassistant.components.homekit.type_triggers import DeviceTriggerAccessory
@@ -67,6 +68,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     instance_id,
 )
+from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.helpers.entityfilter import (
     CONF_EXCLUDE_DOMAINS,
     CONF_EXCLUDE_ENTITIES,
@@ -2432,6 +2434,7 @@ async def test_reload(mock_port_available: MagicMock, hass: HomeAssistant) -> No
     ):
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
+        type(homekit).async_stop = AsyncMock()
         assert await async_setup_component(
             hass, DOMAIN, {"homekit": {CONF_NAME: "reloadable", CONF_PORT: 12345}}
         )
@@ -2603,6 +2606,11 @@ async def test_homekit_start_in_accessory_mode_missing_entity(
     assert homekit.status == STATUS_WAIT
 
     assert "entity not available" in caplog.text
+
+    signal = SIGNAL_RELOAD_ENTITIES.format(entry.entry_id)
+    assert hass.data[DATA_DISPATCHER][signal]
+    await homekit.async_stop()
+    assert not hass.data[DATA_DISPATCHER][signal]
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
