@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
-from typing import Any, cast
+from typing import Any
 
 from google.genai import interactions
 import probatio
@@ -17,16 +17,11 @@ with suppress(ImportError, AttributeError):
 from homeassistant.helpers import llm
 
 from .const import (
-    CONF_DANGEROUS_BLOCK_THRESHOLD,
-    CONF_HARASSMENT_BLOCK_THRESHOLD,
-    CONF_HATE_BLOCK_THRESHOLD,
     CONF_MAX_TOKENS,
-    CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
     CONF_THINKING_LEVEL,
     CONF_TOP_K,
     CONF_TOP_P,
-    RECOMMENDED_HARM_BLOCK_THRESHOLD,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_THINKING_LEVEL,
@@ -84,51 +79,6 @@ def format_response_format(
     )
 
 
-def create_safety_settings(
-    options: Mapping[str, Any],
-) -> list[interactions.SafetySetting]:
-    """Create safety settings from integration options."""
-    return [
-        interactions.SafetySetting(
-            type="hate_speech",
-            threshold=cast(
-                interactions.Threshold,
-                options.get(
-                    CONF_HATE_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
-                ).lower(),
-            ),
-        ),
-        interactions.SafetySetting(
-            type="harassment",
-            threshold=cast(
-                interactions.Threshold,
-                options.get(
-                    CONF_HARASSMENT_BLOCK_THRESHOLD,
-                    RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                ).lower(),
-            ),
-        ),
-        interactions.SafetySetting(
-            type="dangerous_content",
-            threshold=cast(
-                interactions.Threshold,
-                options.get(
-                    CONF_DANGEROUS_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
-                ).lower(),
-            ),
-        ),
-        interactions.SafetySetting(
-            type="sexually_explicit",
-            threshold=cast(
-                interactions.Threshold,
-                options.get(
-                    CONF_SEXUAL_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
-                ).lower(),
-            ),
-        ),
-    ]
-
-
 def build_interaction_request(
     *,
     model: str,
@@ -148,7 +98,6 @@ def build_interaction_request(
         | Sequence[interactions.ResponseFormat]
         | None
     ) = None,
-    safety_settings: list[interactions.SafetySetting] | None = None,
     default_max_tokens: int | None = None,
     stream: bool = True,
     store: bool = False,
@@ -177,9 +126,6 @@ def build_interaction_request(
 
     if response_format:
         request["response_format"] = response_format
-
-    if safety_settings:
-        request["safety_settings"] = safety_settings
 
     generation_config: dict[str, Any] = {
         "temperature": options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
