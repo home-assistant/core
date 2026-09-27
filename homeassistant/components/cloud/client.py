@@ -310,11 +310,13 @@ class CloudClient(Interface):
     @override
     def dispatcher_message(self, identifier: str, data: Any = None) -> None:
         """Match cloud notification to dispatcher."""
-        if identifier == DISPATCH_REMOTE_BACKEND_UP:
+        if (
+            identifier == DISPATCH_REMOTE_BACKEND_UP
+            and (remote_domain := self.cloud.remote.instance_domain)
+            != self._prefs.remote_domain
+        ):
             self._hass.async_create_task(
-                self._prefs.async_update(
-                    remote_domain=self.cloud.remote.instance_domain
-                )
+                self._prefs.async_update(remote_domain=remote_domain)
             )
         if identifier.startswith("remote_"):
             async_dispatcher_send(self._hass, DISPATCHER_REMOTE_UPDATE, data)
