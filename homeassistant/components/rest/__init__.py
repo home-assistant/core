@@ -30,11 +30,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import (
-    ConfigEntryNotReady,
-    HomeAssistantError,
-    TemplateError,
-)
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import discovery, template
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.reload import (
@@ -105,15 +101,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: RestConfigEntry) 
 
     try:
         rest: RestData = create_rest_data_from_config_entry(hass, config_entry.data)
-    except TemplateError as exc:
+    except HomeAssistantError as exc:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="template_error",
             translation_placeholders={"error_message": str(exc)},
-        ) from exc
-    except HomeAssistantError as exc:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN, translation_key="empty_resource_error"
         ) from exc
 
     resource_template: template.Template = template.Template(

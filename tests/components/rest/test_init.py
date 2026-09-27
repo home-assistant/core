@@ -599,4 +599,5 @@ async def test_setup_entry_resource_renders_empty(
 
     await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.SETUP_RETRY
-    assert entry.error_reason_translation_key == "empty_resource_error"
+    assert entry.error_reason_translation_key == "template_error"
+    assert "Resource not set for RestData" in entry.reason

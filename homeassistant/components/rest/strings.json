@@ -160,9 +160,6 @@
     }
   },
   "exceptions": {
-    "empty_resource_error": {
-      "message": "The `resource` template rendered an empty string. This may resolve when the template renders a valid URL but if it persists, please check the configuration."
-    },
     "endpoint_error": {
       "message": "Error communicating with resource: {error_message}"
     },
