@@ -3,12 +3,14 @@
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 
+from google.genai import interactions
 from google.genai.types import File, FileState, GenerateContentResponse
 import probatio
 import pytest
 
 from homeassistant.components import ai_task, media_source
 from homeassistant.components.google_generative_ai_conversation.const import (
+    CONF_USE_INTERACTIONS_API,
     RECOMMENDED_IMAGE_MODEL,
 )
 from homeassistant.core import HomeAssistant
@@ -286,3 +288,53 @@ async def test_generate_image(
     assert call_args.kwargs["model"] == RECOMMENDED_IMAGE_MODEL
     assert call_args.kwargs["contents"] == ["Generate a test image"]
     assert call_args.kwargs["config"].response_modalities == ["TEXT", "IMAGE"]
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_data_with_interactions(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test generating structured data with Interactions API enabled."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_USE_INTERACTIONS_API: True},
+    )
+    await hass.async_block_till_done()
+
+    events = [
+        interactions.StepStart(
+            index=0,
+            step=interactions.ModelOutputStep(),
+        ),
+        interactions.StepDelta(
+            index=0,
+            delta=interactions.TextDelta(text='{"answer": "Interactions result"}'),
+        ),
+        interactions.StepStop(index=0),
+    ]
+
+    async def mock_stream(*args, **kwargs):
+        for event in events:
+            yield event
+
+    with patch.object(
+        mock_config_entry.runtime_data.aio.interactions,
+        "create",
+        new_callable=AsyncMock,
+        return_value=mock_stream(),
+    ) as mock_create:
+        result = await ai_task.async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.google_ai_task",
+            instructions="Generate test data",
+            structure=probatio.Schema({"answer": str}),
+        )
+
+    assert result.data == {"answer": "Interactions result"}
+    assert mock_create.call_count == 1
+    call_kwargs = mock_create.call_args.kwargs
+    assert call_kwargs["stream"] is True
+    assert call_kwargs["store"] is False
+    assert call_kwargs["response_format"] is not None

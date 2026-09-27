@@ -153,6 +153,15 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "use_interactions_api": "Use Interactions API"
+        }
+      }
+    }
+  },
   "selector": {
     "thinking_level": {
       "options": {

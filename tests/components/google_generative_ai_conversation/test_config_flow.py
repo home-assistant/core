@@ -21,6 +21,7 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_TOP_K,
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
+    CONF_USE_INTERACTIONS_API,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DEFAULT_STT_NAME,
@@ -852,3 +853,54 @@ async def test_subentry_chat_model_labels_keep_the_full_model_id(
         "learnlm-2.0-flash-experimental",
         "lyria-realtime-exp",
     ]
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test options flow to toggle Interactions API."""
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    schema = result["data_schema"].schema
+    key = next(k for k in schema if k == CONF_USE_INTERACTIONS_API)
+    assert key.default() is False
+
+    with patch(
+        "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {CONF_USE_INTERACTIONS_API: True},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_USE_INTERACTIONS_API: True}
+    assert mock_config_entry.options == {CONF_USE_INTERACTIONS_API: True}
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    schema = result["data_schema"].schema
+    key = next(k for k in schema if k == CONF_USE_INTERACTIONS_API)
+    assert key.default() is True
+
+    with patch(
+        "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {CONF_USE_INTERACTIONS_API: False},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_USE_INTERACTIONS_API: False}
+    assert mock_config_entry.options == {CONF_USE_INTERACTIONS_API: False}

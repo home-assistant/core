@@ -17,6 +17,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
+    OptionsFlow,
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_PROMPT
@@ -47,6 +48,7 @@ from .const import (
     CONF_TOP_K,
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
+    CONF_USE_INTERACTIONS_API,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DEFAULT_STT_NAME,
@@ -69,6 +71,7 @@ from .const import (
     RECOMMENDED_TTS_MODEL,
     RECOMMENDED_TTS_OPTIONS,
     RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
+    RECOMMENDED_USE_INTERACTIONS_API,
     TIMEOUT_MILLIS,
 )
 
@@ -209,6 +212,45 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
             "tts": LLMSubentryFlowHandler,
             "ai_task_data": LLMSubentryFlowHandler,
         }
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> GoogleGenerativeAIOptionsFlow:
+        """Create the options flow."""
+        return GoogleGenerativeAIOptionsFlow()
+
+
+class GoogleGenerativeAIOptionsFlow(OptionsFlow):
+    """Handle options flow for Google Generative AI Conversation."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title="",
+                data=user_input,
+            )
+
+        schema = probatio.Schema(
+            {
+                probatio.Optional(
+                    CONF_USE_INTERACTIONS_API,
+                    default=self.config_entry.options.get(
+                        CONF_USE_INTERACTIONS_API,
+                        RECOMMENDED_USE_INTERACTIONS_API,
+                    ),
+                ): bool,
+            }
+        )
+        return self.async_show_form(
+            step_id="init",
+            data_schema=schema,
+        )
 
 
 class LLMSubentryFlowHandler(ConfigSubentryFlow):
