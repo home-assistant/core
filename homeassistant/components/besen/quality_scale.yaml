@@ -50,9 +50,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics:
-    status: todo
-    comment: Split into a follow-up PR after the initial integration lands.
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: |
