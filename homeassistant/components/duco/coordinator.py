@@ -89,6 +89,31 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             await self.client.async_set_ventilation_state(node_id, state)
             await self._async_refresh_node(node_id)
 
+    async def async_set_bypass_supply_temperature_target(
+        self, zone_id: int, value: float
+    ) -> None:
+        """Set and publish a bypass supply temperature target."""
+        async with self._request_lock:
+            updated_target = (
+                await self.client.async_set_bypass_supply_temperature_target(
+                    zone_id,
+                    value,
+                    target=self.data.bypass_supply_temperature_targets[zone_id],
+                )
+            )
+            if not self.last_update_success:
+                return
+
+            self.async_set_updated_data(
+                replace(
+                    self.data,
+                    bypass_supply_temperature_targets={
+                        **self.data.bypass_supply_temperature_targets,
+                        zone_id: updated_target,
+                    },
+                )
+            )
+
     async def async_set_node_identify(self, node_id: int, identify: bool) -> None:
         """Set and refresh a node's identify state."""
         async with self._request_lock:

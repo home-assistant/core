@@ -1,6 +1,5 @@
 """Number platform for the Duco integration."""
 
-from dataclasses import replace
 import logging
 from typing import override
 
@@ -133,8 +132,8 @@ class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):
         try:
             if self.unit_of_measurement != self.native_unit_of_measurement:
                 value = target.normalize_value(value)
-            updated_target = await self.coordinator.client.async_set_bypass_supply_temperature_target(
-                self._zone_id, value, target=target
+            await self.coordinator.async_set_bypass_supply_temperature_target(
+                self._zone_id, value
             )
         except ValueError as err:
             raise HomeAssistantError(
@@ -160,15 +159,3 @@ class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):
                 translation_domain=DOMAIN,
                 translation_key="failed_to_set_bypass_supply_temperature_target",
             ) from err
-
-        # Do not let a completed write mask a concurrent coordinator refresh failure.
-        if self.coordinator.last_update_success:
-            self.coordinator.async_set_updated_data(
-                replace(
-                    self.coordinator.data,
-                    bypass_supply_temperature_targets={
-                        **self.coordinator.data.bypass_supply_temperature_targets,
-                        self._zone_id: updated_target,
-                    },
-                )
-            )
