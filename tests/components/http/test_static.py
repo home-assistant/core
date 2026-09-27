@@ -1,7 +1,9 @@
 """The tests for http static files."""
 
+import asyncio
 from http import HTTPStatus
 from pathlib import Path
+from unittest.mock import patch
 
 from aiohttp.hdrs import CACHE_CONTROL
 from aiohttp.test_utils import TestClient
@@ -100,3 +102,68 @@ async def test_caching_static_resource_no_cache_header_on_404(
     resp = await mock_http_client.get("/static/does-not-exist.js")
     assert resp.status == HTTPStatus.OK
     assert resp.headers[CACHE_CONTROL] == CACHE_HEADER
+
+
+async def test_caching_static_resource_concurrent_invalidation(
+    hass: HomeAssistant, mock_http_client: TestClient, tmp_path: Path
+) -> None:
+    """Test concurrent requests racing to invalidate the same stale cache entry."""
+    app = hass.http.app
+
+    resource = CachingStaticResource("/static", tmp_path)
+    app.router.register_resource(resource)
+    app[KEY_ALLOW_CONFIGURED_CORS](resource)
+
+    (tmp_path / "race.js").write_text("console.log('race');", encoding="utf-8")
+
+    resp = await mock_http_client.get("/static/race.js")
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers[CACHE_CONTROL] == CACHE_HEADER
+
+    # Delete the cached file, then hammer the endpoint concurrently. Every
+    # request must answer 404 without a cache header; invalidating the same
+    # entry twice must not raise KeyError and turn into a 500.
+    (tmp_path / "race.js").unlink()
+    resps = await asyncio.gather(
+        *(mock_http_client.get("/static/race.js") for _ in range(10))
+    )
+    assert len(resps) == 10
+    for resp in resps:
+        assert resp.status == HTTPStatus.NOT_FOUND
+        assert CACHE_CONTROL not in resp.headers
+
+
+async def test_caching_static_resource_no_cache_header_when_deleted_after_check(
+    hass: HomeAssistant, mock_http_client: TestClient, tmp_path: Path
+) -> None:
+    """Test no cache header when the file vanishes after the existence check.
+
+    Simulates the file being deleted between the preflight is_file() check
+    and FileResponse.prepare() by forcing the check to pass while the file
+    is actually gone. prepare() still answers 404, and the 404 must not
+    carry the cache header.
+    """
+    app = hass.http.app
+
+    resource = CachingStaticResource("/static", tmp_path)
+    app.router.register_resource(resource)
+    app[KEY_ALLOW_CONFIGURED_CORS](resource)
+
+    (tmp_path / "vanish.js").write_text("console.log('vanish');", encoding="utf-8")
+
+    resp = await mock_http_client.get("/static/vanish.js")
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers[CACHE_CONTROL] == CACHE_HEADER
+
+    # Cached path: entry exists, file really gone, check forced to pass.
+    (tmp_path / "vanish.js").unlink()
+    with patch.object(Path, "is_file", return_value=True):
+        resp = await mock_http_client.get("/static/vanish.js")
+    assert resp.status == HTTPStatus.NOT_FOUND
+    assert CACHE_CONTROL not in resp.headers
+
+    # Uncached path: file never existed, check forced to pass.
+    with patch.object(Path, "is_file", return_value=True):
+        resp = await mock_http_client.get("/static/ghost.js")
+    assert resp.status == HTTPStatus.NOT_FOUND
+    assert CACHE_CONTROL not in resp.headers
