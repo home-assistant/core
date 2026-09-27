@@ -80,6 +80,7 @@ from .utils import (
     get_rpc_ws_url,
     get_shelly_model_name,
     is_rpc_ble_scanner_supported,
+    is_rpc_light_as_fan,
     update_device_fw_info,
 )
 
@@ -526,6 +527,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         super().__init__(hass, entry, device, update_interval)
 
         self.connected = False
+        self._light_as_fan = is_rpc_light_as_fan(entry)
         # Set once BLE scanner setup has been attempted after connecting.
         self.ble_scanner_setup_done = asyncio.Event()
         self._disconnected_callbacks: list[CALLBACK_TYPE] = []
@@ -623,6 +625,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self, hass: HomeAssistant, entry: ShellyConfigEntry
     ) -> None:
         """Reconfigure on update."""
+        if self._light_as_fan != is_rpc_light_as_fan(entry):
+            await hass.config_entries.async_reload(entry.entry_id)
+            return
         async with self._connection_lock:
             if self.connected:
                 self._async_run_disconnected_events()
