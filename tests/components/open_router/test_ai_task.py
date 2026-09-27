@@ -135,11 +135,14 @@ async def test_generate_structured_data(
     )
 
     assert result.data == {"characters": ["Mario", "Luigi"]}
+    assert mock_openai_client.chat.completions.create.call_args.kwargs[
+        "extra_body"
+    ] == {"provider": {"require_parameters": True}}
     assert mock_openai_client.chat.completions.create.call_args_list[0][1][
         "response_format"
     ] == {
         "json_schema": {
-            "name": "Test Task",
+            "name": "test_task",
             "schema": {
                 "properties": {
                     "characters": {

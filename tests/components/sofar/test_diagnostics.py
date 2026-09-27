@@ -2,7 +2,9 @@
 
 from unittest.mock import patch
 
+from modbus_connection import ModbusConnectionError, ModbusError, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.matchers import path_type
 
@@ -83,3 +85,33 @@ async def test_diagnostics_decodes_address_masks(
     diag = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
 
     assert diag["address_masks"]["1024"] == 0x0001000200030004
+
+
+@pytest.mark.parametrize(
+    ("error", "error_name"),
+    [
+        pytest.param(ModbusTimeoutError("silent"), "ModbusTimeoutError", id="timeout"),
+        pytest.param(
+            ModbusConnectionError("gone"), "ModbusConnectionError", id="link_lost"
+        ),
+    ],
+)
+async def test_diagnostics_inverter_unreachable(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_connection: MockModbusConnection,
+    init_integration: MockConfigEntry,
+    error: ModbusError,
+    error_name: str,
+) -> None:
+    """Test diagnostics still download when the inverter stops answering."""
+    unit = mock_connection.for_unit(1)
+    unit.fail_requests(error)
+    unit.read_events.clear()
+
+    diag = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+
+    assert diag["read_error"] == error_name
+    assert diag["raw"] is None
+    assert diag["address_masks"] is None
+    assert len(unit.read_events) == 1
