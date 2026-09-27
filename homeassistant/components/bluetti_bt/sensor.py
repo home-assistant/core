@@ -92,11 +92,6 @@ class BluettiSensor(CoordinatorEntity, SensorEntity):
             self.async_write_ha_state()
             return
 
-        self._logger.debug(
-            "Coordinator data: %s",
-            self.coordinator.data,
-        )
-
         response_data = self.coordinator.data.get(str(self._attr_translation_key))
 
         if response_data is None:
@@ -120,6 +115,8 @@ class BluettiSensor(CoordinatorEntity, SensorEntity):
                 response_data,
                 type(response_data),
             )
+            self._attr_native_value = None
+            self.async_write_ha_state()
             return
 
         if isinstance(response_data, Enum):
