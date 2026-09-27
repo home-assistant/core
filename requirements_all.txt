@@ -1411,7 +1411,7 @@ infrared-protocols==10.1.0
 inkbird-ble==1.4.4
 
 # homeassistant.components.insteon
-insteon-frontend-home-assistant==0.6.2
+insteon-frontend-home-assistant==0.7.0
 
 # homeassistant.components.intellifire
 intellifire4py==4.5.0
@@ -2313,7 +2313,7 @@ pyicloud==2.6.5
 pyimouapi==1.4.0
 
 # homeassistant.components.insteon
-pyinsteon==1.6.4
+pyinsteon==1.7.0
 
 # homeassistant.components.intelliclima
 pyintelliclima==0.4.1
