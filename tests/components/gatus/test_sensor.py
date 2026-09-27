@@ -321,6 +321,8 @@ async def test_sensor_readded_endpoint(
         is not None
     )
     assert hass.states.get("sensor.core_backend_service_dns_response_code") is not None
+
+
 async def test_diagnostic_sensors_disabled_by_default(
     hass: HomeAssistant,
     mock_gatus_client: AsyncMock,
