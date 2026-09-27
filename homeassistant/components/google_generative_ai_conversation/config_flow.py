@@ -303,8 +303,11 @@ class LLMSubentryFlowHandler(ConfigSubentryFlow):
                 if user_input.get(CONF_LLM_HASS_API) is None:
                     user_input.pop(CONF_LLM_HASS_API, None)
                 # Don't allow to save options that enable the
-                # Google Search tool with an Assist API
-                if not (
+                # Google Search tool with an Assist API unless
+                # the Interactions API is enabled.
+                if self._get_entry().options.get(
+                    CONF_USE_INTERACTIONS_API, False
+                ) or not (
                     user_input.get(CONF_LLM_HASS_API)
                     and user_input.get(CONF_USE_GOOGLE_SEARCH_TOOL, False) is True
                 ):

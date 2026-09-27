@@ -17,6 +17,7 @@ from homeassistant.components.conversation import (
     trace,
 )
 from homeassistant.components.google_generative_ai_conversation.const import (
+    CONF_USE_GOOGLE_SEARCH_TOOL,
     CONF_USE_INTERACTIONS_API,
 )
 from homeassistant.components.google_generative_ai_conversation.entity import (
@@ -1148,6 +1149,69 @@ async def test_interactions_conversation_function_call(
         for step in call2_input
     )
     assert has_fn_result
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.usefixtures("mock_ulid_tools")
+async def test_interactions_conversation_with_assist_and_google_search(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+) -> None:
+    """Test function calling with Interactions API and Google Search enabled."""
+    subentry = next(iter(mock_config_entry_with_assist.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry_with_assist,
+        subentry,
+        data={**subentry.data, CONF_USE_GOOGLE_SEARCH_TOOL: True},
+    )
+    hass.config_entries.async_update_entry(
+        mock_config_entry_with_assist,
+        options={CONF_USE_INTERACTIONS_API: True},
+    )
+    await hass.async_block_till_done()
+
+    events = [
+        interactions.StepStart(
+            index=0,
+            step=interactions.ModelOutputStep(),
+        ),
+        interactions.StepDelta(
+            index=0,
+            delta=interactions.TextDelta(
+                text="I checked both your devices and Google!"
+            ),
+        ),
+        interactions.StepStop(index=0),
+    ]
+
+    async def mock_stream(*args, **kwargs):
+        for event in events:
+            yield event
+
+    with patch.object(
+        mock_config_entry_with_assist.runtime_data.aio.interactions,
+        "create",
+        new_callable=AsyncMock,
+        return_value=mock_stream(),
+    ) as mock_create:
+        result = await conversation.async_converse(
+            hass,
+            "Check the time and what is the latest news",
+            None,
+            Context(),
+            agent_id="conversation.google_ai_conversation",
+        )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert (
+        result.response.as_dict()["speech"]["plain"]["speech"]
+        == "I checked both your devices and Google!"
+    )
+    assert mock_create.call_count == 1
+    call_kwargs = mock_create.call_args.kwargs
+    tools = call_kwargs["tools"]
+    assert any(isinstance(t, interactions.Function) for t in tools)
+    assert any(isinstance(t, interactions.GoogleSearch) for t in tools)
 
 
 @pytest.mark.parametrize(

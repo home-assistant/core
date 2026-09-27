@@ -904,3 +904,63 @@ async def test_options_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_USE_INTERACTIONS_API: False}
     assert mock_config_entry.options == {CONF_USE_INTERACTIONS_API: False}
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_subentry_google_search_with_assist_allowed_with_interactions_api(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that Google Search tool can be enabled with an Assist API when Interactions API is enabled."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_USE_INTERACTIONS_API: True},
+    )
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={**subentry.data, CONF_RECOMMENDED: False},
+    )
+    await hass.async_block_till_done()
+
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+            hass, subentry.subentry_id
+        )
+
+    new_options = {
+        CONF_RECOMMENDED: False,
+        CONF_PROMPT: "Speak like a pirate",
+        CONF_LLM_HASS_API: ["assist"],
+        CONF_TEMPERATURE: 0.3,
+        CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+        CONF_TOP_P: RECOMMENDED_TOP_P,
+        CONF_TOP_K: RECOMMENDED_TOP_K,
+        CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+        CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+        CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
+        CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+        CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+        CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+        CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+        CONF_USE_GOOGLE_SEARCH_TOOL: True,
+    }
+
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            options_flow["flow_id"],
+            new_options,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert subentry.data[CONF_USE_GOOGLE_SEARCH_TOOL] is True
+    assert subentry.data[CONF_LLM_HASS_API] == ["assist"]
