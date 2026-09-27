@@ -57,6 +57,19 @@
       }
     }
   },
+  "entity": {
+    "number": {
+      "ww1boost": {
+        "name": "Boost Target Temperature"
+      },
+      "ww_boost_h": {
+        "name": "Minimum Hysteresis"
+      },
+      "ww_targ_h": {
+        "name": "Maximum Hysteresis"
+      }
+    }
+  },
   "exceptions": {
     "auth_error": {
       "message": "Authentication failed, please reauthenticate."

@@ -1,4 +1,4 @@
-"""Common fixtures for the Sofar Inverter Modbus tests."""
+"""Fixtures for the Sofar integration tests."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
@@ -35,7 +35,7 @@ def mock_connection() -> MockModbusConnection:
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Mock a Sofar Inverter Modbus config entry."""
+    """Mock a Sofar config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_SERIAL,
@@ -50,7 +50,7 @@ async def init_integration(
     mock_config_entry: MockConfigEntry,
     mock_connection: MockModbusConnection,
 ) -> MockConfigEntry:
-    """Set up the Sofar Inverter Modbus integration for testing."""
+    """Set up the Sofar integration for testing."""
     mock_config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.sofar.async_get_unit",

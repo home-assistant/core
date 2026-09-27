@@ -52,6 +52,17 @@
       "matchStrings": ["RECOMMENDED_VERSION = \"(?<currentValue>[\\d.]+)\""],
       "depNameTemplate": "ghcr.io/alexxit/go2rtc",
       "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "Update the newest MariaDB entry (the latest LTS) in the CI database test matrix",
+      "managerFilePatterns": ["/^\\.github/workflows/ci\\.yaml$/"],
+      "matchStrings": [
+        "MARIADB_VERSIONS: \".*'mariadb:(?<currentValue>\\d+\\.\\d+\\.\\d+)','mysql:"
+      ],
+      "depNameTemplate": "mariadb",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
     }
   ],
 
@@ -218,11 +229,16 @@
       "labels": ["dependency"]
     },
     {
-      "description": "For types-* stubs, only allow patch updates. Major/minor bumps track the upstream runtime package version and must be manually coordinated with the corresponding pin.",
+      "description": "types-* stubs (allowlisted). Enabled without matchUpdateTypes, because update types are unknown when Renovate decides whether a package is enabled.",
       "matchPackageNames": ["/^types-/"],
-      "matchUpdateTypes": ["patch"],
       "enabled": true,
       "labels": ["dependency"]
+    },
+    {
+      "description": "For types-* stubs, only allow patch updates. Major/minor bumps track the upstream runtime package version and must be manually coordinated with the corresponding pin.",
+      "matchPackageNames": ["/^types-/"],
+      "matchUpdateTypes": ["major", "minor"],
+      "enabled": false
     },
     {
       "description": "Pre-commit hook repos (allowlisted, matched by owner/repo)",
@@ -241,6 +257,21 @@
       "enabled": true,
       "minimumReleaseAge": null,
       "labels": ["dependency"]
+    },
+    {
+      "description": "Latest MariaDB LTS tested in CI (allowlisted). Since MariaDB 12, only the x.3 series are LTS.",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["mariadb"],
+      "allowedVersions": "/^\\d+\\.3\\.\\d+$/",
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "Only open a MariaDB PR for a new LTS series, not for its patch releases",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["mariadb"],
+      "matchUpdateTypes": ["patch"],
+      "enabled": false
     },
     {
       "description": "Group ruff pre-commit hook with its PyPI twin into one PR",
@@ -289,6 +320,17 @@
       "matchPackageNames": ["ghcr.io/alexxit/go2rtc"],
       "groupName": "go2rtc",
       "groupSlug": "go2rtc"
+    },
+    {
+      "description": "Group the types-* stub updates into one PR",
+      "matchPackageNames": ["/^types-/"],
+      "groupName": "types stubs",
+      "groupSlug": "types-stubs"
+    },
+    {
+      "description": "uv and pnpm release almost daily, so the cooldown alone still gives a PR (and a full CI run) nearly every day. Limit them to one PR per week.",
+      "matchPackageNames": ["uv", "pnpm"],
+      "schedule": ["after 5pm on friday"]
     }
   ]
 }
