@@ -342,10 +342,10 @@
       "separateMinorPatch": true
     },
     {
-      "description": "Only patch releases of astroid on its own. pylint pins the astroid minor it supports, so a newer astroid minor comes in with the pylint release that needs it. The group above separates minor and patch updates, so astroid patches are still offered.",
+      "description": "Only move astroid to a new minor or major together with pylint. pylint pins the astroid minor it supports, so an astroid minor on its own can't be installed. The group above separates minor and patch updates, so astroid patches are still offered on their own.",
       "matchPackageNames": ["astroid"],
       "matchUpdateTypes": ["major", "minor"],
-      "enabled": false
+      "minimumGroupSize": 2
     },
     {
       "description": "Group the github/codeql-action subactions into one PR (they share a release)",
