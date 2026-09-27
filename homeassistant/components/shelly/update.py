@@ -226,7 +226,6 @@ class RpcBluTrvUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
             self._ota_in_progress = True
             self._ota_progress_percentage = 0
         elif event_type == OTA_PROGRESS:
-            self._ota_in_progress = True
             # Both OTA phases count from 0 to 100, map them onto the first and the
             # second half of the progress bar
             offset = 50 if event.get("msg") == OTA_MSG_UPDATING else 0
