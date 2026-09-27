@@ -1,9 +1,10 @@
 """Support for Sofar binary sensors."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from enum import IntFlag
 from typing import override
 
+from sofar_modbus.modern.device import SofarInverter
 from sofar_modbus.modern.enums import PowerControlFlags
 from sofar_modbus.modern.faults import FaultCategory
 
@@ -32,47 +33,42 @@ _DISABLED_BY_DEFAULT = frozenset(
 
 
 @dataclass(frozen=True, kw_only=True)
-class SofarFaultBinarySensorDescription(
+class SofarBinarySensorEntityDescription(
     SofarEntityDescription, BinarySensorEntityDescription
 ):
-    """Describe a Sofar fault-category binary sensor."""
+    """Describe a Sofar binary sensor."""
 
-    category: FaultCategory
+    is_on_fn: Callable[[SofarInverter], bool | None]
 
 
-FAULT_SENSOR_DESCRIPTIONS: tuple[SofarFaultBinarySensorDescription, ...] = tuple(
-    SofarFaultBinarySensorDescription(
+def _fault_sensor(category: FaultCategory) -> SofarBinarySensorEntityDescription:
+    """Describe the problem sensor for one fault category."""
+    return SofarBinarySensorEntityDescription(
         key=f"fault_{category.value}",
         component="state",
         translation_key=f"fault_{category.value}",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=category not in _DISABLED_BY_DEFAULT,
-        category=category,
+        is_on_fn=lambda device: any(
+            fault.category is category for fault in device.state.active_faults
+        ),
     )
-    for category in FaultCategory
-)
 
 
-@dataclass(frozen=True, kw_only=True)
-class SofarFlagBinarySensorDescription(
-    SofarEntityDescription, BinarySensorEntityDescription
-):
-    """Describe a Sofar binary sensor backed by one flags-register bit."""
-
-    attribute: str
-    flag: IntFlag
-
-
-FLAG_SENSOR_DESCRIPTIONS: tuple[SofarFlagBinarySensorDescription, ...] = (
-    SofarFlagBinarySensorDescription(
+BINARY_SENSOR_DESCRIPTIONS: tuple[SofarBinarySensorEntityDescription, ...] = (
+    *(_fault_sensor(category) for category in FaultCategory),
+    SofarBinarySensorEntityDescription(
         key="active_power_limit_enabled",
         component="active_power_control",
         translation_key="active_power_limit_enabled",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        attribute="power_control",
-        flag=PowerControlFlags.ACTIVE_POWER,
+        is_on_fn=lambda device: (
+            None
+            if (flags := device.active_power_control.power_control) is None
+            else PowerControlFlags.ACTIVE_POWER in flags
+        ),
     ),
 )
 
@@ -86,40 +82,18 @@ async def async_setup_entry(
     runtime_data = entry.runtime_data
     served = runtime_data.served_components
     async_add_entities(
-        SofarFaultBinarySensor(runtime_data, description)
-        for description in FAULT_SENSOR_DESCRIPTIONS
-        if description.component in served
-    )
-    async_add_entities(
-        SofarFlagBinarySensor(runtime_data, description)
-        for description in FLAG_SENSOR_DESCRIPTIONS
+        SofarBinarySensor(runtime_data, description)
+        for description in BINARY_SENSOR_DESCRIPTIONS
         if description.component in served
     )
 
 
-class SofarFaultBinarySensor(SofarEntity, BinarySensorEntity):
-    """Reports whether any fault in one subsystem is currently active."""
+class SofarBinarySensor(SofarEntity, BinarySensorEntity):
+    """Defines a Sofar binary sensor."""
 
-    entity_description: SofarFaultBinarySensorDescription
-
-    @property
-    @override
-    def is_on(self) -> bool:
-        component = getattr(self.coordinator.device, self.entity_description.component)
-        return any(
-            fault.category is self.entity_description.category
-            for fault in component.active_faults
-        )
-
-
-class SofarFlagBinarySensor(SofarEntity, BinarySensorEntity):
-    """Reports whether one bit of a flags register is set."""
-
-    entity_description: SofarFlagBinarySensorDescription
+    entity_description: SofarBinarySensorEntityDescription
 
     @property
     @override
-    def is_on(self) -> bool:
-        component = getattr(self.coordinator.device, self.entity_description.component)
-        flags = getattr(component, self.entity_description.attribute)
-        return self.entity_description.flag in flags
+    def is_on(self) -> bool | None:
+        return self.entity_description.is_on_fn(self.coordinator.device)
