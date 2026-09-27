@@ -3,7 +3,7 @@
 import re
 from typing import Any, override
 
-from bizkaibus.bizkaibusAPI import BizkaibusAPI, BizkaibusLanguages
+from bizkaibus import BizkaibusAPI, BizkaibusConnectionError, BizkaibusLanguages
 import probatio
 
 from homeassistant.config_entries import (
@@ -15,6 +15,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import selector
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_LINE_IDS,
@@ -66,10 +67,14 @@ async def _async_get_lines(
 ) -> tuple[list[str], dict[str, Any]]:
     """Fetch the available lines for a bus stop."""
 
-    if not await api.TestConnection():
+    try:
+        if not await api.test_connection():
+            return [], {}
+
+        bizkaibus_lines = await api.get_lines_on_stop()
+    except BizkaibusConnectionError:
         return [], {}
 
-    bizkaibus_lines = await api.GetLinesOnStop()
     return (
         [line.id for line in bizkaibus_lines],
         {line.id: line.route for line in bizkaibus_lines},
@@ -78,10 +83,13 @@ async def _async_get_lines(
 
 async def _get_title_name(api: BizkaibusAPI, stop_id: str) -> str | None:
 
-    if not await api.TestConnection():
-        return None
+    try:
+        if not await api.test_connection():
+            return None
 
-    timetable = await api.GetTimetable()
+        timetable = await api.get_timetable()
+    except BizkaibusConnectionError:
+        return None
 
     if timetable is None:
         return f"{DOMAIN.capitalize()} {stop_id}"
@@ -124,7 +132,11 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(self._stop_id)
                 self._abort_if_unique_id_configured()
 
-                api = BizkaibusAPI(BizkaibusLanguages.ES, self._stop_id)
+                api = await BizkaibusAPI.create(
+                    BizkaibusLanguages.ES,
+                    self._stop_id,
+                    session=async_get_clientsession(self.hass),
+                )
                 self._line_ids, self._lines = await _async_get_lines(api)
                 if self._line_ids == []:
                     errors["base"] = "cannot_connect"
@@ -190,7 +202,11 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                     await self.async_set_unique_id(stop_id)
                     self._abort_if_unique_id_configured()
 
-                api = BizkaibusAPI(BizkaibusLanguages.ES, stop_id)
+                api = await BizkaibusAPI.create(
+                    BizkaibusLanguages.ES,
+                    stop_id,
+                    session=async_get_clientsession(self.hass),
+                )
                 self._line_ids, self._lines = await _async_get_lines(api)
                 if self._line_ids == []:
                     errors["base"] = "cannot_connect"
@@ -218,7 +234,11 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
         if not stop_id:
             return self.async_abort(reason="invalid_stop_id")
 
-        api = BizkaibusAPI(BizkaibusLanguages.ES, stop_id)
+        api = await BizkaibusAPI.create(
+            BizkaibusLanguages.ES,
+            stop_id,
+            session=async_get_clientsession(self.hass),
+        )
         line_ids, lines = await _async_get_lines(api)
         if line_ids == []:
             return self.async_abort(reason="cannot_connect")
@@ -285,8 +305,6 @@ class BizkaibusOptionsFlow(OptionsFlowWithReload):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the selected bus lines."""
-        api = BizkaibusAPI(BizkaibusLanguages.ES, self.config_entry.data[CONF_STOP_ID])
-
         if user_input:
             return self.async_create_entry(
                 title=self._title,
@@ -296,6 +314,11 @@ class BizkaibusOptionsFlow(OptionsFlowWithReload):
                 },
             )
 
+        api = await BizkaibusAPI.create(
+            BizkaibusLanguages.ES,
+            self.config_entry.data[CONF_STOP_ID],
+            session=async_get_clientsession(self.hass),
+        )
         self._line_ids, self._lines = await _async_get_lines(api)
         if self._line_ids == []:
             return self.async_abort(reason="cannot_connect")

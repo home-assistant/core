@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import override
 
-from bizkaibus.bizkaibusAPI import BizkaibusAPI, BizkaibusArrivalTime
+from bizkaibus import BizkaibusAPI, BizkaibusArrivalTime
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -55,13 +55,13 @@ class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[ArrivalData]]):
         """Get arrival time."""
         if arrivalTime is None:
             return None
-        start_datetime = dt_util.parse_datetime(arrivalTime.GetUTC())
+        start_datetime = dt_util.parse_datetime(arrivalTime.get_utc())
         return start_datetime.astimezone() if start_datetime else None
 
     @override
     async def _async_update_data(self) -> list[ArrivalData]:
         """Async update wrapper."""
-        timetable = await self.api.GetTimetable()
+        timetable = await self.api.get_timetable()
 
         if timetable is None:
             return []
@@ -71,11 +71,11 @@ class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[ArrivalData]]):
 
         arrivals = []
         for arrival in timetable.arrivals.values():
-            nearest_arrival = self.__arrival_time(arrival.nearestArrival)
+            nearest_arrival = self.__arrival_time(arrival.nearest_arrival)
             nearest_arrival = (
                 nearest_arrival if nearest_arrival is not None else dt_util.utcnow()
             )
-            next_arrival = self.__arrival_time(arrival.nextArrival)
+            next_arrival = self.__arrival_time(arrival.next_arrival)
 
             arrival_data = ArrivalData(
                 nearest_arrival=nearest_arrival,

@@ -4,6 +4,12 @@ from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
+from bizkaibus import (
+    BizkaibusConnectionError,
+    BizkaibusLanguages,
+    BizkaibusParseError,
+    BizkaibusStopNotFoundError,
+)
 import pytest
 
 from homeassistant.components.bizkaibus import sensor
@@ -18,6 +24,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from tests.common import MockConfigEntry
@@ -202,17 +209,17 @@ async def test_setup_entry_creates_sensors(
         arrivals={
             "A": SimpleNamespace(
                 line=SimpleNamespace(id="A", route="Route A"),
-                nearestArrival=SimpleNamespace(GetUTC=arrival_time.isoformat),
-                nextArrival=SimpleNamespace(
-                    GetUTC=arrival_time.replace(minute=15).isoformat
+                nearest_arrival=SimpleNamespace(get_utc=arrival_time.isoformat),
+                next_arrival=SimpleNamespace(
+                    get_utc=arrival_time.replace(minute=15).isoformat
                 ),
             ),
             "B": SimpleNamespace(
                 line=SimpleNamespace(id="B", route="Route B"),
-                nearestArrival=SimpleNamespace(
-                    GetUTC=arrival_time.replace(minute=10).isoformat
+                nearest_arrival=SimpleNamespace(
+                    get_utc=arrival_time.replace(minute=10).isoformat
                 ),
-                nextArrival=None,
+                next_arrival=None,
             ),
         },
     )
@@ -228,7 +235,7 @@ async def test_setup_entry_creates_sensors(
     entry.add_to_hass(hass)
 
     with patch("homeassistant.components.bizkaibus.BizkaibusAPI") as mock_api_class:
-        mock_api_class.return_value.GetTimetable = AsyncMock(return_value=timetable)
+        mock_api_class.return_value.get_timetable = AsyncMock(return_value=timetable)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -248,6 +255,42 @@ async def test_setup_entry_creates_sensors(
     ] == (arrival_time.replace(minute=15))
 
 
+@pytest.mark.parametrize(
+    ("exception", "expected_state"),
+    [
+        pytest.param(
+            BizkaibusStopNotFoundError("1234"),
+            ConfigEntryState.SETUP_ERROR,
+            id="stop-not-found",
+        ),
+        pytest.param(
+            BizkaibusConnectionError(),
+            ConfigEntryState.SETUP_RETRY,
+            id="connection",
+        ),
+        pytest.param(
+            BizkaibusParseError(),
+            ConfigEntryState.SETUP_RETRY,
+            id="invalid-response",
+        ),
+    ],
+)
+async def test_setup_entry_handles_api_errors(
+    hass: HomeAssistant,
+    exception: Exception,
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test API setup errors use the appropriate config entry state."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_STOP_ID: "1234"})
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.bizkaibus.BizkaibusAPI") as mock_api_class:
+        mock_api_class.create = AsyncMock(side_effect=exception)
+        await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state is expected_state
+
+
 async def test_setup_entry_without_lines_creates_no_sensors(
     hass: HomeAssistant,
 ) -> None:
@@ -262,7 +305,7 @@ async def test_setup_entry_without_lines_creates_no_sensors(
     entry.add_to_hass(hass)
 
     with patch("homeassistant.components.bizkaibus.BizkaibusAPI") as mock_api_class:
-        mock_api_class.return_value.GetTimetable = AsyncMock(return_value=timetable)
+        mock_api_class.return_value.get_timetable = AsyncMock(return_value=timetable)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -282,14 +325,16 @@ async def test_unload_entry(
     entry.add_to_hass(hass)
 
     with patch("homeassistant.components.bizkaibus.BizkaibusAPI") as mock_api_class:
-        mock_api_class.return_value.GetTimetable = AsyncMock(
+        mock_api = mock_api_class.return_value
+        mock_api_class.create = AsyncMock(return_value=mock_api)
+        mock_api.get_timetable = AsyncMock(
             return_value=SimpleNamespace(
                 name=None,
                 arrivals={
                     "A": SimpleNamespace(
                         line=SimpleNamespace(id="A", route="Route A"),
-                        nearestArrival=None,
-                        nextArrival=None,
+                        nearest_arrival=None,
+                        next_arrival=None,
                     )
                 },
             )
@@ -298,6 +343,12 @@ async def test_unload_entry(
         await hass.async_block_till_done()
         assert hass.states.get("sensor.mock_title_a_route_a") is not None
         assert await hass.config_entries.async_unload(entry.entry_id)
+        mock_api_class.create.assert_awaited_once_with(
+            BizkaibusLanguages.ES,
+            "1234",
+            session=async_get_clientsession(hass),
+        )
+        mock_api.close.assert_not_called()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert hass.states.get("sensor.mock_title_a_route_a").state == STATE_UNAVAILABLE

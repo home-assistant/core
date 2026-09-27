@@ -20,12 +20,12 @@ async def test_coordinator_updates_arrivals(hass: HomeAssistant) -> None:
         arrivals={
             "A": SimpleNamespace(
                 line=SimpleNamespace(id="A", route="Route A"),
-                nearestArrival=SimpleNamespace(GetUTC=nearest_arrival.isoformat),
-                nextArrival=SimpleNamespace(GetUTC=next_arrival.isoformat),
+                nearest_arrival=SimpleNamespace(get_utc=nearest_arrival.isoformat),
+                next_arrival=SimpleNamespace(get_utc=next_arrival.isoformat),
             )
         },
     )
-    api = SimpleNamespace(GetTimetable=AsyncMock(return_value=timetable))
+    api = SimpleNamespace(get_timetable=AsyncMock(return_value=timetable))
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_STOP_ID: "1234"})
     entry.add_to_hass(hass)
     coordinator = BizkaibusUpdateCoordinator(hass, api, entry)
@@ -64,12 +64,12 @@ async def test_coordinator_uses_current_time_for_missing_nearest_arrival(
         arrivals={
             "A": SimpleNamespace(
                 line=SimpleNamespace(id="A", route="Route A"),
-                nearestArrival=None,
-                nextArrival=None,
+                nearest_arrival=None,
+                next_arrival=None,
             )
         },
     )
-    api = SimpleNamespace(GetTimetable=AsyncMock(return_value=timetable))
+    api = SimpleNamespace(get_timetable=AsyncMock(return_value=timetable))
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_STOP_ID: "1234"})
     entry.add_to_hass(hass)
     coordinator = BizkaibusUpdateCoordinator(hass, api, entry)
