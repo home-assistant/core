@@ -69,6 +69,9 @@ METER_SERIAL_REGISTER = 40171
 EXPORT_LIMITATION_ENTITY = "select.solaredge_se10000h_export_limitation"
 EXTERNAL_PRODUCTION_ENTITY = "switch.solaredge_se10000h_external_production"
 ACTIVE_POWER_LIMIT_ENTITY = "number.solaredge_se10000h_active_power_limit"
+BACKUP_RESERVE_ENTITY = "number.solaredge_se10000h_backup_reserve"
+SITE_EXPORT_LIMIT_ENTITY = "number.solaredge_se10000h_site_export_limit"
+ON_GRID_ENTITY = "binary_sensor.solaredge_se10000h_on_grid"
 
 
 async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -762,45 +765,61 @@ async def test_replaced_meter_is_picked_up(
     )
 
 
-async def test_control_block_that_answers_later_is_picked_up(
+@pytest.mark.parametrize(
+    ("register", "entity_id"),
+    [
+        pytest.param(40113, ON_GRID_ENTITY, id="grid status"),
+        pytest.param(57348, BACKUP_RESERVE_ENTITY, id="storage control"),
+        pytest.param(57344, SITE_EXPORT_LIMIT_ENTITY, id="export control"),
+        pytest.param(61440, ACTIVE_POWER_LIMIT_ENTITY, id="power control"),
+    ],
+)
+async def test_block_that_answers_later_is_picked_up(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_modbus_unit: MockModbusUnit,
+    register: int,
+    entity_id: str,
 ) -> None:
-    """A control block silent while probing leaves a platform empty until then.
-
-    Which blocks answer decides which entities exist, and that is read once. An
-    inverter that was busy at the wrong moment would otherwise be missing every
-    setting it has until someone reloads by hand.
-    """
-    mock_modbus_unit.fail_read(POWER_CONTROL_REGISTER, ModbusTimeoutError("timed out"))
+    """A block that answers only after setup still gets its entities."""
+    mock_modbus_unit.fail_read(register, ModbusTimeoutError("timed out"))
     await _setup(hass, mock_config_entry)
 
-    assert hass.states.get(ACTIVE_POWER_LIMIT_ENTITY) is None
+    assert hass.states.get(entity_id) is None
 
-    # The inverter answers for it again.
-    mock_modbus_unit.fail_read(POWER_CONTROL_REGISTER, None)
+    mock_modbus_unit.fail_read(register, None)
 
     await _tick_attachment_check(hass, freezer)
 
-    assert hass.states.get(ACTIVE_POWER_LIMIT_ENTITY) is not None
+    assert hass.states.get(entity_id) is not None
 
 
-async def test_silent_control_block_does_not_trigger_a_reload(
+@pytest.mark.parametrize(
+    ("register", "entity_id"),
+    [
+        pytest.param(40113, ON_GRID_ENTITY, id="grid status"),
+        pytest.param(57348, BACKUP_RESERVE_ENTITY, id="storage control"),
+        pytest.param(57344, SITE_EXPORT_LIMIT_ENTITY, id="export control"),
+        pytest.param(61440, ACTIVE_POWER_LIMIT_ENTITY, id="power control"),
+    ],
+)
+async def test_block_going_quiet_does_not_trigger_a_reload(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_modbus_unit: MockModbusUnit,
+    register: int,
+    entity_id: str,
 ) -> None:
     """A block going quiet is not the inverter saying it does not have one."""
     await _setup(hass, mock_config_entry)
 
-    mock_modbus_unit.fail_read(POWER_CONTROL_REGISTER, ModbusTimeoutError("timed out"))
+    mock_modbus_unit.fail_read(register, ModbusTimeoutError("timed out"))
 
     assert await _tick_attachment_check(hass, freezer) == 1
 
-    assert hass.states.get(ACTIVE_POWER_LIMIT_ENTITY) is not None
+    assert hass.states.get(entity_id) is not None
 
 
 async def test_silent_attachment_does_not_trigger_a_reload(

@@ -157,15 +157,13 @@ async def async_setup_entry(
         attachments=_attachment_identities(solaredge),
     )
 
-    if silent := solaredge.unresponsive_blocks & {
-        SUBSYSTEM_BATTERIES,
-        SUBSYSTEM_METERS,
-    }:
+    if silent := solaredge.unresponsive_blocks & _probed_blocks(solaredge).keys():
         LOGGER.warning(
-            "%s did not answer for its %s while probing, so their entities are"
-            " missing until it does; reloading probes again",
+            "%s did not answer for %s while probing, so the entities those"
+            " would carry are missing; this is looked at again every %s minutes",
             entry.title,
             " and ".join(sorted(silent)),
+            int(ATTACHMENT_SCAN_INTERVAL.total_seconds() // 60),
         )
 
     _async_remove_stale_devices(hass, entry, solaredge, serial_number, silent=silent)
