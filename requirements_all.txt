@@ -1650,7 +1650,7 @@ modbus-connection[tmodbus]==4.12.1
 moehlenhoff-alpha2==1.4.0
 
 # homeassistant.components.route_b_smart_meter
-momonga==0.3.0
+momonga==0.7.0
 
 # homeassistant.components.monarch_money
 monarchmoneycommunity==1.6.0
