@@ -4,7 +4,7 @@ from homeassistant.components.lock import CONF_DEFAULT_CODE, DOMAIN as LOCK_DOMA
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CODE, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import LOGGER, PLATFORMS
 from .coordinator import YaleDataUpdateCoordinator
@@ -18,6 +18,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool
     coordinator = YaleDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
+
+    # Register the alarm panel device so child devices can link to it via
+    # via_device_id, since the panel is otherwise only registered by a sibling
+    # entity on a concurrently loaded platform.
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        **coordinator.device_info,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

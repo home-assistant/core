@@ -12,10 +12,38 @@ from sense_energy import (
     SenseWebsocketException,
 )
 
+from homeassistant.components.sense.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+
+from .const import DEVICE_1_ID, MONITOR_ID
 
 from tests.common import MockConfigEntry
+
+
+@pytest.mark.usefixtures("mock_sense")
+async def test_device_via_device_link(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test child devices link to the monitor device via via_device_id."""
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    monitor_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MONITOR_ID), config_entry.entry_id
+    )
+    assert monitor_device is not None
+
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MONITOR_ID}:{DEVICE_1_ID}"), config_entry.entry_id
+    )
+    assert child_device is not None
+    assert child_device.via_device_id == monitor_device.id
 
 
 @pytest.mark.parametrize(

@@ -1,0 +1,32 @@
+{
+  "command": "getConfiguration",
+  "protocolVersion": "1.0.0",
+  "destinations": [
+    {
+      "id": 97358,
+      "animationType": 6,
+      "names": ["Licht", "", "", ""],
+      "actions": [
+        {
+          "id": 20,
+          "actionType": 4,
+          "actionDescription": 6
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    }
+  ],
+  "rooms": [
+    {
+      "id": 19239,
+      "name": "Terrasse",
+      "destinations": [97358],
+      "scenes": []
+    }
+  ],
+  "scenes": []
+}

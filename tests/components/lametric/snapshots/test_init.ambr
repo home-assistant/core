@@ -1,0 +1,77 @@
+# serializer version: 1
+# name: test_device_info[device-SA110405124500W00BS9]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': 'https://127.0.0.1/',
+    'connections': set({
+      tuple(
+        'bluetooth',
+        'aa:bb:cc:dd:ee:ee',
+      ),
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'lametric',
+        'SA110405124500W00BS9',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'LaMetric Inc.',
+    'model': 'TIME',
+    'model_id': 'LM 37X8',
+    'name': "Frenck's LaMetric",
+    'name_by_user': None,
+    'serial_number': 'SA110405124500W00BS9',
+    'sw_version': '2.2.2',
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_info[device_sa5-SA52100000123TBNC]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': 'https://127.0.0.1/',
+    'connections': set({
+      tuple(
+        'bluetooth',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'lametric',
+        'SA52100000123TBNC',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'LaMetric Inc.',
+    'model': 'SKY',
+    'model_id': 'sa5',
+    'name': "spyfly's LaMetric SKY",
+    'name_by_user': None,
+    'serial_number': 'SA52100000123TBNC',
+    'sw_version': '3.0.13',
+    'via_device_id': None,
+  })
+# ---

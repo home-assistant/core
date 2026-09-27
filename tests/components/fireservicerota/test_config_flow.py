@@ -56,7 +56,15 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_CONF
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_CONF,
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -70,7 +78,15 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
         side_effect=InvalidAuthError,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_CONF
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=MOCK_CONF,
         )
         assert result["errors"] == {"base": "invalid_auth"}
 
@@ -91,7 +107,15 @@ async def test_step_user(hass: HomeAssistant) -> None:
         mock_fireservicerota.request_tokens.return_value = MOCK_TOKEN_INFO
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_CONF
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=MOCK_CONF,
         )
 
         await hass.async_block_till_done()

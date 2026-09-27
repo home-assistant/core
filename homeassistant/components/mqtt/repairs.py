@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.core import HomeAssistant
@@ -36,8 +36,8 @@ class MQTTDeviceEntryMigration(RepairsFlow):
         """Handle the confirm step of a fix flow."""
         if user_input is not None:
             device_registry = dr.async_get(self.hass)
-            subentry_device = device_registry.async_get_device(
-                identifiers={(DOMAIN, self.subentry_id)}
+            subentry_device = device_registry.async_get_device_by_identifier(
+                (DOMAIN, self.subentry_id), self.entry_id
             )
             entry = self.hass.config_entries.async_get_entry(self.entry_id)
             if TYPE_CHECKING:
@@ -48,7 +48,7 @@ class MQTTDeviceEntryMigration(RepairsFlow):
 
         return self.async_show_form(
             step_id="confirm",
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
             description_placeholders={"name": self.name},
         )
 

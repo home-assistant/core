@@ -2,12 +2,12 @@
 
 from datetime import timedelta
 
+import probatio
 from pyportainer import (
     PortainerAuthenticationError,
     PortainerConnectionError,
     PortainerTimeoutError,
 )
-import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -28,58 +28,43 @@ ATTR_PULL_IMAGE = "pull_image"
 ATTR_CONTAINER_DEVICE_ID = "container_device_id"
 
 SERVICE_PRUNE_IMAGES = "prune_images"
-SERVICE_PRUNE_IMAGES_SCHEMA = vol.Schema(
+SERVICE_PRUNE_IMAGES_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Optional(ATTR_DATE_UNTIL): vol.All(
-            cv.time_period, vol.Range(min=timedelta(minutes=1))
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Optional(ATTR_DATE_UNTIL): probatio.All(
+            cv.time_period, probatio.Range(min=timedelta(minutes=1))
         ),
-        vol.Optional(ATTR_DANGLING): cv.boolean,
+        probatio.Optional(ATTR_DANGLING): cv.boolean,
     },
 )
 
 SERVICE_RECREATE_CONTAINER = "recreate_container"
-SERVICE_RECREATE_CONTAINER_SCHEMA = vol.Schema(
+SERVICE_RECREATE_CONTAINER_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONTAINER_DEVICE_ID): cv.string,
-        vol.Optional(ATTR_TIMEOUT): vol.All(
-            cv.time_period, vol.Range(min=timedelta(minutes=1))
+        probatio.Required(ATTR_CONTAINER_DEVICE_ID): cv.string,
+        probatio.Optional(ATTR_TIMEOUT): probatio.All(
+            cv.time_period, probatio.Range(min=timedelta(minutes=1))
         ),
-        vol.Optional(ATTR_PULL_IMAGE): cv.boolean,
+        probatio.Optional(ATTR_PULL_IMAGE): cv.boolean,
     }
 )
 
 
 @callback
-def _async_get_device(call: ServiceCall, device_id: str) -> dr.DeviceEntry:
-    """Get a device entry from a device ID."""
-    device_reg = dr.async_get(call.hass)
-    if (device := device_reg.async_get(device_id)) is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_target",
-        )
-    return device
-
-
-@callback
-def _async_get_entry_from_device(
-    call: ServiceCall, device: dr.DeviceEntry
-) -> PortainerConfigEntry:
-    """Resolve and validate the Portainer config entry for a device."""
-    for entry in call.hass.config_entries.async_entries(DOMAIN):
-        if entry.entry_id in device.config_entries:
-            return service.async_get_config_entry(call.hass, DOMAIN, entry.entry_id)
-
-    raise ServiceValidationError(
-        translation_domain=DOMAIN,
-        translation_key="invalid_target",
+def _async_get_device_and_entry(
+    call: ServiceCall, device_id: str
+) -> tuple[dr.AnyDeviceEntry, PortainerConfigEntry]:
+    """Resolve and validate the device and Portainer config entry for a device ID."""
+    entry: PortainerConfigEntry
+    device, entry = service.async_get_device_and_config_entry(
+        call.hass, DOMAIN, device_id
     )
+    return device, entry
 
 
 @callback
 def _async_get_endpoint_id(
-    device: dr.DeviceEntry,
+    device: dr.AnyDeviceEntry,
     config_entry: PortainerConfigEntry,
 ) -> int:
     """Get the endpoint ID from a device entry."""
@@ -100,7 +85,7 @@ def _async_get_endpoint_id(
 
 @callback
 def _async_get_container_and_endpoint_ids(
-    device: dr.DeviceEntry,
+    device: dr.AnyDeviceEntry,
     config_entry: PortainerConfigEntry,
 ) -> tuple[int, str]:
     """Get the endpoint ID and container ID from a container device entry."""
@@ -122,8 +107,7 @@ def _async_get_container_and_endpoint_ids(
 
 async def prune_images(call: ServiceCall) -> None:
     """Prune unused images in Portainer, with more controls."""
-    device = _async_get_device(call, call.data[ATTR_DEVICE_ID])
-    config_entry = _async_get_entry_from_device(call, device)
+    device, config_entry = _async_get_device_and_entry(call, call.data[ATTR_DEVICE_ID])
     coordinator = config_entry.runtime_data
     endpoint_id = _async_get_endpoint_id(device, config_entry)
 
@@ -136,24 +120,25 @@ async def prune_images(call: ServiceCall) -> None:
     except PortainerAuthenticationError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="invalid_auth_no_details",
+            translation_key="invalid_auth",
         ) from err
     except PortainerConnectionError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="cannot_connect_no_details",
+            translation_key="cannot_connect",
         ) from err
     except PortainerTimeoutError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="timeout_connect_no_details",
+            translation_key="timeout_connect",
         ) from err
 
 
 async def recreate_container(call: ServiceCall) -> None:
     """Recreate a container in Portainer, with more controls."""
-    device = _async_get_device(call, call.data[ATTR_CONTAINER_DEVICE_ID])
-    config_entry = _async_get_entry_from_device(call, device)
+    device, config_entry = _async_get_device_and_entry(
+        call, call.data[ATTR_CONTAINER_DEVICE_ID]
+    )
     coordinator = config_entry.runtime_data
     endpoint_id, container_id = _async_get_container_and_endpoint_ids(
         device, config_entry
@@ -170,23 +155,24 @@ async def recreate_container(call: ServiceCall) -> None:
     except PortainerAuthenticationError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="invalid_auth_no_details",
+            translation_key="invalid_auth",
         ) from err
     except PortainerConnectionError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="cannot_connect_no_details",
+            translation_key="cannot_connect",
         ) from err
     except PortainerTimeoutError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="timeout_connect_no_details",
+            translation_key="timeout_connect",
         ) from err
 
     await coordinator.async_request_refresh()
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services."""
 
     hass.services.async_register(
@@ -196,7 +182,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_PRUNE_IMAGES_SCHEMA,
     )
 
-    hass.services.async_register(
+    service.async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_RECREATE_CONTAINER,
         recreate_container,

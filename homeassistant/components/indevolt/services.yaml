@@ -19,7 +19,7 @@ charge:
       selector:
         number:
           min: 0
-          max: 2400
+          max: 10800
           step: 1
           unit_of_measurement: "W"
 
@@ -44,6 +44,6 @@ discharge:
       selector:
         number:
           min: 0
-          max: 2400
+          max: 10800
           step: 1
           unit_of_measurement: "W"

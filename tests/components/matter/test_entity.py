@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
-    set_node_attribute,
+    set_node_attribute_and_notify,
     setup_integration_with_node_fixture,
     trigger_subscription_callback,
 )
@@ -262,12 +262,14 @@ async def test_bridged_entity_becomes_unavailable_on_reachable_false(
     assert state.state != STATE_UNAVAILABLE
 
     # Simulate the bridge reporting the endpoint as unreachable.
-    set_node_attribute(matter_node, 29, 57, 17, False)
-    await trigger_subscription_callback(
+    await set_node_attribute_and_notify(
         hass,
         matter_client,
-        event=EventType.ATTRIBUTE_UPDATED,
-        data=(matter_node.node_id, _REACHABLE_ATTR_PATH, False),
+        matter_node,
+        endpoint=29,
+        cluster_id=57,
+        attribute_id=17,
+        value=False,
     )
 
     state = hass.states.get(_BRIDGE_ENTITY_ID)
@@ -298,12 +300,14 @@ async def test_bridged_entity_recovers_when_reachable_true(
     assert state.state == STATE_UNAVAILABLE
 
     # Simulate the bridge reporting the endpoint as reachable again.
-    set_node_attribute(matter_node, 29, 57, 17, True)
-    await trigger_subscription_callback(
+    await set_node_attribute_and_notify(
         hass,
         matter_client,
-        event=EventType.ATTRIBUTE_UPDATED,
-        data=(matter_node.node_id, _REACHABLE_ATTR_PATH, True),
+        matter_node,
+        endpoint=29,
+        cluster_id=57,
+        attribute_id=17,
+        value=True,
     )
 
     state = hass.states.get(_BRIDGE_ENTITY_ID)
@@ -480,12 +484,14 @@ async def test_composed_entity_state_updates_when_parent_reachable_changes(
     assert state.state == STATE_UNAVAILABLE
 
     # Simulate the parent endpoint reporting as reachable again.
-    set_node_attribute(matter_node, 42, 57, 17, True)
-    await trigger_subscription_callback(
+    await set_node_attribute_and_notify(
         hass,
         matter_client,
-        event=EventType.ATTRIBUTE_UPDATED,
-        data=(matter_node.node_id, _COMPOSED_PARENT_REACHABLE_ATTR_PATH, True),
+        matter_node,
+        endpoint=42,
+        cluster_id=57,
+        attribute_id=17,
+        value=True,
     )
 
     state = hass.states.get(_COMPOSED_ENTITY_ID)
@@ -493,12 +499,14 @@ async def test_composed_entity_state_updates_when_parent_reachable_changes(
     assert state.state != STATE_UNAVAILABLE
 
     # Simulate the parent endpoint reporting as unreachable again.
-    set_node_attribute(matter_node, 42, 57, 17, False)
-    await trigger_subscription_callback(
+    await set_node_attribute_and_notify(
         hass,
         matter_client,
-        event=EventType.ATTRIBUTE_UPDATED,
-        data=(matter_node.node_id, _COMPOSED_PARENT_REACHABLE_ATTR_PATH, False),
+        matter_node,
+        endpoint=42,
+        cluster_id=57,
+        attribute_id=17,
+        value=False,
     )
 
     state = hass.states.get(_COMPOSED_ENTITY_ID)

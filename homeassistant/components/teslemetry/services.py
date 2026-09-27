@@ -3,8 +3,7 @@
 import logging
 from typing import TYPE_CHECKING
 
-import voluptuous as vol
-from voluptuous import All, Range
+import probatio
 
 from homeassistant.const import (
     ATTR_ID,
@@ -17,7 +16,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    service,
+)
 
 from .const import DOMAIN
 from .helpers import handle_command, handle_vehicle_command
@@ -64,35 +67,16 @@ SERVICE_ADD_PRECONDITION_SCHEDULE = "add_precondition_schedule"
 SERVICE_REMOVE_PRECONDITION_SCHEDULE = "remove_precondition_schedule"
 
 
-def async_get_device_for_service_call(
+def async_get_device_and_config_for_service_call(
     hass: HomeAssistant, call: ServiceCall
-) -> dr.DeviceEntry:
-    """Get the device entry related to a service call."""
-    device_id = call.data[CONF_DEVICE_ID]
-    device_registry = dr.async_get(hass)
-    if (device_entry := device_registry.async_get(device_id)) is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_device",
-            translation_placeholders={"device_id": device_id},
-        )
-
-    return device_entry
-
-
-def async_get_config_for_device(
-    hass: HomeAssistant, device_entry: dr.DeviceEntry
-) -> TeslemetryConfigEntry:
-    """Get the config entry related to a device entry."""
-    for entry_id in device_entry.config_entries:
-        if entry := hass.config_entries.async_get_entry(entry_id):
-            if entry.domain == DOMAIN:
-                return entry
-    raise ServiceValidationError(
-        translation_domain=DOMAIN,
-        translation_key="no_config_entry_for_device",
-        translation_placeholders={"device_id": device_entry.id},
+) -> tuple[dr.DeviceEntry, TeslemetryConfigEntry]:
+    """Get the device entry and config entry related to a service call."""
+    config_entry: TeslemetryConfigEntry
+    # Callers match the device's serial number, which only a main device has
+    device_entry, config_entry = service.async_get_device_and_config_entry(
+        hass, DOMAIN, call.data[CONF_DEVICE_ID], include_child_devices=False
     )
+    return device_entry, config_entry
 
 
 def async_get_vehicle_for_entry(
@@ -131,15 +115,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def navigate_gps_request(call: ServiceCall) -> None:
         """Send lat,lon,order with a vehicle."""
-        device = async_get_device_for_service_call(hass, call)
-        config = async_get_config_for_device(hass, device)
+        device, config = async_get_device_and_config_for_service_call(hass, call)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
         await handle_vehicle_command(
             vehicle.api.navigation_gps_request(
                 lat=call.data[ATTR_GPS][CONF_LATITUDE],
                 lon=call.data[ATTR_GPS][CONF_LONGITUDE],
-                order=call.data.get(ATTR_ORDER),
+                order=call.data.get(ATTR_ORDER, 0),
             )
         )
 
@@ -147,22 +130,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_NAVIGATE_ATTR_GPS_REQUEST,
         navigate_gps_request,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_GPS): {
-                    vol.Required(CONF_LATITUDE): cv.latitude,
-                    vol.Required(CONF_LONGITUDE): cv.longitude,
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_GPS): {
+                    probatio.Required(CONF_LATITUDE): cv.latitude,
+                    probatio.Required(CONF_LONGITUDE): cv.longitude,
                 },
-                vol.Optional(ATTR_ORDER): cv.positive_int,
+                probatio.Optional(ATTR_ORDER): cv.positive_int,
             }
         ),
     )
 
     async def set_scheduled_charging(call: ServiceCall) -> None:
         """Configure fleet telemetry."""
-        device = async_get_device_for_service_call(hass, call)
-        config = async_get_config_for_device(hass, device)
+        device, config = async_get_device_and_config_for_service_call(hass, call)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
         time: int
@@ -185,19 +167,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SET_SCHEDULED_CHARGING,
         set_scheduled_charging,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_ENABLE): bool,
-                vol.Optional(ATTR_TIME): str,
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_ENABLE): bool,
+                probatio.Optional(ATTR_TIME): str,
             }
         ),
     )
 
     async def set_scheduled_departure(call: ServiceCall) -> None:
         """Configure fleet telemetry."""
-        device = async_get_device_for_service_call(hass, call)
-        config = async_get_config_for_device(hass, device)
+        device, config = async_get_device_and_config_for_service_call(hass, call)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
         enable = call.data.get("enable", True)
@@ -253,24 +234,23 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SET_SCHEDULED_DEPARTURE,
         set_scheduled_departure,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Optional(ATTR_ENABLE): bool,
-                vol.Optional(ATTR_PRECONDITIONING_ENABLED): bool,
-                vol.Optional(ATTR_PRECONDITIONING_WEEKDAYS): bool,
-                vol.Optional(ATTR_DEPARTURE_TIME): str,
-                vol.Optional(ATTR_OFF_PEAK_CHARGING_ENABLED): bool,
-                vol.Optional(ATTR_OFF_PEAK_CHARGING_WEEKDAYS): bool,
-                vol.Optional(ATTR_END_OFF_PEAK_TIME): str,
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Optional(ATTR_ENABLE): bool,
+                probatio.Optional(ATTR_PRECONDITIONING_ENABLED): bool,
+                probatio.Optional(ATTR_PRECONDITIONING_WEEKDAYS): bool,
+                probatio.Optional(ATTR_DEPARTURE_TIME): str,
+                probatio.Optional(ATTR_OFF_PEAK_CHARGING_ENABLED): bool,
+                probatio.Optional(ATTR_OFF_PEAK_CHARGING_WEEKDAYS): bool,
+                probatio.Optional(ATTR_END_OFF_PEAK_TIME): str,
             }
         ),
     )
 
     async def valet_mode(call: ServiceCall) -> None:
         """Configure fleet telemetry."""
-        device = async_get_device_for_service_call(hass, call)
-        config = async_get_config_for_device(hass, device)
+        device, config = async_get_device_and_config_for_service_call(hass, call)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
         await handle_vehicle_command(
@@ -281,19 +261,20 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_VALET_MODE,
         valet_mode,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_ENABLE): cv.boolean,
-                vol.Required(ATTR_PIN): All(cv.positive_int, Range(min=1000, max=9999)),
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_ENABLE): cv.boolean,
+                probatio.Required(ATTR_PIN): probatio.All(
+                    cv.positive_int, probatio.Range(min=1000, max=9999)
+                ),
             }
         ),
     )
 
     async def speed_limit(call: ServiceCall) -> None:
         """Configure fleet telemetry."""
-        device = async_get_device_for_service_call(hass, call)
-        config = async_get_config_for_device(hass, device)
+        device, config = async_get_device_and_config_for_service_call(hass, call)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
         enable = call.data["enable"]
@@ -310,19 +291,20 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SPEED_LIMIT,
         speed_limit,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_ENABLE): cv.boolean,
-                vol.Required(ATTR_PIN): All(cv.positive_int, Range(min=1000, max=9999)),
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_ENABLE): cv.boolean,
+                probatio.Required(ATTR_PIN): probatio.All(
+                    cv.positive_int, probatio.Range(min=1000, max=9999)
+                ),
             }
         ),
     )
 
     async def time_of_use(call: ServiceCall) -> None:
         """Configure time of use settings."""
-        device = async_get_device_for_service_call(hass, call)
-        config = async_get_config_for_device(hass, device)
+        device, config = async_get_device_and_config_for_service_call(hass, call)
         site = async_get_energy_site_for_entry(hass, device, config)
 
         tou_settings = call.data[ATTR_TOU_SETTINGS]
@@ -342,10 +324,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_TIME_OF_USE,
         time_of_use,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_TOU_SETTINGS): dict,
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_TOU_SETTINGS): dict,
             }
         ),
         description_placeholders={
@@ -355,8 +337,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def add_charge_schedule(call: ServiceCall) -> None:
         """Configure charging schedule for a vehicle."""
-        device = async_get_device_for_service_call(hass, call)
-        config = async_get_config_for_device(hass, device)
+        device, config = async_get_device_and_config_for_service_call(hass, call)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
         # Extract parameters from the service call
@@ -409,28 +390,27 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_ADD_CHARGE_SCHEDULE,
         add_charge_schedule,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_DAYS_OF_WEEK): cv.ensure_list,
-                vol.Required(ATTR_ENABLE): cv.boolean,
-                vol.Optional(ATTR_LOCATION): {
-                    vol.Required(CONF_LATITUDE): cv.latitude,
-                    vol.Required(CONF_LONGITUDE): cv.longitude,
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_DAYS_OF_WEEK): cv.ensure_list,
+                probatio.Required(ATTR_ENABLE): cv.boolean,
+                probatio.Optional(ATTR_LOCATION): {
+                    probatio.Required(CONF_LATITUDE): cv.latitude,
+                    probatio.Required(CONF_LONGITUDE): cv.longitude,
                 },
-                vol.Optional(ATTR_START_TIME): cv.time,
-                vol.Optional(ATTR_END_TIME): cv.time,
-                vol.Optional(ATTR_ONE_TIME): cv.boolean,
-                vol.Optional(ATTR_ID): cv.positive_int,
-                vol.Optional(ATTR_NAME): cv.string,
+                probatio.Optional(ATTR_START_TIME): cv.time,
+                probatio.Optional(ATTR_END_TIME): cv.time,
+                probatio.Optional(ATTR_ONE_TIME): cv.boolean,
+                probatio.Optional(ATTR_ID): cv.positive_int,
+                probatio.Optional(ATTR_NAME): cv.string,
             }
         ),
     )
 
     async def remove_charge_schedule(call: ServiceCall) -> None:
         """Remove a charging schedule for a vehicle."""
-        device = async_get_device_for_service_call(hass, call)
-        config = async_get_config_for_device(hass, device)
+        device, config = async_get_device_and_config_for_service_call(hass, call)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
         # Extract parameters from the service call
@@ -446,18 +426,17 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_REMOVE_CHARGE_SCHEDULE,
         remove_charge_schedule,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_ID): cv.positive_int,
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_ID): cv.positive_int,
             }
         ),
     )
 
     async def add_precondition_schedule(call: ServiceCall) -> None:
         """Add or modify a precondition schedule for a vehicle."""
-        device = async_get_device_for_service_call(hass, call)
-        config = async_get_config_for_device(hass, device)
+        device, config = async_get_device_and_config_for_service_call(hass, call)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
         # Extract parameters from the service call
@@ -503,27 +482,26 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_ADD_PRECONDITION_SCHEDULE,
         add_precondition_schedule,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_DAYS_OF_WEEK): cv.ensure_list,
-                vol.Required(ATTR_ENABLE): cv.boolean,
-                vol.Optional(ATTR_LOCATION): {
-                    vol.Required(CONF_LATITUDE): cv.latitude,
-                    vol.Required(CONF_LONGITUDE): cv.longitude,
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_DAYS_OF_WEEK): cv.ensure_list,
+                probatio.Required(ATTR_ENABLE): cv.boolean,
+                probatio.Optional(ATTR_LOCATION): {
+                    probatio.Required(CONF_LATITUDE): cv.latitude,
+                    probatio.Required(CONF_LONGITUDE): cv.longitude,
                 },
-                vol.Required(ATTR_PRECONDITION_TIME): cv.time,
-                vol.Optional(ATTR_ID): cv.positive_int,
-                vol.Optional(ATTR_ONE_TIME): cv.boolean,
-                vol.Optional(ATTR_NAME): cv.string,
+                probatio.Required(ATTR_PRECONDITION_TIME): cv.time,
+                probatio.Optional(ATTR_ID): cv.positive_int,
+                probatio.Optional(ATTR_ONE_TIME): cv.boolean,
+                probatio.Optional(ATTR_NAME): cv.string,
             }
         ),
     )
 
     async def remove_precondition_schedule(call: ServiceCall) -> None:
         """Remove a preconditioning schedule for a vehicle."""
-        device = async_get_device_for_service_call(hass, call)
-        config = async_get_config_for_device(hass, device)
+        device, config = async_get_device_and_config_for_service_call(hass, call)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
         # Extract parameters from the service call
@@ -539,10 +517,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_REMOVE_PRECONDITION_SCHEDULE,
         remove_precondition_schedule,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_ID): cv.positive_int,
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_ID): cv.positive_int,
             }
         ),
     )

@@ -5,8 +5,8 @@ from http import HTTPStatus
 import logging
 
 import boto3
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.const import CONF_DOMAIN, CONF_TTL, CONF_ZONE
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -25,20 +25,22 @@ DOMAIN = "route53"
 INTERVAL = timedelta(minutes=60)
 DEFAULT_TTL = 300
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_ACCESS_KEY_ID): cv.string,
-                vol.Required(CONF_DOMAIN): cv.string,
-                vol.Required(CONF_RECORDS): vol.All(cv.ensure_list, [cv.string]),
-                vol.Required(CONF_SECRET_ACCESS_KEY): cv.string,
-                vol.Required(CONF_ZONE): cv.string,
-                vol.Optional(CONF_TTL, default=DEFAULT_TTL): cv.positive_int,
+                probatio.Required(CONF_ACCESS_KEY_ID): cv.string,
+                probatio.Required(CONF_DOMAIN): cv.string,
+                probatio.Required(CONF_RECORDS): probatio.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                probatio.Required(CONF_SECRET_ACCESS_KEY): cv.string,
+                probatio.Required(CONF_ZONE): cv.string,
+                probatio.Optional(CONF_TTL, default=DEFAULT_TTL): cv.positive_int,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

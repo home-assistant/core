@@ -4,18 +4,24 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import CookieJar
+import probatio
 from pyanglianwater import AnglianWater
 from pyanglianwater.auth import MSOB2CAuth
 from pyanglianwater.exceptions import (
     ConsentRequiredError,
     InvalidAccountIdError,
+    MFARequiredError,
     SelfAssertedError,
     SmartMeterUnavailableError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_CODE,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
@@ -23,12 +29,18 @@ from .const import CONF_ACCOUNT_NUMBER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): selector.TextSelector(),
-        vol.Required(CONF_PASSWORD): selector.TextSelector(
+        probatio.Required(CONF_USERNAME): selector.TextSelector(),
+        probatio.Required(CONF_PASSWORD): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
+    }
+)
+
+STEP_MFA_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_CODE): selector.TextSelector(),
     }
 )
 
@@ -37,7 +49,11 @@ async def validate_credentials(auth: MSOB2CAuth) -> str | MSOB2CAuth:
     """Validate the provided credentials."""
     try:
         await auth.send_login_request()
-    except ConsentRequiredError, SelfAssertedError:
+    except MFARequiredError:
+        return "mfa_required"
+    except ConsentRequiredError:
+        return "consent_required"
+    except SelfAssertedError:
         return "invalid_auth"
     except Exception:
         _LOGGER.exception("Unexpected exception")
@@ -103,29 +119,53 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             validation_response = await validate_credentials(self.authenticator)
             if isinstance(validation_response, str):
+                if validation_response == "mfa_required":
+                    self.user_input = user_input
+                    return await self.async_step_mfa()
                 errors["base"] = validation_response
             else:
                 self.accounts = await get_accounts(self.authenticator)
-                if len(self.accounts) > 1:
-                    self.user_input = user_input
-                    return await self.async_step_select_account()
-                account_number = self.accounts[0]["value"]
                 self.user_input = user_input
-                return await self.async_step_complete(
-                    {
-                        CONF_ACCOUNT_NUMBER: account_number,
-                    }
-                )
+                return await self.async_step_select_account()
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_mfa(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the MFA step."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if TYPE_CHECKING:
+                assert self.authenticator
+            try:
+                await self.authenticator.send_mfa_request(user_input[CONF_CODE])
+            except MFARequiredError:
+                errors["base"] = "invalid_code"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                self.accounts = await get_accounts(self.authenticator)
+                return await self.async_step_select_account()
+        return self.async_show_form(
+            step_id="mfa", data_schema=STEP_MFA_DATA_SCHEMA, errors=errors
         )
 
     async def async_step_select_account(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the account selection step."""
-        errors = {}
+        if len(self.accounts) == 1:
+            account_number = self.accounts[0]["value"]
+            return await self.async_step_complete(
+                {
+                    CONF_ACCOUNT_NUMBER: account_number,
+                }
+            )
+        errors: dict[str, str] = {}
         if user_input is not None:
             if TYPE_CHECKING:
                 assert self.authenticator
@@ -139,9 +179,9 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_complete(user_input)
         return self.async_show_form(
             step_id="select_account",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ACCOUNT_NUMBER): selector.SelectSelector(
+                    probatio.Required(CONF_ACCOUNT_NUMBER): selector.SelectSelector(
                         selector.SelectSelectorConfig(
                             options=self.accounts,
                             multiple=False,

@@ -1,16 +1,16 @@
 """Tests for the Whois config flow."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, call
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from whois.exceptions import (
-    FailedParsingWhoisOutput,
-    UnknownDateFormat,
-    UnknownTld,
-    WhoisCommandFailed,
-    WhoisPrivateRegistry,
-    WhoisQuotaExceeded,
+from whoisdomain.exceptions import (
+    FailedParsingWhoisOutputError,
+    UnknownDateFormatError,
+    UnknownTldError,
+    WhoisCommandFailedError,
+    WhoisPrivateRegistryError,
+    WhoisQuotaExceededError,
 )
 
 from homeassistant.components.whois.const import DOMAIN
@@ -26,6 +26,7 @@ from tests.common import MockConfigEntry
 async def test_full_user_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
+    mock_whois: MagicMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the full user configuration flow."""
@@ -44,18 +45,39 @@ async def test_full_user_flow(
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2 == snapshot
 
+    mock_whois.assert_called_once_with("example.com", whoisOnly=True)
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
     ("throw", "reason"),
     [
-        (UnknownTld, "unknown_tld"),
-        (FailedParsingWhoisOutput, "unexpected_response"),
-        (UnknownDateFormat, "unknown_date_format"),
-        (WhoisCommandFailed, "whois_command_failed"),
-        (WhoisPrivateRegistry, "private_registry"),
-        (WhoisQuotaExceeded, "quota_exceeded"),
+        pytest.param(UnknownTldError, "unknown_tld", id="UnknownTld-unknown_tld"),
+        pytest.param(
+            FailedParsingWhoisOutputError,
+            "unexpected_response",
+            id="FailedParsingWhoisOutput-unexpected_response",
+        ),
+        pytest.param(
+            UnknownDateFormatError,
+            "unknown_date_format",
+            id="UnknownDateFormat-unknown_date_format",
+        ),
+        pytest.param(
+            WhoisCommandFailedError,
+            "whois_command_failed",
+            id="WhoisCommandFailed-whois_command_failed",
+        ),
+        pytest.param(
+            WhoisPrivateRegistryError,
+            "private_registry",
+            id="WhoisPrivateRegistry-private_registry",
+        ),
+        pytest.param(
+            WhoisQuotaExceededError,
+            "quota_exceeded",
+            id="WhoisQuotaExceeded-quota_exceeded",
+        ),
     ],
 )
 async def test_full_flow_with_error(
@@ -90,6 +112,7 @@ async def test_full_flow_with_error(
 
     assert len(mock_setup_entry.mock_calls) == 0
     assert len(mock_whois.mock_calls) == 1
+    mock_whois.assert_called_once_with("example.com", whoisOnly=True)
 
     mock_whois.side_effect = None
     result3 = await hass.config_entries.flow.async_configure(
@@ -102,6 +125,10 @@ async def test_full_flow_with_error(
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_whois.mock_calls) == 2
+    assert mock_whois.mock_calls == [
+        call("example.com", whoisOnly=True),
+        call("example.com", whoisOnly=True),
+    ]
 
 
 @pytest.mark.usefixtures("mock_whois")
@@ -114,12 +141,18 @@ async def test_already_configured(
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_DOMAIN: "HOME-Assistant.io"},
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_DOMAIN: "HOME-Assistant.io"},
+    )
+
+    assert result2.get("type") is FlowResultType.ABORT
+    assert result2.get("reason") == "already_configured"
 
     assert len(mock_setup_entry.mock_calls) == 0

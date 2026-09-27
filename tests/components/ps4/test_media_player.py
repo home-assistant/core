@@ -1,7 +1,7 @@
 """Tests for the PS4 media player platform."""
 
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyps4_2ndscreen.credential import get_ddp_message
 from pyps4_2ndscreen.ddp import DEFAULT_UDP_PORT
@@ -25,6 +25,7 @@ from homeassistant.components.ps4.const import (
     GAMES_FILE,
     PS4_DATA,
 )
+from homeassistant.components.ps4.media_player import PS4Device
 from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_ENTITY_ID,
@@ -313,8 +314,10 @@ async def test_device_info_is_set_from_status_correctly(
 
     mock_state = hass.states.get(mock_entity_id).state
 
-    mock_d_entries = device_registry.devices
-    mock_entry = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_HOST_ID)})
+    mock_d_entries = device_registry._devices
+    mock_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_HOST_ID), MOCK_ENTRY_ID
+    )
     assert mock_state == STATE_OFF
 
     assert len(mock_d_entries) == 1
@@ -336,8 +339,8 @@ async def test_device_registry(
 
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_HOST_ID)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_HOST_ID), MOCK_ENTRY_ID
     )
     assert device_entry == snapshot
 
@@ -357,7 +360,7 @@ async def test_device_info_is_assummed(
         identifiers={(DOMAIN, MOCK_HOST_ID)},
         sw_version=MOCK_HOST_VERSION,
     )
-    mock_d_entries = device_registry.devices
+    mock_d_entries = device_registry._devices
     assert len(mock_d_entries) == 1
 
     # Create a entity_registry entry which is using identifiers from device.
@@ -387,7 +390,7 @@ async def test_device_info_assummed_works(
     """Reverse test that device info assumption works."""
     mock_entity_id = await setup_mock_component(hass)
     mock_state = hass.states.get(mock_entity_id).state
-    mock_d_entries = device_registry.devices
+    mock_d_entries = device_registry._devices
 
     # Ensure that state is not set.
     assert mock_state == STATE_UNKNOWN
@@ -572,3 +575,69 @@ async def test_entry_is_unloaded(hass: HomeAssistant) -> None:
     assert not hass.data[PS4_DATA].protocol.callbacks
 
     assert hass.states.get(mock_entity_id) is None
+
+
+async def test_title_data_fetched_from_poll(
+    hass: HomeAssistant, patch_get_status: MagicMock
+) -> None:
+    """Test title data is fetched when parsing status in an executor thread."""
+    patch_get_status.return_value = MOCK_STATUS_PLAYING
+
+    mock_result = MagicMock()
+    mock_result.name = MOCK_TITLE_NAME
+    mock_result.cover_art = MOCK_TITLE_ART_URL
+    mock_result.game_type = "not_an_app"
+
+    mock_func = (
+        "homeassistant.components.ps4.media_player"
+        ".pyps4.Ps4Async.async_get_ps_store_data"
+    )
+    with patch(mock_func, return_value=mock_result) as mock_fetch:
+        mock_entity_id = await setup_mock_component(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(mock_fetch.mock_calls) == 1
+
+    mock_state = hass.states.get(mock_entity_id)
+    mock_attrs = dict(mock_state.attributes)
+
+    assert mock_state.state == STATE_PLAYING
+    assert mock_attrs.get(ATTR_MEDIA_TITLE) == MOCK_TITLE_NAME
+    assert mock_attrs.get(ATTR_MEDIA_CONTENT_TYPE) == MOCK_TITLE_TYPE
+
+
+async def test_title_data_fetched_before_entity_added(
+    hass: HomeAssistant, patch_get_status: MagicMock
+) -> None:
+    """Test fetching title data before the entity is added does not raise.
+
+    Entities are added with update_before_add, so the first poll runs while the
+    entity has no entity_id yet, and the fetch it starts can finish before the
+    entity is added.
+    """
+    patch_get_status.return_value = MOCK_STATUS_PLAYING
+
+    mock_result = MagicMock()
+    mock_result.name = MOCK_TITLE_NAME
+    mock_result.cover_art = MOCK_TITLE_ART_URL
+    mock_result.game_type = "not_an_app"
+
+    mock_entry = MockConfigEntry(
+        domain=ps4.DOMAIN, data=MOCK_DATA, version=VERSION, entry_id=MOCK_ENTRY_ID
+    )
+    mock_entity = PS4Device(
+        mock_entry,
+        MOCK_NAME,
+        MOCK_HOST,
+        MOCK_REGION,
+        MagicMock(async_get_ps_store_data=AsyncMock(return_value=mock_result)),
+        MOCK_CREDS,
+    )
+    mock_entity.hass = hass
+    assert mock_entity.entity_id is None
+
+    await mock_entity.async_get_title_data(MOCK_TITLE_ID, MOCK_TITLE_NAME)
+
+    # The data is kept, the platform writes it out when the entity is added
+    assert mock_entity.media_title == MOCK_TITLE_NAME
+    assert mock_entity.media_content_type == MediaType.GAME

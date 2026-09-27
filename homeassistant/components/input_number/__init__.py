@@ -4,11 +4,10 @@ from contextlib import suppress
 import logging
 from typing import Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.const import (  # noqa: F401
-    ATTR_EDITABLE,
     ATTR_MODE,
     CONF_ICON,
     CONF_ID,
@@ -24,6 +23,8 @@ from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
+
+from .const import InputNumberEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,45 +50,51 @@ SERVICE_DECREMENT = "decrement"
 
 
 def _cv_input_number(cfg):
-    """Configure validation helper for input number (voluptuous)."""
+    """Configure validation helper for input number (probatio)."""
     minimum = cfg.get(CONF_MIN)
     maximum = cfg.get(CONF_MAX)
     if minimum >= maximum:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"Maximum ({minimum}) is not greater than minimum ({maximum})"
         )
     state = cfg.get(CONF_INITIAL)
     if state is not None and (state < minimum or state > maximum):
-        raise vol.Invalid(f"Initial value {state} not in range {minimum}-{maximum}")
+        raise probatio.Invalid(
+            f"Initial value {state} not in range {minimum}-{maximum}"
+        )
     return cfg
 
 
 STORAGE_FIELDS: VolDictType = {
-    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Required(CONF_MIN): vol.Coerce(float),
-    vol.Required(CONF_MAX): vol.Coerce(float),
-    vol.Optional(CONF_INITIAL): vol.Coerce(float),
-    vol.Optional(CONF_STEP, default=1): vol.All(vol.Coerce(float), vol.Range(min=1e-9)),
-    vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_MODE, default=MODE_SLIDER): vol.In([MODE_BOX, MODE_SLIDER]),
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Required(CONF_MIN): probatio.Coerce(float),
+    probatio.Required(CONF_MAX): probatio.Coerce(float),
+    probatio.Optional(CONF_INITIAL): probatio.Coerce(float),
+    probatio.Optional(CONF_STEP, default=1): probatio.All(
+        probatio.Coerce(float), probatio.Range(min=1e-9)
+    ),
+    probatio.Optional(CONF_ICON): cv.icon,
+    probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    probatio.Optional(CONF_MODE, default=MODE_SLIDER): probatio.In(
+        [MODE_BOX, MODE_SLIDER]
+    ),
 }
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: cv.schema_with_slug_keys(
-            vol.All(
+            probatio.All(
                 {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Required(CONF_MIN): vol.Coerce(float),
-                    vol.Required(CONF_MAX): vol.Coerce(float),
-                    vol.Optional(CONF_INITIAL): vol.Coerce(float),
-                    vol.Optional(CONF_STEP, default=1): vol.All(
-                        vol.Coerce(float), vol.Range(min=1e-9)
+                    probatio.Optional(CONF_NAME): cv.string,
+                    probatio.Required(CONF_MIN): probatio.Coerce(float),
+                    probatio.Required(CONF_MAX): probatio.Coerce(float),
+                    probatio.Optional(CONF_INITIAL): probatio.Coerce(float),
+                    probatio.Optional(CONF_STEP, default=1): probatio.All(
+                        probatio.Coerce(float), probatio.Range(min=1e-9)
                     ),
-                    vol.Optional(CONF_ICON): cv.icon,
-                    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-                    vol.Optional(CONF_MODE, default=MODE_SLIDER): vol.In(
+                    probatio.Optional(CONF_ICON): cv.icon,
+                    probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                    probatio.Optional(CONF_MODE, default=MODE_SLIDER): probatio.In(
                         [MODE_BOX, MODE_SLIDER]
                     ),
                 },
@@ -95,9 +102,9 @@ CONFIG_SCHEMA = vol.Schema(
             )
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
-RELOAD_SERVICE_SCHEMA = vol.Schema({})
+RELOAD_SERVICE_SCHEMA = probatio.Schema({})
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
@@ -149,7 +156,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_SET_VALUE,
-        {vol.Required(ATTR_VALUE): vol.Coerce(float)},
+        {probatio.Required(ATTR_VALUE): probatio.Coerce(float)},
         "async_set_native_value",
     )
 
@@ -163,7 +170,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class NumberStorageCollection(collection.DictStorageCollection):
     """Input storage based collection."""
 
-    SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, _cv_input_number))
+    SCHEMA = probatio.Schema(probatio.All(STORAGE_FIELDS, _cv_input_number))
 
     @override
     async def _process_create_data(self, data: dict) -> dict:
@@ -204,7 +211,7 @@ class NumberStorageCollection(collection.DictStorageCollection):
 class InputNumber(collection.CollectionEntity, NumberEntity, RestoreEntity):
     """Representation of a slider."""
 
-    _unrecorded_attributes = frozenset({ATTR_EDITABLE})
+    _unrecorded_attributes = frozenset({InputNumberEntityStateAttribute.EDITABLE})
 
     _attr_should_poll = False
     editable: bool
@@ -248,8 +255,8 @@ class InputNumber(collection.CollectionEntity, NumberEntity, RestoreEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
-            ATTR_INITIAL: self._initial_value,
-            ATTR_EDITABLE: self.editable,
+            InputNumberEntityStateAttribute.INITIAL: self._initial_value,
+            InputNumberEntityStateAttribute.EDITABLE: self.editable,
         }
 
     @override
@@ -279,7 +286,7 @@ class InputNumber(collection.CollectionEntity, NumberEntity, RestoreEntity):
         num_value = float(value)
 
         if num_value < self.native_min_value or num_value > self.native_max_value:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"Invalid value for {self.entity_id}: {value} (range "
                 f"{self.native_min_value} - {self.native_max_value})"
             )

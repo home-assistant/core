@@ -8,7 +8,7 @@ from typing import Any
 
 from asyncinotify import Inotify, Mask
 from evdev import InputDevice, categorize, ecodes, list_devices
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -38,28 +38,32 @@ EMULATE_KEY_HOLD_REPEAT = "emulate_key_hold_repeat"
 
 DEVINPUT = "/dev/input"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             cv.ensure_list,
             [
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Exclusive(DEVICE_DESCRIPTOR, DEVICE_ID_GROUP): cv.string,
-                        vol.Exclusive(DEVICE_NAME, DEVICE_ID_GROUP): cv.string,
-                        vol.Optional(TYPE, default=["key_up"]): vol.All(
-                            cv.ensure_list, [vol.In(KEY_VALUE)]
+                        probatio.Exclusive(
+                            DEVICE_DESCRIPTOR, DEVICE_ID_GROUP
+                        ): cv.string,
+                        probatio.Exclusive(DEVICE_NAME, DEVICE_ID_GROUP): cv.string,
+                        probatio.Optional(TYPE, default=["key_up"]): probatio.All(
+                            cv.ensure_list, [probatio.In(KEY_VALUE)]
                         ),
-                        vol.Optional(EMULATE_KEY_HOLD, default=False): cv.boolean,
-                        vol.Optional(EMULATE_KEY_HOLD_DELAY, default=0.250): float,
-                        vol.Optional(EMULATE_KEY_HOLD_REPEAT, default=0.033): float,
+                        probatio.Optional(EMULATE_KEY_HOLD, default=False): cv.boolean,
+                        probatio.Optional(EMULATE_KEY_HOLD_DELAY, default=0.250): float,
+                        probatio.Optional(
+                            EMULATE_KEY_HOLD_REPEAT, default=0.033
+                        ): float,
                     }
                 ),
                 cv.has_at_least_one_key(DEVICE_DESCRIPTOR, DEVICE_ID_GROUP),
             ],
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

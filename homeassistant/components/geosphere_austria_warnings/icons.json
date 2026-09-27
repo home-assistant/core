@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "active_warnings": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "advance_warning_level": {
+        "default": "mdi:alert"
+      },
+      "advance_warnings": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "warning_level": {
+        "default": "mdi:alert"
+      }
+    }
+  }
+}

@@ -11,6 +11,7 @@ from tests.common import MockConfigEntry
 
 async def test_migrate_entry(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test migrate config entry from v1 to v2."""
 
@@ -22,14 +23,13 @@ async def test_migrate_entry(
 
     mock_config_entry_v1.add_to_hass(hass)
 
-    dev_reg = dr.async_get(hass)
     # Create device registry entries for old integration
-    dev_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=mock_config_entry_v1.entry_id,
         identifiers={(DOMAIN, "AA:BB:CC:11:22:33")},
         name="KuLight 1",
     )
-    dev_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=mock_config_entry_v1.entry_id,
         identifiers={(DOMAIN, "AA:BB:CC:44:55:66")},
         name="KuLight 2",

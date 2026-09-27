@@ -10,7 +10,7 @@ from typing import Any, override
 from aiohttp import hdrs, web
 from aiohttp.web_request import FileField
 from PIL import Image, ImageOps, UnidentifiedImageError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
@@ -31,11 +31,11 @@ VALID_SIZES = {256, 512}
 MAX_SIZE = 1024 * 1024 * 10
 
 CREATE_FIELDS: VolDictType = {
-    vol.Required("file"): FileField,
+    probatio.Required("file"): FileField,
 }
 
 UPDATE_FIELDS: VolDictType = {
-    vol.Optional("name"): vol.All(str, vol.Length(min=1)),
+    probatio.Optional("name"): probatio.All(str, probatio.Length(min=1)),
 }
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -62,8 +62,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class ImageStorageCollection(collection.DictStorageCollection):
     """Image collection stored in storage."""
 
-    CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
-    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+    CREATE_SCHEMA = probatio.Schema(CREATE_FIELDS)
+    UPDATE_SCHEMA = probatio.Schema(UPDATE_FIELDS)
 
     def __init__(self, hass: HomeAssistant, image_dir: pathlib.Path) -> None:
         """Initialize media storage collection."""
@@ -84,7 +84,7 @@ class ImageStorageCollection(collection.DictStorageCollection):
             "image/jpeg",
             "image/png",
         ):
-            raise vol.Invalid("Only jpeg, png, and gif images are allowed")
+            raise probatio.Invalid("Only jpeg, png, and gif images are allowed")
 
         data[CONF_ID] = secrets.token_hex(16)
         data["filesize"] = await self.hass.async_add_executor_job(self._move_data, data)
@@ -103,7 +103,7 @@ class ImageStorageCollection(collection.DictStorageCollection):
         try:
             image = Image.open(uploaded_file.file)
         except UnidentifiedImageError as err:
-            raise vol.Invalid("Unable to identify image file") from err
+            raise probatio.Invalid("Unable to identify image file") from err
 
         # Reset content
         uploaded_file.file.seek(0)

@@ -23,7 +23,7 @@
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 393>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 16,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 16,
     }),
     'context': <ANY>,
     'entity_id': 'climate.melissa_12345678',

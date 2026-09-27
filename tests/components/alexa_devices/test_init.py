@@ -1,8 +1,11 @@
 """Tests for the Alexa Devices integration."""
 
 import asyncio
+from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
+from aioamazondevices.exceptions import CannotConnect, CannotRetrieveData
+from aioamazondevices.structures import AmazonListInfo, AmazonListType
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -27,6 +30,24 @@ from .const import TEST_DEVICE_1_SN, TEST_PASSWORD, TEST_USER_ID, TEST_USERNAME
 from tests.common import MockConfigEntry
 
 
+def _fail_todo_list_items(client: AsyncMock, error: Exception) -> None:
+    """Make the todo list items sync fail."""
+    client.todo_lists = [
+        AmazonListInfo(id="shopping_list_id", name=None, list_type=AmazonListType.SHOP)
+    ]
+    client.get_todo_list_items.side_effect = error
+
+
+def _fail_history_state(client: AsyncMock, error: Exception) -> None:
+    """Make the history state sync fail."""
+    client.sync_history_state.side_effect = error
+
+
+def _fail_media_state(client: AsyncMock, error: Exception) -> None:
+    """Make the media state sync fail."""
+    client.sync_media_state.side_effect = error
+
+
 async def test_device_info(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -36,8 +57,8 @@ async def test_device_info(
 ) -> None:
     """Test device registry integration."""
     await setup_integration(hass, mock_config_entry)
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_1_SN), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry == snapshot
@@ -224,3 +245,69 @@ async def test_http2_stop_processing_called_on_shutdown(
     await hass.async_block_till_done()
 
     mock_amazon_devices_client.stop_http2_processing.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("configure_failure", "invoked_method"),
+    [
+        (_fail_todo_list_items, "sync_todo_list_items"),
+        (_fail_history_state, "sync_history_state"),
+        (_fail_media_state, "sync_media_state"),
+    ],
+)
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(
+            CannotConnect("429 - Too Many Requests"),
+            id="http_429_too_many_requests",
+        ),
+        pytest.param(
+            CannotRetrieveData("503 - Service Unavailable"),
+            id="http_503_service_unavailable",
+        ),
+    ],
+)
+async def test_initial_sync_amazon_api_failure_does_not_block_setup(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    configure_failure: Callable[[AsyncMock, Exception], None],
+    invoked_method: str,
+    error: Exception,
+) -> None:
+    """Test a failing initial sync call is logged but does not block setup."""
+    configure_failure(mock_amazon_devices_client, error)
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert f"Initial sync failed for {invoked_method}:" in caplog.text
+    assert str(error) in caplog.text
+    assert (
+        "Data may be missing or incomplete until updates are pushed by Amazon"
+        in caplog.text
+    )
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_initial_sync_failure_does_not_prevent_other_syncs(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a failing initial sync call does not stop the remaining sync calls."""
+    mock_amazon_devices_client.todo_lists = [
+        AmazonListInfo(id="shopping_list_id", name=None, list_type=AmazonListType.SHOP)
+    ]
+    mock_amazon_devices_client.get_todo_list_items.return_value = {}
+    mock_amazon_devices_client.sync_history_state.side_effect = CannotConnect(
+        "429 - Too Many Requests"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_amazon_devices_client.get_todo_list_items.assert_awaited_once()
+    mock_amazon_devices_client.sync_media_state.assert_awaited_once()

@@ -4,6 +4,8 @@ import logging
 from typing import Any, override
 
 from homeassistant.const import ATTR_SUGGESTED_AREA
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -19,7 +21,9 @@ class LutronCasetaEntity(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, device: dict[str, Any], data: LutronCasetaData) -> None:
+    def __init__(
+        self, hass: HomeAssistant, device: dict[str, Any], data: LutronCasetaData
+    ) -> None:
         """Set up the base class.
 
         [:param]device the device metadata
@@ -54,7 +58,11 @@ class LutronCasetaEntity(Entity):
             manufacturer=MANUFACTURER,
             model=f"{device['model']} ({device['type']})",
             name=full_name,
-            via_device=(DOMAIN, self._bridge_device["serial"]),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass,
+                (DOMAIN, self._bridge_device["serial"]),
+                config_entry_id=data.config_entry_id,
+            ),
             configuration_url=CONFIG_URL,
         )
         if area != UNASSIGNED_AREA:

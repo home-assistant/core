@@ -316,7 +316,9 @@ async def test_update_name(
 
     await setup_integration(hass, mock_config_entry)
 
-    dev_entry = device_registry.async_get_device({(DOMAIN, TEST_MAC)})
+    dev_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_MAC), mock_config_entry.entry_id
+    )
 
     assert dev_entry.name == "Tree 1"
 
@@ -326,6 +328,8 @@ async def test_update_name(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    dev_entry = device_registry.async_get_device({(DOMAIN, TEST_MAC)})
+    dev_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_MAC), mock_config_entry.entry_id
+    )
 
     assert dev_entry.name == "new_device_name"

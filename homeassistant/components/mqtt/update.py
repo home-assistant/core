@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import update
 from homeassistant.components.update import (
@@ -45,34 +45,38 @@ CONF_TITLE = "title"
 
 PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
     {
-        vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
-        vol.Optional(CONF_DISPLAY_PRECISION, default=0): cv.positive_int,
-        vol.Optional(CONF_LATEST_VERSION_TEMPLATE): cv.template,
-        vol.Optional(CONF_LATEST_VERSION_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_PAYLOAD_INSTALL): cv.string,
-        vol.Optional(CONF_RELEASE_SUMMARY): cv.string,
-        vol.Optional(CONF_RELEASE_URL): cv.string,
-        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(CONF_TITLE): cv.string,
+        probatio.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_DEVICE_CLASS): probatio.Any(DEVICE_CLASSES_SCHEMA, None),
+        probatio.Optional(CONF_DISPLAY_PRECISION, default=0): cv.positive_int,
+        probatio.Optional(CONF_LATEST_VERSION_TEMPLATE): cv.template,
+        probatio.Optional(CONF_LATEST_VERSION_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_PAYLOAD_INSTALL): cv.string,
+        probatio.Optional(CONF_RELEASE_SUMMARY): cv.string,
+        probatio.Optional(CONF_RELEASE_URL): cv.string,
+        probatio.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        probatio.Optional(CONF_TITLE): cv.string,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 
-DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA))
+DISCOVERY_SCHEMA = probatio.All(
+    PLATFORM_SCHEMA_MODERN.extend({}, extra=probatio.REMOVE_EXTRA)
+)
 
 
-MQTT_JSON_UPDATE_SCHEMA = vol.Schema(
+MQTT_JSON_UPDATE_SCHEMA = probatio.Schema(
     {
-        vol.Optional("installed_version"): cv.string,
-        vol.Optional("latest_version"): cv.string,
-        vol.Optional("title"): cv.string,
-        vol.Optional("release_summary"): cv.string,
-        vol.Optional("release_url"): cv.url,
-        vol.Optional("entity_picture"): cv.url,
-        vol.Optional("in_progress"): cv.boolean,
-        vol.Optional("update_percentage"): vol.Any(vol.Range(min=0, max=100), None),
+        probatio.Optional("installed_version"): cv.string,
+        probatio.Optional("latest_version"): cv.string,
+        probatio.Optional("title"): cv.string,
+        probatio.Optional("release_summary"): cv.string,
+        probatio.Optional("release_url"): cv.url,
+        probatio.Optional("entity_picture"): cv.url,
+        probatio.Optional("in_progress"): cv.boolean,
+        probatio.Optional("update_percentage"): probatio.Any(
+            probatio.Range(min=0, max=100), None
+        ),
     }
 )
 
@@ -175,7 +179,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                     msg.topic,
                 )
                 json_payload = {"installed_version": str(payload)}
-        except vol.MultipleInvalid as exc:
+        except probatio.MultipleInvalid as exc:
             _LOGGER.warning(
                 (
                     "Schema violation after processing payload '%s'"

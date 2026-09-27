@@ -4,8 +4,8 @@ from http import HTTPStatus
 import os
 import re
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -14,7 +14,6 @@ from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
 from .const import (
-    _LOGGER,
     ATTR_FILENAME,
     ATTR_HEADERS,
     ATTR_OVERWRITE,
@@ -24,6 +23,7 @@ from .const import (
     DOMAIN,
     DOWNLOAD_COMPLETED_EVENT,
     DOWNLOAD_FAILED_EVENT,
+    LOGGER,
     SERVICE_DOWNLOAD_FILE,
 )
 
@@ -64,7 +64,7 @@ async def download_file(service: ServiceCall) -> None:
             req = requests.get(url, stream=True, headers=headers, timeout=10)
 
             if req.status_code != HTTPStatus.OK:
-                _LOGGER.warning(
+                LOGGER.warning(
                     "Downloading '%s' failed, status_code=%d", url, req.status_code
                 )
                 service.hass.bus.fire(
@@ -112,12 +112,12 @@ async def download_file(service: ServiceCall) -> None:
 
                         final_path = f"{path}_{tries}.{ext}"
 
-                _LOGGER.debug("%s -> %s", url, final_path)
+                LOGGER.debug("%s -> %s", url, final_path)
 
                 with open(final_path, "wb") as fil:
                     fil.writelines(req.iter_content(1024))
 
-                _LOGGER.debug("Downloading of %s done", url)
+                LOGGER.debug("Downloading of %s done", url)
                 service.hass.bus.fire(
                     f"{DOMAIN}_{DOWNLOAD_COMPLETED_EVENT}",
                     {"url": url, "filename": filename},
@@ -165,13 +165,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_DOWNLOAD_FILE,
         download_file,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Optional(ATTR_FILENAME): cv.string,
-                vol.Optional(ATTR_SUBDIR): cv.string,
-                vol.Required(ATTR_URL): cv.url,
-                vol.Optional(ATTR_OVERWRITE, default=False): cv.boolean,
-                vol.Optional(ATTR_HEADERS, default=dict): vol.Schema(
+                probatio.Optional(ATTR_FILENAME): cv.string,
+                probatio.Optional(ATTR_SUBDIR): cv.string,
+                probatio.Required(ATTR_URL): cv.url,
+                probatio.Optional(ATTR_OVERWRITE, default=False): cv.boolean,
+                probatio.Optional(ATTR_HEADERS, default=dict): probatio.Schema(
                     {cv.string: cv.string}
                 ),
             }

@@ -5,7 +5,7 @@ from collections import defaultdict
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, replace
 import logging
-from typing import TYPE_CHECKING, Any, cast, override
+from typing import Any, Literal, cast, override
 from uuid import UUID
 
 from aiohasupervisor import SupervisorError, SupervisorNotFoundError
@@ -16,8 +16,10 @@ from aiohasupervisor.models import (
     HomeAssistantInfo,
     HomeAssistantStats,
     HostInfo,
+    IngressPanel,
     InstalledAddon,
     InstalledAddonComplete,
+    Issue as SupervisorIssue,
     Job,
     NetworkInfo,
     NFSMountResponse,
@@ -27,27 +29,44 @@ from aiohasupervisor.models import (
     StoreInfo,
     SupervisorInfo,
     SupervisorStats,
+    UnhealthyReason,
+    UnsupportedReason,
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MANUFACTURER
+from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME
 from homeassistant.core import (
     CALLBACK_TYPE,
     HomeAssistant,
     callback,
     is_callback_check_partial,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
+from homeassistant.helpers.translation import (
+    LOCALE_EN,
+    async_get_cached_translations,
+    async_load_integrations,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     ATTR_ADDONS,
     ATTR_DATA,
+    ATTR_HEALTHY,
     ATTR_REPOSITORIES,
+    ATTR_SLUG,
     ATTR_STARTUP,
+    ATTR_SUPPORTED,
+    ATTR_UNHEALTHY_REASONS,
+    ATTR_UNSUPPORTED_REASONS,
     ATTR_UPDATE_KEY,
     ATTR_WS_EVENT,
     CONTAINER_STATS,
@@ -66,12 +85,34 @@ from .const import (
     DATA_SUPERVISOR_INFO,
     DATA_SUPERVISOR_STATS,
     DOMAIN,
+    EVENT_HEALTH_CHANGED,
+    EVENT_ISSUE_CHANGED,
+    EVENT_ISSUE_REMOVED,
     EVENT_JOB,
+    EVENT_STORE_RELOADED,
     EVENT_SUPERVISOR_EVENT,
     EVENT_SUPERVISOR_UPDATE,
+    EVENT_SUPPORTED_CHANGED,
+    EXTRA_PLACEHOLDERS,
     HASSIO_ADDON_UPDATE_INTERVAL,
+    HASSIO_ISSUES_UPDATE_INTERVAL,
     HASSIO_MAIN_UPDATE_INTERVAL,
     HASSIO_STATS_UPDATE_INTERVAL,
+    ISSUE_KEY_ADDON_APP_PORT_CONFLICT,
+    ISSUE_KEY_ADDON_BOOT_FAIL,
+    ISSUE_KEY_ADDON_DEPRECATED_ARCH,
+    ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
+    ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
+    ISSUE_KEY_ADDON_PWNED,
+    ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
+    ISSUE_KEY_SYSTEM_FREE_SPACE,
+    ISSUE_MOUNT_MOUNT_FAILED,
+    PLACEHOLDER_KEY_ADDON,
+    PLACEHOLDER_KEY_ADDON_URL,
+    PLACEHOLDER_KEY_FREE_SPACE,
+    PLACEHOLDER_KEY_PORT,
+    PLACEHOLDER_KEY_REASON,
+    PLACEHOLDER_KEY_REFERENCE,
     REQUEST_REFRESH_DELAY,
     STARTUP_COMPLETE,
     SUPERVISOR_CONTAINER,
@@ -81,11 +122,512 @@ from .const import (
 )
 from .exceptions import HassioNotReadyError
 from .handler import get_supervisor_client
-
-if TYPE_CHECKING:
-    from .issues import SupervisorIssues
+from .issues import Issue, IssueDataType, Suggestion
 
 _LOGGER = logging.getLogger(__name__)
+
+ISSUE_KEY_UNHEALTHY = "unhealthy"
+ISSUE_KEY_UNSUPPORTED = "unsupported"
+ISSUE_ID_UNHEALTHY = "unhealthy_system"
+ISSUE_ID_UNSUPPORTED = "unsupported_system"
+
+INFO_URL_UNHEALTHY = "https://www.home-assistant.io/more-info/unhealthy"
+INFO_URL_UNSUPPORTED = "https://www.home-assistant.io/more-info/unsupported"
+
+# Some unsupported reasons also mark the system as unhealthy. If the unsupported reason
+# provides no additional information beyond the unhealthy one then skip that repair.
+UNSUPPORTED_SKIP_REPAIR = {"privileged"}
+
+# Keys (type + context) of issues that when found should be made into a repair.
+ISSUE_KEYS_FOR_REPAIRS = {
+    ISSUE_KEY_ADDON_APP_PORT_CONFLICT,
+    ISSUE_KEY_ADDON_BOOT_FAIL,
+    ISSUE_MOUNT_MOUNT_FAILED,
+    "issue_system_multiple_data_disks",
+    "issue_system_reboot_required",
+    ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
+    ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
+    ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
+    "issue_system_disk_lifetime",
+    ISSUE_KEY_SYSTEM_FREE_SPACE,
+    ISSUE_KEY_ADDON_PWNED,
+    ISSUE_KEY_ADDON_DEPRECATED_ARCH,
+    "issue_system_ntp_sync_failed",
+}
+
+
+@dataclass(slots=True, frozen=True)
+class IssueSubscription:
+    """Subscribe for updates on supervisor issues matching a key."""
+
+    event_callback: Callable[[IssueSubscriptionEvent], None]
+    key: str
+
+    def __post_init__(self) -> None:
+        """Validate inputs."""
+        if not self.key:
+            raise ValueError("A key must be provided!")
+        if not is_callback_check_partial(self.event_callback):
+            raise ValueError("event_callback must be a homeassistant.core.callback!")
+
+    def matches(self, issue: Issue) -> bool:
+        """Return true if issue matches this subscription."""
+        return issue.key == self.key
+
+
+@dataclass(slots=True, frozen=True)
+class IssueSubscriptionEvent:
+    """Issue subscription event."""
+
+    event: Literal["changed", "removed"]
+    issue: Issue
+
+
+@dataclass(slots=True, frozen=True)
+class SupervisorIssuesData:
+    """Data class for supervisor issues."""
+
+    unhealthy_reasons: set[str]
+    unsupported_reasons: set[str]
+    issues: dict[UUID, Issue]
+
+
+@callback
+def presentable_issue_suggestions(
+    hass: HomeAssistant, issue: Issue
+) -> list[Suggestion]:
+    """Return the issue's suggestions the repair fix flow can present.
+
+    Filters out suggestions this Core version has no fix flow translation
+    for; an empty result means the repair is not fixable here. Filtered
+    suggestions stay applicable via the Supervisor API and CLI.
+    """
+    if not issue.suggestions:
+        return []
+
+    # Key availability is language independent — check against English,
+    # which is always cached, unlike the configured language right after
+    # a language switch
+    translations = async_get_cached_translations(hass, LOCALE_EN, "issues", DOMAIN)
+    prefix = f"component.{DOMAIN}.issues.{issue.key}.fix_flow.step"
+    if not any(key.startswith(prefix) for key in translations):
+        # This version of Core shipped an unfixable repair for this issue
+        # (a repair is either always or never fixable per issue key) —
+        # drop all suggestions, including any would break the repair
+        return []
+
+    presentable = [
+        suggestion
+        for suggestion in issue.suggestions
+        # Either a menu option label or a dedicated step (e.g. the
+        # confirmation of a formerly sole suggestion) proves this Core
+        # knows the suggestion for this issue
+        if f"{prefix}.fix_menu.menu_options.{suggestion.key}" in translations
+        or f"{prefix}.{suggestion.key}.description" in translations
+    ]
+    # If nothing is presentable, keep everything: the fix flow strings for
+    # this issue exist, so the repair must stay fixable — and an unlabeled
+    # menu still beats a dead end. The frontend falls back to the raw
+    # option keys.
+    return presentable or issue.suggestions
+
+
+class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
+    """Manage supervisor issues state and repair synchronization."""
+
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+        """Initialize supervisor issues coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name="SupervisorIssuesCoordinator",
+            update_interval=HASSIO_ISSUES_UPDATE_INTERVAL,
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+            ),
+        )
+        self._supervisor_client = get_supervisor_client(hass)
+        self._subscriptions: set[IssueSubscription] = set()
+        self._dispatcher_disconnect: Callable[[], None] | None = (
+            async_dispatcher_connect(
+                self.hass, EVENT_SUPERVISOR_EVENT, self._supervisor_events_to_issues
+            )
+        )
+        # Keep polling active even if initial refresh fails so coordinator can recover.
+        self.async_add_listener(lambda: None)
+
+    @property
+    def unhealthy_reasons(self) -> set[str]:
+        """Get unhealthy reasons. Returns empty set if system is healthy."""
+        return self.data.unhealthy_reasons if self.data is not None else set()
+
+    @property
+    def unsupported_reasons(self) -> set[str]:
+        """Get unsupported reasons. Returns empty set if system is supported."""
+        return self.data.unsupported_reasons if self.data is not None else set()
+
+    @property
+    def issues(self) -> set[Issue]:
+        """Get issues."""
+        if self.data is None:
+            return set()
+        return set(self.data.issues.values())
+
+    def get_issue(self, issue_id: str) -> Issue | None:
+        """Get issue from key."""
+        if self.data is None:
+            return None
+        return self.data.issues.get(UUID(issue_id))
+
+    def subscribe(self, subscription: IssueSubscription) -> CALLBACK_TYPE:
+        """Subscribe to updates for issue key. Callback is used to unsubscribe."""
+        self._subscriptions.add(subscription)
+
+        for match in [issue for issue in self.issues if subscription.matches(issue)]:
+            self._notify_issue_subscription_event(
+                subscription, IssueSubscriptionEvent(event="changed", issue=match)
+            )
+
+        def _unsubscribe() -> None:
+            self._subscriptions.discard(subscription)
+
+        return _unsubscribe
+
+    def _process_issue_change(self, event: IssueSubscriptionEvent) -> None:
+        """Process an issue change by triggering callbacks on subscribers."""
+        for sub in self._subscriptions:
+            if sub.matches(event.issue):
+                self._notify_issue_subscription_event(sub, event)
+
+    def _notify_issue_subscription_event(
+        self, subscription: IssueSubscription, event: IssueSubscriptionEvent
+    ) -> None:
+        """Run a subscription callback and log callback failures."""
+        try:
+            subscription.event_callback(event)
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error(
+                "Error encountered processing Supervisor issue (%s %s %s) - %s",
+                event.issue.key,
+                event.issue.reference,
+                event.issue.uuid,
+                err,
+            )
+
+    @staticmethod
+    def _issue_equal(previous_issue: Issue, issue: Issue) -> bool:
+        """Return true if issues are equal including suggestions."""
+        return (
+            previous_issue == issue and previous_issue.suggestions == issue.suggestions
+        )
+
+    def _process_reason_deltas(
+        self,
+        previous_data: SupervisorIssuesData,
+        current_data: SupervisorIssuesData,
+    ) -> None:
+        """Create/delete unhealthy and unsupported repairs based on reason deltas."""
+        for unhealthy in (
+            current_data.unhealthy_reasons - previous_data.unhealthy_reasons
+        ):
+            if unhealthy in UnhealthyReason:
+                translation_key = f"{ISSUE_KEY_UNHEALTHY}_{unhealthy}"
+                translation_placeholders = None
+            else:
+                translation_key = ISSUE_KEY_UNHEALTHY
+                translation_placeholders = {PLACEHOLDER_KEY_REASON: unhealthy}
+
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"{ISSUE_ID_UNHEALTHY}_{unhealthy}",
+                is_fixable=False,
+                learn_more_url=f"{INFO_URL_UNHEALTHY}/{unhealthy}",
+                severity=IssueSeverity.CRITICAL,
+                translation_key=translation_key,
+                translation_placeholders=translation_placeholders,
+            )
+
+        for fixed in previous_data.unhealthy_reasons - current_data.unhealthy_reasons:
+            async_delete_issue(self.hass, DOMAIN, f"{ISSUE_ID_UNHEALTHY}_{fixed}")
+
+        for unsupported in (
+            current_data.unsupported_reasons
+            - UNSUPPORTED_SKIP_REPAIR
+            - previous_data.unsupported_reasons
+        ):
+            if unsupported in UnsupportedReason:
+                translation_key = f"{ISSUE_KEY_UNSUPPORTED}_{unsupported}"
+                translation_placeholders = None
+            else:
+                translation_key = ISSUE_KEY_UNSUPPORTED
+                translation_placeholders = {PLACEHOLDER_KEY_REASON: unsupported}
+
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"{ISSUE_ID_UNSUPPORTED}_{unsupported}",
+                is_fixable=False,
+                learn_more_url=f"{INFO_URL_UNSUPPORTED}/{unsupported}",
+                severity=IssueSeverity.WARNING,
+                translation_key=translation_key,
+                translation_placeholders=translation_placeholders,
+            )
+
+        for fixed in previous_data.unsupported_reasons - (
+            current_data.unsupported_reasons - UNSUPPORTED_SKIP_REPAIR
+        ):
+            async_delete_issue(self.hass, DOMAIN, f"{ISSUE_ID_UNSUPPORTED}_{fixed}")
+
+    def _create_or_update_issue_repair(self, issue: Issue) -> None:
+        """Create/update a repair for an issue if needed."""
+        if issue.key not in ISSUE_KEYS_FOR_REPAIRS:
+            return
+
+        presentable = presentable_issue_suggestions(self.hass, issue)
+
+        # A non-fixable repair renders the issue description, which may
+        # use the extra placeholders; a fixable one uses the fix flow,
+        # which computes its own placeholders
+        if not presentable and issue.key in EXTRA_PLACEHOLDERS:
+            placeholders: dict[str, str] = EXTRA_PLACEHOLDERS[issue.key].copy()
+        else:
+            placeholders = {}
+
+        if issue.reference:
+            placeholders[PLACEHOLDER_KEY_REFERENCE] = issue.reference
+
+            if issue.key in {
+                ISSUE_KEY_ADDON_APP_PORT_CONFLICT,
+                ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
+                ISSUE_KEY_ADDON_PWNED,
+            }:
+                placeholders[PLACEHOLDER_KEY_ADDON_URL] = (
+                    f"/hassio/addon/{issue.reference}"
+                )
+                addons_list = get_addons_list(self.hass) or []
+                placeholders[PLACEHOLDER_KEY_ADDON] = issue.reference
+                for addon in addons_list:
+                    if addon[ATTR_SLUG] == issue.reference:
+                        placeholders[PLACEHOLDER_KEY_ADDON] = addon[ATTR_NAME]
+                        break
+
+                if (
+                    issue.key == ISSUE_KEY_ADDON_APP_PORT_CONFLICT
+                    and issue.reference_extra
+                ):
+                    placeholders[PLACEHOLDER_KEY_PORT] = str(
+                        issue.reference_extra["port"]
+                    )
+
+        elif issue.key == ISSUE_KEY_SYSTEM_FREE_SPACE:
+            host_info = get_host_info(self.hass)
+            if host_info and "disk_free" in host_info:
+                placeholders[PLACEHOLDER_KEY_FREE_SPACE] = str(host_info["disk_free"])
+            else:
+                placeholders[PLACEHOLDER_KEY_FREE_SPACE] = "<2"
+
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            issue.uuid.hex,
+            is_fixable=bool(presentable),
+            severity=IssueSeverity.WARNING,
+            translation_key=issue.key,
+            translation_placeholders=placeholders or None,
+        )
+
+    def _delete_issue_repair(self, issue: Issue) -> None:
+        """Delete repair for issue if it maps to a repair."""
+        if issue.key in ISSUE_KEYS_FOR_REPAIRS:
+            async_delete_issue(self.hass, DOMAIN, issue.uuid.hex)
+
+    def _process_issue_deltas(
+        self,
+        previous_data: SupervisorIssuesData,
+        current_data: SupervisorIssuesData,
+    ) -> None:
+        """Create/delete issue repairs and notify subscribers based on issue deltas."""
+        issue_registry = ir.async_get(self.hass)
+        for issue in current_data.issues.values():
+            previous_issue = previous_data.issues.get(issue.uuid)
+            changed = previous_issue is None or not self._issue_equal(
+                previous_issue, issue
+            )
+
+            # Update the repair on changes, and re-create it if the registry
+            # entry went missing: a finished repair flow deletes the entry
+            # even when applying the suggestion failed in Supervisor and the
+            # issue is unchanged.
+            if changed or (
+                issue.key in ISSUE_KEYS_FOR_REPAIRS
+                and not issue_registry.async_get_issue(DOMAIN, issue.uuid.hex)
+            ):
+                self._create_or_update_issue_repair(issue)
+
+            if changed:
+                self._process_issue_change(
+                    IssueSubscriptionEvent(event="changed", issue=issue)
+                )
+
+        for issue_uuid, issue in previous_data.issues.items():
+            if issue_uuid not in current_data.issues:
+                self._delete_issue_repair(issue)
+                self._process_issue_change(
+                    IssueSubscriptionEvent(event="removed", issue=issue)
+                )
+
+    @override
+    async def _async_update_data(self) -> SupervisorIssuesData:
+        """Update issues data from Supervisor resolution center."""
+        # Translations decide which suggestions a repair can present and
+        # with that its fixable state — make sure they are loaded before
+        # the repairs are created (no-op once cached).
+        await async_load_integrations(self.hass, {DOMAIN})
+
+        try:
+            data = await self._supervisor_client.resolution.info()
+        except SupervisorError as err:
+            raise UpdateFailed(f"Error on Supervisor API: {err}") from err
+
+        issue_from_data_results = await asyncio.gather(
+            *(self._issue_from_data(issue) for issue in data.issues)
+        )
+        issues = {
+            issue_from_data.uuid: issue_from_data
+            for issue_from_data in issue_from_data_results
+            if issue_from_data is not None
+        }
+
+        return SupervisorIssuesData(
+            unhealthy_reasons={str(reason) for reason in data.unhealthy},
+            unsupported_reasons={str(reason) for reason in data.unsupported},
+            issues=issues,
+        )
+
+    async def _issue_from_data(self, data: SupervisorIssue) -> Issue | None:
+        """Build an Issue model from Supervisor issue data and fetched suggestions."""
+        try:
+            suggestions = (
+                await self._supervisor_client.resolution.suggestions_for_issue(
+                    data.uuid
+                )
+            )
+        except SupervisorError:
+            _LOGGER.error(
+                "Could not get suggestions for supervisor issue %s, skipping it",
+                data.uuid.hex,
+            )
+            return None
+
+        return Issue(
+            uuid=data.uuid,
+            type=str(data.type),
+            context=data.context,
+            reference=data.reference,
+            reference_extra=data.reference_extra,
+            suggestions=[
+                Suggestion(
+                    uuid=suggestion.uuid,
+                    type=str(suggestion.type),
+                    context=suggestion.context,
+                    reference=suggestion.reference,
+                    reference_extra=suggestion.reference_extra,
+                )
+                for suggestion in suggestions
+            ],
+        )
+
+    @override
+    async def _async_refresh(
+        self,
+        log_failures: bool = True,
+        raise_on_auth_failed: bool = False,
+        scheduled: bool = False,
+        raise_on_entry_error: bool = False,
+    ) -> None:
+        """Refresh issue data and apply repair/subscription deltas."""
+        previous_data = self.data or SupervisorIssuesData(set(), set(), {})
+        await super()._async_refresh(
+            log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
+        )
+        if self.last_update_success and self.data is not None:
+            self._process_reason_deltas(previous_data, self.data)
+            self._process_issue_deltas(previous_data, self.data)
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Shut down the coordinator."""
+        await super().async_shutdown()
+        if self._dispatcher_disconnect:
+            self._dispatcher_disconnect()
+            self._dispatcher_disconnect = None
+
+    @callback
+    def _supervisor_events_to_issues(self, event: dict[str, Any]) -> None:
+        """Update issues data from supervisor events."""
+        if ATTR_WS_EVENT not in event:
+            return
+
+        if (
+            event[ATTR_WS_EVENT] == EVENT_SUPERVISOR_UPDATE
+            and event.get(ATTR_UPDATE_KEY) == UPDATE_KEY_SUPERVISOR
+            and event.get(ATTR_DATA, {}).get(ATTR_STARTUP) == STARTUP_COMPLETE
+        ):
+            self.config_entry.async_create_task(self.hass, self.async_refresh())
+            return
+
+        previous_data = self.data or SupervisorIssuesData(set(), set(), {})
+
+        if event[ATTR_WS_EVENT] == EVENT_HEALTH_CHANGED:
+            unhealthy_reasons = (
+                set()
+                if event[ATTR_DATA][ATTR_HEALTHY]
+                else set(event[ATTR_DATA][ATTR_UNHEALTHY_REASONS])
+            )
+            updated_data = SupervisorIssuesData(
+                unhealthy_reasons=unhealthy_reasons,
+                unsupported_reasons=set(previous_data.unsupported_reasons),
+                issues=dict(previous_data.issues),
+            )
+        elif event[ATTR_WS_EVENT] == EVENT_SUPPORTED_CHANGED:
+            unsupported_reasons = (
+                set()
+                if event[ATTR_DATA][ATTR_SUPPORTED]
+                else set(event[ATTR_DATA][ATTR_UNSUPPORTED_REASONS])
+            )
+            updated_data = SupervisorIssuesData(
+                unhealthy_reasons=set(previous_data.unhealthy_reasons),
+                unsupported_reasons=unsupported_reasons,
+                issues=dict(previous_data.issues),
+            )
+        elif event[ATTR_WS_EVENT] == EVENT_ISSUE_CHANGED:
+            issue = Issue.from_dict(cast(IssueDataType, event[ATTR_DATA]))
+            updated_issues = dict(previous_data.issues)
+            updated_issues[issue.uuid] = issue
+            updated_data = SupervisorIssuesData(
+                unhealthy_reasons=set(previous_data.unhealthy_reasons),
+                unsupported_reasons=set(previous_data.unsupported_reasons),
+                issues=updated_issues,
+            )
+        elif event[ATTR_WS_EVENT] == EVENT_ISSUE_REMOVED:
+            issue = Issue.from_dict(cast(IssueDataType, event[ATTR_DATA]))
+            updated_issues = dict(previous_data.issues)
+            updated_issues.pop(issue.uuid, None)
+            updated_data = SupervisorIssuesData(
+                unhealthy_reasons=set(previous_data.unhealthy_reasons),
+                unsupported_reasons=set(previous_data.unsupported_reasons),
+                issues=updated_issues,
+            )
+        else:
+            return
+
+        self.async_set_updated_data(updated_data)
+        self._process_reason_deltas(previous_data, updated_data)
+        self._process_issue_deltas(previous_data, updated_data)
 
 
 @dataclass(slots=True, frozen=True)
@@ -291,6 +833,7 @@ class HassioMainData:
     host: HostInfo
     mounts: dict[str, CIFSMountResponse | NFSMountResponse]
     os: OSInfo | None
+    panels: dict[str, IngressPanel]
 
     def to_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the data."""
@@ -300,6 +843,7 @@ class HassioMainData:
             "host": self.host.to_dict(),
             "mounts": {name: mount.to_dict() for name, mount in self.mounts.items()},
             "os": self.os.to_dict() if self.os is not None else None,
+            "panels": {slug: panel.to_dict() for slug, panel in self.panels.items()},
         }
 
 
@@ -546,7 +1090,7 @@ def get_core_info(hass: HomeAssistant) -> dict[str, Any]:
 
 
 @callback
-def get_issues_info(hass: HomeAssistant) -> SupervisorIssues | None:
+def get_issues_info(hass: HomeAssistant) -> SupervisorIssuesCoordinator | None:
     """Return Supervisor issues info.
 
     Async friendly.
@@ -663,11 +1207,11 @@ def async_register_supervisor_in_dev_reg(
 
 @callback
 def async_remove_devices_from_dev_reg(
-    dev_reg: dr.DeviceRegistry, devices: set[str]
+    entry_id: str, dev_reg: dr.DeviceRegistry, devices: set[str]
 ) -> None:
     """Remove devices from the device registry."""
     for device in devices:
-        if dev := dev_reg.async_get_device(identifiers={(DOMAIN, device)}):
+        if dev := dev_reg.async_get_device_by_identifier((DOMAIN, device), entry_id):
             dev_reg.async_remove_device(dev.id)
 
 
@@ -811,6 +1355,23 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         self.dev_reg = dev_reg
         self._addon_info_subscriptions: defaultdict[str, set[str]] = defaultdict(set)
         self.supervisor_client = get_supervisor_client(hass)
+        self._dispatcher_disconnect = async_dispatcher_connect(
+            hass, EVENT_SUPERVISOR_EVENT, self._supervisor_event
+        )
+
+    @callback
+    def _supervisor_event(self, event: dict[str, Any]) -> None:
+        """Refresh add-on data when Supervisor reloads the store."""
+        if event.get(ATTR_WS_EVENT) != EVENT_STORE_RELOADED:
+            return
+        # Without listeners there are no add-on entities to keep in sync.
+        # Scheduled polling is paused in that case as well, so don't let
+        # store reload events trigger refreshes either.
+        if not self._listeners:
+            return
+        self.config_entry.async_create_task(
+            self.hass, self.async_refresh_after_store_reload()
+        )
 
     @override
     async def _async_update_data(self) -> HassioAddonData:
@@ -874,13 +1435,11 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         # Remove add-ons that are no longer installed from device registry
         supervisor_addon_devices = {
             list(device.identifiers)[0][1]
-            for device in self.dev_reg.devices.get_devices_for_config_entry_id(
-                self.entry_id
-            )
+            for device in dr.async_entries_for_config_entry(self.dev_reg, self.entry_id)
             if device.model == SupervisorEntityModel.ADDON
         }
         if stale_addons := supervisor_addon_devices - set(new_data.addons):
-            async_remove_devices_from_dev_reg(self.dev_reg, stale_addons)
+            async_remove_devices_from_dev_reg(self.entry_id, self.dev_reg, stale_addons)
 
         # If there are new add-ons, we should reload the config entry so we can
         # create new devices and entities. We can return the new data because
@@ -952,6 +1511,11 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
             log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
         )
 
+    async def async_refresh_after_store_reload(self) -> None:
+        """Refresh addon data when the store was already reloaded externally."""
+        async with self._debounced_refresh.async_lock():
+            await super()._async_refresh(log_failures=True)
+
     async def force_addon_info_data_refresh(self, addon_slug: str) -> None:
         """Force refresh of addon info data for a specific addon."""
         try:
@@ -973,6 +1537,12 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
             # Update addon info cache in hass.data
             addon_info_cache = self.hass.data.setdefault(DATA_ADDONS_INFO, {})
             addon_info_cache[slug] = info
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Shut down and clean up when config entry unloaded."""
+        await super().async_shutdown()
+        self._dispatcher_disconnect()
 
 
 class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
@@ -1014,6 +1584,25 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         ):
             self.config_entry.async_create_task(self.hass, self.async_request_refresh())
 
+    @callback
+    def async_push_panel(self, addon: str, panel: IngressPanel) -> None:
+        """Apply a Supervisor panel push to cached data without touching refresh state."""
+        self.data = replace(self.data, panels={**self.data.panels, addon: panel})
+        self.async_update_listeners()
+
+    @callback
+    def async_push_panel_removal(self, addon: str) -> None:
+        """Apply a Supervisor panel removal push to cached data."""
+        if addon not in self.data.panels:
+            return
+        self.data = replace(
+            self.data,
+            panels={
+                slug: panel for slug, panel in self.data.panels.items() if slug != addon
+            },
+        )
+        self.async_update_listeners()
+
     @override
     async def _async_update_data(self) -> HassioMainData:
         """Update data via library."""
@@ -1023,7 +1612,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         try:
             # Cast is required here because asyncio.gather only has overloads to
             # maintain typing for 6 arguments. It falls back to list[<common parent>]
-            # after that which is what mypy sees here since we have 7 API calls.
+            # after that which is what mypy sees here since we have 8 API calls.
             (
                 info,
                 core_info,
@@ -1032,6 +1621,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
                 host_info,
                 store_info,
                 network_info,
+                panels_info,
             ) = cast(
                 tuple[
                     RootInfo,
@@ -1041,6 +1631,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
                     HostInfo,
                     StoreInfo,
                     NetworkInfo,
+                    dict[str, IngressPanel],
                 ],
                 await asyncio.gather(
                     client.info(),
@@ -1050,6 +1641,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
                     client.host.info(),
                     client.store.info(),
                     client.network.info(),
+                    client.ingress.panels(),
                 ),
             )
             mounts_info = await client.mounts.info()
@@ -1064,6 +1656,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
             host=host_info,
             mounts={mount.name: mount for mount in mounts_info.mounts},
             os=os_info if self.is_hass_os else None,
+            panels=panels_info,
         )
 
         # Update hass.data for legacy accessor functions
@@ -1091,18 +1684,20 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         # Remove mounts that no longer exists from device registry
         supervisor_mount_devices = {
             device.name
-            for device in self.dev_reg.devices.get_devices_for_config_entry_id(
-                self.entry_id
-            )
+            for device in dr.async_entries_for_config_entry(self.dev_reg, self.entry_id)
             if device.model == SupervisorEntityModel.MOUNT
         }
         if stale_mounts := supervisor_mount_devices - set(new_data.mounts):
             async_remove_devices_from_dev_reg(
-                self.dev_reg, {f"mount_{stale_mount}" for stale_mount in stale_mounts}
+                self.entry_id,
+                self.dev_reg,
+                {f"mount_{stale_mount}" for stale_mount in stale_mounts},
             )
 
         if not self.is_hass_os and (
-            dev := self.dev_reg.async_get_device(identifiers={(DOMAIN, "OS")})
+            dev := self.dev_reg.async_get_device_by_identifier(
+                (DOMAIN, "OS"), self.entry_id
+            )
         ):
             # Remove the OS device if it exists and the installation is not hassos
             self.dev_reg.async_remove_device(dev.id)

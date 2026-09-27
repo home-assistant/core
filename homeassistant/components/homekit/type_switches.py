@@ -13,21 +13,23 @@ from pyhap.const import (
 )
 
 from homeassistant.components import button, input_button
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
 from homeassistant.components.input_number import (
     ATTR_VALUE as INPUT_NUMBER_ATTR_VALUE,
     CONF_MAX as INPUT_NUMBER_CONF_MAX,
     CONF_MIN as INPUT_NUMBER_CONF_MIN,
     CONF_STEP as INPUT_NUMBER_CONF_STEP,
-    DOMAIN as INPUT_NUMBER_DOMAIN,
     SERVICE_SET_VALUE as INPUT_NUMBER_SERVICE_SET_VALUE,
 )
-from homeassistant.components.input_select import ATTR_OPTIONS, SERVICE_SELECT_OPTION
+from homeassistant.components.input_select import SERVICE_SELECT_OPTION
 from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
     SERVICE_DOCK,
     SERVICE_START_MOWING,
     LawnMowerActivity,
 )
+from homeassistant.components.select import SelectEntityCapabilityAttribute
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
@@ -38,7 +40,6 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_TYPE,
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
@@ -48,6 +49,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OPEN,
     STATE_OPENING,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.helpers.event import async_call_later
@@ -193,9 +195,9 @@ class Switch(HomeAccessory):
         if self._domain == "script":
             service = self._object_id
             params = {}
-        elif self._domain == button.DOMAIN:
+        elif self._domain == BUTTON_DOMAIN:
             service = button.SERVICE_PRESS
-        elif self._domain == input_button.DOMAIN:
+        elif self._domain == INPUT_BUTTON_DOMAIN:
             service = input_button.SERVICE_PRESS
         else:
             service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
@@ -232,7 +234,7 @@ class Vacuum(Switch):
         state = self.hass.states.get(self.entity_id)
         assert state
 
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         if value:
             sup_start = features & VacuumEntityFeature.START
@@ -401,8 +403,9 @@ class ValveBase(HomeAccessory):
     def set_duration(self, value: int) -> None:
         """Set default duration for how long the valve should remain open."""
         _LOGGER.debug("%s: Set default run time to %s", self.entity_id, value)
+        assert self.linked_duration_entity
         self.async_call_service(
-            INPUT_NUMBER_DOMAIN,
+            split_entity_id(self.linked_duration_entity)[0],
             INPUT_NUMBER_SERVICE_SET_VALUE,
             {
                 ATTR_ENTITY_ID: self.linked_duration_entity,
@@ -502,13 +505,28 @@ class ValveSwitch(ValveBase):
 class Valve(ValveBase):
     """Generate a Valve accessory from a HomeAssistant valve."""
 
-    def __init__(self, *args: Any) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        driver: HomeDriver,
+        name: str,
+        entity_id: str,
+        aid: int,
+        config: dict[str, Any],
+        *args: Any,
+    ) -> None:
         """Initialize a Valve accessory object."""
         super().__init__(
-            TYPE_VALVE,
+            config.get(CONF_TYPE, TYPE_VALVE),
             VALVE_OPEN_STATES,
             SERVICE_OPEN_VALVE,
             SERVICE_CLOSE_VALVE,
+            hass,
+            driver,
+            name,
+            entity_id,
+            aid,
+            config,
             *args,
         )
 
@@ -525,7 +543,7 @@ class SelectSwitch(HomeAccessory):
         assert state
 
         self.select_chars: dict[str, Characteristic] = {}
-        options = state.attributes[ATTR_OPTIONS]
+        options = state.attributes[SelectEntityCapabilityAttribute.OPTIONS]
         for option in options:
             serv_option = self.add_preload_service(
                 SERV_OUTLET,

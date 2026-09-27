@@ -3,8 +3,8 @@
 from enum import Enum
 from typing import Any, override
 
+import probatio
 import smarttub
-import voluptuous as vol
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_MODE
@@ -23,12 +23,16 @@ ATTR_CYCLE_LAST_UPDATED = "cycle_last_updated"
 # the hour of the day at which to start the cycle (0-23)
 ATTR_START_HOUR = "start_hour"
 
-SET_PRIMARY_FILTRATION_SCHEMA = vol.All(
+SET_PRIMARY_FILTRATION_SCHEMA = probatio.All(
     cv.has_at_least_one_key(ATTR_DURATION, ATTR_START_HOUR),
     cv.make_entity_service_schema(
         {
-            vol.Optional(ATTR_DURATION): vol.All(int, vol.Range(min=1, max=24)),
-            vol.Optional(ATTR_START_HOUR): vol.All(int, vol.Range(min=0, max=23)),
+            probatio.Optional(ATTR_DURATION): probatio.All(
+                int, probatio.Range(min=1, max=24)
+            ),
+            probatio.Optional(ATTR_START_HOUR): probatio.All(
+                int, probatio.Range(min=0, max=23)
+            ),
         },
     ),
 )
@@ -36,7 +40,7 @@ SET_PRIMARY_FILTRATION_SCHEMA = vol.All(
 PARALLEL_UPDATES = 0
 
 SET_SECONDARY_FILTRATION_SCHEMA: VolDictType = {
-    vol.Required(ATTR_MODE): vol.In(
+    probatio.Required(ATTR_MODE): probatio.In(
         {
             mode.name.lower()
             for mode in smarttub.SpaSecondaryFiltrationCycle.SecondaryFiltrationMode

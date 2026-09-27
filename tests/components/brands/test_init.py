@@ -26,6 +26,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 FAKE_PNG = b"\x89PNG\r\n\x1a\nfakeimagedata"
+BRAND_PNG = b"\x89PNG\r\n\x1a\nfakebranddata"
 
 
 @pytest.fixture(autouse=True)
@@ -73,7 +74,7 @@ async def test_integration_view_serves_from_cdn(
 ) -> None:
     """Test serving an integration brand image from the CDN."""
     aioclient_mock.get(
-        f"{BRANDS_CDN_URL}/brands/hue/icon.png",
+        f"{BRANDS_CDN_URL}/hue/icon.png",
         content=FAKE_PNG,
     )
 
@@ -85,12 +86,68 @@ async def test_integration_view_serves_from_cdn(
     assert await resp.read() == FAKE_PNG
 
 
+async def test_integration_view_prefers_integration_over_brand(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that the integration image wins over a brand image of the same name."""
+    aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/google/icon.png",
+        content=FAKE_PNG,
+    )
+    aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/brands/google/icon.png",
+        content=BRAND_PNG,
+    )
+
+    client = await hass_client()
+    resp = await client.get("/api/brands/integration/google/icon.png")
+
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == FAKE_PNG
+    assert aioclient_mock.call_count == 1
+
+
+async def test_integration_view_falls_back_to_brand(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that a brand-only domain is served from the brand namespace."""
+    aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/apple/icon.png",
+        status=HTTPStatus.NOT_FOUND,
+    )
+    aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/brands/apple/icon.png",
+        content=BRAND_PNG,
+    )
+
+    client = await hass_client()
+    resp = await client.get("/api/brands/integration/apple/icon.png")
+
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == BRAND_PNG
+    assert aioclient_mock.call_count == 2
+
+    # The integration 404 marker and the brand image are cached separately
+    resp = await client.get("/api/brands/integration/apple/icon.png")
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == BRAND_PNG
+    assert aioclient_mock.call_count == 2
+
+
 async def test_integration_view_default_placeholder_fallback(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test that CDN 404 serves placeholder by default."""
+    aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/nonexistent/icon.png",
+        status=HTTPStatus.NOT_FOUND,
+    )
     aioclient_mock.get(
         f"{BRANDS_CDN_URL}/brands/nonexistent/icon.png",
         status=HTTPStatus.NOT_FOUND,
@@ -113,6 +170,10 @@ async def test_integration_view_no_placeholder(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test that CDN 404 returns 404 when placeholder=no is set."""
+    aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/nonexistent/icon.png",
+        status=HTTPStatus.NOT_FOUND,
+    )
     aioclient_mock.get(
         f"{BRANDS_CDN_URL}/brands/nonexistent/icon.png",
         status=HTTPStatus.NOT_FOUND,
@@ -187,7 +248,7 @@ async def test_integration_view_all_allowed_images(
     ]
     for image in allowed:
         aioclient_mock.get(
-            f"{BRANDS_CDN_URL}/brands/hue/{image}",
+            f"{BRANDS_CDN_URL}/hue/{image}",
             content=FAKE_PNG,
         )
 
@@ -203,6 +264,10 @@ async def test_integration_view_cdn_error_returns_none(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test that CDN connection errors result in 404 with placeholder=no."""
+    aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/broken/icon.png",
+        exc=ClientError(),
+    )
     aioclient_mock.get(
         f"{BRANDS_CDN_URL}/brands/broken/icon.png",
         exc=ClientError(),
@@ -220,6 +285,10 @@ async def test_integration_view_cdn_unexpected_status(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test that unexpected CDN status codes result in 404 with placeholder=no."""
+    aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/broken/icon.png",
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
+    )
     aioclient_mock.get(
         f"{BRANDS_CDN_URL}/brands/broken/icon.png",
         status=HTTPStatus.INTERNAL_SERVER_ERROR,
@@ -243,7 +312,7 @@ async def test_disk_cache_hit(
 ) -> None:
     """Test that a second request is served from disk cache."""
     aioclient_mock.get(
-        f"{BRANDS_CDN_URL}/brands/hue/icon.png",
+        f"{BRANDS_CDN_URL}/hue/icon.png",
         content=FAKE_PNG,
     )
 
@@ -268,21 +337,26 @@ async def test_disk_cache_404_marker(
 ) -> None:
     """Test that 404s are cached as empty files."""
     aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/nothing/icon.png",
+        status=HTTPStatus.NOT_FOUND,
+    )
+    aioclient_mock.get(
         f"{BRANDS_CDN_URL}/brands/nothing/icon.png",
         status=HTTPStatus.NOT_FOUND,
     )
 
     client = await hass_client()
 
-    # First request: CDN returns 404, cached as empty file
+    # First request: CDN returns 404 for both namespaces, each cached as an
+    # empty file
     resp = await client.get("/api/brands/integration/nothing/icon.png?placeholder=no")
     assert resp.status == HTTPStatus.NOT_FOUND
-    assert aioclient_mock.call_count == 1
+    assert aioclient_mock.call_count == 2
 
-    # Second request: served from cached 404 marker
+    # Second request: served from cached 404 markers
     resp = await client.get("/api/brands/integration/nothing/icon.png?placeholder=no")
     assert resp.status == HTTPStatus.NOT_FOUND
-    assert aioclient_mock.call_count == 1  # No additional CDN call
+    assert aioclient_mock.call_count == 2  # No additional CDN call
 
 
 async def test_stale_cache_triggers_background_refresh(
@@ -292,7 +366,7 @@ async def test_stale_cache_triggers_background_refresh(
 ) -> None:
     """Test that stale cache entries trigger background refresh."""
     aioclient_mock.get(
-        f"{BRANDS_CDN_URL}/brands/hue/icon.png",
+        f"{BRANDS_CDN_URL}/hue/icon.png",
         content=FAKE_PNG,
     )
 
@@ -331,6 +405,10 @@ async def test_stale_cache_404_marker_with_placeholder(
 ) -> None:
     """Test that stale cached 404 serves placeholder by default."""
     aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/gone/icon.png",
+        status=HTTPStatus.NOT_FOUND,
+    )
+    aioclient_mock.get(
         f"{BRANDS_CDN_URL}/brands/gone/icon.png",
         status=HTTPStatus.NOT_FOUND,
     )
@@ -344,7 +422,7 @@ async def test_stale_cache_404_marker_with_placeholder(
     # First request caches the 404 (with placeholder=no)
     resp = await client.get("/api/brands/integration/gone/icon.png?placeholder=no")
     assert resp.status == HTTPStatus.NOT_FOUND
-    assert aioclient_mock.call_count == 1
+    assert aioclient_mock.call_count == 2
 
     # Make the cache stale
     cache_path = (
@@ -367,6 +445,10 @@ async def test_stale_cache_404_marker_no_placeholder(
 ) -> None:
     """Test that stale cached 404 with placeholder=no returns 404."""
     aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/gone/icon.png",
+        status=HTTPStatus.NOT_FOUND,
+    )
+    aioclient_mock.get(
         f"{BRANDS_CDN_URL}/brands/gone/icon.png",
         status=HTTPStatus.NOT_FOUND,
     )
@@ -376,7 +458,7 @@ async def test_stale_cache_404_marker_no_placeholder(
     # First request caches the 404
     resp = await client.get("/api/brands/integration/gone/icon.png?placeholder=no")
     assert resp.status == HTTPStatus.NOT_FOUND
-    assert aioclient_mock.call_count == 1
+    assert aioclient_mock.call_count == 2
 
     # Make the cache stale
     cache_path = (
@@ -390,9 +472,9 @@ async def test_stale_cache_404_marker_no_placeholder(
     resp = await client.get("/api/brands/integration/gone/icon.png?placeholder=no")
     assert resp.status == HTTPStatus.NOT_FOUND
 
-    # Background refresh should have been triggered
+    # Background refresh should have been triggered for the stale marker
     await hass.async_block_till_done()
-    assert aioclient_mock.call_count == 2
+    assert aioclient_mock.call_count == 3
 
 
 # ------------------------------------------------------------------
@@ -435,7 +517,7 @@ async def test_custom_integration_no_brand_falls_through(
     custom = _create_custom_integration(hass, "my_custom", has_branding=False)
 
     aioclient_mock.get(
-        f"{BRANDS_CDN_URL}/brands/my_custom/icon.png",
+        f"{BRANDS_CDN_URL}/my_custom/icon.png",
         content=FAKE_PNG,
     )
 
@@ -463,7 +545,7 @@ async def test_custom_integration_brand_missing_file_falls_through(
     brand_dir.mkdir(parents=True, exist_ok=True)
 
     aioclient_mock.get(
-        f"{BRANDS_CDN_URL}/brands/my_custom/icon.png",
+        f"{BRANDS_CDN_URL}/my_custom/icon.png",
         content=FAKE_PNG,
     )
 
@@ -488,7 +570,7 @@ async def test_custom_integration_takes_priority_over_cache(
 
     # Prime the CDN cache first
     aioclient_mock.get(
-        f"{BRANDS_CDN_URL}/brands/my_custom/icon.png",
+        f"{BRANDS_CDN_URL}/my_custom/icon.png",
         content=FAKE_PNG,
     )
 
@@ -672,7 +754,7 @@ async def test_custom_integration_no_fallback_match_falls_through_to_cdn(
     # brand dir exists but is empty - no icon.png either
 
     aioclient_mock.get(
-        f"{BRANDS_CDN_URL}/brands/my_custom/icon.png",
+        f"{BRANDS_CDN_URL}/my_custom/icon.png",
         content=FAKE_PNG,
     )
 
@@ -758,6 +840,10 @@ async def test_cdn_timeout_returns_404(
 ) -> None:
     """Test that CDN timeout results in 404 with placeholder=no."""
     aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/slow/icon.png",
+        exc=TimeoutError(),
+    )
+    aioclient_mock.get(
         f"{BRANDS_CDN_URL}/brands/slow/icon.png",
         exc=TimeoutError(),
     )
@@ -780,7 +866,7 @@ async def test_authenticated_request(
 ) -> None:
     """Test that authenticated requests succeed."""
     aioclient_mock.get(
-        f"{BRANDS_CDN_URL}/brands/hue/icon.png",
+        f"{BRANDS_CDN_URL}/hue/icon.png",
         content=FAKE_PNG,
     )
 
@@ -797,7 +883,7 @@ async def test_token_query_param_authentication(
 ) -> None:
     """Test that a valid access token in query param authenticates."""
     aioclient_mock.get(
-        f"{BRANDS_CDN_URL}/brands/hue/icon.png",
+        f"{BRANDS_CDN_URL}/hue/icon.png",
         content=FAKE_PNG,
     )
 
@@ -857,7 +943,7 @@ async def test_token_rotation(
 ) -> None:
     """Test that access tokens rotate over time."""
     aioclient_mock.get(
-        f"{BRANDS_CDN_URL}/brands/hue/icon.png",
+        f"{BRANDS_CDN_URL}/hue/icon.png",
         content=FAKE_PNG,
     )
 

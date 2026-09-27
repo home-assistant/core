@@ -2,8 +2,8 @@
 
 from datetime import timedelta
 
+import probatio
 from pywaze.route_calculator import WazeRouteCalculator
-import voluptuous as vol
 
 from homeassistant.const import CONF_REGION
 from homeassistant.core import (
@@ -54,11 +54,11 @@ from .coordinator import async_get_travel_times
 from .helpers import base_coordinates_to_tuple
 
 SERVICE_GET_TRAVEL_TIMES = "get_travel_times"
-SERVICE_GET_TRAVEL_TIMES_SCHEMA = vol.Schema(
+SERVICE_GET_TRAVEL_TIMES_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ORIGIN): TextSelector(),
-        vol.Required(CONF_DESTINATION): TextSelector(),
-        vol.Required(CONF_REGION): SelectSelector(
+        probatio.Required(CONF_ORIGIN): TextSelector(),
+        probatio.Required(CONF_DESTINATION): TextSelector(),
+        probatio.Required(CONF_REGION): SelectSelector(
             SelectSelectorConfig(
                 options=REGIONS,
                 mode=SelectSelectorMode.DROPDOWN,
@@ -66,8 +66,10 @@ SERVICE_GET_TRAVEL_TIMES_SCHEMA = vol.Schema(
                 sort=True,
             )
         ),
-        vol.Optional(CONF_REALTIME, default=False): BooleanSelector(),
-        vol.Optional(CONF_VEHICLE_TYPE, default=DEFAULT_VEHICLE_TYPE): SelectSelector(
+        probatio.Optional(CONF_REALTIME, default=False): BooleanSelector(),
+        probatio.Optional(
+            CONF_VEHICLE_TYPE, default=DEFAULT_VEHICLE_TYPE
+        ): SelectSelector(
             SelectSelectorConfig(
                 options=VEHICLE_TYPES,
                 mode=SelectSelectorMode.DROPDOWN,
@@ -75,7 +77,7 @@ SERVICE_GET_TRAVEL_TIMES_SCHEMA = vol.Schema(
                 sort=True,
             )
         ),
-        vol.Optional(CONF_UNITS, default=METRIC_UNITS): SelectSelector(
+        probatio.Optional(CONF_UNITS, default=METRIC_UNITS): SelectSelector(
             SelectSelectorConfig(
                 options=UNITS,
                 mode=SelectSelectorMode.DROPDOWN,
@@ -83,25 +85,27 @@ SERVICE_GET_TRAVEL_TIMES_SCHEMA = vol.Schema(
                 sort=True,
             )
         ),
-        vol.Optional(CONF_AVOID_TOLL_ROADS, default=False): BooleanSelector(),
-        vol.Optional(CONF_AVOID_SUBSCRIPTION_ROADS, default=False): BooleanSelector(),
-        vol.Optional(CONF_AVOID_FERRIES, default=False): BooleanSelector(),
-        vol.Optional(CONF_INCL_FILTER): TextSelector(
+        probatio.Optional(CONF_AVOID_TOLL_ROADS, default=False): BooleanSelector(),
+        probatio.Optional(
+            CONF_AVOID_SUBSCRIPTION_ROADS, default=False
+        ): BooleanSelector(),
+        probatio.Optional(CONF_AVOID_FERRIES, default=False): BooleanSelector(),
+        probatio.Optional(CONF_INCL_FILTER): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 multiple=True,
             ),
         ),
-        vol.Optional(CONF_EXCL_FILTER): TextSelector(
+        probatio.Optional(CONF_EXCL_FILTER): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 multiple=True,
             ),
         ),
-        vol.Optional(CONF_TIME_DELTA): DurationSelector(
+        probatio.Optional(CONF_TIME_DELTA): DurationSelector(
             DurationSelectorConfig(allow_negative=True, enable_second=False)
         ),
-        vol.Optional(CONF_BASE_COORDINATES): LocationSelector(),
+        probatio.Optional(CONF_BASE_COORDINATES): LocationSelector(),
     }
 )
 

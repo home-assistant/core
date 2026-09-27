@@ -3,7 +3,7 @@
 import logging
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -43,10 +43,10 @@ CONF_DEFAULT_FUEL_TYPES = ["E10", "U91"]
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_STATION_ID): cv.positive_int,
-        vol.Optional(CONF_FUEL_TYPES, default=CONF_DEFAULT_FUEL_TYPES): vol.All(
-            cv.ensure_list, [vol.In(CONF_ALLOWED_FUEL_TYPES)]
-        ),
+        probatio.Required(CONF_STATION_ID): cv.positive_int,
+        probatio.Optional(
+            CONF_FUEL_TYPES, default=CONF_DEFAULT_FUEL_TYPES
+        ): probatio.All(cv.ensure_list, [probatio.In(CONF_ALLOWED_FUEL_TYPES)]),
     }
 )
 

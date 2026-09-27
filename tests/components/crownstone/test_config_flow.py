@@ -22,6 +22,7 @@ from homeassistant.components.crownstone.const import (
     MANUAL_PATH,
 )
 from homeassistant.components.usb import USBDevice
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -143,8 +144,15 @@ async def start_config_flow(hass: HomeAssistant, mocked_cloud: MagicMock):
         "homeassistant.components.crownstone.config_flow.CrownstoneCloud",
         return_value=mocked_cloud,
     ):
-        return await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=mocked_login_input
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        return await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=mocked_login_input
         )
 
 

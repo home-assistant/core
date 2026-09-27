@@ -56,6 +56,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
+    from .coordinator import IcloudCalendarCoordinator, IcloudRemindersCoordinator
     from .media_source import PhotoCache
 
 _LOGGER = logging.getLogger(__name__)
@@ -97,6 +98,10 @@ class IcloudAccount:
 
         self._unsub_fetch: CALLBACK_TYPE | None = None
         self.listeners: list[CALLBACK_TYPE] = []
+
+        # Built in async_setup_entry, before the platforms are forwarded.
+        self.calendar_coordinator: IcloudCalendarCoordinator | None = None
+        self.reminders_coordinator: IcloudRemindersCoordinator | None = None
 
         self.photo_cache: PhotoCache | None = None
 
@@ -170,6 +175,11 @@ class IcloudAccount:
         api_devices = {}
         try:
             api_devices = self.api.devices
+            # Since pyicloud 2.3.0 device reads are cache-only and the library
+            # requests an active locate from Apple only at service creation, so
+            # explicitly refresh with locate=True to get a fresh GPS fix on
+            # every poll instead of Apple's cached location.
+            api_devices.refresh(locate=True)
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Unknown iCloud error: %s", err)
             self._fetch_interval = 2

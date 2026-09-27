@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch_entities_snapshot[imou_mock_devices0][switch.device_1_human_detection-entry]
+# name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_human_detection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -36,7 +36,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities_snapshot[imou_mock_devices0][switch.device_1_human_detection-state]
+# name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_human_detection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Human detection',
@@ -49,7 +49,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_entities_snapshot[imou_mock_devices0][switch.device_1_indicator_light-entry]
+# name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_indicator_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -86,7 +86,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities_snapshot[imou_mock_devices0][switch.device_1_indicator_light-state]
+# name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_indicator_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
@@ -100,7 +100,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switch_entities_snapshot[imou_mock_devices0][switch.device_1_motion_detection-entry]
+# name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_motion_detection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -137,7 +137,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities_snapshot[imou_mock_devices0][switch.device_1_motion_detection-state]
+# name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_motion_detection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Motion detection',
@@ -150,7 +150,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switch_entities_snapshot[imou_mock_devices0][switch.device_1_plug_switch-entry]
+# name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_plug_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -187,7 +187,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities_snapshot[imou_mock_devices0][switch.device_1_plug_switch-state]
+# name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_plug_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',

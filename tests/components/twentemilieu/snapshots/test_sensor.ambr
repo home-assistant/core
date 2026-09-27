@@ -53,8 +53,8 @@
 # name: test_sensors[sensor.twente_milieu_christmas_tree_pickup].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': 'https://www.twentemilieu.nl',
     'connections': set({
     }),
@@ -75,7 +75,6 @@
     'model_id': None,
     'name': 'Twente Milieu',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -135,8 +134,8 @@
 # name: test_sensors[sensor.twente_milieu_non_recyclable_waste_pickup].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': 'https://www.twentemilieu.nl',
     'connections': set({
     }),
@@ -157,7 +156,6 @@
     'model_id': None,
     'name': 'Twente Milieu',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -217,8 +215,8 @@
 # name: test_sensors[sensor.twente_milieu_organic_waste_pickup].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': 'https://www.twentemilieu.nl',
     'connections': set({
     }),
@@ -239,7 +237,6 @@
     'model_id': None,
     'name': 'Twente Milieu',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -299,8 +296,8 @@
 # name: test_sensors[sensor.twente_milieu_packages_waste_pickup].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': 'https://www.twentemilieu.nl',
     'connections': set({
     }),
@@ -321,7 +318,6 @@
     'model_id': None,
     'name': 'Twente Milieu',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -381,8 +377,8 @@
 # name: test_sensors[sensor.twente_milieu_paper_waste_pickup].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': 'https://www.twentemilieu.nl',
     'connections': set({
     }),
@@ -403,7 +399,6 @@
     'model_id': None,
     'name': 'Twente Milieu',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,

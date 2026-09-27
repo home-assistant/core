@@ -1,15 +1,16 @@
 """Websocket tests for Voice Assistant integration."""
 
 from collections.abc import AsyncGenerator, Generator
+from dataclasses import FrozenInstanceError, replace
 from pathlib import Path
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from freezegun import freeze_time
 from hassil.recognize import Intent, IntentData, RecognizeResult
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components import (
     assist_pipeline,
@@ -25,6 +26,10 @@ from homeassistant.components.assist_pipeline.const import (
     DATA_CONFIG,
     DOMAIN,
 )
+from homeassistant.components.assist_pipeline.default_pipeline import (
+    _async_local_fallback_intent_filter,
+    _DefaultPipelineProcessor,
+)
 from homeassistant.components.assist_pipeline.pipeline import (
     STORAGE_KEY,
     STORAGE_VERSION,
@@ -34,12 +39,12 @@ from homeassistant.components.assist_pipeline.pipeline import (
     PipelineEventType,
     PipelineStorageCollection,
     PipelineStore,
-    _async_local_fallback_intent_filter,
     async_create_default_pipeline,
     async_get_pipeline,
     async_get_pipelines,
     async_update_pipeline,
 )
+from homeassistant.components.assist_pipeline.run import _PipelineProcessorRequest
 from homeassistant.components.llm import LLMTools
 from homeassistant.const import ATTR_FRIENDLY_NAME, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
@@ -63,7 +68,7 @@ from .conftest import (
     make_10ms_chunk,
 )
 
-from tests.common import MockConfigEntry, async_mock_service, flush_store
+from tests.common import MockConfigEntry, MockUser, async_mock_service, flush_store
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -556,7 +561,7 @@ async def test_default_pipeline_unsupported_tts_language(
 
 
 async def test_update_pipeline(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+    hass: HomeAssistant, hass_storage: dict[str, Any], hass_admin_user: MockUser
 ) -> None:
     """Test async_update_pipeline."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -595,6 +600,7 @@ async def test_update_pipeline(
         tts_voice="test_voice",
         wake_word_entity="wake_work.test_1",
         wake_word_id="wake_word_id_1",
+        user_id=hass_admin_user.id,
     )
 
     pipelines = async_get_pipelines(hass)
@@ -614,6 +620,7 @@ async def test_update_pipeline(
             tts_voice="test_voice",
             wake_word_entity="wake_work.test_1",
             wake_word_id="wake_word_id_1",
+            user_id=hass_admin_user.id,
         )
     ]
     assert len(hass_storage[STORAGE_KEY]["data"]["items"]) == 1
@@ -631,6 +638,7 @@ async def test_update_pipeline(
         "wake_word_entity": "wake_work.test_1",
         "wake_word_id": "wake_word_id_1",
         "prefer_local_intents": False,
+        "user_id": hass_admin_user.id,
     }
 
     await async_update_pipeline(
@@ -658,6 +666,7 @@ async def test_update_pipeline(
             tts_voice="test_voice",
             wake_word_entity="wake_work.test_1",
             wake_word_id="wake_word_id_1",
+            user_id=hass_admin_user.id,
         )
     ]
     assert len(hass_storage[STORAGE_KEY]["data"]["items"]) == 1
@@ -675,6 +684,7 @@ async def test_update_pipeline(
         "wake_word_entity": "wake_work.test_1",
         "wake_word_id": "wake_word_id_1",
         "prefer_local_intents": False,
+        "user_id": hass_admin_user.id,
     }
 
 
@@ -818,6 +828,55 @@ def test_pipeline_run_equality(hass: HomeAssistant, init_components) -> None:
     assert run_1 != 1234
 
 
+async def test_pipeline_run_delegates_to_processor(
+    hass: HomeAssistant,
+    init_components: None,
+    mock_chat_session: chat_session.ChatSession,
+) -> None:
+    """Test that the run controller delegates processing and owns the lifecycle."""
+    events: list[assist_pipeline.PipelineEvent] = []
+    processor = Mock(
+        response_audio=None,
+        supports_streaming_response=False,
+        async_validate=AsyncMock(),
+        async_execute=AsyncMock(),
+        invalidate=Mock(),
+        cleanup=Mock(),
+    )
+
+    with patch(
+        "homeassistant.components.assist_pipeline.run._create_pipeline_processor",
+        return_value=processor,
+    ):
+        pipeline_input = assist_pipeline.pipeline.PipelineInput(
+            intent_input="test input",
+            session=mock_chat_session,
+            run=assist_pipeline.pipeline.PipelineRun(
+                hass,
+                context=Context(),
+                pipeline=assist_pipeline.pipeline.async_get_pipeline(hass),
+                start_stage=assist_pipeline.PipelineStage.INTENT,
+                end_stage=assist_pipeline.PipelineStage.INTENT,
+                event_callback=events.append,
+            ),
+        )
+
+    await pipeline_input.execute(validate=True)
+
+    validate_request = processor.async_validate.await_args.args[0]
+    execute_request = processor.async_execute.await_args.args[0]
+    assert isinstance(validate_request, _PipelineProcessorRequest)
+    assert validate_request == execute_request
+    assert validate_request.session is pipeline_input.session
+    assert validate_request.intent_input == pipeline_input.intent_input
+    with pytest.raises(FrozenInstanceError):
+        validate_request.intent_input = "changed"
+    assert [event.type for event in events] == [
+        PipelineEventType.RUN_START,
+        PipelineEventType.RUN_END,
+    ]
+
+
 async def test_text_only_run_does_not_start_debug_recording_thread(
     hass: HomeAssistant,
     init_components,
@@ -882,16 +941,13 @@ async def test_tts_audio_output(
     await pipeline_input.validate()
 
     # Verify TTS audio settings
-    assert pipeline_input.run.tts_stream.options is not None
-    assert pipeline_input.run.tts_stream.options.get(tts.ATTR_PREFERRED_FORMAT) == "wav"
-    assert (
-        pipeline_input.run.tts_stream.options.get(tts.ATTR_PREFERRED_SAMPLE_RATE)
-        == 16000
-    )
-    assert (
-        pipeline_input.run.tts_stream.options.get(tts.ATTR_PREFERRED_SAMPLE_CHANNELS)
-        == 1
-    )
+    processor = pipeline_input.run._processor
+    assert isinstance(processor, _DefaultPipelineProcessor)
+    assert processor.tts_stream is not None
+    assert processor.tts_stream.options is not None
+    assert processor.tts_stream.options.get(tts.ATTR_PREFERRED_FORMAT) == "wav"
+    assert processor.tts_stream.options.get(tts.ATTR_PREFERRED_SAMPLE_RATE) == 16000
+    assert processor.tts_stream.options.get(tts.ATTR_PREFERRED_SAMPLE_CHANNELS) == 1
 
     with patch.object(mock_tts_entity, "get_tts_audio") as mock_get_tts_audio:
         await pipeline_input.execute()
@@ -1089,13 +1145,12 @@ async def test_sentence_trigger_overrides_conversation_agent(
             start_stage=assist_pipeline.PipelineStage.INTENT,
             end_stage=assist_pipeline.PipelineStage.INTENT,
             event_callback=events.append,
-            intent_agent="test-agent",  # not the default agent
         ),
     )
 
     # Ensure prepare succeeds
     with patch(
-        "homeassistant.components.assist_pipeline.pipeline.conversation.async_get_agent_info",
+        "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_get_agent_info",
         return_value=conversation.AgentInfo(
             id="test-agent",
             name="Test Agent",
@@ -1105,7 +1160,7 @@ async def test_sentence_trigger_overrides_conversation_agent(
         await pipeline_input.validate()
 
     with patch(
-        "homeassistant.components.assist_pipeline.pipeline.conversation.async_converse"
+        "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_converse"
     ) as mock_async_converse:
         await pipeline_input.execute()
 
@@ -1178,7 +1233,7 @@ async def test_prefer_local_intents(
 
     # Ensure prepare succeeds
     with patch(
-        "homeassistant.components.assist_pipeline.pipeline.conversation.async_get_agent_info",
+        "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_get_agent_info",
         return_value=conversation.AgentInfo(
             id="test-agent",
             name="Test Agent",
@@ -1188,7 +1243,7 @@ async def test_prefer_local_intents(
         await pipeline_input.validate()
 
     with patch(
-        "homeassistant.components.assist_pipeline.pipeline.conversation.async_converse"
+        "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_converse"
     ) as mock_async_converse:
         await pipeline_input.execute()
 
@@ -1247,7 +1302,7 @@ async def test_intent_continue_conversation(
 
     # Ensure prepare succeeds
     with patch(
-        "homeassistant.components.assist_pipeline.pipeline.conversation.async_get_agent_info",
+        "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_get_agent_info",
         return_value=conversation.AgentInfo(
             id="test-agent",
             name="Test Agent",
@@ -1260,7 +1315,7 @@ async def test_intent_continue_conversation(
     response.async_set_speech("For how long?")
 
     with patch(
-        "homeassistant.components.assist_pipeline.pipeline.conversation.async_converse",
+        "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_converse",
         return_value=conversation.ConversationResult(
             response=response,
             conversation_id=mock_chat_session.conversation_id,
@@ -1322,7 +1377,7 @@ async def test_intent_continue_conversation(
 
     # Ensure prepare succeeds
     with patch(
-        "homeassistant.components.assist_pipeline.pipeline.conversation.async_get_agent_info",
+        "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_get_agent_info",
         return_value=conversation.AgentInfo(
             id="test-agent",
             name="Test Agent",
@@ -1338,7 +1393,7 @@ async def test_intent_continue_conversation(
     response.async_set_speech("Timer set for 20 minutes")
 
     with patch(
-        "homeassistant.components.assist_pipeline.pipeline.conversation.async_converse",
+        "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_converse",
         return_value=conversation.ConversationResult(
             response=response,
             conversation_id=mock_chat_session.conversation_id,
@@ -1410,7 +1465,7 @@ async def test_stt_language_used_instead_of_conversation_language(
     await pipeline_input.validate()
 
     with patch(
-        "homeassistant.components.assist_pipeline.pipeline.conversation.async_converse",
+        "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_converse",
         return_value=conversation.ConversationResult(
             intent.IntentResponse(pipeline.language)
         ),
@@ -1486,7 +1541,7 @@ async def test_tts_language_used_instead_of_conversation_language(
     await pipeline_input.validate()
 
     with patch(
-        "homeassistant.components.assist_pipeline.pipeline.conversation.async_converse",
+        "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_converse",
         return_value=conversation.ConversationResult(
             intent.IntentResponse(pipeline.language)
         ),
@@ -1562,7 +1617,7 @@ async def test_pipeline_language_used_instead_of_conversation_language(
     await pipeline_input.validate()
 
     with patch(
-        "homeassistant.components.assist_pipeline.pipeline.conversation.async_converse",
+        "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_converse",
         return_value=conversation.ConversationResult(
             intent.IntentResponse(pipeline.language)
         ),
@@ -1748,7 +1803,7 @@ async def test_chat_log_tts_streaming(
     mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
 
     with patch(
-        "homeassistant.components.assist_pipeline.pipeline.conversation.async_get_agent_info",
+        "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_get_agent_info",
         return_value=conversation.AgentInfo(
             id="test-agent",
             name="Test Agent",
@@ -1818,8 +1873,8 @@ async def test_chat_log_tts_streaming(
     mock_tool = AsyncMock()
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
-    mock_tool.parameters = vol.Schema({})
-    mock_tool.async_call.return_value = "Test response"
+    mock_tool.parameters = probatio.Schema({})
+    mock_tool.async_call.return_value = llm.ToolResult(data="Test response")
 
     with (
         patch(
@@ -1828,7 +1883,7 @@ async def test_chat_log_tts_streaming(
             return_value=LLMTools(tools=[mock_tool]),
         ),
         patch(
-            "homeassistant.components.assist_pipeline.pipeline.conversation.async_converse",
+            "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_converse",
             mock_converse,
         ),
     ):
@@ -1913,7 +1968,7 @@ async def test_acknowledge(
         await pipeline_input.execute()
 
     with patch(
-        "homeassistant.components.assist_pipeline.PipelineRun.text_to_speech"
+        "homeassistant.components.assist_pipeline.default_pipeline._DefaultPipelineProcessor.text_to_speech"
     ) as text_to_speech:
 
         def _reset() -> None:
@@ -1991,7 +2046,7 @@ async def test_acknowledge(
         device_registry.async_update_device(light_device.id, area_id=area_2.id)
 
         _reset()
-        await _run("turn on light 2")
+        await _run("turn on Mock Title light 2")
 
         # Acknowledgment sound should be not played (different device area)
         text_to_speech.assert_called_once()
@@ -2034,6 +2089,91 @@ async def test_acknowledge(
             break
 
     assert has_acknowledge_override
+
+
+@pytest.mark.parametrize(("use_satellite_entity"), [True, False])
+async def test_acknowledge_child_device_inherits_area(
+    hass: HomeAssistant,
+    init_components,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+    mock_chat_session: chat_session.ChatSession,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    use_satellite_entity: bool,
+) -> None:
+    """Test acknowledge works when satellite and target inherit area from a parent."""
+    area_1 = area_registry.async_get_or_create("area_1")
+
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+
+    # Parent device carries the area; its children have no area of their own and
+    # inherit the parent's.
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections=set(),
+        identifiers={("demo", "parent")},
+    )
+    device_registry.async_update_device(parent_device.id, area_id=area_1.id)
+
+    satellite_device = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        identifiers={("demo", "satellite-child")},
+        parent_device_id=parent_device.id,
+    )
+    satellite = entity_registry.async_get_or_create(
+        "assist_satellite", "test", "1234", device_id=satellite_device.id
+    )
+
+    light_device = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        identifiers={("demo", "light-child")},
+        parent_device_id=parent_device.id,
+    )
+    light_1 = entity_registry.async_get_or_create(
+        "light", "demo", "1234", original_name="light 1", device_id=light_device.id
+    )
+    hass.states.async_set(light_1.entity_id, "off", {ATTR_FRIENDLY_NAME: "light 1"})
+
+    turn_on = async_mock_service(hass, "light", "turn_on")
+
+    pipeline_store = pipeline_data.pipeline_store
+    pipeline_id = pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    async def _run(text: str) -> None:
+        pipeline_input = assist_pipeline.pipeline.PipelineInput(
+            intent_input=text,
+            session=mock_chat_session,
+            satellite_id=satellite.entity_id if use_satellite_entity else None,
+            device_id=satellite_device.id if not use_satellite_entity else None,
+            run=assist_pipeline.pipeline.PipelineRun(
+                hass,
+                context=Context(),
+                pipeline=pipeline,
+                start_stage=assist_pipeline.PipelineStage.INTENT,
+                end_stage=assist_pipeline.PipelineStage.TTS,
+                event_callback=events.append,
+            ),
+        )
+        await pipeline_input.validate()
+        await pipeline_input.execute()
+
+    with patch(
+        "homeassistant.components.assist_pipeline.default_pipeline._DefaultPipelineProcessor.text_to_speech"
+    ) as text_to_speech:
+        await _run("turn on light 1")
+
+        # Acknowledgment sound is played: the satellite and the light both inherit
+        # area_1 from their parent device, so all targets are in the satellite area.
+        text_to_speech.assert_called_once()
+        assert (
+            text_to_speech.call_args.kwargs["override_media_path"] == ACKNOWLEDGE_PATH
+        )
+        assert len(turn_on) == 1
 
 
 async def test_acknowledge_other_agents(
@@ -2092,7 +2232,7 @@ async def test_acknowledge_other_agents(
 
     with (
         patch(
-            "homeassistant.components.assist_pipeline.pipeline.conversation.async_get_agent_info",
+            "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_get_agent_info",
             return_value=conversation.AgentInfo(
                 id="test-agent",
                 name="Test Agent",
@@ -2100,16 +2240,16 @@ async def test_acknowledge_other_agents(
             ),
         ),
         patch(
-            "homeassistant.components.assist_pipeline.PipelineRun.prepare_text_to_speech"
+            "homeassistant.components.assist_pipeline.default_pipeline._DefaultPipelineProcessor.prepare_text_to_speech"
         ),
         patch(
-            "homeassistant.components.assist_pipeline.PipelineRun.text_to_speech"
+            "homeassistant.components.assist_pipeline.default_pipeline._DefaultPipelineProcessor.text_to_speech"
         ) as text_to_speech,
         patch(
             "homeassistant.components.conversation.async_converse", return_value=None
         ) as async_converse,
         patch(
-            "homeassistant.components.assist_pipeline.PipelineRun._get_all_targets_in_satellite_area"
+            "homeassistant.components.assist_pipeline.default_pipeline._DefaultPipelineProcessor._get_all_targets_in_satellite_area"
         ) as get_all_targets_in_satellite_area,
     ):
         pipeline_input = assist_pipeline.pipeline.PipelineInput(
@@ -2181,7 +2321,7 @@ async def test_stt_vad_enabled_based_on_audio_processing(
     # VAD should be used
     with (
         patch(
-            "homeassistant.components.assist_pipeline.pipeline.VoiceCommandSegmenter"
+            "homeassistant.components.assist_pipeline.default_pipeline.VoiceCommandSegmenter"
         ) as mock_vad,
         patch(
             "homeassistant.components.stt.async_get_speech_to_text_engine",
@@ -2232,7 +2372,7 @@ async def test_stt_vad_enabled_based_on_audio_processing(
     # VAD should NOT be used
     with (
         patch(
-            "homeassistant.components.assist_pipeline.pipeline.VoiceCommandSegmenter"
+            "homeassistant.components.assist_pipeline.default_pipeline.VoiceCommandSegmenter"
         ) as mock_vad,
         patch(
             "homeassistant.components.stt.async_get_speech_to_text_engine",
@@ -2359,3 +2499,155 @@ async def test_pipeline_error_before_tts_does_not_leak_result_stream(
                 )
 
     assert len(hass.data[tts.DATA_TTS_MANAGER].token_to_stream) == 0
+
+
+async def _run_with_pipeline_user(
+    hass: HomeAssistant,
+    pipeline_user_id: str,
+    context: Context,
+    mock_chat_session: chat_session.ChatSession,
+) -> Context:
+    """Run a pipeline that acts as a user and return the context it ran with."""
+    pipeline = replace(
+        assist_pipeline.pipeline.async_get_pipeline(hass), user_id=pipeline_user_id
+    )
+    processor = Mock(
+        response_audio=None,
+        supports_streaming_response=False,
+        async_validate=AsyncMock(),
+        async_execute=AsyncMock(),
+        invalidate=Mock(),
+        cleanup=Mock(),
+    )
+    with patch(
+        "homeassistant.components.assist_pipeline.run._create_pipeline_processor",
+        return_value=processor,
+    ):
+        pipeline_input = assist_pipeline.pipeline.PipelineInput(
+            intent_input="test input",
+            session=mock_chat_session,
+            run=assist_pipeline.pipeline.PipelineRun(
+                hass,
+                context=context,
+                pipeline=pipeline,
+                start_stage=assist_pipeline.PipelineStage.INTENT,
+                end_stage=assist_pipeline.PipelineStage.INTENT,
+                event_callback=lambda event: None,
+            ),
+        )
+
+    await pipeline_input.execute()
+
+    return pipeline_input.run.context
+
+
+async def test_pipeline_user_id_sets_context_user(
+    hass: HomeAssistant,
+    init_components: None,
+    hass_admin_user: MockUser,
+    mock_chat_session: chat_session.ChatSession,
+) -> None:
+    """Test a pipeline lends its user to a run that has none."""
+    context = Context()
+    run_context = await _run_with_pipeline_user(
+        hass, hass_admin_user.id, context, mock_chat_session
+    )
+
+    assert run_context.user_id == hass_admin_user.id
+    assert run_context.id == context.id
+
+
+async def test_pipeline_user_id_keeps_non_admin_caller(
+    hass: HomeAssistant,
+    init_components: None,
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
+    mock_chat_session: chat_session.ChatSession,
+) -> None:
+    """Test a pipeline never hands a caller permissions they do not have."""
+    run_context = await _run_with_pipeline_user(
+        hass,
+        hass_admin_user.id,
+        Context(user_id=hass_read_only_user.id),
+        mock_chat_session,
+    )
+
+    assert run_context.user_id == hass_read_only_user.id
+
+
+async def test_pipeline_user_id_applies_for_admin_caller(
+    hass: HomeAssistant,
+    init_components: None,
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
+    mock_chat_session: chat_session.ChatSession,
+) -> None:
+    """Test an administrator runs as the user the pipeline acts as."""
+    run_context = await _run_with_pipeline_user(
+        hass,
+        hass_read_only_user.id,
+        Context(user_id=hass_admin_user.id),
+        mock_chat_session,
+    )
+
+    assert run_context.user_id == hass_read_only_user.id
+
+
+async def test_pipeline_user_id_deactivated_user(
+    hass: HomeAssistant,
+    init_components: None,
+    hass_read_only_user: MockUser,
+    mock_chat_session: chat_session.ChatSession,
+) -> None:
+    """Test a run does not act as a user that was deactivated after being set."""
+    await hass.auth.async_deactivate_user(hass_read_only_user)
+
+    run_context = await _run_with_pipeline_user(
+        hass, hass_read_only_user.id, Context(), mock_chat_session
+    )
+
+    assert run_context.user_id is None
+
+
+async def test_pipeline_unknown_user_id(
+    hass: HomeAssistant,
+    init_components: None,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test a pipeline cannot be stored with a user that does not exist."""
+    pipeline_store = hass.data[
+        assist_pipeline.pipeline.KEY_ASSIST_PIPELINE
+    ].pipeline_store
+    settings = {
+        "name": "Test",
+        "language": "en-US",
+        "conversation_engine": "test agent",
+        "conversation_language": "en-US",
+        "tts_engine": "test tts",
+        "tts_language": "en-US",
+        "tts_voice": "test voice",
+        "stt_engine": "test stt",
+        "stt_language": "en-US",
+        "wake_word_entity": None,
+        "wake_word_id": None,
+    }
+
+    with pytest.raises(probatio.Invalid):
+        await pipeline_store.async_create_item(settings | {"user_id": "does-not-exist"})
+
+    pipeline = await pipeline_store.async_create_item(
+        settings | {"user_id": hass_admin_user.id}
+    )
+    assert pipeline.user_id == hass_admin_user.id
+
+    with pytest.raises(probatio.Invalid):
+        await pipeline_store.async_update_item(
+            pipeline.id, settings | {"user_id": "does-not-exist"}
+        )
+
+    # a deactivated user is an identity a run must not be given either
+    await hass.auth.async_deactivate_user(hass_admin_user)
+    with pytest.raises(probatio.Invalid):
+        await pipeline_store.async_create_item(
+            settings | {"user_id": hass_admin_user.id}
+        )

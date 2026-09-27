@@ -59,6 +59,7 @@ async def test_async_setup_entry_default(
     assert await hass.config_entries.async_setup(entry.entry_id) is True
 
     mock_igd_device.async_subscribe_services.assert_called()
+    assert entry.update_listeners == []
 
 
 @pytest.mark.usefixtures("ssdp_instant_discovery", "mock_no_mac_address_from_host")

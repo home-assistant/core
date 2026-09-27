@@ -4,7 +4,7 @@ import logging
 import mimetypes
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
@@ -31,7 +31,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_UPDATE_FILE_PATH,
         {
-            vol.Required(CONF_FILE_PATH): cv.string,
+            probatio.Required(CONF_FILE_PATH): cv.string,
         },
         "update_file_path",
     )

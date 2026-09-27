@@ -2,9 +2,9 @@
 
 from typing import Any, override
 
+import probatio
 from pywilight.const import ITEM_SWITCH, SWITCH_PAUSE_VALVE, SWITCH_VALVE
 from pywilight.wilight_device import PyWiLightDevice
-import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -42,12 +42,14 @@ RANGE_PAUSE_TIME = 24
 RANGE_TRIGGER_INDEX = 4
 
 # Service call validation schemas
-VALID_WATERING_TIME = vol.All(
-    vol.Coerce(int), vol.Range(min=1, max=RANGE_WATERING_TIME)
+VALID_WATERING_TIME = probatio.All(
+    probatio.Coerce(int), probatio.Range(min=1, max=RANGE_WATERING_TIME)
 )
-VALID_PAUSE_TIME = vol.All(vol.Coerce(int), vol.Range(min=1, max=RANGE_PAUSE_TIME))
-VALID_TRIGGER_INDEX = vol.All(
-    vol.Coerce(int), vol.Range(min=1, max=RANGE_TRIGGER_INDEX)
+VALID_PAUSE_TIME = probatio.All(
+    probatio.Coerce(int), probatio.Range(min=1, max=RANGE_PAUSE_TIME)
+)
+VALID_TRIGGER_INDEX = probatio.All(
+    probatio.Coerce(int), probatio.Range(min=1, max=RANGE_TRIGGER_INDEX)
 )
 
 # Descriptions of the valve switch entities
@@ -108,7 +110,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_WATERING_TIME,
         {
-            vol.Required(ATTR_WATERING_TIME): VALID_WATERING_TIME,
+            probatio.Required(ATTR_WATERING_TIME): VALID_WATERING_TIME,
         },
         set_watering_time,
     )
@@ -116,8 +118,8 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_TRIGGER,
         {
-            vol.Required(ATTR_TRIGGER_INDEX): VALID_TRIGGER_INDEX,
-            vol.Required(ATTR_TRIGGER): wl_trigger,
+            probatio.Required(ATTR_TRIGGER_INDEX): VALID_TRIGGER_INDEX,
+            probatio.Required(ATTR_TRIGGER): wl_trigger,
         },
         set_trigger,
     )
@@ -125,7 +127,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_PAUSE_TIME,
         {
-            vol.Required(ATTR_PAUSE_TIME): VALID_PAUSE_TIME,
+            probatio.Required(ATTR_PAUSE_TIME): VALID_PAUSE_TIME,
         },
         set_pause_time,
     )

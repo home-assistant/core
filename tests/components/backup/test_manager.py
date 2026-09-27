@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable, Generator
 from dataclasses import replace
 from datetime import timedelta
-from io import StringIO
+from io import BytesIO, StringIO
 import json
 from pathlib import Path
 import re
@@ -34,7 +34,7 @@ from homeassistant.components.backup import (
     LocalBackupAgent,
 )
 from homeassistant.components.backup.agent import BackupAgentError
-from homeassistant.components.backup.const import DATA_MANAGER
+from homeassistant.components.backup.const import BUF_SIZE, DATA_MANAGER
 from homeassistant.components.backup.manager import (
     AddonErrorData,
     AddonInfo,
@@ -50,6 +50,7 @@ from homeassistant.components.backup.manager import (
     UploadBackupEvent,
     WrittenBackup,
 )
+from homeassistant.components.http.server import MAX_CLIENT_SIZE
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -947,6 +948,7 @@ async def test_initiate_backup_with_agent_error(
 )
 async def test_create_backup_success_clears_issue(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     hass_ws_client: WebSocketGenerator,
     create_backup_command: dict[str, Any],
     issues_after_create_backup: set[tuple[str, str]],
@@ -982,7 +984,6 @@ async def test_create_backup_success_clears_issue(
 
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)
     assert set(issue_registry.issues) == issues_after_create_backup
 
 
@@ -1309,6 +1310,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
 )
 async def test_create_backup_failure_raises_issue(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     hass_ws_client: WebSocketGenerator,
     create_backup: AsyncMock,
     automatic_agents: list[str],
@@ -1344,7 +1346,6 @@ async def test_create_backup_failure_raises_issue(
     assert result["success"] == create_backup_result
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)
     assert set(issue_registry.issues) == set(issues_after_create_backup)
     for issue_id, issue_data in issues_after_create_backup.items():
         issue = issue_registry.issues[issue_id]
@@ -2015,6 +2016,141 @@ async def test_receive_backup(
             backup_data += chunk
         assert backup_data == expected_backup_data
     assert unlink_mock.call_count == temp_file_unlink_call_count
+
+
+@pytest.mark.parametrize(
+    ("upload_size", "min_chunk_count"),
+    [
+        pytest.param(1024, 1, id="small"),
+        pytest.param(MAX_CLIENT_SIZE + 1024, 2, id="above_max_client_size"),
+    ],
+)
+async def test_receive_large_backup(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    upload_size: int,
+    min_chunk_count: int,
+) -> None:
+    """Test receiving a backup larger than the max request body size."""
+    await setup_backup_integration(hass)
+    # Make sure we wait for Platform.EVENT and Platform.SENSOR to be fully processed,
+    # to avoid interference with the Path.open patching below which is used to verify
+    # that the file is written to the expected location.
+    await hass.async_block_till_done(True)
+    client = await hass_client()
+    open_mock = mock_open()
+
+    with (
+        patch("pathlib.Path.open", open_mock),
+        patch("homeassistant.components.backup.manager.make_backup_dir"),
+        patch("shutil.move"),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=TEST_BACKUP_ABC123,
+        ),
+    ):
+        data = FormData(quote_fields=False)
+        data.add_field(
+            "file",
+            BytesIO(b"\0" * upload_size),
+            filename="backup.tar",
+            content_type="application/octet-stream",
+        )
+        resp = await client.post("/api/backup/upload?agent_id=backup.local", data=data)
+        await hass.async_block_till_done()
+
+    assert resp.status == 201
+    assert await resp.json() == {"backup_id": TEST_BACKUP_ABC123.backup_id}
+    written_chunks = [
+        call.args[0] for call in open_mock.return_value.write.call_args_list
+    ]
+    assert sum(len(chunk) for chunk in written_chunks) == upload_size
+    # The file must be written in bounded chunks, not buffered into memory whole
+    assert len(written_chunks) >= min_chunk_count
+    assert max(len(chunk) for chunk in written_chunks) <= BUF_SIZE
+
+
+class _DisconnectingBodyPartReader:
+    """Minimal BodyPartReader whose read_chunk raises after the first chunk.
+
+    Models a client disconnect mid-upload: aiohttp sets a ConnectionResetError on
+    the request payload and cancels the handler when the connection is lost.
+    """
+
+    filename = "backup.tar"
+
+    def __init__(self, chunk: bytes, error: Exception) -> None:
+        """Initialize the reader."""
+        self._chunk = chunk
+        self._error = error
+        self._sent = False
+
+    async def read_chunk(self, size: int) -> bytes:
+        """Return one chunk, then raise on the next read."""
+        if self._sent:
+            raise self._error
+        self._sent = True
+        return self._chunk
+
+
+async def test_receive_backup_stream_error_resets_state(hass: HomeAssistant) -> None:
+    """Test the backup manager returns to IDLE when the upload stream fails.
+
+    A client disconnect (or other stream error) mid-upload must not wedge the
+    manager in a busy state; this drives the manager with a stream that raises
+    rather than a real socket disconnect, which the test client can't produce.
+    """
+    await setup_backup_integration(hass)
+    await hass.async_block_till_done(True)
+    manager = hass.data[DATA_MANAGER]
+    contents = _DisconnectingBodyPartReader(
+        b"\0" * 1024, ConnectionResetError("Connection lost")
+    )
+
+    with (
+        patch("pathlib.Path.open", mock_open()),
+        patch("homeassistant.components.backup.manager.make_backup_dir"),
+        patch("pathlib.Path.unlink") as unlink_mock,
+    ):
+        # Bound the await so a reintroduced deadlock fails fast instead of hanging.
+        async with asyncio.timeout(10):
+            with pytest.raises(ConnectionResetError):
+                await manager.async_receive_backup(
+                    agent_ids=["backup.local"], contents=contents
+                )
+
+    assert manager.state is BackupManagerState.IDLE
+    # The partially written temp file is removed on the failed upload.
+    assert unlink_mock.call_count == 1
+
+
+async def test_receive_backup_unparsable_file_removed(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the temp file is removed when the uploaded backup can't be parsed."""
+    await setup_backup_integration(hass)
+    await hass.async_block_till_done(True)
+    client = await hass_client()
+
+    with (
+        patch("pathlib.Path.open", mock_open(read_data=b"test")),
+        patch("homeassistant.components.backup.manager.make_backup_dir"),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            side_effect=OSError("Boom"),
+        ),
+        patch("pathlib.Path.unlink") as unlink_mock,
+    ):
+        resp = await client.post(
+            "/api/backup/upload?agent_id=backup.local",
+            data={"file": StringIO("test")},
+        )
+        await hass.async_block_till_done()
+
+    assert resp.status == 500
+    # The unparsable temp file is removed exactly once.
+    assert unlink_mock.call_count == 1
 
 
 async def test_receive_backup_valid_filename(

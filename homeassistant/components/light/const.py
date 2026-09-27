@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 from enum import IntFlag, StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.util.hass_dict import HassKey
 
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
     from . import LightEntity, Profiles
 
-DOMAIN = "light"
+DOMAIN: Final = "light"
 DATA_COMPONENT: HassKey[EntityComponent[LightEntity]] = HassKey(DOMAIN)
 SCAN_INTERVAL = timedelta(seconds=30)
 

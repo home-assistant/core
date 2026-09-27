@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 import praw
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -48,15 +48,15 @@ SCAN_INTERVAL = timedelta(seconds=300)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_CLIENT_SECRET): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_SUBREDDITS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_SORT_BY, default="hot"): vol.All(
-            cv.string, vol.In(LIST_TYPES)
+        probatio.Required(CONF_CLIENT_ID): cv.string,
+        probatio.Required(CONF_CLIENT_SECRET): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_SUBREDDITS): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(CONF_SORT_BY, default="hot"): probatio.All(
+            cv.string, probatio.In(LIST_TYPES)
         ),
-        vol.Optional(CONF_MAXIMUM, default=10): cv.positive_int,
+        probatio.Optional(CONF_MAXIMUM, default=10): cv.positive_int,
     }
 )
 

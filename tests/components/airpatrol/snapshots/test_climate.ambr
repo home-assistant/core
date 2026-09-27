@@ -162,7 +162,7 @@
         'on',
         'off',
       ]),
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 22.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.living_room',

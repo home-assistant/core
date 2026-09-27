@@ -1,6 +1,6 @@
 """Twitter platform for notify component."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from functools import partial
 from http import HTTPStatus
 import json
@@ -9,8 +9,8 @@ import mimetypes
 import os
 from typing import Any, override
 
+import probatio
 from TwitterAPI import TwitterAPI
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -23,6 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,11 +35,11 @@ ATTR_MEDIA = "media"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ACCESS_TOKEN): cv.string,
-        vol.Required(CONF_ACCESS_TOKEN_SECRET): cv.string,
-        vol.Required(CONF_CONSUMER_KEY): cv.string,
-        vol.Required(CONF_CONSUMER_SECRET): cv.string,
-        vol.Optional(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_ACCESS_TOKEN): cv.string,
+        probatio.Required(CONF_ACCESS_TOKEN_SECRET): cv.string,
+        probatio.Required(CONF_CONSUMER_KEY): cv.string,
+        probatio.Required(CONF_CONSUMER_SECRET): cv.string,
+        probatio.Optional(CONF_USERNAME): cv.string,
     }
 )
 
@@ -233,7 +234,7 @@ class TwitterNotificationService(BaseNotificationService):
             "media processing waiting %s seconds to check status", str(check_after_secs)
         )
 
-        when = datetime.now() + timedelta(seconds=check_after_secs)  # pylint: disable=home-assistant-enforce-naive-now
+        when = dt_util.now() + timedelta(seconds=check_after_secs)
         myself = partial(self.check_status_until_done, media_id, callback)
         async_track_point_in_time(self.hass, myself, when)
 

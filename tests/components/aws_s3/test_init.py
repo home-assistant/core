@@ -73,3 +73,23 @@ async def test_setup_entry_head_bucket_error(
     )
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_entry_warms_loader_caches(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that create_client passes warm_up_loader_caches config."""
+    with patch(
+        "homeassistant.components.aws_s3.AioSession.create_client"
+    ) as create_client:
+        client_ctx = AsyncMock()
+        client = AsyncMock()
+        client_ctx.__aenter__.return_value = client
+        create_client.return_value = client_ctx
+
+        await setup_integration(hass, mock_config_entry)
+
+        create_client.assert_called_once()
+        _, kwargs = create_client.call_args
+        assert kwargs["config"].warm_up_loader_caches is True

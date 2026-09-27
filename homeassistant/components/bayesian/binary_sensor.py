@@ -7,7 +7,7 @@ import math
 from typing import TYPE_CHECKING, Any, NamedTuple, override
 from uuid import UUID
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
@@ -87,7 +87,7 @@ def above_greater_than_below(config: dict[str, Any]) -> dict[str, Any]:
                 " must be specified",
                 config[CONF_ENTITY_ID],
             )
-            raise vol.Invalid("above_or_below")
+            raise probatio.Invalid("above_or_below")
         if above is not None and below is not None:
             if above > below:
                 _LOGGER.error(
@@ -96,19 +96,19 @@ def above_greater_than_below(config: dict[str, Any]) -> dict[str, Any]:
                     above,
                     below,
                 )
-                raise vol.Invalid("above_below")
+                raise probatio.Invalid("above_below")
     return config
 
 
-NUMERIC_STATE_SCHEMA = vol.All(
-    vol.Schema(
+NUMERIC_STATE_SCHEMA = probatio.All(
+    probatio.Schema(
         {
             CONF_PLATFORM: CONF_NUMERIC_STATE,
-            vol.Required(CONF_ENTITY_ID): cv.entity_id,
-            vol.Optional(CONF_ABOVE): vol.Coerce(float),
-            vol.Optional(CONF_BELOW): vol.Coerce(float),
-            vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
-            vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
+            probatio.Required(CONF_ENTITY_ID): cv.entity_id,
+            probatio.Optional(CONF_ABOVE): probatio.Coerce(float),
+            probatio.Optional(CONF_BELOW): probatio.Coerce(float),
+            probatio.Required(CONF_P_GIVEN_T): probatio.Coerce(float),
+            probatio.Optional(CONF_P_GIVEN_F): probatio.Coerce(float),
         },
         required=True,
     ),
@@ -155,49 +155,49 @@ def no_overlapping(configs: list[dict]) -> list[dict]:
                     intervals[i + 1].above,
                     intervals[i + 1].below,
                 )
-                raise vol.Invalid(
+                raise probatio.Invalid(
                     "overlapping_ranges",
                 )
     return configs
 
 
-STATE_SCHEMA = vol.Schema(
+STATE_SCHEMA = probatio.Schema(
     {
         CONF_PLATFORM: CONF_STATE,
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Required(CONF_TO_STATE): cv.string,
-        vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
-        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id,
+        probatio.Required(CONF_TO_STATE): cv.string,
+        probatio.Required(CONF_P_GIVEN_T): probatio.Coerce(float),
+        probatio.Optional(CONF_P_GIVEN_F): probatio.Coerce(float),
     },
     required=True,
 )
 
-TEMPLATE_SCHEMA = vol.Schema(
+TEMPLATE_SCHEMA = probatio.Schema(
     {
         CONF_PLATFORM: CONF_TEMPLATE,
-        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
-        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
+        probatio.Required(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Required(CONF_P_GIVEN_T): probatio.Coerce(float),
+        probatio.Optional(CONF_P_GIVEN_F): probatio.Coerce(float),
     },
     required=True,
 )
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): cv.string,
-        vol.Required(CONF_OBSERVATIONS): vol.Schema(
-            vol.All(
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_DEVICE_CLASS): cv.string,
+        probatio.Required(CONF_OBSERVATIONS): probatio.Schema(
+            probatio.All(
                 cv.ensure_list,
-                [vol.Any(TEMPLATE_SCHEMA, STATE_SCHEMA, NUMERIC_STATE_SCHEMA)],
+                [probatio.Any(TEMPLATE_SCHEMA, STATE_SCHEMA, NUMERIC_STATE_SCHEMA)],
                 no_overlapping,
             )
         ),
-        vol.Required(CONF_PRIOR): vol.Coerce(float),
-        vol.Optional(
+        probatio.Required(CONF_PRIOR): probatio.Coerce(float),
+        probatio.Optional(
             CONF_PROBABILITY_THRESHOLD, default=DEFAULT_PROBABILITY_THRESHOLD
-        ): vol.Coerce(float),
+        ): probatio.Coerce(float),
     }
 )
 

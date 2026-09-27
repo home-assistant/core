@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import init_integration
+from . import init_integration, init_integration_gen4
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -156,3 +156,14 @@ async def test_switch_connection_error(
 
     state = hass.states.get("switch.modernformsfan_away_mode")
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_no_adaptive_learning_switch_on_gen4(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test the adaptive learning switch isn't created for Gen4 fans."""
+    await init_integration_gen4(hass, aioclient_mock)
+
+    assert hass.states.get("switch.modernformsfan_adaptive_learning") is None
+    assert hass.states.get("switch.modernformsfan_away_mode") is not None

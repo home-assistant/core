@@ -3,6 +3,8 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
+import pytest
+
 from homeassistant.components.jellyfin.const import DOMAIN
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ALBUM_ARTIST,
@@ -350,6 +352,7 @@ async def test_browse_media(
         "can_play": False,
         "can_expand": True,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": "http://localhost/Items/c22fd826-17fc-44f4-9b04-1eb3e8fb9173/Images/Backdrop.jpg",
         "children_media_class": None,
     }
@@ -379,6 +382,7 @@ async def test_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": "http://localhost/Items/21af9851-8e39-43a9-9c47-513d3b9e99fc/Images/Primary.jpg",
         "children_media_class": None,
     }
@@ -408,6 +412,7 @@ async def test_browse_media(
         "can_play": True,
         "can_expand": True,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": "http://localhost/Items/c22fd826-17fc-44f4-9b04-1eb3e8fb9173/Images/Backdrop.jpg",
         "children_media_class": None,
     }
@@ -437,6 +442,7 @@ async def test_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": "http://localhost/Items/21af9851-8e39-43a9-9c47-513d3b9e99fc/Images/Primary.jpg",
         "children_media_class": None,
     }
@@ -519,11 +525,66 @@ async def test_search_media(
             "can_play": False,
             "can_expand": True,
             "can_search": False,
+            "search_media_classes": None,
             "not_shown": 0,
             "thumbnail": "http://localhost/Items/21af9851-8e39-43a9-9c47-513d3b9e99fc/Images/Primary.jpg",
             "children": [],
         }
     ]
+
+
+@pytest.mark.parametrize(
+    ("media_filter_classes", "expected_item_types"),
+    [
+        pytest.param([], [None], id="no_filter"),
+        pytest.param(["album"], ["MusicAlbum"], id="album"),
+        pytest.param(["artist"], ["MusicArtist"], id="artist"),
+        pytest.param(["track"], ["Audio"], id="track"),
+        pytest.param(["movie"], ["Movie"], id="movie"),
+        pytest.param(["playlist"], ["Playlist"], id="playlist"),
+        pytest.param(["video"], ["Video"], id="video"),
+        pytest.param(
+            ["directory"],
+            ["CollectionFolder,AggregateFolder,Folder,BoxSet"],
+            id="multiple_item_types",
+        ),
+        pytest.param(
+            ["album", "tv_show"], ["MusicAlbum", "Series"], id="multiple_classes"
+        ),
+        pytest.param(["music", "track"], ["Audio"], id="shared_item_type"),
+        pytest.param(["podcast"], [], id="unmapped_class"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_search_media_item_types(
+    hass_ws_client: WebSocketGenerator,
+    mock_api: MagicMock,
+    media_filter_classes: list[str],
+    expected_item_types: list[str | None],
+) -> None:
+    """Test Jellyfin search maps media filter classes to Jellyfin item types."""
+    client = await hass_ws_client()
+
+    await client.send_json_auto_id(
+        {
+            "type": "media_player/search_media",
+            "entity_id": "media_player.jellyfin_device",
+            "media_content_id": "",
+            "media_content_type": "",
+            "search_query": "Fake Item 1",
+            "media_filter_classes": media_filter_classes,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    # The filter classes arrive as a set, so the search order is not fixed.
+    assert sorted(
+        (
+            search_call.kwargs["media"]
+            for search_call in mock_api.search_media_items.call_args_list
+        ),
+        key=str,
+    ) == sorted(expected_item_types, key=str)
 
 
 async def test_new_client_connected(

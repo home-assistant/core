@@ -8,7 +8,7 @@ import logging
 from types import MappingProxyType
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.rest import RESOURCE_SCHEMA, create_rest_data_from_config
 from homeassistant.components.sensor import CONF_STATE_CLASS, DOMAIN as SENSOR_DOMAIN
@@ -59,32 +59,32 @@ type ScrapeConfigEntry = ConfigEntry[ScrapeCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_SCHEMA = vol.Schema(
+SENSOR_SCHEMA = probatio.Schema(
     {
         **TEMPLATE_SENSOR_BASE_SCHEMA.schema,
-        vol.Optional(CONF_AVAILABILITY): cv.template,
-        vol.Optional(CONF_ATTRIBUTE): cv.string,
-        vol.Optional(CONF_INDEX, default=0): cv.positive_int,
-        vol.Required(CONF_SELECT): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
+        probatio.Optional(CONF_AVAILABILITY): cv.template,
+        probatio.Optional(CONF_ATTRIBUTE): cv.string,
+        probatio.Optional(CONF_INDEX, default=0): cv.positive_int,
+        probatio.Required(CONF_SELECT): cv.string,
+        probatio.Optional(CONF_VALUE_TEMPLATE): probatio.All(
             cv.template, ValueTemplate.from_template
         ),
     }
 )
 
-COMBINED_SCHEMA = vol.Schema(
+COMBINED_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
+        probatio.Optional(CONF_SCAN_INTERVAL): cv.time_period,
         **RESOURCE_SCHEMA,
-        vol.Optional(SENSOR_DOMAIN): vol.All(
-            cv.ensure_list, [vol.Schema(SENSOR_SCHEMA)]
+        probatio.Optional(SENSOR_DOMAIN): probatio.All(
+            cv.ensure_list, [probatio.Schema(SENSOR_SCHEMA)]
         ),
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {vol.Optional(DOMAIN): vol.All(cv.ensure_list, [COMBINED_SCHEMA])},
-    extra=vol.ALLOW_EXTRA,
+CONFIG_SCHEMA = probatio.Schema(
+    {probatio.Optional(DOMAIN): probatio.All(cv.ensure_list, [COMBINED_SCHEMA])},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -236,18 +236,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
                 )
                 device_reg.async_update_device(
                     device.id,
-                    add_config_entry_id=entry.entry_id,
-                    add_config_subentry_id=subentry_id,
+                    new_config_entry_id=entry.entry_id,
+                    new_config_subentry_id=subentry_id,
                     new_identifiers=new_identifiers,
-                )
-
-                # Removing None from the list of subentries if existing
-                # as the device should only belong to the subentry
-                # and not the main config entry
-                device_reg.async_update_device(
-                    device.id,
-                    remove_config_entry_id=entry.entry_id,
-                    remove_config_subentry_id=None,
                 )
 
         # Update the resource config
@@ -308,7 +299,7 @@ async def update_listener(hass: HomeAssistant, entry: ScrapeConfigEntry) -> None
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: ConfigEntry, device: dr.DeviceEntry
+    hass: HomeAssistant, entry: ConfigEntry, device: dr.AnyDeviceEntry
 ) -> bool:
     """Remove Scrape config entry from a device."""
     entity_registry = er.async_get(hass)

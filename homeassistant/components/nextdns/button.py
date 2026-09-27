@@ -31,10 +31,13 @@ async def async_setup_entry(
     entry: NextDnsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add aNextDNS entities from a config_entry."""
-    coordinator = entry.runtime_data.status
-
-    async_add_entities([NextDnsButton(coordinator, CLEAR_LOGS_BUTTON)])
+    """Add NextDNS entities from a config_entry."""
+    for subentry_id, profile_data in entry.runtime_data.profiles.items():
+        coordinator = profile_data.status
+        async_add_entities(
+            [NextDnsButton(coordinator, CLEAR_LOGS_BUTTON)],
+            config_subentry_id=subentry_id,
+        )
 
 
 class NextDnsButton(NextDnsEntity, ButtonEntity):

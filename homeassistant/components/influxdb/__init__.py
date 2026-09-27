@@ -14,9 +14,9 @@ from influxdb import InfluxDBClient, exceptions
 from influxdb_client import InfluxDBClient as InfluxDBClientV2
 from influxdb_client.client.write_api import ASYNCHRONOUS, SYNCHRONOUS
 from influxdb_client.rest import ApiException
+import probatio
 import requests.exceptions
 import urllib3.exceptions
-import voluptuous as vol
 
 from homeassistant import config as conf_util
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -140,19 +140,19 @@ def validate_version_specific_config(conf: dict) -> dict:
     """Ensure correct config fields are provided based on API version used."""
     if conf.get(CONF_API_VERSION, DEFAULT_API_VERSION) == API_VERSION_2:
         if CONF_TOKEN not in conf:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"{CONF_TOKEN} and {CONF_BUCKET} are required when"
                 f" {CONF_API_VERSION} is {API_VERSION_2}"
             )
 
         if CONF_USERNAME in conf:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"{CONF_USERNAME} and {CONF_PASSWORD} are only allowed when"
                 f" {CONF_API_VERSION} is {DEFAULT_API_VERSION}"
             )
 
     elif CONF_TOKEN in conf:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"{CONF_TOKEN} and {CONF_BUCKET} are only allowed when"
             f" {CONF_API_VERSION} is {API_VERSION_2}"
         )
@@ -160,35 +160,39 @@ def validate_version_specific_config(conf: dict) -> dict:
     return conf
 
 
-_CUSTOMIZE_ENTITY_SCHEMA = vol.Schema(
+_CUSTOMIZE_ENTITY_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
-        vol.Optional(CONF_IGNORE_ATTRIBUTES): vol.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
+        probatio.Optional(CONF_IGNORE_ATTRIBUTES): probatio.All(
+            cv.ensure_list, [cv.string]
+        ),
     }
 )
 
 _INFLUX_BASE_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
     {
-        vol.Optional(CONF_RETRY_COUNT, default=0): cv.positive_int,
-        vol.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
-        vol.Optional(CONF_MEASUREMENT_ATTR, default=DEFAULT_MEASUREMENT_ATTR): vol.In(
-            ["unit_of_measurement", "domain__device_class", "entity_id"]
+        probatio.Optional(CONF_RETRY_COUNT, default=0): cv.positive_int,
+        probatio.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
+        probatio.Optional(
+            CONF_MEASUREMENT_ATTR, default=DEFAULT_MEASUREMENT_ATTR
+        ): probatio.In(["unit_of_measurement", "domain__device_class", "entity_id"]),
+        probatio.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
+        probatio.Optional(CONF_TAGS, default={}): probatio.Schema(
+            {cv.string: cv.string}
         ),
-        vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
-        vol.Optional(CONF_TAGS, default={}): vol.Schema({cv.string: cv.string}),
-        vol.Optional(CONF_TAGS_ATTRIBUTES, default=[]): vol.All(
+        probatio.Optional(CONF_TAGS_ATTRIBUTES, default=[]): probatio.All(
             cv.ensure_list, [cv.string]
         ),
-        vol.Optional(CONF_IGNORE_ATTRIBUTES, default=[]): vol.All(
+        probatio.Optional(CONF_IGNORE_ATTRIBUTES, default=[]): probatio.All(
             cv.ensure_list, [cv.string]
         ),
-        vol.Optional(CONF_COMPONENT_CONFIG, default={}): vol.Schema(
+        probatio.Optional(CONF_COMPONENT_CONFIG, default={}): probatio.Schema(
             {cv.entity_id: _CUSTOMIZE_ENTITY_SCHEMA}
         ),
-        vol.Optional(CONF_COMPONENT_CONFIG_GLOB, default={}): vol.Schema(
+        probatio.Optional(CONF_COMPONENT_CONFIG_GLOB, default={}): probatio.Schema(
             {cv.string: _CUSTOMIZE_ENTITY_SCHEMA}
         ),
-        vol.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}): vol.Schema(
+        probatio.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}): probatio.Schema(
             {cv.string: _CUSTOMIZE_ENTITY_SCHEMA}
         ),
     }
@@ -199,9 +203,9 @@ INFLUX_SCHEMA = _INFLUX_BASE_SCHEMA.extend(
 )
 
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(INFLUX_SCHEMA, validate_version_specific_config)},
-    extra=vol.ALLOW_EXTRA,
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.All(INFLUX_SCHEMA, validate_version_specific_config)},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

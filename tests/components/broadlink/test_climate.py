@@ -96,8 +96,8 @@ async def test_climate(
     mock_api.get_full_status.return_value = api_return_value
     mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
     )
     entries = er.async_entries_for_device(entity_registry, device_entry.id)
     climates = [entry for entry in entries if entry.domain == Platform.CLIMATE]
@@ -134,8 +134,8 @@ async def test_climate_set_temperature_turn_off_turn_on(
     }
     mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
     )
     entries = er.async_entries_for_device(entity_registry, device_entry.id)
     climates = [entry for entry in entries if entry.domain == Platform.CLIMATE]

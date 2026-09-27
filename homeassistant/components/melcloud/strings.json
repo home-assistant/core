@@ -3,9 +3,7 @@
     "abort": {
       "already_configured": "MELCloud integration already configured for this email. Access token has been refreshed.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -60,6 +58,21 @@
       },
       "water_pump_status": {
         "name": "Water pump {number}"
+      }
+    },
+    "number": {
+      "flow_temperature": {
+        "name": "Flow temperature"
+      }
+    },
+    "select": {
+      "operation_mode": {
+        "name": "Operation mode",
+        "state": {
+          "curve": "Curve",
+          "flow": "Flow",
+          "room": "Room"
+        }
       }
     },
     "sensor": {
@@ -120,6 +133,11 @@
       "tank_temperature": {
         "name": "Tank temperature"
       }
+    }
+  },
+  "exceptions": {
+    "set_number_failed": {
+      "message": "Failed to send the value to the device."
     }
   },
   "services": {

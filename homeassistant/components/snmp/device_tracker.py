@@ -4,6 +4,7 @@ import binascii
 import logging
 from typing import TYPE_CHECKING, override
 
+import probatio
 from pysnmp.error import PySnmpError
 from pysnmp.hlapi.v3arch.asyncio import (
     CommunityData,
@@ -13,7 +14,6 @@ from pysnmp.hlapi.v3arch.asyncio import (
     bulk_walk_cmd,
     is_end_of_mib,
 )
-import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -44,11 +44,11 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_BASEOID): cv.string,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
-        vol.Inclusive(CONF_AUTH_KEY, "keys"): cv.string,
-        vol.Inclusive(CONF_PRIV_KEY, "keys"): cv.string,
+        probatio.Required(CONF_BASEOID): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
+        probatio.Inclusive(CONF_AUTH_KEY, "keys"): cv.string,
+        probatio.Inclusive(CONF_PRIV_KEY, "keys"): cv.string,
     }
 )
 

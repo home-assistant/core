@@ -1,7 +1,7 @@
 """Tests for the Notifications for Android TV / Fire TV notify platform."""
 
-from collections.abc import AsyncGenerator
-from unittest.mock import patch
+from collections.abc import AsyncGenerator, Generator
+from unittest.mock import MagicMock, patch
 
 from notifications_android_tv.notifications import ConnectError
 import pytest
@@ -16,12 +16,14 @@ from homeassistant.components.notify import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import NAME
 
 from tests.common import AsyncMock, MockConfigEntry, snapshot_platform
+
+LEGACY_SERVICE_NAME = "android_tv_fire_tv_1_2_3_4"
 
 
 @pytest.fixture(autouse=True)
@@ -123,3 +125,48 @@ async def test_send_message_exception(
     mock_notifications_android_tv.send.assert_called_once_with(
         message="Hello", title="World"
     )
+
+
+@pytest.fixture
+def mock_legacy_notifications() -> Generator[MagicMock]:
+    """Mock the client used by the legacy notify service."""
+    with patch(
+        "homeassistant.components.nfandroidtv.notify.Notifications",
+        autospec=True,
+    ) as mock_client:
+        yield mock_client.return_value
+
+
+@pytest.mark.usefixtures("mock_notifications_android_tv")
+@pytest.mark.parametrize(
+    ("service_data", "translation_key"),
+    [
+        pytest.param({"duration": "invalid"}, "invalid_duration", id="duration"),
+        pytest.param({"duration": None}, "invalid_duration", id="duration_none"),
+        pytest.param({"interrupt": "invalid"}, "invalid_interrupt", id="interrupt"),
+    ],
+)
+async def test_legacy_send_message_invalid_data(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_legacy_notifications: MagicMock,
+    service_data: dict[str, str | None],
+    translation_key: str,
+) -> None:
+    """Test that invalid service data raises and sends nothing."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(NOTIFY_DOMAIN, LEGACY_SERVICE_NAME)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            LEGACY_SERVICE_NAME,
+            {"message": "Hello", "data": service_data},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == translation_key
+    mock_legacy_notifications.send.assert_not_called()

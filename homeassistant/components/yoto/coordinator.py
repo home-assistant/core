@@ -22,7 +22,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import _LOGGER, DOMAIN, SCAN_INTERVAL, STATUS_PUSH_INTERVAL
+from .const import DOMAIN, LOGGER, SCAN_INTERVAL, STATUS_PUSH_INTERVAL
 
 type YotoConfigEntry = ConfigEntry[YotoDataUpdateCoordinator]
 
@@ -41,7 +41,7 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
         """Initialize the coordinator."""
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             config_entry=entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
@@ -147,7 +147,7 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
             for device_id in self._subscribed_players - current:
                 await self.client.unsubscribe_player_events(device_id)
         except YotoError as err:
-            _LOGGER.warning("Could not update Yoto event subscriptions: %s", err)
+            LOGGER.warning("Could not update Yoto event subscriptions: %s", err)
             return
         self._subscribed_players = current
 
@@ -161,20 +161,18 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
                 (ident[1] for ident in device.identifiers if ident[0] == DOMAIN), None
             )
             if player_id is not None and player_id not in self.client.players:
-                device_registry.async_update_device(
-                    device.id, remove_config_entry_id=self.config_entry.entry_id
-                )
+                device_registry.async_remove_device(device.id)
 
     async def _async_load_library(self) -> None:
         """Load the card library and groups; failures only affect browsing."""
         try:
             await self.client.update_library()
         except YotoError as err:
-            _LOGGER.warning("Could not load Yoto card library: %s", err)
+            LOGGER.warning("Could not load Yoto card library: %s", err)
         try:
             await self.client.update_groups()
         except YotoError as err:
-            _LOGGER.warning("Could not load Yoto card groups: %s", err)
+            LOGGER.warning("Could not load Yoto card groups: %s", err)
 
     async def _async_status_push_tick(self, _now: datetime) -> None:
         """Ask each player to push a fresh status snapshot over MQTT."""
