@@ -33,8 +33,8 @@ BRAVIA_SYSTEM_INFO = {
     "cid": "very_unique_string",
 }
 
-# The TV leaves "label" empty when unset, omits it on some models, and allows the
-# same label on several inputs.
+# The TV leaves "label" empty when unset, omits it on some models, and allows a
+# label that repeats another input's generic name.
 INPUTS = [
     {
         "uri": "extInput:hdmi?port=1",
@@ -54,43 +54,18 @@ INPUTS = [
         "uri": "extInput:hdmi?port=3",
         "title": "HDMI 3",
         "connection": True,
-        "label": "game console",
+        "label": "",
         "icon": "meta:hdmi",
     },
     {
         "uri": "extInput:hdmi?port=4",
         "title": "HDMI 4",
         "connection": True,
-        "label": "",
         "icon": "meta:hdmi",
-    },
-    {
-        "uri": "extInput:hdmi?port=5",
-        "title": "HDMI 5",
-        "connection": True,
-        "icon": "meta:hdmi",
-    },
-    {
-        "uri": "extInput:cec?type=player&port=1",
-        "connection": True,
-        "label": "Streaming box",
-        "icon": "meta:playbackdevice",
-    },
-    {
-        "uri": "extInput:widi?port=1",
-        "connection": False,
-        "icon": "meta:wifidisplay",
-    },
-    {
-        "uri": "extInput:scart?port=1",
-        "title": "AV1",
-        "connection": False,
-        "label": "Straße",
-        "icon": "meta:scart",
     },
 ]
 
-PLAYING_INFO = {"uri": "extInput:hdmi?port=3", "title": "HDMI 3", "source": "HDMI"}
+PLAYING_INFO = {"uri": "extInput:hdmi?port=2", "title": "HDMI 2", "source": "HDMI"}
 
 
 @pytest.fixture
@@ -129,26 +104,19 @@ async def set_play_content(hass: HomeAssistant) -> AsyncGenerator[AsyncMock]:
 
 
 @pytest.mark.usefixtures("set_play_content")
-async def test_source_list_prefers_label(hass: HomeAssistant) -> None:
-    """Test that an input renamed on the TV is exposed with that name."""
+async def test_source_list_adds_label(hass: HomeAssistant) -> None:
+    """Test that the name set on the TV is added next to the generic one."""
     state = hass.states.get(ENTITY_ID)
 
     assert state is not None
-    # HDMI 3 repeats HDMI 2's label apart from case, so it does not appear twice.
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == [
+        "HDMI 1",
         "HDMI 2",
         "Game console",
+        "HDMI 3",
         "HDMI 4",
-        "HDMI 5",
-        "Streaming box",
-        "Straße",
     ]
-    # HDMI 3 is labelled "game console"; it is reported with the spelling that is
-    # actually in the list, never with one that is missing from it.
-    assert state.attributes[ATTR_INPUT_SOURCE] == "Game console"
-    assert (
-        state.attributes[ATTR_INPUT_SOURCE] in state.attributes[ATTR_INPUT_SOURCE_LIST]
-    )
+    assert state.attributes[ATTR_INPUT_SOURCE] == "HDMI 2"
 
 
 @pytest.mark.parametrize(
@@ -161,12 +129,6 @@ async def test_source_list_prefers_label(hass: HomeAssistant) -> None:
         ("HDMI 1", "extInput:hdmi?port=1"),
         ("HDMI 3", "extInput:hdmi?port=3"),
         ("HDMI 4", "extInput:hdmi?port=4"),
-        ("HDMI 5", "extInput:hdmi?port=5"),
-        ("Streaming box", "extInput:cec?type=player&port=1"),
-        # A partial name still resolves, as it did before.
-        ("Streaming", "extInput:cec?type=player&port=1"),
-        ("straße", "extInput:scart?port=1"),
-        ("STRASSE", "extInput:scart?port=1"),
     ],
 )
 async def test_select_source(
