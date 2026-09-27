@@ -22,7 +22,7 @@ from homeassistant.components.media_source import (
     Unresolvable,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
 
 from .const import DOMAIN
@@ -35,6 +35,21 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up Immich media source."""
     hass.http.register_view(ImmichMediaView(hass))
     return ImmichMediaSource(hass)
+
+
+@callback
+def _async_get_loaded_entry(hass: HomeAssistant, unique_id: str) -> ImmichConfigEntry:
+    """Return the loaded config entry with the given unique ID."""
+    entry: ImmichConfigEntry | None = (
+        hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, unique_id)
+    )
+    if entry is None or entry.state is not ConfigEntryState.LOADED:
+        raise BrowseError(
+            translation_domain=DOMAIN,
+            translation_key="account_not_loaded",
+            translation_placeholders={"unique_id": unique_id},
+        )
+    return entry
 
 
 class ImmichMediaSourceIdentifier:
@@ -183,12 +198,7 @@ class ImmichMediaSource(MediaSource):
         # 1st level, render collections overview
         # --------------------------------------------------------
         identifier = ImmichMediaSourceIdentifier(item.identifier)
-        entry: ImmichConfigEntry | None = (
-            self.hass.config_entries.async_entry_for_domain_unique_id(
-                DOMAIN, identifier.unique_id
-            )
-        )
-        assert entry
+        entry = _async_get_loaded_entry(self.hass, identifier.unique_id)
         immich_api = entry.runtime_data.api
 
         if identifier.collection is None:
@@ -421,17 +431,7 @@ class ImmichMediaSource(MediaSource):
             )
 
         identifier = ImmichMediaSourceIdentifier(item.identifier)
-        entry: ImmichConfigEntry | None = (
-            self.hass.config_entries.async_entry_for_domain_unique_id(
-                DOMAIN, identifier.unique_id
-            )
-        )
-        if entry is None or entry.state is not ConfigEntryState.LOADED:
-            raise BrowseError(
-                translation_domain=DOMAIN,
-                translation_key="account_not_loaded",
-                translation_placeholders={"unique_id": identifier.unique_id},
-            )
+        entry = _async_get_loaded_entry(self.hass, identifier.unique_id)
         immich_api = entry.runtime_data.api
 
         search_args: ImmichSmartSearchArgs = {
@@ -502,12 +502,10 @@ class ImmichMediaView(HomeAssistantView):
         except ValueError as err:
             raise HTTPNotFound from err
 
-        entry: ImmichConfigEntry | None = (
-            self.hass.config_entries.async_entry_for_domain_unique_id(
-                DOMAIN, source_dir_id
-            )
-        )
-        assert entry
+        try:
+            entry = _async_get_loaded_entry(self.hass, source_dir_id)
+        except BrowseError as err:
+            raise HTTPNotFound from err
         immich_api = entry.runtime_data.api
 
         # stream response for videos

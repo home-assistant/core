@@ -909,3 +909,60 @@ async def test_search_media_account_unloaded(
             SearchMediaQuery(search_query="my search"),
         )
     assert exc_info.value.translation_key == "account_not_loaded"
+
+
+@pytest.mark.parametrize(
+    "identifier",
+    [
+        pytest.param("unknown_unique_id", id="unknown_account"),
+        pytest.param("unloaded_unique_id", id="unloaded_account"),
+    ],
+)
+@pytest.mark.usefixtures("mock_immich")
+async def test_browse_media_account_not_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    identifier: str,
+) -> None:
+    """Test browse_media on an account that is not loaded."""
+    assert await async_setup_component(hass, "media_source", {})
+
+    with patch("homeassistant.components.immich.PLATFORMS", []):
+        await setup_integration(hass, mock_config_entry)
+    MockConfigEntry(domain=DOMAIN, unique_id="unloaded_unique_id").add_to_hass(hass)
+
+    source = await async_get_media_source(hass)
+
+    with pytest.raises(BrowseError) as exc_info:
+        await source.async_browse_media(MediaSourceItem(hass, DOMAIN, identifier, None))
+    assert exc_info.value.translation_key == "account_not_loaded"
+
+
+@pytest.mark.parametrize(
+    "unique_id",
+    [
+        pytest.param("unknown_unique_id", id="unknown_account"),
+        pytest.param("unloaded_unique_id", id="unloaded_account"),
+    ],
+)
+@pytest.mark.usefixtures("mock_immich")
+async def test_media_view_account_not_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    unique_id: str,
+) -> None:
+    """Test ImmichMediaView on an account that is not loaded."""
+    assert await async_setup_component(hass, "media_source", {})
+
+    with patch("homeassistant.components.immich.PLATFORMS", []):
+        await setup_integration(hass, mock_config_entry)
+    MockConfigEntry(domain=DOMAIN, unique_id="unloaded_unique_id").add_to_hass(hass)
+
+    view = ImmichMediaView(hass)
+
+    with pytest.raises(web.HTTPNotFound):
+        await view.get(
+            MockRequest(b"", DOMAIN),
+            unique_id,
+            "2e94c203-50aa-4ad2-8e29-56dd74e0eff4/thumbnail/image/jpeg",
+        )
