@@ -185,6 +185,36 @@ async def test_device_via_device_links(
     assert child_device.via_device_id == box_device.id
 
 
+async def test_box_entities_added_after_initial_incomplete_node_list(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test box entities are added when the box appears after setup."""
+    mock_duco_client.async_get_nodes.return_value = [
+        node for node in mock_nodes if node.node_id != BOX_NODE_ID
+    ]
+    entity_ids = (
+        "fan.living",
+        "number.living_bypass_target_1",
+        "number.living_bypass_target_2",
+    )
+
+    await setup_platform_integration(
+        hass, mock_config_entry, [Platform.FAN, Platform.NUMBER]
+    )
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert all(hass.states.get(entity_id) is None for entity_id in entity_ids)
+
+    mock_duco_client.async_get_nodes.return_value = mock_nodes
+    await async_fire_coordinator_update(hass, freezer)
+
+    assert all(hass.states.get(entity_id) is not None for entity_id in entity_ids)
+
+
 @pytest.mark.parametrize(
     ("disabled_entity_ids", "expected_state_presence"),
     [
