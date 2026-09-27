@@ -995,9 +995,7 @@ async def test_heater_cooler_auto_set_temperature(
         {"entity_id": "climate.testdevice", **service_data},
         blocking=True,
     )
-    helper.async_assert_service_values(
-        ServicesTypes.HEATER_COOLER, expected_writes
-    )
+    helper.async_assert_service_values(ServicesTypes.HEATER_COOLER, expected_writes)
 
 
 async def test_heater_cooler_auto_set_temperature_without_setpoint(
