@@ -680,6 +680,7 @@ async def test_coordinator_firmware_refresh_with_session_is_closed(
 
     assert "Client is closed when reading firmware" in caplog.text
 
+    caplog.clear()
     mock_envoy.setup.side_effect = RuntimeError("Session is closed")
     await config_entry.runtime_data._async_try_refresh_firmware()
 
