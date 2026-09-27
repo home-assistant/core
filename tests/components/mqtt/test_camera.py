@@ -8,6 +8,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import camera
+from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.camera import MQTT_CAMERA_ATTRIBUTES_BLOCKED
 from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -387,6 +388,32 @@ async def test_entity_debug_info_message(
         state_topic="test_topic",
         state_payload=b"ON",
     )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [{DOMAIN: {camera.DOMAIN: {"topic": "test/camera", "name": "Test Camera"}}}],
+)
+async def test_debug_info_large_payload(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test debug info only stores the start of a large image payload."""
+    await mqtt_mock_entry()
+    image = bytes(range(256)) * 100
+
+    async_fire_mqtt_message(hass, "test/camera", image)
+
+    client = await hass_client_no_auth()
+    url = hass.states.get("camera.test_camera").attributes["entity_picture"]
+    resp = await client.get(url)
+    assert await resp.read() == image
+
+    debug_info_data = debug_info.info_for_config_entry(hass)
+    messages = debug_info_data["entities"][0]["subscriptions"][0]["messages"]
+    assert len(messages) == 1
+    assert messages[0]["payload"] == str(image[: debug_info.MAX_STORED_PAYLOAD_SIZE])
 
 
 async def test_reloadable(

@@ -1722,7 +1722,7 @@ class MqttEntity(
             msg.subscribed_topic
         ]["messages"]
         if msg not in messages:
-            messages.append(msg)
+            debug_info.log_received_message(messages, msg)
 
         try:
             msg_callback(msg)

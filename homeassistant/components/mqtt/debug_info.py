@@ -1,7 +1,7 @@
 """Helper to handle a set of topics to subscribe to."""
 
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import datetime as dt
 import time
 from typing import TYPE_CHECKING, Any
@@ -12,9 +12,11 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from .const import ATTR_DISCOVERY_PAYLOAD, ATTR_DISCOVERY_TOPIC
-from .models import DATA_MQTT, PublishPayloadType
+from .models import DATA_MQTT, PublishPayloadType, ReceiveMessage
 
 STORED_MESSAGES = 10
+# Limit memory used by large payloads, like camera images
+MAX_STORED_PAYLOAD_SIZE = 8192
 
 
 @dataclass(frozen=True, slots=True)
@@ -28,6 +30,13 @@ class TimestampedPublishMessage:
     timestamp: float
     encoding: str | None
     kwargs: dict[str, Any]
+
+
+def log_received_message(messages: deque[ReceiveMessage], msg: ReceiveMessage) -> None:
+    """Log an incoming MQTT message."""
+    if len(msg.payload) > MAX_STORED_PAYLOAD_SIZE:
+        msg = replace(msg, payload=msg.payload[:MAX_STORED_PAYLOAD_SIZE])
+    messages.append(msg)
 
 
 def log_message(
