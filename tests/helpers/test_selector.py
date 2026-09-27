@@ -78,6 +78,48 @@ def test_allowed_context_keys_values_immutable(
         assert isinstance(allowed_types, frozenset)
 
 
+def test_selector_with_context() -> None:
+    """Test setting the context of a selector."""
+    context = {"filter_device_class": "device_class"}
+    uom_selector = selector.UnitOfMeasurementSelector()
+    assert uom_selector.context == {}
+
+    assert uom_selector.with_context(context) is uom_selector
+    assert uom_selector.context == context
+    # The context is copied
+    context["filter_state_class"] = "state_class"
+    assert uom_selector.context == {"filter_device_class": "device_class"}
+
+    assert uom_selector != selector.UnitOfMeasurementSelector()
+    assert uom_selector == selector.UnitOfMeasurementSelector().with_context(
+        {"filter_device_class": "device_class"}
+    )
+
+
+@pytest.mark.parametrize(
+    ("selector_instance", "context"),
+    [
+        pytest.param(
+            selector.UnitOfMeasurementSelector(),
+            {"filter_entity": "entity_id"},
+            id="uom_filter_entity",
+        ),
+        pytest.param(
+            selector.TextSelector(),
+            {"filter_entity": "entity_id"},
+            id="text_any_key",
+        ),
+    ],
+)
+def test_selector_with_invalid_context(
+    selector_instance: selector.Selector, context: dict[str, str]
+) -> None:
+    """Test setting a context key the selector does not allow raises."""
+    with pytest.raises(ValueError, match="are not allowed"):
+        selector_instance.with_context(context)
+    assert selector_instance.context == {}
+
+
 def _test_selector(
     selector_type: str,
     schema: dict | None,

@@ -763,7 +763,12 @@ SENSOR_ENTITY_CATEGORY_SELECTOR = SelectSelector(
     )
 )
 SENSOR_STATE_CLASS_SELECTOR = StateClassSelector()
-UNIT_OF_MEASUREMENT_SELECTOR = UnitOfMeasurementSelector()
+NUMBER_UNIT_OF_MEASUREMENT_SELECTOR = UnitOfMeasurementSelector().with_context(
+    {"filter_device_class": CONF_DEVICE_CLASS}
+)
+SENSOR_UNIT_OF_MEASUREMENT_SELECTOR = UnitOfMeasurementSelector().with_context(
+    {"filter_device_class": CONF_DEVICE_CLASS, "filter_state_class": CONF_STATE_CLASS}
+)
 STEP_SELECTOR = NumberSelector(NumberSelectorConfig(min=1e-3, step=1e-3))
 SUPPORTED_COLOR_MODES_SELECTOR = SelectSelector(
     SelectSelectorConfig(
@@ -1400,7 +1405,7 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             required=False,
         ),
         CONF_UNIT_OF_MEASUREMENT: PlatformField(
-            selector=UNIT_OF_MEASUREMENT_SELECTOR,
+            selector=NUMBER_UNIT_OF_MEASUREMENT_SELECTOR,
             required=False,
         ),
     },
@@ -1413,7 +1418,7 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             selector=SENSOR_STATE_CLASS_SELECTOR, required=False
         ),
         CONF_UNIT_OF_MEASUREMENT: PlatformField(
-            selector=UNIT_OF_MEASUREMENT_SELECTOR,
+            selector=SENSOR_UNIT_OF_MEASUREMENT_SELECTOR,
             required=False,
         ),
         CONF_SUGGESTED_DISPLAY_PRECISION: PlatformField(

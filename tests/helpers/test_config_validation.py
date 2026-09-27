@@ -889,6 +889,49 @@ def test_selector_in_serializer() -> None:
     }
 
 
+def test_selector_with_context_in_serializer() -> None:
+    """Test selector with context with custom_serializer."""
+    assert cv.custom_serializer(
+        selector.UnitOfMeasurementSelector().with_context(
+            {"filter_device_class": "device_class"}
+        )
+    ) == {
+        "selector": {"unit_of_measurement": {}},
+        "context": {"filter_device_class": "device_class"},
+    }
+
+
+def test_selector_context_in_field_list() -> None:
+    """Test selector context is only added to the field that sets it."""
+    schema = probatio.Schema(
+        {
+            probatio.Optional("device_class"): selector.DeviceClassSelector(
+                selector.DeviceClassSelectorConfig(domain="sensor")
+            ),
+            probatio.Optional(
+                "unit_of_measurement"
+            ): selector.UnitOfMeasurementSelector().with_context(
+                {"filter_device_class": "device_class"}
+            ),
+        }
+    )
+    assert probatio.to_field_list(schema, custom_serializer=cv.custom_serializer) == [
+        {
+            "name": "device_class",
+            "optional": True,
+            "required": False,
+            "selector": {"device_class": {"domain": "sensor", "multiple": False}},
+        },
+        {
+            "name": "unit_of_measurement",
+            "optional": True,
+            "required": False,
+            "selector": {"unit_of_measurement": {}},
+            "context": {"filter_device_class": "device_class"},
+        },
+    ]
+
+
 def test_positive_time_period_dict_in_serializer() -> None:
     """Test positive_time_period_dict with custom_serializer."""
     assert cv.custom_serializer(cv.positive_time_period_dict) == {
