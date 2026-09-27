@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any, cast, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 from aiohttp import ClientConnectorCertificateError, ClientError
 import probatio
@@ -418,10 +418,11 @@ class OverkizConfigFlow(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Let the user pick a gateway on a multi-gateway account."""
-        if self._server == Server.SOMFY:
-            candidates = self._somfy_gateways
-        else:
-            candidates = self._rexel_gateways
+        candidates = (
+            self._somfy_gateways
+            if self._server == Server.SOMFY
+            else self._rexel_gateways
+        )
 
         if user_input:
             gateway = next(
@@ -550,7 +551,8 @@ class OverkizConfigFlow(
         """Scope the client to the chosen site and persist its token bundle."""
         self._somfy_client.select_gateway(gateway.gateway_id)
         credentials = self._somfy_client.to_credentials()
-        assert isinstance(credentials, SomfyTokenCredentials)
+        if TYPE_CHECKING:
+            assert isinstance(credentials, SomfyTokenCredentials)
 
         await self.async_set_unique_id(gateway.gateway_id, raise_on_progress=False)
 
