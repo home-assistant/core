@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
@@ -166,7 +167,9 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured({CONF_HOST: self._url})
 
         if self.hass.config_entries.flow.async_has_matching_flow(self):
-            return self.async_abort(reason="already_in_progress")
+            return self.async_abort(
+                reason="already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
 
         # update old and user-configured config entries
         for entry in self._async_current_entries(include_ignore=False):
