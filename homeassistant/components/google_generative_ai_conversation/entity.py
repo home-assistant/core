@@ -73,7 +73,6 @@ from .helpers import ContentDetails, PartDetails
 from .interactions import (
     build_interaction_request,
     convert_chat_log_to_interactions_steps,
-    create_safety_settings,
     format_response_format,
     format_tools_for_interactions,
     transform_interactions_stream,
@@ -764,8 +763,6 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             ),
         )
 
-        safety_settings = create_safety_settings(options)
-
         for _iteration in range(max_iterations):
             input_steps = convert_chat_log_to_interactions_steps(chat_log)
 
@@ -787,7 +784,6 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 system_instruction=prompt if supports_system_instruction else None,
                 tools=interactions_tools or None,
                 response_format=response_format,
-                safety_settings=safety_settings or None,
                 default_max_tokens=default_max_tokens,
                 stream=True,
                 store=False,
