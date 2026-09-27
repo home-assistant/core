@@ -43,7 +43,9 @@ def _format_tool(
     tool_spec = {
         "name": tool.name,
         "parameters": probatio.to_openapi(
-            tool.parameters, custom_serializer=custom_serializer
+            tool.parameters,
+            custom_serializer=custom_serializer,
+            openapi_version="3.1.0",
         ),
     }
     if tool.description:
@@ -94,7 +96,12 @@ def _convert_content(
     if isinstance(chat_content, conversation.ToolResultContent):
         return ollama.Message(
             role=MessageRole.TOOL.value,
-            content=json_dumps(chat_content.tool_result),
+            content=json_dumps(
+                {
+                    "data": chat_content.result.data,
+                    "error": chat_content.result.error,
+                }
+            ),
         )
     if isinstance(chat_content, conversation.AssistantContent):
         return ollama.Message(
@@ -233,6 +240,7 @@ class OllamaBaseLLMEntity(Entity):
                     if chat_log.llm_api
                     else llm.selector_serializer
                 ),
+                openapi_version="3.1.0",
             )
 
         # Get response

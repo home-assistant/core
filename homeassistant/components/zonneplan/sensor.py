@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
-from homeassistant.const import UnitOfEnergy, UnitOfVolume
+from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -57,6 +57,80 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
                     None,
                 )
             )
+            else None
+        ),
+        supported_fn=lambda coordinator: bool(coordinator.data.electricity_prices),
+    ),
+    ZonneplanPriceSensorEntityDescription(
+        key="next_hour_electricity_price",
+        translation_key="next_hour_electricity_price",
+        native_unit_of_measurement=f"EUR/{UnitOfEnergy.KILO_WATT_HOUR}",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value_fn=lambda coordinator: (
+            float(point.price_tax_included.euro)
+            if (
+                point := next(
+                    (
+                        point
+                        for electricity_prices in (coordinator.data.electricity_prices,)
+                        if electricity_prices is not None
+                        for point in electricity_prices.prices
+                        if point.start_date
+                        <= dt_util.utcnow() + timedelta(hours=1)
+                        < point.end_date
+                    ),
+                    None,
+                )
+            )
+            else None
+        ),
+        supported_fn=lambda coordinator: bool(coordinator.data.electricity_prices),
+    ),
+    ZonneplanPriceSensorEntityDescription(
+        key="current_electricity_tariff_group",
+        translation_key="current_electricity_tariff_group",
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "normal", "high"],
+        value_fn=lambda coordinator: (
+            point.tariff_group
+            if (
+                point := next(
+                    (
+                        point
+                        for electricity_prices in (coordinator.data.electricity_prices,)
+                        if electricity_prices is not None
+                        for point in electricity_prices.prices
+                        if point.start_date <= dt_util.utcnow() < point.end_date
+                    ),
+                    None,
+                )
+            )
+            else None
+        ),
+        supported_fn=lambda coordinator: bool(coordinator.data.electricity_prices),
+    ),
+    ZonneplanPriceSensorEntityDescription(
+        key="current_sustainability_score",
+        translation_key="current_sustainability_score",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        value_fn=lambda coordinator: (
+            float(point.sustainability_score.fraction * 100)
+            if (
+                point := next(
+                    (
+                        point
+                        for electricity_prices in (coordinator.data.electricity_prices,)
+                        if electricity_prices is not None
+                        for point in electricity_prices.prices
+                        if point.start_date <= dt_util.utcnow() < point.end_date
+                    ),
+                    None,
+                )
+            )
+            and point.sustainability_score is not None
             else None
         ),
         supported_fn=lambda coordinator: bool(coordinator.data.electricity_prices),

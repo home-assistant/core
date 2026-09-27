@@ -7,7 +7,7 @@ import telegram
 from telegram import Bot
 from telegram.error import InvalidToken, TelegramError
 
-from homeassistant.const import CONF_PLATFORM, Platform
+from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -41,6 +41,7 @@ from .const import (
     PLATFORM_POLLING,
     PLATFORM_WEBHOOKS,
 )
+from .log_filter import async_redact_token, async_unredact_token
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -157,6 +158,10 @@ def bot_device_info(config_entry: TelegramBotConfigEntry, bot_id: int) -> dr.Dev
 
 async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> bool:
     """Create the Telegram bot from config entry."""
+    # Registered before the bot is built: the library logs the token as soon as
+    # it constructs the API URLs.
+    async_redact_token(entry.data[CONF_API_KEY])
+
     bot: Bot = await hass.async_add_executor_job(initialize_bot, hass, entry.data)
     try:
         await bot.get_me()
@@ -164,7 +169,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
         # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryAuthFailed("Invalid API token for Telegram Bot.") from err
     except TelegramError as err:
-        raise ConfigEntryNotReady from err
+        # Do not let the message through: the Telegram API URL embeds the bot
+        # token, and library errors quote that URL.
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
 
     p_type: str = entry.data[CONF_PLATFORM]
 
@@ -212,6 +222,8 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: TelegramBotConfigEntry
 ) -> bool:
     """Unload Telegram app."""
+    async_unredact_token(entry.data[CONF_API_KEY])
+
     # broadcast platform has no app
     if entry.runtime_data.app:
         await entry.runtime_data.app.shutdown()

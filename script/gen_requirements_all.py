@@ -105,7 +105,7 @@ uuid==1000000000.0.0
 # even newer versions seem to introduce new issues, it's useful
 # for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.13.0
+anyio==4.14.2
 h11==0.16.0
 httpcore==1.0.9
 
@@ -237,9 +237,6 @@ caio<0.12.3
 # https://github.com/auth0/auth0-python/releases/tag/5.0.0
 auth0-python<5.0
 
-# Setuptools >=82.0.0 doesn't contain pkg_resources anymore
-setuptools<82.0.0
-
 # backoff and python-backoff share the same package name
 # pin versions which are mostly compatible to each other
 backoff==2.2.1
@@ -252,7 +249,7 @@ python-backoff<2.4.0
 azure-kusto-data==4.5.1
 azure-kusto-ingest==4.5.1
 coloredlogs==15.0.1
-setuptools==81.0.0
+setuptools==84.0.0
 
 # Pin cffi to 2.0.0 to avoid version mismatch with the pre-baked _cffi_backend in the base image.
 # https://github.com/home-assistant/core/issues/175832

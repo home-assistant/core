@@ -19,7 +19,12 @@ from homeassistant.components import media_player, songpal
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.songpal.const import ERROR_REQUEST_RETRY
 from homeassistant.components.songpal.services import SET_SOUND_SETTING
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -408,6 +413,23 @@ async def test_websocket_events(hass: HomeAssistant) -> None:
     power_change.status = False
     await notification_callbacks[PowerChange](power_change)
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+
+async def test_stop_listener_removed_on_unload(hass: HomeAssistant) -> None:
+    """Test the stop listener is removed when the entity is removed."""
+    mocked_device = _create_mocked_device()
+    entry = MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA)
+    entry.add_to_hass(hass)
+
+    with _patch_media_player_device(mocked_device):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    stop_listeners = hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STOP]
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STOP] == stop_listeners - 1
 
 
 async def test_disconnected(

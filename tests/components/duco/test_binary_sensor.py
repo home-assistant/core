@@ -1,15 +1,10 @@
 """Tests for the Duco binary sensor platform."""
 
+from dataclasses import replace
 import logging
 from unittest.mock import AsyncMock
 
-from duco_connectivity import (
-    DiagComponent,
-    DiagInfo,
-    DucoConnectionError,
-    DucoError,
-    Node,
-)
+from duco_connectivity import DiagComponent, DucoConnectionError, DucoError, Node
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -45,13 +40,14 @@ async def test_diagnostic_binary_sensor_entity_registry_defaults(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the diagnostic binary sensor entity registry defaults."""
-    mock_duco_client.async_get_diagnostics_info.return_value = DiagInfo(
+    mock_duco_client.async_get_info_overview.return_value = replace(
+        mock_duco_client.async_get_info_overview.return_value,
         diagnostic_subsystems=(
             DiagComponent(component="Ventilation", status="Ok"),
             DiagComponent(component="Filter", status="Ok"),
             DiagComponent(component="VentCool", status="Ok"),
             DiagComponent(component="SunCtrl", status="Ok"),
-        )
+        ),
     )
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.BINARY_SENSOR])
@@ -80,8 +76,9 @@ async def test_unknown_diagnostic_subsystem_is_ignored(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test an unknown diagnostic subsystem is not exposed."""
-    mock_duco_client.async_get_diagnostics_info.return_value = DiagInfo(
-        diagnostic_subsystems=(DiagComponent(component="Future Mode", status="Error"),)
+    mock_duco_client.async_get_info_overview.return_value = replace(
+        mock_duco_client.async_get_info_overview.return_value,
+        diagnostic_subsystems=(DiagComponent(component="Future Mode", status="Error"),),
     )
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.BINARY_SENSOR])
@@ -106,10 +103,11 @@ async def test_diagnostic_binary_sensor_problem_state(
     expected_state: str,
 ) -> None:
     """Test diagnostic statuses map to the expected problem state."""
-    mock_duco_client.async_get_diagnostics_info.return_value = DiagInfo(
+    mock_duco_client.async_get_info_overview.return_value = replace(
+        mock_duco_client.async_get_info_overview.return_value,
         diagnostic_subsystems=(
             DiagComponent(component="Ventilation", status=raw_status),
-        )
+        ),
     )
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.BINARY_SENSOR])
@@ -126,26 +124,31 @@ async def test_diagnostic_binary_sensors_added_after_initial_empty_response(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test diagnostic binary sensors can be added after an empty response."""
-    mock_duco_client.async_get_diagnostics_info.return_value = DiagInfo()
+    mock_duco_client.async_get_info_overview.return_value = replace(
+        mock_duco_client.async_get_info_overview.return_value,
+        diagnostic_subsystems=(),
+    )
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.BINARY_SENSOR])
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get(VENTILATION_PROBLEM_ENTITY_ID) is None
 
-    mock_duco_client.async_get_diagnostics_info.return_value = DiagInfo(
-        diagnostic_subsystems=(DiagComponent(component="Ventilation", status="Error"),)
+    mock_duco_client.async_get_info_overview.return_value = replace(
+        mock_duco_client.async_get_info_overview.return_value,
+        diagnostic_subsystems=(DiagComponent(component="Ventilation", status="Error"),),
     )
 
     await async_fire_coordinator_update(hass, freezer)
 
     assert hass.states.is_state(VENTILATION_PROBLEM_ENTITY_ID, STATE_ON)
 
-    mock_duco_client.async_get_diagnostics_info.return_value = DiagInfo(
+    mock_duco_client.async_get_info_overview.return_value = replace(
+        mock_duco_client.async_get_info_overview.return_value,
         diagnostic_subsystems=(
             DiagComponent(component="Ventilation", status="Error"),
             DiagComponent(component="Filter", status="Ok"),
-        )
+        ),
     )
 
     await async_fire_coordinator_update(hass, freezer)
@@ -198,8 +201,9 @@ async def test_diagnostic_binary_sensor_becomes_unknown_without_known_status(
 
     assert hass.states.is_state(VENTILATION_PROBLEM_ENTITY_ID, STATE_OFF)
 
-    mock_duco_client.async_get_diagnostics_info.return_value = DiagInfo(
-        diagnostic_subsystems=diagnostic_subsystems
+    mock_duco_client.async_get_info_overview.return_value = replace(
+        mock_duco_client.async_get_info_overview.return_value,
+        diagnostic_subsystems=diagnostic_subsystems,
     )
 
     await async_fire_coordinator_update(hass, freezer)
@@ -224,14 +228,14 @@ async def test_diagnostics_refresh_failure_is_isolated_and_recovers(
 
     assert hass.states.is_state(VENTILATION_PROBLEM_ENTITY_ID, STATE_OFF)
 
-    mock_duco_client.async_get_diagnostics_info.side_effect = exception_type("error")
+    mock_duco_client.async_get_info_overview.side_effect = exception_type("error")
 
     await async_fire_coordinator_update(hass, freezer)
 
     assert hass.states.is_state(VENTILATION_PROBLEM_ENTITY_ID, STATE_UNAVAILABLE)
     assert hass.states.is_state("sensor.office_co2_carbon_dioxide", "405")
 
-    mock_duco_client.async_get_diagnostics_info.side_effect = None
+    mock_duco_client.async_get_info_overview.side_effect = None
     await async_fire_coordinator_update(hass, freezer)
 
     assert hass.states.is_state(VENTILATION_PROBLEM_ENTITY_ID, STATE_OFF)
@@ -248,7 +252,7 @@ async def test_initial_diagnostics_failure_is_isolated_and_recovers(
 ) -> None:
     """Test an initial diagnostics failure is isolated and recovers."""
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
-    mock_duco_client.async_get_diagnostics_info.side_effect = exception_type("error")
+    mock_duco_client.async_get_info_overview.side_effect = exception_type("error")
 
     await setup_platform_integration(
         hass, mock_config_entry, [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -258,7 +262,7 @@ async def test_initial_diagnostics_failure_is_isolated_and_recovers(
     assert hass.states.get(VENTILATION_PROBLEM_ENTITY_ID) is None
     assert hass.states.is_state("sensor.office_co2_carbon_dioxide", "405")
 
-    mock_duco_client.async_get_diagnostics_info.side_effect = None
+    mock_duco_client.async_get_info_overview.side_effect = None
     await async_fire_coordinator_update(hass, freezer)
 
     assert hass.states.is_state(VENTILATION_PROBLEM_ENTITY_ID, STATE_OFF)
@@ -273,12 +277,12 @@ async def test_diagnostics_availability_transitions_logged(
 ) -> None:
     """Test diagnostics availability transitions are logged once."""
     caplog.set_level(logging.INFO, logger="homeassistant.components.duco.coordinator")
-    mock_duco_client.async_get_diagnostics_info.side_effect = DucoError("error")
+    mock_duco_client.async_get_info_overview.side_effect = DucoError("error")
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.BINARY_SENSOR])
     await async_fire_coordinator_update(hass, freezer)
 
-    mock_duco_client.async_get_diagnostics_info.side_effect = None
+    mock_duco_client.async_get_info_overview.side_effect = None
     await async_fire_coordinator_update(hass, freezer)
     await async_fire_coordinator_update(hass, freezer)
 

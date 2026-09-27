@@ -553,6 +553,7 @@
         "state": {
           "adaptive": "Adaptive",
           "auto": "[%key:common::state::auto%]",
+          "auto_pir": "Auto PIR",
           "autoadaptive": "Auto adaptive",
           "off": "[%key:common::state::off%]",
           "onatnight": "On at night",

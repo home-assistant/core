@@ -44,7 +44,7 @@ rules:
     comment: Integration does not connect to any physical object or service.
 
   # Silver
-  action-exceptions: todo
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
