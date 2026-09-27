@@ -78,7 +78,6 @@ _FEATURES = {
     EspMediaPlayerEntityFeature.GROUPING: MediaPlayerEntityFeature.GROUPING,
     EspMediaPlayerEntityFeature.MEDIA_ANNOUNCE: MediaPlayerEntityFeature.MEDIA_ANNOUNCE,
     EspMediaPlayerEntityFeature.MEDIA_ENQUEUE: MediaPlayerEntityFeature.MEDIA_ENQUEUE,
-    EspMediaPlayerEntityFeature.SEARCH_MEDIA: MediaPlayerEntityFeature.SEARCH_MEDIA,
 }
 
 ATTR_BYPASS_PROXY = "bypass_proxy"
@@ -101,7 +100,8 @@ class EsphomeMediaPlayer(
         )
         flags = MediaPlayerEntityFeature(0)
         for espflag in esp_flags:
-            flags |= _FEATURES[espflag]
+            # The entity does not implement search, so SEARCH_MEDIA has no mapping
+            flags |= _FEATURES.get(espflag, MediaPlayerEntityFeature(0))
         self._attr_supported_features = flags
         self._entry_data.media_player_formats[self] = (
             self._static_info.supported_formats
