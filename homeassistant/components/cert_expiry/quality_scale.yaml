@@ -44,7 +44,9 @@ rules:
     status: exempt
     comment: Integration does not register custom actions.
   config-entry-unloading: done
-  docs-configuration-parameters: todo
+  docs-configuration-parameters:
+    status: exempt
+    comment: Integration has no options flow.
   docs-installation-parameters: todo
   entity-unavailable: done
   integration-owner: done
@@ -57,8 +59,12 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery: todo
-  discovery-update-info: todo
+  discovery:
+    status: exempt
+    comment: Monitors user-chosen hosts; there is nothing to discover.
+  discovery-update-info:
+    status: exempt
+    comment: Integration does not support discovery.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
@@ -76,11 +82,17 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: Certificate problems are reported by problem binary sensors; there is no Home Assistant-side issue for the user to repair.
   stale-devices:
     status: exempt
     comment: Integration supports a single device per config entry.
   # Platinum
-  async-dependency: todo
-  inject-websession: todo
+  async-dependency:
+    status: exempt
+    comment: Integration has no external library dependencies.
+  inject-websession:
+    status: exempt
+    comment: Integration opens raw TLS connections and makes no HTTP requests.
   strict-typing: done
