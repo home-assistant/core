@@ -22,9 +22,9 @@ from homeassistant.helpers.trigger_template_entity import (
     CONF_PICTURE,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import async_get_config_and_coordinator, create_rest_data_from_config
+from .coordinator import RestCoordinator
 from .data import RestData
 
 TRIGGER_ENTITY_OPTIONS = (
@@ -45,7 +45,7 @@ async def async_get_config_rest_data_and_coordinator(
     config: ConfigType,
     entity_domain: str,
     discovery_info: DiscoveryInfoType | None = None,
-) -> tuple[ConfigType, RestData, DataUpdateCoordinator[None] | None]:
+) -> tuple[ConfigType, RestData, RestCoordinator | None]:
     """Get the config, rest data +/- coordinator for sub entity."""
     # Must update the sensor now (including fetching the rest resource) to
     # ensure it's updating its state.
@@ -96,7 +96,7 @@ class RestEntity(Entity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[None] | None,
+        coordinator: RestCoordinator | None,
         rest: RestData,
         resource_template: Template | None,
         force_update: bool,

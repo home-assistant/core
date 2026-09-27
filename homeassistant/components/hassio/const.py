@@ -20,8 +20,6 @@ if TYPE_CHECKING:
         SupervisorInfo,
     )
 
-    from homeassistant.auth.models import User
-
     from .coordinator import (
         HassioAddOnDataUpdateCoordinator,
         HassioMainDataUpdateCoordinator,
@@ -153,7 +151,6 @@ DATA_KEY_SUPERVISOR_ISSUES: HassKey[SupervisorIssuesCoordinator] = HassKey(
 )
 DATA_KEY_MOUNTS = "mounts"
 DATA_HASSIO_HOST: HassKey[str] = HassKey("hassio_host")
-DATA_HASSIO_SUPERVISOR_USER: HassKey[User] = HassKey("hassio_supervisor_user")
 
 ENTRY_DATA_USER = "user"
 

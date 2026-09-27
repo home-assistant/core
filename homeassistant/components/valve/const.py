@@ -1,11 +1,21 @@
 """Constants for the Valve entity platform."""
 
 from enum import IntFlag, StrEnum
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import probatio
 
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from .entity import ValveEntity
+
 DOMAIN: Final = "valve"
+DATA_COMPONENT: HassKey[EntityComponent[ValveEntity]] = HassKey(DOMAIN)
+
+ATTR_POSITION = "position"
 
 
 class ValveEntityStateAttribute(StrEnum):

@@ -399,7 +399,7 @@ async def test_ntfy_publish_upload_media_source_not_supported(
         patch(
             "homeassistant.components.ntfy.notify.async_resolve_media",
             return_value=media_source.PlayMedia(
-                url="/api/tts_proxy/WDyphPCh3sAoO3koDY87ew.mp3",
+                url="https://gameclipscontent-d2009.media.xboxlive.com/123456789",
                 mime_type="audio/mpeg",
                 path=None,
             ),
@@ -415,8 +415,8 @@ async def test_ntfy_publish_upload_media_source_not_supported(
             {
                 ATTR_ENTITY_ID: "notify.mytopic",
                 ATTR_ATTACH_FILE: {
-                    "media_content_id": "media-source://tts/demo?message=Hello+world%21&language=en",
-                    "media_content_type": "audio/mp3",
+                    "media_content_id": "media-source://xbox/123456789/",
+                    "media_content_type": "video/mp4",
                 },
             },
             blocking=True,
@@ -453,6 +453,40 @@ async def test_ntfy_publish_upload_media_image_source(
         )
     mock_get_image.assert_called_once_with(hass, "image.test")
     mock_aiontfy.publish.assert_called_once_with(Message(topic="mytopic"), b"\x89PNG")
+
+
+@pytest.mark.usefixtures("mock_aiontfy")
+async def test_ntfy_publish_upload_tts_source(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_aiontfy: AsyncMock,
+) -> None:
+    """Test publishing ntfy message with tts source."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    with patch(
+        "homeassistant.components.tts.async_get_media_source_audio",
+        return_value=("mp3", b"Test"),
+    ) as mock_get_media_source_audio:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PUBLISH,
+            {
+                ATTR_ENTITY_ID: "notify.mytopic",
+                ATTR_ATTACH_FILE: {
+                    "media_content_id": "media-source://tts/demo?message=Test&language=en",
+                    "media_content_type": "audio/mp3",
+                },
+            },
+            blocking=True,
+        )
+    mock_get_media_source_audio.assert_called_once_with(
+        hass, "media-source://tts/demo?message=Test&language=en"
+    )
+    mock_aiontfy.publish.assert_called_once_with(Message(topic="mytopic"), b"Test")
 
 
 async def test_ntfy_clear(

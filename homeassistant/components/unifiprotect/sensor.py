@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
 import logging
-from typing import Any, cast, override
+import operator
+from typing import Any, override
 
 from uiprotect.data import (
     NVR,
@@ -18,12 +19,7 @@ from uiprotect.data import (
     ProtectDeviceModel,
     Sensor,
 )
-from uiprotect.data.public_devices import (
-    PublicDeviceModel,
-    PublicLight,
-    SensorFeatureCapability,
-)
-from uiprotect.utils import convert_to_datetime
+from uiprotect.data.public_devices import PublicDeviceModel, SensorFeatureCapability
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -45,6 +41,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
@@ -97,11 +94,6 @@ class ProtectSensorEventEntityDescription(
     ProtectEventMixin[T], SensorEntityDescription
 ):
     """Describes UniFi Protect Sensor entity."""
-
-
-def _get_last_motion_public(obj: PublicDeviceModel) -> datetime | None:
-    # Public API reports last motion as a JS epoch (ms); private side a datetime.
-    return convert_to_datetime(cast(PublicLight, obj).last_motion)
 
 
 def _get_uptime(obj: ProtectDeviceModel) -> datetime | None:
@@ -325,8 +317,8 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         native_unit_of_measurement=LIGHT_LUX,
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
-        ufp_value="stats.light.value",
-        ufp_enabled="is_light_sensor_enabled",
+        ufp_public_value="stats.light.value",
+        ufp_public_enabled_fn=operator.attrgetter("is_light_sensor_enabled"),
         ufp_capability=SensorFeatureCapability.LIGHT,
     ),
     ProtectSensorEntityDescription(
@@ -334,8 +326,8 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        ufp_value="stats.humidity.value",
-        ufp_enabled="is_humidity_sensor_enabled",
+        ufp_public_value="stats.humidity.value",
+        ufp_public_enabled_fn=operator.attrgetter("is_humidity_sensor_enabled"),
         ufp_capability=SensorFeatureCapability.HUMIDITY,
     ),
     ProtectSensorEntityDescription(
@@ -343,8 +335,8 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        ufp_value="stats.temperature.value",
-        ufp_enabled="is_temperature_sensor_enabled",
+        ufp_public_value="stats.temperature.value",
+        ufp_public_enabled_fn=operator.attrgetter("is_temperature_sensor_enabled"),
         ufp_capability=SensorFeatureCapability.TEMPERATURE,
     ),
     ProtectSensorEntityDescription[Sensor](
@@ -358,7 +350,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="door_last_trip_time",
         translation_key="last_open",
         device_class=SensorDeviceClass.TIMESTAMP,
-        ufp_value="open_status_changed_at",
+        ufp_public_value="open_status_changed_at_dt",
         ufp_capability=SensorFeatureCapability.OPEN,
         entity_registry_enabled_default=False,
     ),
@@ -366,7 +358,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="motion_last_trip_time",
         translation_key="last_motion_detected",
         device_class=SensorDeviceClass.TIMESTAMP,
-        ufp_value="motion_detected_at",
+        ufp_public_value="motion_detected_at_dt",
         ufp_capability=SensorFeatureCapability.MOTION,
         entity_registry_enabled_default=False,
     ),
@@ -375,7 +367,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         translation_key="last_tampering_detected",
         ufp_capability=SensorFeatureCapability.TAMPER,
         device_class=SensorDeviceClass.TIMESTAMP,
-        ufp_value="tampering_detected_at",
+        ufp_public_value="tampering_detected_at_dt",
         entity_registry_enabled_default=False,
     ),
     ProtectSensorEntityDescription(
@@ -522,7 +514,7 @@ LIGHT_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="motion_last_trip_time",
         translation_key="last_motion_detected",
         device_class=SensorDeviceClass.TIMESTAMP,
-        ufp_public_value_fn=_get_last_motion_public,
+        ufp_public_value="last_motion_dt",
         entity_registry_enabled_default=False,
     ),
     ProtectSensorEntityDescription(
@@ -680,6 +672,25 @@ class ProtectFobSensor(ProtectFobEntity, SensorEntity):
         self._attr_native_value = self.entity_description.value_fn(fob)
 
 
+@callback
+def _async_public_entities(
+    data: ProtectData, device: PublicDeviceModel
+) -> list[Entity]:
+    """Return the sensors for one public device."""
+    if isinstance(device, Fob):
+        return [
+            ProtectFobSensor(data, device, description) for description in FOB_SENSORS
+        ]
+    return list(
+        async_all_device_entities(
+            data,
+            ProtectDeviceSensor,
+            model_descriptions=_MODEL_DESCRIPTIONS,
+            public_device=device,
+        )
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
@@ -690,36 +701,36 @@ async def async_setup_entry(
 
     @callback
     def _add_new_public_device(device: PublicDeviceModel) -> None:
-        if isinstance(device, Fob):
-            async_add_entities(
-                ProtectFobSensor(data, device, description)
-                for description in FOB_SENSORS
-            )
+        async_add_entities(_async_public_entities(data, device))
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
     )
 
+    async_remove_unsupported_sense_entities(hass, Platform.SENSOR, data, SENSE_SENSORS)
+
+    entities: list[Entity] = []
     # The public bootstrap is primed only with an API key and supported NVR
     # firmware; without it there are no fobs to expose.
     api = data.api
     if api.has_public_bootstrap:
-        async_add_entities(
-            ProtectFobSensor(data, fob, description)
-            for fob in api.public_bootstrap.fobs.values()
-            for description in FOB_SENSORS
-        )
+        for fob in api.public_bootstrap.fobs.values():
+            entities.extend(_async_public_entities(data, fob))
 
-    # Everything below is driven by the private bootstrap, which public-only
-    # entries do not have.
     if api.is_public_only:
+        # The remaining sensors read the private bootstrap; the migrated ones
+        # are built from the public devices instead.
+        entities.extend(
+            async_all_device_entities(
+                data, ProtectDeviceSensor, model_descriptions=_MODEL_DESCRIPTIONS
+            )
+        )
+        async_add_entities(entities)
         return
-
-    async_remove_unsupported_sense_entities(hass, Platform.SENSOR, data, SENSE_SENSORS)
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        entities = async_all_device_entities(
+        device_entities = async_all_device_entities(
             data,
             ProtectDeviceSensor,
             all_descs=ALL_DEVICES_SENSORS,
@@ -732,18 +743,20 @@ async def async_setup_entry(
             and isinstance(device, Camera)
             and device.is_adopted_by_us
         ):
-            entities += _async_event_entities(data, ufp_device=device)
-        async_add_entities(entities)
+            device_entities += _async_event_entities(data, ufp_device=device)
+        async_add_entities(device_entities)
 
     data.async_subscribe_adopt(_add_new_device)
-    entities = async_all_device_entities(
-        data,
-        ProtectDeviceSensor,
-        all_descs=ALL_DEVICES_SENSORS,
-        model_descriptions=_MODEL_DESCRIPTIONS,
+    entities.extend(
+        async_all_device_entities(
+            data,
+            ProtectDeviceSensor,
+            all_descs=ALL_DEVICES_SENSORS,
+            model_descriptions=_MODEL_DESCRIPTIONS,
+        )
     )
-    entities += _async_event_entities(data)
-    entities += _async_nvr_entities(data)
+    entities.extend(_async_event_entities(data))
+    entities.extend(_async_nvr_entities(data))
 
     async_add_entities(entities)
 

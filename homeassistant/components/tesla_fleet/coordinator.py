@@ -152,6 +152,8 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using TeslaFleet API."""
 
+        self.update_interval = VEHICLE_INTERVAL
+
         try:
             # Check if the vehicle is awake using a free API call
             response = await self.api.vehicle()
@@ -166,11 +168,16 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except VehicleOffline:
             self.data["state"] = TeslaFleetState.ASLEEP
             return self.data
-        except RateLimited:
-            LOGGER.warning(
-                "%s rate limited, will skip refresh",
-                self.name,
-            )
+        except RateLimited as e:
+            if isinstance(e.data, dict) and (after := e.data.get("after")):
+                LOGGER.warning(
+                    "%s rate limited, will retry in %s seconds",
+                    self.name,
+                    after,
+                )
+                self.update_interval = timedelta(seconds=int(after))
+            else:
+                LOGGER.warning("%s rate limited, will skip refresh", self.name)
             return self.data
         except (InvalidToken, OAuthExpired) as e:
             _invalidate_access_token(self.hass, self.config_entry)
@@ -179,8 +186,6 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
-
-        self.update_interval = VEHICLE_INTERVAL
 
         self.updated_once = True
 
@@ -238,13 +243,13 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         try:
             data = (await self.api.live_status())["response"]
         except RateLimited as e:
-            if isinstance(e.data, dict) and "after" in e.data:
+            if isinstance(e.data, dict) and (after := e.data.get("after")):
                 LOGGER.warning(
                     "%s rate limited, will retry in %s seconds",
                     self.name,
-                    e.data["after"],
+                    after,
                 )
-                self.update_interval = timedelta(seconds=int(e.data["after"]))
+                self.update_interval = timedelta(seconds=int(after))
             else:
                 LOGGER.warning("%s rate limited, will skip refresh", self.name)
             return self.data
@@ -317,16 +322,18 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site history data using Tesla Fleet API."""
 
+        self.update_interval = ENERGY_HISTORY_INTERVAL
+
         try:
             data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))["response"]
         except RateLimited as e:
-            if isinstance(e.data, dict) and "after" in e.data:
+            if isinstance(e.data, dict) and (after := e.data.get("after")):
                 LOGGER.warning(
                     "%s rate limited, will retry in %s seconds",
                     self.name,
-                    e.data["after"],
+                    after,
                 )
-                self.update_interval = timedelta(seconds=int(e.data["after"]))
+                self.update_interval = timedelta(seconds=int(after))
             else:
                 LOGGER.warning("%s rate limited, will skip refresh", self.name)
             return self.data
@@ -401,13 +408,13 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         try:
             data = (await self.api.site_info())["response"]
         except RateLimited as e:
-            if isinstance(e.data, dict) and "after" in e.data:
+            if isinstance(e.data, dict) and (after := e.data.get("after")):
                 LOGGER.warning(
                     "%s rate limited, will retry in %s seconds",
                     self.name,
-                    e.data["after"],
+                    after,
                 )
-                self.update_interval = timedelta(seconds=int(e.data["after"]))
+                self.update_interval = timedelta(seconds=int(after))
             else:
                 LOGGER.warning("%s rate limited, will skip refresh", self.name)
             return self.data

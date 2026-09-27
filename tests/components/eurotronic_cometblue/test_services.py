@@ -6,8 +6,8 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.eurotronic_cometblue import DOMAIN
-from homeassistant.components.number import ServiceValidationError
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
 
 from .conftest import setup_with_selected_platforms

@@ -24,6 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 class BesenCoordinator(DataUpdateCoordinator[BesenData]):
     """Coordinate Besen state updates."""
 
+    config_entry: BesenConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -79,6 +81,8 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
         """Publish a client state update."""
 
         self.async_set_updated_data(data)
+        if data.auth_failed:
+            self.config_entry.async_start_reauth(self.hass)
 
     async def async_start_charging(self) -> None:
         """Start charging."""

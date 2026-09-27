@@ -107,5 +107,9 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
 
     async def async_close_sma_session(self) -> None:
         """Close the SMA session."""
-        await self.sma.close_session()
+        try:
+            await self.sma.close_session()
+        except SmaConnectionException as err:
+            _LOGGER.debug("Could not close the SMA session: %s", err)
+            return
         _LOGGER.debug("SMA session closed")

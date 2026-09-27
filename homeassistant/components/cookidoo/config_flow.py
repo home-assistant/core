@@ -1,11 +1,14 @@
 """Config flow for Cookidoo integration."""
 
 from collections.abc import Mapping
+from dataclasses import asdict
 import logging
 from typing import Any, override
 
 from cookidoo_api import (
+    CookidooAuthData,
     CookidooAuthException,
+    CookidooParseException,
     CookidooRequestException,
     get_country_options,
     get_localization_options,
@@ -18,7 +21,14 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_COUNTRY, CONF_EMAIL, CONF_LANGUAGE, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_COUNTRY,
+    CONF_EMAIL,
+    CONF_LANGUAGE,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+)
+from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     CountrySelector,
     CountrySelectorConfig,
@@ -61,6 +71,9 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
 
     user_input: dict[str, Any]
     user_uuid: str
+    # A login whose token response carries no refresh token leaves the library
+    # with nothing to hand us, and the entry is then created without tokens
+    token: dict[str, Any] = {}
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any]
@@ -119,7 +132,12 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         ):
             if self.source == SOURCE_USER:
                 return self.async_create_entry(
-                    title="Cookidoo", data={**self.user_input, **language_input}
+                    title="Cookidoo",
+                    data={
+                        **self.user_input,
+                        **language_input,
+                        CONF_TOKEN: self.token,
+                    },
                 )
             reconfigure_entry = self._get_reconfigure_entry()
             return self.async_update_reload_and_abort(
@@ -128,6 +146,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
                     **reconfigure_entry.data,
                     **self.user_input,
                     **language_input,
+                    CONF_TOKEN: self.token,
                 },
             )
 
@@ -160,7 +179,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(self.user_uuid)
                 self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
-                    reauth_entry, data_updates=user_input
+                    reauth_entry, data_updates={**user_input, CONF_TOKEN: self.token}
                 )
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -200,6 +219,11 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         }
 
+    @callback
+    def _save_token(self, auth_data: CookidooAuthData) -> None:
+        """Keep the tokens the library hands us during the validation requests."""
+        self.token = asdict(auth_data)
+
     async def validate_input(
         self,
         user_input: dict[str, Any],
@@ -222,14 +246,21 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
                 await get_localization_options(country=data_input[CONF_COUNTRY].lower())
             )[0].language  # Pick any language to test login
 
-        cookidoo = await cookidoo_from_config_data(self.hass, data_input)
+        # Only this attempt's tokens may reach the entry: a login that yields
+        # none leaves _save_token uncalled, and an earlier attempt may have
+        # stored a pair, for another account in a reauth
+        self.token = {}
+        cookidoo = await cookidoo_from_config_data(
+            self.hass, data_input, on_auth_data_update=self._save_token
+        )
         try:
             await cookidoo.login()
             user_info = await cookidoo.get_user_info()
             self.user_uuid = user_info.id
             if language_input:
                 await cookidoo.get_additional_items()
-        except CookidooRequestException:
+        except CookidooRequestException, CookidooParseException:
+            # login() scrapes the CIAM login page, so it can also fail to parse it
             errors["base"] = "cannot_connect"
         except CookidooAuthException:
             errors["base"] = "invalid_auth"
