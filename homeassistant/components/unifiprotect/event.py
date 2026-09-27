@@ -106,6 +106,9 @@ _SMART_DETECT_EVENT_TYPES = (
     EventType.SMART_DETECT_LINE,
     EventType.SMART_DETECT_LOITER,
 )
+# The event types uiprotect keeps in the camera's last smart detect event; a
+# line crossing inside a zone can leave it on the line event.
+_VEHICLE_EVENT_TYPES = (EventType.SMART_DETECT, EventType.SMART_DETECT_LINE)
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -422,7 +425,7 @@ class ProtectDeviceVehicleEventEntity(
         # Process vehicle detection events with thumbnails
         if (
             event
-            and event.type is EventType.SMART_DETECT
+            and event.type in _VEHICLE_EVENT_TYPES
             and (thumbnails := self._get_vehicle_thumbnails(event))
         ):
             # Skip if same event with same data (no changes)
