@@ -175,6 +175,46 @@ def test_build_interaction_request_full_parameters() -> None:
     }
 
 
+def test_build_interaction_request_thinking_level_gemini_2_5() -> None:
+    """Test thinking_level is omitted for Gemini 2.5 models."""
+    request = build_interaction_request(
+        model="models/gemini-2.5-flash",
+        input_content="Hello",
+        options={CONF_THINKING_LEVEL: "high"},
+    )
+    assert "thinking_level" not in request["generation_config"]
+
+
+def test_build_interaction_request_thinking_level_gemini_3_pro_minimal() -> None:
+    """Test minimal thinking_level is omitted for Gemini 3 Pro models."""
+    request = build_interaction_request(
+        model="models/gemini-3.1-pro-preview",
+        input_content="Hello",
+        options={CONF_THINKING_LEVEL: "minimal"},
+    )
+    assert "thinking_level" not in request["generation_config"]
+
+
+def test_build_interaction_request_thinking_level_gemini_3_pro_supported() -> None:
+    """Test supported thinking_levels are included for Gemini 3 Pro models."""
+    request = build_interaction_request(
+        model="models/gemini-3.1-pro-preview",
+        input_content="Hello",
+        options={CONF_THINKING_LEVEL: "low"},
+    )
+    assert request["generation_config"]["thinking_level"] == "low"
+
+
+def test_build_interaction_request_thinking_level_gemini_3_flash_minimal() -> None:
+    """Test minimal thinking_level is included for non-Pro Gemini 3 models."""
+    request = build_interaction_request(
+        model="models/gemini-3.1-flash-lite",
+        input_content="Hello",
+        options={CONF_THINKING_LEVEL: "minimal"},
+    )
+    assert request["generation_config"]["thinking_level"] == "minimal"
+
+
 async def test_transform_interactions_stream_text() -> None:
     """Test streaming text events from Interactions API."""
     chat_log = MagicMock()
