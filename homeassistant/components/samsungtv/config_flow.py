@@ -26,7 +26,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TOKEN,
 )
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
@@ -489,7 +489,9 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_abort_if_host_already_in_progress(self) -> None:
         if self.hass.config_entries.flow.async_has_matching_flow(self):
-            raise AbortFlow("already_in_progress")
+            raise AbortFlow(
+                "already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
 
     @override
     def is_matching(self, other_flow: Self) -> bool:

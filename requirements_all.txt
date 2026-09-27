@@ -1890,7 +1890,7 @@ panasonic-viera==0.4.6
 pdunehd==1.3.3
 
 # homeassistant.components.peblar
-peblar==2.0.0
+peblar==2.1.0
 
 # homeassistant.components.peco
 peco==0.1.2
@@ -2507,7 +2507,7 @@ pyotgw==2.2.3
 pyotp==2.9.0
 
 # homeassistant.components.overkiz
-pyoverkiz[nexity]==2.1.0
+pyoverkiz[nexity]==2.1.2
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.20
