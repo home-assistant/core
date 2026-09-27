@@ -24,6 +24,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
     intent,
     llm,
 )
@@ -247,10 +248,9 @@ async def test_search_media(
                 },
             ],
             "instruction": (
-                "Pick the result that best matches the request. "
-                "Call media_player__play_media with its media_content_id and "
-                "media_content_type, and with the same name, area and floor "
-                "as this search."
+                "To play a result, call media_player__play_media with its "
+                "media_content_id and media_content_type, and with the same "
+                "player_name, player_area and player_floor as this search."
             ),
         }
     )
@@ -337,7 +337,7 @@ async def test_play_media(hass: HomeAssistant, media: dict[str, str]) -> None:
     play_calls = async_mock_service(hass, DOMAIN, SERVICE_PLAY_MEDIA)
 
     result = await _async_call_tool(
-        hass, "media_player__play_media", {**media, "name": "Test media_player"}
+        hass, "media_player__play_media", {**media, "player_name": "Test media_player"}
     )
 
     assert result == llm.ToolResult(data={"success": True})
@@ -354,7 +354,7 @@ async def test_blank_target_values_omitted(hass: HomeAssistant) -> None:
         response={ENTITY_ID: SearchMedia(result=[])},
     )
     play_calls = async_mock_service(hass, DOMAIN, SERVICE_PLAY_MEDIA)
-    blank_target = {"name": "", "area": " ", "floor": None}
+    blank_target = {"player_name": "", "player_area": " ", "player_floor": None}
 
     await _async_call_tool(
         hass,
@@ -405,9 +405,67 @@ async def test_player_without_features_not_matched(
     play_calls = async_mock_service(hass, DOMAIN, SERVICE_PLAY_MEDIA)
 
     with pytest.raises(intent.MatchFailedError):
-        await _async_call_tool(hass, tool_name, {**tool_args, "name": "Play only"})
+        await _async_call_tool(
+            hass, tool_name, {**tool_args, "player_name": "Play only"}
+        )
     assert not search_calls
     assert not play_calls
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        pytest.param({"player_name": "Kitchen speaker"}, id="player_name"),
+        pytest.param({"player_area": "Kitchen"}, id="player_area"),
+        pytest.param({"player_floor": "Ground floor"}, id="player_floor"),
+    ],
+)
+async def test_play_media_target(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    floor_registry: fr.FloorRegistry,
+    target: dict[str, str],
+) -> None:
+    """Test the player target arguments select the media player."""
+    ground_floor = floor_registry.async_create("Ground floor")
+    upstairs = floor_registry.async_create("Upstairs")
+    kitchen = area_registry.async_create("Kitchen", floor_id=ground_floor.floor_id)
+    bedroom = area_registry.async_create("Bedroom", floor_id=upstairs.floor_id)
+    async_expose_entity(hass, "conversation", ENTITY_ID, False)
+
+    for area in (kitchen, bedroom):
+        entry = entity_registry.async_get_or_create(
+            DOMAIN,
+            "test",
+            area.id,
+            suggested_object_id=area.id,
+            original_name=f"{area.name} speaker",
+        )
+        entity_registry.async_update_entity(entry.entity_id, area_id=area.id)
+        hass.states.async_set(
+            entry.entity_id,
+            "idle",
+            {
+                "friendly_name": f"{area.name} speaker",
+                ATTR_SUPPORTED_FEATURES: SEARCH_PLAY_FEATURES,
+            },
+        )
+        async_expose_entity(hass, "conversation", entry.entity_id, True)
+
+    play_calls = async_mock_service(hass, DOMAIN, SERVICE_PLAY_MEDIA)
+
+    await _async_call_tool(
+        hass,
+        "media_player__play_media",
+        {
+            "media_content_id": "library://track/1",
+            "media_content_type": "track",
+            **target,
+        },
+    )
+
+    assert play_calls[0].data["entity_id"] == "media_player.kitchen"
 
 
 async def test_search_and_play_use_device_area(

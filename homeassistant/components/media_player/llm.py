@@ -84,9 +84,9 @@ SEARCH_PLAY_FEATURES = (
 MAX_SEARCH_RESULTS = 20
 
 TARGET_SCHEMA = {
-    probatio.Optional("name"): cv.string,
-    probatio.Optional("area"): cv.string,
-    probatio.Optional("floor"): cv.string,
+    probatio.Optional("player_name"): cv.string,
+    probatio.Optional("player_area"): cv.string,
+    probatio.Optional("player_floor"): cv.string,
 }
 
 
@@ -110,9 +110,9 @@ def _async_match_player(
 ) -> State:
     """Return the single media player that the target arguments match."""
     constraints = intent.MatchTargetsConstraints(
-        name=args.get("name"),
-        area_name=args.get("area"),
-        floor_name=args.get("floor"),
+        name=args.get("player_name"),
+        area_name=args.get("player_area"),
+        floor_name=args.get("player_floor"),
         domains={DOMAIN},
         assistant=llm_context.assistant,
         features=SEARCH_PLAY_FEATURES,
@@ -188,10 +188,9 @@ class MediaSearchTool(Tool):
             data={
                 "results": results,
                 "instruction": (
-                    "Pick the result that best matches the request. "
-                    f"Call {MediaPlayTool.name} with its media_content_id and "
-                    "media_content_type, and with the same name, area and floor "
-                    "as this search."
+                    f"To play a result, call {MediaPlayTool.name} with its "
+                    "media_content_id and media_content_type, and with the same "
+                    "player_name, player_area and player_floor as this search."
                 ),
             }
         )
@@ -204,7 +203,8 @@ class MediaPlayTool(Tool):
     title = "Play media"
     description = (
         "Plays a media item that the search media tool returned, or a URL. "
-        "For a search result, pass the same name, area and floor as the search."
+        "For a search result, pass the same player_name, player_area and "
+        "player_floor as the search."
     )
     parameters = probatio.Schema(
         {
