@@ -19,7 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SSL, DOMAIN
+from .const import DEFAULT_PORT, DEFAULT_SSL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,11 +135,11 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         event_collector = hass_splunk(
             session=async_get_clientsession(self.hass),
-            host=user_input.get(CONF_HOST, DEFAULT_HOST),
-            port=user_input.get(CONF_PORT, DEFAULT_PORT),
+            host=user_input[CONF_HOST],
+            port=user_input[CONF_PORT],
             token=user_input[CONF_TOKEN],
-            use_ssl=user_input.get(CONF_SSL, DEFAULT_SSL),
-            verify_ssl=user_input.get(CONF_VERIFY_SSL, True),
+            use_ssl=user_input[CONF_SSL],
+            verify_ssl=user_input[CONF_VERIFY_SSL],
         )
 
         try:
