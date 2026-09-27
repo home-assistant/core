@@ -1484,7 +1484,7 @@ def _generate_statistics_period_endpoints_stmt(
     metadata_ids: list[int] | None,
     period_bounds: tuple[tuple[float, float], ...],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> StatementLambdaElement:
+) -> Select:
     """Select original rows at the end of each requested calendar period."""
     queries = []
     for lower, upper in period_bounds:
@@ -1496,15 +1496,20 @@ def _generate_statistics_period_endpoints_stmt(
             query = query.where(Statistics.metadata_id.in_(metadata_ids))
         queries.append(query.group_by(Statistics.metadata_id))
     endpoints = union_all(*queries).subquery()
-    stmt = _generate_select_columns_for_types_stmt(Statistics, types)
-    stmt += lambda q: q.join(
+    columns = select(Statistics.metadata_id, Statistics.start_ts)
+    for key, type_columns in _type_column_mapping.items():
+        if key in types:
+            columns = columns.add_columns(
+                *(getattr(Statistics, column) for column in type_columns)
+            )
+    # Keep dynamically constructed bound values local to this request.
+    return columns.join(
         endpoints,
         and_(
             Statistics.metadata_id == endpoints.c.metadata_id,
             Statistics.start_ts == endpoints.c.start_ts,
         ),
     )
-    return stmt
 
 
 def _generate_latest_statistics_start_stmt(
