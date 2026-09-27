@@ -179,9 +179,14 @@ def extract_output_image(
         interaction.output_image is not None
         and interaction.output_image.data is not None
     ):
+        raw_data = (
+            base64.b64decode(interaction.output_image.data)
+            if isinstance(interaction.output_image.data, str)
+            else bytes(interaction.output_image.data)
+        )
         return (
-            base64.b64decode(interaction.output_image.data),
-            interaction.output_image.mime_type or "image/jpeg",
+            raw_data,
+            str(interaction.output_image.mime_type or "image/jpeg"),
         )
 
     if interaction.steps:
@@ -192,9 +197,14 @@ def extract_output_image(
                         isinstance(content_part, interactions.ImageContent)
                         and content_part.data is not None
                     ):
+                        raw_data = (
+                            base64.b64decode(content_part.data)
+                            if isinstance(content_part.data, str)
+                            else bytes(content_part.data)
+                        )
                         return (
-                            base64.b64decode(content_part.data),
-                            content_part.mime_type or "image/jpeg",
+                            raw_data,
+                            str(content_part.mime_type or "image/jpeg"),
                         )
 
     raise ValueError("Interaction did not contain an output image")
@@ -211,9 +221,14 @@ def extract_output_audio(
         interaction.output_audio is not None
         and interaction.output_audio.data is not None
     ):
+        raw_data = (
+            base64.b64decode(interaction.output_audio.data)
+            if isinstance(interaction.output_audio.data, str)
+            else bytes(interaction.output_audio.data)
+        )
         return (
-            base64.b64decode(interaction.output_audio.data),
-            interaction.output_audio.mime_type or "audio/wav",
+            raw_data,
+            str(interaction.output_audio.mime_type or "audio/wav"),
         )
 
     if interaction.steps:
@@ -224,9 +239,14 @@ def extract_output_audio(
                         isinstance(content_part, interactions.AudioContent)
                         and content_part.data is not None
                     ):
+                        raw_data = (
+                            base64.b64decode(content_part.data)
+                            if isinstance(content_part.data, str)
+                            else bytes(content_part.data)
+                        )
                         return (
-                            base64.b64decode(content_part.data),
-                            content_part.mime_type or "audio/wav",
+                            raw_data,
+                            str(content_part.mime_type or "audio/wav"),
                         )
 
     raise ValueError("Interaction did not contain output audio")
@@ -252,6 +272,9 @@ def build_interaction_request(
         | None
     ) = None,
     default_max_tokens: int | None = None,
+    speech_config: (
+        Sequence[interactions.SpeechConfig] | Sequence[dict[str, Any]] | None
+    ) = None,
     stream: bool = True,
     store: bool = False,
 ) -> dict[str, Any]:
@@ -280,21 +303,27 @@ def build_interaction_request(
     if response_format:
         request["response_format"] = response_format
 
-    generation_config: dict[str, Any] = {
-        "temperature": options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
-        "top_p": options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-        "top_k": options.get(CONF_TOP_K, RECOMMENDED_TOP_K),
-        "max_output_tokens": options.get(
-            CONF_MAX_TOKENS,
-            default_max_tokens
-            if default_max_tokens is not None
-            else RECOMMENDED_MAX_TOKENS,
-        ),
-    }
+    if speech_config is not None:
+        generation_config: dict[str, Any] = {
+            "temperature": options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
+            "speech_config": speech_config,
+        }
+    else:
+        generation_config = {
+            "temperature": options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
+            "top_p": options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+            "top_k": options.get(CONF_TOP_K, RECOMMENDED_TOP_K),
+            "max_output_tokens": options.get(
+                CONF_MAX_TOKENS,
+                default_max_tokens
+                if default_max_tokens is not None
+                else RECOMMENDED_MAX_TOKENS,
+            ),
+        }
 
-    thinking_level = options.get(CONF_THINKING_LEVEL, RECOMMENDED_THINKING_LEVEL)
-    if thinking_level and thinking_level != "auto":
-        generation_config["thinking_level"] = thinking_level
+        thinking_level = options.get(CONF_THINKING_LEVEL, RECOMMENDED_THINKING_LEVEL)
+        if thinking_level and thinking_level != "auto":
+            generation_config["thinking_level"] = thinking_level
 
     request["generation_config"] = generation_config
 
@@ -377,6 +406,32 @@ def _convert_assistant_content_steps(
                 search_type="web_search",
             )
         )
+        search_res_detail = next(
+            (d for d in part_details if d.part_type == "google_search_result"),
+            None,
+        )
+        if search_res_detail and search_res_detail.search_result is not None:
+            search_results: list[interactions.GoogleSearchResult] = []
+            raw_results = search_res_detail.search_result
+            if isinstance(raw_results, list):
+                for r in raw_results:
+                    if isinstance(r, interactions.GoogleSearchResult):
+                        search_results.append(r)
+                    elif isinstance(r, dict):
+                        val = r.get("search_suggestions")
+                        suggestions = val if isinstance(val, str) else None
+                        search_results.append(
+                            interactions.GoogleSearchResult(
+                                search_suggestions=suggestions
+                            )
+                        )
+            steps.append(
+                interactions.GoogleSearchResultStep(
+                    call_id=search_tool.id,
+                    result=search_results,
+                    signature=search_res_detail.thought_signature,
+                )
+            )
 
     thought_sig = next(
         (d.thought_signature for d in part_details if d.part_type == "thought"),
@@ -488,6 +543,12 @@ def convert_chat_log_to_interactions_steps(
                     latest_part_details = content.native.part_details
                 steps.extend(_convert_assistant_content_steps(content))
             case conversation.ToolResultContent():
+                if content.tool_name == "google_search" and any(
+                    isinstance(s, interactions.GoogleSearchResultStep)
+                    and s.call_id == content.tool_call_id
+                    for s in steps
+                ):
+                    continue
                 steps.append(_convert_tool_result_step(content, latest_part_details))
 
     return steps
@@ -725,22 +786,6 @@ def _handle_step_stop(
         return deltas
 
     if state.current_search_result_id:
-        if state.current_search_result_signature:
-            state.part_details.append(
-                PartDetails(
-                    part_type="google_search_result",
-                    index=max(0, state.tool_call_index - 1),
-                    length=0,
-                    thought_signature=state.current_search_result_signature,
-                )
-            )
-
-        if state.part_details:
-            deltas.append(
-                {"native": ContentDetails(part_details=list(state.part_details))}
-            )
-            state.part_details.clear()
-
         raw_results = state.current_search_result_data
         formatted_results: list[dict[str, Any]] = []
         for r in raw_results:
@@ -748,22 +793,16 @@ def _handle_step_stop(
                 formatted_results.append(r.model_dump(exclude_none=True))
             elif isinstance(r, dict):
                 formatted_results.append(r)
-        result_dict: dict[str, Any] = {"result": formatted_results}
-        if state.current_search_result_signature:
-            result_dict["signature"] = state.current_search_result_signature
 
-        deltas.append(
-            {
-                "role": "tool_result",
-                "tool_call_id": state.current_search_result_id,
-                "tool_name": "google_search",
-                "result": llm.ToolResult(
-                    data=result_dict,
-                    error=bool(state.current_search_result_is_error),
-                ),
-            }
+        state.part_details.append(
+            PartDetails(
+                part_type="google_search_result",
+                index=max(0, state.tool_call_index - 1),
+                length=0,
+                thought_signature=state.current_search_result_signature,
+                search_result=formatted_results,
+            )
         )
-        deltas.append({"role": "assistant"})
 
         state.current_search_result_id = None
         state.current_search_result_data = []

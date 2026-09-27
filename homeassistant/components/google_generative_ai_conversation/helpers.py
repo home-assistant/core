@@ -3,7 +3,7 @@
 from contextlib import suppress
 from dataclasses import dataclass
 import io
-from typing import Literal
+from typing import Any, Literal
 import wave
 
 from homeassistant.exceptions import HomeAssistantError
@@ -29,6 +29,9 @@ class PartDetails:
     thought_signature: str | None = None
     """Signature, if available."""
 
+    search_result: Any = None
+    """Google Search result data, if available."""
+
 
 @dataclass(slots=True)
 class ContentDetails:
@@ -48,6 +51,11 @@ def convert_to_wav(audio_data: bytes, mime_type: str) -> bytes:
         A bytes object representing the WAV file header.
 
     """
+    if mime_type.lower().startswith(
+        ("audio/wav", "audio/x-wav")
+    ) or audio_data.startswith(b"RIFF"):
+        return audio_data
+
     parameters = _parse_audio_mime_type(mime_type)
 
     wav_buffer = io.BytesIO()
@@ -75,6 +83,9 @@ def _parse_audio_mime_type(mime_type: str) -> dict[str, int]:
         integers if found, otherwise None.
 
     """
+    if mime_type.lower().startswith(("audio/wav", "audio/x-wav")):
+        return {"bits_per_sample": 16, "rate": 24000}
+
     if not mime_type.lower().startswith("audio/l"):
         LOGGER.warning("Received unexpected MIME type %s", mime_type)
         raise HomeAssistantError(f"Unsupported audio MIME type: {mime_type}")

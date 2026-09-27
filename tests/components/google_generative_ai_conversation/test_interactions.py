@@ -624,11 +624,11 @@ async def test_transform_interactions_stream_gemini_3_flash_google_search(
         )
     ]
 
-    assert len(contents) == 3
+    assert len(contents) == 1
 
-    search_call_content = contents[0]
-    assert isinstance(search_call_content, conversation.AssistantContent)
-    assert search_call_content.tool_calls == [
+    assistant_content = contents[0]
+    assert isinstance(assistant_content, conversation.AssistantContent)
+    assert assistant_content.tool_calls == [
         llm.ToolInput(
             tool_name="google_search",
             tool_args={
@@ -641,7 +641,11 @@ async def test_transform_interactions_stream_gemini_3_flash_google_search(
             external=True,
         )
     ]
-    assert search_call_content.native == ContentDetails(
+    assert (
+        assistant_content.content
+        == "The **Seattle Seahawks** won Super Bowl LX on February 8, 2026."
+    )
+    assert assistant_content.native == ContentDetails(
         part_details=[
             PartDetails(
                 part_type="google_search_call",
@@ -654,27 +658,8 @@ async def test_transform_interactions_stream_gemini_3_flash_google_search(
                 index=0,
                 length=0,
                 thought_signature="res_sig_abc",
+                search_result=[{"search_suggestions": "..."}],
             ),
-        ]
-    )
-
-    tool_result_content = contents[1]
-    assert isinstance(tool_result_content, conversation.ToolResultContent)
-    assert tool_result_content.tool_name == "google_search"
-    assert tool_result_content.tool_call_id == "call_491782"
-    assert tool_result_content.result.data == {
-        "result": [{"search_suggestions": "..."}],
-        "signature": "res_sig_abc",
-    }
-
-    final_content = contents[2]
-    assert isinstance(final_content, conversation.AssistantContent)
-    assert (
-        final_content.content
-        == "The **Seattle Seahawks** won Super Bowl LX on February 8, 2026."
-    )
-    assert final_content.native == ContentDetails(
-        part_details=[
             PartDetails(
                 part_type="thought",
                 index=0,
