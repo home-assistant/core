@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 
 from aiohttp import ClientConnectorError, ServerDisconnectedError
 from freezegun.api import FrozenDateTimeFactory
+from pyoverkiz.enums import ExecutionState
 from pyoverkiz.exceptions import (
     InvalidEventListenerIdError,
     MaintenanceError,
@@ -22,6 +23,7 @@ from homeassistant.components.overkiz.const import (
     UPDATE_INTERVAL,
     UPDATE_INTERVAL_ALL_ASSUMED_STATE,
     UPDATE_INTERVAL_EXECUTION,
+    UPDATE_INTERVAL_EXECUTION_SETTLE,
     UPDATE_INTERVAL_RATE_LIMITED_MAX,
 )
 from homeassistant.components.overkiz.executor import OverkizExecutor
@@ -37,6 +39,7 @@ from .helpers import (
     device_created_event,
     device_removed_event,
     execution_registered_event,
+    execution_state_changed_event,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -326,6 +329,65 @@ async def test_water_heater_refreshes_are_debounced(
     await hass.async_block_till_done()
 
     assert mock_client.fetch_events.await_count == 2
+
+
+async def test_execution_poll_settles_before_slowing_down(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+) -> None:
+    """The fast poll outlives the execution that started it.
+
+    The server reports an execution COMPLETED before it publishes the states
+    that execution produced, so slowing down on the completing refresh would
+    strand them until the next default-interval poll.
+    """
+    entry = await setup_overkiz_integration(fixture=POOL_PUMP.fixture)
+    coordinator = entry.runtime_data.coordinator
+
+    await OverkizExecutor(POOL_PUMP.device_url, coordinator).async_execute_command("on")
+    assert coordinator.update_interval == UPDATE_INTERVAL_EXECUTION
+
+    # The completion empties coordinator.executions...
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                "exec-1", ExecutionState.COMPLETED, ExecutionState.IN_PROGRESS
+            )
+        ],
+        update_interval=UPDATE_INTERVAL_EXECUTION,
+    )
+
+    assert not coordinator.executions
+
+    # ...but polling stays fast, so a state published just after it still lands
+    # within a second instead of waiting for the default interval.
+    assert coordinator.update_interval == UPDATE_INTERVAL_EXECUTION
+
+    mock_client.fetch_events.reset_mock()
+    freezer.tick(UPDATE_INTERVAL_EXECUTION)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.fetch_events.await_count == 1
+
+    # Once the settle window passes with nothing outstanding, polling slows.
+    freezer.tick(UPDATE_INTERVAL_EXECUTION_SETTLE)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.update_interval == UPDATE_INTERVAL
+
+    mock_client.fetch_events.reset_mock()
+    freezer.tick(UPDATE_INTERVAL_EXECUTION)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.fetch_events.await_count == 0
 
 
 async def test_rate_limit_backs_off_and_recovers(

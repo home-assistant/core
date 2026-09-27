@@ -1,7 +1,7 @@
 """Helpers to help coordinate updates."""
 
 from collections.abc import Callable, Coroutine
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any, override
 
@@ -35,6 +35,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
 
 if TYPE_CHECKING:
@@ -46,6 +47,7 @@ from .const import (
     LOGGER,
     UPDATE_INTERVAL,
     UPDATE_INTERVAL_EXECUTION,
+    UPDATE_INTERVAL_EXECUTION_SETTLE,
     UPDATE_INTERVAL_RATE_LIMITED_MAX,
 )
 
@@ -61,6 +63,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     config_entry: OverkizDataConfigEntry
     _default_update_interval: timedelta
     _rate_limited_interval: timedelta | None
+    _executions_seen_at: datetime | None
 
     def __init__(
         self,
@@ -88,6 +91,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.areas = self._places_to_area(places) if places else None
         self._default_update_interval = UPDATE_INTERVAL
         self._rate_limited_interval = None
+        self._executions_seen_at = None
 
         self.is_stateless = all(
             device.identifier.protocol in (Protocol.RTS, Protocol.INTERNAL)
@@ -175,7 +179,23 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         """
         self._rate_limited_interval = None
 
-        if self.executions and not self.is_stateless:
+        if self.is_stateless:
+            self.update_interval = self._default_update_interval
+            return
+
+        if self.executions:
+            self._executions_seen_at = dt_util.utcnow()
+            self.update_interval = UPDATE_INTERVAL_EXECUTION
+            return
+
+        # The server reports an execution COMPLETED before it publishes the
+        # states that execution produced, so returning to the slow interval on
+        # the same refresh strands them until the next poll.
+        if (
+            self._executions_seen_at is not None
+            and dt_util.utcnow() - self._executions_seen_at
+            < UPDATE_INTERVAL_EXECUTION_SETTLE
+        ):
             self.update_interval = UPDATE_INTERVAL_EXECUTION
         else:
             self.update_interval = self._default_update_interval
