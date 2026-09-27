@@ -55,6 +55,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OpenRGBConfigEntry) ->
     would be registered again the first time the new key is generated, orphaning
     the existing entity along with anything referencing it.
     """
+    _LOGGER.debug("Migrating configuration from version %s", entry.version)
+
     if entry.version == 1:
         entity_registry = er.async_get(hass)
 
@@ -66,9 +68,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OpenRGBConfigEntry) ->
             if entity_registry.async_get_entity_id(
                 entity_entry.domain, entity_entry.platform, new_key
             ):
-                # A previous duplicate already occupies the stable identifier
                 _LOGGER.debug(
-                    "Not migrating %s, the stable identifier is already in use",
+                    "Not migrating %s, the stable unique ID is already in use",
                     entity_entry.entity_id,
                 )
                 return None
@@ -110,6 +111,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OpenRGBConfigEntry) ->
 
         hass.config_entries.async_update_entry(entry, version=2)
 
+    _LOGGER.debug("Migration to configuration version %s successful", entry.version)
     return True
 
 
