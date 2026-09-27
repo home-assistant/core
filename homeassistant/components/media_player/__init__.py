@@ -101,6 +101,7 @@ from .const import (  # noqa: F401
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     CONTENT_AUTH_EXPIRY_TIME,
+    DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     INTENT_MEDIA_SEARCH_AND_PLAY,
     REPEAT_MODES,
@@ -113,6 +114,7 @@ from .const import (  # noqa: F401
     SERVICE_SELECT_SOURCE,
     SERVICE_UNJOIN,
     MediaClass,
+    MediaPlayerDeviceClass,
     MediaPlayerEntityCapabilityAttribute,
     MediaPlayerEntityFeature,
     MediaPlayerEntityStateAttribute,
@@ -150,20 +152,6 @@ class MediaPlayerEnqueue(StrEnum):
     PLAY = "play"
     # play the given media item now, clear queue
     REPLACE = "replace"
-
-
-class MediaPlayerDeviceClass(StrEnum):
-    """Device class for media players."""
-
-    TV = "tv"
-    SPEAKER = "speaker"
-    RECEIVER = "receiver"
-    PROJECTOR = "projector"
-
-
-DEVICE_CLASSES_SCHEMA = probatio.All(
-    probatio.Lower, probatio.Coerce(MediaPlayerDeviceClass)
-)
 
 
 DEVICE_CLASSES = [cls.value for cls in MediaPlayerDeviceClass]

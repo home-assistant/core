@@ -96,6 +96,22 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
+            "climate",
+            {"hvac_mode": "{{ states('climate.one') }}"},
+            "heat",
+            {"one": "heat", "two": "cool"},
+            {},
+            {
+                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
+                "set_hvac_mode": [],
+            },
+            {
+                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
+                "set_hvac_mode": [],
+            },
+            {},
+        ),
+        (
             "sensor",
             {
                 "state": (
@@ -509,6 +525,18 @@ async def test_config_flow(
             {},
         ),
         (
+            "climate",
+            {"hvac_mode": "{{ 'heat' }}"},
+            {
+                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
+                "set_hvac_mode": [],
+            },
+            {
+                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
+                "set_hvac_mode": [],
+            },
+        ),
+        (
             "switch",
             {"value_template": "{{ false }}"},
             {},
@@ -776,6 +804,23 @@ async def test_config_flow_device(
             {"one": "open", "two": "closed"},
             {"set_cover_position": []},
             {"set_cover_position": []},
+            "state",
+            None,
+        ),
+        (
+            "climate",
+            {"hvac_mode": "{{ states('climate.one') }}"},
+            {"hvac_mode": "{{ states('climate.two') }}"},
+            ["heat", "cool"],
+            {"one": "heat", "two": "cool"},
+            {
+                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
+                "set_hvac_mode": [],
+            },
+            {
+                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
+                "set_hvac_mode": [],
+            },
             "state",
             None,
         ),
@@ -1384,7 +1429,7 @@ EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of tem
                     "'None' is not a valid unit for device class 'energy'; "
                     "expected one of 'cal', 'Gcal', 'GJ', 'GWh', 'J',"
                     " 'kcal', 'kJ', 'kWh', 'Mcal', 'MJ', 'MWh',"
-                    " 'mWh', 'TWh', 'Wh'"
+                    " 'mWh', 'thm', 'TWh', 'Wh'"
                 ),
             },
         ),
@@ -1828,6 +1873,18 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {},
             {},
             {},
+        ),
+        (
+            "climate",
+            {"hvac_mode": "{{ states('climate.one') }}"},
+            {
+                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
+                "set_hvac_mode": [],
+            },
+            {
+                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
+                "set_hvac_mode": [],
+            },
         ),
         (
             "cover",

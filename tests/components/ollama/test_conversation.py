@@ -314,7 +314,7 @@ async def test_function_call(
         {probatio.Optional("param1", description="Test parameters"): str},
         extra=probatio.ALLOW_EXTRA,
     )
-    mock_tool.async_call.return_value = "Test response"
+    mock_tool.async_call.return_value = llm.ToolResult(data="Test response")
 
     mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
@@ -497,12 +497,14 @@ async def test_history_conversion(
             agent_id=agent_id,
             tool_call_id="01KGW7TFC1VVVK7ANHVMDA4DJ6",
             tool_name="HassGetCurrentTime",
-            tool_result={
-                "speech": {"plain": {"speech": "4:24 PM", "extra_data": None}},
-                "response_type": "action_done",
-                "speech_slots": {"time": datetime.time(16, 24, 17, 813343)},
-                "data": {"success": [], "failed": []},
-            },
+            result=llm.ToolResult(
+                data={
+                    "speech": {"plain": {"speech": "4:24 PM", "extra_data": None}},
+                    "response_type": "action_done",
+                    "speech_slots": {"time": datetime.time(16, 24, 17, 813343)},
+                    "data": {"success": [], "failed": []},
+                }
+            ),
         )
     )
     mock_chat_log.async_add_assistant_content_without_tools(
@@ -550,11 +552,12 @@ async def test_history_conversion(
             Message(
                 role="tool",
                 content=(
-                    '{"speech":{"plain":{"speech":"4:24 PM",'
+                    '{"data":{"speech":{"plain":{"speech":"4:24 PM",'
                     '"extra_data":null}},'
                     '"response_type":"action_done",'
                     '"speech_slots":{"time":"16:24:17.813343"},'
-                    '"data":{"success":[],"failed":[]}}'
+                    '"data":{"success":[],"failed":[]}},'
+                    '"error":false}'
                 ),
             ),
             Message(role="assistant", content="4:24 PM"),

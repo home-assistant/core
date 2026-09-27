@@ -62,7 +62,11 @@ async def test_cannot_connect_shows_error_form(
     """Test form is shown with error when cannot connect."""
     controller.connect.side_effect = HeosError()
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "127.0.0.1"}
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.1"}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -80,7 +84,11 @@ async def test_create_entry_when_host_valid(
     data = {CONF_HOST: "127.0.0.1"}
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=data
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=data
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == DOMAIN

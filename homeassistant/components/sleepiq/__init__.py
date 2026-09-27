@@ -6,7 +6,7 @@ from typing import Any
 from asyncsleepiq import (
     AsyncSleepIQ,
     SleepIQAPIException,
-    SleepIQBed,
+    SleepIQConnectionException,
     SleepIQLoginException,
     SleepIQTimeoutException,
 )
@@ -76,6 +76,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> b
 
     try:
         await gateway.login(email, password)
+    except SleepIQConnectionException as err:
+        raise ConfigEntryNotReady(
+            str(err) or "Transient connection failure during authentication"
+        ) from err
     except SleepIQLoginException as err:
         _LOGGER.error("Could not authenticate with SleepIQ server")
         raise ConfigEntryAuthFailed(err) from err
@@ -122,57 +126,28 @@ async def async_unload_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-def _foundation_feature_count(bed: SleepIQBed) -> int:
-    """Count foundation features on a bed."""
-    f = bed.foundation
-    return (
-        len(f.lights)
-        + len(f.actuators)
-        + len(f.presets)
-        + len(f.foot_warmers)
-        + len(f.core_climates)
-    )
+_FIRMNESS_CONTROL = "firmness control"
 
 
 def _filter_duplicate_beds(gateway: AsyncSleepIQ) -> None:
-    """Remove duplicate bed objects that share sleeper IDs.
+    """Remove "Firmness Control" controller objects that duplicate a real bed.
 
-    Groups beds whose sleeper-ID sets overlap and keeps the one with
-    the most foundation features so the real bed survives regardless
-    of API ordering.
+    The SleepIQ API can return a controller object alongside the real bed,
+    both carrying the same sleeper IDs. The controller is identified by
+    "Firmness Control" in its model string.
     """
-    groups: dict[frozenset[str], list[str]] = {}
+    to_remove: list[str] = []
     for bed_id, bed in gateway.beds.items():
-        bed_sleeper_ids = frozenset(s.sleeper_id for s in bed.sleepers if s.sleeper_id)
-        if not bed_sleeper_ids:
-            continue
-        matched = None
-        for key in groups:
-            if key & bed_sleeper_ids:
-                matched = key
-                break
-        if matched is not None:
-            groups[matched].append(bed_id)
-        else:
-            groups[bed_sleeper_ids] = [bed_id]
-
-    for bed_ids in groups.values():
-        if len(bed_ids) < 2:
-            continue
-        best = max(
-            bed_ids, key=lambda bid: _foundation_feature_count(gateway.beds[bid])
+        if _FIRMNESS_CONTROL in (bed.model or "").lower():
+            to_remove.append(bed_id)
+    for bed_id in to_remove:
+        _LOGGER.debug(
+            "Removing controller duplicate '%s' (id=%s, model=%s)",
+            gateway.beds[bed_id].name,
+            bed_id,
+            gateway.beds[bed_id].model,
         )
-        for bed_id in bed_ids:
-            if bed_id != best:
-                _LOGGER.debug(
-                    "Removing duplicate bed '%s' (id=%s), keeping '%s' (id=%s)"
-                    " which has more foundation features",
-                    gateway.beds[bed_id].name,
-                    bed_id,
-                    gateway.beds[best].name,
-                    best,
-                )
-                del gateway.beds[bed_id]
+        del gateway.beds[bed_id]
 
 
 async def _async_migrate_unique_ids(

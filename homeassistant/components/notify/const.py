@@ -1,11 +1,14 @@
 """Provide common notify constants."""
 
+from enum import IntFlag
 import logging
 from typing import Final
 
 import probatio
 
 from homeassistant.helpers import config_validation as cv
+
+DOMAIN: Final = "notify"
 
 ATTR_DATA = "data"
 
@@ -21,7 +24,6 @@ ATTR_RECIPIENTS = "recipients"
 # Title of notification
 ATTR_TITLE = "title"
 
-DOMAIN: Final = "notify"
 
 LOGGER = logging.getLogger(__package__)
 
@@ -37,3 +39,9 @@ NOTIFY_SERVICE_SCHEMA = probatio.Schema(
         probatio.Optional(ATTR_DATA): dict,
     }
 )
+
+
+class NotifyEntityFeature(IntFlag):
+    """Supported features of a notify entity."""
+
+    TITLE = 1

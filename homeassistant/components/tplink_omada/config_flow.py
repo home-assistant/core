@@ -84,7 +84,8 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> HubInfo:
 
     client = await create_omada_client(hass, data)
     controller_id = await client.login()
-    name = await client.get_controller_name()
+    controller_status = await client.get_controller_status()
+    name = controller_status.name or controller_status.model
     sites = await client.get_sites()
 
     return HubInfo(controller_id, name, sites)

@@ -13,7 +13,6 @@ from uiprotect.data import (
     FobAwayState,
     FobButton,
     ModelType,
-    PublicBootstrap,
     PublicFobFeatureFlags,
     WSAction,
 )
@@ -32,7 +31,13 @@ from homeassistant.core import Event as HAEvent, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .utils import MockUFPFixture, enable_entity, init_entry, public_device_ws_message
+from .utils import (
+    MockUFPFixture,
+    enable_entity,
+    init_entry,
+    make_public_bootstrap,
+    public_device_ws_message,
+)
 
 FOB_ID = "fob-id-1"
 FOB_MAC = "AA:BB:CC:DD:EE:F0"
@@ -78,29 +83,11 @@ def _make_fob(
 
 def _make_public_bootstrap(fob: Mock | None) -> Mock:
     """Build a public bootstrap mock holding the given fob."""
-    pb = Mock(spec=PublicBootstrap)
-    pb.fobs = {fob.id: fob} if fob is not None else {}
-    pb.cameras = {}
-    pb.lights = {}
-    pb.relays = {}
-    pb.sirens = {}
-    pb.arm_mode = None
-    pb.arm_profiles = {}
-    pb.nvr = Mock()
-    pb.nvr.mac = "aa:bb:cc:dd:ee:ff"
-    pb.nvr.name = "Test NVR"
-    pb.nvr.display_name = "Test NVR"
-    pb.nvr.device_type = None
-    pb.nvr.type = None
-
-    # The baseline and reconnect resync enumerate all_devices(); a fob missing
-    # from it would be redispatched as new on every reconnect.
-    def _all_devices(*, include_nvr: bool = False) -> list[Mock]:
-        devices = list(pb.fobs.values())
-        return [pb.nvr, *devices] if include_nvr else devices
-
-    pb.all_devices = _all_devices
-    return pb
+    nvr = Mock(
+        mac="aa:bb:cc:dd:ee:ff", display_name="Test NVR", device_type=None, type=None
+    )
+    nvr.name = "Test NVR"
+    return make_public_bootstrap(fobs={fob.id: fob} if fob is not None else {}, nvr=nvr)
 
 
 @pytest.fixture(name="ufp_with_fob")
@@ -633,4 +620,57 @@ async def test_fob_added_at_runtime(
             ]
         )
         == 5
+    )
+
+
+async def test_fob_added_after_setup_in_hybrid(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A fob paired after setup gets its entities in hybrid mode too.
+
+    The private bootstrap has no store for fobs, so the adopt path never sees
+    one; discovery goes through the public add signal in both modes. A
+    re-delivered frame must not add a second time.
+    """
+    ufp.api.has_public_bootstrap = True
+    pb = _make_public_bootstrap(None)
+    ufp.api.public_bootstrap = pb
+    ufp.api.update_public = AsyncMock(return_value=pb)
+
+    await init_entry(hass, ufp, [])
+    assert entity_registry.async_get(BATTERY_SENSOR) is None
+
+    fob = _make_fob()
+    pb.fobs = {fob.id: fob}
+    msg = public_device_ws_message(fob)
+    msg.action = WSAction.ADD
+    assert ufp.devices_ws_subscription is not None
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(BATTERY_SENSOR) is not None
+    count = len(
+        [
+            entry
+            for entry in entity_registry.entities.values()
+            if entry.unique_id.startswith(FOB_MAC)
+        ]
+    )
+
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert "already exists" not in caplog.text
+    assert (
+        len(
+            [
+                entry
+                for entry in entity_registry.entities.values()
+                if entry.unique_id.startswith(FOB_MAC)
+            ]
+        )
+        == count
     )

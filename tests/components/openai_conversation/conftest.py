@@ -170,7 +170,7 @@ def mock_create_stream() -> Generator[AsyncMock]:
             ),
             truncation=kwargs.get("truncation", "disabled"),
             usage=None,
-            user=kwargs.get("user"),
+            safety_identifier=kwargs.get("safety_identifier"),
             store=kwargs.get("store", True),
         )
         yield ResponseCreatedEvent(

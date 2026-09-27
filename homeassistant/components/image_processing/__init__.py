@@ -2,7 +2,6 @@
 
 import asyncio
 from datetime import timedelta
-from enum import StrEnum
 import logging
 from typing import Any, Final, TypedDict, final, override
 
@@ -24,25 +23,15 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import ImageProcessingEntityStateAttribute
+from .const import (
+    DOMAIN,
+    ImageProcessingDeviceClass,
+    ImageProcessingEntityStateAttribute,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN: Final = "image_processing"
 SCAN_INTERVAL = timedelta(seconds=10)
-
-
-class ImageProcessingDeviceClass(StrEnum):
-    """Device class for image processing entities."""
-
-    # Automatic license plate recognition
-    ALPR = "alpr"
-
-    # Face
-    FACE = "face"
-
-    # OCR
-    OCR = "ocr"
 
 
 SERVICE_SCAN = "scan"

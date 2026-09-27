@@ -6,7 +6,6 @@ from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from enum import IntFlag
 from functools import partial
 import logging
 import os
@@ -69,6 +68,7 @@ from .const import (
     PREF_ORIENTATION,
     PREF_PRELOAD_STREAM,
     SERVICE_RECORD,
+    CameraEntityFeature,
     CameraEntityStateAttribute,
     CameraState,
     StreamType,
@@ -112,13 +112,6 @@ SERVICE_PLAY_STREAM: Final = "play_stream"
 ATTR_FILENAME: Final = "filename"
 ATTR_MEDIA_PLAYER: Final = "media_player"
 ATTR_FORMAT: Final = "format"
-
-
-class CameraEntityFeature(IntFlag):
-    """Supported features of the camera entity."""
-
-    ON_OFF = 1
-    STREAM = 2
 
 
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"

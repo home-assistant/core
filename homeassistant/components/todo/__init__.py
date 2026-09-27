@@ -257,6 +257,7 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     _attr_todo_items: list[TodoItem] | None = None
     _update_listeners: list[Callable[[list[TodoItem] | None], None]] | None = None
+    _last_broadcast_items: list[TodoItem] | None = None
 
     @property
     @override
@@ -316,14 +317,16 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @callback
     def async_update_listeners(self) -> None:
         """Push updated To-do items to all listeners."""
+        items = self.todo_items
+        if items == self._last_broadcast_items:
+            return
+        self._last_broadcast_items = (
+            [copy.copy(item) for item in items] if items is not None else None
+        )
         if not self._update_listeners:
             return
-
-        items = self.todo_items
-        todo_items = [copy.copy(item) for item in items] if items is not None else None
-
         for listener in self._update_listeners:
-            listener(todo_items)
+            listener(self._last_broadcast_items)
 
     @callback
     @override

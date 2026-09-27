@@ -1,15 +1,21 @@
 """Tuya Home Assistant Base Device Model."""
 
+from dataclasses import dataclass
 from typing import Any, override
 
 from tuya_device_handlers.device_wrapper import DeviceWrapper
 from tuya_sharing import CustomerDevice, Manager
 
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
-from .const import LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY
-from .util import get_device_info
+from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY
+
+
+@dataclass(frozen=True)
+class TuyaEntityDescription(EntityDescription):
+    """Describes a Tuya entity."""
 
 
 class TuyaEntity(Entity):
@@ -22,10 +28,10 @@ class TuyaEntity(Entity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: EntityDescription,
+        description: TuyaEntityDescription,
     ) -> None:
         """Init TuyaEntity."""
-        self._attr_device_info = get_device_info(device)
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device.id)})
         self._attr_unique_id = f"tuya.{device.id}{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self.entity_description = description
         # TuyaEntity initialize mq can subscribe
