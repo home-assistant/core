@@ -2068,3 +2068,68 @@ async def test_somfy_reauth_wrong_account(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_wrong_account"
+
+
+@pytest.mark.parametrize(
+    ("gateway_id", "reason", "refresh_token"),
+    [
+        pytest.param(
+            TEST_GATEWAY_ID, "reconfigure_successful", "new-token", id="success"
+        ),
+        pytest.param(
+            TEST_GATEWAY_ID2,
+            "reconfigure_wrong_account",
+            "somfy-refresh-token",
+            id="wrong_account",
+        ),
+    ],
+)
+async def test_somfy_reconfigure(
+    hass: HomeAssistant,
+    mock_somfy_config_entry: MockConfigEntry,
+    gateway_id: str,
+    reason: str,
+    refresh_token: str,
+) -> None:
+    """Somfy reconfigure re-runs the login and only accepts the same gateway."""
+    mock_somfy_config_entry.add_to_hass(hass)
+
+    result = await mock_somfy_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "local_or_cloud"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "cloud"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "somfy"
+
+    credentials = SomfyTokenCredentials(
+        refresh_token="new-token",
+        site_oid=TEST_SITE_OID,
+        region=TEST_REGION,
+        gateway_id=gateway_id,
+    )
+
+    with (
+        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.discover_gateways",
+            return_value=[GatewayCandidate(gateway_id=gateway_id, label="My Home")],
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.select_gateway"
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.to_credentials",
+            return_value=credentials,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert mock_somfy_config_entry.data["refresh_token"] == refresh_token

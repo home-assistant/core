@@ -9,6 +9,7 @@ import probatio
 from pyoverkiz.auth.credentials import (
     LocalTokenCredentials,
     RexelTokenCredentials,
+    SomfyTokenCredentials,
     UsernamePasswordCredentials,
 )
 from pyoverkiz.client import GatewayCandidate, OverkizClient
@@ -546,6 +547,7 @@ class OverkizConfigFlow(
         """Scope the client to the chosen site and persist its token bundle."""
         self._somfy_client.select_gateway(gateway.gateway_id)
         credentials = self._somfy_client.to_credentials()
+        assert isinstance(credentials, SomfyTokenCredentials)
 
         await self.async_set_unique_id(gateway.gateway_id, raise_on_progress=False)
 
@@ -564,6 +566,12 @@ class OverkizConfigFlow(
             self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=data
+            )
+
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch(reason="reconfigure_wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data=data
             )
 
         self._abort_if_unique_id_configured()
