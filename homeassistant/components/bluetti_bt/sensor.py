@@ -88,6 +88,8 @@ class BluettiSensor(CoordinatorEntity, SensorEntity):
             self._logger.warning(
                 "Data from coordinator is Empty",
             )
+            self._attr_native_value = None
+            self.async_write_ha_state()
             return
 
         self._logger.debug(
