@@ -111,11 +111,22 @@ def create_safety_settings(options: Mapping[str, Any]) -> list[SafetySetting]:
 def build_interaction_request(
     *,
     model: str,
-    input_content: Any,
+    input_content: (
+        str
+        | Sequence[interactions.Step]
+        | Sequence[interactions.StepParam]
+        | Sequence[interactions.Content]
+        | Sequence[interactions.ContentParam]
+    ),
     options: Mapping[str, Any] | None = None,
     system_instruction: str | None = None,
     tools: Sequence[interactions.Tool] | None = None,
-    response_format: interactions.TextResponseFormat | None = None,
+    response_format: (
+        interactions.InteractionResponseFormat
+        | interactions.ResponseFormat
+        | Sequence[interactions.ResponseFormat]
+        | None
+    ) = None,
     safety_settings: list[SafetySetting] | None = None,
     default_max_tokens: int | None = None,
     stream: bool = True,
