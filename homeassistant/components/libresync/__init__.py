@@ -1,7 +1,6 @@
 """The LibreSync integration."""
 
 from collections.abc import Callable
-from typing import Any
 
 from aiolibresync import DeviceState, LibreSyncClient, NotConnectedError
 
@@ -35,9 +34,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LibreSyncConfigEntry) ->
     entry.async_on_unload(client.async_disconnect)
     entry.runtime_data = client
 
-    # The model and the serial answer a moment after the ports come up, so the
-    # device is created here and kept up to date from the pushed state, before
-    # and after the entity registers.
+    # The model answers a moment after the ports come up, so the device is
+    # created here and kept up to date from the pushed state, before and after
+    # the entity registers. The hub's serial is a module production code, not
+    # the serial printed on the product, so the device does not carry it.
     assert entry.unique_id is not None
     device = dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -56,22 +56,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: LibreSyncConfigEntry) ->
 def _device_updater(
     hass: HomeAssistant, device_id: str
 ) -> Callable[[DeviceState], None]:
-    """Keep the model and the serial on the device up to date."""
-    seen: tuple[str | None, str | None] | None = None
+    """Keep the model on the device up to date."""
+    seen: str | None = None
 
     @callback
     def update(state: DeviceState) -> None:
         nonlocal seen
-        if (state.serial, state.model) == seen:
+        if not state.model or state.model == seen:
             return
-        seen = (state.serial, state.model)
-        changes: dict[str, Any] = {}
-        if state.serial:
-            changes["serial_number"] = state.serial
-        if state.model:
-            changes["model"] = state.model
-        if changes:
-            dr.async_get(hass).async_update_device(device_id, **changes)
+        seen = state.model
+        dr.async_get(hass).async_update_device(device_id, model=state.model)
 
     return update
 

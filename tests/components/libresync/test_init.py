@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-from .conftest import HOST, SERIAL, STATE, push
+from .conftest import HOST, STATE, push
 
 from tests.common import MockConfigEntry
 
@@ -48,7 +48,7 @@ async def test_device_updated(
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test the serial and model reach the device when they arrive."""
+    """Test the model reaches the device when it arrives, and the serial never."""
     mock_client.state = STATE.evolve(serial=None, model=None)
     await setup_integration(hass, mock_config_entry)
 
@@ -57,8 +57,8 @@ async def test_device_updated(
     [device] = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
-    assert device.serial_number == SERIAL
     assert device.model == "Stereo Hub"
+    assert device.serial_number is None
 
 
 async def test_platform_failure_disconnects(
@@ -80,13 +80,12 @@ async def test_device_keeps_identity_across_reload(
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test a reload before the model and serial are answered keeps them."""
+    """Test a reload before the model is answered keeps it."""
     await setup_integration(hass, mock_config_entry)
     [device] = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
     assert device.model == "Stereo Hub"
-    assert device.serial_number == SERIAL
 
     mock_client.state = STATE.evolve(serial=None, model=None)
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
@@ -96,4 +95,3 @@ async def test_device_keeps_identity_across_reload(
         device_registry, mock_config_entry.entry_id
     )
     assert device.model == "Stereo Hub"
-    assert device.serial_number == SERIAL

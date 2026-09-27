@@ -49,8 +49,8 @@ class LibreSyncEntity(Entity):
     def __init__(self, client: LibreSyncClient, unique_id: str, name: str) -> None:
         """Initialize the entity."""
         self._client = client
-        # No model or serial here: setup keeps them on the device as they
-        # arrive, and a None here would overwrite them.
+        # No model here: setup keeps it on the device as it arrives, and a
+        # None here would overwrite it.
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             manufacturer=MANUFACTURER,
