@@ -277,7 +277,7 @@ async def async_migrate_entry(
             # device advertises, so this needs the devices from the API.
             client = await create_client(hass, entry)
             try:
-                await client.login()
+                await client.login(register_event_listener=False)
                 setup = await client.get_setup()
             except (
                 BadCredentialsError,

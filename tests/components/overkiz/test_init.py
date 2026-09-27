@@ -201,6 +201,8 @@ async def test_go_to_alias_button_unique_id_migration(
     ) is not None
     assert entry.unique_id == "ogp://1234-1234-6233/16730100-goToAlias_favorite1"
     assert mock_entry.minor_version == 3
+    # The migration's throwaway client must not leave an event listener behind.
+    mock_client.login.assert_any_await(register_event_listener=False)
 
 
 async def test_go_to_alias_button_migration_connection_error(
