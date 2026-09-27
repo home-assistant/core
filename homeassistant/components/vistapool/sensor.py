@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VistapoolConfigEntry
 from .const import (
-    GRAM_PER_HOUR,
+    GRAMS_PER_HOUR,
     PATH_HASCD,
     PATH_HASCL,
     PATH_HASHIDRO,
@@ -154,7 +154,7 @@ def _build_sensor_entities(
                 VistapoolSensorEntityDescription(
                     key=key,
                     translation_key=key,
-                    native_unit_of_measurement=GRAM_PER_HOUR,
+                    native_unit_of_measurement=GRAMS_PER_HOUR,
                     state_class=SensorStateClass.MEASUREMENT,
                     value_path="hidro.current",
                     value_fn=_convert_tenths,

@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import VistapoolConfigEntry
 from .const import (
     DOMAIN,
-    GRAM_PER_HOUR,
+    GRAMS_PER_HOUR,
     PATH_HASHIDRO,
     PATH_HASPH,
     PATH_HASRX,
@@ -178,7 +178,7 @@ def _build_number_entities(
                     native_min_value=0,
                     native_max_value=50.0,
                     native_step=0.1,
-                    native_unit_of_measurement=GRAM_PER_HOUR,
+                    native_unit_of_measurement=GRAMS_PER_HOUR,
                     value_path="hidro.level",
                     scale=10,
                     max_value_fn=_max_electrolysis,
