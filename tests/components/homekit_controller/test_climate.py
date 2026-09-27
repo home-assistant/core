@@ -947,8 +947,9 @@ async def test_heater_cooler_auto_target_temperatures(
         "expected_writes",
     ),
     [
+        # Clean step grids so the fake's written values land exactly.
         pytest.param(
-            HEATING_THRESHOLD,
+            (10.0, 30.0, 20.0, 1.0),
             None,
             {"temperature": 25},
             {CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD: 25},
@@ -956,14 +957,14 @@ async def test_heater_cooler_auto_target_temperatures(
         ),
         pytest.param(
             None,
-            COOLING_THRESHOLD,
+            (10.0, 30.0, 20.0, 0.5),
             {"temperature": 22},
             {CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD: 22},
             id="cooling_threshold_only",
         ),
         pytest.param(
-            HEATING_THRESHOLD,
-            COOLING_THRESHOLD,
+            (10.0, 30.0, 20.0, 1.0),
+            (10.0, 30.0, 20.0, 0.5),
             {"target_temp_high": 24, "target_temp_low": 20},
             {
                 CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD: 24,
