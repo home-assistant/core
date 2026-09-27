@@ -939,6 +939,117 @@ async def test_heater_cooler_auto_target_temperatures(
     assert state.attributes["target_temp_step"] == expected_target_temp_step
 
 
+@pytest.mark.parametrize(
+    (
+        "heating_threshold",
+        "cooling_threshold",
+        "service_data",
+        "expected_writes",
+    ),
+    [
+        pytest.param(
+            HEATING_THRESHOLD,
+            None,
+            {"temperature": 25},
+            {CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD: 25},
+            id="heating_threshold_only",
+        ),
+        pytest.param(
+            None,
+            COOLING_THRESHOLD,
+            {"temperature": 22},
+            {CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD: 22},
+            id="cooling_threshold_only",
+        ),
+        pytest.param(
+            HEATING_THRESHOLD,
+            COOLING_THRESHOLD,
+            {"target_temp_high": 24, "target_temp_low": 20},
+            {
+                CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD: 24,
+                CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD: 20,
+            },
+            id="both_thresholds_use_range",
+        ),
+    ],
+)
+async def test_heater_cooler_auto_set_temperature(
+    hass: HomeAssistant,
+    get_next_aid: Callable[[], int],
+    heating_threshold: ThresholdTuple | None,
+    cooling_threshold: ThresholdTuple | None,
+    service_data: dict[str, float],
+    expected_writes: dict[str, float],
+) -> None:
+    """Test setting the target temperature in AUTO mode."""
+    create_service = functools.partial(
+        create_heater_cooler_service_auto,
+        heating_threshold=heating_threshold,
+        cooling_threshold=cooling_threshold,
+    )
+    helper = await setup_test_component(hass, get_next_aid(), create_service)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {"entity_id": "climate.testdevice", **service_data},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.HEATER_COOLER, expected_writes
+    )
+
+
+async def test_heater_cooler_auto_set_temperature_without_setpoint(
+    hass: HomeAssistant,
+    get_next_aid: Callable[[], int],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a plain temperature set with both thresholds warns."""
+    create_service = functools.partial(
+        create_heater_cooler_service_auto,
+        heating_threshold=HEATING_THRESHOLD,
+        cooling_threshold=COOLING_THRESHOLD,
+    )
+    await setup_test_component(hass, get_next_aid(), create_service)
+
+    with caplog.at_level(
+        "WARNING", logger="homeassistant.components.homekit_controller"
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {"entity_id": "climate.testdevice", "temperature": 22},
+            blocking=True,
+        )
+    assert "is not supported yet" in caplog.text
+
+
+async def test_heater_cooler_unknown_target_state_uses_defaults(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
+    """Test that an unknown target state falls back to the default range."""
+    create_service = functools.partial(
+        create_heater_cooler_service_auto,
+        heating_threshold=HEATING_THRESHOLD,
+    )
+    helper = await setup_test_component(hass, get_next_aid(), create_service)
+
+    await helper.async_update(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.ACTIVE: ActivationStateValues.INACTIVE,
+            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: 99,
+        },
+    )
+
+    state = await helper.poll_and_get_state()
+    assert state.attributes["min_temp"] == 7
+    assert state.attributes["max_temp"] == 35
+    assert state.attributes.get("temperature") is None
+    assert state.attributes["target_temp_step"] == 1.0
+
+
 async def test_heater_cooler_change_thermostat_state(
     hass: HomeAssistant, get_next_aid: Callable[[], int]
 ) -> None:
