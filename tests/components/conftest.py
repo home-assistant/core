@@ -1013,6 +1013,41 @@ async def _validate_translation(
     )
 
 
+async def _validate_abort_translation_not_duplicated(
+    hass: HomeAssistant,
+    translation_errors: dict[str, str],
+    ignore_translations_for_mock_domains: set[str],
+    category: str,
+    component: str,
+    translation_domain: str,
+    key: str,
+) -> None:
+    """Raise if an integration duplicates an abort translated by another domain.
+
+    A local translation with different wording is kept, since the integration
+    may raise the same reason itself to show its own wording.
+    """
+    if component in ignore_translations_for_mock_domains:
+        return
+    full_key = f"component.{component}.{category}.{key}"
+    translations = await async_get_translations(hass, "en", category, [component])
+    if (translation := translations.get(full_key)) is None:
+        return
+    shared_translations = await async_get_translations(
+        hass, "en", category, [translation_domain]
+    )
+    if translation == shared_translations.get(
+        f"component.{translation_domain}.{category}.{key}"
+    ):
+        translation_errors[full_key] = (
+            f"Translation `{category}.{key}` of {component} duplicates the one of "
+            f"{translation_domain}, which translates this abort. Please remove it "
+            f"from homeassistant/components/{component}/strings.json and pass "
+            f'translation_domain="{translation_domain}" wherever {component} '
+            "raises this reason itself"
+        )
+
+
 @pytest.fixture
 def ignore_missing_translations() -> str | list[str]:
     """Ignore specific missing translations.
@@ -1181,11 +1216,22 @@ async def _check_config_flow_result_translations(
         return
 
     if result["type"] is FlowResultType.ABORT:
+        abort_domain = result.get("translation_domain")
+        if abort_domain is not None and abort_domain != integration:
+            await _validate_abort_translation_not_duplicated(
+                flow.hass,
+                translation_errors,
+                ignore_translations_for_mock_domains,
+                category,
+                integration,
+                abort_domain,
+                f"{key_prefix}abort.{result['reason']}",
+            )
         # We don't need translations for a discovery flow which immediately
         # aborts, since such flows won't be seen by users
         if not flow.__flow_seen_before and flow.source in DISCOVERY_SOURCES:
             return
-        if (abort_domain := result.get("translation_domain")) is not None:
+        if abort_domain is not None:
             integration = abort_domain
         await _validate_translation(
             flow.hass,
@@ -1330,6 +1376,7 @@ async def check_translations(
 
     Current checks:
     - data entry flow results (ConfigFlow/OptionsFlow/RepairFlow)
+    - data entry flow aborts translated by another domain are not duplicated locally
     - issue registry entries
     - action (service) exceptions
     """
