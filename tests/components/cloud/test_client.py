@@ -634,6 +634,19 @@ async def test_remote_enable(hass: HomeAssistant) -> None:
     prefs.async_update.assert_called_once_with(remote_enabled=True)
 
 
+async def test_remote_backend_up_updates_remote_domain(hass: HomeAssistant) -> None:
+    """Test the remote domain preference is synced when the backend is up."""
+    prefs = MagicMock(async_update=AsyncMock(return_value=None))
+    client = CloudClient(hass, prefs, None, {}, {})
+    client.cloud = MagicMock()
+    client.cloud.remote.instance_domain = "example.ui.nabu.casa"
+
+    client.dispatcher_message("remote_backend_up")
+    await hass.async_block_till_done()
+
+    prefs.async_update.assert_called_once_with(remote_domain="example.ui.nabu.casa")
+
+
 async def test_remote_enable_not_allowed(hass: HomeAssistant) -> None:
     """Test enabling remote UI."""
     prefs = MagicMock(
