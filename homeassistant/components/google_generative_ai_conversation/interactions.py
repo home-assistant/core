@@ -25,6 +25,7 @@ from .const import (
     CONF_THINKING_LEVEL,
     CONF_TOP_K,
     CONF_TOP_P,
+    ERROR_GETTING_RESPONSE,
     LOGGER,
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
     RECOMMENDED_MAX_TOKENS,
@@ -33,7 +34,7 @@ from .const import (
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
 )
-from .entity import ERROR_GETTING_RESPONSE, ContentDetails, PartDetails
+from .helpers import ContentDetails, PartDetails
 
 
 def format_tools_for_interactions(
@@ -119,11 +120,22 @@ def create_safety_settings(options: Mapping[str, Any]) -> list[SafetySetting]:
 def build_interaction_request(
     *,
     model: str,
-    input_content: str | Sequence[interactions.Step] | Sequence[interactions.StepParam],
+    input_content: (
+        str
+        | Sequence[interactions.Step]
+        | Sequence[interactions.StepParam]
+        | Sequence[interactions.Content]
+        | Sequence[interactions.ContentParam]
+    ),
     options: Mapping[str, Any] | None = None,
     system_instruction: str | None = None,
     tools: Sequence[interactions.Tool] | None = None,
-    response_format: interactions.TextResponseFormat | None = None,
+    response_format: (
+        interactions.InteractionResponseFormat
+        | interactions.ResponseFormat
+        | Sequence[interactions.ResponseFormat]
+        | None
+    ) = None,
     safety_settings: list[SafetySetting] | None = None,
     default_max_tokens: int | None = None,
     stream: bool = True,
