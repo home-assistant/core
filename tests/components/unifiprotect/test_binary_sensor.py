@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
+from functools import partial
 from typing import Any
 from unittest.mock import Mock
 
@@ -111,6 +112,25 @@ async def test_binary_sensor_sensor_remove(
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 0, 0)
     await adopt_devices(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 5, 5)
+
+
+async def test_binary_sensor_adopt_adds_only_the_adopted_device(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+    light: Light,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Adopting one device does not add the other devices' entities again."""
+
+    ufp.api.bootstrap.nvr.system_info.ustorage = None
+    await init_entry(hass, ufp, [sensor_all, light])
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 7, 7)
+    await remove_entities(hass, ufp, [sensor_all])
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 2, 2)
+    await adopt_devices(hass, ufp, [sensor_all])
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 7, 7)
+    assert "already exists" not in caplog.text
 
 
 async def test_binary_sensor_setup_light(
@@ -1111,38 +1131,58 @@ async def test_public_only_binary_sensors_end_to_end(
     assert hass.states.get(entity_id).state == STATE_ON
 
 
+def _make_streamless_public_camera(camera: Camera) -> Mock:
+    public = make_public_camera(camera)
+    public.rtsps_streams = None
+    return public
+
+
+@pytest.mark.parametrize(
+    ("fixture_name", "make", "key"),
+    [
+        pytest.param("doorbell", _make_streamless_public_camera, "motion", id="camera"),
+        pytest.param("light", make_public_light, "dark", id="light"),
+        pytest.param(
+            "sensor_all",
+            partial(make_public_sensor, capabilities={SensorFeatureCapability.MOTION}),
+            "motion",
+            id="sensor",
+        ),
+    ],
+)
 async def test_public_only_binary_sensor_added_after_setup(
     hass: HomeAssistant,
+    request: pytest.FixtureRequest,
     entity_registry: er.EntityRegistry,
     ufp_public_only: MockUFPFixture,
     setup_public_only: Callable[[], Coroutine[Any, Any, None]],
-    light: Light,
     caplog: pytest.LogCaptureFixture,
+    fixture_name: str,
+    make: Callable[[Any], Mock],
+    key: str,
 ) -> None:
     """A device added after setup gets its binary sensors from its add frame."""
     await setup_public_only()
-    assert registered_keys(entity_registry, Platform.BINARY_SENSOR, light.mac) == set()
 
-    public = make_public_light(light)
-    ufp_public_only.api.public_bootstrap.lights = {light.id: public}
+    device = request.getfixturevalue(fixture_name)
+    assert registered_keys(entity_registry, Platform.BINARY_SENSOR, device.mac) == set()
+
+    public = make(device)
+    store = getattr(ufp_public_only.api.public_bootstrap, f"{device.model.value}s")
+    store[device.id] = public
     msg = public_device_ws_message(public)
     msg.action = WSAction.ADD
     ufp_public_only.devices_ws_subscription(msg)
     await hass.async_block_till_done()
 
-    assert registered_keys(entity_registry, Platform.BINARY_SENSOR, light.mac) == {
-        "dark",
-        "motion",
-    }
+    keys = registered_keys(entity_registry, Platform.BINARY_SENSOR, device.mac)
+    assert key in keys
 
     # A re-delivered frame must not add the entities a second time.
     ufp_public_only.devices_ws_subscription(msg)
     await hass.async_block_till_done()
 
-    assert registered_keys(entity_registry, Platform.BINARY_SENSOR, light.mac) == {
-        "dark",
-        "motion",
-    }
+    assert registered_keys(entity_registry, Platform.BINARY_SENSOR, device.mac) == keys
     assert "already exists" not in caplog.text
 
 
