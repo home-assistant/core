@@ -202,6 +202,9 @@
     "system_message_not_found": {
       "message": "First message must be a system message."
     },
+    "tool_args_parse_error": {
+      "message": "Claude returned invalid tool arguments."
+    },
     "unexpected_chat_log_content": {
       "message": "Unexpected content type in chat log: {type}."
     },

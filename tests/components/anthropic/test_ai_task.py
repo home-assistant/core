@@ -1,5 +1,6 @@
 """Tests for the Anthropic integration."""
 
+from json import JSONDecodeError
 from pathlib import Path
 import re
 from unittest.mock import AsyncMock, patch
@@ -23,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 
-from . import create_content_block
+from . import create_content_block, create_server_tool_use_block
 
 from tests.common import MockConfigEntry
 
@@ -194,6 +195,40 @@ async def test_generate_data_stop_reason_error(
         )
 
     assert exc_info.value.translation_key == translation_key
+    mock_create_stream.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_data_invalid_tool_arguments(
+    hass: HomeAssistant,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Report invalid tool arguments with the first parsing error as the cause."""
+    incomplete_json = '{"command": "echo'
+    mock_create_stream.return_value = [
+        [
+            *create_server_tool_use_block(
+                0, "srvtoolu_first", "bash_code_execution", [incomplete_json]
+            ),
+            *create_server_tool_use_block(
+                1, "srvtoolu_second", "bash_code_execution", ['{"command":']
+            ),
+        ]
+    ]
+
+    with pytest.raises(
+        HomeAssistantError, match="Claude returned invalid tool arguments"
+    ) as exc_info:
+        await ai_task.async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.claude_ai_task",
+            instructions="Generate test data",
+        )
+
+    assert exc_info.value.translation_key == "tool_args_parse_error"
+    assert isinstance(exc_info.value.__cause__, JSONDecodeError)
+    assert exc_info.value.__cause__.doc == incomplete_json
     mock_create_stream.assert_awaited_once()
 
 

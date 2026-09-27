@@ -1,6 +1,6 @@
 """Tests for the Anthropic integration."""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Generator
 from copy import deepcopy
 import datetime
 from pathlib import Path
@@ -154,6 +154,21 @@ def code_execution_container() -> Container:
         id="container_paused",
         expires_at=dt_util.utcnow() + datetime.timedelta(minutes=5),
     )
+
+
+@pytest.fixture
+def mock_llm_tool() -> Generator[AsyncMock]:
+    """Provide a local tool whose execution can be checked."""
+    mock_tool = AsyncMock()
+    mock_tool.name = "test_tool"
+    mock_tool.description = "Test function"
+    mock_tool.parameters = probatio.Schema({probatio.Optional("param1"): str})
+    mock_tool.async_call.return_value = llm.ToolResult(data="Test response")
+    with patch(
+        "homeassistant.components.llm.async_get_tools",
+        return_value=LLMTools(tools=[mock_tool]),
+    ):
+        yield mock_tool
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -803,6 +818,116 @@ async def test_stop_reason_error(
     assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown"
     assert result.response.speech["plain"]["speech"] == error_message
+    mock_create_stream.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_config_entry_with_server_tools", "mock_init_component")
+@pytest.mark.parametrize(
+    ("tool_blocks", "stop_reason", "error_message"),
+    [
+        pytest.param(
+            create_tool_use_block(0, "toolu_invalid", "test_tool", ['{"param1":']),
+            "max_tokens",
+            "Claude reached the output token limit before completing the response",
+            id="local_output_token_limit",
+        ),
+        pytest.param(
+            create_server_tool_use_block(
+                0, "srvtoolu_invalid", "bash_code_execution", ['{"command":']
+            ),
+            "max_tokens",
+            "Claude reached the output token limit before completing the response",
+            id="server_output_token_limit",
+        ),
+        pytest.param(
+            create_tool_use_block(0, "toolu_invalid", "test_tool", ['{"param1":']),
+            "model_context_window_exceeded",
+            "Claude reached the context window limit before completing the response",
+            id="context_window_limit",
+        ),
+        pytest.param(
+            create_tool_use_block(0, "toolu_invalid", "test_tool", ['{"param1":']),
+            "refusal",
+            "Potential policy violation detected",
+            id="refusal",
+        ),
+        pytest.param(
+            create_tool_use_block(0, "toolu_invalid", "test_tool", ['{"param1":']),
+            "stop_sequence",
+            "Claude stopped after encountering a stop sequence",
+            id="stop_sequence",
+        ),
+        pytest.param(
+            create_tool_use_block(0, "toolu_invalid", "test_tool", ['{"param1":']),
+            "tool_use",
+            "Claude returned invalid tool arguments",
+            id="local_invalid_json",
+        ),
+        pytest.param(
+            create_server_tool_use_block(
+                0, "srvtoolu_invalid", "bash_code_execution", ['{"command":']
+            ),
+            "end_turn",
+            "Claude returned invalid tool arguments",
+            id="server_invalid_json",
+        ),
+        pytest.param(
+            create_server_tool_use_block(
+                0, "srvtoolu_invalid", "bash_code_execution", ['{"command":']
+            ),
+            "pause_turn",
+            "Claude returned invalid tool arguments",
+            id="invalid_json_prevents_continuation",
+        ),
+        pytest.param(
+            [
+                *create_tool_use_block(0, "toolu_invalid", "test_tool", ['{"param1":']),
+                *create_tool_use_block(1, "toolu_valid", "test_tool", ["{}"]),
+            ],
+            "tool_use",
+            "Claude returned invalid tool arguments",
+            id="valid_tool_after_invalid_tool",
+        ),
+        pytest.param(
+            [
+                *create_tool_use_block(0, "toolu_invalid", "test_tool", ['{"param1":']),
+                *create_tool_use_block(1, "toolu_invalid_2", "test_tool", ["{"]),
+                *create_tool_use_block(2, "toolu_valid", "test_tool", ["{}"]),
+            ],
+            "tool_use",
+            "Claude returned invalid tool arguments",
+            id="valid_tool_after_multiple_invalid_tools",
+        ),
+    ],
+)
+async def test_invalid_tool_arguments(
+    hass: HomeAssistant,
+    mock_create_stream: AsyncMock,
+    mock_llm_tool: AsyncMock,
+    tool_blocks: list[RawMessageStreamEvent],
+    stop_reason: StopReason,
+    error_message: str,
+) -> None:
+    """Read the stop reason before reporting malformed tool arguments."""
+    mock_create_stream.return_value = [
+        [
+            *tool_blocks,
+            RawMessageDeltaEvent(
+                type="message_delta",
+                delta=Delta(stop_reason=stop_reason),
+                usage=MessageDeltaUsage(output_tokens=10),
+            ),
+        ]
+    ]
+
+    result = await conversation.async_converse(
+        hass, "Please call the test function", None, Context(), agent_id=ENTITY_ID
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert result.response.error_code == "unknown"
+    assert result.response.speech["plain"]["speech"] == error_message
+    mock_llm_tool.async_call.assert_not_called()
     mock_create_stream.assert_awaited_once()
 
 
@@ -2282,15 +2407,38 @@ async def test_resume_pause_turn(
 
 
 @pytest.mark.usefixtures("mock_config_entry_with_server_tools", "mock_init_component")
+@pytest.mark.parametrize(
+    "final_tool_arguments",
+    [
+        pytest.param(['{"command": "echo 42"}'], id="valid_tool_arguments"),
+        pytest.param(['{"command":'], id="invalid_tool_arguments"),
+    ],
+)
 async def test_pause_turn_iteration_limit(
     hass: HomeAssistant,
     mock_create_stream: AsyncMock,
     code_execution_container: Container,
+    final_tool_arguments: list[str],
 ) -> None:
     """Report an incomplete response if every allowed request pauses."""
-    mock_create_stream.return_value = _create_paused_responses(
-        MAX_TOOL_ITERATIONS, code_execution_container
-    )
+    mock_create_stream.return_value = [
+        *_create_paused_responses(MAX_TOOL_ITERATIONS - 1, code_execution_container),
+        [
+            *create_bash_code_execution_result_block(
+                0, f"srvtoolu_{MAX_TOOL_ITERATIONS - 2}", stdout="42\n"
+            ),
+            *create_server_tool_use_block(
+                1, "srvtoolu_final", "bash_code_execution", final_tool_arguments
+            ),
+            RawMessageDeltaEvent(
+                type="message_delta",
+                delta=Delta(
+                    stop_reason="pause_turn", container=code_execution_container
+                ),
+                usage=MessageDeltaUsage(output_tokens=10),
+            ),
+        ],
+    ]
 
     result = await conversation.async_converse(
         hass, "Calculate the answer", None, Context(), agent_id=ENTITY_ID

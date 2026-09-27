@@ -531,6 +531,7 @@ class AnthropicDeltaStream:
         self._chat_log: conversation.ChatLog = chat_log
         self._stream: AsyncStream[MessageStreamEvent] = stream
         self.stop_reason: StopReason | None = None
+        self.tool_args_error: json.JSONDecodeError | None = None
 
         self._buffer: deque[
             conversation.AssistantContentDeltaDict
@@ -825,25 +826,34 @@ class AnthropicDeltaStream:
 
     def on_content_block_stop_event(self, index: int) -> None:
         """Handle RawContentBlockStopEvent."""
-        if self._current_tool_block is not None:
-            tool_args = (
-                json.loads(self._current_tool_args) if self._current_tool_args else {}
-            )
-            self._current_tool_block["input"] |= tool_args
-            self._buffer.append(
-                {
-                    "tool_calls": [
-                        llm.ToolInput(
-                            id=self._current_tool_block["id"],
-                            tool_name=self._current_tool_block["name"],
-                            tool_args=self._current_tool_block["input"],
-                            external=self._current_tool_block["type"]
-                            == "server_tool_use",
-                        )
-                    ]
-                }
-            )
-            self._current_tool_block = None
+        if (tool_block := self._current_tool_block) is None:
+            return
+        self._current_tool_block = None
+        tool_args_json = self._current_tool_args
+        self._current_tool_args = ""
+        if self.tool_args_error is not None:
+            return
+
+        try:
+            tool_args = json.loads(tool_args_json) if tool_args_json else {}
+        except json.JSONDecodeError as err:
+            # Wait for the stop reason to distinguish truncation from invalid input.
+            self.tool_args_error = err
+            return
+
+        tool_block["input"] |= tool_args
+        self._buffer.append(
+            {
+                "tool_calls": [
+                    llm.ToolInput(
+                        id=tool_block["id"],
+                        tool_name=tool_block["name"],
+                        tool_args=tool_block["input"],
+                        external=tool_block["type"] == "server_tool_use",
+                    )
+                ]
+            }
+        )
 
     def on_message_delta_event(self, delta: Delta, usage: MessageDeltaUsage) -> None:
         """Handle RawMessageDeltaEvent."""
@@ -1176,18 +1186,12 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                     },
                 ) from err
 
-            if (
-                stop_reason := delta_stream.stop_reason
-            ) == "pause_turn" and iteration < max_iterations - 1:
-                continue
-
-            if stop_reason in (
+            if (stop_reason := delta_stream.stop_reason) in (
                 "refusal",
                 "max_tokens",
                 "model_context_window_exceeded",
                 "stop_sequence",
-                "pause_turn",
-            ):
+            ) or (stop_reason == "pause_turn" and iteration == max_iterations - 1):
                 coordinator.async_set_updated_data(coordinator.data)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
@@ -1199,6 +1203,16 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                         "pause_turn": "response_incomplete",
                     }[stop_reason],
                 )
+
+            if delta_stream.tool_args_error is not None:
+                coordinator.async_set_updated_data(coordinator.data)
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="tool_args_parse_error",
+                ) from delta_stream.tool_args_error
+
+            if stop_reason == "pause_turn":
+                continue
 
             if not chat_log.unresponded_tool_results:
                 coordinator.async_set_updated_data(coordinator.data)
