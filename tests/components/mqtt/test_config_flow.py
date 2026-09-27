@@ -37,7 +37,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+    selector,
+)
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .common import (
@@ -4171,6 +4176,67 @@ async def test_subentry_configflow(
 
     # Assert the entry is reloaded to set up the entity
     assert len(mock_reload_after_entry_update.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("platform", "expected_context"),
+    [
+        pytest.param(
+            "number",
+            {"filter_device_class": "device_class"},
+            id="number",
+        ),
+        pytest.param(
+            "sensor",
+            {
+                "filter_device_class": "device_class",
+                "filter_state_class": "state_class",
+            },
+            id="sensor",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_reload_after_entry_update")
+async def test_subentry_configflow_unit_of_measurement_context(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    platform: str,
+    expected_context: dict[str, str],
+) -> None:
+    """Test the unit of measurement field context refers to fields in the form."""
+    await mqtt_mock_entry()
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "device"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"platform": platform, "name": "Milk"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entity_platform_config"
+
+    # Serialize the form the way it is sent to the frontend
+    fields = {
+        field["name"]: field
+        for field in probatio.to_field_list(
+            result["data_schema"], custom_serializer=cv.custom_serializer
+        )
+    }
+    assert fields["unit_of_measurement"]["context"] == expected_context
+    # The frontend reads the context values from sibling fields in the same form
+    allowed_context_keys = selector.UnitOfMeasurementSelector().allowed_context_keys
+    for context_key, field_name in expected_context.items():
+        assert (
+            next(iter(fields[field_name]["selector"]))
+            in allowed_context_keys[context_key]
+        )
 
 
 @pytest.mark.parametrize(
