@@ -44,6 +44,7 @@ from homeassistant.helpers.template import Template
 
 from . import CONFIG_ENTRY_PLATFORMS, create_rest_data_from_config_entry
 from .const import (
+    CONF_ENCODING,
     CONF_JSON_ATTRS,
     CONF_JSON_ATTRS_PATH,
     DEFAULT_BINARY_SENSOR_NAME,
@@ -224,6 +225,9 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
             except TemplateError as exc:
                 errors["base"] = "template_error"
                 placeholders["template_error_message"] = str(exc)
+            except UnicodeDecodeError as exc:
+                errors[CONF_ENCODING] = "decoding_error"
+                placeholders["decoding_error_message"] = str(exc)
         suggested_values = user_input or {}
         return self.async_show_form(
             step_id="user",
@@ -315,6 +319,7 @@ class RestSubentryFlow(ConfigSubentryFlow):
                     errors["base"] = "endpoint_error"
                     placeholders["endpoint_error_message"] = str(
                         entry.runtime_data.rest.last_exception
+                        or entry.runtime_data.last_exception
                     )
             if not errors:
                 title: str = user_input.get(

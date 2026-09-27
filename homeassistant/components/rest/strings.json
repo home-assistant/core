@@ -21,6 +21,7 @@
     "error": {
       "codec not found": "Encoding not supported",
       "credentials_missing": "Username and password are both required",
+      "decoding_error": "Error decoding response: {decoding_error_message}",
       "endpoint_error": "[%key:component::rest::common::endpoint_error%]",
       "invalid url": "Invalid URL",
       "template_error": "[%key:component::rest::common::template_error%]"

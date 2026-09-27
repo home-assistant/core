@@ -218,7 +218,7 @@ async def test_sensor_subentry_flow_invalid_json_attrs_path(
     get_config_entry_data: dict[str, Any],
     get_subentry_data: list[config_entries.ConfigSubentryData],
 ) -> None:
-    """Test a subentry flow wrong json_attrs_path."""
+    """Test a subentry flow invalid json_attrs_path."""
     aioclient_mock.get(
         "http://localhost",
         status=HTTPStatus.OK,
@@ -314,7 +314,7 @@ async def test_subentry_flow_entry_not_loaded(
     get_config_entry_data: dict[str, Any],
     get_subentry_data: list[config_entries.ConfigSubentryData],
 ) -> None:
-    """Test to ensure that a config entry entering any state other than LOADED is caught."""
+    """Test to ensure subentry flow handles an entry with a state other than LOADED."""
     aioclient_mock.get(
         "http://localhost",
         status=HTTPStatus.OK,
@@ -345,7 +345,7 @@ async def test_invalid_rest_resource(
     aioclient_mock: AiohttpClientMocker,
     get_config_entry_data: dict[str, Any],
 ) -> None:
-    """Test any invalid resource."""
+    """Test config flow handling of resource (ClientError) handling."""
     aioclient_mock.get("http://localhost", exc=ClientError("client error"))
 
     result = await hass.config_entries.flow.async_init(
@@ -368,7 +368,7 @@ async def test_config_invalid_input(
     hass: HomeAssistant,
     get_config_entry_data: dict[str, Any],
 ) -> None:
-    """Test config entry reconfigure flow."""
+    """Test config entry flow schema validation."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -480,4 +480,31 @@ async def test_config_flow_xml_parse_error(
         result["errors"]
         and "base" in result["errors"]
         and result["errors"]["base"] == "xml_parse_error"
+    )
+
+
+async def test_config_flow_decode_error(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    get_config_entry_data: dict[str, Any],
+) -> None:
+    """Test that config_flow handles decode error as this is not handled by RestData."""
+    aioclient_mock.get("http://localhost", status=HTTPStatus.OK, content=b"\x80")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], get_config_entry_data
+    )
+
+    assert (
+        result["errors"]
+        and CONF_ENCODING in result["errors"]
+        and result["errors"][CONF_ENCODING] == "decoding_error"
+    )
+    assert (
+        "codec can't decode byte 0x80"
+        in result["description_placeholders"]["decoding_error_message"]
     )
