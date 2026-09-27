@@ -39,3 +39,14 @@ class ElectricKiwiLocalOAuth2Implementation(AuthImplementation):
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {"scope": SCOPE_VALUES}
+
+    @override
+    async def _async_refresh_token(self, token: dict) -> dict:
+        """Refresh tokens."""
+        new_token = await self._token_request(
+            {
+                "grant_type": "refresh_token",
+                "refresh_token": token["refresh_token"],
+            }
+        )
+        return {**token, **new_token}
