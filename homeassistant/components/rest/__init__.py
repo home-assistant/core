@@ -105,12 +105,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: RestConfigEntry) 
 
     try:
         rest: RestData = create_rest_data_from_config_entry(hass, config_entry.data)
-    except TemplateError as ex:
+    except TemplateError as exc:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="template_error",
-            translation_placeholders={"error_message": str(ex)},
-        ) from ex
+            translation_placeholders={"error_message": str(exc)},
+        ) from exc
+    except HomeAssistantError as exc:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="empty_resource_error"
+        ) from exc
 
     resource_template: template.Template = template.Template(
         config_entry.data[CONF_RESOURCE], hass

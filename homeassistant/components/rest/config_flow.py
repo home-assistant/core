@@ -132,23 +132,23 @@ def _validate_sensor_input(
             parse_json_attributes_raise_error(
                 rest.data_without_xml(), attrs, input.get(CONF_JSON_ATTRS_PATH)
             )
-        except HomeAssistantError as ex:
-            if ex.translation_key is not None:
-                errors["base"] = ex.translation_key
-                placeholders = ex.translation_placeholders or {}
-        except ExpatError as ex:
+        except HomeAssistantError as exc:
+            if exc.translation_key is not None:
+                errors["base"] = exc.translation_key
+                placeholders = exc.translation_placeholders or {}
+        except ExpatError as exc:
             errors["base"] = "xml_parse_error"
-            placeholders["xml_parse_error_message"] = str(ex)
+            placeholders["xml_parse_error_message"] = str(exc)
     try:
         _validate_unit(input)
-    except probatio.Invalid as ex:
+    except probatio.Invalid as exc:
         errors[CONF_UNIT_OF_MEASUREMENT] = "unit_validation_error"
-        placeholders["unit_validation_error_message"] = str(ex)
+        placeholders["unit_validation_error_message"] = str(exc)
     try:
         _validate_state_class(input)
-    except probatio.Invalid as ex:
+    except probatio.Invalid as exc:
         errors[CONF_STATE_CLASS] = "state_class_validation_error"
-        placeholders["state_class_validation_error_message"] = str(ex)
+        placeholders["state_class_validation_error_message"] = str(exc)
 
     return errors, placeholders
 
@@ -221,9 +221,9 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._title = f"{user_input[CONF_METHOD]} {Template(user_input[CONF_RESOURCE], self.hass).async_render()}"
                     self._data = user_input
                     return await self.async_step_subentries_menu()
-            except TemplateError as ex:
+            except TemplateError as exc:
                 errors["base"] = "template_error"
-                placeholders["error_message"] = str(ex)
+                placeholders["error_message"] = str(exc)
         suggested_values = user_input or {}
         return self.async_show_form(
             step_id="user",

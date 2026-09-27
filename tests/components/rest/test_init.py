@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PACKAGES,
     CONF_PAYLOAD,
+    CONF_RESOURCE,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     UnitOfInformation,
@@ -558,7 +559,7 @@ async def test_setup_entry_bad_resource(
     aioclient_mock: AiohttpClientMocker,
     get_config_entry_data: dict[str, Any],
 ) -> None:
-    """Test setup entry with resource."""
+    """Test setup entry with resource error."""
     aioclient_mock.get("http://localhost", exc=ClientError("client error"))
 
     entry = await async_setup_entry(hass, get_config_entry_data)
@@ -574,7 +575,7 @@ async def test_setup_entry_template_error(
     aioclient_mock: AiohttpClientMocker,
     get_config_entry_data: dict[str, Any],
 ) -> None:
-    """Test setup entry with resource."""
+    """Test setup entry handles TemplateError."""
     entry = await async_setup_entry(
         hass,
         get_config_entry_data | {CONF_PAYLOAD: '{"bad_template": "{{ 1 / 0}}"}'},
@@ -583,3 +584,19 @@ async def test_setup_entry_template_error(
     await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.SETUP_RETRY
     assert entry.error_reason_translation_key == "template_error"
+
+
+async def test_setup_entry_resource_renders_empty(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    get_config_entry_data: dict[str, Any],
+) -> None:
+    """Test setup entry when resource template renders empty result."""
+    entry = await async_setup_entry(
+        hass,
+        get_config_entry_data | {CONF_RESOURCE: "{{ '' }}"},
+    )
+
+    await hass.async_block_till_done()
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "empty_resource_error"
