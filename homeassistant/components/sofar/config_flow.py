@@ -48,7 +48,7 @@ async def _async_probe(
     """Connect to the inverter and read its identity, or raise."""
     params = ModbusTcpParams(host=host, port=port)
     async with async_get_temporary_unit(hass, params, unit_id) as unit:
-        device = SofarInverter(unit)
+        device = await SofarInverter.async_detect(unit)
         await device.async_update()
     return device
 
