@@ -65,6 +65,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     coordinator = PortainerCoordinator(hass, entry, client)
     coordinator.watcher = watcher
     await coordinator.async_config_entry_first_refresh()
+    # Keep polling without entities, so new endpoints are still discovered
+    entry.async_on_unload(coordinator.async_add_listener(lambda: None))
 
     docker_system_df_client = Portainer(
         api_url=entry.data[CONF_URL],

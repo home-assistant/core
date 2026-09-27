@@ -371,6 +371,7 @@ async def test_new_endpoint_callback(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test new endpoint creates entities after refresh."""
     mock_portainer_client.get_endpoints.return_value = []
@@ -389,9 +390,9 @@ async def test_new_endpoint_callback(
         if endpoint["Status"] == EndpointStatus.UP
     ]
 
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
