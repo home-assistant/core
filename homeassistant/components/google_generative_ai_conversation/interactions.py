@@ -421,8 +421,44 @@ def _convert_assistant_content_steps(
 
 def _convert_tool_result_step(
     content: conversation.ToolResultContent,
-) -> interactions.FunctionResultStep:
-    """Convert ToolResultContent into a FunctionResultStep."""
+    part_details: list[PartDetails] | None = None,
+) -> interactions.FunctionResultStep | interactions.GoogleSearchResultStep:
+    """Convert ToolResultContent into a FunctionResultStep or GoogleSearchResultStep."""
+    if content.tool_name == "google_search":
+        sig: str | None = None
+        if part_details:
+            sig = next(
+                (
+                    d.thought_signature
+                    for d in part_details
+                    if d.part_type == "google_search_result"
+                ),
+                None,
+            )
+        data = content.result.data if isinstance(content.result.data, dict) else {}
+        if sig is None and "signature" in data and isinstance(data["signature"], str):
+            sig = data["signature"]
+
+        raw_results = data.get("result", []) if isinstance(data, dict) else []
+        search_results: list[interactions.GoogleSearchResult] = []
+        if isinstance(raw_results, list):
+            for r in raw_results:
+                if isinstance(r, interactions.GoogleSearchResult):
+                    search_results.append(r)
+                elif isinstance(r, dict):
+                    val = r.get("search_suggestions")
+                    suggestions = val if isinstance(val, str) else None
+                    search_results.append(
+                        interactions.GoogleSearchResult(search_suggestions=suggestions)
+                    )
+
+        return interactions.GoogleSearchResultStep(
+            call_id=content.tool_call_id,
+            result=search_results,
+            is_error=True if content.result.error else None,
+            signature=sig,
+        )
+
     result_data = (
         _validate_tool_results(content.result.data)
         if content.result.data is not None
@@ -441,15 +477,18 @@ def convert_chat_log_to_interactions_steps(
 ) -> list[interactions.Step]:
     """Convert Home Assistant ChatLog history into a sequence of interaction steps."""
     steps: list[interactions.Step] = []
+    latest_part_details: list[PartDetails] = []
 
     for content in chat_log.content:
         match content:
             case conversation.UserContent():
                 steps.append(_convert_user_content_step(content))
             case conversation.AssistantContent():
+                if isinstance(content.native, ContentDetails):
+                    latest_part_details = content.native.part_details
                 steps.extend(_convert_assistant_content_steps(content))
             case conversation.ToolResultContent():
-                steps.append(_convert_tool_result_step(content))
+                steps.append(_convert_tool_result_step(content, latest_part_details))
 
     return steps
 
@@ -541,6 +580,11 @@ class _StreamState:
     current_search_queries: list[str] | None = None
     current_search_signature: str | None = None
 
+    current_search_result_id: str | None = None
+    current_search_result_data: list[Any] = field(default_factory=list)
+    current_search_result_signature: str | None = None
+    current_search_result_is_error: bool | None = None
+
 
 def _handle_step_start(step: interactions.Step, state: _StreamState) -> None:
     """Handle step start events."""
@@ -560,6 +604,13 @@ def _handle_step_start(step: interactions.Step, state: _StreamState) -> None:
             state.current_search_queries = (
                 list(args.queries) if args and args.queries is not None else None
             )
+        case interactions.GoogleSearchResultStep(
+            call_id=call_id, result=res, signature=sig, is_error=is_err
+        ):
+            state.current_search_result_id = call_id
+            state.current_search_result_data = list(res) if res else []
+            state.current_search_result_signature = sig or None
+            state.current_search_result_is_error = is_err or None
 
 
 def _handle_step_delta(
@@ -596,6 +647,16 @@ def _handle_step_delta(
             if args and args.queries is not None:
                 state.current_search_queries = list(args.queries)
 
+        case interactions.GoogleSearchResultDelta(
+            result=res, signature=sig, is_error=is_err
+        ):
+            if sig:
+                state.current_search_result_signature = sig
+            if res:
+                state.current_search_result_data.extend(res)
+            if is_err is not None:
+                state.current_search_result_is_error = is_err
+
         case interactions.ArgumentsDelta(arguments=args):
             if args:
                 state.current_tool_args_str += args
@@ -605,39 +666,49 @@ def _handle_step_delta(
 
 def _handle_step_stop(
     state: _StreamState,
-) -> conversation.AssistantContentDeltaDict | None:
+) -> list[
+    conversation.AssistantContentDeltaDict | conversation.ToolResultContentDeltaDict
+]:
     """Handle step stop events."""
+    deltas: list[
+        conversation.AssistantContentDeltaDict | conversation.ToolResultContentDeltaDict
+    ] = []
+
     if state.current_tool_name:
         tool_args = _parse_tool_args(
             state.current_tool_args_str, state.current_tool_args_dict
         )
-        delta: conversation.AssistantContentDeltaDict = {
-            "tool_calls": [
-                llm.ToolInput(
-                    tool_name=state.current_tool_name,
-                    tool_args=tool_args,
-                    id=state.current_tool_id or "",
-                )
-            ]
-        }
+        deltas.append(
+            {
+                "tool_calls": [
+                    llm.ToolInput(
+                        tool_name=state.current_tool_name,
+                        tool_args=tool_args,
+                        id=state.current_tool_id or "",
+                    )
+                ]
+            }
+        )
         state.current_tool_id = None
         state.current_tool_name = None
         state.current_tool_args_str = ""
         state.current_tool_args_dict = None
         state.tool_call_index += 1
-        return delta
+        return deltas
 
     if state.current_search_call_id:
-        search_delta: conversation.AssistantContentDeltaDict = {
-            "tool_calls": [
-                llm.ToolInput(
-                    tool_name="google_search",
-                    tool_args={"queries": state.current_search_queries or []},
-                    id=state.current_search_call_id,
-                    external=True,
-                )
-            ]
-        }
+        deltas.append(
+            {
+                "tool_calls": [
+                    llm.ToolInput(
+                        tool_name="google_search",
+                        tool_args={"queries": state.current_search_queries or []},
+                        id=state.current_search_call_id,
+                        external=True,
+                    )
+                ]
+            }
+        )
         if state.current_search_signature:
             state.part_details.append(
                 PartDetails(
@@ -651,15 +722,64 @@ def _handle_step_stop(
         state.current_search_queries = None
         state.current_search_signature = None
         state.tool_call_index += 1
-        return search_delta
+        return deltas
 
-    return None
+    if state.current_search_result_id:
+        if state.current_search_result_signature:
+            state.part_details.append(
+                PartDetails(
+                    part_type="google_search_result",
+                    index=max(0, state.tool_call_index - 1),
+                    length=0,
+                    thought_signature=state.current_search_result_signature,
+                )
+            )
+
+        if state.part_details:
+            deltas.append(
+                {"native": ContentDetails(part_details=list(state.part_details))}
+            )
+            state.part_details.clear()
+
+        raw_results = state.current_search_result_data
+        formatted_results: list[dict[str, Any]] = []
+        for r in raw_results:
+            if hasattr(r, "model_dump"):
+                formatted_results.append(r.model_dump(exclude_none=True))
+            elif isinstance(r, dict):
+                formatted_results.append(r)
+        result_dict: dict[str, Any] = {"result": formatted_results}
+        if state.current_search_result_signature:
+            result_dict["signature"] = state.current_search_result_signature
+
+        deltas.append(
+            {
+                "role": "tool_result",
+                "tool_call_id": state.current_search_result_id,
+                "tool_name": "google_search",
+                "result": llm.ToolResult(
+                    data=result_dict,
+                    error=bool(state.current_search_result_is_error),
+                ),
+            }
+        )
+        deltas.append({"role": "assistant"})
+
+        state.current_search_result_id = None
+        state.current_search_result_data = []
+        state.current_search_result_signature = None
+        state.current_search_result_is_error = None
+        return deltas
+
+    return deltas
 
 
 async def transform_interactions_stream(
     chat_log: conversation.ChatLog,
     result: AsyncIterator[interactions.InteractionSSEEvent],
-) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
+) -> AsyncGenerator[
+    conversation.AssistantContentDeltaDict | conversation.ToolResultContentDeltaDict
+]:
     """Transform Gemini Interactions SSE stream into AssistantContentDeltaDict chunks."""
     new_message = True
     state = _StreamState()
@@ -682,8 +802,8 @@ async def transform_interactions_stream(
                     if out_delta := _handle_step_delta(delta, state):
                         yield out_delta
                 case interactions.StepStop():
-                    if out_delta := _handle_step_stop(state):
-                        yield out_delta
+                    for stop_delta in _handle_step_stop(state):
+                        yield stop_delta
 
         if state.part_details:
             yield {"native": ContentDetails(part_details=state.part_details)}

@@ -624,14 +624,11 @@ async def test_transform_interactions_stream_gemini_3_flash_google_search(
         )
     ]
 
-    assistant_content = next(
-        c for c in contents if isinstance(c, conversation.AssistantContent)
-    )
-    assert (
-        assistant_content.content
-        == "The **Seattle Seahawks** won Super Bowl LX on February 8, 2026."
-    )
-    assert assistant_content.tool_calls == [
+    assert len(contents) == 3
+
+    search_call_content = contents[0]
+    assert isinstance(search_call_content, conversation.AssistantContent)
+    assert search_call_content.tool_calls == [
         llm.ToolInput(
             tool_name="google_search",
             tool_args={
@@ -644,7 +641,7 @@ async def test_transform_interactions_stream_gemini_3_flash_google_search(
             external=True,
         )
     ]
-    assert assistant_content.native == ContentDetails(
+    assert search_call_content.native == ContentDetails(
         part_details=[
             PartDetails(
                 part_type="google_search_call",
@@ -653,6 +650,32 @@ async def test_transform_interactions_stream_gemini_3_flash_google_search(
                 thought_signature=search_sig,
             ),
             PartDetails(
+                part_type="google_search_result",
+                index=0,
+                length=0,
+                thought_signature="res_sig_abc",
+            ),
+        ]
+    )
+
+    tool_result_content = contents[1]
+    assert isinstance(tool_result_content, conversation.ToolResultContent)
+    assert tool_result_content.tool_name == "google_search"
+    assert tool_result_content.tool_call_id == "call_491782"
+    assert tool_result_content.result.data == {
+        "result": [{"search_suggestions": "..."}],
+        "signature": "res_sig_abc",
+    }
+
+    final_content = contents[2]
+    assert isinstance(final_content, conversation.AssistantContent)
+    assert (
+        final_content.content
+        == "The **Seattle Seahawks** won Super Bowl LX on February 8, 2026."
+    )
+    assert final_content.native == ContentDetails(
+        part_details=[
+            PartDetails(
                 part_type="thought",
                 index=0,
                 length=0,
@@ -660,8 +683,39 @@ async def test_transform_interactions_stream_gemini_3_flash_google_search(
             ),
         ]
     )
-    assert assistant_content.native.part_details[0].thought_signature == search_sig
-    assert assistant_content.native.part_details[1].thought_signature == thought_sig
+
+    # Verify history conversion reconstructs the steps accurately
+    steps = convert_chat_log_to_interactions_steps(chat_log)
+    assert len(steps) == 5
+    assert steps[0] == interactions.UserInputStep(
+        content=[interactions.TextContent(text="who won Super Bowl LX 2026?")]
+    )
+    assert steps[1] == interactions.GoogleSearchCallStep(
+        arguments=interactions.GoogleSearchCallArguments(
+            queries=[
+                "Super Bowl LX 2026 winner",
+                "Super Bowl LX date location",
+            ]
+        ),
+        id="call_491782",
+        signature=search_sig,
+        search_type="web_search",
+    )
+    assert steps[2] == interactions.GoogleSearchResultStep(
+        call_id="call_491782",
+        result=[interactions.GoogleSearchResult(search_suggestions="...")],
+        signature="res_sig_abc",
+    )
+    assert steps[3] == interactions.ThoughtStep(
+        signature=thought_sig,
+    )
+    assert steps[4] == interactions.ModelOutputStep(
+        content=[
+            interactions.TextContent(
+                text="The **Seattle Seahawks** won Super Bowl LX on February 8, 2026."
+            )
+        ]
+    )
 
 
 async def test_convert_chat_log_to_interactions_steps_simple(
@@ -785,6 +839,128 @@ async def test_convert_chat_log_to_interactions_steps_google_search_multiturn(
     assert request["model"] == "gemini-3.8-flash"
     assert request["store"] is False
     assert request["stream"] is True
+
+
+async def test_convert_chat_log_to_interactions_steps_google_search_with_tool_result_multiturn(
+    hass: HomeAssistant,
+) -> None:
+    """Test converting Google Search conversation turn with tool result to steps for multi-turn follow-up."""
+    chat_log = conversation.ChatLog(hass, "test_conversation")
+    chat_log.async_add_user_content(
+        conversation.UserContent(content="who won Super Bowl LX 2026?")
+    )
+
+    search_sig = "search_sig_super_bowl_123"
+    result_sig = "result_sig_super_bowl_456"
+    thought_sig = "thought_sig_super_bowl_789"
+
+    chat_log.async_add_assistant_content_without_tools(
+        conversation.AssistantContent(
+            agent_id="test_agent",
+            tool_calls=[
+                llm.ToolInput(
+                    tool_name="google_search",
+                    tool_args={
+                        "queries": [
+                            "Super Bowl LX 2026 winner",
+                            "Super Bowl LX date location",
+                        ]
+                    },
+                    id="call_491782",
+                    external=True,
+                )
+            ],
+            native=ContentDetails(
+                part_details=[
+                    PartDetails(
+                        part_type="google_search_call",
+                        index=0,
+                        length=0,
+                        thought_signature=search_sig,
+                    ),
+                    PartDetails(
+                        part_type="google_search_result",
+                        index=0,
+                        length=0,
+                        thought_signature=result_sig,
+                    ),
+                ]
+            ),
+        )
+    )
+
+    chat_log.async_add_assistant_content_without_tools(
+        conversation.ToolResultContent(
+            agent_id="test_agent",
+            tool_call_id="call_491782",
+            tool_name="google_search",
+            result=llm.ToolResult(
+                data={
+                    "result": [{"search_suggestions": "Super Bowl LX Champion"}],
+                    "signature": result_sig,
+                }
+            ),
+        )
+    )
+
+    chat_log.async_add_assistant_content_without_tools(
+        conversation.AssistantContent(
+            agent_id="test_agent",
+            content="The **Seattle Seahawks** won Super Bowl LX on February 8, 2026.",
+            native=ContentDetails(
+                part_details=[
+                    PartDetails(
+                        part_type="thought",
+                        index=0,
+                        length=0,
+                        thought_signature=thought_sig,
+                    ),
+                ]
+            ),
+        )
+    )
+
+    chat_log.async_add_user_content(
+        conversation.UserContent(content="what was the score?")
+    )
+
+    steps = convert_chat_log_to_interactions_steps(chat_log)
+
+    assert len(steps) == 6
+    assert steps[0] == interactions.UserInputStep(
+        content=[interactions.TextContent(text="who won Super Bowl LX 2026?")]
+    )
+    assert steps[1] == interactions.GoogleSearchCallStep(
+        arguments=interactions.GoogleSearchCallArguments(
+            queries=[
+                "Super Bowl LX 2026 winner",
+                "Super Bowl LX date location",
+            ]
+        ),
+        id="call_491782",
+        signature=search_sig,
+        search_type="web_search",
+    )
+    assert steps[2] == interactions.GoogleSearchResultStep(
+        call_id="call_491782",
+        result=[
+            interactions.GoogleSearchResult(search_suggestions="Super Bowl LX Champion")
+        ],
+        signature=result_sig,
+    )
+    assert steps[3] == interactions.ThoughtStep(
+        signature=thought_sig,
+    )
+    assert steps[4] == interactions.ModelOutputStep(
+        content=[
+            interactions.TextContent(
+                text="The **Seattle Seahawks** won Super Bowl LX on February 8, 2026."
+            )
+        ]
+    )
+    assert steps[5] == interactions.UserInputStep(
+        content=[interactions.TextContent(text="what was the score?")]
+    )
 
 
 async def test_convert_chat_log_to_interactions_steps_userland_tool_multiturn(

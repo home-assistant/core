@@ -15,7 +15,9 @@ from .const import LOGGER
 class PartDetails:
     """Additional data for a content part."""
 
-    part_type: Literal["text", "thought", "function_call", "google_search_call"]
+    part_type: Literal[
+        "text", "thought", "function_call", "google_search_call", "google_search_result"
+    ]
     """The part type for which this data is relevant for."""
 
     index: int
