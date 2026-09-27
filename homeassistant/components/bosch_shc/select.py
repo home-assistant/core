@@ -42,18 +42,14 @@ async def _siren_select_option(device: SHCOutdoorSiren, option: str) -> None:
     await device.siren.async_set_configuration(sound_level=level)
 
 
-SIREN_SOUND_LEVEL = "siren_sound_level"
-
-SELECT_TYPES: dict[str, SHCSelectEntityDescription] = {
-    SIREN_SOUND_LEVEL: SHCSelectEntityDescription[SHCOutdoorSiren](
-        key=SIREN_SOUND_LEVEL,
-        translation_key=SIREN_SOUND_LEVEL,
-        entity_category=EntityCategory.CONFIG,
-        options=["low", "medium", "high"],
-        current_option_fn=_siren_current_option,
-        select_option_fn=_siren_select_option,
-    ),
-}
+SIREN_SOUND_LEVEL_DESCRIPTION = SHCSelectEntityDescription[SHCOutdoorSiren](
+    key="siren_sound_level",
+    translation_key="siren_sound_level",
+    entity_category=EntityCategory.CONFIG,
+    options=["low", "medium", "high"],
+    current_option_fn=_siren_current_option,
+    select_option_fn=_siren_select_option,
+)
 
 
 async def async_setup_entry(
@@ -73,7 +69,7 @@ async def async_setup_entry(
             device=siren,
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
-            description=SELECT_TYPES[SIREN_SOUND_LEVEL],
+            description=SIREN_SOUND_LEVEL_DESCRIPTION,
         )
         for siren in session.device_helper.outdoor_sirens
         if siren.siren is not None
