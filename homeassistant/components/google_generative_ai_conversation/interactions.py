@@ -476,44 +476,8 @@ def _convert_assistant_content_steps(
 
 def _convert_tool_result_step(
     content: conversation.ToolResultContent,
-    part_details: list[PartDetails] | None = None,
-) -> interactions.FunctionResultStep | interactions.GoogleSearchResultStep:
-    """Convert ToolResultContent into a FunctionResultStep or GoogleSearchResultStep."""
-    if content.tool_name == "google_search":
-        sig: str | None = None
-        if part_details:
-            sig = next(
-                (
-                    d.thought_signature
-                    for d in part_details
-                    if d.part_type == "google_search_result"
-                ),
-                None,
-            )
-        data = content.result.data if isinstance(content.result.data, dict) else {}
-        if sig is None and "signature" in data and isinstance(data["signature"], str):
-            sig = data["signature"]
-
-        raw_results = data.get("result", []) if isinstance(data, dict) else []
-        search_results: list[interactions.GoogleSearchResult] = []
-        if isinstance(raw_results, list):
-            for r in raw_results:
-                if isinstance(r, interactions.GoogleSearchResult):
-                    search_results.append(r)
-                elif isinstance(r, dict):
-                    val = r.get("search_suggestions")
-                    suggestions = val if isinstance(val, str) else None
-                    search_results.append(
-                        interactions.GoogleSearchResult(search_suggestions=suggestions)
-                    )
-
-        return interactions.GoogleSearchResultStep(
-            call_id=content.tool_call_id,
-            result=search_results,
-            is_error=True if content.result.error else None,
-            signature=sig,
-        )
-
+) -> interactions.FunctionResultStep:
+    """Convert ToolResultContent into a FunctionResultStep."""
     result_data = (
         _validate_tool_results(content.result.data)
         if content.result.data is not None
@@ -532,24 +496,15 @@ def convert_chat_log_to_interactions_steps(
 ) -> list[interactions.Step]:
     """Convert Home Assistant ChatLog history into a sequence of interaction steps."""
     steps: list[interactions.Step] = []
-    latest_part_details: list[PartDetails] = []
 
     for content in chat_log.content:
         match content:
             case conversation.UserContent():
                 steps.append(_convert_user_content_step(content))
             case conversation.AssistantContent():
-                if isinstance(content.native, ContentDetails):
-                    latest_part_details = content.native.part_details
                 steps.extend(_convert_assistant_content_steps(content))
             case conversation.ToolResultContent():
-                if content.tool_name == "google_search" and any(
-                    isinstance(s, interactions.GoogleSearchResultStep)
-                    and s.call_id == content.tool_call_id
-                    for s in steps
-                ):
-                    continue
-                steps.append(_convert_tool_result_step(content, latest_part_details))
+                steps.append(_convert_tool_result_step(content))
 
     return steps
 

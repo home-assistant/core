@@ -741,107 +741,13 @@ async def test_convert_chat_log_to_interactions_steps_google_search_multiturn(
     )
 
     search_sig = "search_sig_super_bowl_123"
-    thought_sig = "thought_sig_super_bowl_456"
-
-    chat_log.async_add_assistant_content_without_tools(
-        conversation.AssistantContent(
-            agent_id="test_agent",
-            content="The **Seattle Seahawks** won Super Bowl LX on February 8, 2026.",
-            tool_calls=[
-                llm.ToolInput(
-                    tool_name="google_search",
-                    tool_args={
-                        "queries": [
-                            "Super Bowl LX 2026 winner",
-                            "Super Bowl LX date location",
-                        ]
-                    },
-                    id="call_491782",
-                    external=True,
-                )
-            ],
-            native=ContentDetails(
-                part_details=[
-                    PartDetails(
-                        part_type="google_search_call",
-                        index=0,
-                        length=0,
-                        thought_signature=search_sig,
-                    ),
-                    PartDetails(
-                        part_type="thought",
-                        index=0,
-                        length=0,
-                        thought_signature=thought_sig,
-                    ),
-                ]
-            ),
-        )
-    )
-
-    chat_log.async_add_user_content(
-        conversation.UserContent(content="what is the score")
-    )
-
-    steps = convert_chat_log_to_interactions_steps(chat_log)
-
-    assert len(steps) == 5
-    assert steps[0] == interactions.UserInputStep(
-        content=[interactions.TextContent(text="who won Super Bowl LX 2026?")]
-    )
-    assert steps[1] == interactions.GoogleSearchCallStep(
-        arguments=interactions.GoogleSearchCallArguments(
-            queries=[
-                "Super Bowl LX 2026 winner",
-                "Super Bowl LX date location",
-            ]
-        ),
-        id="call_491782",
-        signature=search_sig,
-        search_type="web_search",
-    )
-    assert steps[2] == interactions.ThoughtStep(
-        signature=thought_sig,
-    )
-    assert steps[3] == interactions.ModelOutputStep(
-        content=[
-            interactions.TextContent(
-                text="The **Seattle Seahawks** won Super Bowl LX on February 8, 2026."
-            )
-        ]
-    )
-    assert steps[4] == interactions.UserInputStep(
-        content=[interactions.TextContent(text="what is the score")]
-    )
-
-    request = build_interaction_request(
-        model="gemini-3.8-flash",
-        input_content=steps,
-        stream=True,
-        store=False,
-    )
-    assert request["input"] == steps
-    assert request["model"] == "gemini-3.8-flash"
-    assert request["store"] is False
-    assert request["stream"] is True
-
-
-async def test_convert_chat_log_to_interactions_steps_google_search_with_tool_result_multiturn(
-    hass: HomeAssistant,
-) -> None:
-    """Test converting Google Search conversation turn with tool result to steps for multi-turn follow-up."""
-    chat_log = conversation.ChatLog(hass, "test_conversation")
-    chat_log.async_add_user_content(
-        conversation.UserContent(content="who won Super Bowl LX 2026?")
-    )
-
-    search_sig = "search_sig_super_bowl_123"
     result_sig = "result_sig_super_bowl_456"
     thought_sig = "thought_sig_super_bowl_789"
 
     chat_log.async_add_assistant_content_without_tools(
         conversation.AssistantContent(
             agent_id="test_agent",
+            content="The **Seattle Seahawks** won Super Bowl LX on February 8, 2026.",
             tool_calls=[
                 llm.ToolInput(
                     tool_name="google_search",
@@ -868,32 +774,10 @@ async def test_convert_chat_log_to_interactions_steps_google_search_with_tool_re
                         index=0,
                         length=0,
                         thought_signature=result_sig,
+                        search_result=[
+                            {"search_suggestions": "Super Bowl LX Champion"}
+                        ],
                     ),
-                ]
-            ),
-        )
-    )
-
-    chat_log.async_add_assistant_content_without_tools(
-        conversation.ToolResultContent(
-            agent_id="test_agent",
-            tool_call_id="call_491782",
-            tool_name="google_search",
-            result=llm.ToolResult(
-                data={
-                    "result": [{"search_suggestions": "Super Bowl LX Champion"}],
-                    "signature": result_sig,
-                }
-            ),
-        )
-    )
-
-    chat_log.async_add_assistant_content_without_tools(
-        conversation.AssistantContent(
-            agent_id="test_agent",
-            content="The **Seattle Seahawks** won Super Bowl LX on February 8, 2026.",
-            native=ContentDetails(
-                part_details=[
                     PartDetails(
                         part_type="thought",
                         index=0,
@@ -906,7 +790,7 @@ async def test_convert_chat_log_to_interactions_steps_google_search_with_tool_re
     )
 
     chat_log.async_add_user_content(
-        conversation.UserContent(content="what was the score?")
+        conversation.UserContent(content="what is the score")
     )
 
     steps = convert_chat_log_to_interactions_steps(chat_log)
@@ -944,8 +828,19 @@ async def test_convert_chat_log_to_interactions_steps_google_search_with_tool_re
         ]
     )
     assert steps[5] == interactions.UserInputStep(
-        content=[interactions.TextContent(text="what was the score?")]
+        content=[interactions.TextContent(text="what is the score")]
     )
+
+    request = build_interaction_request(
+        model="gemini-3.8-flash",
+        input_content=steps,
+        stream=True,
+        store=False,
+    )
+    assert request["input"] == steps
+    assert request["model"] == "gemini-3.8-flash"
+    assert request["store"] is False
+    assert request["stream"] is True
 
 
 async def test_convert_chat_log_to_interactions_steps_userland_tool_multiturn(
