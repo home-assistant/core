@@ -326,28 +326,61 @@ async def test_smoke_detection_system_no_alarm_yet(
 
 
 @pytest.mark.parametrize(
-    "device_buckets",
-    [{"smoke_detection_system": smoke_detection_system_device()}],
-    indirect=True,
+    ("device_buckets", "new_alarm", "event_type"),
+    [
+        pytest.param(
+            {
+                "smoke_detection_system": smoke_detection_system_device(
+                    alarm=SurveillanceAlarmService.State.ALARM_OFF
+                )
+            },
+            SurveillanceAlarmService.State.ALARM_ON,
+            "alarm_on",
+            id="alarm_on",
+        ),
+        pytest.param(
+            {
+                "smoke_detection_system": smoke_detection_system_device(
+                    alarm=SurveillanceAlarmService.State.ALARM_ON
+                )
+            },
+            SurveillanceAlarmService.State.ALARM_MUTED,
+            "alarm_muted",
+            id="alarm_muted",
+        ),
+        pytest.param(
+            {
+                "smoke_detection_system": smoke_detection_system_device(
+                    alarm=SurveillanceAlarmService.State.ALARM_ON
+                )
+            },
+            SurveillanceAlarmService.State.ALARM_OFF,
+            "alarm_off",
+            id="alarm_off",
+        ),
+    ],
+    indirect=["device_buckets"],
 )
 async def test_smoke_detection_system_fires_on_new_state(
     hass: HomeAssistant,
     mock_session: MagicMock,
     mock_config_entry: MockConfigEntry,
+    new_alarm: SurveillanceAlarmService.State,
+    event_type: str,
 ) -> None:
     """A SurveillanceAlarm push updates the event entity's state and attributes."""
     await setup_integration(hass, mock_config_entry)
     device = mock_session.device_helper.smoke_detection_system
     alarm_service = device.device_services[0]
 
-    device.alarm = SurveillanceAlarmService.State.ALARM_ON
+    device.alarm = new_alarm
     alarm_service._event_callbacks[device.id]()
     await hass.async_block_till_done()
 
     state = hass.states.get("event.smoke_detection_system")
     assert state is not None
     assert state.state != "unknown"
-    assert state.attributes["event_type"] == "alarm_on"
+    assert state.attributes["event_type"] == event_type
 
 
 @pytest.mark.parametrize(
