@@ -99,6 +99,7 @@
       "smart_charging": {
         "name": "Smart charging",
         "state": {
+          "custom_solar": "Custom solar",
           "default": "Default",
           "fast_solar": "Fast solar",
           "pure_solar": "Pure solar",
