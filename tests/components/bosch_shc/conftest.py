@@ -28,6 +28,7 @@ from boschshcpy import (
     SHCShutterControl,
     SHCSmartPlug,
     SHCSmartPlugCompact,
+    SHCSmokeDetectionSystem,
     SHCSmokeDetector,
     SHCThermostat,
     SHCThermostatGen2,
@@ -35,6 +36,7 @@ from boschshcpy import (
     ShutterContactService,
     ShutterControlService,
     SilentModeService,
+    SurveillanceAlarmService,
     ThermostatService,
 )
 from boschshcpy.services_impl import (
@@ -104,9 +106,10 @@ _EMPTY_DEVICE_BUCKETS: dict[str, Any] = {
         "water_leakage_detectors",
     )
 } | {
-    # Not a list bucket — presence_simulation_system is a single optional
-    # device on device_helper, not a device_helper.<x> list of devices.
+    # Not list buckets — these are single optional devices on device_helper,
+    # not a device_helper.<x> list of devices.
     "presence_simulation_system": None,
+    "smoke_detection_system": None,
 }
 
 
@@ -605,6 +608,46 @@ def smoke_detector_device(
     device.supports_intrusion_alarm = supports_intrusion_alarm
     device.intrusion_alarm = intrusion_alarm
     device.alarmstate = alarmstate
+    return device
+
+
+class FakeSurveillanceAlarmService:
+    """Minimal double of a SurveillanceAlarm DeviceService's event-callback API."""
+
+    id = "SurveillanceAlarm"
+
+    def __init__(self) -> None:
+        """Initialize the fake service's callback registry."""
+        self._event_callbacks: dict[str, Any] = {}
+
+    def register_event(self, event: str, callback: Any) -> None:
+        """Register a callback for the given device id."""
+        self._event_callbacks[event] = callback
+
+    def subscribe_callback(self, entity_id: str, callback: Any) -> None:
+        """No-op: SHCEntity subscribes to every device service's generic callback."""
+
+    def unsubscribe_callback(self, entity_id: str) -> None:
+        """No-op counterpart to subscribe_callback."""
+
+
+def smoke_detection_system_device(
+    device_id: str = "hdm:HomeMaticIP:smokedetectionsystem1",
+    name: str = "Smoke Detection System",
+    alarm: SurveillanceAlarmService.State = SurveillanceAlarmService.State.ALARM_OFF,
+) -> SHCSmokeDetectionSystem:
+    """Build a minimal device double for the smoke_detection_system device."""
+    device = create_autospec(SHCSmokeDetectionSystem, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "SMOKE_DETECTION_SYSTEM"
+    device.device_services = [FakeSurveillanceAlarmService()]
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.alarm = alarm
     return device
 
 
