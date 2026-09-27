@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -12,13 +13,17 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE,
+    ATTR_FAN_MODES,
     ATTR_HVAC_ACTION,
     ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
     HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
@@ -69,12 +74,19 @@ THERMOSTAT_HEATING = FixtureDevice(
     "io://1234-5678-5010/386310#1",
     "climate.study_thermostat",
 )
+# io:AtlanticHeatRecoveryVentilationIOComponent without io:VentilationModeState value
+HEAT_RECOVERY_VENTILATION = FixtureDevice(
+    "setup/local_somfy_tahoma_switch_europe.json",
+    "io://1234-5678-6508/2840629#1",
+    "climate.ventilation",
+)
 
 SNAPSHOT_FIXTURES = [
     VALVE,
     COZYTOUCH,
     YUTAKI_ZONE_1,
     THERMOSTAT_HEATING,
+    HEAT_RECOVERY_VENTILATION,
 ]
 
 
@@ -390,3 +402,174 @@ async def test_thermostat_heating_set_preset_mode(
         command_name="setDerogation",
         parameters=parameters,
     )
+
+
+def sent_commands(mock_client: MockOverkizClient) -> list[tuple[str, list[Any]]]:
+    """Return every command sent through the mocked client, in order."""
+    return [
+        (command.name, command.parameters or [])
+        for call in mock_client.execute_action_group.await_args_list
+        for action in call.kwargs["actions"]
+        for command in action.commands
+    ]
+
+
+async def test_heat_recovery_ventilation_without_ventilation_mode(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test bypass and prog are not offered without an io:VentilationModeState value."""
+    await setup_overkiz_integration(fixture=HEAT_RECOVERY_VENTILATION.fixture)
+
+    state = hass.states.get(HEAT_RECOVERY_VENTILATION.entity_id)
+    assert state is not None
+    assert state.state == HVACMode.FAN_ONLY
+    assert state.attributes[ATTR_FAN_MODE] == "auto"
+    assert state.attributes[ATTR_FAN_MODES] == [
+        "auto",
+        "away",
+        "home_boost",
+        "kitchen_boost",
+    ]
+    assert state.attributes[ATTR_PRESET_MODE] == "auto"
+    assert state.attributes[ATTR_PRESET_MODES] == ["auto", "manual"]
+
+
+async def test_heat_recovery_ventilation_ventilation_mode_reported(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test bypass and prog are offered once io:VentilationModeState has a value."""
+    await setup_overkiz_integration(fixture=HEAT_RECOVERY_VENTILATION.fixture)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=HEAT_RECOVERY_VENTILATION.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.IO_VENTILATION_MODE,
+                        "type": 11,
+                        "value": {"cooling": "on", "prog": "off"},
+                    },
+                    {
+                        "name": OverkizState.IO_VENTILATION_CONFIGURATION_MODE,
+                        "type": 3,
+                        "value": "standard",
+                    },
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(HEAT_RECOVERY_VENTILATION.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_FAN_MODE] == "bypass_boost"
+    assert state.attributes[ATTR_FAN_MODES] == [
+        "auto",
+        "away",
+        "home_boost",
+        "kitchen_boost",
+        "bypass_boost",
+    ]
+    assert state.attributes[ATTR_PRESET_MODE] == "manual"
+    assert state.attributes[ATTR_PRESET_MODES] == ["auto", "prog", "manual"]
+
+
+@pytest.mark.parametrize(
+    ("fan_mode", "air_demand_mode"),
+    [
+        pytest.param("auto", "auto", id="auto"),
+        pytest.param("away", "away", id="away"),
+        pytest.param("home_boost", "boost", id="home_boost"),
+        pytest.param("kitchen_boost", "high", id="kitchen_boost"),
+    ],
+)
+async def test_heat_recovery_ventilation_set_fan_mode_without_ventilation_mode(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    fan_mode: str,
+    air_demand_mode: str,
+) -> None:
+    """Test setting a fan mode skips setVentilationMode without its state value."""
+    await setup_overkiz_integration(fixture=HEAT_RECOVERY_VENTILATION.fixture)
+
+    await hass.services.async_call(
+        "climate",
+        "set_fan_mode",
+        {"entity_id": HEAT_RECOVERY_VENTILATION.entity_id, ATTR_FAN_MODE: fan_mode},
+        blocking=True,
+    )
+
+    assert sent_commands(mock_client) == [
+        ("setAirDemandMode", [air_demand_mode]),
+        ("refreshVentilationState", []),
+    ]
+
+
+@pytest.mark.parametrize(
+    ("preset_mode", "configuration_mode"),
+    [
+        pytest.param("auto", "comfort", id="auto"),
+        pytest.param("manual", "standard", id="manual"),
+    ],
+)
+async def test_heat_recovery_ventilation_set_preset_mode_without_ventilation_mode(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    preset_mode: str,
+    configuration_mode: str,
+) -> None:
+    """Test setting a preset skips setVentilationMode without its state value."""
+    await setup_overkiz_integration(fixture=HEAT_RECOVERY_VENTILATION.fixture)
+
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {
+            "entity_id": HEAT_RECOVERY_VENTILATION.entity_id,
+            ATTR_PRESET_MODE: preset_mode,
+        },
+        blocking=True,
+    )
+
+    assert sent_commands(mock_client) == [
+        ("setVentilationConfigurationMode", [configuration_mode]),
+        ("refreshVentilationState", []),
+        ("refreshVentilationConfigurationMode", []),
+    ]
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        pytest.param("set_fan_mode", {ATTR_FAN_MODE: "bypass_boost"}, id="bypass"),
+        pytest.param("set_preset_mode", {ATTR_PRESET_MODE: "prog"}, id="prog"),
+    ],
+)
+async def test_heat_recovery_ventilation_rejects_modes_without_ventilation_mode(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    service: str,
+    service_data: dict[str, str],
+) -> None:
+    """Test bypass and prog are rejected without an io:VentilationModeState value."""
+    await setup_overkiz_integration(fixture=HEAT_RECOVERY_VENTILATION.fixture)
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            "climate",
+            service,
+            {"entity_id": HEAT_RECOVERY_VENTILATION.entity_id, **service_data},
+            blocking=True,
+        )
+
+    mock_client.execute_action_group.assert_not_awaited()
