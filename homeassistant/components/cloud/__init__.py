@@ -381,7 +381,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _on_initialized() -> None:
         """Update preferences."""
-        await prefs.async_update(remote_domain=cloud.remote.instance_domain)
+        if (remote_domain := cloud.remote.instance_domain) != prefs.remote_domain:
+            await prefs.async_update(remote_domain=remote_domain)
 
     hass.data[DATA_PENDING_AUTO_LOGIN] = None
 
