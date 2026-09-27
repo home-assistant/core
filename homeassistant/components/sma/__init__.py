@@ -43,6 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SMAConfigEntry) -> bool:
     )
 
     coordinator = SMADataUpdateCoordinator(hass, entry, sma)
+    entry.async_on_unload(coordinator.async_close_sma_session)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
@@ -61,9 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SMAConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: SMAConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.async_close_sma_session()
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
