@@ -142,6 +142,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         """Extend source map and source list."""
         if sort_by:
             sources = sorted(sources, key=lambda d: d.get(sort_by, ""))
+        titles = {item["title"].lower() for item in sources if item.get("title")}
         for item in sources:
             title = item.get("title")
             uri = item.get("uri")
@@ -149,11 +150,15 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 continue
             self.source_map[uri] = {**item, "type": source_type}
             if add_to_list:
+                if title not in self.source_list:
+                    self.source_list.append(title)
                 # The name set on the TV is offered as an extra entry next to the
-                # generic one, so the reported source keeps its generic name.
-                for name in (title, item.get("label")):
-                    if name and name not in self.source_list:
-                        self.source_list.append(name)
+                # generic one, so the reported source keeps its generic name. A
+                # label repeating a generic name would select the other input.
+                label = item.get("label")
+                listed = titles | {name.lower() for name in self.source_list}
+                if label and label.lower() not in listed:
+                    self.source_list.append(label)
 
     @override
     async def _async_update_data(self) -> None:
