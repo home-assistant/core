@@ -93,8 +93,10 @@ async def validate_input(
 
     # new_session raises SmaAuthenticationException on failure
     await sma.new_session()
-    device_info = await sma.device_info()
-    await sma.close_session()
+    try:
+        device_info = await sma.device_info()
+    finally:
+        await sma.close_session()
 
     return dataclasses.asdict(device_info)
 

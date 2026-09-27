@@ -26,7 +26,7 @@
     'object_id_base': 'Air density',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 5,
+        'suggested_display_precision': 3,
       }),
     }),
     'original_device_class': None,
@@ -83,7 +83,7 @@
     'object_id_base': 'Air pressure',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 5,
+        'suggested_display_precision': 1,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
@@ -143,6 +143,9 @@
     'name': None,
     'object_id_base': 'Battery',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
@@ -169,7 +172,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '96.8611111111111',
+    'state': '97',
   })
 # ---
 # name: test_all_entities[sensor.st_00000001_battery_voltage-entry]
@@ -199,7 +202,7 @@
     'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 3,
       }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
@@ -372,6 +375,9 @@
     'name': None,
     'object_id_base': 'Humidity',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
@@ -541,7 +547,7 @@
     'object_id_base': 'Lightning average distance',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
@@ -653,7 +659,7 @@
     'object_id_base': 'Lightning last distance',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
@@ -815,7 +821,7 @@
     'object_id_base': 'Precipitation',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
@@ -874,7 +880,7 @@
     'object_id_base': 'Precipitation intensity',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
@@ -1161,6 +1167,9 @@
     'name': None,
     'object_id_base': 'UV index',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
@@ -1216,10 +1225,13 @@
     'object_id_base': 'Vapor pressure',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 5,
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
     'original_name': 'Vapor pressure',
     'platform': 'weatherflow',
@@ -1228,16 +1240,16 @@
     'supported_features': 0,
     'translation_key': 'vapor_pressure',
     'unique_id': 'ST-00000001_vapor_pressure',
-    'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
+    'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
   })
 # ---
 # name: test_all_entities[sensor.st_00000001_vapor_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pressure',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'atmospheric_pressure',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ST-00000001 Vapor pressure',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.MBAR: 'mbar'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.HPA: 'hPa'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.st_00000001_vapor_pressure',

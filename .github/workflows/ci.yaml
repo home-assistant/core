@@ -52,11 +52,9 @@ env:
   # and some queries that work on MariaDB do not work on MySQL
   MARIADB_VERSIONS: "['mariadb:10.3.32','mariadb:10.6.10','mariadb:10.11.2','mariadb:11.4.9','mariadb:11.8.8','mariadb:12.3.3','mysql:8.0.32']"
   # 12 is the oldest supported version
-  # - 12.22 is the latest (as of 19 Aug 2026)
   # 15 is a supported version
-  # - 15.19 is the latest (as of 19 Aug 2026)
   # 18 is the latest version
-  # - 18.6 is the latest (as of 19 Aug 2026)
+  # Renovate keeps each entry on the latest release of its major version
   POSTGRESQL_VERSIONS: "['postgres:12.22','postgres:15.19', 'postgres:18.6']"
   # 3.40.1 is the oldest supported version (recorder MIN_VERSION_SQLITE),
   # shipped in Debian 12 (bookworm)
@@ -349,7 +347,7 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/hadolint.json"
       - name: Check ${{ matrix.file }}
-        uses: docker://hadolint/hadolint:v2.12.0@sha256:30a8fd2e785ab6176eed53f74769e04f125afb2f74a6c52aef7d463583b6d45e
+        uses: docker://hadolint/hadolint:v2.15.1@sha256:32dac94127fd60b7b7e3fbfc65e1383b9b5e25c9bfd7b8536de7a539fe68a12d
         with:
           args: hadolint ${{ matrix.file }}
 
@@ -775,7 +773,7 @@ jobs:
           uv-cache-dir: ${{ env.UV_CACHE_DIR }}
           apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Run benchmarks
-        uses: CodSpeedHQ/action@a4a36bb07c0638b0b4ca52bf1f3dad1b4289e52f # v4.18.1
+        uses: CodSpeedHQ/action@373d6868929f444bc08d901fd0eb0ad52a8875ea # v5.2.1
         with:
           mode: simulation,memory
           # No token: auth uses the OIDC id-token minted by the job permissions.
