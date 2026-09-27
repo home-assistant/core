@@ -60,6 +60,7 @@ from homeassistant.components import repairs
 from homeassistant.config_entries import (
     DISCOVERY_SOURCES,
     ConfigEntriesFlowManager,
+    ConfigSubentryFlowManager,
     FlowResult,
     OptionsFlowManager,
 )
@@ -1021,6 +1022,9 @@ async def _validate_abort_translation_not_duplicated(
     component: str,
     translation_domain: str,
     key: str,
+    *,
+    shared_category: str | None = None,
+    shared_key: str | None = None,
 ) -> None:
     """Raise if an integration duplicates an abort translated by another domain.
 
@@ -1033,11 +1037,12 @@ async def _validate_abort_translation_not_duplicated(
     translations = await async_get_translations(hass, "en", category, [component])
     if (translation := translations.get(full_key)) is None:
         return
+    shared_category = shared_category or category
     shared_translations = await async_get_translations(
-        hass, "en", category, [translation_domain]
+        hass, "en", shared_category, [translation_domain]
     )
     if translation == shared_translations.get(
-        f"component.{translation_domain}.{category}.{key}"
+        f"component.{translation_domain}.{shared_category}.{shared_key or key}"
     ):
         translation_errors[full_key] = (
             f"Translation `{category}.{key}` of {component} duplicates the one of "
@@ -1182,6 +1187,27 @@ async def _check_config_flow_result_translations(
             **(issue.translation_placeholders or {}),
             **(description_placeholders or {}),
         }
+    elif isinstance(manager, ConfigSubentryFlowManager):
+        # Subentry flows are only checked for duplicated shared abort translations
+        if (
+            result["type"] is FlowResultType.ABORT
+            and (abort_domain := result.get("translation_domain")) is not None
+            and (entry := flow.hass.config_entries.async_get_entry(flow.handler[0]))
+            and abort_domain != entry.domain
+        ):
+            # The frontend resolves a shared subentry abort from the config section
+            await _validate_abort_translation_not_duplicated(
+                flow.hass,
+                translation_errors,
+                ignore_translations_for_mock_domains,
+                "config_subentries",
+                entry.domain,
+                abort_domain,
+                f"{flow.handler[1]}.abort.{result['reason']}",
+                shared_category="config",
+                shared_key=f"abort.{result['reason']}",
+            )
+        return
     else:
         return
 
@@ -1377,6 +1403,7 @@ async def check_translations(
     Current checks:
     - data entry flow results (ConfigFlow/OptionsFlow/RepairFlow)
     - data entry flow aborts translated by another domain are not duplicated locally
+      (also for ConfigSubentryFlow)
     - issue registry entries
     - action (service) exceptions
     """
