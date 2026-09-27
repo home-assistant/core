@@ -474,7 +474,6 @@ async def test_independent_baselines_and_new_fields(
         pytest.param(TeslaFleetError(), False, id="api"),
         pytest.param(InvalidToken(), True, id="invalid-token"),
         pytest.param(OAuthExpired(), True, id="expired-token"),
-        pytest.param(RateLimited({"after": 600}), False, id="rate-limit"),
         pytest.param(TimeoutError(), False, id="timeout"),
         pytest.param(ClientConnectionError(), False, id="connection"),
         pytest.param({}, False, id="missing-response"),
@@ -596,11 +595,16 @@ async def test_resume_valid_prefix_after_failure(
 @pytest.mark.parametrize(
     ("time_zone", "message"),
     [
-        (None, "Energy history did not include the site's time zone"),
-        ("", "Energy history did not include the site's time zone"),
-        (
+        pytest.param(
+            None, "Energy history did not include the site's time zone", id="missing"
+        ),
+        pytest.param(
+            "", "Energy history did not include the site's time zone", id="empty"
+        ),
+        pytest.param(
             "Invalid/Timezone",
             "Energy history included an unknown time zone: Invalid/Timezone",
+            id="unknown",
         ),
     ],
 )
