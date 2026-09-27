@@ -12,7 +12,7 @@ from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, REOPEN_DELAYS
+from .const import CONNECT_RETRIES, DEFAULT_SCAN_INTERVAL, DOMAIN, REOPEN_DELAYS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +60,8 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
             rbid=self.bid,
             pwd=self._password,
             reopen_delays=REOPEN_DELAYS,
+            scan_retries=CONNECT_RETRIES,
+            join_retries=CONNECT_RETRIES,
         )
 
         super().__init__(
