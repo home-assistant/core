@@ -2,6 +2,7 @@
 
 from os import environ
 import ssl
+from typing import Self
 
 import certifi
 import httpx2
@@ -16,17 +17,26 @@ import truststore
 httpx2.alias_httpx()
 
 
-def _certifi_ssl_context(_protocol: int | None = None) -> ssl.SSLContext:
-    """Return an SSL context verified against certifi, as httpx used to create."""
-    return ssl.create_default_context(
-        cafile=environ.get("REQUESTS_CA_BUNDLE", certifi.where())
-    )
+class _CertifiSSLContext(ssl.SSLContext):
+    """Client SSL context verified against certifi, as httpx used to create."""
+
+    def __new__(cls, protocol: int = ssl.PROTOCOL_TLS_CLIENT) -> Self:
+        """Default to a client context, like truststore."""
+        return super().__new__(cls, protocol)
+
+    def __init__(self, protocol: int = ssl.PROTOCOL_TLS_CLIENT) -> None:
+        """Load the certifi CA certificates."""
+        super().__init__()
+        self.verify_flags |= ssl.VERIFY_X509_PARTIAL_CHAIN | ssl.VERIFY_X509_STRICT
+        self.load_verify_locations(
+            cafile=environ.get("REQUESTS_CA_BUNDLE", certifi.where())
+        )
 
 
-# httpx2 builds default SSL contexts with truststore, which on Linux reloads the
-# system CA certificates on every TLS handshake, blocking the event loop. Use
-# certifi instead, loaded once per context, consistent with the rest of HA.
-truststore.SSLContext = _certifi_ssl_context  # type: ignore[misc,assignment]
+# httpx2 defaults to truststore, which on Linux reloads the system CA store on
+# every TLS handshake, blocking the event loop. Use certifi, like httpx did. A
+# subclass keeps subclassing and isinstance checks on truststore working.
+truststore.SSLContext = _CertifiSSLContext  # type: ignore[misc,assignment]
 
 # Probatio replaces voluptuous as the validation engine. Custom integrations and a
 # few dependencies still import voluptuous directly, so alias it to probatio in

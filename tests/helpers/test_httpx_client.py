@@ -9,6 +9,7 @@ import certifi
 import httpcore2
 import httpx2
 import pytest
+import truststore
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant
@@ -321,7 +322,6 @@ def test_default_ssl_context_uses_certifi(
 
     context = create_context()
 
-    assert type(context) is ssl.SSLContext
     assert context.cert_store_stats() == expected.cert_store_stats()
     # truststore reloads the system CA store on every handshake
     with patch.object(ssl.SSLContext, "set_default_verify_paths") as mock_load:
@@ -348,3 +348,21 @@ def test_default_ssl_context_uses_requests_ca_bundle(
     monkeypatch.setenv("REQUESTS_CA_BUNDLE", str(ca_bundle))
 
     assert create_context().cert_store_stats()["x509_ca"] == 1
+
+
+def test_truststore_ssl_context_subclass(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test subclassing and isinstance checks on truststore.SSLContext work."""
+    monkeypatch.delenv("REQUESTS_CA_BUNDLE", raising=False)
+
+    class CustomSSLContext(truststore.SSLContext):
+        """Custom SSL context, as some libraries define."""
+
+    expected = ssl.create_default_context(cafile=certifi.where())
+
+    context = CustomSSLContext(ssl.PROTOCOL_TLS_CLIENT)
+
+    assert isinstance(context, truststore.SSLContext)
+    assert context.cert_store_stats() == expected.cert_store_stats()
+    assert context.verify_flags == expected.verify_flags
+    assert context.check_hostname
+    assert context.verify_mode == ssl.CERT_REQUIRED
