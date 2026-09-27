@@ -278,6 +278,11 @@ async def test_remote_ui_url(hass: HomeAssistant) -> None:
 
         assert async_remote_ui_url(hass) == "https://example.com"
 
+        # Remote backend loaded after a login, stored domain not refreshed
+        cl.client.prefs._prefs["remote_domain"] = None
+        with patch.object(cl.remote, "_instance_domain", "live.example.com"):
+            assert async_remote_ui_url(hass) == "https://live.example.com"
+
 
 async def test_async_get_or_create_cloudhook(
     hass: HomeAssistant,
