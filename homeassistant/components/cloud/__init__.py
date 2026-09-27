@@ -291,8 +291,7 @@ def async_remote_ui_url(hass: HomeAssistant) -> str:
     if not cloud.client.prefs.remote_enabled:
         raise CloudNotAvailable
 
-    # The stored domain is only refreshed on startup, so it is missing after
-    # a login until the next restart.
+    # The stored domain covers the time the remote backend is not loaded.
     if not (
         remote_domain := cloud.remote.instance_domain
         or cloud.client.prefs.remote_domain
