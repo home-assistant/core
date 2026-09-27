@@ -1,6 +1,8 @@
 """The Overkiz (by Somfy) integration."""
 
 from collections import defaultdict
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import cast
 
@@ -23,7 +25,6 @@ from pyoverkiz.enums import (
 )
 from pyoverkiz.exceptions import (
     BadCredentialsError,
-    BaseOverkizError,
     MaintenanceError,
     NoSuchTokenError,
     NotAuthenticatedError,
@@ -131,21 +132,11 @@ async def create_client(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) -> bool:
-    """Set up Overkiz from a config entry."""
-    api_type = entry.data.get(CONF_API_TYPE, APIType.CLOUD)
-    client = await create_client(hass, entry)
-
+@contextmanager
+def _translate_api_errors() -> Iterator[None]:
+    """Translate Overkiz API errors into config entry setup errors."""
     try:
-        await client.login()
-        setup = await client.get_setup()
-
-        # Local API does expose scenarios, but they are not functional.
-        # Tracked in https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode/issues/21
-        if api_type == APIType.CLOUD:
-            scenarios = await client.get_action_groups()
-        else:
-            scenarios = []
+        yield
     except (
         BadCredentialsError,
         NoSuchTokenError,
@@ -163,6 +154,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         raise ConfigEntryNotReady("Server is down for maintenance") from exception
     except ServiceUnavailableError as exception:
         raise ConfigEntryNotReady("Server is unavailable") from exception
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) -> bool:
+    """Set up Overkiz from a config entry."""
+    api_type = entry.data.get(CONF_API_TYPE, APIType.CLOUD)
+    client = await create_client(hass, entry)
+
+    with _translate_api_errors():
+        await client.login()
+        setup = await client.get_setup()
+
+        # Local API does expose scenarios, but they are not functional.
+        # Tracked in https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode/issues/21
+        if api_type == APIType.CLOUD:
+            scenarios = await client.get_action_groups()
+        else:
+            scenarios = []
 
     coordinator = OverkizDataUpdateCoordinator(
         hass,
@@ -258,38 +266,46 @@ async def async_migrate_entry(
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
     if entry.version == 1 and entry.minor_version < 3:
-        # Whether the legacy button has a counterpart depends on the aliases the
-        # device advertises, so this migration needs the devices from the API.
-        client = await create_client(hass, entry)
-        try:
-            await client.login()
-            setup = await client.get_setup()
-        except BaseOverkizError, OAuth2TokenRequestError, TimeoutError, ClientError:
-            LOGGER.exception("Failed to fetch devices during migration")
-            return False
-
         entity_registry = er.async_get(hass)
         legacy_suffix = f"-{OverkizCommand.GO_TO_ALIAS}"
+        legacy_buttons = [
+            entity_entry
+            for entity_entry in er.async_entries_for_config_entry(
+                entity_registry, entry.entry_id
+            )
+            if entity_entry.domain == Platform.BUTTON
+            and entity_entry.unique_id.endswith(legacy_suffix)
+        ]
 
         # The legacy button hardcoded alias id 1, which is the favorite1 ("My
         # position") slot. Devices advertising any other type never had a working
         # button, so those entities have no counterpart to migrate to.
-        devices_with_favorite = {
-            device.device_url
-            for device in setup.devices
-            if any(
-                alias.type == "favorite1" for alias in device.get_supported_aliases()
-            )
-        }
+        devices_with_favorite: set[str] = set()
+        if legacy_buttons:
+            # Whether a legacy button has a counterpart depends on the aliases the
+            # device advertises, so this needs the devices from the API.
+            client = await create_client(hass, entry)
+            try:
+                with _translate_api_errors():
+                    await client.login()
+                    setup = await client.get_setup()
+            except ConfigEntryAuthFailed:
+                # Reauth is not started for a failed migration, so drop the legacy
+                # buttons instead of blocking setup, which then starts reauth.
+                LOGGER.warning(
+                    "Could not authenticate to migrate goToAlias buttons, removing them"
+                )
+            else:
+                devices_with_favorite = {
+                    device.device_url
+                    for device in setup.devices
+                    if any(
+                        alias.type == "favorite1"
+                        for alias in device.get_supported_aliases()
+                    )
+                }
 
-        for entity_entry in er.async_entries_for_config_entry(
-            entity_registry, entry.entry_id
-        ):
-            if entity_entry.domain != Platform.BUTTON or not (
-                entity_entry.unique_id.endswith(legacy_suffix)
-            ):
-                continue
-
+        for entity_entry in legacy_buttons:
             if entity_entry.unique_id.removesuffix(legacy_suffix) in (
                 devices_with_favorite
             ):
