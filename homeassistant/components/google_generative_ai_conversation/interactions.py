@@ -12,6 +12,13 @@ from google.genai.errors import APIError, ClientError
 from google.genai.types import File
 import probatio
 
+# The google-genai SDK's interactions module has a name collision:
+# google.genai.interactions exports both triggers.Interaction (a Request/Union typealias)
+# and interactions.interaction.Interaction (the response model class).
+# At static analysis time, mypy resolves interactions.Interaction to the trigger union,
+# causing attribute errors on response fields (steps, output_image, output_audio).
+# We import the concrete response model under TYPE_CHECKING for type checkers while
+# using the public interactions.Interaction export at runtime.
 if TYPE_CHECKING:
     from google.genai._gaos.types.interactions.interaction import Interaction
 else:
