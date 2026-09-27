@@ -27,6 +27,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "night": {
+        "name": "Night"
+      }
+    },
     "camera": {
       "latest_capture": {
         "name": "Latest capture"
@@ -38,9 +43,6 @@
       },
       "latest_startrail": {
         "name": "Latest star trail"
-    "binary_sensor": {
-      "night": {
-        "name": "Night"
       }
     },
     "sensor": {
