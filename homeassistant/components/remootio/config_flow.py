@@ -91,7 +91,7 @@ async def _async_validate_connection(
         errors["base"] = "unknown"
     else:
         if not serial:
-            errors["base"] = "cannot_connect"
+            errors["base"] = "no_serial"
     return serial, errors
 
 

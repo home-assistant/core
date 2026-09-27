@@ -115,7 +115,7 @@ async def test_form_missing_serial(
     mock_setup_entry: AsyncMock,
     mock_remootio_client: AsyncMock,
 ) -> None:
-    """Test we treat a missing serial after connect as cannot_connect."""
+    """Test we treat a missing serial after connect as no_serial."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -126,7 +126,7 @@ async def test_form_missing_serial(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "no_serial"}
 
     mock_remootio_client.serial_number = MOCK_SERIAL
     result = await hass.config_entries.flow.async_configure(
@@ -403,6 +403,32 @@ async def test_reconfigure_restores_runtime_after_probe_failure(
     mock_remootio_client.disconnect.assert_awaited_once()
     mock_remootio_client.connect.assert_awaited_once_with(reconnect=True)
     mock_remootio_client.enable_reconnect.assert_not_called()
+    assert init_integration.state is ConfigEntryState.LOADED
+    assert init_integration.data == USER_INPUT
+
+
+async def test_reconfigure_logs_when_restore_connect_fails(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_remootio_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failed restore after a probe failure."""
+    result = await init_integration.start_reconfigure_flow(hass)
+    mock_remootio_client.connect.reset_mock()
+    mock_remootio_client.__aenter__.side_effect = RemootioTimeoutError(
+        "No SERVER_HELLO"
+    )
+    mock_remootio_client.connect.side_effect = RemootioConnectionError("offline")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_HOST_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    mock_remootio_client.connect.assert_awaited_once_with(reconnect=True)
+    assert "Failed to restore Remootio connection after a failed probe" in caplog.text
     assert init_integration.state is ConfigEntryState.LOADED
     assert init_integration.data == USER_INPUT
 

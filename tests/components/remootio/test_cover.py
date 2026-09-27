@@ -214,6 +214,29 @@ async def test_cover_impulse_without_sensor_falls_back_to_trigger(
     mock_remootio_client.trigger.assert_awaited_once()
 
 
+async def test_cover_impulse_without_sensor_trigger_error(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_remootio_client: AsyncMock,
+) -> None:
+    """Test impulse fallback raises HomeAssistantError if TRIGGER also fails."""
+    entity_id = _entity_id(hass)
+    mock_remootio_client.open.side_effect = _no_sensor_error(ActionType.OPEN)
+    mock_remootio_client.trigger.side_effect = RemootioTimeoutError(
+        "Timed out waiting for TRIGGER response"
+    )
+
+    with pytest.raises(HomeAssistantError, match="Timed out waiting for TRIGGER"):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    mock_remootio_client.open.assert_awaited_once()
+    mock_remootio_client.trigger.assert_awaited_once()
+
+
 async def test_cover_state_from_events(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
