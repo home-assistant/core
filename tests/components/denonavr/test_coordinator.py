@@ -182,31 +182,6 @@ async def test_a_failure_while_waiting_for_the_lock_forces_the_read(
 
 
 @pytest.mark.parametrize(
-    ("peer_available", "force"),
-    [
-        pytest.param(True, False, id="peer_available"),
-        pytest.param(False, True, id="peer_failed"),
-    ],
-)
-async def test_a_failed_peer_forces_the_read(
-    hass: HomeAssistant, peer_available: bool, force: bool
-) -> None:
-    """A skip must not hide the other coordinator's failure either.
-
-    With Telnet healthy this poll would otherwise never ask the receiver the
-    other coordinator just failed to reach, nor confirm that it is back.
-    """
-    refresh_fn = AsyncMock()
-    coordinator = _coordinator(hass, refresh_fn)
-    coordinator.peer = _coordinator(hass, AsyncMock())
-    coordinator.peer.last_update_success = peer_available
-
-    await coordinator.async_refresh()
-
-    assert refresh_fn.await_args.kwargs["force"] is force
-
-
-@pytest.mark.parametrize(
     ("pref_disable_polling", "polls"),
     [
         pytest.param(False, True, id="polling"),

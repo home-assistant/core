@@ -3,12 +3,14 @@
 import asyncio
 from collections.abc import Generator
 from datetime import timedelta
+import logging
 from unittest.mock import MagicMock, create_autospec, patch
 
 from denonavr import DenonAVR
 from denonavr.const import POWER_ON
 from denonavr.exceptions import (
     AvrCommandError,
+    AvrForbiddenError,
     AvrIncompleteResponseError,
     AvrInvalidResponseError,
     AvrNetworkError,
@@ -391,52 +393,110 @@ async def test_concurrent_forced_refreshes_share_one_bypassing_fetch(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "expected_state"),
+    ("options", "pref_disable_polling"),
     [
-        pytest.param(None, STATE_UNKNOWN, id="status_answers"),
+        pytest.param({CONF_USE_TELNET: True}, False, id="audyssey_not_polling"),
         pytest.param(
-            AvrNetworkError("Network error", "test"),
-            STATE_UNAVAILABLE,
-            id="status_unreachable",
+            {CONF_USE_TELNET: True, CONF_UPDATE_AUDYSSEY: True},
+            False,
+            id="audyssey_polling",
         ),
+        pytest.param({CONF_USE_TELNET: True}, True, id="polling_disabled"),
     ],
 )
-@pytest.mark.parametrize(
-    "telnet_healthy_at_setup",
-    [
-        pytest.param(True, id="telnet_healthy"),
-        # The status poll at setup read, and a coordinator judged by its last
-        # read would keep counting on a poll that now skips.
-        pytest.param(False, id="telnet_recovers_after_setup"),
-    ],
-)
-async def test_initial_audyssey_failure_makes_the_status_poll_read(
+async def test_healthy_telnet_keeps_status_up_through_an_audyssey_failure(
     hass: HomeAssistant,
     client: MagicMock,
     freezer: FrozenDateTimeFactory,
-    telnet_healthy_at_setup: bool,
-    side_effect: Exception | None,
-    expected_state: str,
+    caplog: pytest.LogCaptureFixture,
+    options: dict[str, bool],
+    pref_disable_polling: bool,
 ) -> None:
-    """A failed Audyssey fetch at setup makes the next status poll read.
+    """Healthy Telnet keeps the status current through an HTTP failure.
 
-    With Telnet healthy that poll would otherwise skip, never asking the
-    receiver the Audyssey fetch just failed to reach. Its own read decides.
+    Reading status over the same failing HTTP would mark the media player
+    unavailable, and log a second error, while Telnet still answers.
     """
     client.telnet_connected = True
-    client.telnet_healthy = telnet_healthy_at_setup
-    client.async_update_audyssey.side_effect = AvrNetworkError("Network error", "test")
-    await setup_denonavr(hass, options={CONF_USE_TELNET: True})
     client.telnet_healthy = True
-    client.async_update.side_effect = side_effect
+    client.async_update_audyssey.side_effect = AvrForbiddenError("Forbidden", "test")
+    await setup_denonavr(
+        hass, options=options, pref_disable_polling=pref_disable_polling
+    )
+    client.async_update.side_effect = AvrForbiddenError("Forbidden", "test")
     reads_before = client.async_update.await_count
 
     freezer.tick(timedelta(seconds=11))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert client.async_update.await_count > reads_before
-    assert hass.states.get(ENTITY_ID).state == expected_state
+    assert client.async_update.await_count == reads_before
+    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+    errors = [r.getMessage() for r in caplog.records if r.levelno == logging.ERROR]
+    assert len(errors) == 1
+    assert "denonavr_audyssey" in errors[0]
+
+
+@pytest.mark.parametrize(
+    ("audyssey_error", "status_error", "telnet_healthy", "audyssey_available"),
+    [
+        pytest.param(
+            None,
+            AvrNetworkError("Network error", "test"),
+            True,
+            True,
+            id="failure_telnet_healthy",
+        ),
+        pytest.param(
+            None,
+            AvrNetworkError("Network error", "test"),
+            False,
+            False,
+            id="failure_telnet_down",
+        ),
+        pytest.param(
+            AvrNetworkError("Network error", "test"),
+            None,
+            True,
+            False,
+            id="success_telnet_healthy",
+        ),
+        pytest.param(
+            AvrNetworkError("Network error", "test"),
+            None,
+            False,
+            True,
+            id="success_telnet_down",
+        ),
+    ],
+)
+async def test_status_hands_its_state_to_audyssey_only_while_telnet_is_down(
+    hass: HomeAssistant,
+    client: MagicMock,
+    audyssey_error: Exception | None,
+    status_error: Exception | None,
+    telnet_healthy: bool,
+    audyssey_available: bool,
+) -> None:
+    """With Telnet healthy each coordinator speaks for itself.
+
+    The Audyssey coordinator has no poll here. A status success under Telnet
+    need not come from an HTTP read, and a status failure handed over would
+    outlast status's own recovery.
+    """
+    client.telnet_connected = True
+    client.telnet_healthy = True
+    client.async_update_audyssey.side_effect = audyssey_error
+    entry = await setup_denonavr(hass, options={CONF_USE_TELNET: True})
+    client.telnet_healthy = telnet_healthy
+    client.async_update.side_effect = status_error
+
+    await entry.runtime_data.coordinator.async_refresh_forced()
+
+    assert (
+        entry.runtime_data.audyssey_coordinator.last_update_success
+        is audyssey_available
+    )
 
 
 async def test_initial_audyssey_failure_reaches_a_status_coordinator_not_polling(
@@ -636,7 +696,7 @@ async def test_update_audyssey_restores_availability(hass: HomeAssistant) -> Non
     has updated the receiver's properties.
     """
     entry = await setup_denonavr(hass)
-    entry.runtime_data.audyssey_coordinator.last_update_success = False
+    mark_unavailable(entry.runtime_data.audyssey_coordinator)
 
     await hass.services.async_call(
         DOMAIN,

@@ -157,8 +157,6 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.lock = lock
         self._refresh_fn = refresh_fn
         self._force_next_refresh = False
-        # The other coordinator on the same receiver, set once both exist.
-        self.peer: DenonAvrDataUpdateCoordinator | None = None
         self._force_refresh_lock = asyncio.Lock()
         self._forced_refresh_count = 0
         self._internal_listeners: list[CALLBACK_TYPE] = []
@@ -167,10 +165,10 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def polls(self) -> bool:
         """Whether this coordinator's own poll settles its availability.
 
-        A poll reads rather than skips while either coordinator is failed, so
-        it finds a failure or confirms a recovery within one interval. Without
-        a recurring poll, or with polling disabled for the entry, the other
-        coordinator has to hand it the verdict.
+        A poll reads while Telnet is down or this coordinator is failed, so it
+        finds a failure or confirms a recovery within one interval. Without a
+        recurring poll, or with polling disabled for the entry, the other
+        coordinator has to hand it the verdict while Telnet is down.
         """
         return (
             self.update_interval is not None
@@ -246,15 +244,11 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """Refresh the receiver via this coordinator's refresh_fn."""
         async with self.lock:
             # A skip reports success without asking the receiver, so it must not
-            # clear or hide a confirmed failure, this coordinator's or the
-            # other's. Costs one read per interval while either is unavailable.
-            # Decided under the lock: the other coordinator's listeners run
-            # while this one waits for it, and may mark it unavailable.
-            force = (
-                self._force_next_refresh
-                or not self.last_update_success
-                or (self.peer is not None and not self.peer.last_update_success)
-            )
+            # be what clears a confirmed failure. Costs one read per interval
+            # while unavailable. Decided under the lock: the other coordinator's
+            # listeners run while this one waits for it, and may mark it
+            # unavailable.
+            force = self._force_next_refresh or not self.last_update_success
             try:
                 await self._refresh_fn(self.receiver, force=force)
             except UNAVAILABLE_ON as err:
