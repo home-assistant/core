@@ -1,6 +1,5 @@
 """Switch platform for the Duco integration."""
 
-from functools import partial
 import logging
 from typing import Any, override
 
@@ -22,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
-from .helpers import async_forget_removed_node
+from .helpers import async_remove_stale_node_ids
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,21 +53,14 @@ async def async_setup_entry(
     @callback
     def _async_add_new_entities() -> None:
         """Add identify switches for newly discovered controllable nodes."""
+        async_remove_stale_node_ids(coordinator, known_nodes)
         identify_nodes = _discover_identify_nodes(coordinator.data.node_actions)
         new_nodes = [
             node
             for node in coordinator.data.nodes.values()
             if node.node_id in identify_nodes and node.node_id not in known_nodes
         ]
-        new_entities = []
-        for node in new_nodes:
-            entity = DucoIdentifySwitch(coordinator, node)
-            entity.async_on_remove(
-                partial(
-                    async_forget_removed_node, coordinator, known_nodes, node.node_id
-                )
-            )
-            new_entities.append(entity)
+        new_entities = [DucoIdentifySwitch(coordinator, node) for node in new_nodes]
         known_nodes.update(node.node_id for node in new_nodes)
         if new_entities:
             async_add_entities(new_entities)

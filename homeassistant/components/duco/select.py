@@ -1,6 +1,5 @@
 """Select platform for the Duco integration."""
 
-from functools import partial
 import logging
 from typing import override
 
@@ -22,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN, VENTILATION_CAPABLE_NODE_TYPES
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
-from .helpers import async_forget_removed_node
+from .helpers import async_remove_stale_node_ids
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,6 +64,7 @@ async def async_setup_entry(
     @callback
     def _async_add_new_entities() -> None:
         """Add select entities for newly discovered controllable nodes."""
+        async_remove_stale_node_ids(coordinator, known_nodes)
         options_by_node = _discover_ventilation_options(coordinator.data.node_actions)
         new_entities: list[DucoVentilationStateSelect] = []
 
@@ -82,13 +82,7 @@ async def async_setup_entry(
                 continue
 
             known_nodes.add(node.node_id)
-            entity = DucoVentilationStateSelect(coordinator, node, options)
-            entity.async_on_remove(
-                partial(
-                    async_forget_removed_node, coordinator, known_nodes, node.node_id
-                )
-            )
-            new_entities.append(entity)
+            new_entities.append(DucoVentilationStateSelect(coordinator, node, options))
 
         if new_entities:
             async_add_entities(new_entities)

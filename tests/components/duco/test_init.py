@@ -185,13 +185,30 @@ async def test_device_via_device_links(
     assert child_device.via_device_id == box_device.id
 
 
+@pytest.mark.parametrize(
+    ("disabled_entity_ids", "expected_state_presence"),
+    [
+        pytest.param((), (True, True, True), id="enabled"),
+        pytest.param(
+            (
+                "select.bedroom_valve_ventilation_state",
+                "switch.bedroom_valve_identify",
+            ),
+            (False, True, False),
+            id="disabled",
+        ),
+    ],
+)
 async def test_deregistered_controllable_node_is_restored(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     mock_sensor_nodes: list[Node],
     mock_node_actions: NodeListActionItemList,
     freezer: FrozenDateTimeFactory,
+    disabled_entity_ids: tuple[str, ...],
+    expected_state_presence: tuple[bool, bool, bool],
 ) -> None:
     """Test controls return when a deregistered node is registered again."""
     node_id = 60
@@ -226,6 +243,12 @@ async def test_deregistered_controllable_node_is_restored(
 
     assert all(hass.states.get(entity_id) is not None for entity_id in entity_ids)
 
+    for entity_id in disabled_entity_ids:
+        entity_registry.async_update_entity(
+            entity_id, disabled_by=er.RegistryEntryDisabler.USER
+        )
+    await hass.async_block_till_done()
+
     mock_duco_client.async_get_nodes.return_value = [
         node for node in mock_sensor_nodes if node.node_id != node_id
     ]
@@ -236,7 +259,11 @@ async def test_deregistered_controllable_node_is_restored(
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
     await async_fire_coordinator_update(hass, freezer)
 
-    assert all(hass.states.get(entity_id) is not None for entity_id in entity_ids)
+    assert (
+        tuple(hass.states.get(entity_id) is not None for entity_id in entity_ids)
+        == expected_state_presence
+    )
+    assert all(entity_registry.async_get(entity_id) for entity_id in entity_ids)
 
 
 @pytest.mark.parametrize(

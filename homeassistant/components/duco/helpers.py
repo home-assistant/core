@@ -6,9 +6,8 @@ from .coordinator import DucoCoordinator
 
 
 @callback
-def async_forget_removed_node(
-    coordinator: DucoCoordinator, known_nodes: set[int], node_id: int
+def async_remove_stale_node_ids(
+    coordinator: DucoCoordinator, known_nodes: set[int]
 ) -> None:
-    """Allow rediscovery after a node entity is removed."""
-    if node_id not in coordinator.data.nodes:
-        known_nodes.discard(node_id)
+    """Allow rediscovery after nodes are removed."""
+    known_nodes.intersection_update(coordinator.data.nodes)
