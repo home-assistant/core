@@ -1082,6 +1082,13 @@ async def test_blu_trv_update_progress(
             "msg": "Updating",
             "progress_percent": 0,
         },
+        # Event from other BTHome device
+        {
+            "component": "bthomedevice:201",
+            "event": "ota_progress",
+            "msg": "Updating",
+            "progress_percent": 99,
+        },
         {
             "component": "bthomedevice:200",
             "event": "ota_progress",
@@ -1127,6 +1134,7 @@ async def test_blu_trv_update_progress(
         (True, 19),
         (True, 40),
         (True, 50),
+        (True, 50),  # Event from other BTHome device should not affect progress
         (True, 100),
         (False, None),
     ]
@@ -1271,38 +1279,38 @@ async def test_blu_trv_update_check_auth_error(
 
 
 @pytest.mark.parametrize(
-    ("exc", "error"),
+    ("exc", "translation_key"),
     [
-        (
-            DeviceConnectionError,
-            "Device communication error occurred while calling action for"
-            " update.trv_name_firmware of Test name",
-        ),
-        (
-            RpcCallError(-1, "error"),
-            "RPC call error occurred while calling action for"
-            " update.trv_name_firmware of Test name",
-        ),
+        (DeviceConnectionError, "ota_update_connection_error"),
+        (RpcCallError(-1, "error"), "ota_update_rpc_error"),
     ],
 )
 async def test_blu_trv_update_install_errors(
     hass: HomeAssistant,
     mock_blu_trv: Mock,
     exc: Exception,
-    error: str,
+    translation_key: str,
 ) -> None:
-    """Test BLU TRV update entity install connection/call errors."""
+    """Test BLU TRV update install errors do not make the host unavailable."""
+    entity_id = "update.trv_name_firmware"
+
     await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
 
     mock_blu_trv.blu_trv_update_firmware.side_effect = exc
 
-    with pytest.raises(HomeAssistantError, match=error):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.trv_name_firmware"},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+
+    assert exc_info.value.translation_key == translation_key
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_IN_PROGRESS] is False
 
 
 async def test_blu_trv_update_install_auth_error(

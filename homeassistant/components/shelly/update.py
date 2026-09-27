@@ -234,8 +234,6 @@ class RpcBluTrvUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         elif event_type in (OTA_ERROR, OTA_SUCCESS):
             self._ota_in_progress = False
             self._ota_progress_percentage = None
-        else:
-            return
 
         self.async_write_ha_state()
 
