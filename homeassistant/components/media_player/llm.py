@@ -131,12 +131,29 @@ class MediaSearchTool(Tool):
 
     name = "media_player__search_media"
     title = "Search media"
-    description = "Searches a media player for media and returns the playable items."
+    description = (
+        "Searches a media player for media. "
+        "Can also search inside a result, such as an artist or an album."
+    )
     parameters = probatio.Schema(
         {
             probatio.Required(
                 ATTR_MEDIA_SEARCH_QUERY,
                 description="What to search for, such as a song, artist or album",
+            ): cv.string,
+            probatio.Optional(
+                "within_media_content_id",
+                description=(
+                    "The media_content_id of a result to search inside, "
+                    "such as an artist"
+                ),
+            ): cv.string,
+            probatio.Optional(
+                "within_media_content_type",
+                description=(
+                    "The media_content_type of a result to search inside, "
+                    "such as an artist"
+                ),
             ): cv.string,
             **TARGET_SCHEMA,
         }
@@ -156,6 +173,10 @@ class MediaSearchTool(Tool):
             ATTR_ENTITY_ID: entity_id,
             ATTR_MEDIA_SEARCH_QUERY: args[ATTR_MEDIA_SEARCH_QUERY],
         }
+        if within_id := args.get("within_media_content_id"):
+            service_data[ATTR_MEDIA_CONTENT_ID] = within_id
+        if within_type := args.get("within_media_content_type"):
+            service_data[ATTR_MEDIA_CONTENT_TYPE] = within_type
 
         service_result = await hass.services.async_call(
             DOMAIN,
@@ -166,15 +187,16 @@ class MediaSearchTool(Tool):
             return_response=True,
         )
         search_media = cast(dict[str, SearchMedia], service_result)[entity_id]
-        playable = [item for item in search_media.result if item.can_play]
         results: list[JsonValueType] = [
             {
                 "title": item.title,
                 "media_class": item.media_class,
                 ATTR_MEDIA_CONTENT_TYPE: item.media_content_type,
                 ATTR_MEDIA_CONTENT_ID: item.media_content_id,
+                "can_play": item.can_play,
+                "can_search": item.can_search,
             }
-            for item in playable[:MAX_SEARCH_RESULTS]
+            for item in search_media.result[:MAX_SEARCH_RESULTS]
         ]
         if not results:
             return ToolResult(data={"results": results})
@@ -182,9 +204,13 @@ class MediaSearchTool(Tool):
             data={
                 "results": results,
                 "instruction": (
-                    f"To play a result, call {MediaPlayTool.name} with its "
-                    "media_content_id and media_content_type, and with the same "
-                    "player_name, player_area and player_floor as this search."
+                    f"To play a result that can_play, call {MediaPlayTool.name} "
+                    "with its media_content_id and media_content_type. "
+                    f"To search inside a result that can_search, call {self.name} "
+                    "again with its media_content_id and media_content_type as "
+                    "within_media_content_id and within_media_content_type. "
+                    "Pass the same player_name, player_area and player_floor "
+                    "as this search."
                 ),
             }
         )
