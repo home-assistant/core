@@ -145,14 +145,14 @@ class MediaSearchTool(Tool):
                 "within_media_content_id",
                 description=(
                     "The media_content_id of a result to search inside, "
-                    "such as an artist"
+                    "such as an artist. Copy it from that result."
                 ),
             ): cv.string,
             probatio.Optional(
                 "within_media_content_type",
                 description=(
-                    "The media_content_type of a result to search inside, "
-                    "such as an artist"
+                    "The media_content_type of the result to search inside. "
+                    "Copy it from that result."
                 ),
             ): cv.string,
             **TARGET_SCHEMA,
