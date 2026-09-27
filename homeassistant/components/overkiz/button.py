@@ -135,8 +135,7 @@ async def async_setup_entry(
             continue
 
         for command in device.definition.commands:
-            # A device can advertise several alias ids of the same type, so let
-            # pyoverkiz resolve the single one the official app would target.
+            # Target the most-featured id per alias type (same behavior as vendor app).
             if command == OverkizCommand.GO_TO_ALIAS:
                 entities.extend(
                     OverkizAliasButton(device.device_url, data.coordinator, alias)
@@ -179,8 +178,7 @@ class OverkizAliasButton(OverkizEntity, ButtonEntity):
         """Initialize the alias button."""
         super().__init__(device_url, coordinator)
         self._alias = alias
-        # Keyed on the type rather than the id, since the resolved id can change
-        # when the device changes the features it advertises per alias.
+        # Keyed on alias type, as the most-featured id can change.
         self._attr_unique_id = (
             f"{self.device_url}-{OverkizCommand.GO_TO_ALIAS}_{alias.type}"
         )
