@@ -22,6 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN, VENTILATION_CAPABLE_NODE_TYPES
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
+from .helpers import async_forget_removed_node
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,12 +63,6 @@ async def async_setup_entry(
     known_nodes: set[int] = set()
 
     @callback
-    def _async_forget_removed_node(node_id: int) -> None:
-        """Allow rediscovery after a node entity is removed."""
-        if node_id not in coordinator.data.nodes:
-            known_nodes.discard(node_id)
-
-    @callback
     def _async_add_new_entities() -> None:
         """Add select entities for newly discovered controllable nodes."""
         options_by_node = _discover_ventilation_options(coordinator.data.node_actions)
@@ -88,7 +83,11 @@ async def async_setup_entry(
 
             known_nodes.add(node.node_id)
             entity = DucoVentilationStateSelect(coordinator, node, options)
-            entity.async_on_remove(partial(_async_forget_removed_node, node.node_id))
+            entity.async_on_remove(
+                partial(
+                    async_forget_removed_node, coordinator, known_nodes, node.node_id
+                )
+            )
             new_entities.append(entity)
 
         if new_entities:
