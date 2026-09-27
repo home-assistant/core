@@ -7,8 +7,6 @@ from .coordinator import DucoCoordinator
 
 
 @callback
-def async_remove_stale_node_ids(
-    coordinator: DucoCoordinator, known_nodes: set[int]
-) -> None:
+def remove_stale_node_ids(coordinator: DucoCoordinator, known_nodes: set[int]) -> None:
     """Allow rediscovery, preserving the box during incomplete node updates."""
     known_nodes.intersection_update(coordinator.data.nodes.keys() | {BOX_NODE_ID})
