@@ -503,6 +503,13 @@ class Person(
             self._update_extra_state_attributes()
 
     @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from device trackers when the person is removed."""
+        if self._unsub_track_device is not None:
+            self._unsub_track_device()
+            self._unsub_track_device = None
+
+    @override
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._async_update_config(config)
