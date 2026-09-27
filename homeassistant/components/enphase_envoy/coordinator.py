@@ -7,7 +7,7 @@ import logging
 import math
 from typing import Any, override
 
-from pyenphase import Envoy, EnvoyError, EnvoyTokenAuth
+from pyenphase import Envoy, EnvoyClientClosedError, EnvoyError, EnvoyTokenAuth
 from pyenphase.models.home import EnvoyInterfaceInformation
 
 from homeassistant.config_entries import ConfigEntry
@@ -207,6 +207,9 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # just try again next time
             _LOGGER.debug("%s: Error reading firmware: %s", err, self.name)
             return
+        except EnvoyClientClosedError:
+            _LOGGER.debug("%s: Client is closed when reading firmware", self.name)
+            return
         except RuntimeError as err:
             # We may get session is closed if we still run at unload
             if "Session is closed" in str(err):
@@ -254,6 +257,11 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             interface: (
                 EnvoyInterfaceInformation | None
             ) = await self.envoy.interface_settings()
+        except EnvoyClientClosedError:
+            _LOGGER.debug(
+                "%s: Client is closed when reading interface information", self.name
+            )
+            return
         except RuntimeError as err:
             # We may get session is closed if we still run at unload
             if "Session is closed" in str(err):

@@ -6,7 +6,12 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from jwt import encode
-from pyenphase import EnvoyAuthenticationError, EnvoyError, EnvoyTokenAuth
+from pyenphase import (
+    EnvoyAuthenticationError,
+    EnvoyClientClosedError,
+    EnvoyError,
+    EnvoyTokenAuth,
+)
 from pyenphase.auth import EnvoyLegacyAuth
 import pytest
 import respx
@@ -656,6 +661,7 @@ async def test_coordinator_firmware_refresh_with_session_is_closed(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_envoy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test coordinator firmware check handling session closed."""
@@ -665,6 +671,13 @@ async def test_coordinator_firmware_refresh_with_session_is_closed(
     logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
         logging.DEBUG
     )
+
+    mock_envoy.setup.side_effect = EnvoyClientClosedError
+    freezer.tick(FIRMWARE_REFRESH_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Client is closed when reading firmware" in caplog.text
 
     mock_envoy.setup.side_effect = RuntimeError("Session is closed")
     await config_entry.runtime_data._async_try_refresh_firmware()
@@ -852,13 +865,20 @@ async def test_coordinator_interface_information_runtime_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_envoy: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test coordinator interface mac verification handling RuntimeError."""
     await setup_integration(hass, config_entry)
+    caplog.set_level(logging.DEBUG)
 
     mock_envoy.interface_settings.side_effect = RuntimeError("Some other runtime error")
     with pytest.raises(RuntimeError, match="Some other runtime error"):
         await config_entry.runtime_data._async_fetch_and_compare_mac()
+
+    caplog.clear()
+    mock_envoy.interface_settings.side_effect = EnvoyClientClosedError
+    await config_entry.runtime_data._async_fetch_and_compare_mac()
+    assert "Client is closed when reading interface information" in caplog.text
 
 
 @pytest.mark.freeze_time("2024-07-23 00:00:00+00:00")
