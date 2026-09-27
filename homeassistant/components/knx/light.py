@@ -4,7 +4,9 @@ from typing import Any, cast, override
 
 from propcache.api import cached_property
 from xknx import XKNX
+from xknx.devices import Device as XknxDevice
 from xknx.devices.light import ColorTemperatureType, Light as XknxLight, XYYColor
+from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.address import DeviceGroupAddress
 
 from homeassistant import config_entries
@@ -18,8 +20,8 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.const import CONF_NAME, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON, Platform
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     async_get_current_platform,
@@ -328,6 +330,30 @@ class _KnxLight(LightEntity):
     _attr_max_color_temp_kelvin: int
     _attr_min_color_temp_kelvin: int
     _device: XknxLight
+    _knx_module: KNXModule
+    _last_switch_telegram: Telegram | None = None
+
+    def after_update_callback(self, device: XknxDevice) -> None:
+        """Attribute on/off changes to the telegram updating the switch value."""
+        telegram = self._device.switch.telegram
+        new_telegram = telegram is not self._last_switch_telegram
+        self._last_switch_telegram = telegram
+        if (
+            new_telegram
+            and telegram is not None
+            and telegram.direction is TelegramDirection.INCOMING
+            and (old_state := self.hass.states.get(self.entity_id)) is not None
+            and old_state.state in (STATE_ON, STATE_OFF)
+            and old_state.state != (STATE_ON if self.is_on else STATE_OFF)
+        ):
+            self.async_set_context(
+                self._knx_module.telegrams.async_get_context(telegram)
+            )
+            self.async_write_ha_state()
+            # Later color or brightness updates must not inherit this sender.
+            self.async_set_context(Context())
+            return
+        self.async_write_ha_state()
 
     @property
     @override

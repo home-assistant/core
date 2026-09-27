@@ -20,7 +20,7 @@ from xknx.exceptions import XKNXException
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later, async_track_time_change
 from homeassistant.helpers.storage import STORAGE_DIR, Store
@@ -30,6 +30,7 @@ from .const import (
     CONF_KNX_TELEGRAM_DB_BACKEND,
     CONF_KNX_TELEGRAM_DB_POSTGRES_DSN,
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
+    EVENT_KNX_TELEGRAM_RECEIVED,
     KNX_TELEGRAM_BACKEND_POSTGRES,
     KNX_TELEGRAM_DB_PATH_SQLITE,
     SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
@@ -161,6 +162,30 @@ class Telegrams:
             )
         )
         self.last_ga_telegrams: dict[str, TelegramDict] = {}
+        self._last_entity_update: tuple[Telegram, Context] | None = None
+
+    @callback
+    def async_get_context(self, telegram: Telegram) -> Context:
+        """Describe a telegram and share its context across synchronous entity updates."""
+        if self._last_entity_update is not None:
+            last_telegram, context = self._last_entity_update
+            if last_telegram is telegram:
+                return context
+
+        context = Context()
+        self._last_entity_update = (telegram, context)
+        telegram_data = self.telegram_to_dict(telegram)
+        self.hass.bus.async_fire(
+            EVENT_KNX_TELEGRAM_RECEIVED,
+            {
+                "source": telegram_data["source"],
+                "source_name": telegram_data["source_name"],
+                "destination": telegram_data["destination"],
+                "telegramtype": telegram_data["telegramtype"],
+            },
+            context=context,
+        )
+        return context
 
     async def load_history(self) -> None:
         """Load history from store."""
