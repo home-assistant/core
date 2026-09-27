@@ -19,6 +19,7 @@ import probatio
 # causing attribute errors on response fields (steps, output_image, output_audio).
 # We import the concrete response model under TYPE_CHECKING for type checkers while
 # using the public interactions.Interaction export at runtime.
+# Tracked upstream: https://github.com/googleapis/python-genai/issues/3013
 if TYPE_CHECKING:
     from google.genai._gaos.types.interactions.interaction import Interaction
 else:
