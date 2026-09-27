@@ -765,6 +765,7 @@ class StatisticsSensor(SensorEntity):
         _LOGGER.debug("Startup for %s", self.entity_id)
         if "recorder" in self.hass.config.components:
             await self._initialize_from_database()
+        self.async_on_remove(self._async_cancel_update_listener)
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass,

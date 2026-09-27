@@ -2814,7 +2814,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==7.9.0
+python-roborock==7.12.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -3129,7 +3129,7 @@ snapcast==2.3.8
 soco==0.31.2
 
 # homeassistant.components.sofar
-sofar-modbus==0.16.0
+sofar-modbus==0.17.0
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
