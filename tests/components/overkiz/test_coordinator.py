@@ -11,6 +11,7 @@ from pyoverkiz.enums import ExecutionState
 from pyoverkiz.exceptions import (
     InvalidEventListenerIdError,
     MaintenanceError,
+    OverkizError,
     ServiceUnavailableError,
     TooManyConcurrentRequestsError,
     TooManyRequestsError,
@@ -440,6 +441,53 @@ async def test_rate_limit_backs_off_and_recovers(
     await hass.async_block_till_done()
 
     assert mock_client.fetch_events.call_count == 1
+
+
+async def test_untyped_quota_error_backs_off(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """The cloud's QUOTA_EXCEEDED has to back off even though it arrives untyped.
+
+    pyoverkiz raises TooManyRequestsError only for AUTHENTICATION_ERROR, so the
+    quota error the cloud actually sends is a bare OverkizError. Left unhandled
+    it keeps polling at the interval that hit the limit.
+    """
+    entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+    coordinator = entry.runtime_data.coordinator
+
+    mock_client.fetch_events.side_effect = OverkizError(
+        {"errorCode": "QUOTA_EXCEEDED", "error": "Too many requests, try again later"}
+    )
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not coordinator.last_update_success
+    assert coordinator.update_interval == UPDATE_INTERVAL * 2
+
+
+async def test_other_untyped_errors_are_not_treated_as_rate_limiting(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """An unrelated untyped Overkiz error must not slow polling down."""
+    entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+    coordinator = entry.runtime_data.coordinator
+
+    mock_client.fetch_events.side_effect = OverkizError(
+        {"errorCode": "SOMETHING_ELSE", "error": "Unrelated"}
+    )
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not coordinator.last_update_success
+    assert coordinator.update_interval == UPDATE_INTERVAL
 
 
 async def test_rate_limit_back_off_never_polls_faster_than_configured(

@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, Final, override
 
 from aiohttp import ClientConnectorError, ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
@@ -13,6 +13,7 @@ from pyoverkiz.exceptions import (
     InvalidEventListenerIdError,
     MaintenanceError,
     NotAuthenticatedError,
+    OverkizError,
     ServiceUnavailableError,
     TooManyConcurrentRequestsError,
     TooManyRequestsError,
@@ -55,6 +56,17 @@ from .const import (
 EVENT_HANDLERS: Registry[
     str, Callable[[OverkizDataUpdateCoordinator, Any], Coroutine[Any, Any, None]]
 ] = Registry()
+
+
+# pyoverkiz types the rate limit only for AUTHENTICATION_ERROR + "Too many
+# requests"; the cloud's own QUOTA_EXCEEDED arrives as a bare OverkizError and
+# would otherwise bypass the back off entirely.
+QUOTA_EXCEEDED_ERROR_CODE: Final = "QUOTA_EXCEEDED"
+
+
+def _is_rate_limited(exception: OverkizError) -> bool:
+    """Whether an otherwise untyped Overkiz error is the cloud rate limit."""
+    return QUOTA_EXCEEDED_ERROR_CODE in str(exception)
 
 
 class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
@@ -124,6 +136,11 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             raise UpdateFailed("Server is unavailable.") from exception
         except InvalidEventListenerIdError as exception:
             raise UpdateFailed(exception) from exception
+        except OverkizError as exception:
+            if not _is_rate_limited(exception):
+                raise
+            self._back_off()
+            raise UpdateFailed("Too many requests, try again later.") from exception
         except (TimeoutError, ClientConnectorError) as exception:
             LOGGER.debug("Failed to connect", exc_info=True)
             raise UpdateFailed("Failed to connect.") from exception
@@ -137,6 +154,11 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             except (BadCredentialsError, NotAuthenticatedError) as exception:
                 raise ConfigEntryAuthFailed("Invalid authentication.") from exception
             except TooManyRequestsError as exception:
+                self._back_off()
+                raise UpdateFailed("Too many requests, try again later.") from exception
+            except OverkizError as exception:
+                if not _is_rate_limited(exception):
+                    raise
                 self._back_off()
                 raise UpdateFailed("Too many requests, try again later.") from exception
 
