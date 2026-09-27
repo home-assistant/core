@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools==78.1.1"]
+requires = ["setuptools==84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -67,17 +67,17 @@ dependencies = [
   "orjson==3.11.9",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
-  "python-slugify==9.0.0",
+  "python-slugify==9.1.0",
   "PyYAML==6.0.3",
   "requests==2.34.2",
   "securetar==2026.4.1",
-  "SQLAlchemy==2.0.52",
+  "SQLAlchemy==2.0.54",
   "standard-aifc==3.13.0",
   "standard-telnetlib==3.13.0",
   "typing-extensions>=4.16.0,<5.0",
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
-  "uv==0.12.13",
+  "uv==0.12.17",
   "probatio==0.12.1",
   "yarl==1.25.1",
   "webrtc-models==0.3.0",
@@ -438,6 +438,13 @@ runtime-typing = false
 [tool.pylint.CODE_STYLE]
 max-line-length-suggestions = 72
 
+[tool.uv]
+# surepy (a surepetcare dependency) carries a stale upper pin on rich (<11) that
+# blocks pytest-codspeed (needs rich>=13.8.1) from resolving in the same
+# environment. rich keeps the Console API surepy uses backwards compatible, so
+# override the pin rather than holding the benchmark tooling back.
+override-dependencies = ["rich>=13.8.1"]
+
 [tool.pytest.ini_options]
 pythonpath = ["pylint/plugins"]
 testpaths = ["tests"]
@@ -638,7 +645,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.16.7"
+required-version = ">=0.16.8"
 
 [tool.ruff.lint]
 select = [
@@ -875,6 +882,9 @@ split-on-trailing-comma = false
 "homeassistant/auth/*/*" = ["TID252"]
 "homeassistant/components/*/*/*" = ["TID252"]
 "tests/components/*/*/*" = ["TID252"]
+
+# Benchmarks reuse the test helpers to spin up a Home Assistant instance
+"benchmarks/**" = ["TID251"]
 
 # Temporary
 "homeassistant/**" = ["PTH"]

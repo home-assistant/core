@@ -9,11 +9,7 @@ from typing import Any, Final
 import probatio
 
 from homeassistant.components.network import async_get_source_ip
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
-    HASSIO_USER_NAME,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
@@ -48,6 +44,7 @@ from .const import (  # noqa: F401
     CONF_TRUSTED_PROXIES,
     CONF_USE_X_FORWARDED_FOR,
     CONF_USE_X_FRAME_OPTIONS,
+    DATA_SUPERVISOR_USER,
     DEFAULT_CORS,
     DOMAIN,
     KEY_HASS_REFRESH_TOKEN_ID,
@@ -215,11 +212,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         async def start_supervisor_unix_socket(*_: Any) -> None:
             """Start the Unix socket after the Supervisor user is available."""
-            if any(
-                user
-                for user in await hass.auth.async_get_users()
-                if user.system_generated and user.name == HASSIO_USER_NAME
-            ):
+            if hass.data.get(DATA_SUPERVISOR_USER) is not None:
                 await server.async_start_supervisor_unix_socket()
             else:
                 _LOGGER.error("Supervisor user not found; not starting Unix socket")
