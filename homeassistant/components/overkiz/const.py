@@ -39,7 +39,7 @@ CONF_HUB: Final = "hub"
 CONF_GATEWAY_ID: Final = "gateway_id"
 CONF_REFRESH_TOKEN: Final = "refresh_token"
 CONF_SITE_OID: Final = "site_oid"
-DEFAULT_SERVER: Final = Server.SOMFY_EUROPE
+DEFAULT_SERVER: Final = Server.SOMFY
 DEFAULT_HOST: Final = "gateway-xxxx-xxxx-xxxx.local:8443"
 
 UPDATE_INTERVAL: Final = timedelta(seconds=30)
