@@ -314,13 +314,15 @@ async def test_sensor_readded_endpoint(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.core_backend_service_response_time") is not None
-    assert hass.states.get("sensor.core_backend_service_status_code") is not None
-    assert hass.states.get("sensor.core_backend_service_last_event") is not None
-    assert (
-        hass.states.get("sensor.core_backend_service_certificate_expiration")
-        is not None
-    )
-    assert hass.states.get("sensor.core_backend_service_dns_response_code") is not None
+    for sensor_key in (
+        "status_code",
+        "last_event",
+        "certificate_expiration",
+        "dns_response_code",
+    ):
+        entity_id = f"sensor.core_backend_service_{sensor_key}"
+        assert hass.states.get(entity_id) is None
+        assert entity_registry.async_get(entity_id) is not None
 
 
 async def test_diagnostic_sensors_disabled_by_default(
