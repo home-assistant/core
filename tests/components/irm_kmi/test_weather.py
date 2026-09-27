@@ -5,12 +5,14 @@ from typing import Any
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.irm_kmi.const import CONF_LANGUAGE_OVERRIDE, DOMAIN
 from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
     SERVICE_GET_FORECASTS,
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.entity_registry as er
 
 from . import setup_integration
@@ -93,3 +95,63 @@ async def test_daily_forecast_night_low_above_day_high(
         (8.0, 6.0),
         (6.0, -2.0),
     ]
+
+
+@pytest.mark.usefixtures("mock_get_forecasts_coord")
+@pytest.mark.parametrize(
+    ("hass_language", "options", "expected_text", "expected_manufacturer"),
+    [
+        pytest.param(
+            "en",
+            {},
+            "Hey!",
+            "Royal Meteorological Institute of Belgium",
+            id="english",
+        ),
+        pytest.param(
+            "en",
+            {CONF_LANGUAGE_OVERRIDE: "fr"},
+            "Bar",
+            "Institut Royal Météorologique de Belgique",
+            id="override_fr",
+        ),
+        pytest.param(
+            "en",
+            {CONF_LANGUAGE_OVERRIDE: "nl"},
+            "Foo",
+            "Koninklijk Meteorologisch Instituut van België",
+            id="override_nl",
+        ),
+        pytest.param(
+            "nl",
+            {CONF_LANGUAGE_OVERRIDE: "none"},
+            "Foo",
+            "Koninklijk Meteorologisch Instituut van België",
+            id="follow_home_assistant",
+        ),
+    ],
+)
+@pytest.mark.freeze_time("2024-01-23T14:15:00+01:00")
+async def test_forecast_language(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_language: str,
+    options: dict[str, str],
+    expected_text: str,
+    expected_manufacturer: str,
+) -> None:
+    """Test the forecast text is fetched in the language the user asked for."""
+    hass.config.language = hass_language
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, options=options)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Only the second recorded day carries a text in every language
+    assert (await _get_forecast(hass, "daily"))[1]["text"] == expected_text
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
+    assert device.manufacturer == expected_manufacturer

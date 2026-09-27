@@ -491,7 +491,7 @@ class Telegrams:
 
         dpt_name, unit = self._resolve_dpt(m.dpt_main, m.dpt_sub)
         return TelegramDict(
-            timestamp=m.timestamp.isoformat(),
+            timestamp=dt_util.as_local(m.timestamp).isoformat(),
             source=m.source,
             destination=m.destination,
             direction=m.direction,

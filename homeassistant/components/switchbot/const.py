@@ -261,6 +261,17 @@ ROLLER_SHADE_SPEED_TO_MODE = {
     ROLLER_SHADE_SPEED_QUIET: 1,
 }
 
+# Curtain movement speeds, exposed as cover speeds.
+# Only the Curtain 3 (identified by its advertised model friendly name)
+# honours the speed byte; other curtain models always move at normal speed.
+CURTAIN_3_MODEL_FRIENDLY_NAME = "Curtain 3"
+CURTAIN_SPEED_NORMAL = "normal"
+CURTAIN_SPEED_SILENT = "silent"
+CURTAIN_SPEED_TO_VALUE = {
+    CURTAIN_SPEED_NORMAL: 255,
+    CURTAIN_SPEED_SILENT: 1,
+}
+
 AIRPURIFIER_BASIC_MODELS = {
     SwitchbotModel.AIR_PURIFIER_JP,
     SwitchbotModel.AIR_PURIFIER_US,

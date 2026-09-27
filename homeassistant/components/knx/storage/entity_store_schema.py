@@ -3,7 +3,7 @@
 from collections.abc import Hashable
 from dataclasses import dataclass
 from enum import StrEnum, unique
-from typing import Annotated
+from typing import Annotated, Any
 
 import probatio
 from probatio import Key
@@ -23,9 +23,9 @@ from homeassistant.components.text import TextMode
 from homeassistant.const import (
     CONF_ENTITY_CATEGORY,
     CONF_ENTITY_ID,
-    CONF_NAME,
     CONF_PAYLOAD,
     CONF_PLATFORM,
+    EntityCategory,
     Platform,
 )
 from homeassistant.helpers import selector
@@ -47,7 +47,8 @@ from ..const import (
 )
 from ..dpt import get_supported_dpts, raw_payload_length
 from ..validation import (
-    entity_category_validator,
+    entity_category_supported,
+    parse_entity_category,
     validate_number_attributes,
     validate_sensor_attributes,
 )
@@ -56,7 +57,6 @@ from .const import (
     CONF_COLOR_TEMP_MAX,
     CONF_COLOR_TEMP_MIN,
     CONF_DATA,
-    CONF_DEVICE_INFO,
     CONF_DPT,
     CONF_ENTITY,
     CONF_GA_ACTIVE,
@@ -135,32 +135,50 @@ SyncState = Annotated[bool | str | int, SyncStateSelector()]
 SyncStateAllowFalse = Annotated[bool | str | int, SyncStateSelector(allow_false=True)]
 
 
+@dataclass(kw_only=True, slots=True)
+class BaseEntityConfig:
+    """Common UI configuration of a KNX entity."""
+
+    name: str | None = None
+    device_info: str | None = None
+    entity_category: Annotated[
+        EntityCategory | None, probatio.Coerce(parse_entity_category)
+    ] = None
+
+    @property
+    def xknx_name(self) -> str:
+        """Name of the xknx device, empty when HA names the entity after its device."""
+        return self.name or ""
+
+
+def _name_or_device_required(config: BaseEntityConfig) -> BaseEntityConfig:
+    """Require a name, unless the entity is named after its device."""
+    if not config.name and config.device_info is None:
+        raise probatio.AnyInvalid("One of `Device` or `Name` is required")
+    return config
+
+
 def base_entity_schema(platform: Platform) -> probatio.All:
     """Return the base entity schema for a platform."""
     return probatio.All(
-        {
-            probatio.Optional(CONF_NAME, default=None): probatio.Maybe(str),
-            probatio.Optional(CONF_DEVICE_INFO, default=None): probatio.Maybe(str),
-            probatio.Optional(
-                CONF_ENTITY_CATEGORY, default=None
-            ): entity_category_validator(platform),
-        },
-        probatio.Any(
-            probatio.Schema(
-                {
-                    probatio.Required(CONF_NAME): probatio.All(str, probatio.IsTrue()),
-                },
-                extra=probatio.ALLOW_EXTRA,
-            ),
-            probatio.Schema(
-                {
-                    probatio.Required(CONF_DEVICE_INFO): str,
-                },
-                extra=probatio.ALLOW_EXTRA,
-            ),
-            msg="One of `Device` or `Name` is required",
+        probatio.DataclassSchema(
+            BaseEntityConfig,
+            {CONF_ENTITY_CATEGORY: entity_category_supported(platform)},
         ),
+        _name_or_device_required,
     )
+
+
+@dataclass(kw_only=True, slots=True)
+class KnxEntityData[KnxT]:
+    """Validated UI entity data: the common `entity` and the platform `knx` part."""
+
+    entity: BaseEntityConfig
+    knx: KnxT
+
+
+def _to_entity_data(data: dict[str, Any]) -> KnxEntityData[Any]:
+    return KnxEntityData(entity=data[CONF_ENTITY], knx=data[DOMAIN])
 
 
 @dataclass(kw_only=True, slots=True)
@@ -1118,14 +1136,17 @@ ENTITY_STORE_DATA_SCHEMA = probatio.All(
         {
             platform: probatio.Schema(
                 {
-                    probatio.Required(CONF_DATA): probatio.Schema(
-                        {
-                            probatio.Required(CONF_ENTITY): base_entity_schema(
-                                platform
-                            ),
-                            probatio.Required(DOMAIN): knx_schema,
-                        },
-                        extra=probatio.PREVENT_EXTRA,  # restrict in data key for yaml edit
+                    probatio.Required(CONF_DATA): probatio.All(
+                        probatio.Schema(
+                            {
+                                probatio.Required(CONF_ENTITY): base_entity_schema(
+                                    platform
+                                ),
+                                probatio.Required(DOMAIN): knx_schema,
+                            },
+                            extra=probatio.PREVENT_EXTRA,  # restrict in data key for yaml edit
+                        ),
+                        _to_entity_data,
                     ),
                 },
                 extra=probatio.ALLOW_EXTRA,  # eg. "type" from WS-endpoint when validating directly
