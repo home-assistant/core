@@ -186,6 +186,7 @@ async def test_setup_min(hass: HomeAssistant) -> None:
     ):
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
+        type(homekit).async_stop = AsyncMock()
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -231,6 +232,7 @@ async def test_removing_entry(port_mock, hass: HomeAssistant) -> None:
     ):
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
+        type(homekit).async_stop = AsyncMock()
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -1851,6 +1853,7 @@ async def test_yaml_updates_update_config_entry_for_name(hass: HomeAssistant) ->
     ):
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
+        type(homekit).async_stop = AsyncMock()
         assert await async_setup_component(
             hass, DOMAIN, {"homekit": {CONF_NAME: BRIDGE_NAME, CONF_PORT: 12345}}
         )
@@ -1899,6 +1902,7 @@ async def test_yaml_can_link_with_default_name(hass: HomeAssistant) -> None:
     ):
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
+        type(homekit).async_stop = AsyncMock()
         assert await async_setup_component(
             hass,
             DOMAIN,
@@ -1945,6 +1949,7 @@ async def test_yaml_can_link_with_port(hass: HomeAssistant) -> None:
     ):
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
+        type(homekit).async_stop = AsyncMock()
         assert await async_setup_component(
             hass,
             DOMAIN,
@@ -2440,6 +2445,7 @@ async def test_reload(mock_port_available: MagicMock, hass: HomeAssistant) -> No
         )
         await hass.async_block_till_done()
 
+    old_homekit = homekit
     mock_homekit.assert_any_call(
         hass,
         "reloadable",
@@ -2472,6 +2478,7 @@ async def test_reload(mock_port_available: MagicMock, hass: HomeAssistant) -> No
     ):
         mock_homekit2.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
+        type(homekit).async_stop = AsyncMock()
         await hass.services.async_call(
             "homekit",
             SERVICE_RELOAD,
@@ -2480,6 +2487,7 @@ async def test_reload(mock_port_available: MagicMock, hass: HomeAssistant) -> No
         )
         await hass.async_block_till_done()
 
+    old_homekit.async_stop.assert_awaited_once()
     mock_homekit2.assert_any_call(
         hass,
         "reloadable",
