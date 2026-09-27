@@ -34,9 +34,20 @@ class TimestampedPublishMessage:
 
 def log_received_message(messages: deque[ReceiveMessage], msg: ReceiveMessage) -> None:
     """Log an incoming MQTT message."""
-    if len(msg.payload) > MAX_STORED_PAYLOAD_SIZE:
-        msg = replace(msg, payload=msg.payload[:MAX_STORED_PAYLOAD_SIZE])
-    messages.append(msg)
+    if len(msg.payload) <= MAX_STORED_PAYLOAD_SIZE:
+        if msg not in messages:
+            messages.append(msg)
+        return
+    payload = msg.payload[:MAX_STORED_PAYLOAD_SIZE]
+    # The truncated copy is a new object, so the identity based check above
+    # can't detect a message received by multiple handlers of one entity
+    if not any(
+        stored.timestamp == msg.timestamp
+        and stored.topic == msg.topic
+        and stored.payload == payload
+        for stored in messages
+    ):
+        messages.append(replace(msg, payload=payload))
 
 
 def log_message(
