@@ -1,7 +1,6 @@
 """Interactions API support for the Google Generative AI Conversation integration."""
 
 from collections.abc import AsyncGenerator, AsyncIterator, Callable, Mapping, Sequence
-from contextlib import suppress
 from dataclasses import dataclass, field
 import datetime
 import json
@@ -10,13 +9,6 @@ from typing import Any
 from google.genai import interactions
 from google.genai.errors import APIError, ClientError
 import probatio
-
-with suppress(ImportError, AttributeError):
-    import google.genai._gaos.utils as _gaos_utils
-    import google.genai._gaos.utils.security as _gaos_security
-
-    _gaos_utils.get_security = _gaos_security.get_security
-    _gaos_utils.get_security_from_env = _gaos_security.get_security_from_env
 
 from homeassistant.components import conversation
 from homeassistant.exceptions import HomeAssistantError
@@ -148,8 +140,14 @@ def build_interaction_request(
         ),
     }
 
+    model_name = model.removeprefix("models/")
     thinking_level = options.get(CONF_THINKING_LEVEL, RECOMMENDED_THINKING_LEVEL)
-    if thinking_level and thinking_level != "auto":
+    if (
+        thinking_level
+        and thinking_level != "auto"
+        and model_name.startswith("gemini-3")
+        and not ("pro" in model_name and thinking_level == "minimal")
+    ):
         generation_config["thinking_level"] = thinking_level
 
     request["generation_config"] = generation_config
