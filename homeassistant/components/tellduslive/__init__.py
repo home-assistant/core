@@ -128,7 +128,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     interval_tracker = hass.data.pop(INTERVAL_TRACKER)
     interval_tracker()
     unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, CONFIG_ENTRY_IS_SETUP
+        config_entry, hass.data[CONFIG_ENTRY_IS_SETUP]
     )
     del hass.data[DOMAIN]
     del hass.data[DATA_CONFIG_ENTRY_LOCK]
