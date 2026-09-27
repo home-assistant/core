@@ -22,6 +22,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
+    entity_registry as er,
     issue_registry as ir,
     service as service_helper,
 )
@@ -327,6 +328,7 @@ class StateVacuumEntity(
 
         entity_data: list[tuple[StateVacuumEntity, dict[str, Any]]] = []
         handled_areas: set[str] = set()
+        stale_areas: set[str] = set()
         for entity in entities:
             if entity.registry_entry is None:
                 raise RuntimeError(
@@ -344,11 +346,21 @@ class StateVacuumEntity(
                     translation_placeholders={"entity_id": entity.entity_id},
                 )
 
+            # Mappings may reference segments the vacuum no longer reports.
+            known_segment_ids: set[str] | None = None
+            if (last_seen_segments := options.get("last_seen_segments")) is not None:
+                known_segment_ids = {segment["id"] for segment in last_seen_segments}
+
             # We use a dict to preserve the order of segments.
             segment_ids: dict[str, None] = {}
             for area_id in cleaning_area_id:
                 if (segments := area_mapping.get(area_id)) is None:
                     continue
+                if known_segment_ids is not None:
+                    segments = [s for s in segments if s in known_segment_ids]
+                    if not segments:
+                        stale_areas.add(area_id)
+                        continue
                 handled_areas.add(area_id)
                 for segment_id in segments:
                     segment_ids[segment_id] = None
@@ -368,12 +380,20 @@ class StateVacuumEntity(
                 "async_clean_segments", entity_data, context=call.context
             )
 
-        unhandled_areas = set(cleaning_area_id) - handled_areas
+        unhandled_areas = set(cleaning_area_id) - handled_areas - stale_areas
         if unhandled_areas:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="areas_not_mapped",
                 translation_placeholders={"areas": ", ".join(sorted(unhandled_areas))},
+            )
+        if unavailable_areas := stale_areas - handled_areas:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="areas_segments_unavailable",
+                translation_placeholders={
+                    "areas": ", ".join(sorted(unavailable_areas))
+                },
             )
 
     def clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
@@ -423,7 +443,10 @@ class StateVacuumEntity(
 
     @callback
     def _async_check_segments_issues(self) -> None:
-        """Create or delete segment-related repair issues."""
+        """Delete the segments changed issue once resolved.
+
+        When a new mapping resolves the issue, stale segments are pruned from it.
+        """
         if self.registry_entry is None:
             return
 
@@ -436,6 +459,29 @@ class StateVacuumEntity(
             issue_id = f"{ISSUE_SEGMENTS_CHANGED}_{self.registry_entry.id}"
             ir.async_delete_issue(self.hass, DOMAIN, issue_id)
             self._segments_changed_last_seen = None
+            if VacuumEntityFeature.CLEAN_AREA in self.supported_features:
+                self._async_prune_area_mapping(options)
+
+    @callback
+    def _async_prune_area_mapping(self, options: Mapping[str, Any]) -> None:
+        """Remove segments from the area mapping that are no longer last seen."""
+        if (area_mapping := options.get("area_mapping")) is None or (
+            last_seen_segments := options.get("last_seen_segments")
+        ) is None:
+            return
+
+        known_segment_ids = {segment["id"] for segment in last_seen_segments}
+        pruned_mapping = {
+            area_id: segment_ids
+            for area_id, segments in area_mapping.items()
+            if (segment_ids := [s for s in segments if s in known_segment_ids])
+        }
+        if pruned_mapping == area_mapping:
+            return
+
+        er.async_get(self.hass).async_update_entity_options(
+            self.entity_id, DOMAIN, {**options, "area_mapping": pruned_mapping}
+        )
 
     def locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""

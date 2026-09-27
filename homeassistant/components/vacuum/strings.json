@@ -105,6 +105,9 @@
     },
     "areas_not_mapped": {
       "message": "The following areas are not mapped to any segments of targeted vacuums: {areas}"
+    },
+    "areas_segments_unavailable": {
+      "message": "The following areas are only mapped to segments that targeted vacuums no longer report: {areas}. Update the segment-to-area mapping."
     }
   },
   "issues": {

@@ -16,6 +16,7 @@ from homeassistant.components.vacuum import (
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_STOP,
+    Segment,
     StateVacuumEntity,
     VacuumActivity,
     VacuumEntityFeature,
@@ -25,6 +26,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from . import (
+    SEGMENTS,
     MockVacuum,
     MockVacuumWithCleanArea,
     help_async_setup_entry_init,
@@ -391,6 +393,101 @@ async def test_clean_area_no_segments(
     assert mock_vacuum_2.clean_segments_calls[0][0] == ["seg_3"]
 
 
+async def _setup_vacuum_with_options(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    area_mapping: dict[str, list[str]],
+    last_seen_segments: list[Segment],
+) -> MockVacuumWithCleanArea:
+    """Set up a mock vacuum with the given area mapping and last seen segments."""
+    mock_vacuum = MockVacuumWithCleanArea(name="Testing", entity_id="vacuum.testing")
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(hass, DOMAIN, [mock_vacuum], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_registry.async_update_entity_options(
+        mock_vacuum.entity_id,
+        DOMAIN,
+        {
+            "area_mapping": area_mapping,
+            "last_seen_segments": [asdict(segment) for segment in last_seen_segments],
+        },
+    )
+    return mock_vacuum
+
+
+@pytest.mark.usefixtures("config_flow_fixture")
+async def test_clean_area_skips_stale_segments(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test clean_area does not send segments missing from last seen segments."""
+    mock_vacuum = await _setup_vacuum_with_options(
+        hass,
+        entity_registry,
+        {"area_1": ["seg_1", "seg_2"], "area_2": ["seg_3"]},
+        [SEGMENTS[0], SEGMENTS[2]],
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CLEAN_AREA,
+        {"entity_id": mock_vacuum.entity_id, "cleaning_area_id": ["area_1", "area_2"]},
+        blocking=True,
+    )
+
+    assert len(mock_vacuum.clean_segments_calls) == 1
+    assert mock_vacuum.clean_segments_calls[0][0] == ["seg_1", "seg_3"]
+
+
+@pytest.mark.usefixtures("config_flow_fixture")
+@pytest.mark.parametrize(
+    ("targeted_areas", "cleaned_segments_calls"),
+    [
+        pytest.param(["area_1"], [], id="only_stale_area"),
+        pytest.param(
+            ["area_1", "area_2"], [(["seg_3"], {})], id="stale_and_valid_area"
+        ),
+    ],
+)
+async def test_clean_area_only_stale_segments(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    targeted_areas: list[str],
+    cleaned_segments_calls: list[tuple[list[str], dict[str, Any]]],
+) -> None:
+    """Test clean_area raises for areas mapped only to segments no longer reported."""
+    mock_vacuum = await _setup_vacuum_with_options(
+        hass,
+        entity_registry,
+        {"area_1": ["seg_1", "seg_2"], "area_2": ["seg_3"]},
+        [SEGMENTS[2]],
+    )
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CLEAN_AREA,
+            {"entity_id": mock_vacuum.entity_id, "cleaning_area_id": targeted_areas},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "areas_segments_unavailable"
+    assert exc_info.value.translation_placeholders == {"areas": "area_1"}
+    assert mock_vacuum.clean_segments_calls == cleaned_segments_calls
+
+
 @pytest.mark.usefixtures("config_flow_fixture")
 async def test_clean_area_methods_not_implemented(hass: HomeAssistant) -> None:
     """Test async_get_segments and async_clean_segments raise NotImplementedError."""
@@ -552,3 +649,65 @@ async def test_segments_changed_issue(
     await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+@pytest.mark.usefixtures("config_flow_fixture")
+@pytest.mark.parametrize(
+    ("create_issue", "expected_area_mapping"),
+    [
+        pytest.param(
+            True,
+            {"area_1": ["seg_1"], "area_3": ["seg_new"]},
+            id="repair_resolved",
+        ),
+        pytest.param(
+            False,
+            {"area_1": ["seg_1", "seg_2"], "area_2": ["seg_3"], "area_3": ["seg_new"]},
+            id="no_repair",
+        ),
+    ],
+)
+async def test_segments_changed_issue_prunes_area_mapping(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    create_issue: bool,
+    expected_area_mapping: dict[str, list[str]],
+) -> None:
+    """Test saving a mapping that resolves the repair prunes stale segments."""
+    mock_vacuum = await _setup_vacuum_with_options(
+        hass,
+        entity_registry,
+        {"area_1": ["seg_1", "seg_2"], "area_2": ["seg_3"]},
+        SEGMENTS,
+    )
+    if create_issue:
+        mock_vacuum.async_create_segments_issue()
+
+    new_last_seen_segments = [
+        {"id": "seg_1", "name": "Kitchen", "group": None},
+        {"id": "seg_new", "name": "New Room", "group": None},
+    ]
+    # The frontend keeps mappings for segments that are no longer reported.
+    entity_registry.async_update_entity_options(
+        mock_vacuum.entity_id,
+        DOMAIN,
+        {
+            "area_mapping": {
+                "area_1": ["seg_1", "seg_2"],
+                "area_2": ["seg_3"],
+                "area_3": ["seg_new"],
+            },
+            "last_seen_segments": new_last_seen_segments,
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get(mock_vacuum.entity_id)
+    assert entity_entry.options[DOMAIN] == {
+        "area_mapping": expected_area_mapping,
+        "last_seen_segments": new_last_seen_segments,
+    }
+    assert not issue_registry.async_get_issue(
+        DOMAIN, f"segments_changed_{entity_entry.id}"
+    )
