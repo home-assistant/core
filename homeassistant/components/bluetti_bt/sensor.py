@@ -84,16 +84,9 @@ class BluettiSensor(CoordinatorEntity, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 
-        if not self.coordinator.data:
+        if len(self.coordinator.data.keys()) == 0:
             self._logger.warning(
                 "Data from coordinator is Empty",
-            )
-            return
-
-        if not isinstance(self.coordinator.data, dict):
-            self._logger.warning(
-                "Invalid data from coordinator (sensor.%s)",
-                self._attr_unique_id,
             )
             return
 
