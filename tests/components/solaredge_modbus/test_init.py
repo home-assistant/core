@@ -60,11 +60,15 @@ METER_MODEL_REGISTER = 40188
 # An address inside the pooled storage and export control read.
 SITE_CONTROL_REGISTER = 57348
 
+# The first register of the power control block, which the probe asks for.
+POWER_CONTROL_REGISTER = 61440
+
 # Where the first meter's serial number lives.
 METER_SERIAL_REGISTER = 40171
 
 EXPORT_LIMITATION_ENTITY = "select.solaredge_se10000h_export_limitation"
 EXTERNAL_PRODUCTION_ENTITY = "switch.solaredge_se10000h_external_production"
+ACTIVE_POWER_LIMIT_ENTITY = "number.solaredge_se10000h_active_power_limit"
 
 
 async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -756,6 +760,47 @@ async def test_replaced_meter_is_picked_up(
         )
         is not None
     )
+
+
+async def test_control_block_that_answers_later_is_picked_up(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A control block silent while probing leaves a platform empty until then.
+
+    Which blocks answer decides which entities exist, and that is read once. An
+    inverter that was busy at the wrong moment would otherwise be missing every
+    setting it has until someone reloads by hand.
+    """
+    mock_modbus_unit.fail_read(POWER_CONTROL_REGISTER, ModbusTimeoutError("timed out"))
+    await _setup(hass, mock_config_entry)
+
+    assert hass.states.get(ACTIVE_POWER_LIMIT_ENTITY) is None
+
+    # The inverter answers for it again.
+    mock_modbus_unit.fail_read(POWER_CONTROL_REGISTER, None)
+
+    await _tick_attachment_check(hass, freezer)
+
+    assert hass.states.get(ACTIVE_POWER_LIMIT_ENTITY) is not None
+
+
+async def test_silent_control_block_does_not_trigger_a_reload(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A block going quiet is not the inverter saying it does not have one."""
+    await _setup(hass, mock_config_entry)
+
+    mock_modbus_unit.fail_read(POWER_CONTROL_REGISTER, ModbusTimeoutError("timed out"))
+
+    assert await _tick_attachment_check(hass, freezer) == 1
+
+    assert hass.states.get(ACTIVE_POWER_LIMIT_ENTITY) is not None
 
 
 async def test_silent_attachment_does_not_trigger_a_reload(
