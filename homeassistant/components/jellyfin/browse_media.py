@@ -25,7 +25,10 @@ from .const import (
 )
 
 CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS: dict[str, str] = {
+    MediaType.ALBUM: MediaClass.ALBUM,
+    MediaType.ARTIST: MediaClass.ARTIST,
     MediaType.MUSIC: MediaClass.MUSIC,
+    MediaType.PLAYLIST: MediaClass.PLAYLIST,
     MediaType.SEASON: MediaClass.SEASON,
     MediaType.TVSHOW: MediaClass.TV_SHOW,
     "boxset": MediaClass.DIRECTORY,
@@ -33,10 +36,14 @@ CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS: dict[str, str] = {
     "library": MediaClass.DIRECTORY,
 }
 
+# The server expands a folder or an artist into its playable items.
 PLAYABLE_MEDIA_TYPES = [
+    MediaType.ALBUM,
+    MediaType.ARTIST,
     MediaType.EPISODE,
     MediaType.MOVIE,
     MediaType.MUSIC,
+    MediaType.PLAYLIST,
     MediaType.SEASON,
     MediaType.TVSHOW,
 ]
@@ -62,6 +69,8 @@ async def item_payload(
         media_class=MEDIA_CLASS_MAP.get(item["Type"], MediaClass.DIRECTORY),
         can_play=bool(media_content_type in PLAYABLE_MEDIA_TYPES and media_content_id),
         can_expand=bool(item.get("IsFolder")),
+        # Search can scope to any folder with parent_id.
+        can_search=bool(item.get("IsFolder")),
         children_media_class=None,
         thumbnail=thumbnail,
     )
@@ -118,6 +127,8 @@ async def build_item_response(
         title=title,
         can_play=bool(media_type in PLAYABLE_MEDIA_TYPES and media_content_id),
         can_expand=True,
+        # Only a folder has children, and search can scope to a folder.
+        can_search=True,
         children=children,
         thumbnail=thumbnail,
     )
@@ -162,8 +173,6 @@ async def search_items(
     hass: HomeAssistant, client: JellyfinClient, user_id: str, query: SearchMediaQuery
 ) -> list[BrowseMedia]:
     """Search items in Jellyfin server."""
-    search_result: list[BrowseMedia] = []
-
     items: list[dict[str, Any]] = []
     # Search for items based on media filter classes (or all if none specified)
     media_types: list[str] | list[None] = []
@@ -192,24 +201,7 @@ async def search_items(
         )
         items.extend(items_dict.get("Items", []))
 
-    for item in items:
-        content_type: str = item["MediaType"]
-
-        response = BrowseMedia(
-            media_class=CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS.get(
-                content_type, MediaClass.DIRECTORY
-            ),
-            media_content_id=item["Id"],
-            media_content_type=content_type,
-            title=item["Name"],
-            thumbnail=get_artwork_url(client, item),
-            can_play=bool(content_type in PLAYABLE_MEDIA_TYPES),
-            can_expand=item.get("IsFolder", False),
-            children=None,
-        )
-        search_result.append(response)
-
-    return search_result
+    return [await item_payload(hass, client, user_id, item) for item in items]
 
 
 async def get_media_info(
