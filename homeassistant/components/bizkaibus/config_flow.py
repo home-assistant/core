@@ -4,7 +4,7 @@ import re
 from typing import Any, override
 
 from bizkaibus.bizkaibusAPI import BizkaibusAPI, BizkaibusLanguages
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -25,9 +25,9 @@ from .const import (
     OLD_CONF_STOP_ID,
 )
 
-USER_DATA_SCHEMA = vol.Schema(
+USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_STOP_ID): selector.TextSelector(
+        probatio.Required(CONF_STOP_ID): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
         )
     }
@@ -36,7 +36,7 @@ USER_DATA_SCHEMA = vol.Schema(
 
 def _lines_schema(
     line_ids: list[str], lines: dict[str, Any], selected_line_ids: list[str]
-) -> vol.Schema:
+) -> probatio.Schema:
     """Return the schema for selecting bus lines."""
     options = [
         selector.SelectOptionDict(
@@ -46,9 +46,9 @@ def _lines_schema(
         for line in line_ids
     ]
 
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(
+            probatio.Required(
                 CONF_LINE_IDS, default=selected_line_ids
             ): selector.SelectSelector(
                 selector.SelectSelectorConfig(

@@ -1,7 +1,7 @@
 """The Bizkaibus bus tracker component."""
 
 from bizkaibus.bizkaibusAPI import BizkaibusAPI, BizkaibusLanguages
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA
 from homeassistant.const import Platform
@@ -14,7 +14,10 @@ from .coordinator import BizkaibusConfigEntry, BizkaibusUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_STOP_ID): cv.string, vol.Optional(CONF_LINES): cv.string}
+    {
+        probatio.Required(CONF_STOP_ID): cv.string,
+        probatio.Optional(CONF_LINES): cv.string,
+    }
 )
 
 
