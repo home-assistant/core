@@ -448,6 +448,27 @@ async def test_a_schedule_is_restored_after_a_restart(
     assert restarted.adaptive_lighting.char_active_count.value == 1
 
 
+async def test_stopping_the_accessory_cancels_the_updates(
+    hass: HomeAssistant, hk_driver, freezer: FrozenDateTimeFactory
+) -> None:
+    """A bridge reload tears the accessory down; the old controller goes quiet."""
+    acc = await _setup_light(hass, hk_driver)
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
+    await _wait_for_light_coalesce(hass)
+    assert len(call_turn_on) == 1
+
+    acc.async_stop()
+    freezer.tick(timedelta(hours=6))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await _wait_for_light_coalesce(hass)
+
+    assert len(call_turn_on) == 1
+    # The schedule is kept for the accessory that replaces this one.
+    assert await _get_store(hass).async_get("light.demo") is not None
+
+
 async def test_an_expired_schedule_is_dropped_on_restart(
     hass: HomeAssistant, hk_driver
 ) -> None:

@@ -546,15 +546,24 @@ class AdaptiveLightingController:
         _LOGGER.debug("%s: adaptive lighting disabled (%s)", self.entity_id, reason)
         self.transition = None
         self._last_applied = None
+        self.stop()
+        self.char_active_count.set_value(0)
+        self.char_control.value = ""
+        self._schedule(_get_store(self.hass).async_set(self.entity_id, None))
+
+    @callback
+    def stop(self) -> None:
+        """Cancel the timers but keep the stored schedule.
+
+        Called when the accessory is torn down on a bridge reload. Without it
+        the old controller keeps writing with the old colour range forever.
+        """
         if self._cancel_updates:
             self._cancel_updates()
             self._cancel_updates = None
         if self._cancel_state:
             self._cancel_state()
             self._cancel_state = None
-        self.char_active_count.set_value(0)
-        self.char_control.value = ""
-        self._schedule(_get_store(self.hass).async_set(self.entity_id, None))
 
     @callback
     def notify_manual_change(self) -> None:
