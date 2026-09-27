@@ -153,6 +153,9 @@
     },
     "ota_in_progress": {
       "message": "An OTA (Over-The-Air) update is already in progress for {configuration}."
+    },
+    "repeat_mode_not_supported": {
+      "message": "Repeat mode {repeat_mode} is not supported."
     }
   },
   "issues": {
