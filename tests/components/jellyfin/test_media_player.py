@@ -541,6 +541,8 @@ async def test_search_media(
         pytest.param(["artist"], ["MusicArtist"], id="artist"),
         pytest.param(["track"], ["Audio"], id="track"),
         pytest.param(["movie"], ["Movie"], id="movie"),
+        pytest.param(["playlist"], ["Playlist"], id="playlist"),
+        pytest.param(["video"], ["Video"], id="video"),
         pytest.param(
             ["directory"],
             ["CollectionFolder,AggregateFolder,Folder,BoxSet"],
