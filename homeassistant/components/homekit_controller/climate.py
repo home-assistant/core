@@ -262,6 +262,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         the temperature between them.
         """
         state = self.service.value(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
+        char_types: tuple[str, ...]
         if state == TargetHeaterCoolerStateValues.COOL:
             char_types = (CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD,)
         elif state == TargetHeaterCoolerStateValues.HEAT:
