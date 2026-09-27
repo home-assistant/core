@@ -40,7 +40,7 @@ INPUTS = [
         "uri": "extInput:hdmi?port=1",
         "title": "HDMI 1",
         "connection": False,
-        "label": "HDMI 2",
+        "label": "hdmi 2",
         "icon": "meta:hdmi",
     },
     {
@@ -124,8 +124,9 @@ async def test_source_list_adds_label(hass: HomeAssistant) -> None:
     [
         ("Game console", "extInput:hdmi?port=2"),
         ("game console", "extInput:hdmi?port=2"),
-        # HDMI 1 is labelled "HDMI 2": the input that owns that name still wins.
+        # HDMI 1 is labelled "hdmi 2": the input that owns that name still wins.
         ("HDMI 2", "extInput:hdmi?port=2"),
+        ("hdmi 2", "extInput:hdmi?port=2"),
         ("HDMI 1", "extInput:hdmi?port=1"),
         ("HDMI 3", "extInput:hdmi?port=3"),
         ("HDMI 4", "extInput:hdmi?port=4"),
