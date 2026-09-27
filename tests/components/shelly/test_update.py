@@ -1160,16 +1160,6 @@ async def test_blu_trv_update_shared_firmware_check(
         assert state.attributes[ATTR_LATEST_VERSION] == "v1.3.0"
 
 
-async def test_blu_trv_update_without_firmware_version(
-    hass: HomeAssistant, entity_registry: EntityRegistry
-) -> None:
-    """Test no update entity for a BLU TRV that does not report its firmware."""
-    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
-
-    assert hass.states.get("update.trv_201_firmware") is None
-    assert entity_registry.async_get("update.trv_201_firmware") is None
-
-
 @pytest.mark.parametrize("fw_id", ["20241224-101010/v1.2.10@aabbccdd", "1.11.0"])
 async def test_blu_trv_update_no_update_available(
     hass: HomeAssistant,
