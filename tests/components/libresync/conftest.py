@@ -13,7 +13,7 @@ from aiolibresync import (
 )
 import pytest
 
-from homeassistant.components.libresync.const import CONF_SERIAL, CONF_UDN, DOMAIN
+from homeassistant.components.libresync.const import DOMAIN
 from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
@@ -68,12 +68,9 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Return a config entry keyed on the serial."""
+    """Return a config entry for the hub."""
     return MockConfigEntry(
-        domain=DOMAIN,
-        title="Stereo",
-        unique_id=SERIAL,
-        data={CONF_HOST: HOST, CONF_SERIAL: SERIAL, CONF_UDN: UDN},
+        domain=DOMAIN, title="Stereo", unique_id=UDN, data={CONF_HOST: HOST}
     )
 
 
@@ -95,16 +92,6 @@ def mock_probe_control() -> Generator[AsyncMock]:
         return_value=True,
     ) as probe:
         yield probe
-
-
-@pytest.fixture
-def mock_read_serial() -> Generator[AsyncMock]:
-    """Mock reading the factory serial."""
-    with patch(
-        "homeassistant.components.libresync.config_flow.async_read_serial",
-        return_value=SERIAL,
-    ) as read_serial:
-        yield read_serial
 
 
 @pytest.fixture

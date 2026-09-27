@@ -38,7 +38,7 @@
     'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 23605>,
     'translation_key': None,
-    'unique_id': 'FAKE0SERIAL000000000',
+    'unique_id': 'uuid:1a2b3c4d-5e6f-11f0-9193-0123456789ab',
     'unit_of_measurement': None,
   })
 # ---

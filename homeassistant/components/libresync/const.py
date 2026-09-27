@@ -4,11 +4,6 @@ from typing import Final
 
 DOMAIN: Final = "libresync"
 
-# Both identifiers are kept in the entry data whenever they are known. The
-# unique_id is whichever was preferred when the entry was created.
-CONF_SERIAL: Final = "serial"
-CONF_UDN: Final = "udn"
-
 MANUFACTURER: Final = "Libre Wireless"
 DEFAULT_NAME: Final = "LibreSync hub"
 

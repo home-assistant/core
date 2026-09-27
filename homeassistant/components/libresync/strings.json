@@ -7,7 +7,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_identity": "The hub answers but does not identify itself, so it cannot be told apart from another hub. Unplug it from the mains, plug it back in, wait a minute, and try again."
+      "no_identity": "The hub answers, but its UPnP service on port 38400 does not, so it cannot identify itself. Check that nothing blocks that port, then unplug the hub from the mains, plug it back in, wait a minute, and try again."
     },
     "step": {
       "discovery_confirm": {

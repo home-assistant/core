@@ -1,7 +1,6 @@
 """The LibreSync integration."""
 
 from collections.abc import Callable
-import logging
 from typing import Any
 
 from aiolibresync import DeviceState, LibreSyncClient, NotConnectedError
@@ -12,9 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_SERIAL, CONNECT_TIMEOUT, DOMAIN, MANUFACTURER
-
-_LOGGER = logging.getLogger(__name__)
+from .const import CONNECT_TIMEOUT, DOMAIN, MANUFACTURER
 
 PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
 
@@ -48,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LibreSyncConfigEntry) ->
         manufacturer=MANUFACTURER,
         name=entry.title,
     )
-    update_device = _device_updater(hass, entry, device.id)
+    update_device = _device_updater(hass, device.id)
     entry.async_on_unload(client.subscribe(update_device))
     update_device(client.state)
 
@@ -57,13 +54,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: LibreSyncConfigEntry) ->
 
 
 def _device_updater(
-    hass: HomeAssistant, entry: LibreSyncConfigEntry, device_id: str
+    hass: HomeAssistant, device_id: str
 ) -> Callable[[DeviceState], None]:
-    """Keep the model and the serial on the device up to date.
-
-    The entry's identity is left alone: the hub at a stored address is not
-    necessarily the one that was added.
-    """
+    """Keep the model and the serial on the device up to date."""
     seen: tuple[str | None, str | None] | None = None
 
     @callback
@@ -72,14 +65,6 @@ def _device_updater(
         if (state.serial, state.model) == seen:
             return
         seen = (state.serial, state.model)
-        known = entry.data.get(CONF_SERIAL)
-        if state.serial and known and state.serial != known:
-            _LOGGER.warning(
-                "The hub at %s reports a different serial from the one it was "
-                "added with",
-                entry.data[CONF_HOST],
-            )
-            return
         changes: dict[str, Any] = {}
         if state.serial:
             changes["serial_number"] = state.serial
