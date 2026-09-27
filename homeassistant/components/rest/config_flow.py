@@ -216,14 +216,14 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
                 await rest.async_update()
                 if rest.last_exception:
                     errors["base"] = "endpoint_error"
-                    placeholders["error_message"] = str(rest.last_exception)
+                    placeholders["endpoint_error_message"] = str(rest.last_exception)
                 if not errors:
                     self._title = f"{user_input[CONF_METHOD]} {Template(user_input[CONF_RESOURCE], self.hass).async_render()}"
                     self._data = user_input
                     return await self.async_step_subentries_menu()
             except TemplateError as exc:
                 errors["base"] = "template_error"
-                placeholders["error_message"] = str(exc)
+                placeholders["template_error_message"] = str(exc)
         suggested_values = user_input or {}
         return self.async_show_form(
             step_id="user",
@@ -294,10 +294,10 @@ class RestSubentryFlow(ConfigSubentryFlow):
         """Base step user."""
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {}
+        entry: RestConfigEntry = self._get_entry()
+        if entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="config_entry_not_loaded")
         if user_input is not None:
-            entry: RestConfigEntry = self._get_entry()
-            if entry.state is not ConfigEntryState.LOADED:
-                return self.async_abort(reason="config_entry_not_loaded")
             validator: (
                 Callable[
                     [dict[str, Any], RestData], tuple[dict[str, str], dict[str, str]]
@@ -307,7 +307,15 @@ class RestSubentryFlow(ConfigSubentryFlow):
             if validator is not None:
                 if len(entry.subentries) == 0:
                     await entry.runtime_data.async_refresh()
-                errors, placeholders = validator(user_input, entry.runtime_data.rest)
+                if entry.runtime_data.rest.data is not None:
+                    errors, placeholders = validator(
+                        user_input, entry.runtime_data.rest
+                    )
+                else:
+                    errors["base"] = "endpoint_error"
+                    placeholders["endpoint_error_message"] = str(
+                        entry.runtime_data.rest.last_exception
+                    )
             if not errors:
                 title: str = user_input.get(
                     CONF_NAME, SUBENTRY_CONFIG[Platform(self._subentry_type)][CONF_NAME]

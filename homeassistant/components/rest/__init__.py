@@ -105,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: RestConfigEntry) 
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="template_error",
-            translation_placeholders={"error_message": str(exc)},
+            translation_placeholders={"template_error_message": str(exc)},
         ) from exc
 
     resource_template: template.Template = template.Template(

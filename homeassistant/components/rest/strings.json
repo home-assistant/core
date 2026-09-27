@@ -3,13 +3,14 @@
     "availability_description": "Defines a template to get the `available` state of the entity, see [Template integration documentation]({docs_url_availability}). If omitted will default to `available` if the last resource update was successful.",
     "availability_section": "Availability Options",
     "config_entry_not_loaded": "The configuration entry for this resource is not loaded, unable to create an entity until the entry is loaded.",
+    "endpoint_error": "Error communicating with resource: {endpoint_error_message}",
     "force_update": "Force Update",
     "force_update_description": "If enabled, state changes will be reported even if the value is the same as the previous value. See RESTful Sensor [Force update]({docs_url_restful_sensor_force_update}).",
     "icon": "Icon",
     "icon_description": "Defines a template for the icon of the entity.",
     "picture": "Picture",
     "picture_description": "Defines a template for the picture of the entity.",
-    "template_error": "Error rendering template: {error_message}",
+    "template_error": "Error rendering template: {template_error_message}",
     "value_template": "Value Template",
     "value_template_description": "Defines a [template]({docs_url_template_data_processing}) to extract the value. `value` or `value_json` can be used."
   },
@@ -20,7 +21,7 @@
     "error": {
       "codec not found": "Encoding not supported",
       "credentials_missing": "Username and password are both required",
-      "endpoint_error": "Error communicating with resource: {error_message}",
+      "endpoint_error": "[%key:component::rest::common::endpoint_error%]",
       "invalid url": "Invalid URL",
       "template_error": "[%key:component::rest::common::template_error%]"
     },
@@ -161,7 +162,7 @@
   },
   "exceptions": {
     "endpoint_error": {
-      "message": "Error communicating with resource: {error_message}"
+      "message": "[%key:component::rest::common::endpoint_error%]"
     },
     "error_communicating": {
       "message": "Error communicating with {resource}"

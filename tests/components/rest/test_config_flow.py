@@ -177,6 +177,41 @@ async def test_sensor_subentry_flow_no_data(
     assert result["errors"] == {"base": "no_json"}
 
 
+async def test_sensor_subentry_flow_endpoint_failure(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    get_config_entry_data: dict[str, Any],
+    get_subentry_data: list[config_entries.ConfigSubentryData],
+) -> None:
+    """Test a subentry flow for a resource in error."""
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
+        text="",
+    )
+    entry = await async_setup_entry(hass, get_config_entry_data)
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "http://localhost",
+        exc=ClientError("the server is down"),
+    )
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, Platform.SENSOR),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        get_subentry_data[SENSOR_DATA]["data"],
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "endpoint_error"}
+    assert (
+        result["description_placeholders"]["endpoint_error_message"]
+        == "the server is down"
+    )
+
+
 async def test_sensor_subentry_flow_invalid_json_attrs_path(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -324,7 +359,9 @@ async def test_invalid_rest_resource(
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "endpoint_error"}
-    assert result["description_placeholders"] == {"error_message": "client error"}
+    assert result["description_placeholders"] == {
+        "endpoint_error_message": "client error"
+    }
 
 
 async def test_config_invalid_input(

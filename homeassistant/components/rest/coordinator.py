@@ -1,6 +1,7 @@
 """RESTful Data Update Coordinator."""
 
 from datetime import timedelta
+from functools import partial
 import logging
 from typing import override
 
@@ -44,11 +45,11 @@ class RestCoordinator(DataUpdateCoordinator[None]):
                     self.rest.set_payload(
                         payload_template.async_render(parse_result=False)
                     )
-                await self.rest.async_update()
+                await self.rest.async_update(config_entry is None)
 
             _update_method = _async_refresh_with_templates
         else:
-            _update_method = self.rest.async_update
+            _update_method = partial(self.rest.async_update, config_entry is None)
 
         super().__init__(
             hass,
@@ -71,6 +72,6 @@ class RestCoordinator(DataUpdateCoordinator[None]):
                 translation_domain=DOMAIN,
                 translation_key="endpoint_error",
                 translation_placeholders={
-                    "error_message": str(self.rest.last_exception)
+                    "endpoint_error_message": str(self.rest.last_exception)
                 },
             ) from self.rest.last_exception
