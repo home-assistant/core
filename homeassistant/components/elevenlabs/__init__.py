@@ -5,7 +5,7 @@ import logging
 
 from elevenlabs import AsyncElevenLabs, Model
 from elevenlabs.core import ApiError
-from httpx import ConnectError
+from httpx2 import ConnectError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_MODEL, Platform

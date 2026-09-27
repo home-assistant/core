@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
-import httpx
+import httpx2
 import openai
 from openai.types.chat import (
     ChatCompletion,
@@ -624,7 +624,7 @@ async def test_conversation_agent_error(
     with patch(
         "openai.resources.chat.completions.AsyncCompletions.create",
         side_effect=openai.APIConnectionError(
-            request=httpx.Request(method="POST", url="test")
+            request=httpx2.Request(method="POST", url="test")
         ),
     ):
         result = await conversation.async_converse(
@@ -647,9 +647,9 @@ async def test_conversation_agent_structured_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test handling of OpenAI API structured errors in conversation entity."""
-    response = httpx.Response(
+    response = httpx2.Response(
         status_code=402,
-        request=httpx.Request(
+        request=httpx2.Request(
             method="POST", url="https://api.openai.com/v1/chat/completions"
         ),
         json={

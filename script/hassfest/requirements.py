@@ -35,6 +35,7 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "bleak": "SemVer",
     "grpcio": "SemVer",
     "httpx": "SemVer",
+    "httpx2": "SemVer",
     "lxml": "SemVer",
     "mashumaro": "SemVer",
     "numpy": "SemVer",

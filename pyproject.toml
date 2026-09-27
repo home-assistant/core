@@ -48,9 +48,9 @@ dependencies = [
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
   "hass-nabucasa==2.7.0",
-  # When bumping httpx, please check the version pins of
-  # httpcore, anyio, and h11 in gen_requirements_all
-  "httpx==0.28.1",
+  # When bumping httpx2, please check the version pin of
+  # anyio in gen_requirements_all
+  "httpx2==2.13.1",
   "home-assistant-bluetooth==2.0.0",
   "ifaddr==0.2.0",
   "Jinja2==3.1.6",
@@ -447,6 +447,9 @@ override-dependencies = ["rich>=13.8.1"]
 
 [tool.pytest.ini_options]
 pythonpath = ["pylint/plugins"]
+# Import homeassistant before any plugin (e.g. respx) imports httpx, so that
+# httpx is aliased to httpx2 (see homeassistant/__init__.py).
+addopts = "-p homeassistant"
 testpaths = ["tests"]
 norecursedirs = [".git", "testing_config"]
 log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"
@@ -860,6 +863,8 @@ mark-parentheses = false
 "pytz".msg = "use zoneinfo instead"
 "tests".msg = "You should not import tests"
 "voluptuous".msg = "use probatio instead"
+"httpx".msg = "use httpx2 instead"
+"httpcore".msg = "use httpcore2 instead"
 "__future__.annotations".msg = "It should not be needed because Home Assistant requires Python 3.14+"
 
 [tool.ruff.lint.isort]

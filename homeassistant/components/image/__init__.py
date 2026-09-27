@@ -11,7 +11,7 @@ from random import SystemRandom
 from typing import Final, final, override
 
 from aiohttp import hdrs, web
-import httpx
+import httpx2
 import probatio
 from propcache.api import cached_property
 
@@ -241,17 +241,17 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return bytes of image."""
         raise NotImplementedError
 
-    async def _fetch_url(self, url: str) -> httpx.Response | None:
+    async def _fetch_url(self, url: str) -> httpx2.Response | None:
         """Fetch a URL."""
         try:
             response = await self._client.get(
                 url, timeout=GET_IMAGE_TIMEOUT, follow_redirects=True
             )
             response.raise_for_status()
-        except httpx.TimeoutException:
+        except httpx2.TimeoutException:
             _LOGGER.error("%s: Timeout getting image from %s", self.entity_id, url)
             return None
-        except (httpx.RequestError, httpx.HTTPStatusError) as err:
+        except (httpx2.RequestError, httpx2.HTTPStatusError) as err:
             _LOGGER.error(
                 "%s: Error getting new image from %s: %s",
                 self.entity_id,

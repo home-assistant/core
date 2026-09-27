@@ -4,7 +4,7 @@ import json
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
-import httpx
+import httpx2
 import pytest
 import respx
 
@@ -45,7 +45,7 @@ OAUTH_AUTHORIZATION_SERVER_DISCOVERY_ENDPOINT = (
     f"{AUTHORIZATION_SERVER}/.well-known/oauth-authorization-server"
 )
 SCOPES_SUPPORTED = ["profile", "email", "phone"]
-OAUTH_PROTECTED_RESOURCE_METADATA_RESPONSE = httpx.Response(
+OAUTH_PROTECTED_RESOURCE_METADATA_RESPONSE = httpx2.Response(
     status_code=200,
     json={
         "resource": MCP_SERVER_URL,
@@ -56,7 +56,7 @@ OAUTH_PROTECTED_RESOURCE_METADATA_RESPONSE = httpx.Response(
         "bearer_methods_supported": ["header"],
     },
 )
-OAUTH_SERVER_METADATA_RESPONSE = httpx.Response(
+OAUTH_SERVER_METADATA_RESPONSE = httpx2.Response(
     status_code=200,
     text=json.dumps(
         {
@@ -134,12 +134,12 @@ async def test_form(
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
-        (httpx.TimeoutException("Some timeout"), "timeout_connect"),
+        (httpx2.TimeoutException("Some timeout"), "timeout_connect"),
         (
-            httpx.HTTPStatusError("", request=None, response=httpx.Response(500)),
+            httpx2.HTTPStatusError("", request=None, response=httpx2.Response(500)),
             "cannot_connect",
         ),
-        (httpx.HTTPError("Some HTTP error"), "cannot_connect"),
+        (httpx2.HTTPError("Some HTTP error"), "cannot_connect"),
         (Exception, "unknown"),
     ],
 )
@@ -295,8 +295,8 @@ async def test_oauth_discovery_flow_without_credentials(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     # MCP Server returns 401 indicating the client needs to authenticate
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
-        "Authentication required", request=None, response=httpx.Response(401)
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
     )
     # Prepare the OAuth Server metadata
     respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
@@ -370,7 +370,7 @@ async def perform_oauth_flow(
     [
         (OAUTH_SERVER_METADATA_RESPONSE, OAUTH_AUTHORIZE_URL, OAUTH_TOKEN_URL, SCOPES),
         (
-            httpx.Response(
+            httpx2.Response(
                 status_code=200,
                 text=json.dumps(
                     {
@@ -384,7 +384,7 @@ async def perform_oauth_flow(
             None,
         ),
         (
-            httpx.Response(status_code=404),
+            httpx2.Response(status_code=404),
             f"{MCP_SERVER_BASE_URL}/authorize",
             f"{MCP_SERVER_BASE_URL}/token",
             None,
@@ -405,7 +405,7 @@ async def test_authentication_flow(
     credential: None,
     aioclient_mock: AiohttpClientMocker,
     hass_client_no_auth: ClientSessionGenerator,
-    oauth_server_metadata_response: httpx.Response,
+    oauth_server_metadata_response: httpx2.Response,
     expected_authorize_url: str,
     expected_token_url: str,
     scopes: list[str] | None,
@@ -416,8 +416,8 @@ async def test_authentication_flow(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     # MCP Server returns 401 indicating the client needs to authenticate
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
-        "Authentication required", request=None, response=httpx.Response(401)
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
     )
     # Prepare the OAuth Server metadata
     respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
@@ -523,10 +523,10 @@ async def test_authentication_discovery_via_header(
     # MCP Server returns 401 when first trying to connect via config
     # flow validate_input. The response value has a WWW-Authenticate
     # header with a full URL for the resource metadata.
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
         "Authentication required",
         request=None,
-        response=httpx.Response(
+        response=httpx2.Response(
             401,
             headers={
                 "WWW-Authenticate": authenticate_header,
@@ -644,10 +644,10 @@ async def test_invalid_protected_resource_metadata(
     # flow validate_input. The response value has a WWW-Authenticate
     # header with a full URL for the resource metadata.
     resource_metadata_url = "https://example.com/custom-discovery"
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
         "Authentication required",
         request=None,
-        response=httpx.Response(
+        response=httpx2.Response(
             401,
             headers={
                 "WWW-Authenticate": (
@@ -660,7 +660,7 @@ async def test_invalid_protected_resource_metadata(
 
     # Discovery process starts. It hits the custom discovery URL directly.
     respx.get(resource_metadata_url).mock(
-        return_value=httpx.Response(
+        return_value=httpx2.Response(
             status_code=200,
             json=resource_metadata,
         )
@@ -683,12 +683,12 @@ async def test_invalid_protected_resource_metadata(
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
-        (httpx.TimeoutException("Some timeout"), "timeout_connect"),
+        (httpx2.TimeoutException("Some timeout"), "timeout_connect"),
         (
-            httpx.HTTPStatusError("", request=None, response=httpx.Response(500)),
+            httpx2.HTTPStatusError("", request=None, response=httpx2.Response(500)),
             "cannot_connect",
         ),
-        (httpx.HTTPError("Some HTTP error"), "cannot_connect"),
+        (httpx2.HTTPError("Some HTTP error"), "cannot_connect"),
         (Exception, "unknown"),
     ],
 )
@@ -709,8 +709,8 @@ async def test_oauth_discovery_failure(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     # MCP Server returns 401 indicating the client needs to authenticate
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
-        "Authentication required", request=None, response=httpx.Response(401)
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
     )
     # Prepare the OAuth Server metadata
     respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(side_effect=side_effect)
@@ -728,12 +728,12 @@ async def test_oauth_discovery_failure(
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
-        (httpx.TimeoutException("Some timeout"), "timeout_connect"),
+        (httpx2.TimeoutException("Some timeout"), "timeout_connect"),
         (
-            httpx.HTTPStatusError("", request=None, response=httpx.Response(500)),
+            httpx2.HTTPStatusError("", request=None, response=httpx2.Response(500)),
             "cannot_connect",
         ),
-        (httpx.HTTPError("Some HTTP error"), "cannot_connect"),
+        (httpx2.HTTPError("Some HTTP error"), "cannot_connect"),
         (Exception, "unknown"),
     ],
 )
@@ -754,8 +754,8 @@ async def test_authentication_flow_server_failure_abort(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     # MCP Server returns 401 indicating the client needs to authenticate
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
-        "Authentication required", request=None, response=httpx.Response(401)
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
     )
     # Prepare the OAuth Server metadata
     respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
@@ -809,8 +809,8 @@ async def test_authentication_flow_server_missing_tool_capabilities(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     # MCP Server returns 401 indicating the client needs to authenticate
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
-        "Authentication required", request=None, response=httpx.Response(401)
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
     )
     # Prepare the OAuth Server metadata
     respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
@@ -1222,12 +1222,12 @@ async def test_hassio_discovery_already_configured(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("side_effect", "expected_reason"),
     [
-        (httpx.TimeoutException("Some timeout"), "timeout_connect"),
+        (httpx2.TimeoutException("Some timeout"), "timeout_connect"),
         (
-            httpx.HTTPStatusError("", request=None, response=httpx.Response(500)),
+            httpx2.HTTPStatusError("", request=None, response=httpx2.Response(500)),
             "cannot_connect",
         ),
-        (httpx.HTTPError("Some HTTP error"), "cannot_connect"),
+        (httpx2.HTTPError("Some HTTP error"), "cannot_connect"),
         (Exception, "unknown"),
     ],
 )
@@ -1284,8 +1284,8 @@ async def test_hassio_discovery_requires_authentication(
         context={"source": config_entries.SOURCE_HASSIO},
         data=ADDON_DISCOVERY_INFO,
     )
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
-        "Authentication required", request=None, response=httpx.Response(401)
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
     )
     respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
         return_value=OAUTH_SERVER_METADATA_RESPONSE
@@ -1314,8 +1314,8 @@ async def test_hassio_discovery_authentication_flow(
         context={"source": config_entries.SOURCE_HASSIO},
         data=ADDON_DISCOVERY_INFO,
     )
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
-        "Authentication required", request=None, response=httpx.Response(401)
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
     )
     respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
         return_value=OAUTH_SERVER_METADATA_RESPONSE

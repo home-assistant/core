@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-import httpx
+import httpx2
 from openai import AuthenticationError, OpenAIError
 import pytest
 
@@ -65,9 +65,9 @@ async def test_second_account(
         (
             AuthenticationError(
                 message="invalid key",
-                response=httpx.Response(
+                response=httpx2.Response(
                     status_code=401,
-                    request=httpx.Request(method="POST", url="https://example.com"),
+                    request=httpx2.Request(method="POST", url="https://example.com"),
                 ),
                 body=None,
             ),
@@ -277,9 +277,9 @@ async def test_reauth_flow(
         (
             AuthenticationError(
                 message="invalid key",
-                response=httpx.Response(
+                response=httpx2.Response(
                     status_code=401,
-                    request=httpx.Request(method="POST", url="https://example.com"),
+                    request=httpx2.Request(method="POST", url="https://example.com"),
                 ),
                 body=None,
             ),
@@ -349,9 +349,9 @@ async def test_reconfigure_flow(
         (
             AuthenticationError(
                 message="invalid key",
-                response=httpx.Response(
+                response=httpx2.Response(
                     status_code=401,
-                    request=httpx.Request(method="POST", url="https://example.com"),
+                    request=httpx2.Request(method="POST", url="https://example.com"),
                 ),
                 body=None,
             ),
