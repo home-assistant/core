@@ -1,6 +1,5 @@
 """The Google Generative AI Conversation integration."""
 
-from functools import partial
 from types import MappingProxyType
 
 from google.genai import Client
@@ -35,6 +34,7 @@ from .const import (
     RECOMMENDED_TTS_OPTIONS,
     TIMEOUT_MILLIS,
 )
+from .helpers import warmup_gaos
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (
@@ -47,9 +47,18 @@ PLATFORMS = (
 type GoogleGenerativeAIConfigEntry = ConfigEntry[Client]
 
 
+def _create_client(api_key: str) -> Client:
+    """Create a Google GenAI Client and warm up lazy modules in the executor."""
+    warmup_gaos()
+    client = Client(api_key=api_key)
+    warmup_gaos(client)
+    return client
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Google Generative AI Conversation."""
 
+    await hass.async_add_executor_job(warmup_gaos)
     await async_migrate_integration(hass)
 
     return True
@@ -62,7 +71,7 @@ async def async_setup_entry(
 
     try:
         client = await hass.async_add_executor_job(
-            partial(Client, api_key=entry.data[CONF_API_KEY])
+            _create_client, entry.data[CONF_API_KEY]
         )
         await client.aio.models.get(
             model=RECOMMENDED_CHAT_MODEL,

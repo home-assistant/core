@@ -1,10 +1,13 @@
 """Tests for the Google Generative AI Conversation helpers."""
 
+from unittest.mock import Mock
+
 import pytest
 
 from homeassistant.components.google_generative_ai_conversation.helpers import (
     _parse_audio_mime_type,
     convert_to_wav,
+    warmup_gaos,
 )
 from homeassistant.exceptions import HomeAssistantError
 
@@ -48,3 +51,12 @@ def test_convert_to_wav_raw_pcm() -> None:
     assert converted.startswith(b"RIFF")
     assert b"WAVE" in converted
     assert raw_pcm in converted
+
+
+def test_warmup_gaos() -> None:
+    """Test that warmup_gaos executes and warms up gaos modules."""
+    mock_client = Mock()
+    warmup_gaos(mock_client)
+    _ = mock_client.aio.interactions
+    # Second call should be idempotent
+    warmup_gaos(mock_client)

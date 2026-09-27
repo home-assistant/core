@@ -2,13 +2,68 @@
 
 from contextlib import suppress
 from dataclasses import dataclass
+from functools import cache
+import importlib
 import io
+import pkgutil
+import sys
 from typing import Any, Literal
 import wave
 
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import LOGGER
+
+
+@cache
+def _warmup_gaos_once() -> None:
+    """Pre-populate google.genai._gaos dynamic imports in executor once."""
+    with suppress(Exception):
+        import google.genai._gaos  # noqa: PLC0415
+        import google.genai._gaos.utils.dynamic_imports as di  # noqa: PLC0415
+
+        orig_lazy_getattr = di.lazy_getattr
+
+        def _caching_lazy_getattr(
+            attr_name: str,
+            *,
+            package: str,
+            dynamic_imports: dict[str, str],
+            sub_packages: list[str] | None = None,
+        ) -> Any:
+            val = orig_lazy_getattr(
+                attr_name,
+                package=package,
+                dynamic_imports=dynamic_imports,
+                sub_packages=sub_packages,
+            )
+            if package in sys.modules:
+                setattr(sys.modules[package], attr_name, val)
+            return val
+
+        di.lazy_getattr = _caching_lazy_getattr
+
+        for _, name, _ in pkgutil.walk_packages(
+            google.genai._gaos.__path__,  # noqa: SLF001
+            google.genai._gaos.__name__ + ".",  # noqa: SLF001
+        ):
+            with suppress(Exception):
+                mod = importlib.import_module(name)
+                if hasattr(mod, "_dynamic_imports"):
+                    for attr in list(mod._dynamic_imports.keys()):  # noqa: SLF001
+                        setattr(mod, attr, getattr(mod, attr))
+                if hasattr(mod, "_sub_packages") and mod._sub_packages:  # noqa: SLF001
+                    for subpkg in mod._sub_packages:  # noqa: SLF001
+                        setattr(mod, subpkg, getattr(mod, subpkg))
+
+
+def warmup_gaos(client: Any = None) -> None:
+    """Pre-populate google.genai._gaos dynamic imports in executor to prevent blocking import_module in event loop."""
+    _warmup_gaos_once()
+
+    if client is not None:
+        with suppress(Exception):
+            _ = client.aio.interactions
 
 
 @dataclass(slots=True)

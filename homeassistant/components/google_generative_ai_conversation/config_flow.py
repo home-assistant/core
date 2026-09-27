@@ -1,7 +1,6 @@
 """Config flow for Google Generative AI Conversation integration."""
 
 from collections.abc import Mapping
-from functools import partial
 import logging
 from typing import Any, cast, override
 
@@ -74,6 +73,7 @@ from .const import (
     RECOMMENDED_USE_INTERACTIONS_API,
     TIMEOUT_MILLIS,
 )
+from .helpers import warmup_gaos
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,14 +84,20 @@ STEP_API_DATA_SCHEMA = probatio.Schema(
 )
 
 
+def _create_client(api_key: str) -> genai.Client:
+    """Create a Google GenAI Client and warm up lazy modules in the executor."""
+    warmup_gaos()
+    client = genai.Client(api_key=api_key)
+    warmup_gaos(client)
+    return client
+
+
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    client = await hass.async_add_executor_job(
-        partial(genai.Client, api_key=data[CONF_API_KEY])
-    )
+    client = await hass.async_add_executor_job(_create_client, data[CONF_API_KEY])
     await client.aio.models.list(
         config={
             "http_options": {
