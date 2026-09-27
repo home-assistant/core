@@ -4,7 +4,15 @@ from pathlib import Path
 import re
 from unittest.mock import AsyncMock, patch
 
-from anthropic.types import Message, TextBlock, Usage
+from anthropic.types import (
+    Message,
+    MessageDeltaUsage,
+    RawMessageDeltaEvent,
+    StopReason,
+    TextBlock,
+    Usage,
+)
+from anthropic.types.raw_message_delta_event import Delta
 from freezegun import freeze_time
 import probatio
 import pytest
@@ -106,6 +114,87 @@ async def test_stream_wrong_type(
             entity_id="ai_task.claude_ai_task",
             instructions="Generate test data",
         )
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    ("stop_reason", "translation_key", "message"),
+    [
+        pytest.param(
+            "max_tokens",
+            "response_max_tokens",
+            "Claude reached the output token limit before completing the response",
+            id="max_tokens",
+        ),
+        pytest.param(
+            "model_context_window_exceeded",
+            "response_context_window_exceeded",
+            "Claude reached the context window limit before completing the response",
+            id="context_window_exceeded",
+        ),
+        pytest.param(
+            "refusal",
+            "api_refusal",
+            "Potential policy violation detected",
+            id="refusal",
+        ),
+        pytest.param(
+            "stop_sequence",
+            "response_stop_sequence",
+            "Claude stopped after encountering a stop sequence",
+            id="stop_sequence",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("structure", "response_text"),
+    [
+        pytest.param(None, "The generated data starts with", id="plain"),
+        pytest.param(
+            probatio.Schema(
+                {
+                    probatio.Required("characters"): selector.selector(
+                        {"text": {"multiple": True}}
+                    )
+                }
+            ),
+            '{"characters": ["Mario',
+            id="structured",
+        ),
+    ],
+)
+async def test_generate_data_stop_reason_error(
+    hass: HomeAssistant,
+    mock_create_stream: AsyncMock,
+    stop_reason: StopReason,
+    translation_key: str,
+    message: str,
+    structure: probatio.Schema | None,
+    response_text: str,
+) -> None:
+    """Reject unsuccessful stop reasons before parsing structured data."""
+    mock_create_stream.return_value = [
+        [
+            *create_content_block(0, [response_text]),
+            RawMessageDeltaEvent(
+                type="message_delta",
+                delta=Delta(stop_reason=stop_reason),
+                usage=MessageDeltaUsage(output_tokens=10),
+            ),
+        ]
+    ]
+
+    with pytest.raises(HomeAssistantError, match=re.escape(message)) as exc_info:
+        await ai_task.async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.claude_ai_task",
+            instructions="Generate test data",
+            structure=structure,
+        )
+
+    assert exc_info.value.translation_key == translation_key
+    mock_create_stream.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("mock_init_component")

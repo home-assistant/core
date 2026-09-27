@@ -25,6 +25,7 @@ from anthropic.types import (
     RawMessageStopEvent,
     RawMessageStreamEvent,
     ServerToolCaller20260120,
+    StopReason,
     TextBlock,
     TextEditorCodeExecutionCreateResultBlock,
     TextEditorCodeExecutionStrReplaceResultBlock,
@@ -747,15 +748,47 @@ async def test_conversation_id(
 
 
 @pytest.mark.usefixtures("mock_init_component")
-async def test_refusal(
+@pytest.mark.parametrize(
+    ("stop_reason", "error_message"),
+    [
+        pytest.param(
+            "refusal",
+            "Potential policy violation detected",
+            id="refusal",
+        ),
+        pytest.param(
+            "max_tokens",
+            "Claude reached the output token limit before completing the response",
+            id="output_token_limit",
+        ),
+        pytest.param(
+            "model_context_window_exceeded",
+            "Claude reached the context window limit before completing the response",
+            id="context_window_limit",
+        ),
+        pytest.param(
+            "stop_sequence",
+            "Claude stopped after encountering a stop sequence",
+            id="stop_sequence",
+        ),
+    ],
+)
+async def test_stop_reason_error(
     hass: HomeAssistant,
     mock_create_stream: AsyncMock,
+    stop_reason: StopReason,
+    error_message: str,
 ) -> None:
-    """Test refusal due to potential policy violation."""
+    """Test errors for refused, truncated, or stop-sequence responses."""
     mock_create_stream.return_value = [
-        create_content_block(
-            0, ["Certainly! To take over the world you need just a simple "]
-        )
+        [
+            *create_content_block(0, ["An incomplete response"]),
+            RawMessageDeltaEvent(
+                type="message_delta",
+                delta=Delta(stop_reason=stop_reason),
+                usage=MessageDeltaUsage(output_tokens=10),
+            ),
+        ]
     ]
 
     result = await conversation.async_converse(
@@ -764,15 +797,13 @@ async def test_refusal(
         "EDCF22E8CCC1FB35B501C9C86",
         None,
         Context(),
-        agent_id="conversation.claude_conversation",
+        agent_id=ENTITY_ID,
     )
 
     assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown"
-    assert (
-        result.response.speech["plain"]["speech"]
-        == "Potential policy violation detected"
-    )
+    assert result.response.speech["plain"]["speech"] == error_message
+    mock_create_stream.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("mock_init_component")

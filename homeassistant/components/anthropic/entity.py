@@ -852,10 +852,6 @@ class AnthropicDeltaStream:
             self._content_details.container = delta.container
         if delta.stop_reason is not None:
             self.stop_reason = delta.stop_reason
-        if delta.stop_reason == "refusal":
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="api_refusal"
-            )
 
     def on_message_stop_event(self) -> None:
         """Handle RawMessageStopEvent."""
@@ -1180,7 +1176,24 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                     },
                 ) from err
 
-            if delta_stream.stop_reason == "pause_turn":
+            if (stop_reason := delta_stream.stop_reason) in (
+                "refusal",
+                "max_tokens",
+                "model_context_window_exceeded",
+                "stop_sequence",
+            ):
+                coordinator.async_set_updated_data(coordinator.data)
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key={
+                        "refusal": "api_refusal",
+                        "max_tokens": "response_max_tokens",
+                        "model_context_window_exceeded": "response_context_window_exceeded",
+                        "stop_sequence": "response_stop_sequence",
+                    }[stop_reason],
+                )
+
+            if stop_reason == "pause_turn":
                 if iteration == max_iterations - 1:
                     coordinator.async_set_updated_data(coordinator.data)
                     raise HomeAssistantError(
