@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import MediaSourceMocks, MediaSourceState
-from .const import DEFAULT_ENTITY_ID, MOCK_MEDIA_DIR_URI_1
+from .const import DEFAULT_ENTITY_ID, MOCK_MEDIA_DIR_URI_1, MOCK_MEDIA_IMAGE_URI_2
 from .helpers import directory, image
 
 from tests.common import Mock, MockConfigEntry
@@ -227,3 +227,30 @@ async def test_first_unavailable(
         )
     state = hass.states.get(DEFAULT_ENTITY_ID)
     assert state and state.state == STATE_UNAVAILABLE
+
+
+async def test_select_image(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_media_source: MediaSourceMocks,
+) -> None:
+    """Test that select_image updates the entity with the selected image."""
+    await _setup_integration(hass, config_entry)
+
+    await hass.services.async_call(
+        DOMAIN,
+        CollectionImageService.SELECT_IMAGE,
+        {
+            ATTR_ENTITY_ID: DEFAULT_ENTITY_ID,
+            CollectionImageServiceArgument.IMAGE: {
+                "media_content_id": MOCK_MEDIA_IMAGE_URI_2,
+                "media_content_type": "image/png",
+            },
+        },
+        blocking=True,
+    )
+
+    args, _kwargs = mock_media_source.resolve.call_args
+    assert args[1] == MOCK_MEDIA_IMAGE_URI_2
+    state = hass.states.get(DEFAULT_ENTITY_ID)
+    assert state and state.state != STATE_UNAVAILABLE

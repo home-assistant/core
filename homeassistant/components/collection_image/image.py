@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 import random
-from typing import Literal, override
+from typing import Any, Literal, override
 
 from homeassistant.components.image import DEFAULT_CONTENT_TYPE, ImageEntity
 from homeassistant.components.media_player import (
@@ -151,6 +151,10 @@ class CollectionImageImageEntity(ImageEntity):
     async def get_previous_image(self, wrap: bool = False) -> None:
         """Get the previous image."""
         await self._get_next_sequential_image(True, wrap)
+
+    async def select_image(self, image: dict[str, Any]) -> None:
+        """Select a specific image."""
+        await self.update_image(image["media_content_id"])
 
     async def _get_image_at_position(self, position: Literal[0, -1]) -> None:
         """Get the first or last image."""

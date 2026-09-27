@@ -43,6 +43,16 @@
       "description": "Update the image entity to the first image in the configured media.",
       "name": "Select first"
     },
+    "select_image": {
+      "description": "Update the image entity to the selected image.",
+      "fields": {
+        "image": {
+          "description": "The image to display.",
+          "name": "Image"
+        }
+      },
+      "name": "Select image"
+    },
     "select_last": {
       "description": "Update the image entity to the last image in the configured media.",
       "name": "Select last"
