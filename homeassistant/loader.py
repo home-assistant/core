@@ -516,7 +516,12 @@ async def async_get_zeroconf(
     hass: HomeAssistant,
 ) -> dict[str, list[ZeroconfMatcher]]:
     """Return cached list of zeroconf types."""
-    zeroconf: dict[str, list[ZeroconfMatcher]] = ZEROCONF.copy()  # type: ignore[assignment]
+    # Copy the lists too, custom integrations append to them below
+    generated_zeroconf = cast(dict[str, list[ZeroconfMatcher]], ZEROCONF)
+    zeroconf = {
+        service_type: list(matchers)
+        for service_type, matchers in generated_zeroconf.items()
+    }
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
