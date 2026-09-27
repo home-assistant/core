@@ -86,7 +86,7 @@ async def test_setup_entry_removes_obsolete_entities_and_devices(
     )
 
     with patch("homeassistant.components.bizkaibus.BizkaibusAPI") as mock_api_class:
-        mock_api_class.return_value.GetTimetable = AsyncMock(return_value=None)
+        mock_api_class.return_value.get_timetable = AsyncMock(return_value=None)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -129,7 +129,7 @@ async def test_setup_entry_removes_obsolete_device(
     )
 
     with patch("homeassistant.components.bizkaibus.BizkaibusAPI") as mock_api_class:
-        mock_api_class.return_value.GetTimetable = AsyncMock(return_value=None)
+        mock_api_class.return_value.get_timetable = AsyncMock(return_value=None)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 

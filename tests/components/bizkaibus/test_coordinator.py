@@ -44,7 +44,7 @@ async def test_coordinator_returns_empty_data_without_timetable(
     hass: HomeAssistant,
 ) -> None:
     """Test a missing timetable produces no arrivals."""
-    api = SimpleNamespace(GetTimetable=AsyncMock(return_value=None))
+    api = SimpleNamespace(get_timetable=AsyncMock(return_value=None))
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_STOP_ID: "1234"})
     entry.add_to_hass(hass)
     coordinator = BizkaibusUpdateCoordinator(hass, api, entry)
