@@ -127,6 +127,7 @@ from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
+    UnitOfMeasurementSelector,
 )
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
@@ -762,6 +763,7 @@ SENSOR_ENTITY_CATEGORY_SELECTOR = SelectSelector(
     )
 )
 SENSOR_STATE_CLASS_SELECTOR = StateClassSelector()
+UNIT_OF_MEASUREMENT_SELECTOR = UnitOfMeasurementSelector()
 STEP_SELECTOR = NumberSelector(NumberSelectorConfig(min=1e-3, step=1e-3))
 SUPPORTED_COLOR_MODES_SELECTOR = SelectSelector(
     SelectSelectorConfig(
@@ -918,49 +920,6 @@ def temperature_step_selector(config: dict[str, Any]) -> Selector:
 
 
 @callback
-def unit_of_measurement_selector(user_data: dict[str, Any | None]) -> Selector:
-    """Return a context based unit of measurement selector."""
-
-    if (state_class := user_data.get(CONF_STATE_CLASS)) in STATE_CLASS_UNITS:
-        return SelectSelector(
-            SelectSelectorConfig(
-                options=[str(uom) for uom in STATE_CLASS_UNITS[state_class]],
-                sort=True,
-                custom_value=True,
-            )
-        )
-
-    if (
-        device_class := user_data.get(CONF_DEVICE_CLASS)
-    ) is None or device_class not in DEVICE_CLASS_UNITS:
-        return TEXT_SELECTOR
-    return SelectSelector(
-        SelectSelectorConfig(
-            options=[str(uom) for uom in DEVICE_CLASS_UNITS[device_class]],
-            sort=True,
-            custom_value=True,
-        )
-    )
-
-
-@callback
-def number_unit_of_measurement_selector(user_data: dict[str, Any | None]) -> Selector:
-    """Return a context based unit of measurement selector for number entities."""
-
-    if (
-        device_class := user_data.get(CONF_DEVICE_CLASS)
-    ) is None or device_class not in NUMBER_DEVICE_CLASS_UNITS:
-        return TEXT_SELECTOR
-    return SelectSelector(
-        SelectSelectorConfig(
-            options=[str(uom) for uom in NUMBER_DEVICE_CLASS_UNITS[device_class]],
-            sort=True,
-            custom_value=True,
-        )
-    )
-
-
-@callback
 def validate(validator: Callable[[Any], Any]) -> Callable[[Any], Any]:
     """Run validator, then return the unmodified input."""
 
@@ -1095,6 +1054,7 @@ def validate_number_platform_config(config: dict[str, Any]) -> dict[str, str]:
         errors[CONF_MIN] = "max_below_min"
         errors[CONF_MAX] = "max_below_min"
 
+    # Existing subentries can still hold the legacy "None" string
     if (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) == "None":
         unit_of_measurement = None
 
@@ -1130,19 +1090,18 @@ def validate_sensor_platform_config(
     ):
         errors[CONF_OPTIONS] = "options_with_enum_device_class"
 
-    unit_of_measurement: str | None = None
-    if (
-        device_class in DEVICE_CLASS_UNITS
-        and (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) is None
-        and errors is not None
-    ):
-        # Do not allow an empty unit of measurement in a subentry data flow
-        errors[CONF_UNIT_OF_MEASUREMENT] = "uom_required_for_device_class"
-        return errors
-
-    if unit_of_measurement == "None":
+    # Existing subentries can still hold the legacy "None" string
+    if (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) == "None":
         unit_of_measurement = None
         config.pop(CONF_UNIT_OF_MEASUREMENT)
+
+    if (
+        device_class in DEVICE_CLASS_UNITS
+        and unit_of_measurement is None
+        and None not in DEVICE_CLASS_UNITS[device_class]
+    ):
+        errors[CONF_UNIT_OF_MEASUREMENT] = "uom_required_for_device_class"
+        return errors
 
     if (
         device_class is not None
@@ -1441,9 +1400,8 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             required=False,
         ),
         CONF_UNIT_OF_MEASUREMENT: PlatformField(
-            selector=number_unit_of_measurement_selector,
+            selector=UNIT_OF_MEASUREMENT_SELECTOR,
             required=False,
-            custom_filtering=True,
         ),
     },
     Platform.SELECT: {},
@@ -1455,9 +1413,8 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             selector=SENSOR_STATE_CLASS_SELECTOR, required=False
         ),
         CONF_UNIT_OF_MEASUREMENT: PlatformField(
-            selector=unit_of_measurement_selector,
+            selector=UNIT_OF_MEASUREMENT_SELECTOR,
             required=False,
-            custom_filtering=True,
         ),
         CONF_SUGGESTED_DISPLAY_PRECISION: PlatformField(
             selector=SUGGESTED_DISPLAY_PRECISION_SELECTOR,
