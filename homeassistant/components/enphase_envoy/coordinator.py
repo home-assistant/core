@@ -137,7 +137,9 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if not self.manual_token:
                 # create config entry task so it will be canceled on unload
                 self.config_entry.async_create_background_task(
-                    self.hass, self._async_try_refresh_token(), f"{name} token refresh"
+                    self.hass,
+                    self._async_try_refresh_token(),
+                    f"{self.name} token refresh",
                 )
                 return
 
@@ -193,7 +195,9 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Proactively check for firmware changes in Envoy."""
         # create config entry task so it will be canceled on unload
         self.config_entry.async_create_background_task(
-            self.hass, self._async_try_refresh_firmware(), "{name} firmware refresh"
+            self.hass,
+            self._async_try_refresh_firmware(),
+            f"{self.name} firmware refresh",
         )
 
     async def _async_try_refresh_firmware(self) -> None:
@@ -244,7 +248,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.config_entry.async_create_background_task(
             self.hass,
             self._async_fetch_and_compare_mac(),
-            "{name} verify envoy mac address",
+            f"{self.name} verify envoy mac address",
         )
 
     async def _async_fetch_and_compare_mac(self) -> None:
