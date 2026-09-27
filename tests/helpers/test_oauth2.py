@@ -1,5 +1,7 @@
 """Tests for the OAuth 2.0 helpers."""
 
+from unittest.mock import AsyncMock, Mock, patch
+
 from multidict import CIMultiDict
 import pytest
 
@@ -97,17 +99,27 @@ async def test_token_request_passes_headers(
     }
 
 
-async def test_token_request_refuses_redirect(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_token_request_refuses_redirect(hass: HomeAssistant) -> None:
     """Test a redirect is an error when redirects are not followed."""
-    aioclient_mock.post(TOKEN_URL, status=307, headers={"Location": "https://evil"})
+    # The aiohttp mock ignores allow_redirects, so the session is patched to see it.
+    response = Mock(status=307, request_info=Mock(), history=(), headers={})
+    session = Mock(post=AsyncMock(return_value=response))
 
-    with pytest.raises(OAuth2TokenRequestError) as exc_info:
+    with (
+        patch(
+            "homeassistant.helpers.oauth2.async_get_clientsession",
+            return_value=session,
+        ),
+        pytest.raises(OAuth2TokenRequestError) as exc_info,
+    ):
         await oauth2.async_token_request(
             hass, TOKEN_URL, {}, domain="test", allow_redirects=False
         )
 
+    session.post.assert_awaited_once_with(
+        TOKEN_URL, data={}, headers=None, allow_redirects=False
+    )
+    response.release.assert_called_once()
     assert exc_info.value.status == 307
     assert not isinstance(exc_info.value, OAuth2TokenRequestReauthError)
 

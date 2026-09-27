@@ -156,6 +156,7 @@ async def async_token_request(
                 "Token request for %s failed (%s): %s", domain, resp.status, detail
             )
         elif not allow_redirects and 300 <= resp.status < 400:
+            resp.release()
             raise ClientResponseError(
                 resp.request_info,
                 resp.history,
