@@ -1025,3 +1025,68 @@ async def test_dataset_write_while_the_mesh_is_migrating(
     assert "300 seconds" in msg["error"]["message"]
     set_enabled_mock.assert_not_called()
     set_channel_mock.assert_not_called()
+
+
+async def test_a_channel_change_records_its_propagation_window(
+    hass: HomeAssistant,
+    otbr_config_entry_thread: None,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """A channel change is recorded as a migration in flight for its mesh.
+
+    A second border router on the mesh has not learned it yet; a migration
+    through that one would otherwise be written into the change's delay.
+    """
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_extended_address",
+            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset",
+            return_value=python_otbr_api.ActiveDataSet(
+                channel=15,
+                extended_pan_id="ABCD1234ABCD1234",
+                active_timestamp=python_otbr_api.Timestamp(seconds=5, ticks=0),
+            ),
+        ),
+        patch("python_otbr_api.OTBR.set_channel"),
+    ):
+        msg = await _dataset_write(hass, websocket_client, "set_channel")
+
+    assert msg["success"]
+    issued = await async_get_issued_timestamps(hass)
+    # Stamped the way the library stamps it: one second above the network.
+    assert issued.get("abcd1234abcd1234") == (6, 0)
+    assert issued.seconds_in_flight("abcd1234abcd1234") == 300
+
+
+async def test_a_refused_channel_change_records_nothing(
+    hass: HomeAssistant,
+    otbr_config_entry_thread: None,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """A channel change the router refused leaves no window behind."""
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_extended_address",
+            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset",
+            return_value=python_otbr_api.ActiveDataSet(
+                channel=15, extended_pan_id="ABCD1234ABCD1234"
+            ),
+        ),
+        patch(
+            "python_otbr_api.OTBR.set_channel",
+            side_effect=python_otbr_api.PendingDatasetRejectedError("not attached"),
+        ),
+    ):
+        msg = await _dataset_write(hass, websocket_client, "set_channel")
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "set_channel_failed"
+    assert "not attached" in msg["error"]["message"]
+    issued = await async_get_issued_timestamps(hass)
+    assert issued.record("abcd1234abcd1234") is None

@@ -17,7 +17,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from . import homeassistant_hardware, websocket_api
-from .const import DOMAIN
+from .const import API_TIMEOUT, DOMAIN
 from .services import async_setup_services
 from .types import OTBRConfigEntry
 from .util import (
@@ -44,7 +44,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool:
     """Set up an Open Thread Border Router config entry."""
-    api = python_otbr_api.OTBR(entry.data["url"], async_get_clientsession(hass), 10)
+    api = python_otbr_api.OTBR(
+        entry.data["url"], async_get_clientsession(hass), API_TIMEOUT
+    )
 
     otbrdata = OTBRData(entry.data["url"], api, entry.entry_id)
     try:

@@ -27,7 +27,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
-from .const import DEFAULT_CHANNEL, DOMAIN
+from .const import API_TIMEOUT, DEFAULT_CHANNEL, DOMAIN
 from .util import (
     async_get_dataset_lock,
     compose_default_network_name,
@@ -155,7 +155,9 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         Will raise if the router's border agent id is in use by another config entry.
         Returns the router's border agent id.
         """
-        api = python_otbr_api.OTBR(otbr_url, async_get_clientsession(self.hass), 10)
+        api = python_otbr_api.OTBR(
+            otbr_url, async_get_clientsession(self.hass), API_TIMEOUT
+        )
         border_agent_id = await api.get_border_agent_id()
         _LOGGER.debug("border agent id for url %s: %s", otbr_url, border_agent_id.hex())
 

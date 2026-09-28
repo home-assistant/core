@@ -371,7 +371,7 @@ async def websocket_set_channel(
             return
 
         try:
-            await data.set_channel(channel)
+            await data.set_channel(hass, channel)
         except HomeAssistantError as exc:
             connection.send_error(msg["id"], "set_channel_failed", str(exc))
             return

@@ -68,12 +68,14 @@ async def async_change_channel(
 ) -> None:
     """Set the channel to be used.
 
-    Does nothing if not configured.
+    Does nothing if not configured. Refused, like every dataset write, while
+    the mesh is mid-change: a pending dataset is in place, or a migration
+    started from Home Assistant is still propagating.
     """
     # Held across the write and the read-back, so the dataset imported below
     # is the one this call created.
     async with async_get_dataset_lock(hass):
-        await data.set_channel(channel, delay)
+        await data.set_channel(hass, channel, delay)
 
         # Import the new dataset
         dataset_tlvs = await data.get_pending_dataset_tlvs()

@@ -7,8 +7,10 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
+from aiohttp.client_reqrep import ConnectionKey
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+import python_otbr_api
 from python_otbr_api import tlv_parser
 from python_otbr_api.tlv_parser import DelayTimer, MeshcopTLVType, Timestamp
 
@@ -908,6 +910,7 @@ async def test_channel_change_waits_for_dataset_lock(
     """A channel change cannot write while a migration holds the lock."""
     with (
         patch("python_otbr_api.OTBR.set_channel") as set_channel,
+        patch("python_otbr_api.OTBR.get_active_dataset", return_value=None),
         patch(
             "python_otbr_api.OTBR.get_pending_dataset_tlvs",
             return_value=DATASET_CH16,
@@ -1632,3 +1635,163 @@ async def test_a_source_network_without_an_extended_pan_id_is_refused(
 
     assert exc_info.value.translation_key == "router_dataset_invalid"
     assert not pending_calls(aioclient_mock)
+
+
+async def test_a_router_that_could_not_be_reached_hands_back_the_window(
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """A connection that never came up wrote nothing.
+
+    Such a router cannot be asked what it holds either, and assuming it
+    holds the dataset would refuse every retry for the delay while nothing
+    propagates.
+    """
+    mock_pending_endpoint(aioclient_mock)
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(re.compile(r".*/api/actions$"), status=HTTPStatus.OK)
+    aioclient_mock.get(
+        f"{BASE_URL}/.well-known/thread/br-rest", status=HTTPStatus.NOT_FOUND
+    )
+    unreachable = aiohttp.ClientConnectorError(
+        ConnectionKey("core-silabs-multiprotocol", 8081, False, True, None, None, None),
+        OSError("connection refused"),
+    )
+    # This action's check and the library's find no pending dataset; the
+    # router is gone by the write and stays gone.
+    answers: list[None] = [None, None]
+
+    async def pending_get(method, url, data):
+        if answers:
+            answers.pop()
+            return AiohttpClientMockResponse(method, url, status=HTTPStatus.NO_CONTENT)
+        return AiohttpClientMockResponse(method, url, exc=unreachable)
+
+    aioclient_mock.get(f"{BASE_URL}/node/dataset/pending", side_effect=pending_get)
+    aioclient_mock.put(f"{BASE_URL}/node/dataset/pending", exc=unreachable)
+
+    with pytest.raises(HomeAssistantError):
+        await call_migrate(hass, dataset=TARGET)
+
+    mock_pending_endpoint(aioclient_mock)
+    assert (await call_migrate(hass, dataset=TARGET))["status"] == "migrating"
+
+
+async def test_a_router_that_cannot_be_asked_keeps_the_window(
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A dropped connection over a router that cannot be asked keeps the window.
+
+    The write may have landed, and an answer that would say otherwise is
+    not to be had; refusing retries for the delay is the safe side.
+    """
+    mock_pending_endpoint(aioclient_mock)
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(re.compile(r".*/api/actions$"), status=HTTPStatus.OK)
+    aioclient_mock.get(
+        f"{BASE_URL}/.well-known/thread/br-rest", status=HTTPStatus.NOT_FOUND
+    )
+    answers: list[None] = [None, None]
+
+    async def pending_get(method, url, data):
+        if answers:
+            answers.pop()
+            return AiohttpClientMockResponse(method, url, status=HTTPStatus.NO_CONTENT)
+        return AiohttpClientMockResponse(method, url, exc=aiohttp.ClientError)
+
+    aioclient_mock.get(f"{BASE_URL}/node/dataset/pending", side_effect=pending_get)
+    aioclient_mock.put(f"{BASE_URL}/node/dataset/pending", exc=aiohttp.ClientError)
+
+    with pytest.raises(HomeAssistantError):
+        await call_migrate(hass, dataset=TARGET, delay=600)
+
+    mock_pending_endpoint(aioclient_mock)
+    freezer.tick(595)
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await call_migrate(hass, dataset=TARGET)
+    assert exc_info.value.translation_key == "migration_in_flight"
+    assert exc_info.value.translation_placeholders == {"remaining": "5"}
+
+
+async def test_a_channel_change_marks_the_mesh_as_migrating(
+    hass: HomeAssistant,
+    otbr_config_entry_thread: None,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A channel change through one router is a migration in flight for the mesh.
+
+    A migration through another router on the mesh, which has not learned
+    the change yet, is refused for the delay and stamped above the change
+    once it is over.
+    """
+    mock_pending_endpoint(aioclient_mock)
+    aioclient_mock.get(
+        "/dev/ttyAMA1/node/dataset/pending", status=HTTPStatus.NO_CONTENT
+    )
+    aioclient_mock.put("/dev/ttyAMA1/node/dataset/pending", status=HTTPStatus.CREATED)
+    with (
+        patch("python_otbr_api.OTBR.set_channel"),
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset",
+            return_value=python_otbr_api.ActiveDataSet(
+                channel=16,
+                extended_pan_id="F642646DA209B1C0",
+                active_timestamp=python_otbr_api.Timestamp(seconds=1, ticks=0),
+            ),
+        ),
+    ):
+        await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=300)
+    thread_entry = next(
+        entry
+        for entry in hass.config_entries.async_loaded_entries("otbr")
+        if entry.entry_id != otbr_config_entry_multipan
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await call_migrate(hass, dataset=TARGET, config_entry=thread_entry.entry_id)
+    assert exc_info.value.translation_key == "migration_in_flight"
+    assert exc_info.value.translation_placeholders == {"remaining": "300"}
+    assert not pending_calls(aioclient_mock)
+
+    # A target no newer than the network: only the record separates the stamps.
+    same_age = dict(tlv_parser.parse_tlv(TARGET))
+    same_age[MeshcopTLVType.ACTIVETIMESTAMP] = Timestamp.from_values(
+        MeshcopTLVType.ACTIVETIMESTAMP, seconds=1
+    )
+    freezer.tick(300)
+    await call_migrate(
+        hass,
+        dataset=tlv_parser.encode_tlv(same_age),
+        config_entry=thread_entry.entry_id,
+    )
+    stamp = tlv_parser.parse_tlv(pending_calls(aioclient_mock)[0][2])[
+        MeshcopTLVType.ACTIVETIMESTAMP
+    ]
+    assert stamp.seconds == 3
+
+
+async def test_the_issued_timestamps_are_loaded_once(hass: HomeAssistant) -> None:
+    """Two first uses at once share one record.
+
+    Loading yields to the event loop; a second instance built meanwhile
+    would hold records the first never sees and erases with its next save.
+    """
+
+    async def yielding_load(*args: Any, **kwargs: Any) -> None:
+        await asyncio.sleep(0)
+
+    with patch(
+        "homeassistant.components.otbr.util.Store.async_load",
+        side_effect=yielding_load,
+    ):
+        first, second = await asyncio.gather(
+            async_get_issued_timestamps(hass), async_get_issued_timestamps(hass)
+        )
+
+    assert first is second
