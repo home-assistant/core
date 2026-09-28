@@ -195,30 +195,23 @@ def _rate_periods(
     return rate_periods
 
 
-def _rejected_rate_period_keys(cost_reads: list[CostRead]) -> set[str]:
-    """Return the rate period keys that only appear in rejected reads.
+def _undiscovered_rate_period_keys(
+    cost_reads: list[CostRead], rate_periods: dict[str, _RatePeriodStatistics]
+) -> set[str]:
+    """Return the rate period keys in the reads that _rate_periods left out.
 
-    These are the periods of reads whose breakdown does not add up. They are
-    never created from such reads, but a period that was stored before, from
-    a version of the read that did add up, must still get its zero point so
-    the corrected read replaces the old one.
+    These are the periods only seen in reads whose breakdown does not add up,
+    or only with components that contribute nothing. They are never created
+    from such reads, but a period that was stored before, from a version of
+    the read that did contribute, must still get its zero point so the
+    corrected read replaces the old one.
     """
-    accepted: set[str] = set()
-    rejected: set[str] = set()
-    for cost_read in cost_reads:
-        if not cost_read.read_components:
-            continue
-        if components := _period_components(cost_read):
-            accepted.update(
-                key for c in components if (key := _rate_period_key(c)) is not None
-            )
-            continue
-        rejected.update(
-            key
-            for c in cost_read.read_components
-            if (c.consumption or c.cost) and (key := _rate_period_key(c)) is not None
-        )
-    return rejected - accepted
+    return {
+        key
+        for cost_read in cost_reads
+        for component in cost_read.read_components
+        if (key := _rate_period_key(component)) is not None
+    } - set(rate_periods)
 
 
 def _safe_get_sum(records: list[Any]) -> float:
@@ -674,15 +667,15 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         consumption_unit_class: str,
         consumption_unit: str,
     ) -> None:
-        """Add the stored rate periods that only appear in rejected reads.
+        """Add the stored rate periods that _rate_periods left out.
 
         A period whose only reads in the window stopped adding up after a
-        correction is not found by _rate_periods, so its old points would never
-        be replaced. Such a period is kept if it has stored statistics, so it
-        gets zero points for those reads. A period that was never stored is not
-        created from reads that do not add up.
+        correction, or now report nothing for it, is not found by _rate_periods,
+        so its old points would never be replaced. Such a period is kept if it
+        has stored statistics, so it gets zero points for those reads. A period
+        that was never stored is not created from such reads.
         """
-        for key in _rejected_rate_period_keys(cost_reads) - set(rate_periods):
+        for key in _undiscovered_rate_period_keys(cost_reads, rate_periods):
             rate_period = _rate_period_statistics(
                 key, id_prefix, name_prefix, consumption_unit_class, consumption_unit
             )
