@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
+from midealocal.devices.dc import DeviceAttributes as DCAttributes
 from midealocal.devices.e1 import DeviceAttributes as E1Attributes
 from midealocal.devices.x26 import DeviceAttributes as X26Attributes
 import pytest
@@ -62,10 +63,20 @@ def _x26_device() -> DummyDevice:
     )
 
 
+def _dc_device() -> DummyDevice:
+    return DummyDevice(
+        DeviceType.DC,
+        attributes={
+            DCAttributes.door_warn: True,
+        },
+    )
+
+
 @pytest.mark.parametrize(
     "device",
     [
         pytest.param(_ac_device(), id="ac"),
+        pytest.param(_dc_device(), id="dc"),
         pytest.param(_e1_device(), id="e1"),
         pytest.param(_x26_device(), id="x26"),
     ],

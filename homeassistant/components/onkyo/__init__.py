@@ -53,9 +53,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
     try:
         info = await async_interview(host)
     except TimeoutError as exc:
-        raise ConfigEntryNotReady(f"Timed out interviewing: {host}") from exc
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="interview_timeout",
+            translation_placeholders={"host": host},
+        ) from exc
     except OSError as exc:
-        raise ConfigEntryNotReady(f"Unexpected exception interviewing: {host}") from exc
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="interview_error",
+            translation_placeholders={"host": host},
+        ) from exc
 
     manager = ReceiverManager(hass, entry, info)
 
@@ -75,7 +83,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
         try:
             await error
         except OSError as exc:
-            raise ConfigEntryNotReady(f"Unable to connect to: {host}") from exc
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"host": host},
+            ) from exc
 
     return True
 

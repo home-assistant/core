@@ -982,7 +982,7 @@ class ConfigEntry[_DataT = Any]:
             with async_start_setup(
                 hass, integration=self.domain, group=self.entry_id, phase=setup_phase
             ):
-                result = await component.async_setup_entry(hass, self)
+                result = await component.async_setup_entry(hass, self)  # type: ignore[func-returns-value,assignment]
 
             if not isinstance(result, bool):
                 logger.error(  # type: ignore[unreachable]
@@ -1127,13 +1127,13 @@ class ConfigEntry[_DataT = Any]:
         if domain_is_integration:
             self._async_set_state(hass, ConfigEntryState.UNLOAD_IN_PROGRESS, None)
         try:
-            result = await component.async_unload_entry(hass, self)
+            result = await component.async_unload_entry(hass, self)  # type: ignore[func-returns-value]
 
             assert isinstance(result, bool)
 
             # Only do side effects if we unloaded the integration
-            if domain_is_integration:
-                if result:
+            if domain_is_integration:  # type: ignore[unreachable]
+                if result:  # type: ignore[unused-ignore]
                     await self._async_process_on_unload(hass)
                     if hasattr(self, "runtime_data"):
                         object.__delattr__(self, "runtime_data")
@@ -1153,7 +1153,7 @@ class ConfigEntry[_DataT = Any]:
                     hass, ConfigEntryState.FAILED_UNLOAD, str(exc) or "Unknown error"
                 )
             return False
-        return result
+        return result  # type: ignore[unreachable]
 
     async def async_remove(self, hass: HomeAssistant) -> None:
         """Invoke remove callback on component."""
@@ -1281,13 +1281,13 @@ class ConfigEntry[_DataT = Any]:
             )
             return False
 
-        result = await component.async_migrate_entry(hass, self)
+        result = await component.async_migrate_entry(hass, self)  # type: ignore[func-returns-value]
         if not isinstance(result, bool):
-            self.logger.error(  # type: ignore[unreachable]
+            self.logger.error(
                 "%s.async_migrate_entry did not return boolean", self.domain
             )
             return False
-        if result:
+        if result:  # type: ignore[unreachable]
             hass.config_entries._async_schedule_save()  # noqa: SLF001
 
         return result
@@ -2526,6 +2526,30 @@ class ConfigEntries:
         return (
             entry.state is ConfigEntryState.LOADED  # type: ignore[comparison-overlap]
         )
+
+    async def async_retry_migration(self, entry_id: str) -> None:
+        """Retry migration for a config entry.
+
+        This is only intended for repair flows created to handle
+        non-recoverable migration errors.
+        """
+        entry = self.async_get_known_entry(entry_id)
+        if entry.state is not ConfigEntryState.MIGRATION_ERROR:
+            raise OperationNotAllowed(
+                f"The config entry '{entry.title}' ({entry.domain}) with entry_id"
+                f" '{entry.entry_id}' cannot retry the migration as it is not in the"
+                f" state {ConfigEntryState.MIGRATION_ERROR} but is in the state {entry.state}"
+            )
+        if entry.disabled_by:
+            raise OperationNotAllowed(
+                f"The config entry '{entry.title}' ({entry.domain}) with entry_id"
+                f" '{entry.entry_id}' cannot retry the migration as it is disabled by"
+                f" {entry.disabled_by}. Please enable the config entry and retry."
+            )
+
+        # Config entry was never loaded so we can set state and start setup to try again
+        entry._async_set_state(self.hass, ConfigEntryState.NOT_LOADED, None)  # noqa: SLF001
+        await self.async_setup(entry_id)
 
     async def async_unload(self, entry_id: str, _lock: bool = True) -> bool:
         """Unload a config entry."""

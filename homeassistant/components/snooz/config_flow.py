@@ -5,7 +5,11 @@ from dataclasses import dataclass
 from typing import Any, override
 
 import probatio
-from pysnooz.advertisement import SnoozAdvertisementData
+from pysnooz import (
+    SnoozAdvertisementData,
+    get_device_display_name,
+    parse_snooz_advertisement,
+)
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -30,6 +34,11 @@ class DiscoveredSnooz:
     info: BluetoothServiceInfo
     device: SnoozAdvertisementData
 
+    @property
+    def display_name(self) -> str:
+        """Return the display name."""
+        return get_device_display_name(self.info.name, self.info.address)
+
 
 class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Snooz."""
@@ -49,8 +58,7 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the bluetooth discovery step."""
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
-        device = SnoozAdvertisementData()
-        if not device.supported(discovery_info):
+        if (device := parse_snooz_advertisement(discovery_info)) is None:
             return self.async_abort(reason="not_supported")
         self._discovery = DiscoveredSnooz(discovery_info, device)
         return await self.async_step_bluetooth_confirm()
@@ -68,8 +76,7 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._create_snooz_entry(self._discovery)
 
         self._set_confirm_only()
-        assert self._discovery.device.display_name
-        placeholders = {"name": self._discovery.device.display_name}
+        placeholders = {"name": self._discovery.display_name}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
             step_id="bluetooth_confirm", description_placeholders=placeholders
@@ -104,12 +111,9 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
             address = info.address
             if address in configured_addresses:
                 continue
-            device = SnoozAdvertisementData()
-            if device.supported(info):
-                assert device.display_name
-                self._discovered_devices[device.display_name] = DiscoveredSnooz(
-                    info, device
-                )
+            if (device := parse_snooz_advertisement(info)) is not None:
+                discovered = DiscoveredSnooz(info, device)
+                self._discovered_devices[discovered.display_name] = discovered
 
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
@@ -121,10 +125,7 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
                     # Name field is no longer allowed in config flow schemas
                     # pylint: disable-next=home-assistant-config-flow-name-field
                     probatio.Required(CONF_NAME): probatio.In(
-                        [
-                            d.device.display_name
-                            for d in self._discovered_devices.values()
-                        ]
+                        [d.display_name for d in self._discovered_devices.values()]
                     )
                 }
             ),
@@ -179,24 +180,27 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="pairing_timeout")
 
     def _create_snooz_entry(self, discovery: DiscoveredSnooz) -> ConfigFlowResult:
-        assert discovery.device.display_name
+        assert discovery.device.password is not None
         return self.async_create_entry(
-            title=discovery.device.display_name,
+            title=discovery.display_name,
             data={
                 CONF_ADDRESS: discovery.info.address,
-                CONF_TOKEN: discovery.device.pairing_token,
+                CONF_TOKEN: discovery.device.password,
             },
         )
 
     async def _async_wait_for_pairing_mode(self) -> None:
         """Process advertisements until pairing mode is detected."""
         assert self._discovery
-        device = self._discovery.device
 
         def is_device_in_pairing_mode(
             service_info: BluetoothServiceInfo,
         ) -> bool:
-            return device.supported(service_info) and device.is_pairing
+            device = parse_snooz_advertisement(service_info)
+            if device is None or not device.is_pairing:
+                return False
+            self._discovery = DiscoveredSnooz(service_info, device)
+            return True
 
         await async_process_advertisements(
             self.hass,

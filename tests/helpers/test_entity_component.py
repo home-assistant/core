@@ -28,7 +28,10 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady, Unauthorized
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity_component import EntityComponent, async_update_entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_platforms,
+)
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
@@ -415,9 +418,11 @@ async def test_unload_entry_resets_platform(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids()) == 1
+    assert len(async_get_platforms(hass, "entry_domain")) == 1
 
     assert await component.async_unload_entry(entry)
     assert len(hass.states.async_entity_ids()) == 0
+    assert async_get_platforms(hass, "entry_domain") == []
 
 
 async def test_unload_entry_tolerates_never_loaded(

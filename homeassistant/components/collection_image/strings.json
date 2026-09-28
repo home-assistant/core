@@ -6,6 +6,15 @@
       "selected_media_no_images": "The selected media has no images. Please select a media directory with images."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "media": "[%key:component::collection_image::config::step::user::data::media%]"
+        },
+        "data_description": {
+          "media": "[%key:component::collection_image::config::step::user::data_description::media%]"
+        },
+        "description": "Updates the source media used for the collection."
+      },
       "user": {
         "data": {
           "media": "Media"
@@ -21,6 +30,12 @@
   "exceptions": {
     "image_read_error": {
       "message": "Error reading image from {path}: {error}"
+    },
+    "no_images": {
+      "message": "No image files were found in the configured media. {entity} will now be unavailable. Reload the config entry after correcting the media source."
+    },
+    "unresolvable": {
+      "message": "Selected media id {id} failed to resolve for {entity}."
     }
   },
   "services": {
