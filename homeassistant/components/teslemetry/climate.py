@@ -1,6 +1,5 @@
 """Climate platform for Teslemetry integration."""
 
-from collections.abc import Callable
 from itertools import chain
 from typing import Any, cast, override
 
@@ -76,7 +75,7 @@ async def async_setup_entry(
                     vehicle,
                     TeslemetryClimateSide.DRIVER,
                     entry.runtime_data.scopes,
-                    vehicles_metadata[vehicle.vin].get("config", {}).get("rhd"),
+                    vehicles_metadata[vehicle.vin].get("config", {}).get("rhd", False),
                 )
                 for vehicle in entry.runtime_data.vehicles
             ),
@@ -258,14 +257,13 @@ class TeslemetryStreamingClimateEntity(
         | ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.PRESET_MODE
     )
-    _remove_temperature_request_listener: Callable[[], None]
 
     def __init__(
         self,
         data: TeslemetryVehicleData,
         side: TeslemetryClimateSide,
         scopes: list[Scope],
-        rhd: bool | None,
+        rhd: bool,
     ) -> None:
         """Initialize the climate."""
 
@@ -293,11 +291,7 @@ class TeslemetryStreamingClimateEntity(
             float,
             data.coordinator.data.get("climate_state_max_avail_temp", DEFAULT_MAX_TEMP),
         )
-        self.rhd: bool = (
-            rhd
-            if rhd is not None
-            else data.coordinator.data.get("vehicle_config_rhd", False)
-        )
+        self.rhd = rhd
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -330,24 +324,36 @@ class TeslemetryStreamingClimateEntity(
                 self._async_handle_climate_keeper_mode
             )
         )
-        self._async_listen_temperature_request()
-        # The listener is replaced when the drive side changes
-        # pylint: disable-next=unnecessary-lambda
-        self.async_on_remove(lambda: self._remove_temperature_request_listener())
         self.async_on_remove(
             self.vehicle.stream_vehicle.listen_RightHandDrive(self._async_handle_rhd)
         )
 
-    def _async_listen_temperature_request(self) -> None:
-        """Listen to the temperature request of the side this entity controls."""
-        right = self.rhd if self.side == TeslemetryClimateSide.DRIVER else not self.rhd
-        if right:
-            listen = self.vehicle.stream_vehicle.listen_HvacRightTemperatureRequest
-        else:
-            listen = self.vehicle.stream_vehicle.listen_HvacLeftTemperatureRequest
-        self._remove_temperature_request_listener = listen(
-            self._async_handle_hvac_temperature_request
-        )
+        if self.side == TeslemetryClimateSide.DRIVER:
+            if self.rhd:
+                self.async_on_remove(
+                    self.vehicle.stream_vehicle.listen_HvacRightTemperatureRequest(
+                        self._async_handle_hvac_temperature_request
+                    )
+                )
+            else:
+                self.async_on_remove(
+                    self.vehicle.stream_vehicle.listen_HvacLeftTemperatureRequest(
+                        self._async_handle_hvac_temperature_request
+                    )
+                )
+        elif self.side == TeslemetryClimateSide.PASSENGER:
+            if self.rhd:
+                self.async_on_remove(
+                    self.vehicle.stream_vehicle.listen_HvacLeftTemperatureRequest(
+                        self._async_handle_hvac_temperature_request
+                    )
+                )
+            else:
+                self.async_on_remove(
+                    self.vehicle.stream_vehicle.listen_HvacRightTemperatureRequest(
+                        self._async_handle_hvac_temperature_request
+                    )
+                )
 
     def _async_handle_inside_temp(self, data: float | None) -> None:
         self._attr_current_temperature = data
@@ -372,10 +378,8 @@ class TeslemetryStreamingClimateEntity(
         self.async_write_ha_state()
 
     def _async_handle_rhd(self, data: bool | None) -> None:
-        if data is not None and data != self.rhd:
+        if data is not None:
             self.rhd = data
-            self._remove_temperature_request_listener()
-            self._async_listen_temperature_request()
 
 
 COP_MODES = {

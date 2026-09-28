@@ -1,7 +1,6 @@
 """Test the Teslemetry climate platform."""
 
 from copy import deepcopy
-from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -40,15 +39,10 @@ from .const import (
     COMMAND_OK,
     METADATA,
     METADATA_NOSCOPE,
-    PRODUCTS,
     VEHICLE_DATA_ALT,
 )
 
 VIN = "LRW3F7EK4NC700000"
-
-# The real products response carries no vehicle_config for streaming vehicles
-PRODUCTS_NO_CONFIG = deepcopy(PRODUCTS)
-del PRODUCTS_NO_CONFIG["response"][0]["vehicle_config"]
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -460,29 +454,24 @@ async def test_cabin_overheat_protection_streaming_set_temperature(
 
 
 @pytest.mark.parametrize(
-    ("config", "products", "target_temperature"),
+    ("rhd", "target_temperature"),
     [
-        pytest.param({"rhd": True}, PRODUCTS_NO_CONFIG, 21, id="rhd"),
-        pytest.param({"rhd": False}, PRODUCTS, 22, id="lhd"),
-        pytest.param({}, PRODUCTS, 21, id="fallback_rhd"),
-        pytest.param({}, PRODUCTS_NO_CONFIG, 22, id="fallback_lhd"),
+        pytest.param(True, 21, id="rhd"),
+        pytest.param(False, 22, id="lhd"),
     ],
 )
 async def test_climate_streaming_drive_side(
     hass: HomeAssistant,
     mock_metadata: AsyncMock,
-    mock_products: AsyncMock,
     mock_add_listener: AsyncMock,
-    config: dict[str, bool],
-    products: dict[str, Any],
+    rhd: bool,
     target_temperature: float,
 ) -> None:
     """Test the streaming target temperature follows the driver side from metadata."""
 
     metadata = deepcopy(METADATA)
-    metadata["vehicles"][VIN]["config"] = config
+    metadata["vehicles"][VIN]["config"] = {"rhd": rhd}
     mock_metadata.return_value = metadata
-    mock_products.return_value = products
 
     await setup_platform(hass, [Platform.CLIMATE])
 
@@ -500,33 +489,3 @@ async def test_climate_streaming_drive_side(
 
     state = hass.states.get("climate.test_climate")
     assert state.attributes[ATTR_TEMPERATURE] == target_temperature
-
-
-async def test_climate_streaming_drive_side_changed(
-    hass: HomeAssistant,
-    mock_metadata: AsyncMock,
-    mock_products: AsyncMock,
-    mock_add_listener: AsyncMock,
-) -> None:
-    """Test a streamed drive side switches the temperature request followed."""
-
-    metadata = deepcopy(METADATA)
-    metadata["vehicles"][VIN]["config"] = {"rhd": False}
-    mock_metadata.return_value = metadata
-    mock_products.return_value = PRODUCTS_NO_CONFIG
-
-    await setup_platform(hass, [Platform.CLIMATE])
-
-    for data in (
-        {Signal.RIGHT_HAND_DRIVE: True},
-        {Signal.HVAC_RIGHT_TEMPERATURE_REQUEST: 21},
-        # The left side is the passenger now, so this is ignored
-        {Signal.HVAC_LEFT_TEMPERATURE_REQUEST: 22},
-    ):
-        mock_add_listener.send(
-            {"vin": VIN, "data": data, "createdAt": "2024-10-04T10:45:17.537Z"}
-        )
-        await hass.async_block_till_done()
-
-    state = hass.states.get("climate.test_climate")
-    assert state.attributes[ATTR_TEMPERATURE] == 21
