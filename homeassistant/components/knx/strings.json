@@ -1390,7 +1390,7 @@
         "name": {
           "label": "Project name"
         },
-        "title": "ETS Project data",
+        "title": "ETS project data",
         "tool_version": {
           "label": "Tool version"
         },
