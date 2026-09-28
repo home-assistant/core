@@ -1,0 +1,43 @@
+{
+  "applianceId": "900277470043000491100106",
+  "connectionState": "Connected",
+  "status": "enabled",
+  "properties": {
+    "reported": {
+      "availableLanguages": [
+        "deu",
+        "eng",
+        "fra",
+        "pol",
+        "spa",
+        "kor",
+        "zht",
+        "zhs",
+        "jpn",
+        "ces",
+        "ita",
+        "rus"
+      ],
+      "capabilities": {
+        "CustomPlay": {},
+        "FreezeMapOnDemand": {},
+        "InteractiveMap": {},
+        "MultipleScheduledCleaningsPerDay": {},
+        "PowerLevels": {},
+        "PowerZones": {}
+      },
+      "batteryStatus": 6,
+      "robotStatus": 10,
+      "messageList": {
+        "messages": []
+      },
+      "dustbinStatus": "connected",
+      "platform": "1.01",
+      "applianceName": "Robot vacuum",
+      "firmwareVersion": "44.9",
+      "language": "eng",
+      "mute": true,
+      "powerMode": 2
+    }
+  }
+}

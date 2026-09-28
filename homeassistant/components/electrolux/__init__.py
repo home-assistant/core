@@ -26,7 +26,7 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import CONF_REFRESH_TOKEN, DOMAIN, NEW_APPLIANCE_SIGNAL, USER_AGENT
@@ -35,6 +35,8 @@ from .coordinator import (
     ElectroluxData,
     ElectroluxDataUpdateCoordinator,
 )
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
@@ -47,6 +49,7 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.NUMBER,
     Platform.SENSOR,
+    Platform.VACUUM,
 ]
 
 
@@ -75,9 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -
 
     async def check_for_new_devices_callback() -> None:
         """Trigger _check_for_new_devices asynchronously."""
-        await _check_for_new_devices(
-            hass, entry, client, on_livestream_opening_callback_list
-        )
+        await _check_for_new_devices(hass, entry, client)
 
     on_livestream_opening_callback_list.append(check_for_new_devices_callback)
 
@@ -107,6 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -
         appliances=appliances,
         coordinators=coordinators,
         sse_task=sse_task,
+        on_livestream_opening_callback_list=on_livestream_opening_callback_list,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -162,12 +164,14 @@ async def _check_for_new_devices(
     hass: HomeAssistant,
     entry: ElectroluxConfigEntry,
     client: ApplianceClient,
-    on_livestream_opening_callback_list: list[Callable[[], Awaitable[None]]],
 ) -> None:
     """Fetch appliances from API and trigger discovery for any new ones."""
     _LOGGER.info("Checking for new devices")
 
     coordinators = entry.runtime_data.coordinators
+    on_livestream_opening_callback_list = (
+        entry.runtime_data.on_livestream_opening_callback_list
+    )
     appliances = await fetch_appliance_data(client)
     entry.runtime_data.appliances = appliances
 

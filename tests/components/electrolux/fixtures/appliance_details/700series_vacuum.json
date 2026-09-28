@@ -1,0 +1,165 @@
+{
+  "applianceInfo": {
+    "brand": "ELECTROLUX",
+    "colour": "DENIMBLUE_SOLID",
+    "deviceType": "ROBOTIC_VACUUM_CLEANER",
+    "model": "HYGENIC600",
+    "pnc": "900402068",
+    "serialNumber": "22400095",
+    "variant": "TM2"
+  },
+  "capabilities": {
+    "batteryStatus": {
+      "access": "read",
+      "type": "int",
+      "max": 100,
+      "min": 1
+    },
+    "cleaningMode": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "notSet": {},
+        "globalClean": {},
+        "edgeClean": {},
+        "pointClean": {},
+        "returnToCharger": {}
+      }
+    },
+    "state": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "idle": {},
+        "inProgress": {},
+        "paused": {},
+        "goingHome": {},
+        "sleeping": {}
+      }
+    },
+    "chargingStatus": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "charging": {},
+        "fullyCharged": {},
+        "idle": {}
+      }
+    },
+    "vacuumMode": {
+      "access": "readwrite",
+      "type": "string",
+      "schedulable": true,
+      "values": {
+        "quiet": {},
+        "energySaving": {},
+        "standard": {},
+        "powerful": {},
+        "maxPower": {}
+      }
+    },
+    "waterPumpRate": {
+      "access": "readwrite",
+      "type": "string",
+      "default": "medium",
+      "schedulable": true,
+      "values": {
+        "off": {},
+        "low": {},
+        "medium": {},
+        "high": {},
+        "max": {}
+      }
+    },
+    "binTank": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "none": {},
+        "dustBox": {},
+        "waterTank": {},
+        "both": {}
+      }
+    },
+    "mopInstalled": {
+      "access": "read",
+      "type": "boolean",
+      "values": {
+        "false": {},
+        "true": {}
+      },
+      "triggers": [
+        {
+          "action": {
+            "waterPumpRate": {
+              "access": "readwrite",
+              "type": "string",
+              "disabled": true
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "false",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "waterPumpRate": {
+              "access": "readwrite",
+              "type": "string",
+              "default": "medium",
+              "values": {
+                "off": {},
+                "low": {},
+                "medium": {},
+                "high": {},
+                "max": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "true",
+            "operator": "eq"
+          }
+        }
+      ]
+    },
+    "cleaningCommand": {
+      "access": "readwrite",
+      "type": "string",
+      "schedulable": true,
+      "values": {
+        "startGlobalClean": {},
+        "startEdgeClean": {},
+        "startPointClean": {},
+        "startGoToCharger": {},
+        "pauseClean": {},
+        "resumeClean": {},
+        "stopClean": {}
+      }
+    },
+    "findMe": {
+      "access": "readwrite"
+    },
+    "faultCode": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "noFault": {},
+        "batteryLowPercentage": {},
+        "batteryNotChargedEnough": {},
+        "dustbinNotInPlace": {},
+        "isOnUnevenSurface": {},
+        "stuckOfCliffSensor": {},
+        "stuckFailedToEscape": {},
+        "frontJammedOrCollisionSensorDirty": {},
+        "rollerBrushStuck": {},
+        "canNotChargeOfLowVoltage": {},
+        "canNotFindCharger": {},
+        "canNotCharge": {}
+      }
+    }
+  }
+}
