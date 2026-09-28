@@ -22,15 +22,6 @@ from .utils import async_remove_entities, async_update_unique_id
 PARALLEL_UPDATES = 1
 
 
-def _dnd_is_on(
-    coordinator: AmazonDevicesCoordinator,
-    serial_num: str,
-    entity_description_key: str,
-) -> bool:
-    """Return the local DND state."""
-    return coordinator.dnd_states.get(serial_num, False)
-
-
 def _communication_is_on(
     coordinator: AmazonDevicesCoordinator,
     serial_num: str,
@@ -41,50 +32,6 @@ def _communication_is_on(
         coordinator.data[serial_num].communication_settings[entity_description_key]
         == "ON"
     )
-
-
-def _dnd_is_available(
-    coordinator: AmazonDevicesCoordinator,
-    serial_num: str,
-    entity_description_key: str,
-) -> bool:
-    """Return if the DND state is known."""
-    return serial_num in coordinator.dnd_states
-
-
-def _announcements_is_available(
-    coordinator: AmazonDevicesCoordinator,
-    serial_num: str,
-    entity_description_key: str,
-) -> bool:
-    """Return if the announcements setting is known and communications are enabled."""
-    settings = coordinator.data[serial_num].communication_settings
-    return (
-        settings.get(entity_description_key) is not None
-        and settings.get("communications") != "OFF"
-    )
-
-
-def _communications_is_available(
-    coordinator: AmazonDevicesCoordinator,
-    serial_num: str,
-    entity_description_key: str,
-) -> bool:
-    """Return if the communications setting is known."""
-    return (
-        coordinator.data[serial_num].communication_settings.get(entity_description_key)
-        is not None
-    )
-
-
-def _update_dnd_state(
-    coordinator: AmazonDevicesCoordinator,
-    serial_num: str,
-    entity_description_key: str,
-    state: bool,
-) -> None:
-    """Update the local DND state."""
-    coordinator.set_dnd_state(serial_num, state)
 
 
 def _update_communication_state(
@@ -112,10 +59,16 @@ class AmazonSwitchEntityDescription(SwitchEntityDescription):
 DND_SWITCH: Final = AmazonSwitchEntityDescription(
     key="dnd",
     translation_key="do_not_disturb",
-    is_on_fn=_dnd_is_on,
-    is_available_fn=_dnd_is_available,
+    is_on_fn=lambda coordinator, serial_num, _: coordinator.dnd_states.get(
+        serial_num, False
+    ),
+    is_available_fn=lambda coordinator, serial_num, _: (
+        serial_num in coordinator.dnd_states
+    ),
     method="set_do_not_disturb",
-    update_state_fn=_update_dnd_state,
+    update_state_fn=lambda coordinator, serial_num, _, state: coordinator.set_dnd_state(
+        serial_num, state
+    ),
 )
 COMMUNICATION_SWITCHES: Final = (
     AmazonSwitchEntityDescription(
@@ -123,7 +76,11 @@ COMMUNICATION_SWITCHES: Final = (
         translation_key="announcements",
         entity_category=EntityCategory.CONFIG,
         is_on_fn=_communication_is_on,
-        is_available_fn=_announcements_is_available,
+        is_available_fn=lambda coordinator, serial_num, key: (
+            (settings := coordinator.data[serial_num].communication_settings).get(key)
+            is not None
+            and settings.get("communications") != "OFF"
+        ),
         method="set_announcement_status",
         update_state_fn=_update_communication_state,
     ),
@@ -132,7 +89,9 @@ COMMUNICATION_SWITCHES: Final = (
         translation_key="communications",
         entity_category=EntityCategory.CONFIG,
         is_on_fn=_communication_is_on,
-        is_available_fn=_communications_is_available,
+        is_available_fn=lambda coordinator, serial_num, key: (
+            coordinator.data[serial_num].communication_settings.get(key) is not None
+        ),
         method="set_communication_status",
         update_state_fn=_update_communication_state,
     ),
