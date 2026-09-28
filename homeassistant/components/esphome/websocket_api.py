@@ -6,7 +6,7 @@ from aioesphomeapi.model import SerialProxyPortType
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
@@ -21,7 +21,6 @@ DEVICE_ID = "device_id"
 ZWAVE_JS_DOMAIN = "zwave_js"
 
 _UNAVAILABLE_CAPABILITIES: dict[str, Any] = {
-    "available": False,
     "bluetooth_proxy": {"supported": False},
     "zwave_proxy": {"supported": False, "home_id": 0, "config_entry_id": None},
     "serial_proxies": [],
@@ -53,9 +52,14 @@ def _zwave_js_config_entry_id(hass: HomeAssistant, home_id: int) -> str | None:
     if not home_id:
         return None
     home_id_str = str(home_id)
-    for entry in hass.config_entries.async_entries(ZWAVE_JS_DOMAIN):
-        if entry.disabled_by is not None or entry.source == SOURCE_IGNORE:
-            continue
+    # Ignored and disabled entries are not the configured network. Scan all
+    # matches because the unique ID index returns only the first one, and
+    # compare with str() so legacy integer unique IDs still match.
+    for entry in hass.config_entries.async_entries(
+        ZWAVE_JS_DOMAIN,
+        include_ignore=False,
+        include_disabled=False,
+    ):
         if str(entry.unique_id) == home_id_str:
             return entry.entry_id
     return None
@@ -167,7 +171,6 @@ def get_device_capabilities(
     connection.send_result(
         msg["id"],
         {
-            "available": entry_data.available,
             "bluetooth_proxy": {
                 "supported": bool(
                     device_info.bluetooth_proxy_feature_flags_compat(
