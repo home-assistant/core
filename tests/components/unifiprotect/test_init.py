@@ -9,7 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from uiprotect import NvrError, ProtectApiClient
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import NVR, Bootstrap, CloudAccount, Light, Version
-from uiprotect.data.public_devices import PublicCamera
+from uiprotect.data.public_devices import PublicCamera, PublicNVR
 from uiprotect.exceptions import BadRequest, ClientError, NotAuthorized
 from uiprotect.websocket import WebsocketState
 
@@ -706,6 +706,26 @@ async def test_public_only_setup(
     state = hass.states.get(PUBLIC_ONLY_ALARM_ENTITY_ID)
     assert state is not None
     assert state.state == AlarmControlPanelState.DISARMED
+
+
+async def test_public_only_setup_nameless_nvr(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """A public NVR without name or type keeps a nameless device, not an empty name."""
+    nvr = ufp_public_only.api.public_bootstrap.nvr
+    nvr.name = nvr.device_type = nvr.type = None
+    nvr.display_name = PublicNVR.display_name.fget(nvr)
+
+    await setup_public_only()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIFI_MAC), ufp_public_only.entry.entry_id
+    )
+    assert device is not None
+    assert device.name is None
 
 
 async def test_public_only_forwards_only_public_platforms(

@@ -1258,7 +1258,6 @@ def _make_streamless_public_camera(camera: Camera, **kwargs: Any) -> Mock:
         "option",
         "setter",
         "setter_call",
-        "absent_keys",
     ),
     [
         pytest.param(
@@ -1269,7 +1268,6 @@ def _make_streamless_public_camera(camera: Camera, **kwargs: Any) -> Mock:
             "always",
             "set_hdr_mode",
             ((PublicHdrMode.ON,), {}),
-            {"recording_mode", "infrared", "doorbell_text", "chime_type", "ptz_patrol"},
             id="camera",
         ),
         pytest.param(
@@ -1284,7 +1282,6 @@ def _make_streamless_public_camera(camera: Camera, **kwargs: Any) -> Mock:
             "motion",
             "set_light_mode",
             ((LightModeType.MOTION,), {"enable_at": LightModeEnableType.ALWAYS}),
-            {"paired_camera"},
             id="light",
         ),
     ],
@@ -1303,7 +1300,6 @@ async def test_public_only_select_end_to_end(
     option: str,
     setter: str,
     setter_call: tuple[tuple[Any, ...], dict[str, Any]],
-    absent_keys: set[str],
 ) -> None:
     """A public-only entry builds the migrated selects from the public object.
 
@@ -1318,9 +1314,7 @@ async def test_public_only_select_end_to_end(
     await setup_public_only()
 
     assert ufp_public_only.entry.state is ConfigEntryState.LOADED
-    keys = _select_keys(entity_registry, device.mac)
-    assert key in keys
-    assert not keys & absent_keys
+    assert _select_keys(entity_registry, device.mac) == {key}
 
     entity_id = entity_registry.async_get_entity_id(
         Platform.SELECT, DOMAIN, f"{device.mac}_{key}"
@@ -1347,6 +1341,70 @@ async def test_public_only_select_end_to_end(
     )
     args, kwargs = setter_call
     getattr(public, setter).assert_awaited_once_with(*args, **kwargs)
+
+
+@pytest.mark.parametrize(
+    ("fixture_name", "make", "updated", "key", "before", "after"),
+    [
+        pytest.param(
+            "doorbell",
+            partial(_make_streamless_public_camera, hdr_type=PublicHdrMode.AUTO),
+            partial(_make_streamless_public_camera, hdr_type=PublicHdrMode.OFF),
+            "hdr_mode",
+            "auto",
+            "off",
+            id="camera",
+        ),
+        pytest.param(
+            "light",
+            partial(
+                make_public_light,
+                light_mode=LightModeType.MOTION,
+                light_mode_enable_at=LightModeEnableType.ALWAYS,
+            ),
+            partial(
+                make_public_light,
+                light_mode=LightModeType.MOTION,
+                light_mode_enable_at=LightModeEnableType.DARK,
+            ),
+            "light_motion",
+            "motion",
+            "motion_dark",
+            id="light",
+        ),
+    ],
+)
+async def test_public_only_select_follows_public_ws(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    entity_registry: er.EntityRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    fixture_name: str,
+    make: Callable[[ProtectAdoptableDeviceModel], Mock],
+    updated: Callable[[ProtectAdoptableDeviceModel], Mock],
+    key: str,
+    before: str,
+    after: str,
+) -> None:
+    """A public devices websocket frame updates the select."""
+    device = request.getfixturevalue(fixture_name)
+    store = getattr(ufp_public_only.api.public_bootstrap, f"{device.model.value}s")
+    store[device.id] = make(device)
+
+    await setup_public_only()
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SELECT, DOMAIN, f"{device.mac}_{key}"
+    )
+    assert entity_id
+    assert hass.states.get(entity_id).state == before
+
+    store[device.id] = public = updated(device)
+    ufp_public_only.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == after
 
 
 async def test_public_only_select_sensor_has_none(
@@ -1453,6 +1511,41 @@ async def test_public_only_select_nvr_arm_profile(
         blocking=True,
     )
     ufp_public_only.api.set_current_arm_profile_public.assert_awaited_once_with("p1")
+
+
+async def test_public_only_select_nvr_arm_profile_ws_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """An NVR devices websocket frame updates the arm profile select."""
+    pb = ufp_public_only.api.public_bootstrap
+    pb.arm_profiles = {"p1": _make_arm_profile("p1", "Home")}
+    pb.arm_mode = _make_nvr_arm_mode(profile_id="p1")
+
+    await setup_public_only()
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SELECT, DOMAIN, f"{UNIFI_MAC}_nvr_arm_profile"
+    )
+    assert entity_id
+    assert hass.states.get(entity_id).state == "Home (p1)"
+
+    pb.arm_profiles = {
+        "p1": _make_arm_profile("p1", "Home"),
+        "p2": _make_arm_profile("p2", "Away"),
+    }
+    pb.arm_mode = _make_nvr_arm_mode(profile_id="p2")
+    msg = Mock()
+    msg.new_obj = pb.nvr
+    msg.old_obj = None
+    ufp_public_only.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "Away (p2)"
+    assert set(state.attributes[ATTR_OPTIONS]) == {"Home (p1)", "Away (p2)"}
 
 
 async def test_public_only_select_nvr_arm_profile_follows_public_ws(
