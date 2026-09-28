@@ -113,16 +113,28 @@ async def test_successful_write_does_not_recover_failed_coordinator(
 
 
 @pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    "removed_zone_ids",
+    [
+        pytest.param(set(), id="stale-target"),
+        pytest.param({1}, id="missing-target"),
+    ],
+)
 async def test_write_waits_for_full_coordinator_poll(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
     mock_duco_client: AsyncMock,
+    removed_zone_ids: set[int],
 ) -> None:
     """Test a write cannot be overwritten by an older full poll."""
     poll_read_started = asyncio.Event()
     release_poll_read = asyncio.Event()
-    stale_targets = mock_bypass_supply_temperature_targets.copy()
+    stale_targets = {
+        zone_id: target
+        for zone_id, target in mock_bypass_supply_temperature_targets.items()
+        if zone_id not in removed_zone_ids
+    }
 
     async def get_bypass_supply_temperature_targets() -> dict[
         int, BypassSupplyTemperatureTarget

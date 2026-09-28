@@ -133,7 +133,7 @@ class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):
             if self.unit_of_measurement != self.native_unit_of_measurement:
                 value = target.normalize_value(value)
             await self.coordinator.async_set_bypass_supply_temperature_target(
-                self._zone_id, value
+                self._zone_id, value, target=target
             )
         except ValueError as err:
             raise HomeAssistantError(
