@@ -875,28 +875,30 @@ async def test_background_task_cancel_at_unload(
             "Some other error",
         ),
     ],
-    ids=["mac", "firmware", "mac_value", "firmware_value"],
+    ids=[
+        "mac_verification_runtimeerror",
+        "firmware_refresh_runtimeeror",
+        "mac_verification_valueerror",
+        "firmware_refresh_valueerror",
+    ],
 )
 @respx.mock
 async def test_coordinator_background_tasks_reraised_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_envoy: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
     test_target: str,
     envoy_method: str,
-    exc: Exception,
+    exc: RuntimeError | ValueError,
     msg: str,
 ) -> None:
     """Test coordinator background task handling raised error."""
     await setup_integration(hass, config_entry)
-    caplog.set_level(logging.DEBUG)
     coordinator = config_entry.runtime_data
 
     def raise_error() -> None:
         raise exc(msg)
 
-    caplog.clear()
     test_with = getattr(coordinator, test_target)
     setattr(mock_envoy, envoy_method, raise_error)
     with pytest.raises(exc, match=msg):
@@ -938,11 +940,11 @@ async def test_coordinator_background_tasks_reraised_error(
         ),
     ],
     ids=[
-        "mac",
-        "firmware",
-        "mac_envoyclosed",
-        "firmware_envoyclosed",
-        "firmware_envoyerror",
+        "mac_verification_runtimeerror",
+        "firmware_refresh_runtimeeror",
+        "mac_verification_envoyclientclosederror",
+        "firmware_refresh_envoyclientclosederror",
+        "firmware_refresh_envoyerror",
     ],
 )
 @respx.mock
@@ -953,7 +955,7 @@ async def test_coordinator_background_tasks_session_is_closed(
     caplog: pytest.LogCaptureFixture,
     freezer: FrozenDateTimeFactory,
     envoy_method: str,
-    exc: Exception,
+    exc: RuntimeError | EnvoyClientClosedError | EnvoyError,
     msg: str,
     time_step: timedelta,
 ) -> None:
