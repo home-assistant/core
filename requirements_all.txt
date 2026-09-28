@@ -1411,7 +1411,7 @@ infrared-protocols==10.1.0
 inkbird-ble==1.4.4
 
 # homeassistant.components.insteon
-insteon-frontend-home-assistant==0.6.2
+insteon-frontend-home-assistant==0.7.0
 
 # homeassistant.components.intellifire
 intellifire4py==4.5.0
@@ -1644,7 +1644,7 @@ mitsubishi-comfort==0.6.0
 moat-ble==0.1.1
 
 # homeassistant.components.modbus
-modbus-connection[tmodbus]==4.12.1
+modbus-connection[tmodbus]==4.12.3
 
 # homeassistant.components.moehlenhoff_alpha2
 moehlenhoff-alpha2==1.4.0
@@ -1813,7 +1813,7 @@ onedrive-personal-sdk==0.1.7
 onvif-zeep-async==4.2.1
 
 # homeassistant.components.onvif
-onvif_parsers==2.3.0
+onvif_parsers==2.5.0
 
 # homeassistant.components.opengarage
 open-garage==0.3.1
@@ -2313,7 +2313,7 @@ pyicloud==2.6.5
 pyimouapi==1.4.0
 
 # homeassistant.components.insteon
-pyinsteon==1.6.4
+pyinsteon==1.7.0
 
 # homeassistant.components.intelliclima
 pyintelliclima==0.4.1
@@ -2561,7 +2561,7 @@ pyqwikswitch==0.93
 pyrail==0.4.1
 
 # homeassistant.components.rainbird
-pyrainbird==6.5.0
+pyrainbird==6.6.0
 
 # homeassistant.components.playstation_network
 pyrate-limiter==4.5.0
@@ -3028,7 +3028,7 @@ ruuvitag-ble==0.4.0
 rxv==0.7.0
 
 # homeassistant.components.samsung_exlink
-samsung-exlink==1.1.1
+samsung-exlink==1.1.2
 
 # homeassistant.components.samsungtv
 samsungctl[websocket]==0.7.1
@@ -3138,7 +3138,7 @@ solaredge-local==0.2.3
 solaredge-web==0.4.0
 
 # homeassistant.components.solaredge_modbus
-solaredged==0.2.3
+solaredged==0.2.4
 
 # homeassistant.components.solarlog
 solarlog_cli==0.7.1
@@ -3524,7 +3524,7 @@ yeelightsunflower==0.0.10
 yolink-api==0.6.5
 
 # homeassistant.components.yoto
-yoto-api==4.3.2
+yoto-api==4.4.2
 
 # homeassistant.components.youless
 youless-api==2.2.0

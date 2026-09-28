@@ -278,6 +278,58 @@ class CalculatedState:
     attributes: dict[str, Any]
 
 
+def _attr_deleter(name: str) -> Callable[[Any], None]:
+    """Create a deleter for an _attr_ property."""
+    private_attr_name = f"__attr_{name}"
+
+    def _deleter(o: Any) -> None:
+        """Delete an _attr_ property.
+
+        Does two things:
+        - Delete the __attr_ attribute
+        - Invalidate the cache of the cached property
+
+        Raises AttributeError if the __attr_ attribute does not exist
+        """
+        # Invalidate the cache of the cached property
+        o.__dict__.pop(name, None)
+        # Delete the __attr_ attribute
+        delattr(o, private_attr_name)
+
+    return _deleter
+
+
+def _attr_setter(name: str) -> Callable[[Any, Any], None]:
+    """Create a setter for an _attr_ property."""
+    private_attr_name = f"__attr_{name}"
+
+    def _setter(o: Any, val: Any) -> None:
+        """Set an _attr_ property to the backing __attr attribute.
+
+        Also invalidates the corresponding cached_property by calling
+        delattr on it.
+        """
+        if (old_val := getattr(o, private_attr_name, _SENTINEL)) == val and type(
+            old_val
+        ) is type(val):
+            return
+        setattr(o, private_attr_name, val)
+        # Invalidate the cache of the cached property
+        o.__dict__.pop(name, None)
+
+    return _setter
+
+
+@ft.cache
+def _make_attr_property(name: str) -> property:
+    """Create an _attr_ property, shared by all classes wrapping the same name."""
+    return property(
+        fget=attrgetter(f"__attr_{name}"),
+        fset=_attr_setter(name),
+        fdel=_attr_deleter(name),
+    )
+
+
 class CachedProperties(type):
     """Metaclass which invalidates cached entity properties on write to _attr_.
 
@@ -320,52 +372,6 @@ class CachedProperties(type):
         Wrap _attr_ for cached properties in property objects.
         """
 
-        def deleter(name: str) -> Callable[[Any], None]:
-            """Create a deleter for an _attr_ property."""
-            private_attr_name = f"__attr_{name}"
-
-            def _deleter(o: Any) -> None:
-                """Delete an _attr_ property.
-
-                Does two things:
-                - Delete the __attr_ attribute
-                - Invalidate the cache of the cached property
-
-                Raises AttributeError if the __attr_ attribute does not exist
-                """
-                # Invalidate the cache of the cached property
-                o.__dict__.pop(name, None)
-                # Delete the __attr_ attribute
-                delattr(o, private_attr_name)
-
-            return _deleter
-
-        def setter(name: str) -> Callable[[Any, Any], None]:
-            """Create a setter for an _attr_ property."""
-            private_attr_name = f"__attr_{name}"
-
-            def _setter(o: Any, val: Any) -> None:
-                """Set an _attr_ property to the backing __attr attribute.
-
-                Also invalidates the corresponding cached_property by calling
-                delattr on it.
-                """
-                if (
-                    old_val := getattr(o, private_attr_name, _SENTINEL)
-                ) == val and type(old_val) is type(val):
-                    return
-                setattr(o, private_attr_name, val)
-                # Invalidate the cache of the cached property
-                o.__dict__.pop(name, None)
-
-            return _setter
-
-        def make_property(name: str) -> property:
-            """Help create a property object."""
-            return property(
-                fget=attrgetter(f"__attr_{name}"), fset=setter(name), fdel=deleter(name)
-            )
-
         def wrap_attr(cls: CachedProperties, property_name: str) -> None:
             """Wrap a cached property's corresponding _attr in a property.
 
@@ -398,7 +404,7 @@ class CachedProperties(type):
                         cls.__annotate__ = wrapped_annotate
 
             # Create the _attr_ property
-            setattr(cls, attr_name, make_property(property_name))
+            setattr(cls, attr_name, _make_attr_property(property_name))
 
         cached_properties: set[str] = namespace["_CachedProperties__cached_properties"]
         seen_props: set[str] = set()  # Keep track of properties which have been handled

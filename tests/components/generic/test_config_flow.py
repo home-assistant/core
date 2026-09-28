@@ -432,7 +432,7 @@ async def test_form_only_stream(
     }
 
     with patch(
-        "homeassistant.components.camera._async_get_stream_image",
+        "homeassistant.components.camera.async_get_stream_image",
         return_value=fakeimgbytes_jpg,
     ):
         image_obj = await async_get_image(hass, "camera.127_0_0_1")

@@ -351,7 +351,7 @@ async def test_browse_media(
         "media_content_id": "COLLECTION-FOLDER-UUID",
         "can_play": False,
         "can_expand": True,
-        "can_search": False,
+        "can_search": True,
         "search_media_classes": None,
         "thumbnail": "http://localhost/Items/c22fd826-17fc-44f4-9b04-1eb3e8fb9173/Images/Backdrop.jpg",
         "children_media_class": None,
@@ -360,6 +360,7 @@ async def test_browse_media(
     assert response["result"]["media_content_id"] == ""
     assert response["result"]["media_content_type"] == "root"
     assert response["result"]["title"] == "Jellyfin"
+    assert response["result"]["can_search"] is False
     assert response["result"]["children"][0] == expected_child_item
 
     # browse collection folder
@@ -390,6 +391,7 @@ async def test_browse_media(
     assert response["success"]
     assert response["result"]["media_content_id"] == "COLLECTION-FOLDER-UUID"
     assert response["result"]["title"] == "FOLDER"
+    assert response["result"]["can_search"] is True
     assert response["result"]["children"][0] == expected_child_item
 
     # browse for series
@@ -411,7 +413,7 @@ async def test_browse_media(
         "media_content_id": "SEASON-UUID",
         "can_play": True,
         "can_expand": True,
-        "can_search": False,
+        "can_search": True,
         "search_media_classes": None,
         "thumbnail": "http://localhost/Items/c22fd826-17fc-44f4-9b04-1eb3e8fb9173/Images/Backdrop.jpg",
         "children_media_class": None,
@@ -420,6 +422,7 @@ async def test_browse_media(
     assert response["success"]
     assert response["result"]["media_content_id"] == "SERIES-UUID"
     assert response["result"]["title"] == "SERIES"
+    assert response["result"]["can_search"] is True
     assert response["result"]["children"][0] == expected_child_item
 
     # browse for season
@@ -450,6 +453,7 @@ async def test_browse_media(
     assert response["success"]
     assert response["result"]["media_content_id"] == "SEASON-UUID"
     assert response["result"]["title"] == "SEASON"
+    assert response["result"]["can_search"] is True
     assert response["result"]["children"][0] == expected_child_item
 
     # browse for collection without children
@@ -491,6 +495,65 @@ async def test_browse_media(
     assert response["error"]["message"] == "Media not found: COLLECTION-UUID-404"
 
 
+@pytest.mark.parametrize(
+    ("item_fixture", "children_fixture", "media_class", "media_type"),
+    [
+        pytest.param(
+            "album.json", "tracks.json", MediaClass.ALBUM, MediaType.ALBUM, id="album"
+        ),
+        pytest.param(
+            "artist.json",
+            "albums.json",
+            MediaClass.ARTIST,
+            MediaType.ARTIST,
+            id="artist",
+        ),
+        pytest.param(
+            "playlist.json",
+            "tracks.json",
+            MediaClass.PLAYLIST,
+            MediaType.PLAYLIST,
+            id="playlist",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_browse_media_music_folder(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_api: MagicMock,
+    item_fixture: str,
+    children_fixture: str,
+    media_class: MediaClass,
+    media_type: MediaType,
+) -> None:
+    """Test Jellyfin browse media of a playable music folder."""
+    mock_api.get_item.side_effect = None
+    mock_api.get_item.return_value = await async_load_json_fixture(hass, item_fixture)
+    mock_api.user_items.side_effect = None
+    mock_api.user_items.return_value = await async_load_json_fixture(
+        hass, children_fixture
+    )
+    client = await hass_ws_client()
+
+    await client.send_json_auto_id(
+        {
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.jellyfin_device",
+            "media_content_type": media_type,
+            "media_content_id": "ITEM-UUID",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    result = response["result"]
+    assert result["media_class"] == media_class
+    assert result["media_content_type"] == media_type
+    assert result["can_play"] is True
+    assert result["can_search"] is True
+    assert result["children"][0]["can_play"] is True
+
+
 async def test_search_media(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -519,18 +582,147 @@ async def test_search_media(
         {
             "title": "FOLDER",
             "media_class": MediaClass.DIRECTORY.value,
-            "media_content_type": "string",
+            "media_content_type": "library",
             "media_content_id": "FOLDER-UUID",
             "children_media_class": None,
             "can_play": False,
             "can_expand": True,
-            "can_search": False,
+            "can_search": True,
             "search_media_classes": None,
             "not_shown": 0,
             "thumbnail": "http://localhost/Items/21af9851-8e39-43a9-9c47-513d3b9e99fc/Images/Primary.jpg",
             "children": [],
         }
     ]
+
+
+@pytest.mark.parametrize(
+    ("fixture", "expected"),
+    [
+        pytest.param(
+            "tracks.json",
+            {
+                "media_class": MediaClass.MUSIC,
+                "media_content_type": MediaType.MUSIC,
+                "can_play": True,
+                "can_expand": False,
+                "can_search": False,
+            },
+            id="track",
+        ),
+        pytest.param(
+            "albums.json",
+            {
+                "media_class": MediaClass.ALBUM,
+                "media_content_type": MediaType.ALBUM,
+                "can_play": True,
+                "can_expand": True,
+                "can_search": True,
+            },
+            id="album",
+        ),
+        pytest.param(
+            "artists.json",
+            {
+                "media_class": MediaClass.ARTIST,
+                "media_content_type": MediaType.ARTIST,
+                "can_play": True,
+                "can_expand": True,
+                "can_search": True,
+            },
+            id="artist",
+        ),
+        pytest.param(
+            "artists-by-name.json",
+            {
+                "media_class": MediaClass.ARTIST,
+                "media_content_type": MediaType.ARTIST,
+                "can_play": True,
+                "can_expand": False,
+                "can_search": True,
+            },
+            id="artist_by_name",
+        ),
+        pytest.param(
+            "playlists.json",
+            {
+                "media_class": MediaClass.PLAYLIST,
+                "media_content_type": MediaType.PLAYLIST,
+                "can_play": True,
+                "can_expand": True,
+                "can_search": True,
+            },
+            id="playlist",
+        ),
+        pytest.param(
+            "videos.json",
+            {
+                "media_class": MediaClass.VIDEO,
+                "media_content_type": MediaType.VIDEO,
+                "can_play": True,
+                "can_expand": False,
+                "can_search": False,
+            },
+            id="video",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_search_media_result_types(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_api: MagicMock,
+    fixture: str,
+    expected: dict[str, str | bool],
+) -> None:
+    """Test Jellyfin search maps results from the Jellyfin item type."""
+    mock_api.search_media_items.return_value = await async_load_json_fixture(
+        hass, fixture
+    )
+    client = await hass_ws_client()
+
+    await client.send_json_auto_id(
+        {
+            "type": "media_player/search_media",
+            "entity_id": "media_player.jellyfin_device",
+            "search_query": "Fake Item 1",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    result = response["result"]["result"][0]
+    assert {key: result[key] for key in expected} == expected
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_search_media_in_artist(
+    hass_ws_client: WebSocketGenerator,
+    mock_api: MagicMock,
+) -> None:
+    """Test Jellyfin search inside an artist filters on the artist."""
+    client = await hass_ws_client()
+
+    await client.send_json_auto_id(
+        {
+            "type": "media_player/search_media",
+            "entity_id": "media_player.jellyfin_device",
+            "media_content_id": "ARTIST-UUID",
+            "media_content_type": MediaType.ARTIST,
+            "search_query": "Fake Item 1",
+            "media_filter_classes": ["album"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["result"][0]["media_content_id"] == "FOLDER-UUID"
+    mock_api.search_media_items.assert_not_called()
+    assert mock_api.user_items.call_args.kwargs["params"] == {
+        "searchTerm": "Fake Item 1",
+        "Recursive": True,
+        "IncludeItemTypes": "MusicAlbum",
+        "Limit": 20,
+        "ArtistIds": "ARTIST-UUID",
+    }
 
 
 @pytest.mark.parametrize(

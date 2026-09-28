@@ -2,13 +2,20 @@
 
 from enum import IntFlag
 import logging
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import probatio
 
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from . import NotifyEntity
 
 DOMAIN: Final = "notify"
+
+DATA_COMPONENT: HassKey[EntityComponent[NotifyEntity]] = HassKey(DOMAIN)
 
 ATTR_DATA = "data"
 
