@@ -37,10 +37,9 @@ async def async_create_client(
 @callback
 def model_alias(model_id: str) -> str:
     """Resolve alias from versioned model name."""
-    if model_id[-2:-1] != "-" and not model_id.endswith("-preview"):
-        model_id = model_id[:-9]
-    if model_id.endswith("-4"):
-        return model_id + "-0"
+    model, _, version = model_id.rpartition("-")
+    if len(version) == 8 and version.isdecimal():
+        return model
     return model_id
 
 

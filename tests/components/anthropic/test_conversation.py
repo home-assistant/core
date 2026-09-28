@@ -9,6 +9,7 @@ from anthropic import RateLimitError
 from anthropic.types import (
     CitationCharLocation,
     CitationCharLocationParam,
+    CitationsConfig,
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
     DocumentBlock,
@@ -1018,7 +1019,7 @@ async def test_web_search(
         next(iter(mock_config_entry.subentries.values())),
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-sonnet-4-0",
+            CONF_CHAT_MODEL: "claude-sonnet-4-5",
             CONF_WEB_SEARCH: True,
             CONF_WEB_SEARCH_MAX_USES: 5,
             CONF_WEB_SEARCH_USER_LOCATION: True,
@@ -1164,7 +1165,7 @@ async def test_web_search_error(
         next(iter(mock_config_entry.subentries.values())),
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-sonnet-4-0",
+            CONF_CHAT_MODEL: "claude-sonnet-4-5",
             CONF_WEB_SEARCH: True,
             CONF_WEB_SEARCH_MAX_USES: 5,
             CONF_WEB_SEARCH_USER_LOCATION: True,
@@ -1878,13 +1879,13 @@ async def test_web_fetch(
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test web fetch."""
+    """Test web fetch with interleaved thinking and citation parsing."""
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         next(iter(mock_config_entry.subentries.values())),
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-haiku-4-5",
+            CONF_CHAT_MODEL: "claude-sonnet-4-6",
             CONF_WEB_FETCH: True,
             CONF_WEB_FETCH_MAX_USES: 5,
         },
@@ -1896,7 +1897,7 @@ async def test_web_fetch(
         url="https://www.home-assistant.io/latest-release-notes/",
         content=DocumentBlock(
             type="document",
-            citations=None,
+            citations=CitationsConfig(enabled=True),
             source=PlainTextSource(
                 type="text",
                 data="Home Assistant new version is out!\nMany new features.\n"
@@ -1950,8 +1951,8 @@ async def test_web_fetch(
                         type="char_location",
                         document_index=0,
                         document_title="Latest Home Assistant Release Notes",
-                        start_char_index=56,
-                        end_char_index=105,
+                        start_char_index=54,
+                        end_char_index=104,
                         cited_text="Anthropic integration now supports web fetch tool.",
                     ),
                 ],
@@ -1968,6 +1969,15 @@ async def test_web_fetch(
         Context(),
         agent_id="conversation.claude_conversation",
     )
+
+    request = mock_create_stream.call_args.kwargs
+    assert request["model"] == "claude-sonnet-4-6"
+    assert request["thinking"] == {"type": "adaptive", "display": "summarized"}
+    assert {
+        "name": "web_fetch",
+        "type": "web_fetch_20250910",
+        "max_uses": 5,
+    } in request["tools"]
 
     chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
         result.conversation_id

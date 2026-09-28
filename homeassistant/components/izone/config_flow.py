@@ -13,7 +13,7 @@ import probatio
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, FlowType
 from homeassistant.const import CONF_HOST
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -88,7 +88,9 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         request as part of start-up, and the import step itself will not be repeated.
         """
         if self._async_in_progress(include_uninitialized=True):
-            return self.async_abort(reason="already_in_progress")
+            return self.async_abort(
+                reason="already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
 
         try:
             await izone_discovery.async_ensure_discovery(self.hass)

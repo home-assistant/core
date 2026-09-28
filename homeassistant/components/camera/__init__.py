@@ -73,7 +73,11 @@ from .const import (
     CameraState,
     StreamType,
 )
-from .helper import get_camera_from_entity_id
+from .helper import (
+    async_get_stream_image,
+    async_stream_endpoint_url,
+    get_camera_from_entity_id,
+)
 from .img_util import (
     TurboJPEGSingleton,  # noqa: F401
     scale_jpeg_camera_image,
@@ -158,7 +162,7 @@ class CameraCapabilities:
 async def async_request_stream(hass: HomeAssistant, entity_id: str, fmt: str) -> str:
     """Request a stream for a camera entity."""
     camera = get_camera_from_entity_id(hass, entity_id)
-    return await _async_stream_endpoint_url(hass, camera, fmt)
+    return await async_stream_endpoint_url(hass, camera, fmt)
 
 
 async def _async_get_image(
@@ -178,7 +182,7 @@ async def _async_get_image(
     with suppress(asyncio.CancelledError, TimeoutError):
         async with asyncio.timeout(timeout):
             image_bytes = (
-                await _async_get_stream_image(
+                await async_get_stream_image(
                     camera, width=width, height=height, wait_for_next_keyframe=False
                 )
                 if camera.use_stream_for_stills
@@ -216,25 +220,6 @@ async def async_get_image(
     """
     camera = get_camera_from_entity_id(hass, entity_id)
     return await _async_get_image(camera, timeout, width, height)
-
-
-async def _async_get_stream_image(
-    camera: Camera,
-    width: int | None = None,
-    height: int | None = None,
-    wait_for_next_keyframe: bool = False,
-) -> bytes | None:
-    if (provider := camera.webrtc_provider) and (
-        image := await provider.async_get_image(camera, width=width, height=height)
-    ) is not None:
-        return image
-    if not camera.stream and CameraEntityFeature.STREAM in camera.supported_features:
-        camera.stream = await camera.async_create_stream()
-    if camera.stream:
-        return await camera.stream.async_get_image(
-            width=width, height=height, wait_for_next_keyframe=wait_for_next_keyframe
-        )
-    return None
 
 
 async def async_get_stream_source(hass: HomeAssistant, entity_id: str) -> str | None:
@@ -961,7 +946,7 @@ async def ws_camera_stream(
     try:
         entity_id = msg["entity_id"]
         camera = get_camera_from_entity_id(hass, entity_id)
-        url = await _async_stream_endpoint_url(hass, camera, fmt=msg["format"])
+        url = await async_stream_endpoint_url(hass, camera, fmt=msg["format"])
         connection.send_result(msg["id"], {"url": url})
     except HomeAssistantError as ex:
         _LOGGER.error("Error requesting stream: %s", ex)
@@ -1088,7 +1073,7 @@ async def async_handle_snapshot_service(
     try:
         async with asyncio.timeout(CAMERA_IMAGE_TIMEOUT):
             image = (
-                await _async_get_stream_image(camera, wait_for_next_keyframe=True)
+                await async_get_stream_image(camera, wait_for_next_keyframe=True)
                 if camera.use_stream_for_stills
                 else await camera.async_camera_image()
             )
@@ -1118,7 +1103,7 @@ async def async_handle_play_stream_service(
     """Handle play stream services calls."""
     hass = camera.hass
     fmt = service_call.data[ATTR_FORMAT]
-    url = await _async_stream_endpoint_url(camera.hass, camera, fmt)
+    url = await async_stream_endpoint_url(camera.hass, camera, fmt)
     url = f"{get_url(hass)}{url}"
 
     await hass.services.async_call(
@@ -1132,20 +1117,6 @@ async def async_handle_play_stream_service(
         blocking=True,
         context=service_call.context,
     )
-
-
-async def _async_stream_endpoint_url(
-    hass: HomeAssistant, camera: Camera, fmt: str
-) -> str:
-    stream = await camera.async_create_stream()
-    if not stream:
-        raise HomeAssistantError(
-            f"{camera.entity_id} does not support play stream service"
-        )
-
-    stream.add_provider(fmt)
-    await stream.start()
-    return stream.endpoint_url(fmt)
 
 
 async def async_handle_record_service(
