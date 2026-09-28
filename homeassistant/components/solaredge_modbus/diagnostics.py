@@ -31,6 +31,13 @@ def _component_data(component: Component) -> dict[str, Any]:
     return {name: getattr(component, name) for name in sorted(names)}
 
 
+def _optional_component_data(component: Component | None) -> dict[str, Any] | None:
+    """A component's data, or None for a block this device does not have."""
+    if component is None:
+        return None
+    return _component_data(component)
+
+
 def _poll_data(coordinator: SolarEdgeModbusDataUpdateCoordinator) -> dict[str, Any]:
     """What a coordinator's most recent poll got out of the device."""
     return {
@@ -54,7 +61,10 @@ async def async_get_config_entry_diagnostics(
     solaredge = runtime_data.solaredge
 
     data: dict[str, Any] = {
-        "polls": {"readings": _poll_data(runtime_data.readings)},
+        "polls": {
+            "readings": _poll_data(runtime_data.readings),
+            "settings": _poll_data(runtime_data.settings),
+        },
         "common": _component_data(solaredge.common),
         "inverter": _component_data(solaredge.inverter),
         "mmppt": (
@@ -64,6 +74,12 @@ async def async_get_config_entry_diagnostics(
         ),
         "meters": [_component_data(meter) for meter in solaredge.meters],
         "batteries": [_component_data(battery) for battery in solaredge.batteries],
+        "storage_control": _optional_component_data(solaredge.storage_control),
+        "export_control": _optional_component_data(solaredge.export_control),
+        "power_control": _optional_component_data(solaredge.power_control),
+        "advanced_power_control": _optional_component_data(
+            solaredge.advanced_power_control
+        ),
         "unresponsive_blocks": sorted(solaredge.unresponsive_blocks),
     }
 

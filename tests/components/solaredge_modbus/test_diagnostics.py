@@ -1,5 +1,7 @@
 """Tests for the SolarEdge Modbus diagnostics."""
 
+from modbus_connection import IllegalDataAddressError
+from modbus_connection.mock import MockModbusUnit
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
@@ -7,6 +9,14 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
+
+# The control blocks, each absent on a device that refuses its base address.
+CONTROL_BASES = {
+    "storage_control": 57348,
+    "export_control": 57344,
+    "power_control": 61440,
+    "advanced_power_control": 61696,
+}
 
 
 async def test_diagnostics(
@@ -24,3 +34,25 @@ async def test_diagnostics(
         await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
         == snapshot
     )
+
+
+async def test_diagnostics_without_control_blocks(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A block this device does not have is named in the dump, as null."""
+    for address in CONTROL_BASES.values():
+        mock_modbus_unit.fail_read(address, IllegalDataAddressError())
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    )
+
+    for name in CONTROL_BASES:
+        assert diagnostics[name] is None
