@@ -3,6 +3,7 @@
 from typing import Any
 
 from modbus_connection.model import Component, RegisterField
+from solaredged import SolarEdge
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
@@ -36,6 +37,22 @@ def _optional_component_data(component: Component | None) -> dict[str, Any] | No
     if component is None:
         return None
     return _component_data(component)
+
+
+def _sunspec_models(solaredge: SolarEdge) -> list[dict[str, int]] | None:
+    """The device's SunSpec model chain, in the order it serves them.
+
+    What the inverter says it carries and where, which is the only account of
+    it that survives a block not being found: everything else here describes
+    what was read, not what was looked for.
+    """
+    if solaredge.sunspec_models is None:
+        return None
+
+    return [
+        {"model_id": model.model_id, "address": model.address, "length": model.length}
+        for model in solaredge.sunspec_models.chain
+    ]
 
 
 def _poll_data(coordinator: SolarEdgeModbusDataUpdateCoordinator) -> dict[str, Any]:
@@ -80,6 +97,7 @@ async def async_get_config_entry_diagnostics(
         "advanced_power_control": _optional_component_data(
             solaredge.advanced_power_control
         ),
+        "sunspec_models": _sunspec_models(solaredge),
         "unresponsive_blocks": sorted(solaredge.unresponsive_blocks),
     }
 

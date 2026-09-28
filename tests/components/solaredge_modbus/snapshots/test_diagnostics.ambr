@@ -193,6 +193,7 @@
       'default_mode': 0,
       'discharge_limit': 11400.0,
     }),
+    'sunspec_models': None,
     'unresponsive_blocks': list([
     ]),
   })
