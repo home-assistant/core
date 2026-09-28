@@ -269,31 +269,51 @@ async def test_a_device_without_battery_still_reports_its_location(
     assert device.battery_level is None
 
 
-async def test_a_device_gaining_a_battery_is_announced_again(
+async def test_a_device_gaining_a_battery_gets_its_battery_sensor(
     hass: HomeAssistant,
     mock_store: Mock,
 ) -> None:
     """Test that a battery arriving later still creates the battery sensor.
 
     A device kept for its location alone is added without one, and the sensor
-    platform only builds from the new-device signal. Without announcing the
-    device again the battery it starts reporting would go unnoticed until
-    Home Assistant restarts.
+    platform only builds from the new-device signal, so the battery it starts
+    reporting would otherwise go unnoticed until Home Assistant restarts.
     """
-    account = await _set_up_with(hass, mock_store, DEVICE_WITHOUT_BATTERY)
-    device = account.devices[DEVICE_WITHOUT_BATTERY["id"]]
-    assert device.battery_level is None
 
-    with patch("homeassistant.components.icloud.account.dispatcher_send") as dispatcher:
-        device.update(
-            {
-                **DEVICE_WITHOUT_BATTERY,
-                "batteryStatus": "NotCharging",
-                "batteryLevel": 0.4,
-            }
+    def battery_sensors() -> list[str]:
+        return [
+            entity_id
+            for entity_id in hass.states.async_entity_ids("sensor")
+            if entity_id.endswith("_battery")
+        ]
+
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService"
+    ) as service_mock:
+        service = service_mock.return_value
+        service.requires_2fa = False
+        service.devices = MockDevicesContainer(
+            USER_INFO, [MockAppleDevice(DEVICE_WITHOUT_BATTERY)]
         )
 
+        config_entry = MockConfigEntry(
+            domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+        )
+        config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert battery_sensors() == []
+
+        account = config_entry.runtime_data
+        device = account.devices[DEVICE_WITHOUT_BATTERY["id"]]
+        await hass.async_add_executor_job(
+            device.update,
+            DEVICE_WITHOUT_BATTERY
+            | {"batteryStatus": "NotCharging", "batteryLevel": 0.4},
+        )
+        await hass.async_block_till_done()
+
     assert device.battery_level == 40
-    assert account.signal_device_new in [
-        call.args[1] for call in dispatcher.call_args_list
-    ]
+    assert battery_sensors() != []

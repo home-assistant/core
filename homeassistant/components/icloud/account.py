@@ -441,14 +441,15 @@ class IcloudDevice:
         self._attrs[ATTR_BATTERY_STATUS] = self._battery_status
         device_battery_level = self._status.get(DEVICE_BATTERY_LEVEL, 0)
         if self._battery_status != "Unknown" and device_battery_level is not None:
-            if self._battery_level is None:
-                # The battery sensor is created from the new-device signal,
-                # and a device kept for its location alone was added without
-                # one. Nothing else reports that it has a battery now.
-                dispatcher_send(self._account.hass, self._account.signal_device_new)
+            # The battery sensor is created from the new-device signal, and a
+            # device kept for its location alone was added without one.
+            # Nothing else reports that it has a battery now.
+            announce = self._battery_level is None
             self._battery_level = int(device_battery_level * 100)
             self._attrs[ATTR_BATTERY] = self._battery_level
             self._attrs[ATTR_LOW_POWER_MODE] = self._status[DEVICE_LOW_POWER_MODE]
+            if announce:
+                dispatcher_send(self._account.hass, self._account.signal_device_new)
 
         # Deliberately not nested under the battery block above: a device
         # iCloud reports no battery for still has a location worth reading.
@@ -457,9 +458,13 @@ class IcloudDevice:
             and self._status[DEVICE_LOCATION][DEVICE_LOCATION_LATITUDE] is not None
         ):
             location = self._status[DEVICE_LOCATION]
-            if self._location is None:
-                dispatcher_send(self._account.hass, self._account.signal_device_new)
+            # Stored before it is announced: this runs off the event loop, so
+            # the listener can read the device before the assignment lands,
+            # find no location, skip it and never be told again.
+            announce = self._location is None
             self._location = location
+            if announce:
+                dispatcher_send(self._account.hass, self._account.signal_device_new)
 
     def play_sound(self) -> None:
         """Play sound on the device."""
