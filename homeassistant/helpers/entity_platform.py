@@ -1316,14 +1316,19 @@ class EntityPlatform:
                 self._parallel_updates_semaphore_limit is not None
                 and self.parallel_updates is not None
             ):
+                old_semaphore = self.parallel_updates
                 new_semaphore = asyncio.Semaphore(
                     self._parallel_updates_semaphore_limit
                 )
-                # Rebind any entity that has not yet acquired a permit so
-                # idle and queued work continues using the replacement
-                # semaphore while active updates keep their original one.
+                # Rebind only the entities still attached to the stale
+                # semaphore. Active holders keep the original instance so
+                # their permit accounting stays consistent while idle or
+                # queued work moves onto the replacement.
                 for entity in self.entities.values():
-                    if not getattr(entity, "_update_acquired", False):
+                    if (
+                        not getattr(entity, "_update_acquired", False)
+                        and entity.parallel_updates is old_semaphore
+                    ):
                         entity.parallel_updates = new_semaphore
                 # Replace the platform semaphore for future acquirers.
                 self.parallel_updates = new_semaphore
