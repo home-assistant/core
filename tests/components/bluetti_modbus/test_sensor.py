@@ -1,5 +1,7 @@
 """Tests for the BLUETTI Modbus sensor entities."""
 
+from unittest.mock import patch
+
 from bluetti_modbus_lib import get_device
 from modbus_connection.mock import MockModbusUnit
 import pytest
@@ -11,7 +13,7 @@ from homeassistant.components.bluetti_modbus.const import (
 )
 from homeassistant.components.bluetti_modbus.sensor import SENSOR_DESCRIPTIONS
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import EntityCategory
+from homeassistant.const import STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -131,6 +133,7 @@ async def test_inverter_power_is_signed(
         pytest.param(3, "other", id="other"),
         pytest.param(100, "dc_pv", id="dc_pv"),
         pytest.param(101, "ac_pv", id="ac_pv"),
+        pytest.param(7, STATE_UNKNOWN, id="undecoded"),
     ],
 )
 async def test_pv_input_type_states(
@@ -159,3 +162,25 @@ def test_pv_input_type_states_cover_the_library_enum() -> None:
     pv_type = type(field.decode([100]))
 
     assert sorted(member.value for member in pv_type) == [0, 1, 2, 3, 100, 101]
+
+
+async def test_unknown_pv_input_type_is_logged_once(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A PV input type missing from the state table reads unknown, logged once."""
+    with (
+        patch.dict(
+            "homeassistant.components.bluetti_modbus.sensor._PV_TYPE", {}, clear=True
+        ),
+        patch(
+            "homeassistant.components.bluetti_modbus.sensor._unmapped_pv_types", set()
+        ),
+    ):
+        await _setup(hass, mock_config_entry)
+
+    state = hass.states.get(PV_1_TYPE_ENTITY)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert caplog.text.count("Unknown PV input type DcPv") == 1

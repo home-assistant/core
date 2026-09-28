@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 from typing import Any, cast, override
 
 from bluetti_modbus_lib import InverterStatus
@@ -27,6 +28,8 @@ from homeassistant.helpers.typing import StateType
 
 from .coordinator import BluettiModbusConfigEntry
 from .entity import BluettiModbusEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -56,8 +59,23 @@ def _as_is(value: Any) -> StateType:
     return cast(StateType, value)
 
 
+_unmapped_pv_types: set[str] = set()
+
+
+def _inverter_status(value: Any) -> StateType:
+    return _INVERTER_STATUS.get(value)
+
+
 def _pv_type(value: Any) -> StateType:
-    return None if value is None else _PV_TYPE.get(value.name)
+    if value is None:
+        return None
+    if (state := _PV_TYPE.get(value.name)) is None and (
+        value.name not in _unmapped_pv_types
+    ):
+        # A member renamed upstream would otherwise read unknown silently.
+        _unmapped_pv_types.add(value.name)
+        _LOGGER.warning("Unknown PV input type %s", value.name)
+    return state
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -153,7 +171,7 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
         translation_key="d_inverter_status",
         device_class=SensorDeviceClass.ENUM,
         options=list(_INVERTER_STATUS.values()),
-        value_fn=_INVERTER_STATUS.get,
+        value_fn=_inverter_status,
     ),
     BluettiModbusSensorEntityDescription(
         key="d_inverter_type",
