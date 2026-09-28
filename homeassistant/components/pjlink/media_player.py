@@ -1,10 +1,11 @@
 """Support for controlling projector via the PJLink protocol."""
 
+from collections.abc import Callable
 from typing import Any, override
 
+import probatio
 from pypjlink import MUTE_AUDIO, Projector
 from pypjlink.projector import ProjectorError
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
@@ -16,6 +17,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -29,11 +31,11 @@ ERR_PROJECTOR_UNAVAILABLE = "projector unavailable"
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
+        probatio.Optional(CONF_PASSWORD): cv.string,
     }
 )
 
@@ -188,27 +190,32 @@ class PjLinkDevice(MediaPlayerEntity):
             else:
                 raise
 
+    def _run_command(self, command: Callable[[Projector], None]) -> None:
+        """Run a projector command and surface failures as HomeAssistantError."""
+        try:
+            with self.projector() as projector:
+                command(projector)
+        except (ProjectorError, TimeoutError, OSError) as err:
+            # script helpers honor continue_on_error only for HomeAssistantError
+            raise HomeAssistantError(f"PJLink command failed: {err}") from err
+
     @override
     def turn_off(self) -> None:
         """Turn projector off."""
-        with self.projector() as projector:
-            projector.set_power("off")
+        self._run_command(lambda projector: projector.set_power("off"))
 
     @override
     def turn_on(self) -> None:
         """Turn projector on."""
-        with self.projector() as projector:
-            projector.set_power("on")
+        self._run_command(lambda projector: projector.set_power("on"))
 
     @override
     def mute_volume(self, mute: bool) -> None:
         """Mute (true) of unmute (false) media player."""
-        with self.projector() as projector:
-            projector.set_mute(MUTE_AUDIO, mute)
+        self._run_command(lambda projector: projector.set_mute(MUTE_AUDIO, mute))
 
     @override
     def select_source(self, source: str) -> None:
         """Set the input source."""
-        source = self._source_name_mapping[source]
-        with self.projector() as projector:
-            projector.set_input(*source)
+        selected = self._source_name_mapping[source]
+        self._run_command(lambda projector: projector.set_input(*selected))

@@ -1,6 +1,7 @@
 """Test Airly system health."""
 
 import asyncio
+from unittest.mock import MagicMock
 
 from aiohttp import ClientError
 
@@ -10,17 +11,20 @@ from homeassistant.setup import async_setup_component
 
 from . import init_integration
 
-from tests.common import get_system_health_info
+from tests.common import MockConfigEntry, get_system_health_info
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_airly_system_health(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+    mock_airly_client: MagicMock,
 ) -> None:
     """Test Airly system health."""
     aioclient_mock.get("https://airapi.airly.eu/v2/", text="")
 
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, mock_config_entry)
     assert await async_setup_component(hass, "system_health", {})
     await hass.async_block_till_done()
 
@@ -36,12 +40,15 @@ async def test_airly_system_health(
 
 
 async def test_airly_system_health_fail(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+    mock_airly_client: MagicMock,
 ) -> None:
     """Test Airly system health."""
     aioclient_mock.get("https://airapi.airly.eu/v2/", exc=ClientError)
 
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, mock_config_entry)
     assert await async_setup_component(hass, "system_health", {})
     await hass.async_block_till_done()
 

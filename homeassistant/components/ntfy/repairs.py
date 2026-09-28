@@ -1,6 +1,6 @@
 """Repairs for ntfy integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
@@ -41,7 +41,7 @@ class TopicProtectedRepairFlow(RepairsFlow):
 
         return self.async_show_form(
             step_id="confirm",
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
             description_placeholders={CONF_TOPIC: self.topic},
         )
 

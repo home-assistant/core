@@ -1,12 +1,10 @@
 """Services for the Fully Kiosk Browser integration."""
 
-import voluptuous as vol
+import probatio
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import (
     ATTR_APPLICATION,
@@ -25,27 +23,12 @@ async def _collect_coordinators(
     call: ServiceCall,
 ) -> list[FullyKioskDataUpdateCoordinator]:
     device_ids: list[str] = call.data[ATTR_DEVICE_ID]
-    config_entries = list[ConfigEntry]()
-    registry = dr.async_get(call.hass)
-    for target in device_ids:
-        device = registry.async_get(target)
-        if device:
-            device_entries = list[ConfigEntry]()
-            for entry_id in device.config_entries:
-                entry = call.hass.config_entries.async_get_entry(entry_id)
-                if entry and entry.domain == DOMAIN:
-                    device_entries.append(entry)
-            if not device_entries:
-                raise HomeAssistantError(f"Device '{target}' is not a {DOMAIN} device")
-            config_entries.extend(device_entries)
-        else:
-            raise HomeAssistantError(f"Device '{target}' not found in device registry")
-    coordinators = list[FullyKioskDataUpdateCoordinator]()
-    for config_entry in config_entries:
-        if config_entry.state is not ConfigEntryState.LOADED:
-            raise HomeAssistantError(f"{config_entry.title} is not loaded")
-        coordinators.append(config_entry.runtime_data)
-    return coordinators
+    return [
+        service.async_get_device_and_config_entry(call.hass, DOMAIN, device_id)[
+            1
+        ].runtime_data
+        for device_id in device_ids
+    ]
 
 
 async def _async_load_url(call: ServiceCall) -> None:
@@ -94,11 +77,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
             DOMAIN,
             service_name,
             service_handler,
-            schema=vol.Schema(
-                vol.All(
+            schema=probatio.Schema(
+                probatio.All(
                     {
-                        vol.Required(ATTR_DEVICE_ID): cv.ensure_list,
-                        vol.Required(attrib): cv.string,
+                        probatio.Required(ATTR_DEVICE_ID): cv.ensure_list,
+                        probatio.Required(attrib): cv.string,
                     }
                 )
             ),
@@ -108,12 +91,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SET_CONFIG,
         _async_set_config,
-        schema=vol.Schema(
-            vol.All(
+        schema=probatio.Schema(
+            probatio.All(
                 {
-                    vol.Required(ATTR_DEVICE_ID): cv.ensure_list,
-                    vol.Required(ATTR_KEY): cv.string,
-                    vol.Required(ATTR_VALUE): vol.Any(str, bool, int),
+                    probatio.Required(ATTR_DEVICE_ID): cv.ensure_list,
+                    probatio.Required(ATTR_KEY): cv.string,
+                    probatio.Required(ATTR_VALUE): probatio.Any(str, bool, int),
                 }
             )
         ),

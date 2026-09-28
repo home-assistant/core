@@ -3,7 +3,7 @@
 import collections
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
@@ -27,7 +27,7 @@ from homeassistant.const import (
     STATE_ON,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -168,27 +168,38 @@ async def async_setup_entry(
         entities.append(Thermostat(data, index, thermostat, hass))
 
     async_add_entities(entities, True)
-    _async_get_thermostats(hass).extend(entities)
+
+    # The ecobee actions act on whatever is in this list, so the entities have
+    # to be taken back out again when the entry goes away.
+    thermostats = _async_get_thermostats(hass)
+    thermostats.extend(entities)
+
+    @callback
+    def _remove_thermostats() -> None:
+        for entity in entities:
+            thermostats.remove(entity)
+
+    config_entry.async_on_unload(_remove_thermostats)
 
     platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_SET_DST_MODE,
-        {vol.Required(ATTR_DST_ENABLED): cv.boolean},
+        {probatio.Required(ATTR_DST_ENABLED): cv.boolean},
         "set_dst_mode",
     )
 
     platform.async_register_entity_service(
         SERVICE_SET_MIC_MODE,
-        {vol.Required(ATTR_MIC_ENABLED): cv.boolean},
+        {probatio.Required(ATTR_MIC_ENABLED): cv.boolean},
         "set_mic_mode",
     )
 
     platform.async_register_entity_service(
         SERVICE_SET_OCCUPANCY_MODES,
         {
-            vol.Optional(ATTR_AUTO_AWAY): cv.boolean,
-            vol.Optional(ATTR_FOLLOW_ME): cv.boolean,
+            probatio.Optional(ATTR_AUTO_AWAY): cv.boolean,
+            probatio.Optional(ATTR_FOLLOW_ME): cv.boolean,
         },
         "set_occupancy_modes",
     )
@@ -196,8 +207,8 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_SENSORS_USED_IN_CLIMATE,
         {
-            vol.Optional(ATTR_PRESET_MODE): cv.string,
-            vol.Required(ATTR_SENSOR_LIST): cv.ensure_list,
+            probatio.Optional(ATTR_PRESET_MODE): cv.string,
+            probatio.Required(ATTR_SENSOR_LIST): cv.ensure_list,
         },
         "set_sensors_used_in_climate",
     )

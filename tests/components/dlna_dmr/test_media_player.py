@@ -9,6 +9,7 @@ from unittest.mock import ANY, DEFAULT, Mock, patch
 
 from async_upnp_client.client import UpnpService, UpnpStateVariable
 from async_upnp_client.exceptions import (
+    UpnpActionResponseError,
     UpnpConnectionError,
     UpnpError,
     UpnpResponseError,
@@ -43,6 +44,7 @@ from homeassistant.const import (
     CONF_URL,
 )
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
@@ -1963,7 +1965,7 @@ async def test_become_unavailable(
     mock_entity_id: str,
     dmr_device_mock: Mock,
 ) -> None:
-    """Test a device becoming unavailable."""
+    """Test a device becoming unavailable due to a connection error."""
     # Check async_update currently works
     await async_update_entity(hass, mock_entity_id)
     dmr_device_mock.async_update.assert_called_with(do_ping=False)
@@ -1973,13 +1975,17 @@ async def test_become_unavailable(
     dmr_device_mock.async_update.reset_mock()
 
     # Interface service calls should flag that the device is unavailable, but
-    # not disconnect it immediately
-    await hass.services.async_call(
-        mp.DOMAIN,
-        ha_const.SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: mock_entity_id, mp.ATTR_MEDIA_VOLUME_LEVEL: 0.80},
-        blocking=True,
-    )
+    # not disconnect it immediately.
+    # An exception should also be raised to inform the user or automation.
+    with pytest.raises(
+        HomeAssistantError, match="Could not connect .* async_set_volume_level"
+    ):
+        await hass.services.async_call(
+            mp.DOMAIN,
+            ha_const.SERVICE_VOLUME_SET,
+            {ATTR_ENTITY_ID: mock_entity_id, mp.ATTR_MEDIA_VOLUME_LEVEL: 0.80},
+            blocking=True,
+        )
 
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
@@ -1997,17 +2003,65 @@ async def test_become_unavailable(
     dmr_device_mock.async_update.reset_mock()
     dmr_device_mock.async_update.side_effect = UpnpConnectionError
 
-    await hass.services.async_call(
-        mp.DOMAIN,
-        ha_const.SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: mock_entity_id, mp.ATTR_MEDIA_VOLUME_LEVEL: 0.80},
-        blocking=True,
-    )
+    with pytest.raises(
+        HomeAssistantError, match="Could not connect .* async_set_volume_level"
+    ):
+        await hass.services.async_call(
+            mp.DOMAIN,
+            ha_const.SERVICE_VOLUME_SET,
+            {ATTR_ENTITY_ID: mock_entity_id, mp.ATTR_MEDIA_VOLUME_LEVEL: 0.80},
+            blocking=True,
+        )
+
     await async_update_entity(hass, mock_entity_id)
     dmr_device_mock.async_update.assert_called_with(do_ping=True)
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
     assert mock_state.state == ha_const.STATE_UNAVAILABLE
+
+
+async def test_generic_error(
+    hass: HomeAssistant,
+    mock_entity_id: str,
+    dmr_device_mock: Mock,
+) -> None:
+    """Test when a UpnpError occurs during an action, it is bubbled up to the user.
+
+    The behaviour should be the same as for a UpnpConnectionError.
+    """
+    # Generate a service-specific UpnpError on the next service call. This particular
+    # error simulates trying to play a file that the device does not support.
+    dmr_device_mock.async_play.side_effect = UpnpActionResponseError(
+        status=500, error_code=714, error_desc="Illegal MIME-type"
+    )
+
+    # Interface service calls should flag that the device may be unavailable,
+    # but not disconnect it immediately.
+    # An exception should also be raised to inform the user or automation.
+    with pytest.raises(
+        HomeAssistantError,
+        match="Error when calling device service for action async_media_play: .*Illegal MIME-type",
+    ):
+        await hass.services.async_call(
+            mp.DOMAIN,
+            ha_const.SERVICE_MEDIA_PLAY,
+            {ATTR_ENTITY_ID: mock_entity_id},
+            blocking=True,
+        )
+
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == MediaPlayerState.IDLE
+
+    # With a working connection, device should remain available on the next,
+    # update, and any thereafter.
+    for do_ping in (True, False):
+        dmr_device_mock.async_update.reset_mock()
+        await async_update_entity(hass, mock_entity_id)
+        dmr_device_mock.async_update.assert_called_with(do_ping=do_ping)
+        mock_state = hass.states.get(mock_entity_id)
+        assert mock_state is not None
+        assert mock_state.state == MediaPlayerState.IDLE
 
 
 async def test_poll_availability(

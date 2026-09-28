@@ -629,7 +629,7 @@
     'object_id_base': 'Volatile organic compounds',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: 'volatile_organic_compounds'>,
+    'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
     'original_icon': None,
     'original_name': 'Volatile organic compounds',
     'platform': 'uhoo',
@@ -644,7 +644,7 @@
 # name: test_sensor_snapshot[sensor.test_device_volatile_organic_compounds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds_parts',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Volatile organic compounds',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,

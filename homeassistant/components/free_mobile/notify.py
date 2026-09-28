@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from freesms import FreeClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
@@ -19,7 +19,10 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_ACCESS_TOKEN): cv.string}
+    {
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_ACCESS_TOKEN): cv.string,
+    }
 )
 
 

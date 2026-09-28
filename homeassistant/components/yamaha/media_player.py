@@ -3,10 +3,10 @@
 import logging
 from typing import Any, override
 
+import probatio
 import requests
 import rxv
 from rxv import RXV
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
@@ -72,16 +72,16 @@ SUPPORT_YAMAHA = (
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_SOURCE_IGNORE, default=[]): vol.All(
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_HOST): cv.string,
+        probatio.Optional(CONF_SOURCE_IGNORE, default=[]): probatio.All(
             cv.ensure_list, [cv.string]
         ),
-        vol.Optional(CONF_ZONE_IGNORE, default=[]): vol.All(
+        probatio.Optional(CONF_ZONE_IGNORE, default=[]): probatio.All(
             cv.ensure_list, [cv.string]
         ),
-        vol.Optional(CONF_SOURCE_NAMES, default={}): {cv.string: cv.string},
-        vol.Optional(CONF_ZONE_NAMES, default={}): {cv.string: cv.string},
+        probatio.Optional(CONF_SOURCE_NAMES, default={}): {cv.string: cv.string},
+        probatio.Optional(CONF_ZONE_NAMES, default={}): {cv.string: cv.string},
     }
 )
 
@@ -186,19 +186,22 @@ async def async_setup_platform(
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_SELECT_SCENE,
-        {vol.Required(ATTR_SCENE): cv.string},
+        {probatio.Required(ATTR_SCENE): cv.string},
         "set_scene",
     )
     # Register Service 'enable_output'
     platform.async_register_entity_service(
         SERVICE_ENABLE_OUTPUT,
-        {vol.Required(ATTR_ENABLED): cv.boolean, vol.Required(ATTR_PORT): cv.string},
+        {
+            probatio.Required(ATTR_ENABLED): cv.boolean,
+            probatio.Required(ATTR_PORT): cv.string,
+        },
         "enable_output",
     )
     # Register Service 'menu_cursor'
     platform.async_register_entity_service(
         SERVICE_MENU_CURSOR,
-        {vol.Required(ATTR_CURSOR): vol.In(CURSOR_TYPE_MAP)},
+        {probatio.Required(ATTR_CURSOR): probatio.In(CURSOR_TYPE_MAP)},
         YamahaDeviceZone.menu_cursor.__name__,
     )
 

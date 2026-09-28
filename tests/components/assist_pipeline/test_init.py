@@ -672,7 +672,7 @@ async def test_pipeline_saved_audio_empty_queue(
 
         # Wrap original function to time out immediately
         _pipeline_debug_recording_thread_proc = (
-            assist_pipeline.pipeline._pipeline_debug_recording_thread_proc
+            assist_pipeline.run._pipeline_debug_recording_thread_proc
         )
 
         def proc_wrapper(run_recording_dir, queue):
@@ -686,7 +686,7 @@ async def test_pipeline_saved_audio_empty_queue(
             )
 
         with patch(
-            "homeassistant.components.assist_pipeline.pipeline._pipeline_debug_recording_thread_proc",
+            "homeassistant.components.assist_pipeline.run._pipeline_debug_recording_thread_proc",
             proc_wrapper,
         ):
             await assist_pipeline.async_pipeline_from_audio_stream(

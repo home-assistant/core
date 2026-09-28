@@ -4,10 +4,10 @@ from collections.abc import Mapping
 from http import HTTPStatus
 from typing import Any, override
 
+import probatio
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from requests.exceptions import HTTPError, Timeout
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -33,23 +33,23 @@ from .const import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, DOMAIN, LOGGER
 @callback
 def async_get_schema(
     defaults: Mapping[str, Any], show_name: bool = False
-) -> vol.Schema:
+) -> probatio.Schema:
     """Return MJPEG IP Camera schema."""
     schema = {
-        vol.Required(CONF_MJPEG_URL, default=defaults.get(CONF_MJPEG_URL)): str,
-        vol.Optional(
+        probatio.Required(CONF_MJPEG_URL, default=defaults.get(CONF_MJPEG_URL)): str,
+        probatio.Optional(
             CONF_STILL_IMAGE_URL,
             description={"suggested_value": defaults.get(CONF_STILL_IMAGE_URL)},
         ): str,
-        vol.Optional(
+        probatio.Optional(
             CONF_USERNAME,
             description={"suggested_value": defaults.get(CONF_USERNAME)},
         ): str,
-        vol.Optional(
+        probatio.Optional(
             CONF_PASSWORD,
             default=defaults.get(CONF_PASSWORD, ""),
         ): str,
-        vol.Optional(
+        probatio.Optional(
             CONF_VERIFY_SSL,
             default=defaults.get(CONF_VERIFY_SSL, True),
         ): bool,
@@ -59,11 +59,11 @@ def async_get_schema(
         schema = {
             # Name field is no longer allowed in config flow schemas
             # pylint: disable-next=home-assistant-config-flow-name-field
-            vol.Required(CONF_NAME, default=defaults.get(CONF_NAME)): str,
+            probatio.Required(CONF_NAME, default=defaults.get(CONF_NAME)): str,
             **schema,
         }
 
-    return vol.Schema(schema)
+    return probatio.Schema(schema)
 
 
 def validate_url(

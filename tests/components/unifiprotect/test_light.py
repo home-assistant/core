@@ -1,5 +1,6 @@
 """Test the UniFi Protect light platform."""
 
+from collections.abc import Callable, Coroutine
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
@@ -13,6 +14,7 @@ from homeassistant.components.unifiprotect.const import (
     DEFAULT_BRAND,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_ENTITY_ID,
@@ -25,6 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from .conftest import UNIFI_MAC
 from .utils import (
     MockUFPFixture,
     adopt_devices,
@@ -523,3 +526,55 @@ async def test_light_setup_defers_to_adopt_without_private(
     state = hass.states.get("light.test_light")
     assert state
     assert state.state != STATE_UNAVAILABLE
+
+
+async def test_public_only_light_end_to_end(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    light: Light,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """A public-only entry with a light in the bootstrap creates a working entity.
+
+    Exercises the real public-only setup path (not the ``ufp`` fixture the other
+    public-only tests here shim), proving lights, cameras and the alarm panel
+    coexist under ``PUBLIC_ONLY_PLATFORMS``.
+    """
+
+    public = make_public_light(light, is_light_on=True, led_level=3)
+    ufp_public_only.api.public_bootstrap.lights = {light.id: public}
+
+    await setup_public_only()
+
+    assert ufp_public_only.entry.state is ConfigEntryState.LOADED
+    entity_id = "light.test_light"
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    assert entity.unique_id == light.mac
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 128
+
+    # The light hangs off the NVR device the public-only setup registered.
+    device = device_registry.async_get(entity.device_id)
+    assert device
+    nvr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIFI_MAC), ufp_public_only.entry.entry_id
+    )
+    assert nvr_device
+    assert device.via_device_id == nvr_device.id
+
+    # Commands go to the public object; there is no private one to fall back to.
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    public.set_light.assert_awaited_once_with(False)
+
+    assert len(hass.states.async_entity_ids(Platform.ALARM_CONTROL_PANEL.value)) == 1

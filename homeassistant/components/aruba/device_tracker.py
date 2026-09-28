@@ -5,7 +5,7 @@ import re
 from typing import Any, override
 
 import pexpect
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -27,9 +27,9 @@ _DEVICES_REGEX = re.compile(
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
     }
 )
 

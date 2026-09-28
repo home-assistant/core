@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import automation
 from homeassistant.components.homeassistant.triggers import time
@@ -810,7 +810,7 @@ def test_schema_valid(conf) -> None:
 )
 def test_schema_invalid(conf) -> None:
     """Make sure we don't accept number for 'at' value."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         time.TRIGGER_SCHEMA(conf)
 
 
@@ -1145,7 +1145,7 @@ def test_weekday_validation() -> None:
 
     # Invalid weekday
     invalid_config = {"platform": "time", "at": "5:00:00", "weekday": "invalid"}
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         time.TRIGGER_SCHEMA(invalid_config)
 
     # Invalid weekday in list
@@ -1154,5 +1154,5 @@ def test_weekday_validation() -> None:
         "at": "5:00:00",
         "weekday": ["mon", "invalid"],
     }
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         time.TRIGGER_SCHEMA(invalid_config)

@@ -1,10 +1,13 @@
 """Tests for the Cync integration light platform."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, PropertyMock, patch
 
+from pycync import CyncLight
+from pycync.devices.capabilities import CyncCapability
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.light import ColorMode
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -71,3 +74,80 @@ async def test_turn_on(
     test_device.set_combo.assert_called_once_with(
         True, expected_brightness, expected_color_temp, expected_rgb
     )
+
+
+@pytest.mark.parametrize(
+    ("capabilities", "expected_fallback"),
+    [
+        pytest.param(
+            {
+                CyncCapability.ON_OFF,
+                CyncCapability.DIMMING,
+                CyncCapability.CCT_COLOR,
+                CyncCapability.RGB_COLOR,
+            },
+            ColorMode.UNKNOWN,
+            id="full-color",
+        ),
+        pytest.param(
+            {CyncCapability.ON_OFF, CyncCapability.DIMMING, CyncCapability.CCT_COLOR},
+            ColorMode.UNKNOWN,
+            id="color-temperature",
+        ),
+        pytest.param(
+            {CyncCapability.ON_OFF, CyncCapability.DIMMING, CyncCapability.RGB_COLOR},
+            ColorMode.UNKNOWN,
+            id="rgb",
+        ),
+        pytest.param(
+            {CyncCapability.ON_OFF, CyncCapability.DIMMING},
+            ColorMode.BRIGHTNESS,
+            id="dimmer",
+        ),
+        pytest.param({CyncCapability.ON_OFF}, ColorMode.ONOFF, id="on-off"),
+    ],
+)
+@pytest.mark.parametrize("device_mode", [0, 101, 253, 255])
+async def test_unrecognized_color_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    capabilities: set[CyncCapability],
+    expected_fallback: ColorMode,
+    device_mode: int,
+) -> None:
+    """Unrecognized device modes must not produce an invalid light state."""
+    with (
+        patch.object(
+            CyncLight, "supports_capability", side_effect=capabilities.__contains__
+        ),
+        patch.object(
+            CyncLight, "color_mode", new_callable=PropertyMock, return_value=device_mode
+        ),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+        state = hass.states.get("light.bedroom_bedroom_lamp")
+        assert state.state == "on"
+        assert state.attributes["color_mode"] == expected_fallback
+        assert "white" not in state.attributes["supported_color_modes"]
+
+
+@pytest.mark.parametrize(
+    ("device_mode", "expected_mode"),
+    [(1, ColorMode.COLOR_TEMP), (100, ColorMode.COLOR_TEMP), (254, ColorMode.RGB)],
+)
+async def test_recognized_color_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_mode: int,
+    expected_mode: ColorMode,
+) -> None:
+    """Recognized temperature and RGB modes retain their existing mapping."""
+    with patch.object(
+        CyncLight, "color_mode", new_callable=PropertyMock, return_value=device_mode
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+        state = hass.states.get("light.bedroom_bedroom_lamp")
+        assert state.state == "on"
+        assert state.attributes["color_mode"] == expected_mode

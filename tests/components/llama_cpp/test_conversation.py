@@ -102,6 +102,22 @@ async def test_conversation_entity(
     assert mock_chat_log.content[1:] == snapshot
 
 
+@pytest.mark.parametrize(
+    ("config_entry_data", "supports_streaming"),
+    [({CONF_STREAMING: True}, True), ({CONF_STREAMING: False}, False)],
+)
+async def test_conversation_entity_streaming_support(
+    hass: HomeAssistant, supports_streaming: bool
+) -> None:
+    """Verify the conversation entity advertises streaming support."""
+    agent_info = conversation.async_get_agent_info(
+        hass, "conversation.llama_cpp_conversation"
+    )
+
+    assert agent_info is not None
+    assert agent_info.supports_streaming is supports_streaming
+
+
 @pytest.mark.parametrize(("config_entry_options"), [ASSIST_OPTIONS])
 async def test_function_call(
     hass: HomeAssistant,

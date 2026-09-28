@@ -6,7 +6,7 @@ from typing import Any, Final, override
 
 import boto3
 import botocore
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.tts import (
     PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
@@ -52,19 +52,25 @@ _LOGGER: Final = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA: Final = TTS_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_REGION, default=DEFAULT_REGION): vol.In(SUPPORTED_REGIONS),
-        vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
-        vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
-        vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
-        vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): vol.In(SUPPORTED_VOICES),
-        vol.Optional(CONF_ENGINE, default=DEFAULT_ENGINE): vol.In(SUPPORTED_ENGINES),
-        vol.Optional(CONF_OUTPUT_FORMAT, default=DEFAULT_OUTPUT_FORMAT): vol.In(
-            SUPPORTED_OUTPUT_FORMATS
+        probatio.Optional(CONF_REGION, default=DEFAULT_REGION): probatio.In(
+            SUPPORTED_REGIONS
         ),
-        vol.Optional(CONF_SAMPLE_RATE): vol.All(
-            cv.string, vol.In(SUPPORTED_SAMPLE_RATES)
+        probatio.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
+        probatio.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
+        probatio.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
+        probatio.Optional(CONF_VOICE, default=DEFAULT_VOICE): probatio.In(
+            SUPPORTED_VOICES
         ),
-        vol.Optional(CONF_TEXT_TYPE, default=DEFAULT_TEXT_TYPE): vol.In(
+        probatio.Optional(CONF_ENGINE, default=DEFAULT_ENGINE): probatio.In(
+            SUPPORTED_ENGINES
+        ),
+        probatio.Optional(
+            CONF_OUTPUT_FORMAT, default=DEFAULT_OUTPUT_FORMAT
+        ): probatio.In(SUPPORTED_OUTPUT_FORMATS),
+        probatio.Optional(CONF_SAMPLE_RATE): probatio.All(
+            cv.string, probatio.In(SUPPORTED_SAMPLE_RATES)
+        ),
+        probatio.Optional(CONF_TEXT_TYPE, default=DEFAULT_TEXT_TYPE): probatio.In(
             SUPPORTED_TEXT_TYPES
         ),
     }

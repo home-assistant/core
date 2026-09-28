@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, override
 
+import probatio
 from pypaperless import Paperless
 from pypaperless.exceptions import (
     InitializationError,
@@ -11,7 +12,6 @@ from pypaperless.exceptions import (
     PaperlessInactiveOrDeletedError,
     PaperlessInvalidTokenError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
@@ -19,11 +19,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): str,
-        vol.Required(CONF_API_KEY): str,
-        vol.Required(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Required(CONF_URL): str,
+        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_VERIFY_SSL, default=True): bool,
     }
 )
 
@@ -122,7 +122,7 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
             errors=errors,
         )
 

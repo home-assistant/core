@@ -3,7 +3,7 @@
 from functools import partial
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 import whoisdomain
 from whoisdomain.exceptions import (
     FailedParsingWhoisOutputError,
@@ -68,9 +68,9 @@ class WhoisFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_DOMAIN, default=user_input.get(CONF_DOMAIN, "")
                     ): str,
                 }

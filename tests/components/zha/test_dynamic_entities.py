@@ -92,6 +92,7 @@ def _get_platform_entity(
 
 async def test_dynamic_entity_lifecycle(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
@@ -132,11 +133,10 @@ async def test_dynamic_entity_lifecycle(
         ),
     )
     await hass.async_block_till_done()
-    registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    assert registry.async_get(entity_id) is None
+    assert entity_registry.async_get(entity_id) is None
     assert hass.states.get(entity_id) is None
     # The binary_sensor with the same unique_id is untouched.
-    assert registry.async_get(binary_sensor_id) is not None
+    assert entity_registry.async_get(binary_sensor_id) is not None
     assert hass.states.get(binary_sensor_id) == binary_sensor_state_before
 
     ha_zha_data = get_zha_data(hass)
@@ -170,7 +170,7 @@ async def test_dynamic_entity_lifecycle(
     assert len(matching_refs) == 1
 
     # Soft remove: registry entry is kept, state goes unavailable.
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry is not None
     zha_device_proxy.device.emit(
         DeviceEntityRemovedEvent.event_type,
@@ -181,7 +181,7 @@ async def test_dynamic_entity_lifecycle(
         ),
     )
     await hass.async_block_till_done()
-    assert registry.async_get(entity_id) is not None
+    assert entity_registry.async_get(entity_id) is not None
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
@@ -191,6 +191,7 @@ async def test_dynamic_entity_lifecycle(
 
 async def test_unknown_unique_id_is_noop(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
@@ -201,7 +202,6 @@ async def test_unknown_unique_id_is_noop(
     assert entity_id is not None
 
     ha_zha_data = get_zha_data(hass)
-    registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     # Added: nothing queued, no dispatcher signal fired.
     with patch(
@@ -231,12 +231,13 @@ async def test_unknown_unique_id_is_noop(
         )
         await hass.async_block_till_done()
 
-        assert registry.async_get(entity_id) is not None
+        assert entity_registry.async_get(entity_id) is not None
         assert hass.states.get(entity_id) is not None
 
 
 async def test_remove_entity_reference_when_ieee_already_cleared(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
@@ -255,7 +256,7 @@ async def test_remove_entity_reference_when_ieee_already_cleared(
     ieee = zha_device_proxy.device.ieee
     gateway_proxy._ha_entity_refs.pop(ieee, None)
 
-    er.async_get(hass).async_remove(entity_id)  # pylint: disable=home-assistant-tests-registry-fixtures
+    entity_registry.async_remove(entity_id)
     await hass.async_block_till_done()
 
     assert ieee not in gateway_proxy._ha_entity_refs

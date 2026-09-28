@@ -4,8 +4,8 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.lovelace import DOMAIN, _validate_url_slug
 from homeassistant.core import HomeAssistant
@@ -123,5 +123,5 @@ def test_validate_url_slug_valid(value: str, expected: str) -> None:
 )
 def test_validate_url_slug_invalid(value: Any, error_message: str) -> None:
     """Test _validate_url_slug with invalid values."""
-    with pytest.raises(vol.Invalid, match=error_message):
+    with pytest.raises(probatio.Invalid, match=error_message):
         _validate_url_slug(value)

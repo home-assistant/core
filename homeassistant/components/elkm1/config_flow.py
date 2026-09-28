@@ -5,7 +5,7 @@ from typing import Any, Self, override
 
 from elkm1_lib.discovery import ElkSystem
 from elkm1_lib.elk import Elk
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -50,8 +51,8 @@ PROTOCOL_MAP = {
 VALIDATE_TIMEOUT = 35
 
 BASE_SCHEMA: VolDictType = {
-    vol.Optional(CONF_USERNAME, default=""): str,
-    vol.Optional(CONF_PASSWORD, default=""): str,
+    probatio.Optional(CONF_USERNAME, default=""): str,
+    probatio.Optional(CONF_PASSWORD, default=""): str,
 }
 
 SECURE_PROTOCOLS = ["secure", "TLS 1.2"]
@@ -192,7 +193,9 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
         self.host = host
         if self.hass.config_entries.flow.async_has_matching_flow(self):
-            return self.async_abort(reason="already_in_progress")
+            return self.async_abort(
+                reason="already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
         # Handled ignored case since _async_current_entries
         # is called with include_ignore=False
         self._abort_if_unique_id_configured()
@@ -271,24 +274,24 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_USERNAME,
                         default=existing_data.get(CONF_USERNAME, ""),
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_PASSWORD,
                         default="",
                     ): str,
-                    vol.Required(
+                    probatio.Required(
                         CONF_ADDRESS,
                         default=hostname_from_url(existing_data[CONF_HOST]),
                     ): str,
-                    vol.Required(
+                    probatio.Required(
                         CONF_PROTOCOL,
                         default=_get_protocol_from_url(existing_data[CONF_HOST]),
-                    ): vol.In(ALL_PROTOCOLS),
+                    ): probatio.In(ALL_PROTOCOLS),
                 }
             ),
             errors=errors,
@@ -327,7 +330,9 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
         devices_name[None] = "Manual Entry"
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_DEVICE): probatio.In(devices_name)}
+            ),
         )
 
     async def _async_create_or_error(
@@ -383,12 +388,12 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
         default_proto = PORT_PROTOCOL_MAP.get(device.port, DEFAULT_SECURE_PROTOCOL)
         return self.async_show_form(
             step_id="discovered_connection",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
                     **BASE_SCHEMA,
-                    vol.Required(CONF_PROTOCOL, default=default_proto): vol.In(
-                        ALL_PROTOCOLS
-                    ),
+                    probatio.Required(
+                        CONF_PROTOCOL, default=default_proto
+                    ): probatio.In(ALL_PROTOCOLS),
                 }
             ),
             errors=errors,
@@ -419,14 +424,14 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="manual_connection",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
                     **BASE_SCHEMA,
-                    vol.Required(CONF_ADDRESS): str,
-                    vol.Optional(CONF_PREFIX, default=""): str,
-                    vol.Required(
+                    probatio.Required(CONF_ADDRESS): str,
+                    probatio.Optional(CONF_PREFIX, default=""): str,
+                    probatio.Required(
                         CONF_PROTOCOL, default=DEFAULT_SECURE_PROTOCOL
-                    ): vol.In(ALL_PROTOCOLS),
+                    ): probatio.In(ALL_PROTOCOLS),
                 }
             ),
             errors=errors,

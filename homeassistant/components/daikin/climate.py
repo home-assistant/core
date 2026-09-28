@@ -416,8 +416,11 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
     @property
     @override
     def hvac_modes(self) -> list[HVACMode]:
-        """Return the hvac modes (mirrors the main unit)."""
-        return [self._main_hvac_mode]
+        """Return the main unit HVAC mode and zone power off."""
+        main_mode = self._main_hvac_mode
+        if main_mode == HVACMode.OFF:
+            return [HVACMode.OFF]
+        return [main_mode, HVACMode.OFF]
 
     @property
     @override
@@ -549,7 +552,13 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Disallow changing HVAC mode via zone climate."""
+        """Set zone power without changing the main unit HVAC mode."""
+        if hvac_mode == HVACMode.OFF:
+            await self.async_turn_off()
+            return
+        if hvac_mode == self._main_hvac_mode:
+            await self.async_turn_on()
+            return
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="zone_hvac_read_only",

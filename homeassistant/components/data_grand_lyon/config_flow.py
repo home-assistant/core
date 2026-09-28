@@ -13,7 +13,7 @@ from data_grand_lyon_ha import (
     find_tcl_park_and_ride_by_id,
     find_tcl_stop_by_id,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -45,16 +45,16 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
-STEP_RECONFIGURE_SCHEMA = vol.Schema(
+STEP_RECONFIGURE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -215,9 +215,9 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
                 self._stops, key=lambda s: (s.nom, s.commune or "", s.id or 0)
             )
         ]
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_STOP_ID): SelectSelector(
+                probatio.Required(CONF_STOP_ID): SelectSelector(
                     SelectSelectorConfig(
                         options=options,
                         mode=SelectSelectorMode.DROPDOWN,
@@ -244,9 +244,9 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
             )
 
         options = self._selected_stop.desserte if self._selected_stop else []
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_LINE): SelectSelector(
+                probatio.Required(CONF_LINE): SelectSelector(
                     SelectSelectorConfig(
                         options=options,
                         mode=SelectSelectorMode.DROPDOWN,
@@ -349,9 +349,9 @@ class VelovStationSubentryFlowHandler(ConfigSubentryFlow):
                 key=lambda s: (s.name, s.commune or "", s.number or 0),
             )
         ]
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_STATION_ID): SelectSelector(
+                probatio.Required(CONF_STATION_ID): SelectSelector(
                     SelectSelectorConfig(
                         options=options,
                         mode=SelectSelectorMode.DROPDOWN,
@@ -438,9 +438,9 @@ class ParkAndRideSubentryFlowHandler(ConfigSubentryFlow):
             SelectOptionDict(value=park.id, label=_park_and_ride_label(park))
             for park in sorted(self._parks, key=lambda p: (p.nom, p.id))
         ]
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_PARK_ID): SelectSelector(
+                probatio.Required(CONF_PARK_ID): SelectSelector(
                     SelectSelectorConfig(
                         options=options,
                         mode=SelectSelectorMode.DROPDOWN,

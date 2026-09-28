@@ -6,7 +6,7 @@ from typing import Any, override
 from urllib.parse import urlparse
 
 from afsapi import AFSAPI, FSConnectionError, FSNotImplementedError, InvalidPinError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
@@ -22,16 +22,16 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
     }
 )
 
-STEP_DEVICE_CONFIG_DATA_SCHEMA = vol.Schema(
+STEP_DEVICE_CONFIG_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(
+        probatio.Required(
             CONF_PIN,
             default=DEFAULT_PIN,
         ): str,

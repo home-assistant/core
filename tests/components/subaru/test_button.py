@@ -10,7 +10,7 @@ from homeassistant.components.subaru.const import (
     VEHICLE_HAS_EV,
     VEHICLE_HAS_REMOTE_START,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -26,6 +26,7 @@ from .conftest import (
     MOCK_API,
     MOCK_API_FETCH,
     MOCK_API_GET_DATA,
+    advance_time_to_next_fetch,
     setup_subaru_config_entry,
 )
 
@@ -299,3 +300,15 @@ async def test_no_buttons_without_remote_start(
     assert entry is None
     entry = entity_registry.async_get(VEHICLE_BUTTONS[TEST_VIN_3_G3]["remote_stop"])
     assert entry is None
+
+
+async def test_button_unavailable_on_fetch_failure(
+    hass: HomeAssistant, ev_entry: MockConfigEntry
+) -> None:
+    """Test button goes unavailable when a fetch fails after setup."""
+    with patch(MOCK_API_FETCH, side_effect=SubaruException("403 Error")):
+        advance_time_to_next_fetch(hass)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(VEHICLE_BUTTONS[TEST_VIN_2_EV]["remote_start"])
+    assert state.state == STATE_UNAVAILABLE

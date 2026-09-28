@@ -3,7 +3,7 @@
 from typing import Any, cast
 
 from aioesphomeapi.model import SerialProxyPortType
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntryState
@@ -79,8 +79,8 @@ def _serial_port_type_name(port_type: SerialProxyPortType | int | None) -> str |
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "esphome/get_encryption_key",
-        vol.Required(ENTRY_ID): str,
+        probatio.Required(TYPE): "esphome/get_encryption_key",
+        probatio.Required(ENTRY_ID): str,
     }
 )
 def get_encryption_key(
@@ -108,8 +108,8 @@ def get_encryption_key(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "esphome/get_device_capabilities",
-        vol.Required(DEVICE_ID): str,
+        probatio.Required(TYPE): "esphome/get_device_capabilities",
+        probatio.Required(DEVICE_ID): str,
     }
 )
 def get_device_capabilities(
@@ -125,20 +125,15 @@ def get_device_capabilities(
         )
         return
 
-    entry: ESPHomeConfigEntry | None = None
-    for entry_id in device.config_entries:
-        candidate = hass.config_entries.async_get_entry(entry_id)
-        if candidate is not None and candidate.domain == DOMAIN:
-            entry = cast(ESPHomeConfigEntry, candidate)
-            break
-
-    if entry is None:
+    candidate = hass.config_entries.async_get_entry(device.config_entry_id)
+    if candidate is None or candidate.domain != DOMAIN:
         connection.send_error(
             msg["id"],
             websocket_api.ERR_NOT_FOUND,
             "Device is not an ESPHome device",
         )
         return
+    entry = cast(ESPHomeConfigEntry, candidate)
 
     # Sub-devices share the config entry but not node-level proxy capabilities.
     if not isinstance(device, dr.DeviceEntry):

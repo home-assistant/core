@@ -5,7 +5,7 @@ from typing import Any, override
 
 import hikvision.api
 from hikvision.error import HikvisionError, MissingParamError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -34,11 +34,11 @@ DEFAULT_USERNAME = "admin"
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+        probatio.Optional(CONF_PORT): cv.port,
+        probatio.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
     }
 )
 

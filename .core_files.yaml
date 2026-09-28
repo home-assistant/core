@@ -11,6 +11,12 @@ core: &core
   - requirements.txt
   - setup.cfg
 
+# Performance benchmark suite (CodSpeed). Only gates the benchmark job; kept out
+# of the `any` aggregate below so it does not pull in the full test suite.
+benchmarks: &benchmarks
+  - benchmarks/**
+  - requirements_test.txt
+
 # Our base platforms, that are used by other integrations
 base_platforms: &base_platforms
   - homeassistant/components/ai_task/**
@@ -118,9 +124,13 @@ components: &components
   - homeassistant/components/sun/**
   - homeassistant/components/system_health/**
   - homeassistant/components/tag/**
+  # telegram_bot is used by telegram
+  - homeassistant/components/telegram_bot/**
   - homeassistant/components/template/**
   - homeassistant/components/timer/**
   - homeassistant/components/trace/**
+  # twilio is used by twilio_call and twilio_sms
+  - homeassistant/components/twilio/**
   - homeassistant/components/usb/**
   - homeassistant/components/webhook/**
   - homeassistant/components/websocket_api/**

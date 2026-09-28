@@ -2,7 +2,7 @@
 
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -18,14 +18,14 @@ from .const import (
 from .coordinator import TadoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
-SCHEMA_ADD_METER_READING = vol.Schema(
+SCHEMA_ADD_METER_READING = probatio.Schema(
     {
-        vol.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
+        probatio.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
             {
                 "integration": DOMAIN,
             }
         ),
-        vol.Required(CONF_READING): vol.Coerce(int),
+        probatio.Required(CONF_READING): probatio.Coerce(int),
     }
 )
 
