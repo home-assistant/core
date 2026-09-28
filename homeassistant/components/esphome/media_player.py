@@ -59,7 +59,8 @@ _STATES: EsphomeEnumMapper[EspMediaPlayerState, MediaPlayerState] = EsphomeEnumM
     }
 )
 
-# The native API has no commands for these flags
+# The native API has no commands for these flags, and the entity does not
+# implement search
 _UNSUPPORTED_FEATURES = (
     EspMediaPlayerEntityFeature.SEEK
     | EspMediaPlayerEntityFeature.PREVIOUS_TRACK
@@ -68,6 +69,7 @@ _UNSUPPORTED_FEATURES = (
     | EspMediaPlayerEntityFeature.SELECT_SOUND_MODE
     | EspMediaPlayerEntityFeature.SHUFFLE_SET
     | EspMediaPlayerEntityFeature.GROUPING
+    | EspMediaPlayerEntityFeature.SEARCH_MEDIA
 )
 
 _FEATURES = {
@@ -85,7 +87,6 @@ _FEATURES = {
     EspMediaPlayerEntityFeature.REPEAT_SET: MediaPlayerEntityFeature.REPEAT_SET,
     EspMediaPlayerEntityFeature.MEDIA_ANNOUNCE: MediaPlayerEntityFeature.MEDIA_ANNOUNCE,
     EspMediaPlayerEntityFeature.MEDIA_ENQUEUE: MediaPlayerEntityFeature.MEDIA_ENQUEUE,
-    EspMediaPlayerEntityFeature.SEARCH_MEDIA: MediaPlayerEntityFeature.SEARCH_MEDIA,
 }
 
 ATTR_BYPASS_PROXY = "bypass_proxy"

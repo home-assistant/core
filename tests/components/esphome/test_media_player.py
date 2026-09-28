@@ -24,6 +24,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_REPEAT,
+    ATTR_MEDIA_SEARCH_QUERY,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -33,6 +34,7 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_STOP,
     SERVICE_PLAY_MEDIA,
     SERVICE_REPEAT_SET,
+    SERVICE_SEARCH_MEDIA,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
@@ -49,7 +51,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import ServiceNotSupported, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -288,6 +290,51 @@ async def test_media_player_entity_with_undefined_flags(
     mock_client.media_player_command.assert_has_calls(
         [call(1, volume=0.7, device_id=0)]
     )
+
+
+async def test_media_player_entity_ignores_search_media_flag(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test that the SEARCH_MEDIA flag from the device is not exposed."""
+    entity_info = [
+        MediaPlayerInfo(
+            object_id="mymedia_player",
+            key=1,
+            name="my media_player",
+            supports_pause=True,
+            # PAUSE,PLAY,SEARCH_MEDIA
+            feature_flags=4210689,
+        )
+    ]
+    states = [
+        MediaPlayerEntityState(
+            key=1, volume=50, muted=False, state=MediaPlayerState.PLAYING
+        )
+    ]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    state = hass.states.get("media_player.test_my_media_player")
+    assert state is not None
+    assert state.attributes["supported_features"] == (
+        MediaPlayerEntityFeature.PAUSE | MediaPlayerEntityFeature.PLAY
+    )
+
+    with pytest.raises(ServiceNotSupported):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_SEARCH_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_my_media_player",
+                ATTR_MEDIA_SEARCH_QUERY: "music",
+            },
+            blocking=True,
+            return_response=True,
+        )
 
 
 async def test_media_player_entity_ignores_flags_without_command(
