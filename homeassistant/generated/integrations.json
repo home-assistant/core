@@ -6887,12 +6887,6 @@
           "iot_class": "cloud_polling",
           "name": "SolarEdge"
         },
-        "solaredge_local": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "local_polling",
-          "name": "SolarEdge Local"
-        },
         "solaredge_modbus": {
           "integration_type": "device",
           "config_flow": true,
