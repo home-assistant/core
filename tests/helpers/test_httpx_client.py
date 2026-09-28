@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 
 import certifi
 import httpcore2
+from httpcore2._backends.mock import AsyncMockBackend
 import httpx2
 import pytest
 import truststore
@@ -14,7 +15,12 @@ import truststore
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import httpx_client as client
-from homeassistant.util.ssl import SSL_ALPN_HTTP11, SSL_ALPN_HTTP11_HTTP2
+from homeassistant.util.ssl import (
+    SSL_ALPN_HTTP11,
+    SSL_ALPN_HTTP11_HTTP2,
+    SSLCipherList,
+    client_context,
+)
 
 from tests.common import MockModule, extract_stack_to_frame, mock_integration
 
@@ -387,3 +393,30 @@ def test_truststore_ssl_context_subclass(protocol: ssl._SSLMethod) -> None:
     assert context.protocol == protocol
     assert context.cert_store_stats() == expected.cert_store_stats()
     assert context.verify_flags == expected.verify_flags
+
+
+@pytest.mark.parametrize(
+    ("alpn_protocols", "http2"),
+    [
+        pytest.param(SSL_ALPN_HTTP11, False, id="http1"),
+        pytest.param(SSL_ALPN_HTTP11_HTTP2, True, id="http2"),
+    ],
+)
+async def test_httpcore2_does_not_mutate_ssl_context_alpn(
+    alpn_protocols: tuple[str, ...], http2: bool
+) -> None:
+    """Test httpcore2 sets the same ALPN protocols HA preconfigured."""
+    context = client_context(SSLCipherList.PYTHON_DEFAULT, alpn_protocols)
+    backend = AsyncMockBackend(
+        [b"HTTP/1.1 200 OK\r\n", b"Content-Length: 0\r\n", b"\r\n"]
+    )
+
+    with patch.object(
+        ssl.SSLContext, "set_alpn_protocols", autospec=True
+    ) as mock_set_alpn:
+        async with httpcore2.AsyncConnectionPool(
+            ssl_context=context, http2=http2, network_backend=backend
+        ) as pool:
+            await pool.request("GET", "https://example.com/")
+
+    mock_set_alpn.assert_called_once_with(context, list(alpn_protocols))
