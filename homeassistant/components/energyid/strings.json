@@ -83,8 +83,25 @@
     "device_not_claimed": {
       "message": "This Home Assistant connection is not claimed in EnergyID. Re-authenticate to claim it."
     },
+    "directives_update_failed": {
+      "message": "Error communicating with EnergyID while updating directives."
+    },
     "invalid_credentials": {
       "message": "Invalid provisioning credentials."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "enable_directives": "Receive EnergyID directives"
+        },
+        "data_description": {
+          "enable_directives": "Create a sensor for every directive this EnergyID record may access, including directives granted later."
+        },
+        "description": "Directives tell you when it is a good or bad moment to use electricity. What a directive means for your installation is decided by its provider.\n\nManage access: {directives_url}",
+        "title": "EnergyID directives"
+      }
     }
   }
 }

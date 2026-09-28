@@ -45,7 +45,12 @@ def mock_webhook_client() -> Generator[MagicMock]:
         client.authenticate = AsyncMock(return_value=True)
         client.webhook_policy = {"uploadInterval": 60}
         client.device_name = "Test Device"
+        client.recordNumber = "EA-TEST"
+        client.recordName = "Test EnergyID Site"
+        client.api_access_token = None
         client.synchronize_sensors = AsyncMock()
+        client.get_directives = AsyncMock(return_value=[])
+        client.get_directive_data = AsyncMock()
 
         # Create a mock sensor that will be returned by get_or_create_sensor
         mock_sensor = MagicMock()
