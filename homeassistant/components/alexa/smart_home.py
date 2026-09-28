@@ -26,6 +26,7 @@ from .const import (
     CONF_ENDPOINT,
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
+    CONF_FILTER_LABEL,
     CONF_LOCALE,
     EVENT_ALEXA_SMART_HOME,
 )
@@ -93,11 +94,21 @@ class AlexaConfig(AbstractConfig):
     @override
     def should_expose(self, entity_id: str) -> bool:
         """If an entity should be exposed."""
+        entity_registry = er.async_get(self.hass)
+        registry_entry = entity_registry.async_get(entity_id)
+
+        # Label-based filtering takes priority if configured
+        if filter_label := self._config.get(CONF_FILTER_LABEL):
+            if registry_entry is None:
+                return False
+            return filter_label in registry_entry.labels
+
+        # Fall back to existing YAML entity filter
         if not self._config[CONF_FILTER].empty_filter:
             return bool(self._config[CONF_FILTER](entity_id))
 
-        entity_registry = er.async_get(self.hass)
-        if registry_entry := entity_registry.async_get(entity_id):
+        # Default: hide auxiliary/hidden entities
+        if registry_entry:
             auxiliary_entity = (
                 registry_entry.entity_category is not None
                 or registry_entry.hidden_by is not None
