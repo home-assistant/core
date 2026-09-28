@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import override
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ClientResponseError
 from energyid_webhooks.client_v2 import WebhookClient
 from energyid_webhooks.directives import (
     DirectiveData,
@@ -16,6 +16,7 @@ from energyid_webhooks.directives import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -85,6 +86,16 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
             resources = await self.client.get_directives()
         except PermissionError:
             return EnergyIDDirectivesData(resources={}, schedules={})
+        except ClientResponseError as err:
+            if err.status in (401, 403):
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_credentials",
+                ) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="directives_update_failed",
+            ) from err
         except (ClientError, OSError, TimeoutError, ValueError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
