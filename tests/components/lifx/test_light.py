@@ -341,6 +341,33 @@ async def test_effect_pulse_reads_color_before_merging(
     assert effect.color == HSBK(120.0, 1.0, 128 / 255, 3500)
 
 
+@pytest.mark.parametrize(
+    ("brightness", "expected"),
+    [
+        pytest.param({ATTR_BRIGHTNESS: 0}, 1 / 255, id="brightness"),
+        pytest.param({ATTR_BRIGHTNESS_PCT: 0}, 0.01, id="brightness_pct"),
+    ],
+)
+async def test_effect_pulse_clamps_brightness_above_zero(
+    hass: HomeAssistant,
+    mock_effect_conductor: MagicMock,
+    brightness: dict[str, int],
+    expected: float,
+) -> None:
+    """Test a zero brightness is raised, as it would pulse to black."""
+    await async_setup_lifx_entry(hass, create_mock_light())
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_PULSE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HS_COLOR: (120.0, 50.0), **brightness},
+        blocking=True,
+    )
+
+    effect, _ = mock_effect_conductor.start.await_args.args
+    assert effect.color == HSBK(120.0, 0.5, expected, 3500)
+
+
 async def test_effect_colorloop_uses_public_effect_defaults(
     hass: HomeAssistant, mock_effect_conductor: MagicMock
 ) -> None:
@@ -388,6 +415,24 @@ async def test_effect_colorloop_orders_saturation_bounds(
     effect = mock_effect_conductor.start.await_args.args[0]
     assert effect.saturation_min == 0.5
     assert effect.saturation_max == 0.8
+
+
+async def test_effect_colorloop_clamps_saturation_above_zero(
+    hass: HomeAssistant, mock_effect_conductor: MagicMock
+) -> None:
+    """Test a zero saturation is raised, as it switches the bulb to white."""
+    await async_setup_lifx_entry(hass, create_mock_light())
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_COLORLOOP,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SATURATION_MIN: 0, ATTR_SATURATION_MAX: 0},
+        blocking=True,
+    )
+
+    effect = mock_effect_conductor.start.await_args.args[0]
+    assert effect.saturation_min == 0.01
+    assert effect.saturation_max == 0.01
 
 
 async def test_effect_colorloop_accepts_absolute_brightness(
@@ -1668,6 +1713,26 @@ def test_theme_selector_options_match_the_library(service: str) -> None:
     options = services[service]["fields"][ATTR_THEME]["selector"]["select"]["options"]
 
     assert options == sorted(ThemeLibrary.get_available_themes())
+
+
+@pytest.mark.parametrize(
+    ("service", "default"),
+    [
+        pytest.param(SERVICE_EFFECT_MOVE, None, id="move"),
+        pytest.param(SERVICE_PAINT_THEME, "exciting", id="paint_theme"),
+    ],
+)
+def test_theme_field_default_matches_the_action(
+    service: str, default: str | None
+) -> None:
+    """Test the UI pre-fills the theme the action applies when none is given.
+
+    Move applies no theme without one, so a default would suggest a color
+    change the action does not otherwise make.
+    """
+    services = load_yaml_dict(f"{lifx.__path__[0]}/services.yaml")
+
+    assert services[service]["fields"][ATTR_THEME].get("default") == default
 
 
 @pytest.mark.parametrize(
