@@ -56,8 +56,8 @@
   },
   "entity": {
     "binary_sensor": {
-      "container_oom_killed": {
-        "name": "Out of memory killed"
+      "container_out_of_memory": {
+        "name": "Out of memory"
       },
       "status": {
         "name": "Status"

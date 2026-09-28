@@ -60,8 +60,8 @@ CONTAINER_SENSORS: tuple[PortainerContainerBinarySensorEntityDescription, ...] =
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerContainerBinarySensorEntityDescription(
-        key="container_oom_killed",
-        translation_key="container_oom_killed",
+        key="container_out_of_memory",
+        translation_key="container_out_of_memory",
         state_fn=lambda data: (
             state.oom_killed if (state := data.container_inspect.state) else None
         ),
