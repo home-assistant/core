@@ -112,6 +112,9 @@ class ModbusBaseEntity(Entity):
         await self._async_update()
         self.async_write_ha_state()
         if self._scan_interval > 0 and not self._stopped:
+            # an overlapping update scheduled one already, keep a single timer
+            if self._cancel_call:
+                self._cancel_call()
             self._cancel_call = self._async_call_later(
                 self._scan_interval, self.async_local_update
             )
@@ -152,8 +155,8 @@ class ModbusBaseEntity(Entity):
     def async_disable(self) -> None:
         """Remote stop entity."""
         LOGGER.info(f"hold entity {self._attr_name}")
-        # a timer this misses because two updates overlapped must not start
-        # polling again
+        # an update started by an action is not tracked, it must not start
+        # polling again when it finishes
         self._stopped = True
         self._async_cancel_updates()
         self._attr_available = False
@@ -373,8 +376,8 @@ class ModbusToggleEntity(ModbusBaseEntity, ToggleEntity, RestoreEntity):
             if self._cancel_call:
                 self._cancel_call()
                 self._cancel_call = None
-            self._cancel_call = async_call_later(
-                self.hass, self._verify_delay, self.async_update
+            self._cancel_call = self._async_call_later(
+                self._verify_delay, self.async_update
             )
             return
         await self.async_local_update(cancel_pending_update=True)

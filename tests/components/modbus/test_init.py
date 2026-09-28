@@ -95,6 +95,7 @@ from homeassistant.components.modbus.validators import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_STATE,
     CONF_ADDRESS,
     CONF_BINARY_SENSORS,
@@ -1287,6 +1288,60 @@ async def test_renamed_entity_keeps_polling(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(new_entity_id).state == "42"
+
+
+async def test_overlapping_updates_keep_one_poll_timer(
+    hass: HomeAssistant, mock_pymodbus: mock.AsyncMock
+) -> None:
+    """Test an update overlapping a poll does not start a second polling loop."""
+    entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
+    config = {
+        DOMAIN: [
+            {
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_SCAN_INTERVAL: 10,
+                    }
+                ],
+            }
+        ]
+    }
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, config) is True
+    await hass.async_block_till_done()
+    start = dt_util.utcnow()
+    async_fire_time_changed(hass, start + timedelta(seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(entity_id).state == "0"
+
+    # hold the next poll on the device, so an update requested now overlaps it
+    release_poll = asyncio.Event()
+    result = mock_pymodbus.read_holding_registers.return_value
+
+    async def _held_read(*args: object, **kwargs: object) -> ReadResult:
+        await release_poll.wait()
+        return result
+
+    mock_pymodbus.read_holding_registers.side_effect = _held_read
+    async_fire_time_changed(hass, start + timedelta(seconds=12))
+    await asyncio.sleep(0)
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {ATTR_ENTITY_ID: entity_id}
+    )
+    await asyncio.sleep(0)
+    release_poll.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_pymodbus.read_holding_registers.reset_mock()
+    async_fire_time_changed(hass, start + timedelta(seconds=25))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_pymodbus.read_holding_registers.call_count == 1
 
 
 async def _fire_first_connect_timer(hass: HomeAssistant) -> None:
