@@ -1853,9 +1853,6 @@ opower==0.22.1
 # homeassistant.components.oralb
 oralb-ble==1.1.3
 
-# homeassistant.components.oru
-oru==0.1.11
-
 # homeassistant.components.orvibo
 orvibo==1.1.2
 
@@ -3132,7 +3129,7 @@ sofar-modbus==0.17.0
 solaredge-web==0.4.0
 
 # homeassistant.components.solaredge_modbus
-solaredged==0.2.4
+solaredged==0.3.0
 
 # homeassistant.components.solarlog
 solarlog_cli==0.7.1
@@ -3314,7 +3311,7 @@ ttls==1.11.1
 ttn_client==1.3.0
 
 # homeassistant.components.tuya
-tuya-device-handlers==0.0.29
+tuya-device-handlers==0.0.31
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.2.15
@@ -3385,7 +3382,7 @@ venstarcolortouch==0.22
 viaggiatreno_ha==0.2.4
 
 # homeassistant.components.victron_ble
-victron-ble-ha-parser==0.7.0
+victron-ble-ha-parser==0.8.0
 
 # homeassistant.components.victron_gx
 victron-mqtt==2026.9.5

@@ -5379,12 +5379,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "oru": {
-      "name": "Orange and Rockland Utility (ORU)",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "oru_opower": {
       "name": "Orange and Rockland Utilities (ORU) Opower",
       "integration_type": "virtual",
@@ -5401,6 +5395,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "osram_infrared": {
+      "name": "OSRAM Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
     },
     "osramlightify": {
       "name": "Osramlightify",
