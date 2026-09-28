@@ -1104,7 +1104,9 @@ class DurationSelector(Selector[DurationSelectorConfig]):
             cv.time_period_dict(data)
         else:
             if isinstance(data, dict) and "negative" in data:
-                raise probatio.Invalid("negative is only allowed in signed and offset modes")
+                raise probatio.Invalid(
+                    "negative is only allowed in signed and offset modes"
+                )
             cv.positive_time_period_dict(data)
         return cast(dict[str, float], data)
 
