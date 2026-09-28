@@ -429,6 +429,55 @@ async def test_sensors_streaming_unit_conversion(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_streaming_route_ends(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+) -> None:
+    """Test the streaming active route sensors clear when navigation ends."""
+    await setup_platform(hass, [Platform.SENSOR])
+    vin = VEHICLE_DATA_ALT["response"]["vin"]
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {
+                Signal.DESTINATION_NAME: "Home",
+                Signal.MINUTES_TO_ARRIVAL: 12.5,
+                Signal.MILES_TO_ARRIVAL: 6.2,
+                Signal.EXPECTED_ENERGY_PERCENT_AT_TRIP_ARRIVAL: 62,
+                Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 3,
+            },
+            "createdAt": "2026-09-28T08:40:00.000Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test_state_of_charge_at_arrival").state == "62"
+    assert hass.states.get("sensor.test_traffic_delay").state == "3"
+
+    # The car keeps reporting the last trip's arrival energy and traffic delay
+    # after arriving, but the route fields go null.
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {
+                Signal.DESTINATION_NAME: None,
+                Signal.MINUTES_TO_ARRIVAL: None,
+                Signal.MILES_TO_ARRIVAL: None,
+                Signal.EXPECTED_ENERGY_PERCENT_AT_TRIP_ARRIVAL: 62,
+                Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 0,
+            },
+            "createdAt": "2026-09-28T08:59:11.879Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get("sensor.test_state_of_charge_at_arrival").state == STATE_UNKNOWN
+    )
+    assert hass.states.get("sensor.test_traffic_delay").state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors_streaming_tpms_none_clears_state(
     hass: HomeAssistant,
     mock_vehicle_data: AsyncMock,
