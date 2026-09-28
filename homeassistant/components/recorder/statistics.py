@@ -1485,40 +1485,55 @@ def _generate_statistics_period_stmt(
     period_bounds: tuple[tuple[float, float], ...],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> Select:
-    """Select endpoint rows or arithmetic means for each calendar period."""
+    """Select reduced statistics for each calendar period."""
     queries = []
-    mean_only = types == {"mean"}
+    aggregate_only = types <= {"mean", "min", "max"}
+
     for lower, upper in period_bounds:
-        if mean_only:
+        if aggregate_only:
             query = select(
                 Statistics.metadata_id,
                 func.min(Statistics.start_ts).label("start_ts"),
-                func.avg(Statistics.mean).label("mean"),
             )
+            if "mean" in types:
+                query = query.add_columns(func.avg(Statistics.mean).label("mean"))
+            if "min" in types:
+                query = query.add_columns(func.min(Statistics.min).label("min"))
+            if "max" in types:
+                query = query.add_columns(func.max(Statistics.max).label("max"))
         else:
             query = select(
                 Statistics.metadata_id,
                 func.max(Statistics.start_ts).label("start_ts"),
             )
-        query = query.where(Statistics.start_ts >= lower, Statistics.start_ts < upper)
+
+        query = query.where(
+            Statistics.start_ts >= lower,
+            Statistics.start_ts < upper,
+        )
         if metadata_ids:
             query = query.where(Statistics.metadata_id.in_(metadata_ids))
+
         queries.append(query.group_by(Statistics.metadata_id))
-    endpoints = union_all(*queries).subquery()
-    if mean_only:
-        return select(endpoints)
+
+    reduced = union_all(*queries).subquery()
+
+    if aggregate_only:
+        return select(reduced)
+
     columns = select(Statistics.metadata_id, Statistics.start_ts)
     for key, type_columns in _type_column_mapping.items():
         if key in types:
             columns = columns.add_columns(
                 *(getattr(Statistics, column) for column in type_columns)
             )
+
     # Keep dynamically constructed bound values local to this request.
     return columns.join(
-        endpoints,
+        reduced,
         and_(
-            Statistics.metadata_id == endpoints.c.metadata_id,
-            Statistics.start_ts == endpoints.c.start_ts,
+            Statistics.metadata_id == reduced.c.metadata_id,
+            Statistics.start_ts == reduced.c.start_ts,
         ),
     )
 
@@ -2298,10 +2313,14 @@ def _statistics_during_period_with_session(
     if period in {"day", "week", "month", "year"} and (
         types <= {"sum", "state", "last_reset"}
         or (
-            types == {"mean"}
-            and all(
-                meta["mean_type"] == StatisticMeanType.ARITHMETIC
-                for _, meta in metadata.values()
+            types <= {"mean", "min", "max"}
+            and (
+                "mean" not in types
+                or all(
+                    meta["mean_type"]
+                    in (StatisticMeanType.NONE, StatisticMeanType.ARITHMETIC)
+                    for _, meta in metadata.values()
+                )
             )
         )
     ):

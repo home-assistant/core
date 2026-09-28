@@ -133,7 +133,7 @@ async def test_endpoint_parameter_budget(endpoint_session: Session) -> None:
         assert len(compiled.positiontup or compiled.params) <= 10
 
 
-def _unreduced_statistics(
+def _unoptimized_statistics(
     session: Session,
     start_time: datetime,
     end_time: datetime | None,
@@ -142,7 +142,7 @@ def _unreduced_statistics(
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
     max_bind_vars: int,
 ) -> Sequence[Row]:
-    """Execute the original query to compare the complete public result."""
+    """Execute the unoptimized query path for result comparison."""
     return execute_stmt_lambda_element(
         session,
         statistics._generate_statistics_during_period_stmt(
@@ -188,7 +188,7 @@ def _unreduced_statistics(
         pytest.param({"test:energy_a"}, id="selected-sensor"),
     ],
 )
-async def test_endpoint_results_match_original(
+async def test_endpoint_statistics_return_last_row_per_period(
     hass: HomeAssistant,
     timezone: str,
     period: Literal["day", "week", "month", "year"],
@@ -196,7 +196,7 @@ async def test_endpoint_results_match_original(
     end_time: datetime | None,
     statistic_ids: set[str] | None,
 ) -> None:
-    """Preserve resets, corrections, missing data, conversion and DST semantics."""
+    """Return the last statistics row for each calendar period."""
     await hass.config.async_set_time_zone(timezone)
     start = datetime(2024, 10, 26, tzinfo=dt_util.UTC)
     samples = [
@@ -241,7 +241,7 @@ async def test_endpoint_results_match_original(
     with patch.object(
         statistics,
         "_get_statistics_period_rows",
-        side_effect=_unreduced_statistics,
+        side_effect=_unoptimized_statistics,
     ) as baseline:
         expected = statistics.statistics_during_period(
             hass, start, end_time, statistic_ids, period, {"energy": "Wh"}, types
@@ -282,6 +282,41 @@ def test_endpoint_statement_cache_key(
     actual = statistics._generate_statistics_period_stmt(
         metadata_ids, bounds, types
     )._generate_cache_key()
+    assert baseline is not None
+    assert actual is not None
+    assert (actual == baseline) is same_key
+
+
+@pytest.mark.parametrize(
+    ("types", "same_key"),
+    [
+        pytest.param({"mean"}, True, id="same-columns"),
+        pytest.param({"min"}, False, id="different-min-column"),
+        pytest.param({"max"}, False, id="different-max-column"),
+        pytest.param(
+            {"mean", "min", "max"},
+            False,
+            id="different-all-aggregate-columns",
+        ),
+    ],
+)
+def test_aggregate_statement_cache_key(
+    types: set[Literal["max", "mean", "min"]],
+    same_key: bool,
+) -> None:
+    """Cache aggregate queries by selected columns."""
+    baseline = statistics._generate_statistics_period_stmt(
+        [1],
+        ((0.0, 86400.0),),
+        {"mean"},
+    )._generate_cache_key()
+
+    actual = statistics._generate_statistics_period_stmt(
+        [2],
+        ((1.0, 86401.0),),
+        types,
+    )._generate_cache_key()
+
     assert baseline is not None
     assert actual is not None
     assert (actual == baseline) is same_key
@@ -403,7 +438,7 @@ async def test_endpoint_unbounded_sensor_filter(
     "statistic_ids", [None, {"test:statistic_1", "test:statistic_2"}]
 )
 @pytest.mark.parametrize("bounded", [False, True])
-async def test_arithmetic_means_match_original(
+async def test_arithmetic_mean_returns_average_per_period(
     endpoint_session: Session,
     hass: HomeAssistant,
     timezone: str,
@@ -415,7 +450,7 @@ async def test_arithmetic_means_match_original(
     statistic_ids: set[str] | None,
     bounded: bool,
 ) -> None:
-    """Preserve arithmetic mean semantics, conversion and calendar boundaries."""
+    """Return the arithmetic average for each calendar period."""
     await hass.config.async_set_time_zone(timezone)
     endpoint_session.query(StatisticsMeta).update(
         {
@@ -456,7 +491,7 @@ async def test_arithmetic_means_match_original(
     with patch.object(
         statistics,
         "_get_statistics_period_rows",
-        side_effect=_unreduced_statistics,
+        side_effect=_unoptimized_statistics,
     ) as baseline:
         expected = statistics._statistics_during_period_with_session(
             hass,
@@ -495,6 +530,208 @@ async def test_arithmetic_means_match_original(
                 rel=1e-12,
                 abs=1e-12,
             )
+
+
+@pytest.mark.parametrize("period", ["day", "week", "month", "year"])
+@pytest.mark.parametrize(
+    "types",
+    [
+        pytest.param({"min"}, id="min"),
+        pytest.param({"max"}, id="max"),
+        pytest.param({"min", "max"}, id="min-max"),
+        pytest.param({"mean", "min"}, id="mean-min"),
+        pytest.param({"mean", "max"}, id="mean-max"),
+        pytest.param({"mean", "min", "max"}, id="mean-min-max"),
+    ],
+)
+async def test_aggregate_statistics_return_reduced_values_per_period(
+    endpoint_session: Session,
+    hass: HomeAssistant,
+    period: Literal["day", "week", "month", "year"],
+    types: set[Literal["max", "mean", "min"]],
+) -> None:
+    """Return reduced aggregate values for each calendar period."""
+    endpoint_session.query(StatisticsMeta).update(
+        {
+            StatisticsMeta.mean_type: StatisticMeanType.ARITHMETIC,
+            StatisticsMeta.unit_class: "temperature",
+            StatisticsMeta.unit_of_measurement: "°C",
+            StatisticsMeta.has_sum: False,
+        }
+    )
+
+    start = datetime(2024, 3, 26, 7, tzinfo=dt_util.UTC)
+
+    samples = [
+        (0, 10.0, 5.0, 15.0),
+        (1, 20.0, 8.0, 25.0),
+        (18, None, None, None),
+        (24, 30.0, 18.0, 35.0),
+        (25, 40.0, 22.0, 50.0),
+        (48, None, None, None),
+        (120, 5.0, -10.0, 12.0),
+    ]
+
+    endpoint_session.add_all(
+        Statistics(
+            metadata_id=metadata_id,
+            start_ts=(start + timedelta(hours=hour)).timestamp(),
+            mean=mean,
+            min=minimum,
+            max=maximum,
+        )
+        for metadata_id in (1, 2)
+        for hour, mean, minimum, maximum in samples
+    )
+    endpoint_session.commit()
+
+    with patch.object(
+        statistics,
+        "_get_statistics_period_rows",
+        side_effect=_unoptimized_statistics,
+    ) as baseline:
+        expected = statistics._statistics_during_period_with_session(
+            hass,
+            endpoint_session,
+            start,
+            start + timedelta(days=10),
+            {"test:statistic_1", "test:statistic_2"},
+            period,
+            {"temperature": "°F"},
+            types,
+        )
+
+    assert baseline.call_count == 1
+
+    actual = statistics._statistics_during_period_with_session(
+        hass,
+        endpoint_session,
+        start,
+        start + timedelta(days=10),
+        {"test:statistic_1", "test:statistic_2"},
+        period,
+        {"temperature": "°F"},
+        types,
+    )
+
+    assert actual.keys() == expected.keys()
+    for statistic_id, rows in expected.items():
+        assert len(actual[statistic_id]) == len(rows)
+        for actual_row, expected_row in zip(actual[statistic_id], rows, strict=True):
+            assert actual_row == pytest.approx(
+                expected_row,
+                rel=1e-12,
+                abs=1e-12,
+            )
+
+
+@pytest.mark.parametrize(
+    "statistic_ids",
+    [
+        pytest.param(None, id="all-statistics"),
+        pytest.param(
+            {"test:statistic_1", "test:statistic_2"},
+            id="selected-statistics",
+        ),
+    ],
+)
+async def test_aggregate_statistics_allow_missing_mean(
+    endpoint_session: Session,
+    hass: HomeAssistant,
+    statistic_ids: set[str] | None,
+) -> None:
+    """Allow aggregate requests for statistics without a mean."""
+    endpoint_session.query(StatisticsMeta).filter(StatisticsMeta.id == 1).update(
+        {
+            StatisticsMeta.mean_type: StatisticMeanType.ARITHMETIC,
+            StatisticsMeta.unit_class: "temperature",
+            StatisticsMeta.unit_of_measurement: "°C",
+            StatisticsMeta.has_sum: False,
+        }
+    )
+    endpoint_session.query(StatisticsMeta).filter(StatisticsMeta.id == 2).update(
+        {
+            StatisticsMeta.mean_type: StatisticMeanType.NONE,
+            StatisticsMeta.unit_class: "temperature",
+            StatisticsMeta.unit_of_measurement: "°C",
+            StatisticsMeta.has_sum: False,
+        }
+    )
+
+    start = datetime(2024, 1, 1, tzinfo=dt_util.UTC)
+
+    endpoint_session.add_all(
+        [
+            Statistics(
+                metadata_id=1,
+                start_ts=start.timestamp(),
+                mean=10.0,
+                min=5.0,
+                max=15.0,
+            ),
+            Statistics(
+                metadata_id=1,
+                start_ts=(start + timedelta(hours=1)).timestamp(),
+                mean=20.0,
+                min=8.0,
+                max=25.0,
+            ),
+            Statistics(
+                metadata_id=2,
+                start_ts=start.timestamp(),
+                mean=None,
+                min=2.0,
+                max=12.0,
+            ),
+            Statistics(
+                metadata_id=2,
+                start_ts=(start + timedelta(hours=1)).timestamp(),
+                mean=None,
+                min=4.0,
+                max=18.0,
+            ),
+        ]
+    )
+    endpoint_session.commit()
+
+    types: set[Literal["max", "mean", "min"]] = {"mean", "min", "max"}
+
+    with patch.object(
+        statistics,
+        "_get_statistics_period_rows",
+        side_effect=_unoptimized_statistics,
+    ) as baseline:
+        expected = statistics._statistics_during_period_with_session(
+            hass,
+            endpoint_session,
+            start,
+            start + timedelta(days=1),
+            statistic_ids,
+            "day",
+            None,
+            types,
+        )
+
+    assert baseline.call_count == 1
+
+    actual = statistics._statistics_during_period_with_session(
+        hass,
+        endpoint_session,
+        start,
+        start + timedelta(days=1),
+        statistic_ids,
+        "day",
+        None,
+        types,
+    )
+
+    assert actual == expected
+    assert actual["test:statistic_1"][0]["mean"] == pytest.approx(15.0)
+    assert actual["test:statistic_1"][0]["min"] == 5.0
+    assert actual["test:statistic_1"][0]["max"] == 25.0
+    assert actual["test:statistic_2"][0]["mean"] is None
+    assert actual["test:statistic_2"][0]["min"] == 2.0
+    assert actual["test:statistic_2"][0]["max"] == 18.0
 
 
 @pytest.mark.parametrize(
@@ -550,14 +787,6 @@ async def test_arithmetic_mean_query_limits(
             "power", "W", StatisticMeanType.ARITHMETIC, "hour", {"mean"}, id="hour"
         ),
         pytest.param(
-            "power",
-            "W",
-            StatisticMeanType.ARITHMETIC,
-            "day",
-            {"mean", "min"},
-            id="mixed-types",
-        ),
-        pytest.param(
             "angle", "°", StatisticMeanType.CIRCULAR, "day", {"mean"}, id="circular"
         ),
     ],
@@ -605,27 +834,56 @@ async def test_mean_fallback(
     assert result["test:statistic_1"]
 
 
-async def test_arithmetic_mean_cached_parameters(endpoint_session: Session) -> None:
-    """Do not leak sensor or time bounds between equal query shapes."""
+async def test_aggregate_cached_parameters(endpoint_session: Session) -> None:
+    """Do not leak sensor or time bounds between equal aggregate query shapes."""
     endpoint_session.add_all(
         [
-            Statistics(metadata_id=1, start_ts=0.0, mean=10.0),
-            Statistics(metadata_id=2, start_ts=0.0, mean=30.0),
-            Statistics(metadata_id=2, start_ts=86400.0, mean=20.0),
+            Statistics(
+                metadata_id=1,
+                start_ts=0.0,
+                mean=10.0,
+                min=5.0,
+                max=15.0,
+            ),
+            Statistics(
+                metadata_id=2,
+                start_ts=0.0,
+                mean=30.0,
+                min=20.0,
+                max=40.0,
+            ),
+            Statistics(
+                metadata_id=2,
+                start_ts=86400.0,
+                mean=20.0,
+                min=10.0,
+                max=25.0,
+            ),
         ]
     )
     endpoint_session.commit()
+
+    types: set[Literal["max", "mean", "min"]] = {"mean", "min", "max"}
+
     first = execute_stmt_lambda_element(
         endpoint_session,
-        statistics._generate_statistics_period_stmt([1], ((0.0, 86400.0),), {"mean"}),
-        orm_rows=False,
-    )
-    second = execute_stmt_lambda_element(
-        endpoint_session,
         statistics._generate_statistics_period_stmt(
-            [2], ((86400.0, 172800.0),), {"mean"}
+            [1],
+            ((0.0, 86400.0),),
+            types,
         ),
         orm_rows=False,
     )
-    assert [tuple(row) for row in first] == [(1, 0.0, 10.0)]
-    assert [tuple(row) for row in second] == [(2, 86400.0, 20.0)]
+
+    second = execute_stmt_lambda_element(
+        endpoint_session,
+        statistics._generate_statistics_period_stmt(
+            [2],
+            ((86400.0, 172800.0),),
+            types,
+        ),
+        orm_rows=False,
+    )
+
+    assert [tuple(row) for row in first] == [(1, 0.0, 10.0, 5.0, 15.0)]
+    assert [tuple(row) for row in second] == [(2, 86400.0, 20.0, 10.0, 25.0)]
