@@ -449,9 +449,9 @@ override-dependencies = ["rich>=13.8.1"]
 
 [tool.pytest.ini_options]
 pythonpath = ["pylint/plugins"]
-# Import homeassistant before any plugin (e.g. respx) imports httpx, so that
-# httpx is aliased to httpx2 (see homeassistant/__init__.py).
-addopts = "-p homeassistant"
+# The respx plugin imports httpx before tests/__init__.py can alias it to
+# httpx2 (see homeassistant/__init__.py). Tests use respx directly instead.
+addopts = "-p no:respx"
 testpaths = ["tests"]
 norecursedirs = [".git", "testing_config"]
 log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"

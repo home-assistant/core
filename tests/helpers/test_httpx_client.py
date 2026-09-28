@@ -310,6 +310,19 @@ DEFAULT_SSL_CONTEXT_FACTORIES = [
 ]
 
 
+@pytest.fixture
+def ca_bundle(tmp_path: Path) -> Path:
+    """Return a CA bundle containing only the first certifi certificate."""
+    certifi_bundle = Path(certifi.where()).read_text(encoding="utf-8")
+    end_marker = "-----END CERTIFICATE-----"
+    ca_bundle = tmp_path / "ca.pem"
+    ca_bundle.write_text(
+        certifi_bundle[: certifi_bundle.index(end_marker)] + end_marker,
+        encoding="utf-8",
+    )
+    return ca_bundle
+
+
 @pytest.mark.parametrize("create_context", DEFAULT_SSL_CONTEXT_FACTORIES)
 def test_default_ssl_context_uses_certifi(
     monkeypatch: pytest.MonkeyPatch, create_context: Callable[[], ssl.SSLContext]
@@ -317,7 +330,6 @@ def test_default_ssl_context_uses_certifi(
     """Test httpx2 default SSL contexts use certifi instead of truststore."""
     monkeypatch.delenv("SSL_CERT_FILE", raising=False)
     monkeypatch.delenv("SSL_CERT_DIR", raising=False)
-    monkeypatch.delenv("REQUESTS_CA_BUNDLE", raising=False)
     expected = ssl.create_default_context(cafile=certifi.where())
 
     context = create_context()
@@ -330,39 +342,48 @@ def test_default_ssl_context_uses_certifi(
 
 
 @pytest.mark.parametrize("create_context", DEFAULT_SSL_CONTEXT_FACTORIES)
-def test_default_ssl_context_uses_requests_ca_bundle(
+def test_default_ssl_context_honors_ssl_cert_file(
     monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
+    ca_bundle: Path,
     create_context: Callable[[], ssl.SSLContext],
 ) -> None:
-    """Test httpx2 default SSL contexts honor REQUESTS_CA_BUNDLE."""
-    certifi_bundle = Path(certifi.where()).read_text(encoding="utf-8")
-    end_marker = "-----END CERTIFICATE-----"
-    ca_bundle = tmp_path / "ca.pem"
-    ca_bundle.write_text(
-        certifi_bundle[: certifi_bundle.index(end_marker)] + end_marker,
-        encoding="utf-8",
-    )
-    monkeypatch.delenv("SSL_CERT_FILE", raising=False)
-    monkeypatch.delenv("SSL_CERT_DIR", raising=False)
-    monkeypatch.setenv("REQUESTS_CA_BUNDLE", str(ca_bundle))
+    """Test httpx2 default SSL contexts still honor SSL_CERT_FILE."""
+    monkeypatch.setenv("SSL_CERT_FILE", str(ca_bundle))
 
     assert create_context().cert_store_stats()["x509_ca"] == 1
 
 
-def test_truststore_ssl_context_subclass(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_create_ssl_context_without_trust_env(
+    monkeypatch: pytest.MonkeyPatch, ca_bundle: Path
+) -> None:
+    """Test CA environment variables are ignored when trust_env is False."""
+    monkeypatch.setenv("SSL_CERT_FILE", str(ca_bundle))
+    monkeypatch.setenv("REQUESTS_CA_BUNDLE", str(ca_bundle))
+    expected = ssl.create_default_context(cafile=certifi.where())
+
+    context = httpx2.create_ssl_context(trust_env=False)
+
+    assert context.cert_store_stats() == expected.cert_store_stats()
+
+
+@pytest.mark.parametrize(
+    "protocol",
+    [
+        pytest.param(ssl.PROTOCOL_TLS_CLIENT, id="client"),
+        pytest.param(ssl.PROTOCOL_TLS_SERVER, id="server"),
+    ],
+)
+def test_truststore_ssl_context_subclass(protocol: ssl._SSLMethod) -> None:
     """Test subclassing and isinstance checks on truststore.SSLContext work."""
-    monkeypatch.delenv("REQUESTS_CA_BUNDLE", raising=False)
 
     class CustomSSLContext(truststore.SSLContext):
         """Custom SSL context, as some libraries define."""
 
     expected = ssl.create_default_context(cafile=certifi.where())
 
-    context = CustomSSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    context = CustomSSLContext(protocol)
 
     assert isinstance(context, truststore.SSLContext)
+    assert context.protocol == protocol
     assert context.cert_store_stats() == expected.cert_store_stats()
     assert context.verify_flags == expected.verify_flags
-    assert context.check_hostname
-    assert context.verify_mode == ssl.CERT_REQUIRED

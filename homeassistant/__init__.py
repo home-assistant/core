@@ -1,6 +1,5 @@
 """Init file for Home Assistant."""
 
-from os import environ
 import ssl
 from typing import Self
 
@@ -28,9 +27,7 @@ class _CertifiSSLContext(ssl.SSLContext):
         """Load the certifi CA certificates."""
         super().__init__()
         self.verify_flags |= ssl.VERIFY_X509_PARTIAL_CHAIN | ssl.VERIFY_X509_STRICT
-        self.load_verify_locations(
-            cafile=environ.get("REQUESTS_CA_BUNDLE", certifi.where())
-        )
+        self.load_verify_locations(cafile=certifi.where())
 
 
 # httpx2 defaults to truststore, which on Linux reloads the system CA store on
