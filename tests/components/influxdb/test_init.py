@@ -627,6 +627,7 @@ async def test_event_listener(
         (
             {
                 "influxdb": {
+                    "override_measurement": "state\nlog",
                     "tags_attributes": ["room"],
                     "tags": {"site": "first\nfloor"},
                 }
@@ -639,6 +640,7 @@ async def test_event_listener(
         (
             {
                 "influxdb": {
+                    "override_measurement": "state\nlog",
                     "tags_attributes": ["room"],
                     "tags": {"site": "first\nfloor"},
                 }
@@ -671,7 +673,7 @@ async def test_event_listener_multiline_strings(
 
     body = [
         {
-            "measurement": "fake.entity_id",
+            "measurement": "state log",
             "tags": {
                 "domain": "fake",
                 "entity_id": "entity_id",

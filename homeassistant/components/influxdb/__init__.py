@@ -285,6 +285,9 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
                 else:
                     include_uom = measurement_attr != "unit_of_measurement"
 
+        if isinstance(measurement, str):
+            measurement = _single_line(measurement)
+
         json: dict[str, Any] = {
             INFLUX_CONF_MEASUREMENT: measurement,
             INFLUX_CONF_TAGS: {
