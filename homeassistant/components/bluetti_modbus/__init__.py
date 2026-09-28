@@ -48,14 +48,14 @@ async def async_setup_entry(
         f"IoT {values['d_iot_ver']}"
     )
 
-    assert (
-        entry.unique_id is not None
-    )  # the config flow always sets it to the confirmed serial
+    # The first refresh only succeeds when this matches the entry's unique ID.
+    serial = str(values["d_serial"])
     entry.runtime_data = BluettiModbusRuntimeData(
         coordinator=coordinator,
         device_info=bluetti_modbus_device_info(
-            entry.unique_id, sw_version, host=entry.data[CONF_HOST]
+            serial, sw_version, host=entry.data[CONF_HOST]
         ),
+        serial=serial,
     )
     dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id, **entry.runtime_data.device_info

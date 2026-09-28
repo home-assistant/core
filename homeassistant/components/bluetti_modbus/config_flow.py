@@ -68,10 +68,7 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
                 }
             )
             errors, serial = await self._async_validate(user_input)
-            if not errors:
-                assert (
-                    serial is not None
-                )  # only unset alongside a non-empty errors dict
+            if serial is not None:
                 # Catches the same device already added under a different
                 # link (moved to a new address, for example).
                 await self.async_set_unique_id(serial)

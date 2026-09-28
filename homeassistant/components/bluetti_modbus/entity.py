@@ -34,8 +34,5 @@ class BluettiModbusEntity(CoordinatorEntity[BluettiModbusDataUpdateCoordinator])
         """Initialize a BLUETTI Modbus entity."""
         super().__init__(coordinator=entry.runtime_data.coordinator)
         self._field_name = field_name
-        assert (
-            entry.unique_id is not None
-        )  # the config flow always sets it to the confirmed serial
-        self._attr_unique_id = f"{entry.unique_id}_{field_name}"
+        self._attr_unique_id = f"{entry.runtime_data.serial}_{field_name}"
         self._attr_device_info = entry.runtime_data.device_info
