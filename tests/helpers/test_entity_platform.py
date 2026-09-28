@@ -171,7 +171,8 @@ async def test_polling_updates_entities_with_exception(hass: HomeAssistant) -> N
 
 async def test_polling_continues_when_update_hangs(hass: HomeAssistant) -> None:
     """Test polling continues when a single entity update hangs."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+    scan_interval = timedelta(seconds=1)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, scan_interval)
     await component.async_setup({})
 
     blocked_update_started = asyncio.Event()
@@ -191,13 +192,13 @@ async def test_polling_continues_when_update_hangs(hass: HomeAssistant) -> None:
 
     await component.async_add_entities([blocked, healthy])
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval)
     await blocked_update_started.wait()
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert healthy.async_update.call_count == 1
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=40))
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 2)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert healthy.async_update.call_count == 2

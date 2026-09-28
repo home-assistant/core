@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
-from contextlib import suppress
 from contextvars import ContextVar
 from datetime import timedelta
 from logging import Logger, getLogger
@@ -1290,32 +1289,6 @@ class EntityPlatform:
             description_placeholders=description_placeholders,
         )
 
-    async def _async_update_entity(self, entity: Entity) -> None:
-        """Update one entity while guarding against a permanently hung poll."""
-        update_task = create_eager_task(
-            entity.async_update_ha_state(True), loop=self.hass.loop
-        )
-        try:
-            await asyncio.wait_for(
-                asyncio.shield(update_task), timeout=self.scan_interval_seconds
-            )
-        except TimeoutError:
-            self.logger.warning(
-                "Updating %s %s took longer than the scheduled update interval %s; "
-                "cancelling the in-flight update",
-                self.platform_name,
-                self.domain,
-                self.scan_interval,
-            )
-            update_task.cancel()
-            with suppress(asyncio.CancelledError):
-                await update_task
-        except asyncio.CancelledError:
-            update_task.cancel()
-            with suppress(asyncio.CancelledError):
-                await update_task
-            raise
-
     async def _async_update_entity_states(self) -> None:
         """Update the states of all the polling entities.
 
@@ -1328,11 +1301,13 @@ class EntityPlatform:
             self._process_updates = asyncio.Lock()
         if self._process_updates.locked():
             self.logger.warning(
-                "Updating %s %s took longer than the scheduled update interval %s",
+                "Updating %s %s took longer than the scheduled update interval %s; "
+                "resetting the polling lock to allow future polling",
                 self.platform_name,
                 self.domain,
                 self.scan_interval,
             )
+            self._process_updates = asyncio.Lock()
             return
 
         async with self._process_updates:
@@ -1344,12 +1319,12 @@ class EntityPlatform:
                     # entity being updated, we need to skip updating the
                     # entity.
                     if entity.should_poll and entity.hass:
-                        await self._async_update_entity(entity)
+                        await entity.async_update_ha_state(True)
                 return
 
             if tasks := [
                 create_eager_task(
-                    self._async_update_entity(entity), loop=self.hass.loop
+                    entity.async_update_ha_state(True), loop=self.hass.loop
                 )
                 for entity in self.entities.values()
                 if entity.should_poll
