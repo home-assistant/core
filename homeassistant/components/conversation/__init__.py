@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import logging
-from typing import Any, Literal
+from typing import Literal
 
 from hassil.recognize import RecognizeResult
 import probatio
@@ -50,8 +50,6 @@ from .const import (
     DATA_COMPONENT,
     DOMAIN,
     HOME_ASSISTANT_AGENT,
-    METADATA_CUSTOM_FILE,
-    METADATA_CUSTOM_SENTENCE,
     SERVICE_PROCESS,
     ConversationEntityFeature,
 )
@@ -60,7 +58,7 @@ from .entity import ConversationEntity
 from .http import async_setup as async_setup_conversation_http
 from .models import AbstractConversationAgent, ConversationInput, ConversationResult
 from .trace import ConversationTraceEventType, async_conversation_trace_append
-from .util import async_get_result_from_chat_log
+from .util import async_get_result_from_chat_log, get_config_intents
 
 __all__ = [
     "DOMAIN",
@@ -271,7 +269,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     manager = get_agent_manager(hass)
 
     hass_config_path = hass.config.path()
-    config_intents = _get_config_intents(config, hass_config_path)
+    config_intents = get_config_intents(config, hass_config_path)
     manager.update_config_intents(config_intents)
 
     await async_setup_default_agent(hass, entity_component)
@@ -303,7 +301,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if language is None:
             conf = await async_integration_yaml_config(hass, DOMAIN)
             if conf is not None:
-                config_intents = _get_config_intents(conf, hass_config_path)
+                config_intents = get_config_intents(conf, hass_config_path)
                 manager.update_config_intents(config_intents)
 
         agent = manager.default_agent
@@ -323,25 +321,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_conversation_http(hass)
 
     return True
-
-
-def _get_config_intents(config: ConfigType, hass_config_path: str) -> dict[str, Any]:
-    """Return config intents."""
-    intents = config.get(DOMAIN, {}).get("intents", {})
-    return {
-        intent_name: {
-            "data": [
-                {
-                    "sentences": sentences,
-                    "metadata": {
-                        METADATA_CUSTOM_SENTENCE: True,
-                        METADATA_CUSTOM_FILE: hass_config_path,
-                    },
-                }
-            ]
-        }
-        for intent_name, sentences in intents.items()
-    }
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
