@@ -3,7 +3,7 @@
 import datetime as dt
 from unittest.mock import AsyncMock, MagicMock
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ClientResponseError
 from energyid_webhooks.directives import (
     DirectiveData,
     DirectiveResource,
@@ -12,7 +12,7 @@ from energyid_webhooks.directives import (
 )
 import pytest
 
-from homeassistant.components.energyid.const import CONF_ENABLE_DIRECTIVES
+from homeassistant.components.energyid.const import CONF_ENABLE_DIRECTIVES, DOMAIN
 from homeassistant.components.energyid.coordinator import EnergyIDDirectiveCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -236,3 +236,49 @@ async def test_access_granted_after_setup(
 
     assert set(coordinator.data.resources) == {DIRECTIVE_ID}
     assert coordinator.data.schedules[DIRECTIVE_ID].current == schedule.data[0]
+
+
+@pytest.mark.parametrize("status", [401, 403])
+async def test_rejected_credentials_start_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    status: int,
+) -> None:
+    """Test rejected credentials while polling start the reauthentication flow."""
+    resource, schedule = _directive_fixture()
+    mock_webhook_client.api_access_token = "device-token"
+    mock_webhook_client.get_directives = AsyncMock(return_value=[resource])
+    mock_webhook_client.get_directive_data = AsyncMock(return_value=schedule)
+    coordinator = await _setup_with_directives(hass, mock_config_entry)
+
+    mock_webhook_client.get_directives.side_effect = ClientResponseError(
+        request_info=MagicMock(), history=(), status=status
+    )
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert not coordinator.last_update_success
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert [flow["context"]["source"] for flow in flows] == ["reauth"]
+
+
+async def test_server_error_marks_update_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+) -> None:
+    """Test a server error while polling fails the update without reauthentication."""
+    resource, schedule = _directive_fixture()
+    mock_webhook_client.api_access_token = "device-token"
+    mock_webhook_client.get_directives = AsyncMock(return_value=[resource])
+    mock_webhook_client.get_directive_data = AsyncMock(return_value=schedule)
+    coordinator = await _setup_with_directives(hass, mock_config_entry)
+
+    mock_webhook_client.get_directives.side_effect = ClientResponseError(
+        request_info=MagicMock(), history=(), status=500
+    )
+    await coordinator.async_refresh()
+
+    assert not coordinator.last_update_success
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
