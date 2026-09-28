@@ -53,10 +53,11 @@ async def test_standby_quickmode(
 ) -> None:
     """Test that the fan follows the standby quickmode.
 
-    The value is now read in the executor and cached, so a read that stops
-    being supported must not leave the fan reported as in standby. The recorded
-    level of this device is unknown, which is why the icon and not the state
-    carries the difference here.
+    The value is now read in the executor and cached, so it has to be primed
+    before the first state is published, and a read that stops being supported
+    must not leave the fan reported as in standby. The recorded level of this
+    device is unknown, which is why the icon and not the state carries the
+    difference here.
     """
     fixtures: list[Fixture] = [Fixture({"type:ventilation"}, "vicare/VitoPure.json")]
     vicare_data = MockPyViCare(fixtures).as_vicare_data()
@@ -68,24 +69,27 @@ async def test_standby_quickmode(
         ),
         patch(f"{MODULE}._setup_vicare_api", return_value=vicare_data),
         patch(f"{MODULE}.PLATFORMS", [Platform.FAN]),
+        patch.object(api, "getVentilationQuickmode", return_value=True),
     ):
         await setup_integration(hass, mock_config_entry)
 
-        entity_id = hass.states.async_entity_ids(FAN_DOMAIN)[0]
-        assert "standby" in hass.states.get(entity_id).attributes["vicare_quickmodes"]
+    entity_id = hass.states.async_entity_ids(FAN_DOMAIN)[0]
+    assert "standby" in hass.states.get(entity_id).attributes["vicare_quickmodes"]
+    # The first state is published before the first poll.
+    assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:fan-off"
 
-        # The fixture runs sensor driven and reports the quickmode as inactive.
+    # The fixture runs sensor driven and reports the quickmode as inactive.
+    await async_update_entity(hass, entity_id)
+    assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:fan-auto"
+
+    with patch.object(api, "getVentilationQuickmode", return_value=True):
         await async_update_entity(hass, entity_id)
-        assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:fan-auto"
+    assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:fan-off"
 
-        with patch.object(api, "getVentilationQuickmode", return_value=True):
-            await async_update_entity(hass, entity_id)
-        assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:fan-off"
-
-        with patch.object(
-            api,
-            "getVentilationQuickmode",
-            side_effect=PyViCareNotSupportedFeatureError("standby"),
-        ):
-            await async_update_entity(hass, entity_id)
-        assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:fan-auto"
+    with patch.object(
+        api,
+        "getVentilationQuickmode",
+        side_effect=PyViCareNotSupportedFeatureError("standby"),
+    ):
+        await async_update_entity(hass, entity_id)
+    assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:fan-auto"

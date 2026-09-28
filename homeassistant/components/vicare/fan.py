@@ -161,6 +161,11 @@ class ViCareFan(ViCareEntity, FanEntity):
         )
         if VentilationQuickmode.STANDBY in quickmodes:
             self._attr_supported_features |= FanEntityFeature.TURN_OFF
+            # The first state is published before the first poll.
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._standby = device.getVentilationQuickmode(
+                    VentilationQuickmode.STANDBY
+                )
 
     def update(self) -> None:
         """Update state of fan."""
