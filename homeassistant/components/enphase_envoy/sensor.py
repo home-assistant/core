@@ -56,7 +56,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DAILY_CONSUMPTION_UPPER_LIMIT, DAILY_PRODUCTION_UPPER_LIMIT, DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 from .entity import EnvoyACBAggregateEntity, EnvoyACBBatteryEntity, EnvoyBaseEntity
 
@@ -208,6 +208,7 @@ class EnvoyProductionSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[EnvoySystemProduction], int]
     on_phase: str | None = None
+    upper_limit: int | None = None
 
 
 PRODUCTION_SENSORS = (
@@ -230,6 +231,7 @@ PRODUCTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         value_fn=attrgetter("watt_hours_today"),
+        upper_limit=DAILY_PRODUCTION_UPPER_LIMIT,
     ),
     EnvoyProductionSensorEntityDescription(
         key="seven_days_production",
@@ -275,6 +277,7 @@ class EnvoyConsumptionSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[EnvoySystemConsumption], int]
     on_phase: str | None = None
+    upper_limit: int | None = None
 
 
 CONSUMPTION_SENSORS = (
@@ -297,6 +300,7 @@ CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         value_fn=attrgetter("watt_hours_today"),
+        upper_limit=DAILY_CONSUMPTION_UPPER_LIMIT,
     ),
     EnvoyConsumptionSensorEntityDescription(
         key="seven_days_consumption",
@@ -1202,10 +1206,18 @@ class EnvoyProductionEntity(EnvoySystemSensorEntity):
     @property
     @override
     def native_value(self) -> int | None:
-        """Return the state of the sensor."""
+        """Return the state of the sensor.
+
+        if upper limit specified and exceeded return None
+        """
         if (system_production := self.data.system_production) is None:
             return None
-        return self.entity_description.value_fn(system_production)
+        value: int = self.entity_description.value_fn(system_production)
+        if self.entity_description.upper_limit is not None and (
+            value > self.entity_description.upper_limit
+        ):
+            return None
+        return value
 
 
 class EnvoyConsumptionEntity(EnvoySystemSensorEntity):
@@ -1216,10 +1228,18 @@ class EnvoyConsumptionEntity(EnvoySystemSensorEntity):
     @property
     @override
     def native_value(self) -> int | None:
-        """Return the state of the sensor."""
+        """Return the state of the sensor.
+
+        if upper limit specified and exceeded return None
+        """
         if (system_consumption := self.data.system_consumption) is None:
             return None
-        return self.entity_description.value_fn(system_consumption)
+        value = self.entity_description.value_fn(system_consumption)
+        if self.entity_description.upper_limit is not None and (
+            value > self.entity_description.upper_limit
+        ):
+            return None
+        return value
 
 
 class EnvoyNetConsumptionEntity(EnvoySystemSensorEntity):
@@ -1244,7 +1264,10 @@ class EnvoyProductionPhaseEntity(EnvoySystemSensorEntity):
     @property
     @override
     def native_value(self) -> int | None:
-        """Return the state of the sensor."""
+        """Return the state of the sensor.
+
+        if upper limit specified and exceeded return None
+        """
         if TYPE_CHECKING:
             assert self.entity_description.on_phase
 
@@ -1258,7 +1281,12 @@ class EnvoyProductionPhaseEntity(EnvoySystemSensorEntity):
             ]
         ) is None:
             return None
-        return self.entity_description.value_fn(system_production)
+        value = self.entity_description.value_fn(system_production)
+        if self.entity_description.upper_limit is not None and (
+            value > self.entity_description.upper_limit
+        ):
+            return None
+        return value
 
 
 class EnvoyConsumptionPhaseEntity(EnvoySystemSensorEntity):
@@ -1269,7 +1297,10 @@ class EnvoyConsumptionPhaseEntity(EnvoySystemSensorEntity):
     @property
     @override
     def native_value(self) -> int | None:
-        """Return the state of the sensor."""
+        """Return the state of the sensor.
+
+        if upper limit specified and exceeded return None
+        """
         if TYPE_CHECKING:
             assert self.entity_description.on_phase
 
@@ -1283,7 +1314,12 @@ class EnvoyConsumptionPhaseEntity(EnvoySystemSensorEntity):
             ]
         ) is None:
             return None
-        return self.entity_description.value_fn(system_consumption)
+        value = self.entity_description.value_fn(system_consumption)
+        if self.entity_description.upper_limit is not None and (
+            value > self.entity_description.upper_limit
+        ):
+            return None
+        return value
 
 
 class EnvoyNetConsumptionPhaseEntity(EnvoySystemSensorEntity):
