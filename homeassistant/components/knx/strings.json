@@ -152,10 +152,48 @@
   },
   "config_panel": {
     "common": {
+      "attention": "Attention",
+      "create_binary_sensor": "Create binary sensor",
+      "create_sensor": "Create sensor",
       "exposes_count": "Exposes: {count}",
+      "filter": {
+        "clear": "Clear filter",
+        "dpt": {
+          "sort": {
+            "options": {
+              "name": "Name",
+              "number": "Number"
+            }
+          },
+          "title": "DPT"
+        },
+        "no_results": "No results found",
+        "pin_selected": "Pin selected items",
+        "remove_tooltip": "Remove filter for {value}",
+        "scroll_to_selection": "Scroll to selection",
+        "set_tooltip": "Filter by {value}",
+        "title": "Filter"
+      },
       "group_address": "Group address",
       "group_addresses": "Group addresses",
-      "monitor_x_group_addresses": "Monitor {count} group addresses"
+      "monitor_x_group_addresses": "Monitor {count} group addresses",
+      "sort": {
+        "ascending": "Ascending",
+        "ascending_tooltip": "Sorted ascending",
+        "descending": "Descending",
+        "descending_tooltip": "Sorted descending",
+        "options": {
+          "badge": "Badge",
+          "count": "Count",
+          "description": "Description",
+          "filtered_count": "Filtered count",
+          "total_count": "Total count",
+          "value": "Value"
+        },
+        "sort_by": "Sort by:",
+        "title": "Sort"
+      },
+      "title": "KNX"
     },
     "dashboard": {
       "connection_flow": {
@@ -173,6 +211,11 @@
       "send": {
         "description": "Send an arbitrary telegram to the KNX bus.",
         "title": "[%key:component::knx::config_panel::dialogs::send::title%]"
+      },
+      "status": {
+        "address": "Address: {address}",
+        "connected": "[%key:common::state::connected%]",
+        "disconnected": "[%key:common::state::disconnected%]"
       },
       "time_server": {
         "description": "Broadcast the current local time and date to the KNX bus",
@@ -198,6 +241,14 @@
         },
         "title": "Send KNX telegram",
         "write_button": "Write"
+      },
+      "telegram_info": {
+        "destination": "[%key:component::knx::config_panel::group_monitor::columns::destination%]",
+        "payload": "[%key:component::knx::config_panel::group_monitor::columns::payload%]",
+        "source": "[%key:component::knx::config_panel::group_monitor::columns::source%]",
+        "title": "KNX telegram",
+        "type": "[%key:component::knx::config_panel::group_monitor::columns::type%]",
+        "value": "[%key:component::knx::config_panel::group_monitor::columns::value%]"
       },
       "time_server": {
         "date": {
@@ -453,6 +504,7 @@
     },
     "dpt_reference": {
       "description": "Browse supported KNX datapoint types",
+      "search_label": "Search {count} items",
       "title": "DPT reference"
     },
     "entities": {
@@ -1164,6 +1216,9 @@
         }
       },
       "description": "Add and manage KNX entities",
+      "edit": {
+        "title": "Edit entity"
+      },
       "title": "Entities"
     },
     "expose": {
@@ -1188,6 +1243,8 @@
         "ga": {
           "label": "[%key:component::knx::config_panel::common::group_address%]"
         },
+        "load_error": "Error loading expose configuration.",
+        "loading": "Loading expose configuration.",
         "notes": {
           "label": "Notes",
           "placeholder": "Add your notes here..."
@@ -1209,6 +1266,7 @@
         },
         "show_raw_values": "Show raw values",
         "title": "Add exposure",
+        "validation_error": "Validation error",
         "value_template": {
           "description": "Optionally transform the entity state or attribute value before sending it to KNX using a template. The template receives the entity state or attribute value as `value` variable.",
           "label": "Value template"
@@ -1222,11 +1280,146 @@
       "title": "Expose"
     },
     "group_monitor": {
+      "clear": "Clear",
+      "clear_cache": "Clear cache",
+      "columns": {
+        "destination": "Destination",
+        "destination_name": "Destination name",
+        "direction": "Direction",
+        "payload": "Payload",
+        "source": "Source",
+        "source_name": "Source name",
+        "time": "Time",
+        "time_delta": "Time Δ",
+        "type": "Type",
+        "value": "Value"
+      },
+      "connection_error": {
+        "retry": "Retry",
+        "title": "Connection error"
+      },
       "description": "Monitor KNX group communication",
-      "title": "Group monitor"
+      "direction": {
+        "options": {
+          "incoming": "Incoming",
+          "outgoing": "Outgoing"
+        }
+      },
+      "filters": {
+        "destination": {
+          "sort": {
+            "options": {
+              "address": "Destination address",
+              "name": "Destination name"
+            }
+          }
+        },
+        "source": {
+          "sort": {
+            "options": {
+              "address": "Source address",
+              "name": "Source name"
+            }
+          }
+        }
+      },
+      "pause": "Pause",
+      "paused": {
+        "description": "New telegrams will not be displayed until you resume monitoring.",
+        "title": "Monitoring paused"
+      },
+      "project_not_loaded": {
+        "description": "Device names and telegram values can only be displayed after an ETS project has been loaded.",
+        "title": "ETS project not loaded"
+      },
+      "reload": "Sync",
+      "resume": "Resume",
+      "search_label": "Search {count} telegrams",
+      "search_label_narrow": "Search",
+      "search_label_singular": "Search {count} telegram",
+      "time_delta": {
+        "after": {
+          "label": "+ After (ms)"
+        },
+        "before": {
+          "label": "- Before (ms)"
+        },
+        "description": "Also shows all telegrams within the defined time span before/after a filtered telegram – regardless of the applied filters. (0 = off)",
+        "disabled": "Set a filter to use the context time span.",
+        "summary": "Within -{before} ms / +{after} ms",
+        "title": "Context time span"
+      },
+      "time_range": {
+        "description": "Selecting a range may load additional data from the recorder.",
+        "now": "now",
+        "options": {
+          "1_day": "1 d",
+          "1_hour": "1 h",
+          "1_week": "1 week",
+          "5_minutes": "5 min",
+          "6_hours": "6 h",
+          "30_minutes": "30 min"
+        },
+        "partial": "The range is large; only part of it could be loaded.",
+        "retention_clamped": "Adjusted to the oldest available data.",
+        "select": "Select a time range",
+        "title": "Time range"
+      },
+      "title": "Group monitor",
+      "waiting_message": "Waiting for telegrams"
     },
     "info": {
+      "connected_to_bus": {
+        "label": "Connected to bus"
+      },
       "description": "Version information, manage KNX project file",
+      "individual_address": {
+        "label": "Individual address"
+      },
+      "issue_tracker": {
+        "description": "If you'd like to report a bug or suggest a new feature, create an issue in our GitHub repository"
+      },
+      "my_knx": {
+        "description": "If you'd like to learn more about the KNX system or ETS, visit"
+      },
+      "project_data": {
+        "delete": "Delete project data",
+        "last_modified": {
+          "label": "Last modified"
+        },
+        "name": {
+          "label": "Project name"
+        },
+        "title": "ETS Project data",
+        "tool_version": {
+          "label": "Tool version"
+        },
+        "xknxproject_version": {
+          "label": "XKNXProject version"
+        }
+      },
+      "project_file": {
+        "description": "We extract details such as names, group addresses, devices, group objects, topology, and building structure from your project file. Home Assistant does not store the ETS project file itself nor its optional password for security reasons.",
+        "title": "[%key:component::knx::config_panel::dialogs::project_upload::file_upload_label%]"
+      },
+      "telegram_storage": {
+        "backend": {
+          "options": {
+            "memory": "Memory",
+            "postgres": "PostgreSQL",
+            "sqlite": "SQLite"
+          }
+        },
+        "label": "Telegram storage",
+        "limit": {
+          "label": "Limit"
+        },
+        "retention": {
+          "day": "1 day",
+          "days": "{retention} days",
+          "label": "Retention"
+        }
+      },
       "title": "Information"
     },
     "project": {
@@ -1240,9 +1433,25 @@
         "title": "Devices"
       },
       "group_addresses": {
-        "title": "[%key:component::knx::config_panel::common::group_addresses%]"
+        "add_switch": "Add switch",
+        "columns": {
+          "address": "Address",
+          "description": "Description",
+          "dpt": "DPT",
+          "last_value": "Last value",
+          "name": "Name",
+          "updated": "Updated"
+        },
+        "title": "[%key:component::knx::config_panel::common::group_addresses%]",
+        "view_telegrams": "View telegrams"
       },
-      "title": "Project"
+      "title": "Project",
+      "upload_description": "To use the project viewer please upload a KNX project first!",
+      "version": {
+        "description": "The `XKNXProject` version used for parsing the ETS project was:",
+        "minimum_required": "minimum version required",
+        "reimport": "Please resubmit your ETS project file."
+      }
     },
     "selectors": {
       "knx-payload-selector": {
