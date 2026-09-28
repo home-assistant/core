@@ -1,0 +1,38 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: ubuntu-latest
+
+strategy:
+  matrix:
+    py312:
+      python.version: "3.12"
+    py313:
+      python.version: "3.13"
+
+steps:
+  - checkout: self
+
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: "$(python.version)"
+
+  - script: |
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+      pip install -r requirements_test.txt
+    displayName: Install dependencies
+
+  - script: ruff check homeassistant tests
+    displayName: Lint
+
+  - script: pytest -q --maxfail=1 tests
+    displayName: Unit tests

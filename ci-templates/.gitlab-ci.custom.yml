@@ -1,0 +1,52 @@
+stages:
+  - lint
+  - test
+  - package
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - .cache/pip
+
+default:
+  tags:
+    - docker-runner
+
+lint:
+  stage: lint
+  image: python:3.13
+  before_script:
+    - python -m pip install --upgrade pip
+    - pip install -r requirements.txt -r requirements_test.txt
+  script:
+    - ruff check homeassistant tests
+
+unit_tests:
+  stage: test
+  image: python:3.13
+  services:
+    - name: postgres:16
+      alias: db
+  variables:
+    POSTGRES_DB: testdb
+    POSTGRES_USER: test
+    POSTGRES_PASSWORD: test
+  before_script:
+    - python -m pip install --upgrade pip
+    - pip install -r requirements.txt -r requirements_test.txt
+  script:
+    - pytest -q tests/components/recorder
+
+package_artifact:
+  stage: package
+  image: python:3.13
+  script:
+    - python -m pip install build
+    - python -m build
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 week

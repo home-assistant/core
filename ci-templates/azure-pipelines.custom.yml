@@ -1,0 +1,67 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  name: SelfHostedLinux
+
+variables:
+  python.version: "3.13"
+  PIP_CACHE_DIR: "$(Pipeline.Workspace)/.pip"
+
+stages:
+  - stage: LintAndTests
+    jobs:
+      - job: lint
+        steps:
+          - checkout: self
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "$(python.version)"
+          - script: |
+              python -m pip install --upgrade pip
+              pip install -r requirements.txt
+              pip install -r requirements_test.txt
+            displayName: Install dependencies
+          - script: ruff check homeassistant tests
+            displayName: Run lint
+
+      - job: integration
+        dependsOn: lint
+        steps:
+          - checkout: self
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "$(python.version)"
+          - script: |
+              docker compose -f tests/compose.yml build
+              docker compose -f tests/compose.yml run --rm test pytest -q tests/components
+            displayName: Run integration suite
+          - script: docker compose -f tests/compose.yml down -v
+            condition: always()
+            displayName: Cleanup containers
+
+  - stage: Publish
+    dependsOn: LintAndTests
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - job: package
+        steps:
+          - checkout: self
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "$(python.version)"
+          - script: |
+              python -m pip install build
+              python -m build
+            displayName: Build artifacts
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathToPublish: dist
+              artifactName: python-dist

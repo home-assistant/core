@@ -1,0 +1,29 @@
+stages:
+  - lint
+  - test
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - .cache/pip
+
+lint:
+  stage: lint
+  image: python:3.13
+  before_script:
+    - python -m pip install --upgrade pip
+    - pip install -r requirements.txt -r requirements_test.txt
+  script:
+    - ruff check homeassistant tests
+
+unit_tests:
+  stage: test
+  image: python:3.13
+  before_script:
+    - python -m pip install --upgrade pip
+    - pip install -r requirements.txt -r requirements_test.txt
+  script:
+    - pytest -q --maxfail=1 tests
