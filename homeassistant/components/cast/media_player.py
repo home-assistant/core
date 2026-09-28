@@ -191,6 +191,7 @@ class CastDevice:
         self._status_listener: CastStatusListener | None = None
         self._add_remove_handler: Callable[[], None] | None = None
         self._del_remove_handler: Callable[[], None] | None = None
+        self._stop_listener: Callable[[], None] | None = None
         self._name: str | None = None
 
     def _async_setup(self, name: str) -> None:
@@ -202,7 +203,9 @@ class CastDevice:
         self._del_remove_handler = async_dispatcher_connect(
             self.hass, SIGNAL_CAST_REMOVED, self._async_cast_removed
         )
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_stop)
+        self._stop_listener = self.hass.bus.async_listen(
+            EVENT_HOMEASSISTANT_STOP, self._async_stop
+        )
         # async_create_background_task is used to avoid delaying
         # startup wrapup if the device
         # is discovered already during startup but then fails to respond
@@ -226,6 +229,9 @@ class CastDevice:
         if self._del_remove_handler:
             self._del_remove_handler()
             self._del_remove_handler = None
+        if self._stop_listener:
+            self._stop_listener()
+            self._stop_listener = None
 
     async def _async_connect_to_chromecast(self):
         """Set up the chromecast object."""
