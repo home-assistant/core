@@ -17,12 +17,13 @@ class CheckStatus(StrEnum):
 class CheckKind(StrEnum):
     """The set of checks the deterministic stage can produce.
 
-    The agent prompt has one instruction section per kind. Adding a new kind
-    here requires adding the corresponding section in the agent prompt;
-    otherwise the agent will fail hard when it encounters the new kind.
+    A kind the runner can leave as `NEEDS_AGENT` needs a matching instruction
+    section in the agent prompt; the agent fails hard on a `NEEDS_AGENT` kind
+    it has no section for. Kinds the runner always resolves itself need none.
     """
 
     REPO_PUBLIC = "repo_public"
+    REPO_ISSUES = "repo_issues"
     CI_UPLOAD = "ci_upload"
     RELEASE_PIPELINE = "release_pipeline"
     SECURITY = "security"

@@ -12,11 +12,14 @@ from script.check_requirements.pypi import (
 )
 from script.check_requirements.runner import run_checks
 
+_REPO_URL = "https://github.com/x/y"
+
 
 def _patch_pypi(
     monkeypatch: pytest.MonkeyPatch,
     pypi_info: PypiPackageInfo,
     prov: ProvenanceResult,
+    issues_enabled: bool | None = True,
 ) -> None:
     monkeypatch.setattr(
         "script.check_requirements.runner.fetch_package_info",
@@ -24,6 +27,10 @@ def _patch_pypi(
     )
     monkeypatch.setattr(
         "script.check_requirements.runner.check_provenance", lambda info: prov
+    )
+    monkeypatch.setattr(
+        "script.check_requirements.runner.fetch_issues_enabled",
+        lambda repo_url: issues_enabled,
     )
 
 
@@ -61,6 +68,7 @@ def test_runner_attestation_recognised(monkeypatch: pytest.MonkeyPatch) -> None:
     assert pkg.checks[CheckKind.PR_LINK].status == CheckStatus.NEEDS_AGENT
     assert pkg.checks[CheckKind.ASYNC_BLOCKING].status == CheckStatus.NEEDS_AGENT
     assert pkg.checks[CheckKind.SECURITY].status == CheckStatus.NEEDS_AGENT
+    assert pkg.checks[CheckKind.REPO_ISSUES].status == CheckStatus.PASS
     assert result.needs_agent is True
 
 
@@ -162,6 +170,7 @@ def test_runner_marks_missing_version_as_fail(
     assert pkg.checks[CheckKind.RELEASE_PIPELINE].status == CheckStatus.FAIL
     # No repo URL → short-circuit to FAIL
     assert pkg.checks[CheckKind.REPO_PUBLIC].status == CheckStatus.FAIL
+    assert pkg.checks[CheckKind.REPO_ISSUES].status == CheckStatus.FAIL
     assert pkg.checks[CheckKind.PR_LINK].status == CheckStatus.FAIL
     assert pkg.checks[CheckKind.ASYNC_BLOCKING].status == CheckStatus.FAIL
     assert pkg.checks[CheckKind.SECURITY].status == CheckStatus.FAIL
@@ -198,6 +207,7 @@ def test_runner_pypi_found_but_no_repo_url_fails_repo_checks(
     result = run_checks(pr_number=1, diff_text=diff)
     pkg = result.packages[0]
     assert pkg.checks[CheckKind.REPO_PUBLIC].status == CheckStatus.FAIL
+    assert pkg.checks[CheckKind.REPO_ISSUES].status == CheckStatus.FAIL
     assert pkg.checks[CheckKind.PR_LINK].status == CheckStatus.FAIL
     assert pkg.checks[CheckKind.ASYNC_BLOCKING].status == CheckStatus.FAIL
     assert pkg.checks[CheckKind.SECURITY].status == CheckStatus.FAIL
@@ -446,3 +456,71 @@ def test_runner_serialises_to_json(monkeypatch: pytest.MonkeyPatch) -> None:
     assert '"needs_agent"' in serialised
     assert '"checks"' in serialised
     assert '"repo_public"' in serialised  # check kinds are in the JSON
+
+
+@pytest.mark.parametrize(
+    ("issues_enabled", "tracker_urls", "status", "expected_detail"),
+    [
+        pytest.param(True, {}, CheckStatus.PASS, "is enabled", id="enabled"),
+        pytest.param(False, {}, CheckStatus.FAIL, "is disabled", id="disabled"),
+        pytest.param(
+            False,
+            {"Bug Tracker": f"{_REPO_URL}/issues"},
+            CheckStatus.FAIL,
+            "is disabled",
+            id="disabled-with-own-tracker",
+        ),
+        pytest.param(
+            False,
+            {"Bug Tracker": f"{_REPO_URL}-docs/issues"},
+            CheckStatus.WARN,
+            f"{_REPO_URL}-docs/issues",
+            id="disabled-with-sibling-repo-tracker",
+        ),
+        pytest.param(
+            False,
+            {"Issues": "https://example.com/bugs"},
+            CheckStatus.WARN,
+            "https://example.com/bugs",
+            id="disabled-with-external-tracker",
+        ),
+        pytest.param(None, {}, CheckStatus.WARN, "Could not determine", id="unknown"),
+    ],
+)
+def test_runner_repo_issues(
+    monkeypatch: pytest.MonkeyPatch,
+    issues_enabled: bool | None,
+    tracker_urls: dict[str, str],
+    status: CheckStatus,
+    expected_detail: str,
+) -> None:
+    """The repo_issues verdict follows the host flag and PyPI's tracker URLs."""
+    _patch_pypi(
+        monkeypatch,
+        PypiPackageInfo(
+            project_urls={"Source": _REPO_URL, **tracker_urls},
+            repo_url=_REPO_URL,
+            file_provenance_urls=["whatever"],
+            found=True,
+        ),
+        ProvenanceResult(
+            has_attestation=True,
+            publisher_kind="GitHub",
+            recognized_publisher=True,
+            detail="ok",
+        ),
+        issues_enabled=issues_enabled,
+    )
+    diff = (
+        "diff --git a/requirements_all.txt b/requirements_all.txt\n"
+        "--- a/requirements_all.txt\n"
+        "+++ b/requirements_all.txt\n"
+        "@@ -1 +1 @@\n"
+        "-pkg==1.0.0\n"
+        "+pkg==1.1.0\n"
+    )
+    result = run_checks(pr_number=1, diff_text=diff)
+    check = result.packages[0].checks[CheckKind.REPO_ISSUES]
+    assert check.status == status
+    assert expected_detail in check.details
+    assert _REPO_URL in check.details

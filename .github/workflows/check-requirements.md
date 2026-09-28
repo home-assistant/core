@@ -170,7 +170,9 @@ If a `{{SUMMARY}}` placeholder is present, replace it last, once every
 
 If ❌, also mark this package's `release_pipeline` and `async_blocking`
 cells/details as `—` and explain `Skipped because the source
-repository is not publicly accessible.`.
+repository is not publicly accessible.`. Leave the deterministic
+`repo_issues` cell and detail exactly as rendered, whatever they say —
+the tracker flag was resolved independently through the host's API.
 
 ### Check kind: `pr_link`
 

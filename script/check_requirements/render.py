@@ -5,8 +5,8 @@ get `{{CHECK_CELL:<package>:<kind>}}` and `{{CHECK_DETAIL:<package>:<kind>}}`
 placeholders that the agent replaces before posting.
 
 To add a new check kind: extend `CheckKind` and add an entry to `_CHECK_DISPLAY`
-below. The agent prompt must also gain a matching instruction section, or the
-agent will refuse to resolve the new kind.
+below. A kind the runner can leave as `NEEDS_AGENT` must also gain a matching
+instruction section in the agent prompt, or the agent will refuse to resolve it.
 """
 
 from .models import CheckKind, CheckRunResult, CheckStatus, PackageChange
@@ -21,6 +21,7 @@ _CHECK_DISPLAY: tuple[tuple[CheckKind, str], ...] = (
     (CheckKind.VULNERABILITIES, "No Advisories"),
     (CheckKind.YANKED, "Not Yanked"),
     (CheckKind.REPO_PUBLIC, "Repo Public"),
+    (CheckKind.REPO_ISSUES, "Issue Tracker"),
     (CheckKind.CI_UPLOAD, "CI Upload"),
     (CheckKind.RELEASE_PIPELINE, "Release Pipeline"),
     (CheckKind.SECURITY, "Security"),

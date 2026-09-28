@@ -4,6 +4,9 @@ What the runner resolves itself (deterministic):
 - `yanked`: PASS if the new release is live on PyPI, FAIL if it was yanked.
 - `vulnerabilities`: FAIL if PyPI reports any non-withdrawn OSV / GHSA / CVE
   advisory for the new version; PASS otherwise.
+- `repo_issues`: PASS if the source host reports an open issue tracker, FAIL
+  if issue reporting is disabled and PyPI advertises no tracker elsewhere,
+  WARN if the host could not answer or the tracker lives off-repo.
 - `ci_upload`: PASS / WARN / FAIL based on PEP 740 attestation on PyPI.
 - `release_pipeline`: PASS only when the attestation already identifies a
   recognised CI publisher; otherwise NEEDS_AGENT.
@@ -22,8 +25,14 @@ What the runner defers to the LLM (NEEDS_AGENT):
 
 from .diff import parse_diff
 from .models import CheckKind, CheckResult, CheckRunResult, CheckStatus, PackageChange
-from .pypi import PypiPackageInfo, check_provenance, fetch_package_info
+from .pypi import (
+    PypiPackageInfo,
+    check_provenance,
+    fetch_package_info,
+    pick_tracker_url,
+)
 from .render import render_comment
+from .repo import fetch_issues_enabled
 
 
 def _resolve_yanked(pkg: PackageChange, pypi_info: PypiPackageInfo) -> None:
@@ -77,6 +86,32 @@ def _resolve_vulnerabilities(pkg: PackageChange, pypi_info: PypiPackageInfo) -> 
         CheckStatus.FAIL,
         f"PyPI reports {len(vulns)} active advisories for version "
         f"{pkg.new_version}: " + "; ".join(entries) + ".",
+    )
+
+
+def _resolve_repo_issues(repo_url: str, project_urls: dict[str, str]) -> CheckResult:
+    """Resolve whether the source repository accepts issue reports."""
+    enabled = fetch_issues_enabled(repo_url)
+    if enabled is None:
+        return CheckResult(
+            CheckStatus.WARN,
+            f"Could not determine whether issue reporting is enabled at {repo_url}.",
+        )
+    if enabled:
+        return CheckResult(
+            CheckStatus.PASS,
+            f"Issue reporting is enabled at {repo_url}.",
+        )
+    if tracker_url := pick_tracker_url(project_urls, repo_url):
+        return CheckResult(
+            CheckStatus.WARN,
+            f"Issue reporting is disabled at {repo_url}, but PyPI points at "
+            f"{tracker_url} instead; check that users can report bugs there.",
+        )
+    return CheckResult(
+        CheckStatus.FAIL,
+        f"Issue reporting is disabled at {repo_url}. Home Assistant requires "
+        "dependencies to have an open issue tracker so users can report bugs.",
     )
 
 
@@ -138,6 +173,7 @@ def run_checks(
                 f"Version {pkg.new_version} not found on PyPI.",
             )
             pkg.checks[CheckKind.REPO_PUBLIC] = fail
+            pkg.checks[CheckKind.REPO_ISSUES] = fail
             pkg.checks[CheckKind.PR_LINK] = fail
             pkg.checks[CheckKind.ASYNC_BLOCKING] = fail
             pkg.checks[CheckKind.SECURITY] = fail
@@ -145,6 +181,9 @@ def run_checks(
             pkg.checks[CheckKind.REPO_PUBLIC] = CheckResult(
                 CheckStatus.NEEDS_AGENT,
                 "Reachability of the source repository must be verified by the agent.",
+            )
+            pkg.checks[CheckKind.REPO_ISSUES] = _resolve_repo_issues(
+                pkg.repo_url, pypi_info.project_urls
             )
             pkg.checks[CheckKind.PR_LINK] = CheckResult(
                 CheckStatus.NEEDS_AGENT,
@@ -174,6 +213,7 @@ def run_checks(
                 "PyPI does not advertise a source repository URL.",
             )
             pkg.checks[CheckKind.REPO_PUBLIC] = fail
+            pkg.checks[CheckKind.REPO_ISSUES] = fail
             pkg.checks[CheckKind.PR_LINK] = fail
             pkg.checks[CheckKind.ASYNC_BLOCKING] = fail
             pkg.checks[CheckKind.SECURITY] = CheckResult(

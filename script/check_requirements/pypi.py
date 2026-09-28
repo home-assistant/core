@@ -1,14 +1,10 @@
 """PyPI metadata + PEP 740 provenance attestation lookups."""
 
 from dataclasses import dataclass, field
-import logging
 import re
 from typing import Any
-from urllib.parse import urlparse
 
-import requests
-
-_LOGGER = logging.getLogger(__name__)
+from .fetch import get_json, is_known_host
 
 # Characters that could escape markdown / HTML in the rendered comment or the
 # prompt fence used to ship the artifact to the agent. PyPI maintainers are
@@ -45,31 +41,10 @@ _KNOWN_CI_PUBLISHERS = (
     "activestate",
 )
 
-# Repository host suffixes we accept as a valid `repo_url` answer for Step 3.
-# Matched against the URL's netloc (not substring of the full URL) to avoid
-# accepting `https://evil.com/?x=github.com` as a code-host URL.
-_REPO_HOST_SUFFIXES = (
-    "github.com",
-    "gitlab.com",
-    "codeberg.org",
+# `project_urls` keys that advertise where bugs are filed, lower-cased.
+_TRACKER_URL_KEYS = frozenset(
+    {"bug tracker", "bug reports", "issue tracker", "issues", "tracker"}
 )
-
-
-def _is_code_host_url(url: str) -> bool:
-    """True if `url`'s host is (or ends with) a known code-host suffix."""
-    host = urlparse(url).netloc.lower().removeprefix("www.")
-    if not host:
-        return False
-    return any(
-        host == suffix or host.endswith(f".{suffix}") for suffix in _REPO_HOST_SUFFIXES
-    )
-
-
-_HEADERS = {
-    "User-Agent": "home-assistant-check-requirements/1.0",
-    "Accept": "application/json",
-}
-_TIMEOUT = 30.0
 
 
 @dataclass(slots=True, frozen=True)
@@ -106,25 +81,6 @@ class ProvenanceResult:
     detail: str
 
 
-def _get_json(url: str) -> dict[str, Any] | None:
-    """Fetch JSON or return None on 404/network error."""
-    try:
-        response = requests.get(url, headers=_HEADERS, timeout=_TIMEOUT)
-    except requests.RequestException as err:
-        _LOGGER.warning("Failed to fetch %s: %s", url, err)
-        return None
-    if response.status_code == 404:
-        return None
-    if not response.ok:
-        _LOGGER.warning("HTTP %s fetching %s", response.status_code, url)
-        return None
-    try:
-        return response.json()
-    except ValueError as err:
-        _LOGGER.warning("Invalid JSON at %s: %s", url, err)
-        return None
-
-
 def _pick_repo_url(project_urls: dict[str, str]) -> str | None:
     """Pick the most likely source-repo URL from `info.project_urls`."""
     if not project_urls:
@@ -132,19 +88,36 @@ def _pick_repo_url(project_urls: dict[str, str]) -> str | None:
     lower_map = {k.lower(): v for k, v in project_urls.items()}
     for key in _REPO_URL_KEYS:
         url = lower_map.get(key)
-        if url and _is_code_host_url(url):
+        if url and is_known_host(url):
             return _safe(url)
     for url in project_urls.values():
-        if _is_code_host_url(url):
+        if is_known_host(url):
+            return _safe(url)
+    return None
+
+
+def pick_tracker_url(project_urls: dict[str, str], repo_url: str) -> str | None:
+    """Pick a tracker URL from `project_urls` that lives outside `repo_url`.
+
+    A project may switch its repository's tracker off and point users at a
+    tracker elsewhere; only such an off-repo URL is worth reporting.
+    """
+    repo = repo_url.rstrip("/").lower()
+    for key, url in project_urls.items():
+        if key.lower() not in _TRACKER_URL_KEYS:
+            continue
+        # Compare on a path boundary so a sibling repo is not read as our own.
+        candidate = url.rstrip("/").lower()
+        if candidate != repo and not candidate.startswith(f"{repo}/"):
             return _safe(url)
     return None
 
 
 def fetch_package_info(name: str, version: str) -> PypiPackageInfo:
     """Fetch per-version PyPI metadata for one package."""
-    versioned = _get_json(f"https://pypi.org/pypi/{name}/{version}/json")
+    versioned = get_json(f"https://pypi.org/pypi/{name}/{version}/json")
     if versioned is None:
-        latest = _get_json(f"https://pypi.org/pypi/{name}/json") or {}
+        latest = get_json(f"https://pypi.org/pypi/{name}/json") or {}
         info = latest.get("info") or {}
         project_urls = info.get("project_urls") or {}
         return PypiPackageInfo(
@@ -223,7 +196,7 @@ def check_provenance(pkg: PypiPackageInfo) -> ProvenanceResult:
     # Inspect any one file's attestation; all files of a release share a publisher.
     any_bundle_fetched = False
     for url in pkg.file_provenance_urls:
-        bundle = _get_json(url)
+        bundle = get_json(url)
         if not bundle:
             continue
         any_bundle_fetched = True

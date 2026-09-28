@@ -43,6 +43,9 @@ def _mock_pypi(monkeypatch: pytest.MonkeyPatch) -> None:
             detail="ok",
         ),
     )
+    monkeypatch.setattr(
+        "script.check_requirements.runner.fetch_issues_enabled", lambda repo_url: True
+    )
 
 
 def test_main_writes_artifact(

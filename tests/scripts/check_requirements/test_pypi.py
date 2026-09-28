@@ -8,6 +8,7 @@ from script.check_requirements.pypi import (
     PypiPackageInfo,
     check_provenance,
     fetch_package_info,
+    pick_tracker_url,
 )
 
 # ---------------------------------------------------------------------------
@@ -223,6 +224,47 @@ def test_fetch_package_info_picks_repo_url_from_project_urls(
     info = fetch_package_info("foo", "1.0")
 
     assert info.repo_url == expected_repo_url
+
+
+@pytest.mark.parametrize(
+    ("project_urls", "expected"),
+    [
+        pytest.param({}, None, id="no-urls"),
+        pytest.param(
+            {"Homepage": "https://example.com/elsewhere"}, None, id="no-tracker-key"
+        ),
+        pytest.param(
+            {"Bug Tracker": "https://github.com/foo/bar/issues"}, None, id="own-tracker"
+        ),
+        pytest.param({"Issues": "https://github.com/foo/bar"}, None, id="repo-itself"),
+        pytest.param(
+            {"Issues": "https://github.com/foo/bar/"}, None, id="trailing-slash"
+        ),
+        pytest.param(
+            {"Issues": "https://github.com/foo/bar-docs/issues"},
+            "https://github.com/foo/bar-docs/issues",
+            id="sibling-repo-sharing-a-prefix",
+        ),
+        pytest.param(
+            {"Tracker": "https://example.com/bugs"},
+            "https://example.com/bugs",
+            id="external-host",
+        ),
+        pytest.param(
+            {"ISSUE TRACKER": "https://example.com/bugs"},
+            "https://example.com/bugs",
+            id="key-matched-case-insensitively",
+        ),
+        pytest.param(
+            {"Issues": "https://example.com/<b>bugs</b>"},
+            "https://example.com/bbugs/b",
+            id="sanitised-before-returning",
+        ),
+    ],
+)
+def test_pick_tracker_url(project_urls: dict[str, str], expected: str | None) -> None:
+    """Only a tracker URL outside the repository itself is worth reporting."""
+    assert pick_tracker_url(project_urls, "https://github.com/foo/bar") == expected
 
 
 def test_fetch_package_info_extracts_yanked_fields(
