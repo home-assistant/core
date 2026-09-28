@@ -1,7 +1,7 @@
 """Teslemetry helper functions."""
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from typing import Any, cast
 
 from aiopowerwall import PowerwallAuthenticationError, PowerwallClient
@@ -10,6 +10,7 @@ from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
 from tesla_fleet_api.teslemetry import EnergySite
 from tesla_fleet_api.teslemetry.energysite import TeslemetryEnergySite
+from teslemetry_stream import TeslemetryStreamVehicle
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -34,6 +35,46 @@ def cloud_energy_site(api: EnergySite | EnergySiteRouter) -> TeslemetryEnergySit
         TeslemetryEnergySite,
         api.secondary if isinstance(api, EnergySiteRouter) else api,
     )
+
+
+def listen_active_route[T](
+    vehicle: TeslemetryStreamVehicle,
+    listen: Callable[[Callable[[T | None], None]], Callable[[], None]],
+    route_callback: Callable[[T | None], None],
+) -> Callable[[], None]:
+    """Listen for a route field, reporting None while no navigation is active.
+
+    The car keeps reporting the last trip's route fields after navigation ends;
+    only MinutesToArrival goes null. Nothing is reported until both are seen.
+    """
+    value: T | None = None
+    minutes: float | None = None
+    value_seen = minutes_seen = False
+
+    def _update() -> None:
+        if minutes_seen and minutes is None:
+            route_callback(None)
+        elif minutes_seen and value_seen:
+            route_callback(value)
+
+    def _value_callback(new_value: T | None) -> None:
+        nonlocal value, value_seen
+        value, value_seen = new_value, True
+        _update()
+
+    def _minutes_callback(new_minutes: float | None) -> None:
+        nonlocal minutes, minutes_seen
+        minutes, minutes_seen = new_minutes, True
+        _update()
+
+    unsub_value = listen(_value_callback)
+    unsub_minutes = vehicle.listen_MinutesToArrival(_minutes_callback)
+
+    def _unsubscribe() -> None:
+        unsub_value()
+        unsub_minutes()
+
+    return _unsubscribe
 
 
 def create_powerwall_client(
