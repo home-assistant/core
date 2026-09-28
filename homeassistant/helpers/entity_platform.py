@@ -1319,18 +1319,17 @@ class EntityPlatform:
                 new_semaphore = asyncio.Semaphore(
                     self._parallel_updates_semaphore_limit
                 )
-                # Move queued waiters (those staged but not yet acquired)
-                # onto the new semaphore so they may proceed, but preserve
-                # the original semaphore for updates that already acquired
-                # a permit. We consider an entity queued when `_update_staged`
-                # is True but `_update_acquired` is False.
+                # Rebind the semaphore for any entity that has NOT yet
+                # acquired a permit (either idle or queued) to the new
+                # semaphore so they will acquire from the replacement.
+                # Preserve the old semaphore instance for entities that
+                # have already acquired a permit to avoid corrupting
+                # semaphore accounting.
                 old_semaphore = self.parallel_updates
                 for entity in self.entities.values():
-                    if entity._update_staged and not entity._update_acquired:
-                        # assign the new semaphore so awaiting callers will
-                        # acquire from it instead of the old instance
+                    if not getattr(entity, "_update_acquired", False):
                         entity.parallel_updates = new_semaphore
-                # Finally replace the platform semaphore for future acquirers
+                # Replace the platform semaphore for future acquirers
                 self.parallel_updates = new_semaphore
 
         async with self._process_updates:
