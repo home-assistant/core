@@ -118,15 +118,16 @@ def get_device_capabilities(
     msg: dict[str, Any],
 ) -> None:
     """Return cached ESPHome DeviceInfo capabilities for the device page."""
-    device = dr.async_get(hass).async_get(msg[DEVICE_ID])
+    device, candidate = dr.async_get_device_and_config_entry_for_domain(
+        hass, msg[DEVICE_ID], domain=DOMAIN
+    )
     if device is None:
         connection.send_error(
             msg["id"], websocket_api.ERR_NOT_FOUND, "Device not found"
         )
         return
 
-    candidate = hass.config_entries.async_get_entry(device.config_entry_id)
-    if candidate is None or candidate.domain != DOMAIN:
+    if candidate is None:
         connection.send_error(
             msg["id"],
             websocket_api.ERR_NOT_FOUND,
