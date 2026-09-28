@@ -721,7 +721,7 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
-    def __call__(self, data: Any) -> int:
+    def __call__(self, data: Any) -> float:
         """Validate the passed selection."""
         range_min = self.config.get("min")
         range_max = self.config.get("max")
@@ -732,7 +732,7 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
         if range_max is None:
             range_max = self.config.get("max_mireds")
 
-        value: int = probatio.All(
+        value: float = probatio.All(
             probatio.Coerce(float),
             probatio.Range(
                 min=range_min,
@@ -1762,6 +1762,7 @@ class NumericThresholdSelector(Selector[NumericThresholdSelectorConfig]):
 class ObjectSelectorField(TypedDict, total=False):
     """Class to represent an object selector fields dict."""
 
+    default: Any
     label: str
     required: bool
     selector: Required[Selector | dict[str, Any]]
@@ -1790,6 +1791,7 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
                     probatio.Required("selector"): probatio.Any(
                         Selector, validate_selector
                     ),
+                    probatio.Optional("default"): cv.match_all,
                     probatio.Optional("required"): bool,
                     probatio.Optional("label"): str,
                 }
