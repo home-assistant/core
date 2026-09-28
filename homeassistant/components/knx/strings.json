@@ -223,6 +223,20 @@
     },
     "dialogs": {
       "project_upload": {
+        "current_project": {
+          "ets_version": {
+            "label": "ETS version"
+          },
+          "imported_with": {
+            "label": "Imported with"
+          },
+          "last_modified": {
+            "label": "[%key:component::knx::config_panel::info::project_data::last_modified::label%]"
+          },
+          "modified": "Modified {relative_time}",
+          "short_ets_version": "ETS {version}",
+          "title": "Currently loaded"
+        },
         "description": "Details such as group address names, datapoint types, devices and group objects are extracted from your project file. The ETS project file itself and its optional password are not stored.\n\n`.knxproj` files exported by ETS 4, 5 or 6 are supported.",
         "file_upload_label": "ETS project file",
         "title": "Import ETS project"
