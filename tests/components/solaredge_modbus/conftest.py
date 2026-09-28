@@ -44,12 +44,30 @@ BATTERY_SERIAL_BASE = 57648
 BATTERY_RATED_ENERGY = 57666
 BATTERY_OFFSETS = (0, 256, 768)
 
-# A SunSpec model chain for the captured device, which records none of its own.
-# It describes what that dump holds, the inverter and its three-phase meter,
-# and then the DER storage block an inverter on an IEEE 1547-2018 grid profile
-# serves. Model 713 lands above the first meter, where a second meter would go.
+# The SunSpec marker sits at the start of the common block; the model chain
+# begins in the two registers after it.
+SUNSPEC_BASE = 40000
+
+# The captured dump records no SunSpec model chain, so a test that needs one
+# lays this over it. Each entry is a model's ID and the data length it declares,
+# which is what a chain walk steps on: two header registers, then that many
+# registers of data, then the next model. It describes what the dump holds and
+# ends with the DER storage block an inverter on an IEEE 1547-2018 grid profile
+# serves, which is the block model 713 is:
+#
+#   @40002   model 1    (65)   common block, the inverter's identity
+#   @40069   model 103  (50)   three-phase inverter measurements
+#   @40121   model 1    (65)   the meter's own identity block
+#   @40188   model 203  (105)  three-phase wye meter measurements
+#   @40295   model 713  (7)    DER storage capacity
+#
+# That puts model 713 where a second meter would go, so it cannot be combined
+# with add_second_meter.
 _CHAIN = ((1, 65), (103, 50), (1, 65), (203, 105), (713, 7))
-STORAGE_CAPACITY_BASE = 40295
+
+# Where the chain above lands model 713, rather than a number to keep in step
+# with it by hand.
+STORAGE_CAPACITY_BASE = SUNSPEC_BASE + 2 + sum(length + 2 for _, length in _CHAIN[:-1])
 
 
 def tcp_data(unit_id: int = UNIT_ID) -> dict[str, Any]:
@@ -117,7 +135,7 @@ def add_storage_capacity(unit: MockModbusUnit, state_of_charge: int) -> None:
     here is -2, so 5960 is 59.60%. The block sits where a second meter would,
     so do not combine this with ``add_second_meter``.
     """
-    address = 40002
+    address = SUNSPEC_BASE + 2
     for model_id, length in _CHAIN:
         unit.holding.update({address: model_id, address + 1: length})
         address += length + 2
