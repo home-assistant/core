@@ -8540,12 +8540,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "zestimate": {
-      "name": "Zestimate",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "zeversolar": {
       "name": "Zeversolar",
       "integration_type": "device",
