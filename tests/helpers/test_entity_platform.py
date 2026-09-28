@@ -194,16 +194,20 @@ async def test_polling_continues_when_update_hangs(hass: HomeAssistant) -> None:
 
     async_fire_time_changed(hass, dt_util.utcnow() + scan_interval)
     await blocked_update_started.wait()
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await asyncio.sleep(0)
 
     assert healthy.async_update.call_count == 1
 
     async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 2)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await asyncio.sleep(0)
+    assert healthy.async_update.call_count == 1
 
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 3)
+    await asyncio.sleep(0)
     assert healthy.async_update.call_count == 2
 
     blocked_update_release.set()
+    await hass.async_block_till_done()
 
 
 async def test_update_state_adds_entities(hass: HomeAssistant) -> None:
