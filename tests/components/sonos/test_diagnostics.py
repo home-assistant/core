@@ -63,3 +63,26 @@ async def test_diagnostics_device(
             "sonos_group_entities",
         )
     )
+
+
+async def test_diagnostics_strips_third_party_media_servers(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    async_autosetup_sonos,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test third_party_media_servers_x is removed at any level."""
+    speaker = config_entry.runtime_data.discovered["RINCON_test"]
+    speaker._last_event_cache = {
+        "zone_group_topology": {
+            "third_party_media_servers_x": "secret",
+            "nested": [{"third_party_media_servers_x": "secret", "keep": 1}],
+        }
+    }
+
+    result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+
+    assert "third_party_media_servers_x" not in str(result)
+    assert result["discovered"]["RINCON_test"]["_last_event_cache"] == {
+        "zone_group_topology": {"nested": [{"keep": 1}]}
+    }

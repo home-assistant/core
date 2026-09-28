@@ -41,6 +41,16 @@ SPEAKER_DIAGNOSTIC_ATTRIBUTES = (
     "_last_activity",
     "_last_event_cache",
 )
+STRIP_KEYS = {"third_party_media_servers_x"}
+
+
+def _strip_keys(data: Any) -> Any:
+    """Remove STRIP_KEYS from nested dicts and lists."""
+    if isinstance(data, dict):
+        return {k: _strip_keys(v) for k, v in data.items() if k not in STRIP_KEYS}
+    if isinstance(data, list):
+        return [_strip_keys(item) for item in data]
+    return data
 
 
 async def async_get_config_entry_diagnostics(
@@ -62,7 +72,7 @@ async def async_get_config_entry_diagnostics(
                 )
             else:
                 payload[section][key] = value
-    return payload
+    return _strip_keys(payload)
 
 
 async def async_get_device_diagnostics(
@@ -79,7 +89,7 @@ async def async_get_device_diagnostics(
     if (speaker := config_entry.runtime_data.discovered.get(uid)) is None:
         return {}
 
-    return await async_generate_speaker_info(hass, config_entry, speaker)
+    return _strip_keys(await async_generate_speaker_info(hass, config_entry, speaker))
 
 
 async def async_generate_media_info(
