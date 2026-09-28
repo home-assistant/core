@@ -173,27 +173,29 @@ async def _async_repoint_preferred_dataset(
     runs any more - and this action's own no-dataset default would migrate
     a router back onto them.
 
-    When no preference exists yet the target becomes it. The store picks a
-    preference on its own when a router's first dataset arrives and it finds
-    that router alone on its network, after a discovery wait; a migration
-    started inside that wait would otherwise see the abandoned network
-    chosen once it ends, with the same consequences.
+    With no preference yet, the target becomes it: the network just chosen
+    on purpose. The store only picks a preference itself for a router found
+    alone on its network, after a discovery wait, and would settle on the
+    abandoned network if that wait ended after the migration.
     """
     store = await async_get_store(hass)
-    source_id = None
-    target_id = None
-    # Two independent matches: a credential rotation keeps the network, so
-    # source and target are the same entry and must both resolve to it.
-    for entry in store.datasets.values():
-        if entry.extended_pan_id.lower() == source_extended_pan_id.lower():
-            source_id = entry.id
-        if entry.extended_pan_id.lower() == target_extended_pan_id.lower():
-            target_id = entry.id
-    # With no source entry -- a router re-provisioned by another controller
-    # runs a network the store never saw -- the promotion still applies:
-    # the membership test then only matches a missing preference.
-    if target_id and store.preferred_dataset in (source_id, None):
-        store.preferred_dataset = target_id
+    target_id = next(
+        (
+            entry.id
+            for entry in store.datasets.values()
+            if entry.extended_pan_id.lower() == target_extended_pan_id.lower()
+        ),
+        None,
+    )
+    if target_id is None:
+        return
+    # Judged by the network the pointer names: a credential rotation keeps
+    # the network, so source and target are then the same entry.
+    if (preferred := await async_get_preferred_dataset(hass)) is not None:
+        preferred_xpan = tlv_parser.parse_tlv(preferred).get(MeshcopTLVType.EXTPANID)
+        if str(preferred_xpan).lower() != source_extended_pan_id:
+            return
+    store.preferred_dataset = target_id
 
 
 async def _async_refresh_issues_on_the_mesh(
@@ -243,11 +245,12 @@ async def _pinned_channel_of_another_router(
 
     Only routers that are actually pinned are asked which network they are
     on, so the common setup pays for no extra calls. A pinned router that
-    cannot be read is an error rather than skipped: its REST API being down
+    cannot be read is a failure rather than skipped: its REST API being down
     says nothing about its radio, which may still be on this mesh and would
     follow the pending dataset off the channel it shares with Zigbee.
     Configured entries count even when they are not loaded, for the same
-    reason: a failed setup or an unload does not stop the radio.
+    reason: a failed setup or an unload does not stop the radio, and is the
+    caller's to fix, so that one is a validation error.
     """
     source_xpan = active[MeshcopTLVType.EXTPANID]
 
@@ -277,7 +280,7 @@ async def _pinned_channel_of_another_router(
                 else None
             )
         except (HomeAssistantError, tlv_parser.TLVError) as err:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="pinned_router_unreachable",
                 translation_placeholders={"router": other.title},
@@ -455,9 +458,8 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
         newest = max(newest, issued.get(source_xpan))
 
         # Always step the seconds, never the ticks: python_otbr_api's channel
-        # change stamps seconds + 1 and ignores ticks, so a network left at the
-        # last representable second would wrap that write to zero and have the
-        # mesh ignore every later channel change.
+        # change stamps seconds + 1 and ignores ticks. A stamp that cannot be
+        # stepped is an error, not a wrap to zero the mesh would ignore.
         newest_seconds = newest[0]
         if newest_seconds >= 2**48 - 1:
             raise HomeAssistantError(

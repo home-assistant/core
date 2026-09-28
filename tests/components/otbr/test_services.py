@@ -29,6 +29,7 @@ from homeassistant.components.thread import (
     async_get_store,
     dataset_store,
 )
+from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
@@ -36,6 +37,7 @@ from homeassistant.util import dt as dt_util
 
 from . import BASE_URL, DATASET_CH16
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 # A different network from the one under test: ts 1003, channel 15. Carries
@@ -292,6 +294,7 @@ async def test_migration_refuses_while_a_pending_dataset_is_in_flight(
     hass: HomeAssistant,
     otbr_config_entry_multipan: str,
     aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
 ) -> None:
     """A pending dataset in flight refuses the migration outright.
 
@@ -307,6 +310,7 @@ async def test_migration_refuses_while_a_pending_dataset_is_in_flight(
 
     assert exc_info.value.translation_key == "pending_dataset_in_place"
     assert not pending_calls(aioclient_mock)
+    assert ISSUED_TIMESTAMPS_STORAGE_KEY not in hass_storage
 
 
 async def test_pending_dataset_appearing_mid_flight_is_surfaced(
@@ -823,6 +827,7 @@ async def test_targeting_the_current_network_also_refuses_while_pending(
     hass: HomeAssistant,
     otbr_config_entry_multipan: str,
     aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
 ) -> None:
     """With a move away queued, re-targeting the current network refuses too.
 
@@ -837,6 +842,7 @@ async def test_targeting_the_current_network_also_refuses_while_pending(
 
     assert exc_info.value.translation_key == "pending_dataset_in_place"
     assert not pending_calls(aioclient_mock)
+    assert ISSUED_TIMESTAMPS_STORAGE_KEY not in hass_storage
 
 
 async def test_concurrent_migrations_are_serialized(
@@ -948,16 +954,20 @@ async def test_exhausted_seconds_are_refused(
     assert not pending_calls(aioclient_mock)
 
 
-async def test_ticks_count_in_the_comparison(
+async def test_the_stored_dataset_raises_the_stamp(
     hass: HomeAssistant,
     otbr_config_entry_multipan: str,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """A dataset newer only by ticks is still out-stamped."""
+    """A stored dataset newer than router and target is out-stamped too.
+
+    The store keeps its entry unless the update is newer; stamped below it,
+    the mesh would migrate while the store kept the old credentials.
+    """
     mock_pending_endpoint(aioclient_mock)
     stored = dict(tlv_parser.parse_tlv(TARGET))
     stored[MeshcopTLVType.ACTIVETIMESTAMP] = Timestamp.from_values(
-        MeshcopTLVType.ACTIVETIMESTAMP, seconds=1003, ticks=42
+        MeshcopTLVType.ACTIVETIMESTAMP, seconds=1500
     )
     await async_add_dataset(hass, "test", tlv_parser.encode_tlv(stored))
 
@@ -966,7 +976,14 @@ async def test_ticks_count_in_the_comparison(
     stamp = tlv_parser.parse_tlv(pending_calls(aioclient_mock)[0][2])[
         MeshcopTLVType.ACTIVETIMESTAMP
     ]
-    assert (stamp.seconds, stamp.ticks) == (1004, 0)
+    assert (stamp.seconds, stamp.ticks) == (1501, 0)
+    store = await async_get_store(hass)
+    stored_entry = next(
+        entry
+        for entry in store.datasets.values()
+        if entry.extended_pan_id.lower() == "1111111122222222"
+    )
+    assert _timestamp_parts_seconds(stored_entry.tlv) == 1501
 
 
 async def test_migration_is_persisted_before_success_is_reported(
@@ -1536,10 +1553,11 @@ async def test_unreadable_pinned_router_refuses_the_migration(
     otbr_config_entry_multipan: str,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test a pinned router that cannot be read is an error, not skipped.
+    """Test a pinned router that cannot be read is a failure, not skipped.
 
     Its REST API being down says nothing about its radio, which may still be
     on this mesh and would follow the pending dataset off the shared channel.
+    A failure, not a validation error: nothing about the call was wrong.
     """
     mock_pending_endpoint(aioclient_mock)
     aioclient_mock.get(
@@ -1562,10 +1580,11 @@ async def test_unreadable_pinned_router_refuses_the_migration(
             "get_active_dataset_tlvs",
             side_effect=HomeAssistantError("unreachable"),
         ),
-        pytest.raises(ServiceValidationError) as exc_info,
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
         await call_migrate(hass, dataset=TARGET, config_entry=thread_entry.entry_id)
 
+    assert not isinstance(exc_info.value, ServiceValidationError)
     assert exc_info.value.translation_key == "pinned_router_unreachable"
     assert exc_info.value.translation_placeholders == {"router": pinned_entry.title}
     assert not pending_calls(aioclient_mock)
@@ -1870,3 +1889,178 @@ async def test_the_legacy_beacons_flag_is_not_a_change(
 
     assert response == {"status": "already_on_network"}
     assert not pending_calls(aioclient_mock)
+
+
+async def test_an_unparseable_router_dataset_is_refused(
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+    get_active_dataset_tlvs: AsyncMock,
+) -> None:
+    """A router returning a dataset that does not parse is not migrated."""
+    mock_pending_endpoint(aioclient_mock)
+    # A timestamp TLV announcing eight bytes and carrying none.
+    get_active_dataset_tlvs.return_value = bytes.fromhex("0e08")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await call_migrate(hass, dataset=TARGET)
+
+    assert exc_info.value.translation_key == "router_dataset_invalid"
+    assert not pending_calls(aioclient_mock)
+
+
+async def test_a_target_without_a_timestamp_is_stamped_above_the_network(
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """A target carrying no timestamp is stamped from the network being left."""
+    mock_pending_endpoint(aioclient_mock)
+    unstamped = dict(tlv_parser.parse_tlv(TARGET))
+    del unstamped[MeshcopTLVType.ACTIVETIMESTAMP]
+
+    await call_migrate(hass, dataset=tlv_parser.encode_tlv(unstamped))
+
+    stamp = tlv_parser.parse_tlv(pending_calls(aioclient_mock)[0][2])[
+        MeshcopTLVType.ACTIVETIMESTAMP
+    ]
+    assert (stamp.seconds, stamp.ticks) == (2, 0)
+
+
+async def test_a_refused_write_hands_back_the_previous_window(
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A refusal puts back what the last migration of the mesh recorded.
+
+    Its stamp is still the floor for the next one; dropped instead, the
+    next migration would reissue a stamp the mesh has already seen.
+    """
+    mock_pending_endpoint(aioclient_mock)
+    other_target = dict(tlv_parser.parse_tlv(TARGET))
+    other_target[MeshcopTLVType.EXTPANID] = tlv_parser.MeshcopTLVItem(
+        MeshcopTLVType.EXTPANID, bytes.fromhex("3333333344444444")
+    )
+    await call_migrate(hass, dataset=TARGET)
+    (source_xpan,) = hass_storage[ISSUED_TIMESTAMPS_STORAGE_KEY]["data"]
+    freezer.tick(301)
+
+    mock_pending_endpoint(aioclient_mock, put_status=HTTPStatus.PRECONDITION_FAILED)
+    with pytest.raises(HomeAssistantError):
+        await call_migrate(hass, dataset=tlv_parser.encode_tlv(other_target))
+
+    record = hass_storage[ISSUED_TIMESTAMPS_STORAGE_KEY]["data"][source_xpan]
+    assert record["timestamp"] == [1004, 0]
+    mock_pending_endpoint(aioclient_mock)
+    await call_migrate(hass, dataset=tlv_parser.encode_tlv(other_target))
+    stamp = tlv_parser.parse_tlv(pending_calls(aioclient_mock)[0][2])[
+        MeshcopTLVType.ACTIVETIMESTAMP
+    ]
+    assert stamp.seconds == 1005
+
+
+@pytest.mark.parametrize(
+    "pinned_active",
+    [
+        bytes.fromhex(
+            tlv_parser.encode_tlv(
+                {
+                    **tlv_parser.parse_tlv(DATASET_CH16.hex()),
+                    MeshcopTLVType.EXTPANID: tlv_parser.MeshcopTLVItem(
+                        MeshcopTLVType.EXTPANID, bytes.fromhex("5555666677778888")
+                    ),
+                }
+            )
+        ),
+        None,
+    ],
+    ids=["another_mesh", "no_mesh"],
+)
+async def test_a_pinned_router_off_this_mesh_does_not_pin_it(
+    hass: HomeAssistant,
+    multiprotocol_addon_manager_mock: Mock,
+    otbr_config_entry_thread: None,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+    pinned_active: bytes | None,
+) -> None:
+    """A pinned router that is not on the mesh has no say over its channel."""
+    mock_pending_endpoint(aioclient_mock)
+    aioclient_mock.get(
+        "/dev/ttyAMA1/node/dataset/pending", status=HTTPStatus.NO_CONTENT
+    )
+    aioclient_mock.put("/dev/ttyAMA1/node/dataset/pending", status=HTTPStatus.CREATED)
+    multiprotocol_addon_manager_mock.async_get_channel.return_value = 25
+    thread_entry = next(
+        entry
+        for entry in hass.config_entries.async_loaded_entries("otbr")
+        if entry.entry_id != otbr_config_entry_multipan
+    )
+    pinned_entry = hass.config_entries.async_get_entry(otbr_config_entry_multipan)
+    assert pinned_entry is not None
+
+    with patch.object(
+        pinned_entry.runtime_data, "get_active_dataset_tlvs", return_value=pinned_active
+    ):
+        response = await call_migrate(
+            hass, dataset=TARGET, config_entry=thread_entry.entry_id
+        )
+
+    assert response["status"] == "migrating"
+    assert len(pending_calls(aioclient_mock)) == 1
+
+
+async def test_an_unpinned_router_is_not_asked_before_the_write(
+    hass: HomeAssistant,
+    otbr_config_entry_thread: None,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Only a pinned router is asked which network it is on before the write."""
+    mock_pending_endpoint(aioclient_mock)
+    aioclient_mock.get(
+        "/dev/ttyAMA1/node/dataset/pending", status=HTTPStatus.NO_CONTENT
+    )
+    aioclient_mock.put("/dev/ttyAMA1/node/dataset/pending", status=HTTPStatus.CREATED)
+    thread_entry = next(
+        entry
+        for entry in hass.config_entries.async_loaded_entries("otbr")
+        if entry.entry_id != otbr_config_entry_multipan
+    )
+    other_entry = hass.config_entries.async_get_entry(otbr_config_entry_multipan)
+    assert other_entry is not None
+    puts_seen: list[int] = []
+
+    async def record_and_answer() -> bytes:
+        puts_seen.append(len(pending_calls(aioclient_mock)))
+        return DATASET_CH16
+
+    with patch.object(
+        other_entry.runtime_data,
+        "get_active_dataset_tlvs",
+        side_effect=record_and_answer,
+    ):
+        response = await call_migrate(
+            hass, dataset=TARGET, config_entry=thread_entry.entry_id
+        )
+
+    assert response["status"] == "migrating"
+    # Read once, by the repair-issue refresh after the write.
+    assert puts_seen == [1]
+
+
+async def test_an_ignored_router_is_skipped(
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """An ignored discovery has no URL to judge a channel pin by."""
+    mock_pending_endpoint(aioclient_mock)
+    MockConfigEntry(domain="otbr", data={}, source=SOURCE_IGNORE).add_to_hass(hass)
+
+    response = await call_migrate(hass, dataset=TARGET)
+
+    assert response["status"] == "migrating"

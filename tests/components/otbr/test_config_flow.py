@@ -23,6 +23,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     FirmwareInfo,
     OwningAddon,
 )
+from homeassistant.components.otbr.util import async_get_dataset_lock
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -111,6 +112,46 @@ async def test_user_flow(
 ) -> None:
     """Test the user flow."""
     await _finish_user_flow(hass, url)
+
+
+async def test_the_flow_waits_for_the_dataset_lock(
+    hass: HomeAssistant,
+    get_active_dataset_tlvs: AsyncMock,
+    get_border_agent_id: AsyncMock,
+) -> None:
+    """A router being set up is not read while a migration holds the lock.
+
+    The preferred dataset it would adopt can be repointed by the migration.
+    """
+    reached_router = asyncio.Event()
+
+    async def border_agent_id() -> bytes:
+        reached_router.set()
+        return TEST_BORDER_AGENT_ID
+
+    get_border_agent_id.side_effect = border_agent_id
+    result = await hass.config_entries.flow.async_init(
+        otbr.DOMAIN, context={"source": "user"}
+    )
+
+    with patch("homeassistant.components.otbr.async_setup_entry", return_value=True):
+        async with async_get_dataset_lock(hass):
+            task = hass.async_create_task(
+                hass.config_entries.flow.async_configure(
+                    result["flow_id"], {"url": "http://custom_url:1234"}
+                )
+            )
+            # The router is identified before the lock, and read only after it.
+            await reached_router.wait()
+            for _ in range(5):
+                await asyncio.sleep(0)
+            assert not task.done()
+            get_active_dataset_tlvs.assert_not_awaited()
+
+        result = await task
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    get_active_dataset_tlvs.assert_awaited_once()
 
 
 @pytest.mark.usefixtures(
