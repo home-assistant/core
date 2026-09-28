@@ -19,6 +19,7 @@ from uiprotect.data import (
     Light,
     LightModeEnableType,
     LightModeType,
+    Liveview,
     ModelType,
     MountType,
     ProtectAdoptableDeviceModel,
@@ -28,6 +29,7 @@ from uiprotect.data import (
     SmartDetectAudioType,
     SmartDetectObjectType,
     VideoMode,
+    Viewer,
     WSSubscriptionMessage,
 )
 from uiprotect.data.bootstrap import ProtectDeviceRef
@@ -39,6 +41,7 @@ from uiprotect.data.public_devices import (
     PublicLight,
     PublicLightDeviceSettings,
     PublicLightModeSettings,
+    PublicLiveview,
     PublicOsdSettings,
     PublicSensor,
     PublicSensorAlarmSettingsRead,
@@ -48,6 +51,7 @@ from uiprotect.data.public_devices import (
     PublicSensorStats,
     PublicSensorThresholdSettings,
     PublicSmartDetectSettings,
+    PublicViewer,
     PublicWirelessBatteryStatus,
     PublicWirelessConnectionState,
     SensorFeatureCapability,
@@ -283,7 +287,13 @@ def make_public_bootstrap(**attrs: Any) -> Mock:
     may replace a whole map after setup (``pb.lights = {...}``).
     """
     pb = Mock(spec=PublicBootstrap)
-    for attr in (*_PUBLIC_STORE_ATTRS.values(), "relays", "sirens", "arm_profiles"):
+    for attr in (
+        *_PUBLIC_STORE_ATTRS.values(),
+        "relays",
+        "sirens",
+        "arm_profiles",
+        "liveviews",
+    ):
         setattr(pb, attr, {})
     pb.arm_mode = None
     pb.nvr = None
@@ -775,6 +785,63 @@ def setup_public_camera(ufp: MockUFPFixture) -> None:
             and (private := ufp.api.bootstrap.cameras.get(obj_id)) is not None
         ):
             public_bootstrap.cameras[obj_id] = make_public_camera(private)
+        return public_bootstrap.get(model, obj_id)
+
+    pb.get = _get
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+
+
+def make_public_viewer(
+    viewer: Viewer,
+    *,
+    state: DeviceState | None = None,
+    liveview_id: str | None = None,
+) -> Mock:
+    """Build a public-API viewer mirroring the private fixture's liveview."""
+    public = Mock(spec=PublicViewer)
+    public.id = viewer.id
+    public.mac = viewer.mac
+    public.name = viewer.name
+    public.display_name = viewer.display_name
+    public.type = viewer.type
+    public.model = ModelType.VIEWPORT
+    public.state = DeviceState[viewer.state.name] if state is None else state
+    public.liveview_id = viewer.liveview_id if liveview_id is None else liveview_id
+    public.api = viewer.api
+    public.set_liveview = AsyncMock()
+    return public
+
+
+def make_public_liveview(liveview: Liveview) -> PublicLiveview:
+    """Build a public-API liveview carrying the private liveview's id and name."""
+    return PublicLiveview(
+        id=liveview.id,
+        name=liveview.name,
+        is_default=liveview.is_default,
+        is_global=liveview.is_global,
+        owner=liveview.owner_id,
+        layout=liveview.layout,
+        slots=[],
+    )
+
+
+def setup_public_viewer(ufp: MockUFPFixture, liveviews: Sequence[Liveview]) -> None:
+    """Expose private viewers and the given liveviews over the public API."""
+    public_bootstrap = PublicBootstrap()
+    pb = make_public_bootstrap(
+        viewers=public_bootstrap.viewers,
+        liveviews={lv.id: make_public_liveview(lv) for lv in liveviews},
+    )
+
+    def _get(model: ModelType, obj_id: str) -> ProtectModelWithId | None:
+        # One mock per id so command assertions hit the entity's cached object.
+        if (
+            model is ModelType.VIEWPORT
+            and obj_id not in public_bootstrap.viewers
+            and (private := ufp.api.bootstrap.viewers.get(obj_id)) is not None
+        ):
+            public_bootstrap.viewers[obj_id] = make_public_viewer(private)
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get

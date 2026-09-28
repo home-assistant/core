@@ -131,7 +131,8 @@ class ProtectSelectEntityDescription(
 
 def _get_viewer_options(api: ProtectApiClient) -> list[dict[str, Any]]:
     return [
-        {"id": item.id, "name": item.name} for item in api.bootstrap.liveviews.values()
+        {"id": item.id, "name": item.name}
+        for item in api.public_bootstrap.liveviews.values()
     ]
 
 
@@ -161,10 +162,6 @@ def _get_paired_camera_options(api: ProtectApiClient) -> list[dict[str, Any]]:
     )
 
     return options
-
-
-def _get_viewer_current(obj: Viewer) -> str:
-    return obj.liveview_id
 
 
 def _get_doorbell_current(obj: Camera) -> str | None:
@@ -200,12 +197,6 @@ async def _set_doorbell_message(obj: Camera, message: str) -> None:
         await obj.set_lcd_message_public(None)
     else:
         await obj.set_lcd_message_public(DoorbellMessageType(message), reset_at=None)
-
-
-async def _set_liveview(obj: Viewer, liveview_id: str) -> None:
-    """Set the liveview for a viewer."""
-    liveview = obj.api.bootstrap.liveviews[liveview_id]
-    await obj.set_liveview(liveview)
 
 
 async def _set_ptz_patrol(obj: Camera, patrol_slot: str) -> None:
@@ -342,8 +333,8 @@ VIEWER_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         key="viewer",
         translation_key="liveview",
         ufp_options_fn=_get_viewer_options,
-        ufp_value_fn=_get_viewer_current,
-        ufp_set_method_fn=_set_liveview,
+        ufp_public_value="liveview_id",
+        ufp_set_method="set_liveview",
         ufp_perm=PermRequired.WRITE,
     ),
 )

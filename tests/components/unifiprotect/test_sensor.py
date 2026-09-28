@@ -13,8 +13,10 @@ from uiprotect.data import (
     Event,
     EventType,
     Light,
+    Liveview,
     ModelType,
     Sensor,
+    Viewer,
     WSAction,
 )
 from uiprotect.data.nvr import EventMetadata
@@ -32,6 +34,7 @@ from homeassistant.components.unifiprotect.sensor import (
     NVR_DISABLED_SENSORS,
     NVR_SENSORS,
     SENSE_SENSORS,
+    VIEWER_SENSORS,
     ProtectSensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -60,6 +63,7 @@ from .utils import (
     reset_objects,
     setup_public_light,
     setup_public_sensor,
+    setup_public_viewer,
     time_changed,
 )
 
@@ -751,6 +755,35 @@ async def test_sensor_precision(
     )
 
     assert hass.states.get(entity_id).state == "17.49"
+
+
+@pytest.mark.parametrize(
+    "liveview_id", [None, "unknown_liveview"], ids=["no_liveview", "unknown_liveview"]
+)
+async def test_sensor_viewer_liveview_public(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    viewer: Viewer,
+    liveview: Liveview,
+    liveview_id: str | None,
+) -> None:
+    """The read-only liveview sensor reads the public viewer's liveview."""
+
+    object.__setattr__(viewer, "can_write", Mock(return_value=False))
+    setup_public_viewer(ufp, [liveview])
+    await init_entry(hass, ufp, [viewer])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SENSOR, viewer, VIEWER_SENSORS[0]
+    )
+    assert hass.states.get(entity_id).state == liveview.name
+
+    public = ufp.api.public_bootstrap.viewers[viewer.id]
+    public.liveview_id = liveview_id
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
 async def test_sensor_light_last_motion_public(

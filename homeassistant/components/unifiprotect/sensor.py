@@ -6,7 +6,7 @@ from datetime import datetime
 from functools import partial
 import logging
 import operator
-from typing import Any, override
+from typing import Any, cast, override
 
 from uiprotect.data import (
     NVR,
@@ -19,7 +19,11 @@ from uiprotect.data import (
     ProtectDeviceModel,
     Sensor,
 )
-from uiprotect.data.public_devices import PublicDeviceModel, SensorFeatureCapability
+from uiprotect.data.public_devices import (
+    PublicDeviceModel,
+    PublicViewer,
+    SensorFeatureCapability,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -128,6 +132,14 @@ def _get_alarm_sound(obj: Sensor) -> str:
     ):
         alarm_type = obj.last_alarm_event.metadata.alarm_type or OBJECT_TYPE_NONE
     return alarm_type.lower()
+
+
+def _get_liveview_name_public(obj: PublicDeviceModel) -> str | None:
+    if (liveview_id := cast(PublicViewer, obj).liveview_id) is None:
+        return None
+    if (liveview := obj.api.public_bootstrap.liveviews.get(liveview_id)) is None:
+        return None
+    return liveview.name
 
 
 ALL_DEVICES_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
@@ -573,7 +585,7 @@ VIEWER_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="viewer",
         translation_key="liveview",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="liveview.name",
+        ufp_public_value_fn=_get_liveview_name_public,
         ufp_perm=PermRequired.NO_WRITE,
     ),
 )
