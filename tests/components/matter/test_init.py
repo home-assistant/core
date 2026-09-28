@@ -938,26 +938,6 @@ async def test_remove_config_entry_device(
     assert not hass.states.get(entity_id)
 
 
-async def test_get_matter_device_info(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    matter_client: MagicMock,
-) -> None:
-    """Test Matter device info follows the loaded state of the integration."""
-    await setup_integration_with_node_fixture(hass, "device_diagnostics", matter_client)
-    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    device_entry = dr.async_entries_for_config_entry(
-        device_registry, config_entry.entry_id
-    )[0]
-
-    assert get_matter_device_info(hass, device_entry.id) is not None
-
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert get_matter_device_info(hass, device_entry.id) is None
-
-
 async def test_remove_config_entry_device_no_node(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -1009,6 +989,38 @@ async def test_remove_config_entry_device_rejects_child_device(
         == "Failed to remove device entry, rejected by integration"
     )
     assert device_registry.async_get(child_device.id)
+
+
+async def test_get_matter_device_info(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test Matter device info follows the loaded state of the integration."""
+    node = await setup_integration_with_node_fixture(
+        hass, "device_diagnostics", matter_client
+    )
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    device_entry = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )[0]
+    expected_device_info = {
+        "unique_id": node.device_info.uniqueID,
+        "vendor_id": hex(node.device_info.vendorID),
+        "product_id": hex(node.device_info.productID),
+    }
+
+    assert get_matter_device_info(hass, device_entry.id) == expected_device_info
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert get_matter_device_info(hass, device_entry.id) is None
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert get_matter_device_info(hass, device_entry.id) == expected_device_info
 
 
 @pytest.mark.parametrize(
