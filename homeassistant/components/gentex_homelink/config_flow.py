@@ -1,7 +1,7 @@
 """Config flow for homelink."""
 
-import logging
 from collections.abc import Mapping
+import logging
 from typing import Any, override
 
 import jwt
