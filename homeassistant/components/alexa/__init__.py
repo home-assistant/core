@@ -64,6 +64,7 @@ SMART_HOME_SCHEMA = probatio.Schema(
             CONF_SUPPORTED_LOCALES
         ),
         probatio.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
+        probatio.Optional(CONF_FILTER_LABEL): cv.string,
         probatio.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ALEXA_ENTITY_SCHEMA},
     }
 )
