@@ -69,10 +69,31 @@ class LunatoneDALIScanStatus(
         if line is not None:
             device_unique_id += f"-line{line}"
 
-        self._attr_unique_id = f"{device_unique_id}-scan-progress"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_unique_id)},
+            identifiers={
+                (DOMAIN, self.construct_device_unique_id(config_entry_unique_id, line))
+            },
         )
+        self._attr_unique_id = self.construct_unique_id(config_entry_unique_id, line)
+
+    @staticmethod
+    def construct_device_unique_id(
+        config_entry_unique_id: str, line_id: int | None = None
+    ) -> str:
+        """Returns the unique_id of the parent device."""
+        suffix = f"-line{line_id}" if line_id is not None else ""
+        return f"{config_entry_unique_id}{suffix}"
+
+    @staticmethod
+    def construct_unique_id(
+        config_entry_unique_id: str, line_id: int | None = None
+    ) -> str:
+        """Returns the unique_id for a device ID."""
+        return f"{
+            LunatoneDALIScanStatus.construct_device_unique_id(
+                config_entry_unique_id, line_id
+            )
+        }-scan-progress"
 
     @property
     @override

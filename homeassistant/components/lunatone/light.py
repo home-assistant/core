@@ -92,7 +92,14 @@ class LunatoneLight(
         self._config_entry_unique_id = config_entry_unique_id
         self._device = self.coordinator.data[line_id][device_id]
 
-        self._attr_unique_id = f"{config_entry_unique_id}-device{device_id}"
+        self._attr_unique_id = self.construct_unique_id(
+            config_entry_unique_id, device_id
+        )
+
+    @staticmethod
+    def construct_unique_id(config_entry_unique_id: str, device_id: int) -> str:
+        """Returns the unique_id for a device ID."""
+        return f"{config_entry_unique_id}-device{device_id}"
 
     @property
     @override
@@ -271,9 +278,16 @@ class LunatoneLineBroadcastLight(
         self._coordinator_info = coordinator_info
         self._broadcast = broadcast
 
-        line_unique_id = f"{config_entry_unique_id}-line{broadcast.line}"
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, line_unique_id)})
-        self._attr_unique_id = line_unique_id
+        assert broadcast.line is not None
+
+        unique_id = self.construct_unique_id(config_entry_unique_id, broadcast.line)
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, unique_id)})
+        self._attr_unique_id = unique_id
+
+    @staticmethod
+    def construct_unique_id(config_entry_unique_id: str, line_id: int) -> str:
+        """Returns the unique_id for a device ID."""
+        return f"{config_entry_unique_id}-line{line_id}"
 
     @override
     async def async_added_to_hass(self) -> None:
