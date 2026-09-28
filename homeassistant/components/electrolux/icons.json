@@ -27,6 +27,26 @@
         "default": "mdi:thermometer"
       }
     },
+    "select": {
+      "hood_fan_speed": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "hood_state": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "program": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "sound_tone": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "spin_speed": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "temperature": {
+        "default": "mdi:format-list-bulleted"
+      }
+    },
     "sensor": {
       "appliance_state": {
         "default": "mdi:information-outline"
