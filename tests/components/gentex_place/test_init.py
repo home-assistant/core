@@ -3,7 +3,9 @@
 from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock
 
+from aiohttp import ClientConnectionError, ClientResponseError
 from place.config import OAUTH2_TOKEN_URL
+from place.errors import PlaceFulfillmentError
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
@@ -135,6 +137,122 @@ async def test_setup_auth_transient_failure(
     aioclient_mock.post(
         OAUTH2_TOKEN_URL,
         status=HTTPStatus.SERVICE_UNAVAILABLE,
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_get_iot_credentials",
+    "mock_mqtt_client",
+)
+async def test_setup_enable_auth_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_provider: AsyncMock,
+) -> None:
+    """Test that a 401 from the fulfillment API fails setup permanently."""
+    mock_provider.enable.side_effect = ClientResponseError(
+        request_info=MagicMock(), history=(), status=HTTPStatus.UNAUTHORIZED
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_get_iot_credentials",
+    "mock_mqtt_client",
+)
+async def test_setup_enable_transient_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_provider: AsyncMock,
+) -> None:
+    """Test that a 5xx from the fulfillment API retries setup."""
+    mock_provider.enable.side_effect = ClientResponseError(
+        request_info=MagicMock(), history=(), status=HTTPStatus.SERVICE_UNAVAILABLE
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_get_iot_credentials",
+    "mock_mqtt_client",
+)
+async def test_setup_enable_connection_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_provider: AsyncMock,
+) -> None:
+    """Test that a connection error from the fulfillment API retries setup."""
+    mock_provider.enable.side_effect = ClientConnectionError()
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_get_iot_credentials",
+    "mock_mqtt_client",
+)
+async def test_setup_enable_fulfillment_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_provider: AsyncMock,
+) -> None:
+    """Test that a business-logic failure from the fulfillment API retries setup."""
+    mock_provider.enable.side_effect = PlaceFulfillmentError("not authorized")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_get_iot_credentials",
+    "mock_mqtt_client",
+)
+async def test_setup_discover_auth_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_provider: AsyncMock,
+) -> None:
+    """Test that a 401 from device discovery fails setup permanently."""
+    mock_provider.discover.side_effect = ClientResponseError(
+        request_info=MagicMock(), history=(), status=HTTPStatus.UNAUTHORIZED
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_get_iot_credentials",
+    "mock_mqtt_client",
+)
+async def test_setup_discover_transient_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_provider: AsyncMock,
+) -> None:
+    """Test that a 5xx from device discovery retries setup."""
+    mock_provider.discover.side_effect = ClientResponseError(
+        request_info=MagicMock(), history=(), status=HTTPStatus.SERVICE_UNAVAILABLE
     )
 
     await setup_integration(hass, mock_config_entry)

@@ -2,8 +2,10 @@
 
 import logging
 
+from aiohttp import ClientError
 from place.auth import get_iot_credentials
 from place.config import IOT_ENDPOINT
+from place.errors import PlaceFulfillmentError
 from place.mqtt_client import MqttClient
 from place.provider import Provider
 
@@ -19,7 +21,11 @@ from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import oauth2
 from .const import DOMAIN
-from .coordinator import PlaceConfigEntry, PlaceCoordinator
+from .coordinator import (
+    PlaceConfigEntry,
+    PlaceCoordinator,
+    raise_mapped_fulfillment_error,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +60,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlaceConfigEntry) -> boo
     )
 
     provider = Provider(authenticated_session)
-    await provider.enable()
+    try:
+        await provider.enable()
+    except (ClientError, PlaceFulfillmentError) as err:
+        raise_mapped_fulfillment_error(err)
 
     # Exchange the stored Cognito ID token for AWS IoT credentials
     token = entry.data["token"]

@@ -2,8 +2,10 @@
 
 from dataclasses import replace
 import logging
-from typing import override
+from typing import NoReturn, override
 
+from aiohttp import ClientError, ClientResponseError
+from place.errors import PlaceFulfillmentError
 from place.messages import PlaceMessages, message_kind, parse_payload
 from place.models.device_shadow import PlaceDeviceShadow
 from place.models.discover_device import DiscoverDevice
@@ -12,11 +14,21 @@ from place.provider import Provider
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 type PlaceConfigEntry = ConfigEntry[PlaceCoordinator]
+
+
+def raise_mapped_fulfillment_error(
+    err: ClientError | PlaceFulfillmentError,
+) -> NoReturn:
+    """Map a Place fulfillment API failure to the matching config entry error."""
+    if isinstance(err, ClientResponseError) and 400 <= err.status <= 499:
+        raise ConfigEntryAuthFailed(err) from err
+    raise ConfigEntryNotReady(err) from err
 
 
 class PlaceCoordinator(DataUpdateCoordinator[dict[str, PlaceDeviceShadow]]):
@@ -44,7 +56,10 @@ class PlaceCoordinator(DataUpdateCoordinator[dict[str, PlaceDeviceShadow]]):
 
     async def async_setup(self) -> None:
         """Discover devices, seed shadow state, and start MQTT."""
-        self.devices = await self.provider.discover()
+        try:
+            self.devices = await self.provider.discover()
+        except (ClientError, PlaceFulfillmentError) as err:
+            raise_mapped_fulfillment_error(err)
 
         initial: dict[str, PlaceDeviceShadow] = {}
         for device in self.devices:
