@@ -18,7 +18,7 @@ from homeassistant.components.cover import (
     CoverState,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
@@ -35,6 +35,8 @@ from .const import (
     VEHICLE_DATA_ALT,
     VEHICLE_DATA_NONE,
 )
+
+from tests.common import mock_restore_cache
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -572,3 +574,26 @@ async def test_cover_streaming(
     assert hass.states.get("cover.test_charge_port_door").state == "unknown"
     assert hass.states.get("cover.test_frunk").state == "unknown"
     assert hass.states.get("cover.test_trunk").state == "unknown"
+
+
+async def test_cover_streaming_windows_restored_closed(
+    hass: HomeAssistant,
+    mock_add_listener: AsyncMock,
+) -> None:
+    """Tests a restored closed windows cover stays closed on a single window update."""
+
+    mock_restore_cache(hass, (State("cover.test_windows", CoverState.CLOSED),))
+
+    await setup_platform(hass, [Platform.COVER])
+    assert hass.states.get("cover.test_windows").state == CoverState.CLOSED
+
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {Signal.FD_WINDOW: "WindowStateClosed"},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("cover.test_windows").state == CoverState.CLOSED
