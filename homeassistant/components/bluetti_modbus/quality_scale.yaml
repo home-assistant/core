@@ -90,9 +90,7 @@ rules:
   reconfiguration-flow:
     status: todo
     comment: Split off to a follow-up PR to keep this one reviewable.
-  repair-issues:
-    status: exempt
-    comment: No repairable issues are raised.
+  repair-issues: done
   stale-devices:
     status: exempt
     comment: A config entry is one power station, so no device can go stale.
