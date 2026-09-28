@@ -97,7 +97,6 @@ class AlexaConfig(AbstractConfig):
         entity_registry = er.async_get(self.hass)
         registry_entry = entity_registry.async_get(entity_id)
 
-        # Label-based filtering takes priority if configured
         if filter_label := self._config.get(CONF_FILTER_LABEL):
             if registry_entry is None:
                 return False
