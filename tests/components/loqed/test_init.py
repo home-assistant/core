@@ -318,6 +318,7 @@ async def test_setup_retries_when_cloudhook_unavailable(
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.reason == "Unable to create Home Assistant Cloud webhook"
 
 
 async def test_setup_cloudhook_from_entry_in_bridge(
