@@ -54,6 +54,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import ChildDeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -67,7 +68,7 @@ from .const import (
     DPCode,
 )
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity, TuyaEntityDescription
+from .entity import TuyaEntity, TuyaEntityDescription, get_child_device_info
 from .util import get_device_temp_unit_convert
 
 
@@ -1323,6 +1324,24 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="irrigation_status",
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
+        TuyaSensorEntityDescription(
+            key=DPCode.WATER_ONCE,
+            translation_key="water_once",
+            device_class=SensorDeviceClass.WATER,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.WATER_TOTAL,
+            translation_key="water_total",
+            device_class=SensorDeviceClass.WATER,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.SENSOR_TEMPERATURE,
+            translation_key="temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
         *BATTERY_SENSORS,
     ),
     DeviceCategory.SGBJ: BATTERY_SENSORS,
@@ -1757,26 +1776,13 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         *_electricity_data(DPCode.PHASE_A),
         *_electricity_data(DPCode.PHASE_B),
         *_electricity_data(DPCode.PHASE_C),
-        *_indexed_electricity_data(DPCode.PHASE_S1, 1),
-        *_indexed_electricity_data(DPCode.PHASE_S2, 2),
-        *_indexed_electricity_data(DPCode.PHASE_S3, 3),
-        *_indexed_electricity_data(DPCode.PHASE_S4, 4),
-        *_indexed_electricity_data(DPCode.PHASE_S5, 5),
-        *_indexed_electricity_data(DPCode.PHASE_S6, 6),
-        *_indexed_electricity_data(DPCode.PHASE_S7, 7),
-        *_indexed_electricity_data(DPCode.PHASE_S8, 8),
-        *_indexed_electricity_data(DPCode.PHASE_S9, 9),
-        *_indexed_electricity_data(DPCode.PHASE_S10, 10),
-        *_indexed_electricity_data(DPCode.PHASE_S11, 11),
-        *_indexed_electricity_data(DPCode.PHASE_S12, 12),
-        *_indexed_electricity_data(DPCode.PHASE_S13, 13),
-        *_indexed_electricity_data(DPCode.PHASE_S14, 14),
-        *_indexed_electricity_data(DPCode.PHASE_S15, 15),
-        *_indexed_electricity_data(DPCode.PHASE_S16, 16),
-        *_indexed_electricity_data(DPCode.PHASE_S17, 17),
-        *_indexed_electricity_data(DPCode.PHASE_S18, 18),
-        *_indexed_electricity_data(DPCode.PHASE_S19, 19),
-        *_indexed_electricity_data(DPCode.PHASE_S20, 20),
+        *(
+            description
+            for index in range(1, 21)
+            for description in _indexed_electricity_data(
+                DPCode(f"phase_s{index}"), index
+            )
+        ),
     ),
     DeviceCategory.ZNJDQ: (
         TuyaSensorEntityDescription(
@@ -1920,7 +1926,9 @@ async def async_setup_entry(
                         manager,
                         description,
                         definition,
-                        parent_device_id,
+                        device_info=get_child_device_info(
+                            device, parent_device_id, description
+                        ),
                     )
                     for description in descriptions
                     if (
@@ -1952,10 +1960,11 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         device_manager: Manager,
         description: TuyaSensorEntityDescription,
         definition: SensorDefinition,
-        parent_device_id: str,
+        *,
+        device_info: ChildDeviceInfo | None = None,
     ) -> None:
         """Init Tuya sensor."""
-        super().__init__(device, device_manager, description, parent_device_id)
+        super().__init__(device, device_manager, description, device_info=device_info)
         self._dpcode_wrapper = definition.sensor_wrapper
 
         if description.suggested_unit_of_measurement is None:

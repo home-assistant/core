@@ -22,13 +22,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_RESPOND_TO_READ,
-    CONF_SYNC_STATE,
-    DOMAIN,
-    KNX_ADDRESS,
-    KNX_MODULE_KEY,
-)
+from .const import CONF_RESPOND_TO_READ, CONF_SYNC_STATE, KNX_ADDRESS, KNX_MODULE_KEY
 from .entity import (
     KnxUiEntity,
     KnxUiEntityPlatformController,
@@ -37,9 +31,7 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .schema import SwitchSchema
-from .storage.config_store import KnxEntityData
-from .storage.const import CONF_ENTITY
-from .storage.entity_store_schema import SwitchKnxConfig
+from .storage.entity_store_schema import KnxEntityData, SwitchKnxConfig
 
 
 async def async_setup_entry(
@@ -145,12 +137,12 @@ class KnxUiSwitch(_KnxSwitch, KnxUiEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=unique_id,
-            entity_config=config[CONF_ENTITY],
+            entity_config=config.entity,
         )
-        knx_conf = config[DOMAIN]
+        knx_conf = config.knx
         self._device = XknxSwitch(
             knx_module.xknx,
-            name=config[CONF_ENTITY][CONF_NAME],
+            name=config.entity.xknx_name,
             group_address=knx_conf.ga_switch.write,
             group_address_state=knx_conf.ga_switch.state_and_passive(),
             respond_to_read=knx_conf.respond_to_read,

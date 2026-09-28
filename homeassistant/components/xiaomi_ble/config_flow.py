@@ -23,6 +23,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -354,7 +355,9 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_get_encryption_key_4_5_choose_method()
 
         # Otherwise there wasn't actually encryption so abort
-        return self.async_abort(reason="reauth_successful")
+        return self.async_abort(
+            reason="reauth_successful", translation_domain=HOMEASSISTANT_DOMAIN
+        )
 
     def _async_get_or_create_entry(
         self, bindkey: str | None = None

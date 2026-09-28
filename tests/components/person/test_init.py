@@ -1258,6 +1258,7 @@ async def test_ws_delete(
 ) -> None:
     """Test deleting via WS."""
     manager = hass.data[DOMAIN][1]
+    entity = hass.data[DOMAIN][2].get_entity("person.tracked_person")
 
     client = await hass_ws_client(hass)
     persons = manager.async_items()
@@ -1273,6 +1274,12 @@ async def test_ws_delete(
     assert resp["success"]
     assert len(hass.states.async_entity_ids(DOMAIN)) == 0
     assert not entity_registry.async_is_registered("person.tracked_person")
+
+    # The removed person no longer follows its device tracker
+    with patch.object(entity, "_update_state") as mock_update_state:
+        hass.states.async_set(DEVICE_TRACKER, "home")
+        await hass.async_block_till_done()
+    mock_update_state.assert_not_called()
 
 
 async def test_ws_delete_require_admin(

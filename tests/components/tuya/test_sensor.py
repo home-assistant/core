@@ -47,7 +47,7 @@ async def test_platform_setup_and_discovery(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.parametrize("mock_device_code", ["zndb_au1qr4dpyuqsz6vu"])
+@pytest.mark.parametrize("mock_device_code", ["zndb_qxlwffgv8avf5rrw"])
 async def test_indexed_phase_child_devices(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -65,18 +65,23 @@ async def test_indexed_phase_child_devices(
     assert parent is not None
 
     children = dr.async_entries_for_parent_device(device_registry, parent.id)
-    assert len(children) == 6
+    assert len(children) == 20
     assert not any(
         "phase_s" in entry.unique_id
         for entry in er.async_entries_for_device(entity_registry, parent.id)
     )
     child_ids = {next(iter(child.identifiers)): child.id for child in children}
     assert set(child_ids) == {
-        (DOMAIN, f"{mock_device.id}_channel_{index}") for index in range(1, 7)
+        (DOMAIN, f"{mock_device.id}_channel_{index}") for index in range(1, 21)
     }
     for child in children:
         assert child.parent_device_id == parent.id
-        assert len(er.async_entries_for_device(entity_registry, child.id)) == 6
+        child_entities = er.async_entries_for_device(entity_registry, child.id)
+        assert len(child_entities) == 6
+        for entity in child_entities:
+            state = hass.states.get(entity.entity_id)
+            assert state is not None
+            assert state.state not in ("unknown", "unavailable")
 
     expected_states = {
         "apparentpower": "0.22",

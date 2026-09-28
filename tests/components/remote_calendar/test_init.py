@@ -26,7 +26,7 @@ async def test_load_unload(
     hass: HomeAssistant, config_entry: MockConfigEntry, ics_content: str
 ) -> None:
     """Test loading and unloading a config entry."""
-    respx.get(CALENDER_URL).mock(
+    route = respx.get(CALENDER_URL).mock(
         return_value=Response(
             status_code=200,
             text=ics_content,
@@ -34,6 +34,8 @@ async def test_load_unload(
     )
     await setup_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.LOADED
+    # the calendar is downloaded and parsed once for the whole setup
+    assert route.call_count == 1
 
     state = hass.states.get(TEST_ENTITY)
     assert state
