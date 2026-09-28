@@ -5,8 +5,13 @@ from typing import Any, override
 from energyid_webhooks.directives import DirectiveResource
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
+from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -20,6 +25,8 @@ from .coordinator import (
 )
 
 PARALLEL_UPDATES = 0
+
+SERVICE_GET_DIRECTIVE_SCHEDULE = "get_directive_schedule"
 
 SIGNAL_TO_STATE = {
     "--": "very_bad_moment",
@@ -37,6 +44,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up directive sensors and discover newly granted directives."""
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_GET_DIRECTIVE_SCHEDULE,
+        None,
+        "async_get_directive_schedule",
+        supports_response=SupportsResponse.ONLY,
+    )
+
     coordinator = entry.runtime_data.directive_coordinator
     directives_enabled = async_directives_enabled(entry)
     entity_registry = er.async_get(hass)
@@ -137,4 +152,29 @@ class EnergyIDDirectiveSensor(
             "next_state": SIGNAL_TO_STATE.get(next_change.signal)
             if next_change
             else None,
+        }
+
+    async def async_get_directive_schedule(self) -> ServiceResponse:
+        """Return the complete current schedule for this directive."""
+        snapshot = self.snapshot
+        schedule = snapshot.schedule
+        provider = snapshot.resource.signal_provider
+        return {
+            "title": schedule.title,
+            "description": schedule.description,
+            "interval": schedule.interval,
+            "provider": {
+                "id": provider.id,
+                "display_name": provider.display_name,
+                "logo_url": provider.logo_url,
+            },
+            "data": [
+                {
+                    "timestamp": point.timestamp.isoformat(),
+                    "signal": point.signal,
+                    "color": point.color,
+                    "raw_value": point.raw_value,
+                }
+                for point in schedule.data
+            ],
         }
