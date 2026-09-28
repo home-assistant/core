@@ -47,6 +47,7 @@ PLAYABLE_MEDIA_TYPES = [
     MediaType.PLAYLIST,
     MediaType.SEASON,
     MediaType.TVSHOW,
+    MediaType.VIDEO,
 ]
 
 

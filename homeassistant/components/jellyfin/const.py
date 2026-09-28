@@ -68,6 +68,7 @@ CONTENT_TYPE_MAP = {
     "MusicAlbum": MediaType.ALBUM,
     "MusicArtist": MediaType.ARTIST,
     "Playlist": MediaType.PLAYLIST,
+    "Video": MediaType.VIDEO,
     "CollectionFolder": "collection",
     "AggregateFolder": "library",
     "Folder": "library",

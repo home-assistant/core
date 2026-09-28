@@ -508,6 +508,13 @@ async def test_browse_media(
             MediaType.ARTIST,
             id="artist",
         ),
+        pytest.param(
+            "playlist.json",
+            "tracks.json",
+            MediaClass.PLAYLIST,
+            MediaType.PLAYLIST,
+            id="playlist",
+        ),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -635,6 +642,28 @@ async def test_search_media(
                 "can_search": True,
             },
             id="artist_by_name",
+        ),
+        pytest.param(
+            "playlists.json",
+            {
+                "media_class": MediaClass.PLAYLIST,
+                "media_content_type": MediaType.PLAYLIST,
+                "can_play": True,
+                "can_expand": True,
+                "can_search": True,
+            },
+            id="playlist",
+        ),
+        pytest.param(
+            "videos.json",
+            {
+                "media_class": MediaClass.VIDEO,
+                "media_content_type": MediaType.VIDEO,
+                "can_play": True,
+                "can_expand": False,
+                "can_search": False,
+            },
+            id="video",
         ),
     ],
 )
