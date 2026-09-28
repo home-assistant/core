@@ -25,6 +25,7 @@ from . import (
     config_validation as cv,
     device_registry as dr,
     floor_registry as fr,
+    frame,
     intent,
     selector,
     service,
@@ -40,6 +41,8 @@ APIS_CACHE: HassKey[dict[str, API]] = HassKey("llm_apis")
 
 
 LLM_API_ASSIST = "assist"
+
+TOOL_INTEGRATION_BREAKS_IN_HA_VERSION = "2027.10"
 
 DATE_TIME_PROMPT = (
     'Current time is {{ now().strftime("%H:%M:%S") }}. '
@@ -162,12 +165,29 @@ class ToolResult:
     error: bool = False
 
 
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ToolAnnotations:
+    """Properties describing how a tool behaves.
+
+    The defaults describe the least safe case, so a tool that declares nothing
+    is taken to write, to be destructive, and to reach outside Home Assistant.
+    """
+
+    read_only: bool = False
+    destructive: bool = True
+    idempotent: bool = False
+    open_world: bool = True
+
+
 class Tool:
     """LLM Tool base class."""
 
     name: str
+    title: str | None = None
     description: str | None = None
     parameters: probatio.Schema = probatio.Schema({})
+    annotations: ToolAnnotations = ToolAnnotations()
+    integration: str | None = None
 
     @abstractmethod
     async def async_call(
@@ -192,6 +212,19 @@ class APIInstance:
     tools: list[Tool]
     custom_serializer: Callable[[Any], Any] | None = None
 
+    def __post_init__(self) -> None:
+        """Report a tool that does not record the integration providing it."""
+        for tool in self.tools:
+            if tool.integration is not None:
+                continue
+            # A tool class outside an integration, such as a shared helper tool,
+            # belongs to whichever integration provides the API.
+            domain = _tool_integration_domain(tool) or _integration_domain(
+                type(self.api).__module__
+            )
+            if domain is not None:
+                report_untagged_tool(tool, domain)
+
     async def async_call_tool(self, tool_input: ToolInput) -> ToolResult:
         """Call a LLM tool, validate args and return the response."""
         from homeassistant.components.conversation import (  # noqa: PLC0415
@@ -213,7 +246,52 @@ class APIInstance:
         result = await tool.async_call(self.api.hass, tool_input, self.llm_context)
         if isinstance(result, ToolResult):
             return result
+        frame.report_usage(
+            "returns a JSON object from a tool, which is deprecated; return a "
+            "ToolResult instead",
+            breaks_in_ha_version="2027.11.0",
+            core_behavior=frame.ReportBehavior.ERROR,
+            core_integration_behavior=frame.ReportBehavior.ERROR,
+            custom_integration_behavior=frame.ReportBehavior.LOG,
+            # The tool call has returned, so its frame is gone from the stack.
+            integration_domain=_tool_integration_domain(tool),
+        )
         return ToolResult(data=result)
+
+
+@callback
+def report_untagged_tool(tool: Tool, domain: str) -> None:
+    """Report a tool that does not record the integration providing it."""
+    wrapped = [tool]
+    while isinstance(wrapped[-1], NamespacedTool):
+        wrapped.append(wrapped[-1].tool)
+    frame.report_usage(
+        f"provides the LLM tool {wrapped[-1].name} without an integration",
+        breaks_in_ha_version=TOOL_INTEGRATION_BREAKS_IN_HA_VERSION,
+        core_behavior=frame.ReportBehavior.ERROR,
+        core_integration_behavior=frame.ReportBehavior.ERROR,
+        custom_integration_behavior=frame.ReportBehavior.LOG,
+        integration_domain=domain,
+    )
+    # Record the domain on the tool and every wrapper around it, so it carries
+    # the integration until the requirement is enforced.
+    for entry in wrapped:
+        entry.integration = domain
+
+
+def _tool_integration_domain(tool: Tool) -> str | None:
+    """Return the domain of the integration that provides the tool."""
+    while isinstance(tool, NamespacedTool):
+        tool = tool.tool
+    return _integration_domain(type(tool).__module__)
+
+
+def _integration_domain(module: str) -> str | None:
+    """Return the domain of the integration that defines the module."""
+    for prefix in ("custom_components.", "homeassistant.components."):
+        if module.startswith(prefix):
+            return module.removeprefix(prefix).partition(".")[0]
+    return None
 
 
 @dataclass(slots=True, kw_only=True)
@@ -230,6 +308,27 @@ class API(ABC):
         raise NotImplementedError
 
 
+@callback
+def async_get_match_preferences(
+    hass: HomeAssistant, llm_context: LLMContext
+) -> intent.MatchTargetsPreferences:
+    """Return target match preferences for the area of the requesting device."""
+    area: ar.AreaEntry | None = None
+    floor: fr.FloorEntry | None = None
+    if (
+        llm_context.device_id
+        and (device := dr.async_get(hass).async_get(llm_context.device_id))
+        and (device_area_id := dr.async_get_effective_area_id(hass, device))
+        and (area := ar.async_get(hass).async_get_area(device_area_id))
+        and area.floor_id
+    ):
+        floor = fr.async_get(hass).async_get_floor(area.floor_id)
+    return intent.MatchTargetsPreferences(
+        area_id=area.id if area else None,
+        floor_id=floor.floor_id if floor else None,
+    )
+
+
 class IntentTool(Tool):
     """LLM Tool representing an Intent."""
 
@@ -237,9 +336,16 @@ class IntentTool(Tool):
         self,
         name: str,
         intent_handler: intent.IntentHandler,
+        *,
+        title: str | None = None,
+        integration: str | None = None,
+        annotations: ToolAnnotations = ToolAnnotations(),
     ) -> None:
         """Init the class."""
         self.name = name
+        self.title = title
+        self.integration = integration
+        self.annotations = annotations
         self.intent_type = intent_handler.intent_type
         self.description = (
             intent_handler.description
@@ -264,7 +370,7 @@ class IntentTool(Tool):
     @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
-    ) -> JsonObjectType:
+    ) -> ToolResult:
         """Handle the intent."""
         slots = {
             key: {"value": val}
@@ -272,24 +378,11 @@ class IntentTool(Tool):
             if not intent.is_blank_slot_value(val)
         }
 
-        if self.extra_slots and llm_context.device_id:
-            device_reg = dr.async_get(hass)
-            device = device_reg.async_get(llm_context.device_id)
-
-            area: ar.AreaEntry | None = None
-            floor: fr.FloorEntry | None = None
-            if device:
-                area_reg = ar.async_get(hass)
-                if (
-                    device_area_id := dr.async_get_effective_area_id(hass, device)
-                ) and (area := area_reg.async_get_area(device_area_id)):
-                    if area.floor_id:
-                        floor_reg = fr.async_get(hass)
-                        floor = floor_reg.async_get_floor(area.floor_id)
-
+        if self.extra_slots:
+            preferences = async_get_match_preferences(hass, llm_context)
             for slot_name, slot_value in (
-                ("preferred_area_id", area.id if area else None),
-                ("preferred_floor_id", floor.floor_id if floor else None),
+                ("preferred_area_id", preferences.area_id),
+                ("preferred_floor_id", preferences.floor_id),
             ):
                 if slot_value and slot_name in self.extra_slots:
                     slots[slot_name] = {"value": slot_value}
@@ -305,7 +398,7 @@ class IntentTool(Tool):
             assistant=llm_context.assistant,
             device_id=llm_context.device_id,
         )
-        return IntentResponseDict(intent_response)
+        return ToolResult(data=IntentResponseDict(intent_response))
 
 
 class IntentResponseDict(dict):
@@ -335,8 +428,11 @@ class NamespacedTool(Tool):
         """Init the class."""
         self.namespace = namespace
         self.name = f"{namespace}__{tool.name}"
+        self.title = tool.title
         self.description = tool.description
         self.parameters = tool.parameters
+        self.annotations = tool.annotations
+        self.integration = tool.integration
         self.tool = tool
 
     @override
@@ -642,6 +738,7 @@ class ActionTool(Tool):
         self._domain = domain
         self._action = action
         self.name = f"{domain}__{action}"
+        self.integration = domain
         # Note: _get_cached_action_parameters only works for services which
         # add their description directly to the service description cache.
         # This is not the case for most services, but it is for scripts.
@@ -655,7 +752,7 @@ class ActionTool(Tool):
     @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
-    ) -> JsonObjectType:
+    ) -> ToolResult:
         """Call the action."""
 
         for field, validator in self.parameters.schema.items():
@@ -696,4 +793,4 @@ class ActionTool(Tool):
             return_response=True,
         )
 
-        return {"success": True, "result": result}
+        return ToolResult(data={"result": result})

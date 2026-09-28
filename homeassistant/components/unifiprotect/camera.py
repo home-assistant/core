@@ -2,7 +2,7 @@
 
 from collections.abc import Iterable
 import logging
-from typing import cast, override
+from typing import override
 
 from uiprotect.data import (
     Camera as UFPCamera,
@@ -266,7 +266,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self._last_image: bytes | None = None
         # The base tracks the private device in hybrid (unchanged behaviour) and
         # the public device in public-only, so it always has a mac to key on.
-        super().__init__(data, cast(ProtectDeviceType, private or public))
+        super().__init__(data, private or public)
         self._attr_unique_id = f"{self.device.mac}_{self._channel_id}"
         self._attr_name = get_camera_base_name(quality)
         # only the default (first active) quality channel is enabled by default
@@ -392,11 +392,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             self._public_missing = False
         else:
             self._public_missing = True
-        device = (
-            self._private
-            if self._private is not None
-            else cast(ProtectDeviceType, self._public)
-        )
+        device = self._private if self._private is not None else self._public
         self._async_updated_event(device)
 
     @override
