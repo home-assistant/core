@@ -486,6 +486,64 @@ async def test_camera_stream_source_found(hass: HomeAssistant, run_driver) -> No
     )
 
 
+async def test_camera_shared_stream_source(hass: HomeAssistant, run_driver) -> None:
+    """Test a camera streams from the shared source instead of its own."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    await async_setup_component(
+        hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "camera.demo_camera"
+
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = Camera(hass, run_driver, "Camera", entity_id, 2, {})
+    acc.run()
+
+    await _async_setup_endpoints(hass, acc)
+    working_ffmpeg = _get_working_mock_ffmpeg()
+    session_info = acc.sessions[MOCK_START_STREAM_SESSION_UUID]
+
+    with (
+        patch(
+            "homeassistant.components.demo.camera.DemoCamera.stream_source",
+            return_value="rtsp://example.local",
+        ) as mock_stream_source,
+        patch(
+            "homeassistant.components.homekit.type_cameras.camera.async_get_shared_stream_source",
+            return_value="rtsp://127.0.0.1:18554/camera",
+        ),
+        patch(
+            "homeassistant.components.homekit.type_cameras.HAFFmpeg",
+            return_value=working_ffmpeg,
+        ),
+    ):
+        await _async_start_streaming(hass, acc)
+        await _async_stop_all_streams(hass, acc)
+
+    expected_output = (
+        "-map 0:v:0 -an -c:v libx264 -profile:v high "
+        "-tune zerolatency -pix_fmt yuv420p -r 30 -b:v 299k "
+        "-bufsize 1196k -maxrate 299k -payload_type 99 "
+        "-ssrc {v_ssrc} -f rtp -srtp_out_suite "
+        "AES_CM_128_HMAC_SHA1_80 -srtp_out_params "
+        "zdPmNLWeI86DtLJHvVLI6YPvqhVeeiLsNtrAgbgL "
+        "srtp://192.168.208.5:51246"
+        "?rtcpport=51246&localrtpport=51246&pkt_size=1316"
+    )
+
+    working_ffmpeg.open.assert_called_with(
+        cmd=[],
+        input_source="-i rtsp://127.0.0.1:18554/camera",
+        output=expected_output.format(**session_info),
+        stdout_pipe=False,
+        extra_cmd="-hide_banner -nostats",
+        stderr_pipe=True,
+    )
+    mock_stream_source.assert_not_called()
+
+
 async def test_camera_stream_source_fails(hass: HomeAssistant, run_driver) -> None:
     """Test a camera that can stream and we cannot get the source from the entity."""
     await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})

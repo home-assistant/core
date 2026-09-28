@@ -34,6 +34,7 @@ from homeassistant.components.camera import (
     WebRTCMessage,
     WebRTCSendMessage,
     async_get_image,
+    async_get_shared_stream_source,
 )
 from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOMAIN
 from homeassistant.components.go2rtc import HomeAssistant, WebRTCProvider
@@ -41,6 +42,9 @@ from homeassistant.components.go2rtc.const import (
     CONF_DEBUG_UI,
     DEBUG_UI_URL_MESSAGE,
     DOMAIN,
+    HA_MANAGED_RTSP_HOST,
+    HA_MANAGED_RTSP_PORT,
+    HA_MANAGED_URL,
     RECOMMENDED_VERSION,
 )
 from homeassistant.components.go2rtc.util import (
@@ -1531,3 +1535,117 @@ async def test_preload_no_change_when_already_disabled(
     # Verify preload enable/disable were not called
     rest_client.preload.enable.assert_not_called()
     rest_client.preload.disable.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration", "init_test_integration")
+async def test_shared_stream_source(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+) -> None:
+    """The managed server restreams the camera, so consumers share one upstream."""
+    source = await async_get_shared_stream_source(hass, "camera.test")
+    assert (
+        source
+        == f"rtsp://{HA_MANAGED_RTSP_HOST}:{HA_MANAGED_RTSP_PORT}/test_camera_unique_id"
+    )
+    rest_client.streams.add.assert_called_once_with(
+        "test_camera_unique_id",
+        [
+            "rtsp://stream",
+            "ffmpeg:test_camera_unique_id#audio=opus#query=log_level=debug",
+        ],
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_shared_stream_source_generic_camera(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+) -> None:
+    """A generic camera is registered through the ffmpeg wrapping."""
+    camera = init_test_integration
+    camera.set_stream_source("https://my_stream_url.m3u8")
+
+    with patch.object(camera.platform.platform_data, "platform_name", "generic"):
+        source = await async_get_shared_stream_source(hass, "camera.test")
+        identifier = get_camera_identifier(camera)
+
+    assert (
+        source == f"rtsp://{HA_MANAGED_RTSP_HOST}:{HA_MANAGED_RTSP_PORT}/{identifier}"
+    )
+    rest_client.streams.add.assert_called_once_with(
+        identifier,
+        [
+            "ffmpeg:https://my_stream_url.m3u8",
+            f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
+        ],
+    )
+
+
+@pytest.mark.usefixtures("init_test_integration")
+async def test_shared_stream_source_without_go2rtc(hass: HomeAssistant) -> None:
+    """Without go2rtc there is no provider, so the camera's own source is used."""
+    assert await async_get_shared_stream_source(hass, "camera.test") == "rtsp://stream"
+
+
+@pytest.mark.usefixtures("rest_client", "init_test_integration")
+@pytest.mark.parametrize(
+    "server_url",
+    [
+        pytest.param("http://localhost:1984/", id="other-port"),
+        # Ownership must not be inferred from the URL: a user's own server can
+        # sit here and expose a different RTSP endpoint, or none at all.
+        pytest.param(HA_MANAGED_URL, id="managed-url-collision"),
+    ],
+)
+async def test_shared_stream_source_external_server(
+    hass: HomeAssistant, server_url: str
+) -> None:
+    """An external server's RTSP endpoint is unknown, so the camera's source is used."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_URL: server_url}})
+    await hass.async_block_till_done()
+
+    assert await async_get_shared_stream_source(hass, "camera.test") == "rtsp://stream"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_shared_stream_source_unsupported(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+) -> None:
+    """A source go2rtc cannot restream is handed back unchanged."""
+    init_test_integration.set_stream_source("invalid://not_supported")
+    assert (
+        await async_get_shared_stream_source(hass, "camera.test")
+        == "invalid://not_supported"
+    )
+
+
+@pytest.mark.usefixtures("init_integration", "init_test_integration")
+async def test_shared_stream_source_server_rejects(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+) -> None:
+    """A managed-server error falls back to the camera's own source."""
+    rest_client.streams.add.side_effect = Go2RtcClientError
+    assert await async_get_shared_stream_source(hass, "camera.test") == "rtsp://stream"
+
+
+@pytest.mark.usefixtures("init_integration", "init_test_integration")
+async def test_shared_stream_source_resolves_the_camera_once(
+    hass: HomeAssistant,
+) -> None:
+    """The source is resolved once and handed to the provider.
+
+    stream_source() does real work in some integrations, so the fallback must not
+    ask the camera a second time.
+    """
+    with patch.object(
+        MockCamera, "stream_source", return_value="invalid://not_supported"
+    ) as stream_source:
+        assert (
+            await async_get_shared_stream_source(hass, "camera.test")
+            == "invalid://not_supported"
+        )
+    assert stream_source.call_count == 1
