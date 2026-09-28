@@ -172,6 +172,9 @@ class ViCareFan(ViCareEntity, FanEntity):
                 )
 
             if VentilationQuickmode.STANDBY in self._attributes["vicare_quickmodes"]:
+                # Clear before the guarded read, a suppressed error would
+                # otherwise keep reporting the fan as off.
+                self._standby = False
                 with suppress(PyViCareNotSupportedFeatureError):
                     self._standby = self._api.getVentilationQuickmode(
                         VentilationQuickmode.STANDBY
