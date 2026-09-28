@@ -39,13 +39,13 @@ async def test_tfa_me_sensor_entities_snapshot(
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
-async def test_stale_sensor_value_returns_unknown(
+async def test_stale_sensor_value_returns_unavailable(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     tfa_me_config_entry: MockConfigEntry,
 ) -> None:
-    """Test stale sensor values are reported as unknown."""
+    """Test stale sensor values are reported as unavailable."""
     payload = {
         "gateway_id": "05B3E4E44",
         "sensors": [
