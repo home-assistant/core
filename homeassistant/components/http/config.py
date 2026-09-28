@@ -59,7 +59,7 @@ def default_server_port() -> int:
     if (env_value := os.environ.get(ENV_SETUP_PORT)) is None:
         return default
     try:
-        return cast(int, cv.port(env_value))
+        return cv.port(env_value)
     except probatio.Invalid:
         _LOGGER.warning(
             "Invalid port %r in %s environment variable; falling back to %s",
