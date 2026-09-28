@@ -1,6 +1,8 @@
 """Validate integration translation files."""
 
-from functools import partial
+from collections.abc import Callable
+from contextvars import ContextVar
+from functools import cache
 import json
 import re
 import string
@@ -62,6 +64,11 @@ REMOVED_TITLE_MSG = (
     "manifest."
 )
 
+# Schemas are shared between integrations, validators read the integration from here
+_CURRENT_TRANSLATION: ContextVar[tuple[Config, Integration]] = ContextVar(
+    "current_translation"
+)
+
 MOVED_TRANSLATIONS_DIRECTORY_MSG = (
     "The '.translations' directory has been moved, the new name is 'translations', "
     "starting with Home Assistant 0.112 your translations will no longer "
@@ -108,12 +115,9 @@ def find_references(
             found.append({"source": f"{prefix}::{key}", "ref": match.group(1)})
 
 
-def removed_title_validator(
-    config: Config,
-    integration: Integration,
-    value: Any,
-) -> Any:
+def removed_title_validator(value: Any) -> Any:
     """Mark removed title."""
+    config, integration = _CURRENT_TRANSLATION.get()
     if not config.specific_integrations:
         raise probatio.Invalid(REMOVED_TITLE_MSG)
 
@@ -203,8 +207,6 @@ def validate_placeholders(value: str, allow_placeholders: bool) -> str:
 
 def gen_data_entry_schema(
     *,
-    config: Config,
-    integration: Integration,
     flow_title: int,
     require_step_title: bool,
     mandatory_description: str | None = None,
@@ -257,8 +259,8 @@ def gen_data_entry_schema(
     if flow_title == REQUIRED:
         schema[probatio.Required("title")] = translation_value_validator
     elif flow_title == REMOVED:
-        schema[probatio.Optional("title", msg=REMOVED_TITLE_MSG)] = partial(
-            removed_title_validator, config, integration
+        schema[probatio.Optional("title", msg=REMOVED_TITLE_MSG)] = (
+            removed_title_validator
         )
 
     def data_description_validator(value: dict[str, Any]) -> dict[str, Any]:
@@ -292,25 +294,27 @@ def gen_data_entry_schema(
 
         validators.append(validate_description_set)
 
-    if not allow_name_translation(integration):
-
-        def name_validator(value: dict[str, Any]) -> dict[str, Any]:
-            """Validate name."""
-            for step_id, info in value["step"].items():
-                if info.get("title") == integration.name:
-                    raise probatio.Invalid(
-                        f"Do not set title of step {step_id} if it's a brand name "
-                        "or add exception to ALLOW_NAME_TRANSLATION"
-                    )
-
+    def name_validator(value: dict[str, Any]) -> dict[str, Any]:
+        """Validate name."""
+        _, integration = _CURRENT_TRANSLATION.get()
+        if allow_name_translation(integration):
             return value
 
-        validators.append(name_validator)
+        for step_id, info in value["step"].items():
+            if info.get("title") == integration.name:
+                raise probatio.Invalid(
+                    f"Do not set title of step {step_id} if it's a brand name "
+                    "or add exception to ALLOW_NAME_TRANSLATION"
+                )
+
+        return value
+
+    validators.append(name_validator)
 
     return probatio.All(*validators)
 
 
-def gen_issues_schema(config: Config, integration: Integration) -> dict[str, Any]:
+def gen_issues_schema(frontend_issues: frozenset[str]) -> dict[str, Any]:
     """Generate the issues schema."""
     issue_schema = probatio.All(
         cv.has_at_least_one_key("description", "fix_flow"),
@@ -321,8 +325,6 @@ def gen_issues_schema(config: Config, integration: Integration) -> dict[str, Any
                     "description", "fixable"
                 ): translation_value_validator,
                 probatio.Exclusive("fix_flow", "fixable"): gen_data_entry_schema(
-                    config=config,
-                    integration=integration,
                     flow_title=UNDEFINED,
                     require_step_title=False,
                 ),
@@ -335,7 +337,7 @@ def gen_issues_schema(config: Config, integration: Integration) -> dict[str, Any
     )
 
     schema: dict[str, Any] = {}
-    for key in FRONTEND_HANDLED_ISSUES.get(integration.domain, ()):
+    for key in frontend_issues:
         schema[probatio.Optional(key)] = frontend_issue_schema
     schema[str] = issue_schema
     return schema
@@ -349,26 +351,56 @@ _EXCEPTIONS_SCHEMA = {
 }
 
 
-def gen_strings_schema(config: Config, integration: Integration) -> probatio.Schema:
+def _with_integration(
+    schema: probatio.Schema, config: Config, integration: Integration
+) -> Callable[[Any], Any]:
+    """Return a validator that runs the schema for the integration."""
+
+    def validate(value: Any) -> Any:
+        """Validate value."""
+        token = _CURRENT_TRANSLATION.set((config, integration))
+        try:
+            return schema(value)
+        finally:
+            _CURRENT_TRANSLATION.reset(token)
+
+    return validate
+
+
+def _frontend_issues(integration: Integration) -> frozenset[str]:
+    """Return the issues the frontend handles for the integration."""
+    return frozenset(FRONTEND_HANDLED_ISSUES.get(integration.domain, ()))
+
+
+def gen_strings_schema(
+    config: Config, integration: Integration
+) -> Callable[[Any], Any]:
     """Generate a strings schema."""
+    return _with_integration(
+        _gen_strings_schema(
+            integration.integration_type == IntegrationType.HELPER,
+            _frontend_issues(integration),
+        ),
+        config,
+        integration,
+    )
+
+
+@cache
+def _gen_strings_schema(
+    is_helper: bool, frontend_issues: frozenset[str]
+) -> probatio.Schema:
+    """Generate a strings schema, shared by integrations of the same kind."""
     return probatio.Schema(
         {
             probatio.Optional("title"): translation_value_validator,
             probatio.Optional("config"): gen_data_entry_schema(
-                config=config,
-                integration=integration,
                 flow_title=REMOVED,
                 require_step_title=False,
-                mandatory_description=(
-                    "user"
-                    if integration.integration_type == IntegrationType.HELPER
-                    else None
-                ),
+                mandatory_description="user" if is_helper else None,
             ),
             probatio.Optional("config_subentries"): cv.schema_with_slug_keys(
                 gen_data_entry_schema(
-                    config=config,
-                    integration=integration,
                     flow_title=REMOVED,
                     require_step_title=False,
                     subentry_flow=True,
@@ -376,8 +408,6 @@ def gen_strings_schema(config: Config, integration: Integration) -> probatio.Sch
                 slug_validator=probatio.Any("_", cv.slug),
             ),
             probatio.Optional("options"): gen_data_entry_schema(
-                config=config,
-                integration=integration,
                 flow_title=UNDEFINED,
                 require_step_title=False,
             ),
@@ -462,7 +492,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> probatio.Sch
             probatio.Optional("application_credentials"): {
                 probatio.Optional("description"): translation_value_validator,
             },
-            probatio.Optional("issues"): gen_issues_schema(config, integration),
+            probatio.Optional("issues"): gen_issues_schema(frontend_issues),
             probatio.Optional("entity_component"): cv.schema_with_slug_keys(
                 {
                     probatio.Optional("name"): str,
@@ -598,38 +628,38 @@ def gen_strings_schema(config: Config, integration: Integration) -> probatio.Sch
     )
 
 
-def gen_auth_schema(config: Config, integration: Integration) -> probatio.Schema:
+def gen_auth_schema(config: Config, integration: Integration) -> Callable[[Any], Any]:
     """Generate auth schema."""
-    return probatio.Schema(
+    schema = probatio.Schema(
         {
             probatio.Optional("mfa_setup"): {
                 str: gen_data_entry_schema(
-                    config=config,
-                    integration=integration,
                     flow_title=REQUIRED,
                     require_step_title=True,
                 )
             },
-            probatio.Optional("issues"): gen_issues_schema(config, integration),
+            probatio.Optional("issues"): gen_issues_schema(
+                _frontend_issues(integration)
+            ),
             **_EXCEPTIONS_SCHEMA,
         }
     )
+    return _with_integration(schema, config, integration)
 
 
 def gen_ha_hardware_schema(config: Config, integration: Integration):
     """Generate auth schema."""
-    return probatio.Schema(
+    schema = probatio.Schema(
         {
             str: {
                 probatio.Optional("options"): gen_data_entry_schema(
-                    config=config,
-                    integration=integration,
                     flow_title=UNDEFINED,
                     require_step_title=False,
                 )
             }
         }
     )
+    return _with_integration(schema, config, integration)
 
 
 ONBOARDING_SCHEMA = probatio.Schema(
