@@ -90,6 +90,6 @@ def mock_config_entry(mock_modbus_unit: MockModbusUnit) -> MockConfigEntry:
         domain=DOMAIN,
         entry_id=ENTRY_ID,
         unique_id=SERIAL,
-        title="Balco260",
+        title="Balco 260",
         data=bluetti_data(),
     )

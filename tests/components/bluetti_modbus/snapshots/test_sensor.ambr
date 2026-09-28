@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[sensor.balco260_ac_output_current-entry]
+# name: test_sensors[sensor.balco_260_ac_output_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15,7 +15,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_ac_output_current',
+    'entity_id': 'sensor.balco_260_ac_output_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -41,23 +41,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_ac_output_current-state]
+# name: test_sensors[sensor.balco_260_ac_output_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 AC output current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 AC output current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_ac_output_current',
+    'entity_id': 'sensor.balco_260_ac_output_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.4',
   })
 # ---
-# name: test_sensors[sensor.balco260_ac_output_power-entry]
+# name: test_sensors[sensor.balco_260_ac_output_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -73,7 +73,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_ac_output_power',
+    'entity_id': 'sensor.balco_260_ac_output_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -99,23 +99,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_ac_output_power-state]
+# name: test_sensors[sensor.balco_260_ac_output_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 AC output power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 AC output power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_ac_output_power',
+    'entity_id': 'sensor.balco_260_ac_output_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '90',
   })
 # ---
-# name: test_sensors[sensor.balco260_ac_output_voltage-entry]
+# name: test_sensors[sensor.balco_260_ac_output_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -131,7 +131,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_ac_output_voltage',
+    'entity_id': 'sensor.balco_260_ac_output_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -157,23 +157,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_ac_output_voltage-state]
+# name: test_sensors[sensor.balco_260_ac_output_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 AC output voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 AC output voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_ac_output_voltage',
+    'entity_id': 'sensor.balco_260_ac_output_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '242.0',
   })
 # ---
-# name: test_sensors[sensor.balco260_battery_current-entry]
+# name: test_sensors[sensor.balco_260_battery_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -189,7 +189,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_battery_current',
+    'entity_id': 'sensor.balco_260_battery_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -215,23 +215,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_battery_current-state]
+# name: test_sensors[sensor.balco_260_battery_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Battery current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Battery current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_battery_current',
+    'entity_id': 'sensor.balco_260_battery_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.3',
   })
 # ---
-# name: test_sensors[sensor.balco260_battery_cycle_count-entry]
+# name: test_sensors[sensor.balco_260_battery_cycle_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -247,7 +247,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.balco260_battery_cycle_count',
+    'entity_id': 'sensor.balco_260_battery_cycle_count',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -270,21 +270,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.balco260_battery_cycle_count-state]
+# name: test_sensors[sensor.balco_260_battery_cycle_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Battery cycle count',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Battery cycle count',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_battery_cycle_count',
+    'entity_id': 'sensor.balco_260_battery_cycle_count',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '37',
   })
 # ---
-# name: test_sensors[sensor.balco260_battery_soc-entry]
+# name: test_sensors[sensor.balco_260_battery_soc-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -300,7 +300,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_battery_soc',
+    'entity_id': 'sensor.balco_260_battery_soc',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -323,23 +323,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.balco260_battery_soc-state]
+# name: test_sensors[sensor.balco_260_battery_soc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Battery SoC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Battery SoC',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_battery_soc',
+    'entity_id': 'sensor.balco_260_battery_soc',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '14',
   })
 # ---
-# name: test_sensors[sensor.balco260_battery_soh-entry]
+# name: test_sensors[sensor.balco_260_battery_soh-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -355,7 +355,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.balco260_battery_soh',
+    'entity_id': 'sensor.balco_260_battery_soh',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -378,22 +378,22 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.balco260_battery_soh-state]
+# name: test_sensors[sensor.balco_260_battery_soh-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Battery SoH',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Battery SoH',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_battery_soh',
+    'entity_id': 'sensor.balco_260_battery_soh',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '99',
   })
 # ---
-# name: test_sensors[sensor.balco260_battery_type-entry]
+# name: test_sensors[sensor.balco_260_battery_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -407,7 +407,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.balco260_battery_type',
+    'entity_id': 'sensor.balco_260_battery_type',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -430,20 +430,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.balco260_battery_type-state]
+# name: test_sensors[sensor.balco_260_battery_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Battery type',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Battery type',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_battery_type',
+    'entity_id': 'sensor.balco_260_battery_type',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Balco260',
   })
 # ---
-# name: test_sensors[sensor.balco260_battery_voltage-entry]
+# name: test_sensors[sensor.balco_260_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -459,7 +459,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_battery_voltage',
+    'entity_id': 'sensor.balco_260_battery_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -485,23 +485,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_battery_voltage-state]
+# name: test_sensors[sensor.balco_260_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Battery voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Battery voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_battery_voltage',
+    'entity_id': 'sensor.balco_260_battery_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25.8',
   })
 # ---
-# name: test_sensors[sensor.balco260_cell_count-entry]
+# name: test_sensors[sensor.balco_260_cell_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -515,7 +515,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.balco260_cell_count',
+    'entity_id': 'sensor.balco_260_cell_count',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -538,20 +538,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.balco260_cell_count-state]
+# name: test_sensors[sensor.balco_260_cell_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Cell count',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Cell count',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_cell_count',
+    'entity_id': 'sensor.balco_260_cell_count',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '8',
   })
 # ---
-# name: test_sensors[sensor.balco260_dc_pv_input_count-entry]
+# name: test_sensors[sensor.balco_260_dc_pv_input_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -565,7 +565,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.balco260_dc_pv_input_count',
+    'entity_id': 'sensor.balco_260_dc_pv_input_count',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -588,20 +588,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.balco260_dc_pv_input_count-state]
+# name: test_sensors[sensor.balco_260_dc_pv_input_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 DC PV input count',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 DC PV input count',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_dc_pv_input_count',
+    'entity_id': 'sensor.balco_260_dc_pv_input_count',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4',
   })
 # ---
-# name: test_sensors[sensor.balco260_grid_current-entry]
+# name: test_sensors[sensor.balco_260_grid_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -617,7 +617,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_grid_current',
+    'entity_id': 'sensor.balco_260_grid_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -643,23 +643,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_grid_current-state]
+# name: test_sensors[sensor.balco_260_grid_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Grid current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Grid current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_grid_current',
+    'entity_id': 'sensor.balco_260_grid_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.1',
   })
 # ---
-# name: test_sensors[sensor.balco260_grid_frequency-entry]
+# name: test_sensors[sensor.balco_260_grid_frequency-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -675,7 +675,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_grid_frequency',
+    'entity_id': 'sensor.balco_260_grid_frequency',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -701,23 +701,23 @@
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_grid_frequency-state]
+# name: test_sensors[sensor.balco_260_grid_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Grid frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Grid frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_grid_frequency',
+    'entity_id': 'sensor.balco_260_grid_frequency',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50.0',
   })
 # ---
-# name: test_sensors[sensor.balco260_grid_input_power-entry]
+# name: test_sensors[sensor.balco_260_grid_input_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -733,7 +733,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_grid_input_power',
+    'entity_id': 'sensor.balco_260_grid_input_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -759,23 +759,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_grid_input_power-state]
+# name: test_sensors[sensor.balco_260_grid_input_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Grid input power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Grid input power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_grid_input_power',
+    'entity_id': 'sensor.balco_260_grid_input_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '90',
   })
 # ---
-# name: test_sensors[sensor.balco260_grid_voltage-entry]
+# name: test_sensors[sensor.balco_260_grid_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -791,7 +791,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_grid_voltage',
+    'entity_id': 'sensor.balco_260_grid_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -817,23 +817,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_grid_voltage-state]
+# name: test_sensors[sensor.balco_260_grid_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Grid voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Grid voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_grid_voltage',
+    'entity_id': 'sensor.balco_260_grid_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '242.0',
   })
 # ---
-# name: test_sensors[sensor.balco260_inverter_count-entry]
+# name: test_sensors[sensor.balco_260_inverter_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -847,7 +847,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.balco260_inverter_count',
+    'entity_id': 'sensor.balco_260_inverter_count',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -870,20 +870,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.balco260_inverter_count-state]
+# name: test_sensors[sensor.balco_260_inverter_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Inverter count',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Inverter count',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_inverter_count',
+    'entity_id': 'sensor.balco_260_inverter_count',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
 # ---
-# name: test_sensors[sensor.balco260_inverter_current-entry]
+# name: test_sensors[sensor.balco_260_inverter_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -899,7 +899,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_inverter_current',
+    'entity_id': 'sensor.balco_260_inverter_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -925,23 +925,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_inverter_current-state]
+# name: test_sensors[sensor.balco_260_inverter_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Inverter current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Inverter current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_inverter_current',
+    'entity_id': 'sensor.balco_260_inverter_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.3',
   })
 # ---
-# name: test_sensors[sensor.balco260_inverter_status-entry]
+# name: test_sensors[sensor.balco_260_inverter_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -966,7 +966,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_inverter_status',
+    'entity_id': 'sensor.balco_260_inverter_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -989,11 +989,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.balco260_inverter_status-state]
+# name: test_sensors[sensor.balco_260_inverter_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Inverter status',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Inverter status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'stop',
         'off_grid',
@@ -1006,14 +1006,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_inverter_status',
+    'entity_id': 'sensor.balco_260_inverter_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'grid_connected_load',
   })
 # ---
-# name: test_sensors[sensor.balco260_inverter_type-entry]
+# name: test_sensors[sensor.balco_260_inverter_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1027,7 +1027,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.balco260_inverter_type',
+    'entity_id': 'sensor.balco_260_inverter_type',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1050,20 +1050,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.balco260_inverter_type-state]
+# name: test_sensors[sensor.balco_260_inverter_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Inverter type',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Inverter type',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_inverter_type',
+    'entity_id': 'sensor.balco_260_inverter_type',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Balco260',
   })
 # ---
-# name: test_sensors[sensor.balco260_inverter_voltage-entry]
+# name: test_sensors[sensor.balco_260_inverter_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1079,7 +1079,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_inverter_voltage',
+    'entity_id': 'sensor.balco_260_inverter_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1105,23 +1105,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_inverter_voltage-state]
+# name: test_sensors[sensor.balco_260_inverter_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Inverter voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Inverter voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_inverter_voltage',
+    'entity_id': 'sensor.balco_260_inverter_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '240.8',
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_1_input_current-entry]
+# name: test_sensors[sensor.balco_260_pv_1_input_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1137,7 +1137,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_pv_1_input_current',
+    'entity_id': 'sensor.balco_260_pv_1_input_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1163,23 +1163,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_1_input_current-state]
+# name: test_sensors[sensor.balco_260_pv_1_input_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 PV 1 input current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 PV 1 input current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_pv_1_input_current',
+    'entity_id': 'sensor.balco_260_pv_1_input_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.5',
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_1_input_power-entry]
+# name: test_sensors[sensor.balco_260_pv_1_input_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1195,7 +1195,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_pv_1_input_power',
+    'entity_id': 'sensor.balco_260_pv_1_input_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1221,23 +1221,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_1_input_power-state]
+# name: test_sensors[sensor.balco_260_pv_1_input_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 PV 1 input power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 PV 1 input power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_pv_1_input_power',
+    'entity_id': 'sensor.balco_260_pv_1_input_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '14',
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_1_input_type-entry]
+# name: test_sensors[sensor.balco_260_pv_1_input_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1260,7 +1260,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.balco260_pv_1_input_type',
+    'entity_id': 'sensor.balco_260_pv_1_input_type',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1283,11 +1283,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_1_input_type-state]
+# name: test_sensors[sensor.balco_260_pv_1_input_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 PV 1 input type',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 PV 1 input type',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'reserve',
         'car',
@@ -1298,14 +1298,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_pv_1_input_type',
+    'entity_id': 'sensor.balco_260_pv_1_input_type',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'dc_pv',
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_1_input_voltage-entry]
+# name: test_sensors[sensor.balco_260_pv_1_input_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1321,7 +1321,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_pv_1_input_voltage',
+    'entity_id': 'sensor.balco_260_pv_1_input_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1347,23 +1347,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_1_input_voltage-state]
+# name: test_sensors[sensor.balco_260_pv_1_input_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 PV 1 input voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 PV 1 input voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_pv_1_input_voltage',
+    'entity_id': 'sensor.balco_260_pv_1_input_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '26.0',
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_2_input_current-entry]
+# name: test_sensors[sensor.balco_260_pv_2_input_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1379,7 +1379,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_pv_2_input_current',
+    'entity_id': 'sensor.balco_260_pv_2_input_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1405,23 +1405,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_2_input_current-state]
+# name: test_sensors[sensor.balco_260_pv_2_input_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 PV 2 input current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 PV 2 input current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_pv_2_input_current',
+    'entity_id': 'sensor.balco_260_pv_2_input_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.5',
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_2_input_power-entry]
+# name: test_sensors[sensor.balco_260_pv_2_input_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1437,7 +1437,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_pv_2_input_power',
+    'entity_id': 'sensor.balco_260_pv_2_input_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1463,23 +1463,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_2_input_power-state]
+# name: test_sensors[sensor.balco_260_pv_2_input_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 PV 2 input power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 PV 2 input power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_pv_2_input_power',
+    'entity_id': 'sensor.balco_260_pv_2_input_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '14',
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_2_input_type-entry]
+# name: test_sensors[sensor.balco_260_pv_2_input_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1502,7 +1502,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.balco260_pv_2_input_type',
+    'entity_id': 'sensor.balco_260_pv_2_input_type',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1525,11 +1525,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_2_input_type-state]
+# name: test_sensors[sensor.balco_260_pv_2_input_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 PV 2 input type',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 PV 2 input type',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'reserve',
         'car',
@@ -1540,14 +1540,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_pv_2_input_type',
+    'entity_id': 'sensor.balco_260_pv_2_input_type',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'dc_pv',
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_2_input_voltage-entry]
+# name: test_sensors[sensor.balco_260_pv_2_input_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1563,7 +1563,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_pv_2_input_voltage',
+    'entity_id': 'sensor.balco_260_pv_2_input_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1589,23 +1589,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_2_input_voltage-state]
+# name: test_sensors[sensor.balco_260_pv_2_input_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 PV 2 input voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 PV 2 input voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_pv_2_input_voltage',
+    'entity_id': 'sensor.balco_260_pv_2_input_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25.9',
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_3_input_current-entry]
+# name: test_sensors[sensor.balco_260_pv_3_input_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1621,7 +1621,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_pv_3_input_current',
+    'entity_id': 'sensor.balco_260_pv_3_input_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1647,23 +1647,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_3_input_current-state]
+# name: test_sensors[sensor.balco_260_pv_3_input_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 PV 3 input current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 PV 3 input current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_pv_3_input_current',
+    'entity_id': 'sensor.balco_260_pv_3_input_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.5',
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_3_input_power-entry]
+# name: test_sensors[sensor.balco_260_pv_3_input_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1679,7 +1679,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_pv_3_input_power',
+    'entity_id': 'sensor.balco_260_pv_3_input_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1705,23 +1705,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_3_input_power-state]
+# name: test_sensors[sensor.balco_260_pv_3_input_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 PV 3 input power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 PV 3 input power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_pv_3_input_power',
+    'entity_id': 'sensor.balco_260_pv_3_input_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '14',
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_3_input_type-entry]
+# name: test_sensors[sensor.balco_260_pv_3_input_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1744,7 +1744,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.balco260_pv_3_input_type',
+    'entity_id': 'sensor.balco_260_pv_3_input_type',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1767,11 +1767,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_3_input_type-state]
+# name: test_sensors[sensor.balco_260_pv_3_input_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 PV 3 input type',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 PV 3 input type',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'reserve',
         'car',
@@ -1782,14 +1782,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_pv_3_input_type',
+    'entity_id': 'sensor.balco_260_pv_3_input_type',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'dc_pv',
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_3_input_voltage-entry]
+# name: test_sensors[sensor.balco_260_pv_3_input_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1805,7 +1805,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_pv_3_input_voltage',
+    'entity_id': 'sensor.balco_260_pv_3_input_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1831,23 +1831,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_3_input_voltage-state]
+# name: test_sensors[sensor.balco_260_pv_3_input_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 PV 3 input voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 PV 3 input voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_pv_3_input_voltage',
+    'entity_id': 'sensor.balco_260_pv_3_input_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25.3',
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_4_input_current-entry]
+# name: test_sensors[sensor.balco_260_pv_4_input_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1863,7 +1863,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_pv_4_input_current',
+    'entity_id': 'sensor.balco_260_pv_4_input_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1889,23 +1889,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_4_input_current-state]
+# name: test_sensors[sensor.balco_260_pv_4_input_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 PV 4 input current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 PV 4 input current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_pv_4_input_current',
+    'entity_id': 'sensor.balco_260_pv_4_input_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.6',
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_4_input_power-entry]
+# name: test_sensors[sensor.balco_260_pv_4_input_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1921,7 +1921,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_pv_4_input_power',
+    'entity_id': 'sensor.balco_260_pv_4_input_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1947,23 +1947,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_4_input_power-state]
+# name: test_sensors[sensor.balco_260_pv_4_input_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 PV 4 input power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 PV 4 input power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_pv_4_input_power',
+    'entity_id': 'sensor.balco_260_pv_4_input_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15',
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_4_input_type-entry]
+# name: test_sensors[sensor.balco_260_pv_4_input_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1986,7 +1986,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.balco260_pv_4_input_type',
+    'entity_id': 'sensor.balco_260_pv_4_input_type',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2009,11 +2009,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_4_input_type-state]
+# name: test_sensors[sensor.balco_260_pv_4_input_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 PV 4 input type',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 PV 4 input type',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'reserve',
         'car',
@@ -2024,14 +2024,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_pv_4_input_type',
+    'entity_id': 'sensor.balco_260_pv_4_input_type',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'dc_pv',
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_4_input_voltage-entry]
+# name: test_sensors[sensor.balco_260_pv_4_input_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2047,7 +2047,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_pv_4_input_voltage',
+    'entity_id': 'sensor.balco_260_pv_4_input_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2073,23 +2073,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_4_input_voltage-state]
+# name: test_sensors[sensor.balco_260_pv_4_input_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 PV 4 input voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 PV 4 input voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_pv_4_input_voltage',
+    'entity_id': 'sensor.balco_260_pv_4_input_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '26.1',
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_ac_energy-entry]
+# name: test_sensors[sensor.balco_260_pv_ac_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2105,7 +2105,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_pv_ac_energy',
+    'entity_id': 'sensor.balco_260_pv_ac_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2131,23 +2131,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_ac_energy-state]
+# name: test_sensors[sensor.balco_260_pv_ac_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 PV AC energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 PV AC energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_pv_ac_energy',
+    'entity_id': 'sensor.balco_260_pv_ac_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '95.6',
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_ac_power-entry]
+# name: test_sensors[sensor.balco_260_pv_ac_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2163,7 +2163,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_pv_ac_power',
+    'entity_id': 'sensor.balco_260_pv_ac_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2189,23 +2189,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_pv_ac_power-state]
+# name: test_sensors[sensor.balco_260_pv_ac_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 PV AC power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 PV AC power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_pv_ac_power',
+    'entity_id': 'sensor.balco_260_pv_ac_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[sensor.balco260_temperature_sensor_count-entry]
+# name: test_sensors[sensor.balco_260_temperature_sensor_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2219,7 +2219,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.balco260_temperature_sensor_count',
+    'entity_id': 'sensor.balco_260_temperature_sensor_count',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2242,20 +2242,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.balco260_temperature_sensor_count-state]
+# name: test_sensors[sensor.balco_260_temperature_sensor_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Temperature sensor count',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Temperature sensor count',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_temperature_sensor_count',
+    'entity_id': 'sensor.balco_260_temperature_sensor_count',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4',
   })
 # ---
-# name: test_sensors[sensor.balco260_total_ac_output_energy-entry]
+# name: test_sensors[sensor.balco_260_total_ac_output_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2271,7 +2271,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_total_ac_output_energy',
+    'entity_id': 'sensor.balco_260_total_ac_output_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2297,23 +2297,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_total_ac_output_energy-state]
+# name: test_sensors[sensor.balco_260_total_ac_output_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Total AC output energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Total AC output energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_total_ac_output_energy',
+    'entity_id': 'sensor.balco_260_total_ac_output_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '319.8',
   })
 # ---
-# name: test_sensors[sensor.balco260_total_battery_charged_energy-entry]
+# name: test_sensors[sensor.balco_260_total_battery_charged_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2329,7 +2329,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_total_battery_charged_energy',
+    'entity_id': 'sensor.balco_260_total_battery_charged_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2355,23 +2355,23 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_total_battery_charged_energy-state]
+# name: test_sensors[sensor.balco_260_total_battery_charged_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Total battery charged energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Total battery charged energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_total_battery_charged_energy',
+    'entity_id': 'sensor.balco_260_total_battery_charged_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100120',
   })
 # ---
-# name: test_sensors[sensor.balco260_total_battery_discharged_energy-entry]
+# name: test_sensors[sensor.balco_260_total_battery_discharged_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2387,7 +2387,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_total_battery_discharged_energy',
+    'entity_id': 'sensor.balco_260_total_battery_discharged_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2413,23 +2413,23 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_total_battery_discharged_energy-state]
+# name: test_sensors[sensor.balco_260_total_battery_discharged_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Total battery discharged energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Total battery discharged energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_total_battery_discharged_energy',
+    'entity_id': 'sensor.balco_260_total_battery_discharged_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '93440',
   })
 # ---
-# name: test_sensors[sensor.balco260_total_grid_export_energy-entry]
+# name: test_sensors[sensor.balco_260_total_grid_export_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2445,7 +2445,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_total_grid_export_energy',
+    'entity_id': 'sensor.balco_260_total_grid_export_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2471,23 +2471,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_total_grid_export_energy-state]
+# name: test_sensors[sensor.balco_260_total_grid_export_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Total grid export energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Total grid export energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_total_grid_export_energy',
+    'entity_id': 'sensor.balco_260_total_grid_export_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '6.6',
   })
 # ---
-# name: test_sensors[sensor.balco260_total_grid_import_energy-entry]
+# name: test_sensors[sensor.balco_260_total_grid_import_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2503,7 +2503,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_total_grid_import_energy',
+    'entity_id': 'sensor.balco_260_total_grid_import_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2529,23 +2529,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_total_grid_import_energy-state]
+# name: test_sensors[sensor.balco_260_total_grid_import_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Total grid import energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Total grid import energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_total_grid_import_energy',
+    'entity_id': 'sensor.balco_260_total_grid_import_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '153.0',
   })
 # ---
-# name: test_sensors[sensor.balco260_total_inverter_power-entry]
+# name: test_sensors[sensor.balco_260_total_inverter_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2561,7 +2561,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_total_inverter_power',
+    'entity_id': 'sensor.balco_260_total_inverter_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2587,23 +2587,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_total_inverter_power-state]
+# name: test_sensors[sensor.balco_260_total_inverter_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Total inverter power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Total inverter power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_total_inverter_power',
+    'entity_id': 'sensor.balco_260_total_inverter_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[sensor.balco260_total_pv_input_energy-entry]
+# name: test_sensors[sensor.balco_260_total_pv_input_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2619,7 +2619,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_total_pv_input_energy',
+    'entity_id': 'sensor.balco_260_total_pv_input_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2645,23 +2645,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_total_pv_input_energy-state]
+# name: test_sensors[sensor.balco_260_total_pv_input_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Total PV input energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Total PV input energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_total_pv_input_energy',
+    'entity_id': 'sensor.balco_260_total_pv_input_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '199.2',
   })
 # ---
-# name: test_sensors[sensor.balco260_total_pv_input_power-entry]
+# name: test_sensors[sensor.balco_260_total_pv_input_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2677,7 +2677,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.balco260_total_pv_input_power',
+    'entity_id': 'sensor.balco_260_total_pv_input_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2703,16 +2703,16 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[sensor.balco260_total_pv_input_power-state]
+# name: test_sensors[sensor.balco_260_total_pv_input_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Total PV input power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco 260 Total PV input power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.balco260_total_pv_input_power',
+    'entity_id': 'sensor.balco_260_total_pv_input_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

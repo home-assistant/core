@@ -17,7 +17,7 @@ from homeassistant.helpers.selector import (
     TextSelector,
 )
 
-from .const import CONF_UNIT_ID, DEFAULT_PORT, DEFAULT_UNIT_ID, DOMAIN, MODEL
+from .const import CONF_UNIT_ID, DEFAULT_PORT, DEFAULT_UNIT_ID, DOMAIN, MODEL, MODEL_ID
 from .device import restricted_device
 
 _LOGGER = logging.getLogger(__name__)
@@ -107,7 +107,7 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception while probing the device")
             return {"base": "unknown"}, None
 
-        if device.values.get("d_inverter_type") != MODEL:
+        if device.values.get("d_inverter_type") != MODEL_ID:
             return {"base": "unsupported_device"}, None
         serial = device.values.get("d_serial")
         if not serial:

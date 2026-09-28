@@ -19,13 +19,13 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-VOLTAGE_ENTITY = "sensor.balco260_battery_voltage"
-ENERGY_ENTITY = "sensor.balco260_total_battery_charged_energy"
-BATTERY_LEVEL_ENTITY = "sensor.balco260_battery_soc"
-TOTAL_BATTERY_LEVEL_ENTITY = "sensor.balco260_total_battery_soc"
-CYCLE_COUNT_ENTITY = "sensor.balco260_battery_cycle_count"
-INVERTER_POWER_ENTITY = "sensor.balco260_total_inverter_power"
-PV_1_TYPE_ENTITY = "sensor.balco260_pv_1_input_type"
+VOLTAGE_ENTITY = "sensor.balco_260_battery_voltage"
+ENERGY_ENTITY = "sensor.balco_260_total_battery_charged_energy"
+BATTERY_LEVEL_ENTITY = "sensor.balco_260_battery_soc"
+TOTAL_BATTERY_LEVEL_ENTITY = "sensor.balco_260_total_battery_soc"
+CYCLE_COUNT_ENTITY = "sensor.balco_260_battery_cycle_count"
+INVERTER_POWER_ENTITY = "sensor.balco_260_total_inverter_power"
+PV_1_TYPE_ENTITY = "sensor.balco_260_pv_1_input_type"
 
 
 async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
