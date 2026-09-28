@@ -22,6 +22,7 @@ RUN \
         libyaml-dev \
         libxml2 \
         git \
+        just \
         cmake \
         autoconf \
     && apt-get clean \
