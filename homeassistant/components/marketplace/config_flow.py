@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any
 
 from aiogithubapi import (
     GitHubDeviceAPI,
@@ -11,25 +11,22 @@ from aiogithubapi import (
     GitHubLoginOauthModel,
 )
 from aiogithubapi.common.const import OAUTH_USER_LOGIN
-import voluptuous as vol
+import probatio
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
-from homeassistant.core import callback
-from homeassistant.generated.countries import COUNTRIES
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers import aiohttp_client
 
-from .base import MarketplaceConfigEntry
-from .const import CLIENT_ID, CLIENT_NAME, COUNTRY_ALL, DOMAIN
-from .utils.configuration_schema import APPDAEMON, COUNTRY
+from .const import CLIENT_ID, CLIENT_NAME, DOMAIN
 from .utils.logger import LOGGER
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
+
+# GitHub can answer this right after a quick approval, a later poll then gets
+# the token, see https://github.com/cli/cli/issues/9302
+INVALID_DEVICE_CODE = "The device_code provided is not valid."
+ACTIVATION_ATTEMPTS = 3
 
 
 class MarketplaceConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -43,30 +40,18 @@ class MarketplaceConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _registration: GitHubLoginDeviceModel | None = None
     _activation: GitHubLoginOauthModel | None = None
-    _reauth: bool = False
 
-    def __init__(self) -> None:
-        """Initialize."""
-        self._errors: dict[str, str] = {}
-        self._user_input: dict[str, Any] = {}
-
-    @override
-    async def async_step_user(
+    async def async_step_system(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle a flow initialized by the user."""
-        self._errors = {}
-        if user_input:
-            if [x for x in user_input if x.startswith("acc_") and not user_input[x]]:
-                self._errors["base"] = "acc"
-                return await self._show_config_form(user_input)
+        """Set up the Marketplace, browsing needs no GitHub account."""
+        return self.async_create_entry(title="", data={})
 
-            self._user_input = user_input
-
-            return await self.async_step_device(user_input)
-
-        # Initial form
-        return await self._show_config_form(user_input)
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Connect a GitHub account, started from the Marketplace panel."""
+        return await self.async_step_device(None)
 
     async def async_step_device(
         self, _user_input: dict[str, Any] | None
@@ -81,6 +66,10 @@ class MarketplaceConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 response = await self.device.register()
                 self._registration = response.data
+                LOGGER.debug(
+                    "Registered with GitHub for flow %s, waiting for the code",
+                    self.flow_id,
+                )
             except GitHubException as exception:
                 LOGGER.exception(exception)
                 return self.async_abort(reason="could_not_register")
@@ -90,16 +79,38 @@ class MarketplaceConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="could_not_register")
 
         async def _wait_for_activation() -> None:
-            activation = await device.activation(device_code=registration.device_code)
-            self._activation = activation.data
+            for attempt in range(1, ACTIVATION_ATTEMPTS + 1):
+                try:
+                    activation = await device.activation(
+                        device_code=registration.device_code
+                    )
+                except GitHubException as exception:
+                    if (
+                        str(exception) != INVALID_DEVICE_CODE
+                        or attempt == ACTIVATION_ATTEMPTS
+                    ):
+                        raise
+                    LOGGER.debug(
+                        "GitHub does not know the device code yet, asking again"
+                    )
+                    await asyncio.sleep(registration.interval)
+                    continue
+
+                self._activation = activation.data
+                return
 
         if self.activation_task is None:
+            LOGGER.debug("Waiting for the GitHub activation of flow %s", self.flow_id)
             self.activation_task = self.hass.async_create_task(_wait_for_activation())
 
         if self.activation_task.done():
             if (task_exception := self.activation_task.exception()) is not None:
-                LOGGER.exception(task_exception)
-                return self.async_show_progress_done(next_step_id="could_not_register")
+                LOGGER.error(
+                    "Connecting GitHub failed for flow %s: %s",
+                    self.flow_id,
+                    task_exception,
+                )
+                return self.async_show_progress_done(next_step_id="activation_failed")
             return self.async_show_progress_done(next_step_id="device_done")
 
         return self.async_show_progress(
@@ -112,35 +123,6 @@ class MarketplaceConfigFlow(ConfigFlow, domain=DOMAIN):
             progress_task=self.activation_task,
         )
 
-    async def _show_config_form(
-        self, user_input: dict[str, Any] | None
-    ) -> ConfigFlowResult:
-        """Show the configuration form to edit location data."""
-
-        if not user_input:
-            user_input = {}
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        "acc_logs", default=user_input.get("acc_logs", False)
-                    ): bool,
-                    vol.Required(
-                        "acc_addons", default=user_input.get("acc_addons", False)
-                    ): bool,
-                    vol.Required(
-                        "acc_untested", default=user_input.get("acc_untested", False)
-                    ): bool,
-                    vol.Required(
-                        "acc_disable", default=user_input.get("acc_disable", False)
-                    ): bool,
-                }
-            ),
-            errors=self._errors,
-        )
-
     async def async_step_device_done(
         self, user_input: dict[str, bool] | None = None
     ) -> ConfigFlowResult:
@@ -148,21 +130,20 @@ class MarketplaceConfigFlow(ConfigFlow, domain=DOMAIN):
         if (activation := self._activation) is None:
             return self.async_abort(reason="could_not_register")
 
-        if self._reauth:
-            existing_entry = self._get_reauth_entry()
-            self.hass.config_entries.async_update_entry(
-                existing_entry,
-                data={**existing_entry.data, "token": activation.access_token},
-            )
-            await self.hass.config_entries.async_reload(existing_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
-
-        return self.async_create_entry(
-            title="",
-            data={
-                "token": activation.access_token,
-            },
+        entry = (
+            self._get_reauth_entry()
+            if self.source == SOURCE_REAUTH
+            else self._get_reconfigure_entry()
         )
+        return self.async_update_reload_and_abort(
+            entry, data_updates={CONF_TOKEN: activation.access_token}
+        )
+
+    async def async_step_activation_failed(
+        self, _user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle an activation GitHub did not complete."""
+        return self.async_abort(reason="activation_failed")
 
     async def async_step_could_not_register(
         self, _user_input: dict[str, Any] | None = None
@@ -183,50 +164,6 @@ class MarketplaceConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
+                data_schema=probatio.Schema({}),
             )
-        self._reauth = True
         return await self.async_step_device(None)
-
-    @staticmethod
-    @callback
-    @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> MarketplaceOptionsFlow:
-        """Create the options flow."""
-        return MarketplaceOptionsFlow()
-
-
-class MarketplaceOptionsFlow(OptionsFlow):
-    """Options flow for the Marketplace."""
-
-    async def async_step_init(
-        self, _user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        return await self.async_step_user()
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a flow initialized by the user."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        entries: list[MarketplaceConfigEntry] = (
-            self.hass.config_entries.async_loaded_entries(DOMAIN)
-        )
-        if not entries:
-            return self.async_abort(reason="not_setup")
-
-        marketplace = entries[0].runtime_data
-        if marketplace.queue.has_pending_tasks:
-            return self.async_abort(reason="pending_tasks")
-
-        schema = {
-            vol.Optional(COUNTRY, default=marketplace.configuration.country): vol.In(
-                [COUNTRY_ALL, *sorted(COUNTRIES)]
-            ),
-            vol.Optional(APPDAEMON, default=marketplace.configuration.appdaemon): bool,
-        }
-
-        return self.async_show_form(step_id="user", data_schema=vol.Schema(schema))

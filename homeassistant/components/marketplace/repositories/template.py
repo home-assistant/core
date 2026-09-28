@@ -7,6 +7,7 @@ from homeassistant.exceptions import HomeAssistantError
 from ..enums import MarketplaceSignal, RepositoryCategory
 from ..exceptions import MarketplaceError
 from ..utils.decorator import concurrent
+from ..utils.url import ref_version
 from .base import Repository
 
 if TYPE_CHECKING:
@@ -16,15 +17,15 @@ if TYPE_CHECKING:
 class TemplateRepository(Repository):
     """Template repository."""
 
+    remote_path = ""
+    single_file = True
+
     def __init__(self, marketplace: MarketplaceManager, full_name: str) -> None:
         """Initialize."""
         super().__init__(marketplace=marketplace)
         self.data.full_name = full_name
-        self.data.full_name_lower = full_name.lower()
         self.data.category = RepositoryCategory.TEMPLATE
-        self.content.path.remote = ""
         self.content.path.local = self.localpath
-        self.content.single = True
 
     @property
     @override
@@ -44,6 +45,18 @@ class TemplateRepository(Repository):
         await self.common_validate()
 
         # Custom step 1: Validate content.
+        self.resolve_content()
+
+        # Handle potential errors
+        if self.validate.errors:
+            for error in self.validate.errors:
+                if not self.marketplace.status.startup:
+                    self.logger.error("%s %s", self.string, error)
+        return self.validate.success
+
+    @override
+    def resolve_content(self) -> None:
+        """Point the content at the template hacs.json names."""
         self.data.file_name = self.repository_manifest.filename or ""
 
         if (
@@ -53,15 +66,8 @@ class TemplateRepository(Repository):
             or self.data.file_name not in self.treefiles
         ):
             raise MarketplaceError(
-                f"{self.string} Repository structure for {f'{self.ref}'.replace('tags/', '')} is not compliant"
+                f"{self.string} Repository structure for {ref_version(self.ref)} is not compliant"
             )
-
-        # Handle potential errors
-        if self.validate.errors:
-            for error in self.validate.errors:
-                if not self.marketplace.status.startup:
-                    self.logger.error("%s %s", self.string, error)
-        return self.validate.success
 
     @override
     async def async_post_registration(self) -> None:
@@ -86,7 +92,7 @@ class TemplateRepository(Repository):
             self.logger.exception("%s Reloading custom templates failed", self.string)
 
     @override
-    @concurrent(concurrenttasks=10, backoff_time=5)
+    @concurrent(concurrenttasks=10)
     async def update_repository(
         self, ignore_issues: bool = False, force: bool = False
     ) -> None:

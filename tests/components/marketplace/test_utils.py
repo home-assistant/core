@@ -1,6 +1,8 @@
 """Tests for the Marketplace utilities."""
 
+import asyncio
 from pathlib import Path
+from unittest.mock import patch
 
 from aiogithubapi.models.git_tree import GitHubGitTreeEntryModel
 import pytest
@@ -8,12 +10,10 @@ import pytest
 from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.enums import RepositoryFile
 from homeassistant.components.marketplace.exceptions import MarketplaceError
-from homeassistant.components.marketplace.repositories.base import (
-    DOMAIN_OVERRIDES,
-    Repository,
-)
+from homeassistant.components.marketplace.repositories.base import Repository
 from homeassistant.components.marketplace.utils import filters, path, regex, version
 from homeassistant.components.marketplace.utils.decorator import (
+    concurrent,
     return_none_on_exception,
 )
 from homeassistant.components.marketplace.utils.tree import (
@@ -25,6 +25,7 @@ from homeassistant.components.marketplace.utils.url import (
     github_archive,
     github_raw_file,
     github_release_asset,
+    ref_version,
 )
 
 
@@ -106,13 +107,8 @@ async def test_is_safe(marketplace: MarketplaceManager) -> None:
     configuration = marketplace.configuration
 
     assert path.is_safe(marketplace, "/test")
-    assert not path.is_safe(
-        marketplace, f"{config_path}/{configuration.appdaemon_path}"
-    )
     assert not path.is_safe(marketplace, f"{config_path}/{configuration.plugin_path}")
-    assert not path.is_safe(
-        marketplace, f"{config_path}/{configuration.python_script_path}"
-    )
+    assert not path.is_safe(marketplace, f"{config_path}/python_scripts")
     assert not path.is_safe(marketplace, f"{config_path}/{configuration.theme_path}/")
     assert not path.is_safe(marketplace, f"{config_path}/custom_components/")
     assert not path.is_safe(marketplace, f"{config_path}/custom_components")
@@ -278,15 +274,6 @@ def test_get_first_directory_in_directory_not_found() -> None:
     assert filters.get_first_directory_in_directory(tree, "test") is None
 
 
-def test_domain_overrides() -> None:
-    """Test the hardcoded domain overrides."""
-    assert (
-        DOMAIN_OVERRIDES.get("custom-components/sensor.custom_aftership")
-        == "custom_aftership"
-    )
-    assert DOMAIN_OVERRIDES.get("awesome/repo") is None
-
-
 @pytest.mark.parametrize(
     ("full_path", "expected_path", "expected_filename"),
     [
@@ -308,6 +295,33 @@ def test_tree_entry(full_path: str, expected_path: str, expected_filename: str) 
         github_raw_file(repository="test/test", ref="main", path=full_path)
         == f"https://raw.githubusercontent.com/test/test/main/{full_path}"
     )
+
+
+async def test_concurrent_limits_running_calls() -> None:
+    """Test the decorator caps how many calls run at once, without sleeping."""
+    running = 0
+    peak = 0
+    release = asyncio.Event()
+
+    @concurrent(concurrenttasks=2)
+    async def update_something() -> str:
+        nonlocal running, peak
+        running += 1
+        peak = max(peak, running)
+        await release.wait()
+        running -= 1
+        return "done"
+
+    with patch("asyncio.sleep") as sleep_mock:
+        tasks = [asyncio.create_task(update_something()) for _ in range(5)]
+        await asyncio.wait(tasks, timeout=0.1)
+        assert running == 2
+
+        release.set()
+        assert await asyncio.gather(*tasks) == ["done"] * 5
+
+    assert peak == 2
+    assert not sleep_mock.called
 
 
 def test_return_none_on_exception_sync_function() -> None:
@@ -373,3 +387,17 @@ def test_repository_file_enum() -> None:
     assert RepositoryFile.REPOSITORY_MANIFEST == "hacs.json"
     assert RepositoryFile.REPOSITORY_MANIFEST.value == "hacs.json"
     assert str(RepositoryFile.REPOSITORY_MANIFEST) == "hacs.json"
+
+
+@pytest.mark.parametrize(
+    ("ref", "version"),
+    [
+        pytest.param("tags/1.0.0", "1.0.0", id="tag"),
+        pytest.param("main", "main", id="branch"),
+        pytest.param("fix-tags/one", "fix-tags/one", id="tags_inside_a_branch"),
+        pytest.param(None, "", id="none"),
+    ],
+)
+def test_ref_version(ref: str | None, version: str) -> None:
+    """Test only the prefix of a tag ref is removed."""
+    assert ref_version(ref) == version

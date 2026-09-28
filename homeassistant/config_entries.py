@@ -2413,7 +2413,13 @@ class ConfigEntries:
 
             # A custom integration that a built-in integration took over keeps its
             # entries, they are simply handed to the built-in domain from now on.
-            if replacement := loader.MIGRATED_CUSTOM_INTEGRATIONS.get(domain):
+            # Recovery and safe mode change nothing, they are often the way back
+            # to an older version that still knows the custom integration.
+            if (
+                (replacement := loader.MIGRATED_CUSTOM_INTEGRATIONS.get(domain))
+                and not self.hass.config.recovery_mode
+                and not self.hass.config.safe_mode
+            ):
                 migrated_domains.add(domain)
                 domain = replacement
 

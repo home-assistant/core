@@ -9,6 +9,25 @@ class RepositoryArchivedError(MarketplaceError):
     """For repositories that are archived."""
 
 
+class GitHubRateLimitError(MarketplaceError):
+    """For GitHub API calls refused because the rate limit ran out."""
+
+
+class GitHubAnonymousRateLimitError(GitHubRateLimitError):
+    """For a rate limit hit without a GitHub connection.
+
+    It fails the action that hit it, the Marketplace itself carries on.
+    """
+
+
+class CatalogContentUnresolvedError(MarketplaceError):
+    """For a catalog download the repository archive can not resolve.
+
+    Nothing is written yet when it is raised, the download goes through the
+    GitHub API instead.
+    """
+
+
 class NotModifiedError(MarketplaceError):
     """For responses that are not modified."""
 

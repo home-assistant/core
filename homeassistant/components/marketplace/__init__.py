@@ -1,7 +1,7 @@
 """The Marketplace integration.
 
 Handles downloads of custom integrations, dashboard resources, themes,
-templates, python scripts and AppDaemon apps from GitHub.
+templates and python scripts from GitHub.
 """
 
 from functools import partial
@@ -12,23 +12,35 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPMovedPermanently
 from awesomeversion import AwesomeVersion
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import HomeAssistantView, StaticPathConfig
 from homeassistant.components.lovelace import LOVELACE_DATA
+from homeassistant.config_entries import SOURCE_SYSTEM
 from homeassistant.const import Platform, __version__ as HAVERSION
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    discovery_flow,
+    issue_registry as ir,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import async_clear_custom_components_cache
+from homeassistant.util.hass_dict import HassKey
 
 from .base import MarketplaceConfigEntry, MarketplaceManager
-from .const import CLIENT_NAME, DOMAIN, LEGACY_HACS_SYSTEM_ID
+from .const import (
+    CLIENT_NAME,
+    DOMAIN,
+    LEGACY_DASHBOARD_RESOURCE_BASE,
+    LEGACY_HACS_SYSTEM_ID,
+)
 from .data_client import CatalogClient
 from .enums import DisabledReason, LovelaceMode, MarketplaceStage
 from .exceptions import MarketplaceError
@@ -38,6 +50,7 @@ from .migration import (
     async_remove_duplicate_entries,
     async_remove_legacy_files,
 )
+from .utils.backup import restore_interrupted_backups
 from .utils.data import MarketplaceData
 from .utils.file_system import async_exists
 from .utils.logger import LOGGER
@@ -48,6 +61,12 @@ from .websocket import async_register_websocket_commands
 PLATFORMS = [Platform.SWITCH, Platform.UPDATE]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+# Downloads that need a restart get an issue per repository and version
+RESTART_ISSUE_PREFIX = "restart_required_"
+
+# Set once the old plugin path is served, a route can not be removed on reload
+DATA_LEGACY_PLUGIN_PATH: HassKey[None] = HassKey(f"{DOMAIN}_legacy_plugin_path")
 
 
 class LegacyPanelRedirectView(HomeAssistantView):
@@ -71,6 +90,7 @@ class LegacyPanelRedirectView(HomeAssistantView):
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Marketplace integration."""
     await async_remove_duplicate_entries(hass)
+    _async_remove_restart_issues(hass)
 
     # Registered once per start, the handlers look the loaded entry up themselves
     async_register_websocket_commands(hass)
@@ -79,7 +99,51 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_redirect("/hacs", "/marketplace")
     hass.http.register_view(LegacyPanelRedirectView)
 
+    # A disabled entry counts, turning the Marketplace off is the user's call
+    if not hass.config_entries.async_entries(DOMAIN):
+        discovery_flow.async_create_flow(
+            hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
+        )
+
     return True
+
+
+@callback
+def _async_remove_restart_issues(hass: HomeAssistant) -> None:
+    """Remove the restart issues of downloads from before this start.
+
+    Home Assistant just started, so every one of them has been dealt with.
+    """
+    for domain, issue_id in list(ir.async_get(hass).issues):
+        if domain == DOMAIN and issue_id.startswith(RESTART_ISSUE_PREFIX):
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
+async def _async_serve_legacy_plugin_path(
+    hass: HomeAssistant, lovelace_mode: LovelaceMode
+) -> None:
+    """Keep serving downloaded plugins on the path the custom integration used.
+
+    Dashboards in YAML, and cards that name a URL themselves, still load from it.
+    """
+    if DATA_LEGACY_PLUGIN_PATH in hass.data:
+        return
+
+    plugin_directory = hass.config.path("www/community")
+    if not await async_exists(hass, plugin_directory):
+        return
+
+    hass.data[DATA_LEGACY_PLUGIN_PATH] = None
+    await hass.http.async_register_static_paths(
+        [
+            StaticPathConfig(
+                LEGACY_DASHBOARD_RESOURCE_BASE,
+                plugin_directory,
+                # Only resources in storage carry a version that changes on update
+                cache_headers=lovelace_mode is LovelaceMode.STORAGE,
+            )
+        ]
+    )
 
 
 async def _async_ensure_www_directory(hass: HomeAssistant) -> bool:
@@ -113,7 +177,6 @@ async def _async_initialize_integration(
         {
             "config_entry": config_entry,
             **config_entry.data,
-            **config_entry.options,
         },
     )
 
@@ -138,25 +201,43 @@ async def _async_initialize_integration(
     )
     marketplace.core.config_path = marketplace.hass.config.path()
     marketplace.status.created_www_directory = await _async_ensure_www_directory(hass)
+    await _async_serve_legacy_plugin_path(hass, marketplace.core.lovelace_mode)
 
+    # Before anything looks at what is downloaded, a restart during a download
+    # can have left the previous content in a backup.
+    if await hass.async_add_executor_job(restore_interrupted_backups, marketplace):
+        async_clear_custom_components_cache(hass)
+
+    # An empty token keeps aiogithubapi from reading GITHUB_TOKEN from the
+    # environment, without a connected account the calls are anonymous.
     marketplace.githubapi = GitHubAPI(
-        token=marketplace.configuration.token,
+        token=marketplace.configuration.token or "",
         session=clientsession,
         client_name=CLIENT_NAME,
     )
 
     try:
         if not await marketplace.data.restore():
-            raise ConfigEntryNotReady("Could not restore the stored data")
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN, translation_key="restore_failed"
+            )
 
         marketplace.set_active_categories()
     except GitHubAuthenticationException as exception:
-        raise ConfigEntryAuthFailed(
-            "The GitHub token is no longer valid"
+        if marketplace.github_connected:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_token"
+            ) from exception
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="setup_failed",
+            translation_placeholders={"error": str(exception)},
         ) from exception
     except (GitHubException, MarketplaceError) as exception:
         raise ConfigEntryNotReady(
-            f"Could not set up the Marketplace: {exception}"
+            translation_domain=DOMAIN,
+            translation_key="setup_failed",
+            translation_placeholders={"error": str(exception)},
         ) from exception
 
     # The restore adopts the legacy storage files, only then can they go
@@ -167,11 +248,14 @@ async def _async_initialize_integration(
     # Setting up can leave the Marketplace disabled, an invalid token is for the user
     # to fix, anything else is worth another try.
     if marketplace.system.disabled_reason is DisabledReason.INVALID_TOKEN:
-        raise ConfigEntryAuthFailed("The GitHub token is no longer valid")
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="invalid_token"
+        )
 
-    if marketplace.system.disabled:
+    if marketplace.system.disabled_reason is not None:
         raise ConfigEntryNotReady(
-            f"The Marketplace is disabled: {marketplace.system.disabled_reason}"
+            translation_domain=DOMAIN,
+            translation_key=f"disabled_{marketplace.system.disabled_reason}",
         )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -190,12 +274,9 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: MarketplaceConfigEntry
 ) -> bool:
     """Set up this integration using UI."""
-    # Runs before the update listener is added, trimming the options must not
-    # trigger a reload while the entry is still being set up.
     async_adopt_legacy_install(hass, config_entry)
     await async_migrate_dashboard_resources(hass)
 
-    config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
     return await _async_initialize_integration(hass=hass, config_entry=config_entry)
 
 
@@ -219,23 +300,15 @@ async def async_unload_entry(
     # Store data
     await marketplace.data.async_write(force=True)
 
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    if not await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS):
+        return False
 
     marketplace.set_stage(None)
     marketplace.disable(DisabledReason.REMOVED)
 
     hass.data.pop(STORAGE_CACHE_KEY, None)
 
-    return unload_ok
-
-
-async def async_reload_entry(
-    hass: HomeAssistant, config_entry: MarketplaceConfigEntry
-) -> None:
-    """Reload the config entry when its options change."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    return True
 
 
 async def async_remove_config_entry_device(

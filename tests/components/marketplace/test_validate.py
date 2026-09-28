@@ -1,12 +1,11 @@
 """Tests for the Marketplace data schemas."""
 
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
-import re
 from typing import Any
 
 from awesomeversion import AwesomeVersion
+from probatio.error import Invalid, MultipleInvalid
 import pytest
-from voluptuous.error import Invalid, MultipleInvalid
 
 from homeassistant.components.marketplace.const import DOMAIN
 from homeassistant.components.marketplace.utils.validate import (
@@ -20,10 +19,8 @@ from homeassistant.components.marketplace.utils.validate import (
 from tests.common import load_json_array_fixture, load_json_object_fixture
 
 CATEGORIES = (
-    "appdaemon",
     "integration",
     "plugin",
-    "python_script",
     "template",
     "theme",
 )
@@ -36,7 +33,7 @@ COMMON_CATEGORIES = tuple(
 GOOD_COMMON_DATA = {
     "description": "abc",
     "etag_repository": "blah",
-    "full_name": "blah",
+    "full_name": "owner/blah",
     "last_commit": "abc",
     "last_fetched": 0,
     "last_updated": "blah",
@@ -73,19 +70,19 @@ def without(data: dict[str, Any], key: str) -> dict[str, Any]:
             id="country-list",
         ),
         pytest.param(
-            {"name": "My awesome thing", "country": "NO"},
-            {"name": "My awesome thing", "country": ["NO"]},
-            id="country-string",
+            {"name": "My awesome thing", "country": "not_valid"},
+            {"name": "My awesome thing", "country": "not_valid"},
+            id="country-unknown",
         ),
         pytest.param(
-            {"name": "My awesome thing", "country": "all"},
-            {"name": "My awesome thing", "country": ["ALL"]},
-            id="country-all",
+            {"name": "My awesome thing", "country": False},
+            {"name": "My awesome thing", "country": False},
+            id="country-wrong-type",
         ),
         pytest.param(
-            {"name": "My awesome thing", "country": "no"},
-            {"name": "My awesome thing", "country": ["NO"]},
-            id="country-lowercase",
+            {"name": "My awesome thing", "render_readme": False},
+            {"name": "My awesome thing", "render_readme": False},
+            id="render_readme",
         ),
         pytest.param(
             {"name": "My awesome thing"},
@@ -131,16 +128,6 @@ def test_hacs_manifest_json_schema(
             {"name": "My awesome thing", "not": "valid"},
             r"extra keys not allowed|not a valid option",
             id="extra-key",
-        ),
-        pytest.param(
-            {"name": "My awesome thing", "country": "not_valid"},
-            "Value 'NOT_VALID' is not a known country code.",
-            id="unknown-country",
-        ),
-        pytest.param(
-            {"name": "My awesome thing", "country": False},
-            re.escape("Value 'False' is not a string or list."),
-            id="country-wrong-type",
         ),
         pytest.param({}, "required key not provided", id="missing-name"),
     ],
@@ -272,6 +259,11 @@ def test_repo_data_json_schema(category: str) -> None:
             id="both-versions",
         ),
         pytest.param(
+            GOOD_COMMON_DATA | {"manifest": {"country": "NO"}},
+            does_not_raise(),
+            id="country",
+        ),
+        pytest.param(
             GOOD_COMMON_DATA | {"last_version": "123", "prerelease": "1.2.3"},
             does_not_raise(),
             id="prerelease",
@@ -382,6 +374,41 @@ def test_repo_data_json_schema(category: str) -> None:
             id="topics-wrong-type",
         ),
         pytest.param(
+            GOOD_COMMON_DATA | {"last_version": "release/1.0.0-beta.1"},
+            does_not_raise(),
+            id="last-version-with-slash",
+        ),
+        *(
+            pytest.param(
+                GOOD_COMMON_DATA | {key: version},
+                pytest.raises(Invalid),
+                id=f"{key}-{name}",
+            )
+            for key in ("last_commit", "last_version", "prerelease")
+            for name, version in (
+                ("parent", "../../other/repository/archive/refs/tags/1.0"),
+                ("encoded-parent", "%2e%2e/%2e%2e/other"),
+                ("hidden", ".hidden"),
+                ("query", "1.0?raw=true"),
+                ("fragment", "1.0#readme"),
+                ("empty", ""),
+            )
+        ),
+        *(
+            pytest.param(
+                GOOD_COMMON_DATA | {"full_name": full_name},
+                pytest.raises(Invalid),
+                id=f"full-name-{name}",
+            )
+            for name, full_name in (
+                ("parent", "owner/.."),
+                ("current", "owner/."),
+                ("parent-owner", "../repository"),
+                ("nested", "owner/repository/extra"),
+                ("no-owner", "repository"),
+            )
+        ),
+        pytest.param(
             GOOD_COMMON_DATA | {"extra": "key"},
             does_not_raise(),
             id="extra-key-is-discarded",
@@ -424,6 +451,19 @@ def test_common_repo_data_json_schema_bad_data(
             GOOD_INTEGRATION_DATA | {"domain": 123},
             pytest.raises(Invalid),
             id="domain-wrong-type",
+        ),
+        *(
+            pytest.param(
+                GOOD_INTEGRATION_DATA | {"domain": domain},
+                pytest.raises(Invalid),
+                id=f"domain-{name}",
+            )
+            for name, domain in (
+                ("parent", "../.."),
+                ("path", "custom/light"),
+                ("uppercase", "Light"),
+                ("empty", ""),
+            )
         ),
         pytest.param(
             GOOD_INTEGRATION_DATA | {"manifest_name": 123},

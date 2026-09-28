@@ -4,11 +4,9 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ..enums import RepositoryCategory
-from .appdaemon import AppdaemonRepository
 from .base import Repository
 from .integration import IntegrationRepository
 from .plugin import PluginRepository
-from .python_script import PythonScriptRepository
 from .template import TemplateRepository
 from .theme import ThemeRepository
 
@@ -21,8 +19,6 @@ REPOSITORY_CLASSES: dict[
 ] = {
     RepositoryCategory.THEME: ThemeRepository,
     RepositoryCategory.INTEGRATION: IntegrationRepository,
-    RepositoryCategory.PYTHON_SCRIPT: PythonScriptRepository,
-    RepositoryCategory.APPDAEMON: AppdaemonRepository,
     RepositoryCategory.PLUGIN: PluginRepository,
     RepositoryCategory.TEMPLATE: TemplateRepository,
 }

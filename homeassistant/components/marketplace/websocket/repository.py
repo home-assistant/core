@@ -2,52 +2,74 @@
 
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 import homeassistant.helpers.config_validation as cv
 
-from ..base import async_get_marketplace
-from ..enums import MarketplaceSignal
-from ..exceptions import MarketplaceError
+from ..enums import MarketplaceSignal, RepositoryCategory
+from ..exceptions import (
+    GitHubAnonymousRateLimitError,
+    GitHubRateLimitError,
+    MarketplaceError,
+)
 from ..utils.logger import LOGGER
 from ..utils.version import version_left_higher_then_right
+from .decorators import (
+    ERR_GITHUB_RATE_LIMITED,
+    marketplace_command,
+    send_repository_not_found,
+    send_translated_error,
+)
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
+    from ..base import MarketplaceManager
+
+
+def _send_rate_limited(
+    connection: websocket_api.ActiveConnection,
+    msg_id: int,
+    exception: GitHubRateLimitError,
+) -> None:
+    """Answer that GitHub refused the request, the rate limit ran out."""
+    send_translated_error(connection, msg_id, ERR_GITHUB_RATE_LIMITED, "rate_limited")
+
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "marketplace/repository/info",
-        vol.Required("repository_id"): str,
+        probatio.Required("type"): "marketplace/repository/info",
+        probatio.Required("repository_id"): str,
     }
 )
 @websocket_api.require_admin
 @websocket_api.async_response
+@marketplace_command()
 async def marketplace_repository_info(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
+    marketplace: MarketplaceManager,
 ) -> None:
     """Return information about a repository."""
-    marketplace = async_get_marketplace(hass)
     repository_id = msg["repository_id"]
     repository = marketplace.repositories.get_by_id(repository_id)
     if repository is None:
-        connection.send_error(
-            msg["id"],
-            "repository_not_found",
-            f"Repository with ID ({repository_id}) not found",
-        )
+        send_repository_not_found(connection, msg["id"], repository_id)
         return
 
     if not repository.updated_info:
         try:
             await repository.update_repository(ignore_issues=True, force=True)
+        except GitHubAnonymousRateLimitError:
+            # Show what is known, the next visit tries again
+            repository.logger.debug("%s Rate limited", repository.string)
         except MarketplaceError as exception:
             repository.logger.error("%s %s", repository.string, exception)
-        repository.updated_info = True
+            repository.updated_info = True
+        else:
+            repository.updated_info = True
 
     if repository.data.new:
         repository.data.new = False
@@ -64,7 +86,6 @@ async def marketplace_repository_info(
                 "can_download": repository.can_download,
                 "category": repository.data.category,
                 "config_flow": repository.data.config_flow,
-                "country": repository.repository_manifest.country,
                 "custom": not marketplace.repositories.is_default(
                     str(repository.data.id)
                 ),
@@ -87,6 +108,7 @@ async def marketplace_repository_info(
                 "pending_upgrade": repository.pending_update,
                 "releases": repository.data.published_tags,
                 "ref": repository.ref,
+                "replaces_built_in": await repository.async_replaces_built_in(),
                 "selected_tag": repository.data.selected_tag,
                 "stars": repository.data.stargazers_count,
                 "state": repository.state,
@@ -100,28 +122,25 @@ async def marketplace_repository_info(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "marketplace/repository/ignore",
-        vol.Required("repository"): str,
+        probatio.Required("type"): "marketplace/repository/ignore",
+        probatio.Required("repository"): str,
     }
 )
 @websocket_api.require_admin
 @websocket_api.async_response
+@marketplace_command()
 async def marketplace_repository_ignore(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
+    marketplace: MarketplaceManager,
 ) -> None:
     """Ignore a repository."""
-    marketplace = async_get_marketplace(hass)
     repository_id = msg["repository"]
     LOGGER.info("Ignoring %s", repository_id)
     repository = marketplace.repositories.get_by_id(repository_id)
     if repository is None:
-        connection.send_error(
-            msg["id"],
-            "repository_not_found",
-            f"Repository with ID ({repository_id}) not found",
-        )
+        send_repository_not_found(connection, msg["id"], repository_id)
         return
 
     marketplace.common.ignored_repositories.add(repository.data.full_name)
@@ -132,27 +151,24 @@ async def marketplace_repository_ignore(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "marketplace/repository/state",
-        vol.Required("repository"): cv.string,
-        vol.Required("state"): cv.string,
+        probatio.Required("type"): "marketplace/repository/state",
+        probatio.Required("repository"): cv.string,
+        probatio.Required("state"): cv.string,
     }
 )
 @websocket_api.require_admin
 @websocket_api.async_response
+@marketplace_command()
 async def marketplace_repository_state(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
+    marketplace: MarketplaceManager,
 ) -> None:
     """Set the state of a repository."""
-    marketplace = async_get_marketplace(hass)
     repository = marketplace.repositories.get_by_id(msg["repository"])
     if repository is None:
-        connection.send_error(
-            msg["id"],
-            "repository_not_found",
-            f"Repository with ID ({msg['repository']}) not found",
-        )
+        send_repository_not_found(connection, msg["id"], msg["repository"])
         return
 
     repository.state = msg["state"]
@@ -163,35 +179,38 @@ async def marketplace_repository_state(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "marketplace/repository/version",
-        vol.Required("repository"): cv.string,
-        vol.Required("version"): cv.string,
+        probatio.Required("type"): "marketplace/repository/version",
+        probatio.Required("repository"): cv.string,
+        probatio.Required("version"): cv.string,
     }
 )
 @websocket_api.require_admin
 @websocket_api.async_response
+@marketplace_command(requires_accepted_warning=True)
 async def marketplace_repository_version(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
+    marketplace: MarketplaceManager,
 ) -> None:
     """Set the version of a repository."""
-    marketplace = async_get_marketplace(hass)
     repository = marketplace.repositories.get_by_id(msg["repository"])
     if repository is None:
-        connection.send_error(
-            msg["id"],
-            "repository_not_found",
-            f"Repository with ID ({msg['repository']}) not found",
-        )
+        send_repository_not_found(connection, msg["id"], msg["repository"])
         return
 
+    selected_tag = repository.data.selected_tag
     if msg["version"] == repository.data.default_branch:
         repository.data.selected_tag = None
     else:
         repository.data.selected_tag = msg["version"]
 
-    await repository.update_repository(force=True)
+    try:
+        await repository.update_repository(force=True)
+    except GitHubAnonymousRateLimitError as exception:
+        repository.data.selected_tag = selected_tag
+        _send_rate_limited(connection, msg["id"], exception)
+        return
     repository.state = None
 
     await marketplace.data.async_write()
@@ -200,32 +219,35 @@ async def marketplace_repository_version(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "marketplace/repository/beta",
-        vol.Required("repository"): cv.string,
-        vol.Required("show_beta"): cv.boolean,
+        probatio.Required("type"): "marketplace/repository/beta",
+        probatio.Required("repository"): cv.string,
+        probatio.Required("show_beta"): cv.boolean,
     }
 )
 @websocket_api.require_admin
 @websocket_api.async_response
+@marketplace_command(requires_accepted_warning=True)
 async def marketplace_repository_beta(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
+    marketplace: MarketplaceManager,
 ) -> None:
     """Show or hide beta versions of a repository."""
-    marketplace = async_get_marketplace(hass)
     repository = marketplace.repositories.get_by_id(msg["repository"])
     if repository is None:
-        connection.send_error(
-            msg["id"],
-            "repository_not_found",
-            f"Repository with ID ({msg['repository']}) not found",
-        )
+        send_repository_not_found(connection, msg["id"], msg["repository"])
         return
 
+    show_beta = repository.data.show_beta
     repository.data.show_beta = msg["show_beta"]
 
-    await repository.update_repository(force=True)
+    try:
+        await repository.update_repository(force=True)
+    except GitHubAnonymousRateLimitError as exception:
+        repository.data.show_beta = show_beta
+        _send_rate_limited(connection, msg["id"], exception)
+        return
     repository.state = None
 
     await marketplace.data.async_write()
@@ -234,27 +256,24 @@ async def marketplace_repository_beta(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "marketplace/repository/download",
-        vol.Required("repository"): cv.string,
-        vol.Optional("version"): cv.string,
+        probatio.Required("type"): "marketplace/repository/download",
+        probatio.Required("repository"): cv.string,
+        probatio.Optional("version"): cv.string,
     }
 )
 @websocket_api.require_admin
 @websocket_api.async_response
+@marketplace_command(requires_accepted_warning=True)
 async def marketplace_repository_download(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
+    marketplace: MarketplaceManager,
 ) -> None:
     """Set the version of a repository."""
-    marketplace = async_get_marketplace(hass)
     repository = marketplace.repositories.get_by_id(msg["repository"])
     if repository is None:
-        connection.send_error(
-            msg["id"],
-            "repository_not_found",
-            f"Repository with ID ({msg['repository']}) not found",
-        )
+        send_repository_not_found(connection, msg["id"], msg["repository"])
         return
 
     try:
@@ -266,41 +285,64 @@ async def marketplace_repository_download(
 
         await marketplace.data.async_write()
         connection.send_message(websocket_api.result_message(msg["id"], {}))
+    except GitHubAnonymousRateLimitError as exception:
+        _send_rate_limited(connection, msg["id"], exception)
     except MarketplaceError as exception:
         repository.logger.error("%s %s", repository.string, exception)
-        connection.send_error(msg["id"], "error", str(exception))
+        send_translated_error(
+            connection,
+            msg["id"],
+            "error",
+            "download_failed",
+            {"repository": repository.data.full_name, "error": str(exception)},
+        )
 
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "marketplace/repository/remove",
-        vol.Required("repository"): cv.string,
+        probatio.Required("type"): "marketplace/repository/remove",
+        probatio.Required("repository"): cv.string,
     }
 )
 @websocket_api.require_admin
 @websocket_api.async_response
+@marketplace_command()
 async def marketplace_repository_remove(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
+    marketplace: MarketplaceManager,
 ) -> None:
     """Remove a repository."""
-    marketplace = async_get_marketplace(hass)
     repository = marketplace.repositories.get_by_id(msg["repository"])
     if repository is None:
-        connection.send_error(
-            msg["id"],
-            "repository_not_found",
-            f"Repository with ID ({msg['repository']}) not found",
-        )
+        send_repository_not_found(connection, msg["id"], msg["repository"])
         return
 
     repository.data.new = False
+    # What is on disk is enough to remove it, GitHub is only asked when it can be,
+    # or for a theme that was stored before its file name was
+    theme_without_file_name = (
+        repository.data.category == RepositoryCategory.THEME
+        and not repository.data.file_name
+    )
+    if marketplace.github_connected or theme_without_file_name:
+        try:
+            await repository.update_repository(ignore_issues=True, force=True)
+        except MarketplaceError as exception:
+            repository.logger.error("%s %s", repository.string, exception)
+
     try:
-        await repository.update_repository(ignore_issues=True, force=True)
-    except MarketplaceError as exception:
-        repository.logger.error("%s %s", repository.string, exception)
-    await repository.uninstall()
+        await repository.uninstall()
+    except MarketplaceError:
+        send_translated_error(
+            connection,
+            msg["id"],
+            "remove_failed",
+            "remove_failed",
+            {"repository": repository.data.full_name},
+        )
+        return
 
     await marketplace.data.async_write()
     connection.send_message(websocket_api.result_message(msg["id"], {}))
@@ -308,29 +350,31 @@ async def marketplace_repository_remove(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "marketplace/repository/refresh",
-        vol.Required("repository"): cv.string,
+        probatio.Required("type"): "marketplace/repository/refresh",
+        probatio.Required("repository"): cv.string,
     }
 )
 @websocket_api.require_admin
 @websocket_api.async_response
+@marketplace_command()
 async def marketplace_repository_refresh(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
+    marketplace: MarketplaceManager,
 ) -> None:
     """Refresh a repository."""
-    marketplace = async_get_marketplace(hass)
     repository = marketplace.repositories.get_by_id(msg["repository"])
     if repository is None:
-        connection.send_error(
-            msg["id"],
-            "repository_not_found",
-            f"Repository with ID ({msg['repository']}) not found",
-        )
+        send_repository_not_found(connection, msg["id"], msg["repository"])
         return
 
-    await repository.update_repository(ignore_issues=True, force=True)
+    try:
+        await repository.update_repository(ignore_issues=True, force=True)
+    except GitHubAnonymousRateLimitError as exception:
+        _send_rate_limited(connection, msg["id"], exception)
+        return
+
     await marketplace.data.async_write()
     # Update state of update entity
     marketplace.coordinators[repository.data.category].async_update_listeners()
@@ -340,26 +384,23 @@ async def marketplace_repository_refresh(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "marketplace/repository/release_notes",
-        vol.Required("repository"): cv.string,
+        probatio.Required("type"): "marketplace/repository/release_notes",
+        probatio.Required("repository"): cv.string,
     }
 )
 @websocket_api.require_admin
 @websocket_api.async_response
+@marketplace_command()
 async def marketplace_repository_release_notes(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
+    marketplace: MarketplaceManager,
 ) -> None:
     """Return release notes."""
-    marketplace = async_get_marketplace(hass)
     repository = marketplace.repositories.get_by_id(msg["repository"])
     if repository is None:
-        connection.send_error(
-            msg["id"],
-            "repository_not_found",
-            f"Repository with ID ({msg['repository']}) not found",
-        )
+        send_repository_not_found(connection, msg["id"], msg["repository"])
         return
 
     connection.send_message(
@@ -383,33 +424,39 @@ async def marketplace_repository_release_notes(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "marketplace/repository/releases",
-        vol.Required("repository_id"): cv.string,
+        probatio.Required("type"): "marketplace/repository/releases",
+        probatio.Required("repository_id"): cv.string,
     }
 )
 @websocket_api.require_admin
 @websocket_api.async_response
+@marketplace_command()
 async def marketplace_repository_releases(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
+    marketplace: MarketplaceManager,
 ) -> None:
     """Return releases."""
-    marketplace = async_get_marketplace(hass)
     repository = marketplace.repositories.get_by_id(msg["repository_id"])
     if repository is None:
-        connection.send_error(
-            msg["id"],
-            "repository_not_found",
-            f"Repository with ID ({msg['repository_id']}) not found",
-        )
+        send_repository_not_found(connection, msg["id"], msg["repository_id"])
         return
 
     try:
         releases = await repository.async_get_releases()
+    except GitHubRateLimitError as exception:
+        _send_rate_limited(connection, msg["id"], exception)
+        return
     except MarketplaceError as exception:
         LOGGER.exception("Could not get the releases for %s", repository.string)
-        connection.send_error(msg["id"], "unknown", str(exception))
+        send_translated_error(
+            connection,
+            msg["id"],
+            "unknown",
+            "releases_failed",
+            {"repository": repository.data.full_name, "error": str(exception)},
+        )
         return
 
     connection.send_message(

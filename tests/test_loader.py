@@ -921,6 +921,38 @@ async def test_clear_custom_components_cache_while_it_is_built(
     assert loader.DATA_CUSTOM_COMPONENTS not in hass.data
 
 
+async def test_clear_custom_components_cache_during_a_scan(
+    hass: HomeAssistant,
+) -> None:
+    """Verify a scan that started before a clear does not put its result back."""
+    before = {"test_1": _get_test_integration(hass, "test_1", False)}
+    after = {**before, "test_2": _get_test_integration(hass, "test_2", False)}
+    first_scan: asyncio.Future[dict[str, loader.Integration]] = (
+        hass.loop.create_future()
+    )
+    second_scan: asyncio.Future[dict[str, loader.Integration]] = (
+        hass.loop.create_future()
+    )
+    second_scan.set_result(after)
+    loader.async_clear_custom_components_cache(hass)
+
+    with patch.object(
+        hass, "async_add_executor_job", side_effect=[first_scan, second_scan]
+    ) as mock_scan:
+        first = hass.async_create_task(loader.async_get_custom_components(hass))
+        await asyncio.sleep(0)
+        assert mock_scan.call_count == 1
+
+        # Something was downloaded while the first scan still runs
+        loader.async_clear_custom_components_cache(hass)
+        assert await loader.async_get_custom_components(hass) == after
+
+        first_scan.set_result(before)
+        assert await first == before
+
+    assert await loader.async_get_custom_components(hass) == after
+
+
 @pytest.mark.usefixtures("enable_custom_integrations")
 async def test_custom_component_overwriting_core(hass: HomeAssistant) -> None:
     """Test loading a custom component that overwrites a core component."""

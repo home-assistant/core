@@ -4,6 +4,13 @@ from homeassistant.components.marketplace.enums import RepositoryCategory
 
 TOKEN = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 
+# How the admin user of the tests accepted the first-run warning, unless they
+# opt out.
+WARNING_ACCEPTANCE = {
+    "version": 1,
+    "accepted_at": "2026-09-01T12:00:00+00:00",
+}
+
 # The instant HACS recorded the fixtures at. Several of them carry absolute
 # `last_fetched` timestamps that the staleness checks compare against, so tests
 # that depend on those checks have to run at this instant.

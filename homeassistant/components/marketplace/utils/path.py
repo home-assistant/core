@@ -15,18 +15,16 @@ if TYPE_CHECKING:
 @lru_cache(maxsize=1)
 def _get_safe_paths(
     config_path: str,
-    appdaemon_path: str,
     plugin_path: str,
-    python_script_path: str,
     theme_path: str,
 ) -> set[str]:
     """Get safe paths."""
     return {
         Path(config_path).resolve().as_posix(),
         Path(f"{config_path}/{STORAGE_DIR}").resolve().as_posix(),
-        Path(f"{config_path}/{appdaemon_path}").resolve().as_posix(),
         Path(f"{config_path}/{plugin_path}").resolve().as_posix(),
-        Path(f"{config_path}/{python_script_path}").resolve().as_posix(),
+        # Python scripts are no longer downloaded, their folder stays off limits
+        Path(f"{config_path}/python_scripts/").resolve().as_posix(),
         Path(f"{config_path}/{theme_path}").resolve().as_posix(),
         Path(f"{config_path}/custom_components/").resolve().as_posix(),
         Path(f"{config_path}/custom_templates/").resolve().as_posix(),
@@ -38,9 +36,7 @@ def is_safe(marketplace: MarketplaceManager, path: str | Path) -> bool:
     configuration = marketplace.configuration
     return Path(path).resolve().as_posix() not in _get_safe_paths(
         marketplace.core.config_path,
-        configuration.appdaemon_path,
         configuration.plugin_path,
-        configuration.python_script_path,
         configuration.theme_path,
     )
 

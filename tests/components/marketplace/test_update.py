@@ -4,44 +4,46 @@ from http import HTTPStatus
 import json
 from pathlib import Path
 import re
+from typing import Any
+from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.auth.models import User
 from homeassistant.components.marketplace.base import MarketplaceManager
-from homeassistant.components.marketplace.const import DOMAIN
-from homeassistant.components.marketplace.enums import MarketplaceSignal
+from homeassistant.components.marketplace.const import CONF_WARNING_ACCEPTED, DOMAIN
+from homeassistant.components.marketplace.enums import (
+    MarketplaceSignal,
+    RepositoryCategory,
+)
 from homeassistant.components.marketplace.repositories.base import Repository
 from homeassistant.components.update import (
     ATTR_VERSION,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
 )
+from homeassistant.config_entries import SOURCE_SYSTEM
 from homeassistant.const import ATTR_ENTITY_ID, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.setup import async_setup_component
 
 from . import (
     CategoryTestData,
+    assert_api_usage,
     category_test_data_parametrized,
     get_marketplace,
+    github_api_calls,
     mocked_response,
 )
 from .conftest import MarketplaceResponses
 from .const import REPOSITORY_INTEGRATION, REPOSITORY_INTEGRATION_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockUser
+from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
-
-
-@pytest.fixture(autouse=True)
-async def python_script_integration(hass: HomeAssistant, config_dir: Path) -> None:
-    """Load the python script integration so its category is active."""
-    (config_dir / "python_scripts").mkdir()
-    assert await async_setup_component(hass, "python_script", {})
 
 
 @pytest.fixture
@@ -56,6 +58,8 @@ async def downloaded_repository(
     )
     repository.data.installed = True
     repository.data.installed_version = category_test_data["version_base"]
+    # A downloaded repository has its files on disk
+    Path(repository.localpath).mkdir(parents=True, exist_ok=True)
 
     await hass.config_entries.async_reload(
         marketplace.configuration.config_entry.entry_id
@@ -77,6 +81,8 @@ async def integration_update_entity(
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     repository.data.installed = True
     repository.data.installed_version = "1.0.0"
+    # A downloaded repository has its files on disk
+    Path(repository.localpath).mkdir(parents=True, exist_ok=True)
 
     await hass.config_entries.async_reload(
         marketplace.configuration.config_entry.entry_id
@@ -119,7 +125,7 @@ async def test_update_device_info(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = entity_registry.async_get("update.basic_integration_update")
+    entity_entry = entity_registry.async_get("update.basic_integration")
     assert entity_entry is not None
     assert device_registry.async_get(entity_entry.device_id) == snapshot
 
@@ -148,8 +154,7 @@ async def test_update_entity_picture(
     state = hass.states.get(integration_update_entity)
 
     assert (
-        state.attributes["entity_picture"]
-        == "https://brands.home-assistant.io/_/example/icon.png"
+        state.attributes["entity_picture"] == "/api/brands/integration/example/icon.png"
     )
 
 
@@ -174,7 +179,7 @@ async def test_update_entity_picture_for_other_categories(
 async def test_update_entity_release_summary(
     hass: HomeAssistant, marketplace: MarketplaceManager, integration_update_entity: str
 ) -> None:
-    """Test that a repository waiting for a restart says so."""
+    """Test a pending restart is left to the translated repair issue."""
     repository = get_marketplace(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     repository.pending_restart = True
     repository.data.last_fetched = None
@@ -183,8 +188,8 @@ async def test_update_entity_release_summary(
     ].async_update_listeners()
     await hass.async_block_till_done()
 
-    assert hass.states.get(integration_update_entity).attributes["release_summary"] == (
-        "<ha-alert alert-type='error'>Restart of Home Assistant required</ha-alert>"
+    assert (
+        hass.states.get(integration_update_entity).attributes["release_summary"] is None
     )
 
 
@@ -234,6 +239,7 @@ async def test_update_entity_ignores_other_repositories(
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_install(
     hass: HomeAssistant,
+    hass_storage: dict[str, Any],
     entity_registry: er.EntityRegistry,
     downloaded_repository: Repository,
     category_test_data: CategoryTestData,
@@ -257,6 +263,126 @@ async def test_install(
         downloaded_repository.data.installed_version
         == category_test_data["version_update"]
     )
+
+    # Stored right away, a restart before the next write keeps the new version
+    stored = hass_storage[f"{DOMAIN}.repositories"]["data"][category_test_data["id"]]
+    assert stored["version_installed"] == category_test_data["version_update"]
+
+
+@pytest.mark.parametrize("github_token", [None])
+@pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
+async def test_install_update_from_the_catalog(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    downloaded_repository: Repository,
+    aioclient_mock: AiohttpClientMocker,
+    category_test_data: CategoryTestData,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test installing the update the catalog announces skips the GitHub API."""
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.UPDATE, DOMAIN, category_test_data["id"]
+    )
+    downloaded_repository.data.last_version = category_test_data["version_update"]
+    aioclient_mock.mock_calls.clear()
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+
+    assert (
+        downloaded_repository.data.installed_version
+        == category_test_data["version_update"]
+    )
+    assert not github_api_calls(aioclient_mock)
+    assert_api_usage(aioclient_mock, snapshot)
+
+    state = hass.states.get(entity_id)
+    assert state.attributes["installed_version"] == category_test_data["version_update"]
+    assert state.attributes["latest_version"] == category_test_data["version_update"]
+
+
+@pytest.mark.parametrize(
+    "category_test_data",
+    category_test_data_parametrized(categories=[RepositoryCategory.INTEGRATION]),
+)
+async def test_install_newest_commit_of_a_custom_repository(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    downloaded_repository: Repository,
+    aioclient_mock: AiohttpClientMocker,
+    response_mocker: MarketplaceResponses,
+    config_dir: Path,
+    category_test_data: CategoryTestData,
+) -> None:
+    """Test a repository without releases updates to what its branch holds."""
+    branch_archive = (
+        "https://github.com/hacs-test-org/integration-basic/archive/refs/heads/main.zip"
+    )
+    recorded = Path(__file__).parent.joinpath(
+        "fixtures/proxy/github.com/hacs-test-org/integration-basic"
+        "/archive/refs/tags/1.0.0.zip"
+    )
+    response_mocker.add(
+        branch_archive, mocked_response(branch_archive, content=recorded.read_bytes())
+    )
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.UPDATE, DOMAIN, category_test_data["id"]
+    )
+    marketplace = get_marketplace(hass)
+    data = downloaded_repository.data
+    data.releases = False
+    data.last_version = None
+    data.installed_version = None
+    data.installed_commit = "1234abc"
+    data.last_commit = "7fd1a60"
+    data.default_branch = "main"
+    aioclient_mock.mock_calls.clear()
+
+    with (
+        patch.object(marketplace.repositories, "is_default", return_value=False),
+        patch.object(downloaded_repository, "update_repository"),
+    ):
+        await hass.services.async_call(
+            UPDATE_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+    requested = [str(call[1]) for call in aioclient_mock.mock_calls]
+    assert not [url for url in requested if "7fd1a60" in url]
+    assert branch_archive in requested
+    assert data.installed_commit == "7fd1a60"
+    assert data.installed_version is None
+
+
+@pytest.mark.parametrize("github_token", [None])
+@pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
+async def test_install_update_of_a_custom_repository(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    downloaded_repository: Repository,
+    aioclient_mock: AiohttpClientMocker,
+    category_test_data: CategoryTestData,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test an update of a repository outside the catalog uses the GitHub API."""
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.UPDATE, DOMAIN, category_test_data["id"]
+    )
+    marketplace = get_marketplace(hass)
+    downloaded_repository.data.last_version = category_test_data["version_update"]
+    aioclient_mock.mock_calls.clear()
+
+    with patch.object(marketplace.repositories, "is_default", return_value=False):
+        await hass.services.async_call(
+            UPDATE_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+    assert (
+        downloaded_repository.data.installed_version
+        == category_test_data["version_update"]
+    )
+    assert github_api_calls(aioclient_mock)
+    assert_api_usage(aioclient_mock, snapshot)
 
 
 async def test_install_already_downloaded_version(
@@ -307,8 +433,8 @@ async def test_install_version_without_a_manifest(
     with pytest.raises(
         HomeAssistantError,
         match=re.escape(
-            f"Downloading {REPOSITORY_INTEGRATION} failed: The version 3.0.0 "
-            "for this integration can not be used."
+            f"Downloading {REPOSITORY_INTEGRATION} failed: Version 3.0.0 of "
+            f"{REPOSITORY_INTEGRATION} has no hacs.json, which downloading needs"
         ),
     ):
         await hass.services.async_call(
@@ -355,11 +481,13 @@ async def test_install_download_failure(
     response_mocker: MarketplaceResponses,
 ) -> None:
     """Test a version that can not be downloaded."""
-    for variant in ("tags", "heads"):
-        url = (
-            f"https://github.com/{REPOSITORY_INTEGRATION}"
-            f"/archive/refs/{variant}/2.0.0.zip"
-        )
+    for url in (
+        f"https://github.com/{REPOSITORY_INTEGRATION}/archive/refs/tags/2.0.0.zip",
+        f"https://github.com/{REPOSITORY_INTEGRATION}/archive/refs/heads/2.0.0.zip",
+        # The file by file download that follows a failed archive
+        f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/1.0.0"
+        "/custom_components/example/manifest.json",
+    ):
         response_mocker.add(
             url,
             mocked_response(url, status=HTTPStatus.SERVICE_UNAVAILABLE),
@@ -421,3 +549,188 @@ async def test_release_notes_while_pending_restart(
 
     assert response["success"]
     assert response["result"] is None
+
+
+@pytest.mark.parametrize("github_token", [None])
+async def test_install_without_github(
+    hass: HomeAssistant, integration_update_entity: str
+) -> None:
+    """Test installing an update works without a GitHub connection."""
+    marketplace = get_marketplace(hass)
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: "2.0.0"},
+        blocking=True,
+    )
+
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    assert repository.data.installed_version == "2.0.0"
+    assert not marketplace.system.disabled
+
+
+@pytest.mark.parametrize("config_entry_source", [SOURCE_SYSTEM])
+@pytest.mark.parametrize("warning_accepted", [None])
+async def test_install_needs_accepted_warning(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    integration_update_entity: str,
+) -> None:
+    """Test an install without a user is refused until someone accepts the warning."""
+    marketplace = get_marketplace(hass)
+    assert CONF_WARNING_ACCEPTED not in marketplace.configuration.config_entry.data
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Open the Marketplace and read the warning first",
+    ):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: "2.0.0"},
+            blocking=True,
+        )
+
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    assert repository.data.installed_version == "1.0.0"
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "marketplace/warning/accept"})
+    assert (await client.receive_json())["success"]
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: "2.0.0"},
+        blocking=True,
+    )
+
+    assert repository.data.installed_version == "2.0.0"
+
+
+async def test_install_needs_warning_accepted_by_caller(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    second_admin_user: User,
+    integration_update_entity: str,
+) -> None:
+    """Test a user installing an update needs to have accepted the warning."""
+    marketplace = get_marketplace(hass)
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Open the Marketplace and read the warning first",
+    ):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: "2.0.0"},
+            blocking=True,
+            context=Context(user_id=second_admin_user.id),
+        )
+
+    assert repository.data.installed_version == "1.0.0"
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: "2.0.0"},
+        blocking=True,
+        context=Context(user_id=hass_admin_user.id),
+    )
+
+    assert repository.data.installed_version == "2.0.0"
+
+
+@pytest.mark.parametrize(
+    "status",
+    [
+        pytest.param(HTTPStatus.FORBIDDEN, id="403"),
+        pytest.param(HTTPStatus.TOO_MANY_REQUESTS, id="429"),
+    ],
+)
+@pytest.mark.parametrize("github_token", [None])
+async def test_install_rate_limited_without_github(
+    hass: HomeAssistant,
+    integration_update_entity: str,
+    response_mocker: MarketplaceResponses,
+    status: HTTPStatus,
+) -> None:
+    """Test running out of anonymous requests fails the install clearly."""
+    marketplace = get_marketplace(hass)
+    url = f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}"
+    response_mocker.add(
+        url,
+        mocked_response(
+            url,
+            status=status,
+            json_content={"message": "API rate limit exceeded for 127.0.0.1."},
+        ),
+        keep=True,
+    )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=(
+            "GitHub limits how often the Marketplace can reach it without a "
+            "GitHub connection"
+        ),
+    ):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: "2.0.0"},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    assert repository.data.installed_version == "1.0.0"
+    assert not marketplace.system.disabled
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+@pytest.mark.parametrize("github_token", [None])
+async def test_latest_version_without_github(
+    hass: HomeAssistant, integration_update_entity: str
+) -> None:
+    """Test the latest version comes from the catalog without an account."""
+    state = hass.states.get(integration_update_entity)
+
+    assert state.attributes["installed_version"] == "1.0.0"
+    assert state.attributes["latest_version"] == "1.0.0"
+
+
+@pytest.mark.parametrize("github_token", [None])
+async def test_release_notes_rate_limited_without_github(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    integration_update_entity: str,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test the release notes fall back to what is known when rate limited."""
+    marketplace = get_marketplace(hass)
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.published_tags = []
+
+    url = f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}/releases"
+    response_mocker.add(
+        url,
+        mocked_response(
+            url,
+            status=HTTPStatus.FORBIDDEN,
+            json_content={"message": "API rate limit exceeded for 127.0.0.1."},
+        ),
+    )
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "update/release_notes", "entity_id": integration_update_entity}
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == ""
+    assert not marketplace.system.disabled

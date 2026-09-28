@@ -3,14 +3,12 @@
 from typing import Any
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import STORAGE_DIR, Store
 from homeassistant.util import json as json_util
 from homeassistant.util.hass_dict import HassKey
 
-from ..const import VERSION_STORAGE
-from ..exceptions import MarketplaceError
+from ..const import LEGACY_HACS_STORAGE_VERSION, STORAGE_VERSION
 from .logger import LOGGER
 from .path import resolve_in_directory
 
@@ -26,36 +24,15 @@ LEGACY_STORAGE_KEYS: dict[str, str] = {
     "repositories": "hacs.repositories",
 }
 
-# The data file older releases wrote. Read as a last resort, never adopted,
-# and removed once the Marketplace has a repositories file of its own.
-LEGACY_DATA_STORAGE_KEY = "hacs.data"
+# Older releases kept every repository in this file, grouped by category. The
+# custom integration still falls back to it when its repositories file is empty.
+LEGACY_DATA_KEY = "hacs.data"
 
 # Older releases kept a file per downloaded repository, removed on uninstall.
 LEGACY_HACS_REPOSITORY_STORAGE_KEY = "hacs/{repository_id}.hacs"
 
 
-class MarketplaceStorage(Store[dict[str, Any]]):
-    """A subclass of Store that allows multiple loads in the executor."""
-
-    def load(self) -> Any:
-        """Load the data from disk if version matches."""
-        try:
-            data: Any = json_util.load_json(self.path)
-        except HomeAssistantError as exception:
-            _LOGGER.critical(
-                "Could not load '%s', restore it from a backup or delete the file: %s",
-                self.path,
-                exception,
-            )
-            raise MarketplaceError(exception) from exception
-        if data == {} or data["version"] != self.version:
-            return None
-        return data["data"]
-
-
-STORAGE_CACHE_KEY: HassKey[dict[str, MarketplaceStorage]] = HassKey(
-    "marketplace_storage_cache"
-)
+STORAGE_CACHE_KEY: HassKey[dict[str, Store[Any]]] = HassKey("marketplace_storage_cache")
 
 
 def get_storage_key(key: str) -> str:
@@ -63,18 +40,7 @@ def get_storage_key(key: str) -> str:
     return key if "/" in key else f"{STORENAME}.{key}"
 
 
-def _create_storage(hass: HomeAssistant, storage_key: str) -> MarketplaceStorage:
-    """Create a Store object for a resolved storage key."""
-    return MarketplaceStorage(
-        hass,
-        VERSION_STORAGE,  # type: ignore[arg-type] # the Marketplace keeps its version as a string
-        storage_key,
-        encoder=JSONEncoder,
-        atomic_writes=True,
-    )
-
-
-def get_storage_for_key(hass: HomeAssistant, key: str) -> MarketplaceStorage:
+def get_storage_for_key(hass: HomeAssistant, key: str) -> Store[Any]:
     """Get (or create and cache) the Store object for the key.
 
     The cache is cleared in async_unload_entry so Store instances do not
@@ -82,12 +48,43 @@ def get_storage_for_key(hass: HomeAssistant, key: str) -> MarketplaceStorage:
     """
     cache = hass.data.setdefault(STORAGE_CACHE_KEY, {})
     if key not in cache:
-        cache[key] = _create_storage(hass, get_storage_key(key))
+        cache[key] = Store(
+            hass,
+            STORAGE_VERSION,
+            get_storage_key(key),
+            encoder=JSONEncoder,
+            atomic_writes=True,
+            # The repositories file is large, encoding it stays off the event loop
+            serialize_in_event_loop=False,
+        )
     return cache[key]
 
 
+def _load_legacy_file(path: str) -> Any:
+    """Read a storage file of the custom integration, None if there is none.
+
+    Its string version is not something the Store helper can read.
+    """
+    data = json_util.load_json(path)
+    if not isinstance(data, dict) or data.get("version") != LEGACY_HACS_STORAGE_VERSION:
+        return None
+    return data.get("data")
+
+
+def _load_legacy_repositories_from_data(path: str) -> dict[str, Any] | None:
+    """Read the repositories from the older combined file, keyed by their id."""
+    if not isinstance(data := _load_legacy_file(path), dict):
+        return None
+
+    repositories: dict[str, Any] = {}
+    for category, entries in (data.get("repositories") or {}).items():
+        for repository in entries:
+            repositories[str(repository["id"])] = {"category": category, **repository}
+    return repositories
+
+
 async def _async_adopt_legacy_data(
-    hass: HomeAssistant, key: str, marketplace: MarketplaceStorage
+    hass: HomeAssistant, key: str, marketplace: Store[Any]
 ) -> Any:
     """Copy the data the custom integration wrote for this key over to our own key.
 
@@ -97,7 +94,17 @@ async def _async_adopt_legacy_data(
     if (legacy_key := LEGACY_STORAGE_KEYS.get(key)) is None:
         return None
 
-    if (data := await _create_storage(hass, legacy_key).async_load()) is None:
+    legacy_path = hass.config.path(STORAGE_DIR, legacy_key)
+    data = await hass.async_add_executor_job(_load_legacy_file, legacy_path)
+
+    if key == "repositories" and not data:
+        legacy_key = LEGACY_DATA_KEY
+        data = await hass.async_add_executor_job(
+            _load_legacy_repositories_from_data,
+            hass.config.path(STORAGE_DIR, legacy_key),
+        )
+
+    if not data:
         return None
 
     _LOGGER.info("Adopting the data in '%s' as '%s'", legacy_key, get_storage_key(key))
@@ -111,14 +118,6 @@ async def async_load_from_storage(hass: HomeAssistant, key: str) -> Any:
     if (data := await marketplace.async_load()) is not None:
         return data or {}
     return await _async_adopt_legacy_data(hass, key, marketplace) or {}
-
-
-async def async_load_legacy_data(hass: HomeAssistant) -> Any:
-    """Load the data file older releases wrote.
-
-    Read only, this file is never adopted under one of our own keys.
-    """
-    return await _create_storage(hass, LEGACY_DATA_STORAGE_KEY).async_load() or {}
 
 
 async def async_save_to_storage(hass: HomeAssistant, key: str, data: Any) -> None:

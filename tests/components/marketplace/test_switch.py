@@ -16,23 +16,19 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
-from homeassistant.setup import async_setup_component
 
 from . import CategoryTestData, category_test_data_parametrized, get_marketplace
 from .const import REPOSITORY_INTEGRATION_ID
-
-
-@pytest.fixture(autouse=True)
-async def python_script_integration(hass: HomeAssistant, config_dir: Path) -> None:
-    """Load the python script integration so its category is active."""
-    (config_dir / "python_scripts").mkdir()
-    assert await async_setup_component(hass, "python_script", {})
 
 
 async def _reload(
     hass: HomeAssistant, marketplace: MarketplaceManager
 ) -> MarketplaceManager:
     """Reload the config entry and return the Marketplace object that replaced it."""
+    # A downloaded repository has its files on disk
+    for repository in marketplace.repositories.list_downloaded:
+        Path(repository.localpath).mkdir(parents=True, exist_ok=True)
+
     await hass.config_entries.async_reload(
         marketplace.configuration.config_entry.entry_id
     )

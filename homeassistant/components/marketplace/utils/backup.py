@@ -1,109 +1,155 @@
-"""Backup."""
+"""Backups of downloaded content, kept while a download replaces it."""
 
-import os
+from pathlib import Path
 import shutil
-import tempfile
-from time import sleep
 from typing import TYPE_CHECKING
 
+from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.util.ulid import ulid_now
+
+from ..exceptions import MarketplaceError
 from .logger import LOGGER
-from .path import is_safe
+from .path import is_safe, resolve_in_directory
 
 if TYPE_CHECKING:
     from ..base import MarketplaceManager
-    from ..repositories.base import Repository
+
+# Next to the downloaded content on the same file system, so a backup is a
+# move instead of a copy, and it survives a restart in the middle of a download.
+BACKUP_DIRECTORY = "marketplace_backups"
+
+# Holds the path the backed up content belongs to, for restoring after a restart.
+TARGET_FILE = "target"
+CONTENT_NAME = "content"
 
 
-DEFAULT_BACKUP_PATH = f"{tempfile.gettempdir()}/marketplace_backup/"
+def _backup_root(marketplace: MarketplaceManager) -> Path:
+    """Return the directory that holds all backups."""
+    return Path(marketplace.core.config_path, STORAGE_DIR, BACKUP_DIRECTORY)
 
 
 class Backup:
-    """Backup."""
+    """Move content aside while a download replaces it."""
 
     def __init__(
         self,
         marketplace: MarketplaceManager,
-        local_path: str,
-        backup_path: str = DEFAULT_BACKUP_PATH,
-        repository: Repository | None = None,
+        local_path: str | Path,
+        backup_path: Path | None = None,
     ) -> None:
         """Initialize."""
         self.marketplace = marketplace
-        self.repository = repository
-        self.local_path = local_path
-        self.backup_path = backup_path
-        if repository:
-            self.backup_path = (
-                f"{tempfile.gettempdir()}"
-                f"/marketplace_persistent_{repository.data.category}/"
-                f"{repository.data.name}"
-            )
-        self.backup_path_full = f"{self.backup_path}{self.local_path.split('/')[-1]}"
+        self.local_path = Path(local_path)
+        self.backup_path = backup_path or _backup_root(marketplace) / ulid_now()
 
-    def _init_backup_dir(self) -> bool:
-        """Init backup dir."""
-        if not os.path.exists(self.local_path):
-            return False
-        if not is_safe(self.marketplace, self.local_path):
-            return False
-        if os.path.exists(self.backup_path):
-            shutil.rmtree(self.backup_path)
-
-            # Wait for the folder to be removed
-            while os.path.exists(self.backup_path):
-                sleep(0.1)
-        os.makedirs(self.backup_path, exist_ok=True)
-        return True
+    @property
+    def content_path(self) -> Path:
+        """Return where the backed up content is kept."""
+        return self.backup_path / CONTENT_NAME
 
     def create(self) -> None:
-        """Create a backup in /tmp."""
-        if not self._init_backup_dir():
+        """Move the content into the backup."""
+        if not self.local_path.exists():
+            return
+
+        if not is_safe(self.marketplace, self.local_path):
             return
 
         try:
-            if os.path.isfile(self.local_path):
-                shutil.copyfile(self.local_path, self.backup_path_full)
-                os.remove(self.local_path)
-            else:
-                shutil.copytree(self.local_path, self.backup_path_full)
-                shutil.rmtree(self.local_path)
-                while os.path.exists(self.local_path):
-                    sleep(0.1)
-            LOGGER.debug(
-                "Backup for %s, created in %s",
-                self.local_path,
-                self.backup_path_full,
+            self.backup_path.mkdir(parents=True)
+            # The target goes first, a restart before the move leaves an empty
+            # backup behind, never content nobody knows the place of.
+            (self.backup_path / TARGET_FILE).write_text(
+                self._target(), encoding="utf-8"
             )
+            shutil.move(self.local_path, self.content_path)
         except OSError as exception:
             LOGGER.warning("Could not create backup: %s", exception)
-
-    def restore(self) -> None:
-        """Restore from backup."""
-        if not os.path.exists(self.backup_path_full):
             return
 
-        if os.path.isfile(self.backup_path_full):
-            if os.path.exists(self.local_path):
-                os.remove(self.local_path)
-            shutil.copyfile(self.backup_path_full, self.local_path)
-        else:
-            if os.path.exists(self.local_path):
-                shutil.rmtree(self.local_path)
-                while os.path.exists(self.local_path):
-                    sleep(0.1)
-            shutil.copytree(self.backup_path_full, self.local_path)
-        LOGGER.debug(
-            "Restored %s, from backup %s", self.local_path, self.backup_path_full
-        )
+        LOGGER.debug("Backup for %s created in %s", self.local_path, self.backup_path)
+
+    def _target(self) -> str:
+        """Return the content path, relative to the configuration directory."""
+        config_path = Path(self.marketplace.core.config_path).resolve()
+        local_path = self.local_path.resolve()
+        if local_path.is_relative_to(config_path):
+            return local_path.relative_to(config_path).as_posix()
+        return local_path.as_posix()
+
+    def restore(self) -> None:
+        """Put the backed up content back, replacing what is there now."""
+        if not self.content_path.exists():
+            return
+
+        if self.local_path.is_dir() and not self.local_path.is_symlink():
+            shutil.rmtree(self.local_path)
+        elif self.local_path.exists() or self.local_path.is_symlink():
+            self.local_path.unlink()
+
+        shutil.move(self.content_path, self.local_path)
+        LOGGER.debug("Restored %s from backup %s", self.local_path, self.backup_path)
 
     def cleanup(self) -> None:
-        """Cleanup backup files."""
-        if not os.path.exists(self.backup_path):
+        """Remove the backup."""
+        if not self.backup_path.exists():
             return
 
         shutil.rmtree(self.backup_path)
+        LOGGER.debug("Backup %s removed", self.backup_path)
 
-        # Wait for the folder to be removed
-        while os.path.exists(self.backup_path):
-            sleep(0.1)
-        LOGGER.debug("Backup dir %s cleared", self.backup_path)
+
+def restore_interrupted_backups(marketplace: MarketplaceManager) -> bool:
+    """Put back what a download that never finished moved aside.
+
+    Returns whether anything was put back.
+    """
+    root = _backup_root(marketplace)
+    if not root.is_dir():
+        return False
+
+    backups: list[Backup] = []
+    for backup_path in root.iterdir():
+        try:
+            target = (backup_path / TARGET_FILE).read_text(encoding="utf-8")
+        except OSError:
+            # Without a target nothing was moved into it yet
+            shutil.rmtree(backup_path, ignore_errors=True)
+            continue
+
+        try:
+            local_path = resolve_in_directory(marketplace.core.config_path, target)
+        except MarketplaceError:
+            local_path = None
+
+        if local_path is None or not is_safe(marketplace, local_path):
+            LOGGER.warning(
+                "Leaving backup %s alone, %s is not a place to restore to",
+                backup_path,
+                target,
+            )
+            continue
+
+        backups.append(Backup(marketplace, local_path, backup_path))
+
+    # A persistent directory is moved out of the content it lives in, so the
+    # content has to be back in place before the persistent directory is.
+    backups.sort(key=lambda backup: len(backup.local_path.parts))
+
+    restored = False
+    for backup in backups:
+        try:
+            if backup.content_path.exists():
+                backup.restore()
+                restored = True
+                LOGGER.warning(
+                    "Restored %s, a download replacing it did not finish",
+                    backup.local_path,
+                )
+            backup.cleanup()
+        except OSError as exception:
+            LOGGER.warning(
+                "Could not restore backup %s: %s", backup.backup_path, exception
+            )
+
+    return restored

@@ -1,19 +1,27 @@
 """Tests for the Marketplace data handler."""
 
+from pathlib import Path
+import shutil
 from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.marketplace.base import MarketplaceManager, Repositories
-from homeassistant.components.marketplace.const import DOMAIN
+from homeassistant.components.marketplace.const import DOMAIN, STORAGE_VERSION
 from homeassistant.components.marketplace.repositories.base import Repository
 from homeassistant.components.marketplace.utils.data import MarketplaceData
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
-from .const import REPOSITORY_INTEGRATION, REPOSITORY_INTEGRATION_ID
+from . import create_download_folders, setup_integration
+from .const import (
+    REPOSITORY_INTEGRATION,
+    REPOSITORY_INTEGRATION_ID,
+    REPOSITORY_PLUGIN_ID,
+)
 
 from tests.common import MockConfigEntry
 
@@ -56,6 +64,31 @@ async def test_write_downloaded_repository(
     assert stored[str(mock_repository.data.id)]["version_installed"] == "1"
 
 
+async def test_stored_data_is_a_copy(
+    marketplace: MarketplaceManager, mock_repository: Repository
+) -> None:
+    """Test the stored data shares nothing the event loop keeps changing.
+
+    It is encoded in the executor, a list changing meanwhile would break that.
+    """
+    mock_repository.data.category = "integration"
+    mock_repository.data.installed = True
+    mock_repository.data.topics = ["lights"]
+    mock_repository.data.authors = ["@frenck"]
+    marketplace.repositories.register(mock_repository)
+
+    marketplace.data.async_store_repository_data(mock_repository)
+    stored = marketplace.data.content[str(mock_repository.data.id)]
+
+    assert stored["topics"] == ["lights"]
+    assert stored["topics"] is not mock_repository.data.topics
+    assert stored["authors"] is not mock_repository.data.authors
+    assert (
+        stored["repository_manifest"]
+        is not mock_repository.repository_manifest.manifest
+    )
+
+
 @pytest.mark.usefixtures("stored_repositories", "init_integration")
 async def test_write_without_repositories(
     marketplace: MarketplaceManager,
@@ -75,9 +108,11 @@ async def test_write_without_repositories(
 @pytest.mark.usefixtures("init_integration")
 async def test_restore(
     marketplace: MarketplaceManager,
+    config_dir: Path,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test restoring registers the repositories and their attributes."""
+    create_download_folders(config_dir, RESTORED_REPOSITORIES)
     data = MarketplaceData(marketplace)
 
     with patch(
@@ -153,3 +188,82 @@ async def test_write_on_unload(
     stored = hass_storage[f"{DOMAIN}.repositories"]["data"]
     assert stored[REPOSITORY_INTEGRATION_ID]["full_name"] == REPOSITORY_INTEGRATION
     assert stored[REPOSITORY_INTEGRATION_ID]["installed"] is True
+
+
+@pytest.mark.usefixtures("stored_repositories")
+async def test_downloads_deleted_by_hand_are_forgotten(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    config_dir: Path,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test what was deleted from disk no longer counts as downloaded."""
+    shutil.rmtree(config_dir / "www" / "community" / "plugin-basic")
+
+    await setup_integration(hass, mock_config_entry)
+    marketplace = mock_config_entry.runtime_data
+
+    plugin = marketplace.repositories.get_by_id(REPOSITORY_PLUGIN_ID)
+    assert plugin.data.installed is False
+    assert plugin.data.installed_version is None
+    assert not entity_registry.async_get_entity_id(
+        Platform.UPDATE, DOMAIN, REPOSITORY_PLUGIN_ID
+    )
+
+    # What is still on disk stays downloaded
+    integration = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    assert integration.data.installed is True
+
+
+@pytest.mark.usefixtures("stored_repositories")
+async def test_broken_symlink_stays_downloaded(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, config_dir: Path
+) -> None:
+    """Test a folder that is a symlink to something not there right now stays."""
+    folder = config_dir / "www" / "community" / "plugin-basic"
+    folder.rmdir()
+    folder.symlink_to(config_dir / "not-mounted")
+
+    await setup_integration(hass, mock_config_entry)
+
+    plugin = mock_config_entry.runtime_data.repositories.get_by_id(REPOSITORY_PLUGIN_ID)
+    assert plugin.data.installed is True
+
+
+@pytest.mark.parametrize(
+    ("files_on_disk", "installed"),
+    [
+        pytest.param(["other.jinja", "example.jinja"], True, id="present"),
+        pytest.param(["other.jinja"], False, id="deleted"),
+    ],
+)
+async def test_template_deleted_by_hand(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_config_entry: MockConfigEntry,
+    config_dir: Path,
+    files_on_disk: list[str],
+    installed: bool,
+) -> None:
+    """Test a template counts by its own file, not the folder it shares."""
+    hass_storage[f"{DOMAIN}.repositories"] = {
+        "version": STORAGE_VERSION,
+        "data": {
+            "1296268": {
+                "category": "template",
+                "full_name": "hacs-test-org/template-basic",
+                "installed": True,
+                "file_name": "example.jinja",
+                "version_installed": "1.0.0",
+            }
+        },
+    }
+    templates = config_dir / "custom_templates"
+    templates.mkdir()
+    for name in files_on_disk:
+        (templates / name).touch()
+
+    await setup_integration(hass, mock_config_entry)
+
+    template = mock_config_entry.runtime_data.repositories.get_by_id("1296268")
+    assert template.data.installed is installed

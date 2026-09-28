@@ -6,12 +6,11 @@
     'entry': dict({
       'data': dict({
         'token': '**REDACTED**',
+        'warning_accepted': '**REDACTED**',
       }),
       'disabled_by': None,
       'domain': 'marketplace',
       'options': dict({
-        'appdaemon': True,
-        'country': 'ALL',
       }),
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
@@ -23,21 +22,16 @@
       'archived_repositories': list([
       ]),
       'categories': list([
-        'appdaemon',
         'integration',
         'plugin',
         'template',
         'theme',
       ]),
       'configuration': dict({
-        'appdaemon': True,
-        'country': 'ALL',
         'debug': False,
-        'python_script': False,
-        'release_limit': 5,
-        'theme': False,
       }),
       'disabled_reason': None,
+      'github_connected': True,
       'ignored_repositories': list([
       ]),
       'lovelace_mode': 'storage',
@@ -46,6 +40,9 @@
       }),
       'stage': 'running',
       'startup': False,
+      'warning_accepted_users': 1,
+      'warning_last_accepted_at': '2026-09-01T12:00:00+00:00',
+      'warning_reminders_due': 0,
     }),
     'rate_limit': dict({
       'rate': dict({
@@ -122,7 +119,6 @@
           'file_name': '',
           'first_install': False,
           'full_name': 'hacs-test-org/integration-basic',
-          'full_name_lower': 'hacs-test-org/integration-basic',
           'has_issues': True,
           'hide': False,
           'id': '1296269',
@@ -155,8 +151,6 @@
         'ref': None,
         'repository_manifest': dict({
           'content_in_root': False,
-          'country': list([
-          ]),
           'filename': None,
           'hacs': None,
           'hide_default_branch': False,
@@ -166,7 +160,6 @@
           }),
           'name': 'Basic integration',
           'persistent_directory': None,
-          'render_readme': False,
           'zip_release': False,
         }),
       }),
@@ -186,7 +179,6 @@
           'file_name': '',
           'first_install': False,
           'full_name': 'hacs-test-org/plugin-basic',
-          'full_name_lower': 'hacs-test-org/plugin-basic',
           'has_issues': True,
           'hide': False,
           'id': '1296267',
@@ -219,8 +211,6 @@
         'ref': None,
         'repository_manifest': dict({
           'content_in_root': False,
-          'country': list([
-          ]),
           'filename': 'plugin-basic.js',
           'hacs': None,
           'hide_default_branch': False,
@@ -231,7 +221,6 @@
           }),
           'name': 'Basic plugin',
           'persistent_directory': None,
-          'render_readme': False,
           'zip_release': False,
         }),
       }),
@@ -239,5 +228,5 @@
   })
 # ---
 # name: test_diagnostics_without_a_rate_limit
-  "Could not handle response data from 'https://api.github.com/rate_limit' with - unexpected character, expected a JSON value: line 1 column 1 (char 0)"
+  "Could not handle response data from 'https://api.github.com/rate_limit' with - unexpected character: line 1 column 1 (char 0)"
 # ---

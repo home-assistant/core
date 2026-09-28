@@ -1,16 +1,20 @@
 """Class for dashboard resource repositories."""
 
+from collections.abc import Awaitable, Callable
+from functools import partial
 import re
 from typing import TYPE_CHECKING, override
 
 from homeassistant.components import lovelace
+from homeassistant.components.frontend import DATA_EXTRA_MODULE_URL
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from ..const import DASHBOARD_RESOURCE_BASE, DOMAIN
+from ..const import DASHBOARD_RESOURCE_BASE, DOMAIN, LEGACY_DASHBOARD_RESOURCE_BASE
 from ..enums import MarketplaceSignal, RepositoryCategory
-from ..exceptions import MarketplaceError
+from ..exceptions import CatalogContentUnresolvedError, MarketplaceError
 from ..utils.decorator import concurrent
-from .base import Repository
+from ..utils.url import github_release_asset, ref_version
+from .base import FileInformation, Repository
 
 VERSION_TAG_REPLACER = re.compile(r"\D+")
 
@@ -25,7 +29,6 @@ class PluginRepository(Repository):
         """Initialize."""
         super().__init__(marketplace=marketplace)
         self.data.full_name = full_name
-        self.data.full_name_lower = full_name.lower()
         self.data.file_name = ""
         self.data.category = RepositoryCategory.PLUGIN
         self.content.path.local = self.localpath
@@ -34,7 +37,22 @@ class PluginRepository(Repository):
     @override
     def localpath(self) -> str:
         """Return localpath."""
-        return f"{self.marketplace.core.config_path}/www/community/{self.data.full_name.split('/')[-1]}"
+        return f"{self.marketplace.core.config_path}/www/community/{self.data.full_name.rsplit('/', maxsplit=1)[-1]}"
+
+    @override
+    async def async_pre_install(self) -> None:
+        """Run pre install steps."""
+        # The directory leaves out the owner, so two owners can share a name
+        for repository in self.marketplace.repositories.list_downloaded:
+            if (
+                repository is not self
+                and repository.data.category == RepositoryCategory.PLUGIN
+                and repository.localpath.lower() == self.localpath.lower()
+            ):
+                raise MarketplaceError(
+                    f"The '{self.localpath.rsplit('/', 1)[-1]}' directory is owned "
+                    f"by {repository.data.full_name}"
+                )
 
     @override
     async def validate_repository(self) -> bool:
@@ -43,15 +61,7 @@ class PluginRepository(Repository):
         await self.common_validate()
 
         # Custom step 1: Validate content.
-        self.update_filenames()
-
-        if self.content.path.remote is None:
-            raise MarketplaceError(
-                f"{self.string} Repository structure for {f'{self.ref}'.replace('tags/', '')} is not compliant"
-            )
-
-        if self.content.path.remote == "release":
-            self.content.single = True
+        self.resolve_content()
 
         # Handle potential errors
         if self.validate.errors:
@@ -85,7 +95,7 @@ class PluginRepository(Repository):
         await self.remove_dashboard_resources()
 
     @override
-    @concurrent(concurrenttasks=10, backoff_time=5)
+    @concurrent(concurrenttasks=10)
     async def update_repository(
         self, ignore_issues: bool = False, force: bool = False
     ) -> None:
@@ -98,7 +108,7 @@ class PluginRepository(Repository):
 
         if self.content.path.remote is None:
             self.validate.errors.append(
-                f"{self.string} Repository structure for {f'{self.ref}'.replace('tags/', '')} is not compliant"
+                f"{self.string} Repository structure for {ref_version(self.ref)} is not compliant"
             )
 
         if self.content.path.remote == "release":
@@ -117,37 +127,124 @@ class PluginRepository(Repository):
             )
 
     @override
-    def update_filenames(self) -> None:
-        """Get the filename to target."""
-        content_in_root = self.repository_manifest.content_in_root
-        valid_filenames: tuple[str, ...]
-        if specific_filename := self.repository_manifest.filename:
-            valid_filenames = (specific_filename,)
-        else:
-            name = self.data.name or ""
-            valid_filenames = (
-                f"{name.replace('lovelace-', '')}.js",
-                f"{name}.js",
-                f"{name}.umd.js",
-                f"{name}-bundle.js",
+    def resolve_content(self) -> None:
+        """Point the content at the dashboard resource of the repository."""
+        self.update_filenames()
+        self._check_resolved_content()
+
+    @override
+    def resolve_archive_content(self) -> None:
+        """Point the content at the dashboard resource in the archive."""
+        # The release assets were probed already, the archive only has the tree
+        self._update_filenames_from_tree()
+        self._check_resolved_content()
+
+    def _check_resolved_content(self) -> None:
+        """Refuse a repository without a dashboard resource to serve."""
+        if self.content.path.remote is None:
+            raise MarketplaceError(
+                f"{self.string} Repository structure for {ref_version(self.ref)} is not compliant"
             )
 
-        if not content_in_root:
-            if self.releases.objects:
-                release = self.releases.objects[0]
-                if release.assets:
-                    if assetnames := [
-                        filename
-                        for filename in valid_filenames
-                        for asset in release.assets
-                        if filename == asset.name
-                    ]:
-                        self.data.file_name = assetnames[0]
-                        self.content.path.remote = "release"
-                        return
+        if self.content.path.remote == "release":
+            self.content.single = True
 
+    @override
+    async def _async_resolve_catalog_content(
+        self, version: str, *, commit: bool
+    ) -> Callable[[], Awaitable[None]]:
+        """Resolve the dashboard resource of a catalog version."""
+        if not commit and not self.repository_manifest.content_in_root:
+            # Without the prefix to strip, the first two names are the same
+            for filename in dict.fromkeys(self._valid_filenames()):
+                if filecontent := await self.marketplace.async_download_file(
+                    github_release_asset(
+                        repository=self.data.full_name,
+                        version=version,
+                        filename=filename,
+                    ),
+                    nolog=True,
+                ):
+                    return await self._async_resolve_release_assets(
+                        version, filename, filecontent
+                    )
+
+        return await super()._async_resolve_catalog_content(version, commit=commit)
+
+    async def _async_resolve_release_assets(
+        self, version: str, filename: str, filecontent: bytes
+    ) -> Callable[[], Awaitable[None]]:
+        """Resolve a dashboard resource shipped as a release asset.
+
+        Every asset of the release is downloaded, and only the API lists them.
+        """
+        if not (contents := await self.release_contents(version)):
+            raise CatalogContentUnresolvedError(f"No assets listed for {version}")
+
+        self.data.file_name = filename
+        self.content.path.remote = "release"
+        self.content.single = True
+        return partial(
+            self._async_download_release_assets, contents, filename, filecontent
+        )
+
+    async def _async_download_release_assets(
+        self, contents: list[FileInformation], filename: str, filecontent: bytes
+    ) -> None:
+        """Download the release assets, the resource itself came with the probe."""
+        other_assets: list[FileInformation] = []
+        for content in contents:
+            if content.name == filename:
+                await self._async_write_file(content, filecontent)
+            else:
+                other_assets.append(content)
+
+        if other_assets:
+            await self._async_download_files(other_assets)
+
+    def _valid_filenames(self) -> tuple[str, ...]:
+        """Return the file names the dashboard resource can have."""
+        if specific_filename := self.repository_manifest.filename:
+            return (specific_filename,)
+
+        name = self.data.name or ""
+        return (
+            f"{name.replace('lovelace-', '')}.js",
+            f"{name}.js",
+            f"{name}.umd.js",
+            f"{name}-bundle.js",
+        )
+
+    @override
+    def update_filenames(self) -> None:
+        """Get the filename to target."""
+        if not self._update_filenames_from_release():
+            self._update_filenames_from_tree()
+
+    def _update_filenames_from_release(self) -> bool:
+        """Target an asset of the latest release, return if there is one."""
+        if self.repository_manifest.content_in_root or not self.releases.objects:
+            return False
+
+        release = self.releases.objects[0]
+        if release.assets:
+            if assetnames := [
+                filename
+                for filename in self._valid_filenames()
+                for asset in release.assets
+                if filename == asset.name
+            ]:
+                self.data.file_name = assetnames[0]
+                self.content.path.remote = "release"
+                return True
+
+        return False
+
+    def _update_filenames_from_tree(self) -> None:
+        """Target a file in the root or the dist directory of the tree."""
+        content_in_root = self.repository_manifest.content_in_root
         all_paths = {entry.path for entry in self.tree}
-        for filename in valid_filenames:
+        for filename in self._valid_filenames():
             if filename in all_paths:
                 self.data.file_name = filename
                 self.content.path.remote = ""
@@ -169,6 +266,24 @@ class PluginRepository(Repository):
     def generate_dashboard_resource_namespace(self) -> str:
         """Get the dashboard resource namespace."""
         return f"{DASHBOARD_RESOURCE_BASE}/{self.data.full_name.split('/')[1]}"
+
+    def _loaded_as_extra_module(self) -> bool:
+        """Return if the frontend configuration loads this plugin already.
+
+        Some plugins, like icon sets, are meant for `frontend: extra_module_url`,
+        a dashboard resource next to that would load them twice.
+        """
+        if (
+            extra_modules := self.marketplace.hass.data.get(DATA_EXTRA_MODULE_URL)
+        ) is None:
+            return False
+
+        directory = self.data.full_name.split("/")[1]
+        namespaces = (
+            f"{DASHBOARD_RESOURCE_BASE}/{directory}/",
+            f"{LEGACY_DASHBOARD_RESOURCE_BASE}/{directory}/",
+        )
+        return any(url.startswith(namespaces) for url in extra_modules.urls)
 
     def generate_dashboard_resource_url(self) -> str:
         """Get the dashboard resource URL."""
@@ -219,6 +334,13 @@ class PluginRepository(Repository):
 
     async def update_dashboard_resources(self) -> None:
         """Update dashboard resources."""
+        if self._loaded_as_extra_module():
+            self.logger.debug(
+                "%s Loaded through extra_module_url, no dashboard resource needed",
+                self.string,
+            )
+            return
+
         if not (resources := self._get_resource_handler()):
             return
 

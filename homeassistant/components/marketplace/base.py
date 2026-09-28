@@ -1,7 +1,7 @@
 """Base classes for the Marketplace."""
 
 import asyncio
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 import gzip
@@ -20,26 +20,26 @@ from aiogithubapi import (
 from aiohttp.client import ClientSession, ClientTimeout
 from awesomeversion import AwesomeVersion
 
-from homeassistant.components.persistent_notification import (
-    async_create as async_create_persistent_notification,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    COUNTRY_ALL,
+    CONF_WARNING_ACCEPTED,
     DOMAIN,
     LEGACY_HACS_INTEGRATION_REPOSITORY,
-    MAX_DOWNLOAD_SIZE,
     TV,
+    WARNING_REMINDER_INTERVAL,
+    WARNING_VERSION,
 )
 from .coordinator import MarketplaceUpdateCoordinator
+from .critical import async_create_critical_repository_issue
 from .data_client import CatalogClient
 from .enums import (
     DisabledReason,
@@ -53,6 +53,8 @@ from .exceptions import (
     CoreRepositoryError,
     ExecutionInProgressError,
     ExpectedError,
+    GitHubAnonymousRateLimitError,
+    GitHubRateLimitError,
     MarketplaceError,
     NotModifiedError,
     RepositoryArchivedError,
@@ -64,19 +66,15 @@ from .repositories.base import (
     REPOSITORY_MANIFEST_KEYS_TO_EXPORT,
 )
 from .utils.file_system import async_exists
+from .utils.identity import newest_id_per_name
 from .utils.logger import LOGGER
 from .utils.queue_manager import QueueManager
+from .utils.response import async_read_limited
 from .utils.storage import async_load_from_storage, async_save_to_storage
 
 if TYPE_CHECKING:
     from .repositories.base import Repository
     from .utils.data import MarketplaceData
-
-
-def _declared_size(headers: Mapping[str, str]) -> int:
-    """Return the size a response declares, 0 when it declares none."""
-    length = headers.get("Content-Length", "")
-    return int(length) if length.isdigit() else 0
 
 
 @dataclass
@@ -117,17 +115,10 @@ class RemovedRepository:
 class MarketplaceConfiguration:
     """Configuration of the Marketplace."""
 
-    appdaemon_path: str = "appdaemon/apps/"
-    appdaemon: bool = False
     config_entry: ConfigEntry | None = None
-    country: str = COUNTRY_ALL
     debug: bool = False
     plugin_path: str = "www/community/"
-    python_script_path: str = "python_scripts/"
-    python_script: bool = False
-    release_limit: int = 5
     theme_path: str = "themes/"
-    theme: bool = False
     token: str | None = None
 
     def to_json(self) -> dict[str, Any]:
@@ -139,10 +130,11 @@ class MarketplaceConfiguration:
         if not isinstance(data, dict):
             raise MarketplaceError("Configuration is not valid.")
 
-        for key, value in data.items():
-            if key in {"experimental", "netdaemon", "release_limit", "debug"}:
-                continue
-            setattr(self, key, value)
+        # Entries the custom integration created can carry keys that mean
+        # nothing here, the paths the Marketplace writes to are not settable.
+        for key in ("config_entry", "token"):
+            if key in data:
+                setattr(self, key, data[key])
 
 
 class MarketplaceCore:
@@ -230,9 +222,8 @@ class Repositories:
             if registered_repo.data.full_name == repository.data.full_name:
                 return
 
-            self.unregister(registered_repo)
-
-            registered_repo.data.full_name = repository.data.full_name
+            # Renamed on GitHub, the registered one keeps what it had
+            self.rename(registered_repo, repository.data.full_name)
             registered_repo.data.new = False
             repository = registered_repo
 
@@ -244,6 +235,20 @@ class Repositories:
 
         if default:
             self.mark_default(repository)
+
+    def rename(self, repository: Repository, full_name: str) -> None:
+        """Rename a repository, it is looked up by its new name from now on."""
+        if self._repositories_by_full_name.get(repository.data.full_name_lower) is (
+            repository
+        ):
+            self._repositories_by_full_name.pop(repository.data.full_name_lower)
+
+        repository.data.full_name = full_name
+
+        if repository in self._repositories:
+            self._repositories_by_full_name[repository.data.full_name_lower] = (
+                repository
+            )
 
     def unregister(self, repository: Repository) -> None:
         """Unregister a repository."""
@@ -261,8 +266,13 @@ class Repositories:
         if repository in self._repositories:
             self._repositories.remove(repository)
 
-        self._repositories_by_id.pop(repo_id, None)
-        self._repositories_by_full_name.pop(repository.data.full_name_lower, None)
+        # Another repository can hold the name or the id by now, it keeps them
+        if self._repositories_by_id.get(repo_id) is repository:
+            self._repositories_by_id.pop(repo_id)
+        if self._repositories_by_full_name.get(repository.data.full_name_lower) is (
+            repository
+        ):
+            self._repositories_by_full_name.pop(repository.data.full_name_lower)
 
     def mark_default(self, repository: Repository) -> None:
         """Mark a repository as default."""
@@ -370,6 +380,59 @@ class MarketplaceManager:
         self.status = MarketplaceStatus()
         self.system = MarketplaceSystem()
 
+    @property
+    def github_connected(self) -> bool:
+        """Return if a GitHub account is connected."""
+        return bool(self.configuration.token)
+
+    @property
+    def warning_acceptances(self) -> dict[str, datetime]:
+        """Return when each user accepted the current version of the warning."""
+        if (config_entry := self.configuration.config_entry) is None:
+            return {}
+
+        return {
+            user_id: dt_util.parse_datetime(
+                acceptance["accepted_at"], raise_on_error=True
+            )
+            for user_id, acceptance in config_entry.data.get(
+                CONF_WARNING_ACCEPTED, {}
+            ).items()
+            if acceptance["version"] >= WARNING_VERSION
+        }
+
+    def warning_accepted(self, user_id: str) -> bool:
+        """Return if a user accepted the current version of the first-run warning."""
+        return user_id in self.warning_acceptances
+
+    def warning_reminder_due(self, user_id: str) -> bool:
+        """Return if the warning a user accepted is due to be shown again."""
+        if (accepted_at := self.warning_acceptances.get(user_id)) is None:
+            return False
+
+        return dt_util.utcnow() - accepted_at > WARNING_REMINDER_INTERVAL
+
+    @callback
+    def async_accept_warning(self, user_id: str) -> None:
+        """Store that a user accepted the current version of the first-run warning."""
+        config_entry = self.configuration.config_entry
+        assert config_entry is not None
+
+        self.hass.config_entries.async_update_entry(
+            config_entry,
+            data={
+                **config_entry.data,
+                CONF_WARNING_ACCEPTED: {
+                    **config_entry.data.get(CONF_WARNING_ACCEPTED, {}),
+                    user_id: {
+                        "version": WARNING_VERSION,
+                        "accepted_at": dt_util.utcnow().isoformat(),
+                    },
+                },
+            },
+        )
+        self.async_dispatch(MarketplaceSignal.CONFIG, {})
+
     def set_stage(self, stage: MarketplaceStage | None) -> None:
         """Set the stage the Marketplace is in."""
         if stage and self.stage == stage:
@@ -412,6 +475,7 @@ class MarketplaceManager:
         """Save a file."""
 
         def _write_file():
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
             with open(
                 file_path,
                 mode="w" if isinstance(content, str) else "wb",
@@ -429,15 +493,6 @@ class MarketplaceManager:
                     ):
                         shutil.copyfileobj(f_in, f_out)
 
-            # LEGACY! Remove with 2.0
-            if "themes" in file_path and file_path.endswith(".yaml"):
-                filename = file_path.rsplit("/", maxsplit=1)[-1]
-                base = file_path.split("/themes/", maxsplit=1)[0]
-                combined = f"{base}/themes/{filename}"
-                if os.path.exists(combined):
-                    LOGGER.info("Removing old theme file %s", combined)
-                    os.remove(combined)
-
         try:
             await self.hass.async_add_executor_job(_write_file)
         except OSError as error:
@@ -448,6 +503,10 @@ class MarketplaceManager:
 
     async def async_can_update(self) -> int:
         """Helper to calculate the number of repositories we can fetch data for."""
+        # The anonymous rate limit is too small to spend on background work
+        if not self.github_connected:
+            return 0
+
         try:
             response = await self.async_github_api_method(self.githubapi.rate_limit)
             if ((limit := response.data.resources.core.remaining or 0) - 1000) >= 10:
@@ -491,17 +550,27 @@ class MarketplaceManager:
         raise_exception: bool = True,
         **kwargs: Any,
     ) -> Any:
-        """Call a GitHub API method."""
+        """Call a GitHub API method.
+
+        Without a connected account the call is anonymous, a refusal then only
+        fails the call that hit it. An anonymous rate limit always raises, so
+        the action that hit it fails instead of carrying on with stale data.
+        """
         _exception = None
 
         try:
             return await method(*args, **kwargs)
         except GitHubAuthenticationException as exception:
-            self.disable(DisabledReason.INVALID_TOKEN)
+            if self.github_connected:
+                self.disable(DisabledReason.INVALID_TOKEN)
             _exception = exception
         except GitHubRatelimitException as exception:
+            if not self.github_connected:
+                raise GitHubAnonymousRateLimitError(exception) from exception
             self.disable(DisabledReason.RATE_LIMIT)
-            _exception = exception
+            if raise_exception:
+                raise GitHubRateLimitError(exception) from exception
+            return None
         except GitHubNotModifiedException:
             raise
         except GitHubException as exception:
@@ -513,6 +582,58 @@ class MarketplaceManager:
         if raise_exception and _exception is not None:
             raise MarketplaceError(_exception)
         return None
+
+    @callback
+    def async_set_repository_id(self, repository: Repository, repo_id: str) -> None:
+        """Give a repository the id it is known by now.
+
+        GitHub gives a repository that was deleted and created again a new id,
+        its name is what stays. What was downloaded, its entities and its device
+        move along to the new id.
+        """
+        previous_id = str(repository.data.id)
+        if previous_id in ("0", repo_id):
+            self.repositories.set_repository_id(repository, repo_id)
+            return
+
+        was_default = self.repositories.is_default(previous_id)
+        self.repositories.unregister(repository)
+        repository.data.id = repo_id
+        self.repositories.register(repository, default=was_default)
+
+        entity_registry = er.async_get(self.hass)
+        for platform in (Platform.SWITCH, Platform.UPDATE):
+            entity_id = entity_registry.async_get_entity_id(
+                platform, DOMAIN, previous_id
+            )
+            if entity_id is None:
+                continue
+            if entity_registry.async_get_entity_id(platform, DOMAIN, repo_id):
+                entity_registry.async_remove(entity_id)
+            else:
+                entity_registry.async_update_entity(entity_id, new_unique_id=repo_id)
+
+        device_registry = dr.async_get(self.hass)
+        assert self.configuration.config_entry is not None
+        entry_id = self.configuration.config_entry.entry_id
+        if device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, previous_id), entry_id
+        ):
+            if device_registry.async_get_device_by_identifier(
+                (DOMAIN, repo_id), entry_id
+            ):
+                device_registry.async_remove_device(device.id)
+            else:
+                device_registry.async_update_device(
+                    device.id, new_identifiers={(DOMAIN, repo_id)}
+                )
+
+        LOGGER.info(
+            "%s moved from id %s to %s, it was created again on GitHub",
+            repository.data.full_name,
+            previous_id,
+            repo_id,
+        )
 
     async def async_register_repository(
         self,
@@ -593,24 +714,21 @@ class MarketplaceManager:
         """Tasks that are started after setup."""
         self.set_stage(MarketplaceStage.STARTUP)
 
-        if critical := await async_load_from_storage(self.hass, "critical"):
-            for repo in critical:
-                if not repo["acknowledged"]:
-                    LOGGER.critical("URGENT!: Check the Marketplace!")
-                    async_create_persistent_notification(
-                        self.hass,
-                        title="URGENT!",
-                        message="**Check the Marketplace!**",
-                    )
-                    break
+        # Removals nobody confirmed yet, also those made before the takeover
+        for critical in await async_load_from_storage(self.hass, "critical") or []:
+            if not critical["acknowledged"]:
+                async_create_critical_repository_issue(self.hass, critical)
 
-        self.recurring_tasks.append(
-            async_track_time_interval(
-                self.hass,
-                self.async_update_downloaded_custom_repositories,
-                timedelta(hours=48),
+        # Keeping downloaded repositories up to date takes a connected account,
+        # the catalog comes from the data feed.
+        if self.github_connected:
+            self.recurring_tasks.append(
+                async_track_time_interval(
+                    self.hass,
+                    self.async_update_downloaded_custom_repositories,
+                    timedelta(hours=48),
+                )
             )
-        )
 
         self.recurring_tasks.append(
             async_track_time_interval(
@@ -618,16 +736,17 @@ class MarketplaceManager:
             )
         )
 
-        self.recurring_tasks.append(
-            async_track_time_interval(
-                self.hass, self.async_check_rate_limit, timedelta(minutes=5)
+        if self.github_connected:
+            self.recurring_tasks.append(
+                async_track_time_interval(
+                    self.hass, self.async_check_rate_limit, timedelta(minutes=5)
+                )
             )
-        )
-        self.recurring_tasks.append(
-            async_track_time_interval(
-                self.hass, self.async_process_queue, timedelta(minutes=10)
+            self.recurring_tasks.append(
+                async_track_time_interval(
+                    self.hass, self.async_process_queue, timedelta(minutes=10)
+                )
             )
-        )
 
         self.recurring_tasks.append(
             async_track_time_interval(
@@ -665,7 +784,6 @@ class MarketplaceManager:
         url: str,
         *,
         headers: dict | None = None,
-        keep_url: bool = False,
         nolog: bool = False,
         handle_rate_limit: bool = False,
         **_,
@@ -674,40 +792,26 @@ class MarketplaceManager:
         if url is None:
             return None
 
-        if not keep_url and "tags/" in url:
-            url = url.replace("tags/", "")
-
         LOGGER.debug("Trying to download %s", url)
         attempt_count = 0
 
         while attempt_count < 5:
             try:
-                request = await self.session.get(
+                async with self.session.get(
                     url=url,
                     timeout=ClientTimeout(total=60),
                     headers=headers,
-                )
+                ) as response:
+                    if response.status == 200:
+                        return await async_read_limited(response, url)
 
-                # Make sure that we got a valid result
-                if request.status == 200:
-                    if _declared_size(request.headers) > MAX_DOWNLOAD_SIZE:
-                        raise MarketplaceError(  # noqa: TRY301 # handled below
-                            f"{url} declares more than the "
-                            f"{MAX_DOWNLOAD_SIZE} byte limit"
-                        )
-
-                    content = await request.read()
-                    if len(content) > MAX_DOWNLOAD_SIZE:
-                        raise MarketplaceError(  # noqa: TRY301 # handled below
-                            f"{url} is larger than the {MAX_DOWNLOAD_SIZE} byte limit"
-                        )
-
-                    return content
+                    status = response.status
+                    retry_after_header = response.headers.get("retry-after")
 
                 # Handle rate-limits
-                if handle_rate_limit and request.status == 429:
+                if handle_rate_limit and status == 429:
                     try:
-                        header = int(request.headers.get("retry-after") or 10)
+                        header = int(retry_after_header or 10)
                     except ValueError, TypeError:
                         header = 10
                     retry_after = min(header, 60)  # Limit to 60 seconds
@@ -723,16 +827,11 @@ class MarketplaceManager:
                     continue
 
                 raise MarketplaceError(  # noqa: TRY301 # handled by the retry loop below
-                    f"Got status code {request.status} when trying to download {url}"
+                    f"Got status code {status} when trying to download {url}"
                 )
             except TimeoutError:
                 LOGGER.warning(
-                    "A timeout of 60! seconds was encountered while downloading %s, "
-                    "using over 60 seconds to download a single file is not normal. "
-                    "This is not a problem with the Marketplace but how your host communicates with GitHub. "
-                    "Retrying up to 5 times to mask/hide your host/network problems to "
-                    "stop the flow of issues opened about it. "
-                    "Tries left %s",
+                    "Downloading %s timed out after 60 seconds, %s tries left",
                     url,
                     (4 - attempt_count),
                 )
@@ -779,19 +878,10 @@ class MarketplaceManager:
         ):
             self.enable_category(RepositoryCategory(category))
 
-        if (
-            RepositoryCategory.PYTHON_SCRIPT in self.hass.config.components
-            or self.repositories.category_downloaded(RepositoryCategory.PYTHON_SCRIPT)
-        ):
-            self.enable_category(RepositoryCategory.PYTHON_SCRIPT)
-
         if self.hass.services.has_service(
             "frontend", "reload_themes"
         ) or self.repositories.category_downloaded(RepositoryCategory.THEME):
             self.enable_category(RepositoryCategory.THEME)
-
-        if self.configuration.appdaemon:
-            self.enable_category(RepositoryCategory.APPDAEMON)
 
     async def async_get_all_category_repositories(
         self, _: datetime | None = None
@@ -802,12 +892,12 @@ class MarketplaceManager:
         LOGGER.info("Loading known repositories")
         await asyncio.gather(
             *[
-                self.async_get_category_repositories_experimental(category)
+                self.async_get_category_repositories_from_catalog(category)
                 for category in self.common.categories or []
             ]
         )
 
-    async def async_get_category_repositories_experimental(
+    async def async_get_category_repositories_from_catalog(
         self, category: RepositoryCategory
     ) -> None:
         """Update all category repositories."""
@@ -828,6 +918,7 @@ class MarketplaceManager:
             if repo_data["full_name"] != LEGACY_HACS_INTEGRATION_REPOSITORY
         }
 
+        category_data = newest_id_per_name(category_data)
         await self.data.register_unknown_repositories(category_data, category)
 
         for repo_id, repo_data in category_data.items():
@@ -839,18 +930,25 @@ class MarketplaceManager:
             if repo_name in self.common.archived_repositories:
                 continue
             if repository := self.repositories.get_by_full_name(repo_name):
-                self.repositories.set_repository_id(repository, repo_id)
+                self.async_set_repository_id(repository, repo_id)
                 self.repositories.mark_default(repository)
                 if repository.data.last_fetched is None or (
                     repository.data.last_fetched.timestamp() < repo_data["last_fetched"]
                 ):
-                    repository.data.update_data(
-                        {**dict(REPOSITORY_KEYS_TO_EXPORT), **repo_data}
-                    )
+                    update = {**dict(REPOSITORY_KEYS_TO_EXPORT), **repo_data}
+                    # The files on disk are where the download put them, removal
+                    # goes by this domain
+                    if repository.data.installed:
+                        update.pop("domain", None)
+                    repository.data.update_data(update)
                     if (manifest := repo_data.get("manifest")) is not None:
                         repository.repository_manifest.update_data(
                             {**dict(REPOSITORY_MANIFEST_KEYS_TO_EXPORT), **manifest}
                         )
+                elif not repository.data.installed:
+                    # Storage keeps versions for installed repositories only
+                    repository.data.last_version = repo_data.get("last_version")
+                    repository.data.last_commit = repo_data.get("last_commit")
 
         if self.stage == MarketplaceStage.STARTUP:
             for repository in self.repositories.list_all:
@@ -884,6 +982,9 @@ class MarketplaceManager:
 
     async def async_process_queue(self, _: datetime | None = None) -> None:
         """Process the queue."""
+        if not self.github_connected:
+            LOGGER.debug("No GitHub account connected, not processing the queue")
+            return
         if self.system.disabled:
             LOGGER.debug("The Marketplace is disabled")
             return
@@ -954,7 +1055,7 @@ class MarketplaceManager:
                         translation_placeholders={
                             "name": repository.data.full_name,
                             "reason": str(removed.reason),
-                            "repositry_id": str(repository.data.id),
+                            "repository_id": str(repository.data.id),
                         },
                     )
                     LOGGER.warning(
@@ -975,7 +1076,7 @@ class MarketplaceManager:
         self, _: datetime | None = None
     ) -> None:
         """Execute the task."""
-        if self.system.disabled:
+        if self.system.disabled or not self.github_connected:
             return
         LOGGER.info(
             "Starting recurring background task for downloaded custom repositories"
@@ -987,10 +1088,13 @@ class MarketplaceManager:
         async def update_repository(repository: Repository) -> None:
             """Update a repository."""
             nonlocal repositories_to_update
-            await repository.update_repository(ignore_issues=True)
-            repositories_to_update -= 1
-            if not repositories_to_update:
-                repositories_updated.set()
+            try:
+                await repository.update_repository(ignore_issues=True)
+            finally:
+                # A repository that fails still counts, or the wait never ends
+                repositories_to_update -= 1
+                if not repositories_to_update:
+                    repositories_updated.set()
 
         for repository in self.repositories.list_downloaded:
             if (
@@ -999,6 +1103,9 @@ class MarketplaceManager:
             ):
                 repositories_to_update += 1
                 self.queue.add(update_repository(repository))
+
+        if not repositories_to_update:
+            return
 
         async def update_coordinators() -> None:
             """Update all coordinators."""
@@ -1024,7 +1131,6 @@ class MarketplaceManager:
     ) -> None:
         """Handle critical repositories."""
         critical_queue = QueueManager(hass=self.hass)
-        instored: list[str] = []
         critical: list[dict[str, Any]] = []
         was_installed = False
 
@@ -1039,10 +1145,10 @@ class MarketplaceManager:
             LOGGER.debug("No critical repositories")
             return
 
-        stored_critical = await async_load_from_storage(self.hass, "critical")
-
-        instored.extend(stored["repository"] for stored in stored_critical or [])
-
+        previously_stored = {
+            stored["repository"]: stored
+            for stored in await async_load_from_storage(self.hass, "critical") or []
+        }
         stored_critical = []
 
         for repository in critical:
@@ -1052,23 +1158,24 @@ class MarketplaceManager:
             removed_repo.removal_type = "critical"
             repo = self.repositories.get_by_full_name(repository["repository"])
 
+            previous = previously_stored.get(repository["repository"])
             stored = {
                 "repository": repository["repository"],
                 "reason": repository["reason"],
                 "link": repository["link"],
-                "acknowledged": True,
+                # Confirming the repair is what acknowledges a removal
+                "acknowledged": previous["acknowledged"] if previous else True,
             }
-            if repository["repository"] not in instored:
-                if repo is not None and repo.data.installed:
-                    LOGGER.critical(
-                        "Removing repository %s, it is marked as critical",
-                        repository["repository"],
-                    )
-                    was_installed = True
-                    stored["acknowledged"] = False
-                    # Remove from the Marketplace
-                    critical_queue.add(repo.uninstall())
-                    repo.remove()
+            if previous is None and repo is not None and repo.data.installed:
+                LOGGER.critical(
+                    "Removing repository %s, it is marked as critical",
+                    repository["repository"],
+                )
+                was_installed = True
+                stored["acknowledged"] = False
+                critical_queue.add(repo.uninstall())
+                repo.remove()
+                async_create_critical_repository_issue(self.hass, stored)
 
             stored_critical.append(stored)
             removed_repo.update_data(stored)
@@ -1097,7 +1204,9 @@ def async_get_marketplace(hass: HomeAssistant) -> MarketplaceManager:
     never more than one entry to pick from.
     """
     if not (entries := hass.config_entries.async_loaded_entries(DOMAIN)):
-        raise HomeAssistantError("The Marketplace is not loaded")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="not_loaded"
+        )
 
     entry: MarketplaceConfigEntry = entries[0]
     return entry.runtime_data

@@ -3,6 +3,7 @@
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from http import HTTPStatus
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -98,6 +99,22 @@ async def test_request_exceptions(
         await marketplace.data_client.get_repositories("integration")
 
 
+async def test_catalog_larger_than_the_limit(
+    marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
+) -> None:
+    """Test a catalog response that is too large is not read into memory."""
+    url = "https://data-v2.hacs.xyz/integration/repositories.json"
+    response_mocker.add(url, mocked_response(url, content=b'["' + b"0" * 20 + b'"]'))
+
+    with (
+        patch(
+            "homeassistant.components.marketplace.utils.response.MAX_DOWNLOAD_SIZE", 10
+        ),
+        pytest.raises(MarketplaceError, match="larger than the 10 byte limit"),
+    ):
+        await marketplace.data_client.get_repositories("integration")
+
+
 @pytest.mark.parametrize(
     ("status", "expectation"),
     [
@@ -158,22 +175,12 @@ async def test_etag_is_sent_back(
     ("section", "data"),
     [
         pytest.param(
-            "appdaemon",
-            {"12345": _without_description(GOOD_COMMON_DATA)},
-            id="appdaemon",
-        ),
-        pytest.param(
             "integration",
             {"12345": _without_description(GOOD_INTEGRATION_DATA)},
             id="integration",
         ),
         pytest.param(
             "plugin", {"12345": _without_description(GOOD_COMMON_DATA)}, id="plugin"
-        ),
-        pytest.param(
-            "python_script",
-            {"12345": _without_description(GOOD_COMMON_DATA)},
-            id="python_script",
         ),
         pytest.param(
             "template",

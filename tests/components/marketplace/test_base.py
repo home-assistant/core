@@ -1,5 +1,7 @@
 """Tests for the Marketplace base object."""
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.marketplace.base import (
@@ -11,7 +13,7 @@ from homeassistant.components.marketplace.enums import RepositoryCategory
 from homeassistant.components.marketplace.exceptions import MarketplaceError
 from homeassistant.components.marketplace.repositories.base import Repository
 
-from .const import DEFAULT_CATEGORIES
+from .const import DEFAULT_CATEGORIES, REPOSITORY_INTEGRATION, REPOSITORY_PLUGIN
 
 
 def test_configuration_defaults() -> None:
@@ -21,11 +23,6 @@ def test_configuration_defaults() -> None:
 
     assert isinstance(configuration.to_json(), dict)
     assert configuration.token == "xxxxxxxxxx"
-    assert configuration.appdaemon is False
-    assert configuration.python_script is False
-    assert configuration.theme is False
-    assert configuration.country == "ALL"
-    assert configuration.release_limit == 5
 
 
 @pytest.mark.parametrize(
@@ -33,6 +30,7 @@ def test_configuration_defaults() -> None:
     [
         pytest.param("experimental", id="experimental"),
         pytest.param("netdaemon", id="netdaemon"),
+        pytest.param("release_limit", id="release_limit"),
     ],
 )
 def test_configuration_ignores_option(option: str) -> None:
@@ -42,6 +40,22 @@ def test_configuration_ignores_option(option: str) -> None:
     configuration.update_from_dict({option: True})
 
     assert not hasattr(configuration, option)
+
+
+@pytest.mark.parametrize(
+    ("option", "default"),
+    [
+        pytest.param("plugin_path", "www/community/", id="plugin_path"),
+        pytest.param("theme_path", "themes/", id="theme_path"),
+    ],
+)
+def test_configuration_keeps_its_paths(option: str, default: str) -> None:
+    """Test the paths downloads go to can not be changed from entry data."""
+    configuration = MarketplaceConfiguration()
+
+    configuration.update_from_dict({option: "somewhere/else/"})
+
+    assert getattr(configuration, option) == default
 
 
 def test_configuration_rejects_non_dict() -> None:
@@ -126,6 +140,74 @@ async def test_unregister_repository(
 async def test_active_categories(marketplace: MarketplaceManager) -> None:
     """Test which categories are active for the default options."""
     assert marketplace.common.categories == DEFAULT_CATEGORIES | {
-        RepositoryCategory.APPDAEMON,
         RepositoryCategory.THEME,
     }
+
+
+async def test_catalog_restores_versions_of_repositories_not_installed(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test an unchanged feed still sets the versions storage does not keep."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+    assert not repository.data.installed
+    last_version = repository.data.last_version
+    last_commit = repository.data.last_commit
+    assert last_version or last_commit
+
+    # Restored from storage: same fetch time as the feed, but no versions
+    repository.data.last_version = None
+    repository.data.last_commit = None
+
+    await marketplace.async_get_category_repositories_from_catalog(
+        RepositoryCategory.PLUGIN
+    )
+
+    assert repository.data.last_version == last_version
+    assert repository.data.last_commit == last_commit
+
+
+async def test_catalog_keeps_the_domain_of_a_downloaded_integration(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test the feed can not point a downloaded integration at another directory."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.installed = True
+    repository.data.domain = "example"
+
+    feed = {
+        repository.data.id: {
+            "domain": "other",
+            "full_name": repository.data.full_name,
+            "last_fetched": repository.data.last_fetched.timestamp() + 1,
+            "manifest": {},
+            "manifest_name": "Example",
+        }
+    }
+    with patch.object(marketplace.data_client, "get_data", return_value=feed):
+        await marketplace.async_get_category_repositories_from_catalog(
+            RepositoryCategory.INTEGRATION
+        )
+
+    assert repository.data.manifest_name == "Example"
+    assert repository.data.domain == "example"
+
+
+async def test_custom_repository_listed_by_the_catalog_is_default(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a custom repository the catalog starts listing stops being custom."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository_id = str(repository.data.id)
+
+    # Added by hand before the catalog listed it
+    marketplace.repositories._default_repositories.discard(repository_id)
+    assert not marketplace.repositories.is_default(repository_id)
+
+    await marketplace.async_get_category_repositories_from_catalog(
+        RepositoryCategory.INTEGRATION
+    )
+
+    assert marketplace.repositories.is_default(repository_id)
+    assert (
+        marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION) is repository
+    )

@@ -357,7 +357,10 @@ async def async_get_custom_components(
 
         comps = await hass.async_add_executor_job(_get_custom_components, hass)
 
-        hass.data[DATA_CUSTOM_COMPONENTS] = comps
+        # A cache cleared during the scan asks for a newer scan, this one
+        # must not put its older result back.
+        if hass.data.get(DATA_CUSTOM_COMPONENTS) is future:
+            hass.data[DATA_CUSTOM_COMPONENTS] = comps
         future.set_result(comps)
         return comps
 

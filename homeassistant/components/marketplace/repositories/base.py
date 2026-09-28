@@ -1,7 +1,10 @@
 """Repository."""
 
 from asyncio import sleep
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
+from functools import partial
+import io
 import os
 from pathlib import Path
 import shutil
@@ -9,15 +12,29 @@ import tempfile
 from typing import TYPE_CHECKING, Any, override
 import zipfile
 
-from aiogithubapi import GitHubException, GitHubNotModifiedException
+from aiogithubapi import (
+    GitHubAuthenticationException,
+    GitHubException,
+    GitHubNotModifiedException,
+    GitHubRatelimitException,
+)
+from aiogithubapi.models.git_tree import GitHubGitTreeEntryModel
 import attr
 
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.util import dt as dt_util
 
-from ..const import COUNTRY_ALL, DOMAIN, MAX_DOWNLOAD_SIZE
-from ..enums import MarketplaceSignal, RepositoryFile
+from ..const import DOMAIN, MAX_DOWNLOAD_SIZE, RELEASE_LIMIT
+from ..enums import (
+    DisabledReason,
+    MarketplaceSignal,
+    RepositoryCategory,
+    RepositoryFile,
+)
 from ..exceptions import (
+    CatalogContentUnresolvedError,
+    GitHubAnonymousRateLimitError,
+    GitHubRateLimitError,
     MarketplaceError,
     NotModifiedError,
     RepositoryArchivedError,
@@ -39,7 +56,13 @@ from ..utils.tree import (
     tree_entry_filename,
     tree_entry_is_directory,
 )
-from ..utils.url import github_archive, github_raw_file, github_release_asset
+from ..utils.url import (
+    github_archive,
+    github_commit_archive,
+    github_raw_file,
+    github_release_asset,
+    ref_version,
+)
 from ..utils.validate import Validate
 from ..utils.version import (
     version_left_higher_or_equal_then_right,
@@ -47,25 +70,25 @@ from ..utils.version import (
 )
 
 if TYPE_CHECKING:
-    from aiogithubapi.models.git_tree import GitHubGitTreeEntryModel
     from aiogithubapi.models.release import GitHubReleaseAssetModel, GitHubReleaseModel
     from aiogithubapi.models.repository import GitHubRepositoryModel
 
     from ..base import MarketplaceManager
 
 
-# Domains for integration repositories the Marketplace can not derive one from
-# https://github.com/hacs/integration/issues/2465
-DOMAIN_OVERRIDES: dict[str, str] = {
-    "custom-components/sensor.custom_aftership": "custom_aftership"
-}
+README_FILENAMES = (
+    "README.md",
+    "readme.md",
+    "readme.MD",
+    "README.MD",
+    "README",
+    "readme",
+)
 
 TOPIC_FILTER = (
     "add-on",
     "addon",
     "app",
-    "appdaemon-apps",
-    "appdaemon",
     "custom-card",
     "custom-cards",
     "custom-component",
@@ -128,9 +151,7 @@ REPOSITORY_KEYS_TO_EXPORT: tuple[tuple[str, Any], ...] = (
 )
 
 REPOSITORY_MANIFEST_KEYS_TO_EXPORT: tuple[tuple[str, Any], ...] = (
-    # Keys can not be removed from this list until v3
     # If keys are added, the action need to be re-run with force
-    ("country", []),
     ("name", None),
 )
 
@@ -155,6 +176,76 @@ class FileInformation:
         self.name = name
 
 
+class RepositoryArchive:
+    """The ZIP archive of a repository, as GitHub serves it for a ref.
+
+    GitHub puts everything below a single top level directory named after
+    the repository and the ref, the paths here leave it out.
+    """
+
+    def __init__(self, content: bytes) -> None:
+        """Read the archive, this does I/O and has to run in the executor."""
+        self._content = content
+        self.members: dict[str, zipfile.ZipInfo] = {}
+
+        with self._open() as archive:
+            _check_archive_size(archive)
+            for member in archive.infolist():
+                if path := "/".join(member.filename.split("/")[1:]).rstrip("/"):
+                    self.members[path] = member
+
+    def _open(self) -> zipfile.ZipFile:
+        """Open the archive."""
+        try:
+            return zipfile.ZipFile(io.BytesIO(self._content))
+        except zipfile.BadZipFile as exception:
+            raise MarketplaceError(f"Not a ZIP archive: {exception}") from exception
+
+    @property
+    def tree(self) -> list[GitHubGitTreeEntryModel]:
+        """Return the members as the entries of a repository tree.
+
+        Archives can leave out the entries of directories, so those are
+        derived from the paths, in the order GitHub lists the tree.
+        """
+        entries: dict[str, bool] = {}
+        for path, member in self.members.items():
+            parts = path.split("/")
+            for depth in range(1, len(parts)):
+                entries.setdefault("/".join(parts[:depth]), True)
+            entries.setdefault(path, member.is_dir())
+
+        return [
+            GitHubGitTreeEntryModel(
+                {"path": path, "type": "tree" if is_directory else "blob"}
+            )
+            for path, is_directory in entries.items()
+        ]
+
+    def read(self, path: str) -> bytes:
+        """Return the content of a file in the archive."""
+        with self._open() as archive:
+            return archive.read(self.members[path])
+
+    def extract_directory(self, remote: str, local: str) -> None:
+        """Extract everything below remote into local."""
+        with self._open() as archive:
+            extractable = []
+            for path in archive.filelist:
+                filename = "/".join(path.filename.split("/")[1:])
+                if filename.startswith(remote) and filename != remote:
+                    path.filename = filename.replace(remote, "").lstrip("/")
+                    if not path.filename:
+                        # Blank files is not valid, and will start to throw in Python 3.12
+                        continue
+                    resolve_in_directory(local, path.filename)
+                    extractable.append(path)
+
+            if len(extractable) == 0:
+                raise MarketplaceError("No content to extract")
+            archive.extractall(local, extractable)
+
+
 @attr.s(auto_attribs=True)
 class RepositoryData:
     """RepositoryData class."""
@@ -172,7 +263,6 @@ class RepositoryData:
     file_name: str = ""
     first_install: bool = False
     full_name: str = ""
-    full_name_lower: str = ""
     hide: bool = False
     has_issues: bool = True
     id: str | int = 0
@@ -199,7 +289,12 @@ class RepositoryData:
         """Return the name."""
         if self.category == "integration":
             return self.domain
-        return self.full_name.split("/")[-1]
+        return self.full_name.rsplit("/", maxsplit=1)[-1]
+
+    @property
+    def full_name_lower(self) -> str:
+        """Return the name the repository is looked up by."""
+        return self.full_name.lower()
 
     def to_json(self) -> dict[str, Any]:
         """Export to json."""
@@ -236,7 +331,6 @@ class RepositoryManifest:
     """The repository manifest, parsed from hacs.json."""
 
     content_in_root: bool = False
-    country: list[str] = attr.field(factory=list)
     filename: str | None = None
     hacs: str | None = None  # Minimum HACS version, the `hacs` key of hacs.json
     hide_default_branch: bool = False
@@ -244,7 +338,6 @@ class RepositoryManifest:
     manifest: dict[str, Any] = attr.field(factory=dict)
     name: str | None = None
     persistent_directory: str | None = None
-    render_readme: bool = False
     zip_release: bool = False
 
     def to_dict(self) -> dict[str, Any]:
@@ -265,10 +358,7 @@ class RepositoryManifest:
         }
 
         for key, value in manifest_data.manifest.items():
-            if key == "country" and isinstance(value, str):
-                setattr(manifest_data, key, [value])
-            elif key in manifest_data.__dict__:
-                setattr(manifest_data, key, value)
+            setattr(manifest_data, key, value)
         return manifest_data
 
     def update_data(self, data: dict[str, Any]) -> None:
@@ -277,13 +367,7 @@ class RepositoryManifest:
             if key not in self.__dict__:
                 continue
 
-            if key == "country":
-                if isinstance(value, str):
-                    setattr(self, key, [value])
-                else:
-                    setattr(self, key, value)
-            else:
-                setattr(self, key, value)
+            setattr(self, key, value)
 
 
 class RepositoryReleases:
@@ -309,6 +393,11 @@ class RepositoryContent:
 class Repository:
     """A repository the Marketplace knows about."""
 
+    # Where the content of a category lives before the repository tree says
+    # otherwise, and whether it is a single file
+    remote_path: str | None = None
+    single_file: bool = False
+
     def __init__(self, marketplace: MarketplaceManager) -> None:
         """Initialize the repository."""
         self.marketplace = marketplace
@@ -316,6 +405,8 @@ class Repository:
         self.data = RepositoryData()
         self.content = RepositoryContent()
         self.content.path = RepositoryPath()
+        self.content.path.remote = self.remote_path
+        self.content.single = self.single_file
         self.repository_object: GitHubRepositoryModel | None = None
         self.updated_info = False
         self.state: str | None = None
@@ -355,25 +446,11 @@ class Repository:
                 return self.integration_manifest["name"]
 
         return (
-            self.data.full_name.split("/")[-1]
+            self.data.full_name.rsplit("/", maxsplit=1)[-1]
             .replace("-", " ")
             .replace("_", " ")
             .title()
         )
-
-    @property
-    def ignored_by_country_configuration(self) -> bool:
-        """Return True if hidden by country."""
-        if self.data.installed:
-            return False
-        configuration = self.marketplace.configuration.country.lower()
-        if configuration == COUNTRY_ALL.lower():
-            return False
-
-        manifest = [entry.lower() for entry in self.repository_manifest.country or []]
-        if not manifest:
-            return False
-        return configuration not in manifest
 
     @property
     def display_status(self) -> str:
@@ -432,7 +509,11 @@ class Repository:
                     if self.data.installed_commit != self.data.last_commit:
                         return True
                     return False
-            if self.display_version_or_commit == "version":
+            # A commit that happens to look like a version is still a commit
+            if (
+                self.display_version_or_commit == "version"
+                and self.data.installed_version is not None
+            ):
                 if (
                     result := version_left_higher_then_right(
                         self.display_available_version,
@@ -471,7 +552,8 @@ class Repository:
                     return True
         if self.ref == self.data.default_branch:
             return False
-        if self.data.category not in ["plugin", "theme"]:
+        # A theme comes from its themes directory, the way the catalog installs it
+        if self.data.category != "plugin":
             return False
         if not self.data.releases:
             return False
@@ -481,7 +563,7 @@ class Repository:
         """Validate."""
         return False
 
-    @concurrent(concurrenttasks=10, backoff_time=5)
+    @concurrent(concurrenttasks=10)
     async def update_repository(
         self, ignore_issues: bool = False, force: bool = False
     ) -> None:
@@ -502,6 +584,12 @@ class Repository:
             if manifest := await self.async_get_repository_manifest():
                 self.repository_manifest = RepositoryManifest.from_dict(manifest)
                 self.data.update_data(self.repository_manifest.to_dict())
+        else:
+            # Every download reads it, a repository without one can not be updated
+            self.validate.errors.append(
+                f"{self.data.full_name} has no {RepositoryFile.REPOSITORY_MANIFEST} "
+                "in its root, the Marketplace needs one to download it"
+            )
 
     async def common_registration(self) -> None:
         """Common registration steps of the repository."""
@@ -526,7 +614,7 @@ class Repository:
             self.data.last_updated = self.repository_object.pushed_at or 0
             self.data.last_fetched = dt_util.utcnow()
 
-    @concurrent(concurrenttasks=10, backoff_time=5)
+    @concurrent(concurrenttasks=10)
     async def common_update(
         self,
         ignore_issues: bool = False,
@@ -545,10 +633,14 @@ class Repository:
                 skip_releases=skip_releases,
             )
         except RepositoryExistsError:
-            self.data.full_name = self.marketplace.common.renamed_repositories[
-                self.data.full_name
-            ]
+            self.marketplace.repositories.rename(
+                self,
+                self.marketplace.common.renamed_repositories[self.data.full_name],
+            )
             await self.common_update_data(ignore_issues=ignore_issues, force=force)
+
+        except GitHubAnonymousRateLimitError:
+            raise
 
         except MarketplaceError:
             if not ignore_issues and not force:
@@ -579,8 +671,7 @@ class Repository:
                 self.repository_manifest = RepositoryManifest.from_dict(manifest)
                 self.data.update_data(self.repository_manifest.to_dict())
 
-        # Update "info.md"
-        self.additional_info = await self.async_get_info_file_contents()
+        self.additional_info = await self.async_get_readme_contents()
 
         # Set last fetch attribute
         self.data.last_fetched = dt_util.utcnow()
@@ -597,7 +688,7 @@ class Repository:
                     name=filename,
                     url=github_release_asset(
                         repository=self.data.full_name,
-                        version=f"{self.ref}",
+                        version=ref_version(self.ref),
                         filename=filename,
                     ),
                 ),
@@ -682,84 +773,83 @@ class Repository:
         if not contents:
             contents = self.gather_files_to_download()
 
-        if not contents:
-            raise MarketplaceError("No content to download")
+        await self._async_download_files(contents)
 
+    async def _async_download_files(self, contents: list[FileInformation]) -> None:
+        """Download the files of the repository content."""
         download_queue = QueueManager(hass=self.marketplace.hass)
-
-        for content in contents:
-            if (
-                self.repository_manifest.content_in_root
-                and self.repository_manifest.filename
-            ):
-                if content.name != self.repository_manifest.filename:
-                    continue
+        for content in self._wanted_contents(contents):
             download_queue.add(self.dowload_repository_content(content))
 
         await download_queue.execute()
 
+    def _wanted_contents(
+        self, contents: list[FileInformation]
+    ) -> list[FileInformation]:
+        """Return the files of the content that have to be written."""
+        if not contents:
+            raise MarketplaceError("No content to download")
+
+        if (
+            self.repository_manifest.content_in_root
+            and self.repository_manifest.filename
+        ):
+            return [
+                content
+                for content in contents
+                if content.name == self.repository_manifest.filename
+            ]
+
+        return contents
+
     async def download_repository_zip(self) -> None:
         """Download the zip archive of the repository."""
-        ref = f"{self.ref}".replace("tags/", "")
+        ref = ref_version(self.ref)
 
         if not ref:
             raise MarketplaceError("Missing required elements.")
 
-        filecontent = await self.marketplace.async_download_file(
-            github_archive(repository=self.data.full_name, version=ref, variant="tags"),
-            keep_url=True,
-            nolog=True,
-        )
+        archive = await self._async_download_archive(ref)
+        await self._async_extract_archive(archive)
 
-        if filecontent is None:
+    async def _async_download_archive(
+        self, ref: str, *, commit: bool = False
+    ) -> RepositoryArchive:
+        """Download and open the zip archive of the repository at a ref."""
+        if commit:
+            filecontent = await self.marketplace.async_download_file(
+                github_commit_archive(repository=self.data.full_name, commit=ref)
+            )
+        else:
             filecontent = await self.marketplace.async_download_file(
                 github_archive(
-                    repository=self.data.full_name, version=ref, variant="heads"
+                    repository=self.data.full_name, version=ref, variant="tags"
                 ),
-                keep_url=True,
+                nolog=True,
             )
+
+            if filecontent is None:
+                filecontent = await self.marketplace.async_download_file(
+                    github_archive(
+                        repository=self.data.full_name, version=ref, variant="heads"
+                    ),
+                )
+
         if filecontent is None:
             raise MarketplaceError(f"[{self}] Failed to download zipball")
 
-        temp_dir = await self.marketplace.hass.async_add_executor_job(tempfile.mkdtemp)
-        # A scratch file, deliberately not named after the remote manifest
-        temp_file = Path(temp_dir, "archive.zip")
-        result = await self.marketplace.async_save_file(str(temp_file), filecontent)
-        if not result:
-            raise MarketplaceError("Could not save ZIP file")
+        return await self.marketplace.hass.async_add_executor_job(
+            RepositoryArchive, filecontent
+        )
 
-        def _extract_zip_file():
-            with zipfile.ZipFile(temp_file, "r") as zip_file:
-                _check_archive_size(zip_file)
-                extractable = []
-                for path in zip_file.filelist:
-                    filename = "/".join(path.filename.split("/")[1:])
-                    if (
-                        filename.startswith(self.content.path.remote)
-                        and filename != self.content.path.remote
-                    ):
-                        path.filename = filename.replace(
-                            self.content.path.remote, ""
-                        ).lstrip("/")
-                        if not path.filename:
-                            # Blank files is not valid, and will start to throw in Python 3.12
-                            continue
-                        resolve_in_directory(self.content.path.local, path.filename)
-                        extractable.append(path)
+    async def _async_extract_archive(self, archive: RepositoryArchive) -> None:
+        """Extract the remote directory of the content from the archive."""
+        if (remote := self.content.path.remote) is None:
+            raise MarketplaceError("Missing required elements.")
 
-                if len(extractable) == 0:
-                    raise MarketplaceError("No content to extract")
-                zip_file.extractall(self.content.path.local, extractable)
-
-        await self.marketplace.hass.async_add_executor_job(_extract_zip_file)
-
-        def cleanup_temp_dir():
-            """Cleanup temp_dir."""
-            if os.path.exists(temp_dir):
-                self.logger.debug("%s Cleaning up %s", self.string, temp_dir)
-                shutil.rmtree(temp_dir)
-
-        await self.marketplace.hass.async_add_executor_job(cleanup_temp_dir)
+        await self.marketplace.hass.async_add_executor_job(
+            archive.extract_directory, remote, self.content.path.local
+        )
         self.logger.info(
             "%s Content was extracted to %s", self.string, self.content.path.local
         )
@@ -782,31 +872,18 @@ class Repository:
             pass
         return None
 
-    async def async_get_info_file_contents(
-        self, *, version: str | None = None, **kwargs: Any
-    ) -> str:
-        """Get the content of the info.md file."""
-
-        def _info_file_variants() -> tuple[str, ...]:
-            name: str = "readme"
-            return (
-                f"{name.upper()}.md",
-                f"{name}.md",
-                f"{name}.MD",
-                f"{name.upper()}.MD",
-                name.upper(),
-                name,
-            )
-
-        info_files = [
-            filename for filename in _info_file_variants() if filename in self.treefiles
+    async def async_get_readme_contents(self, *, version: str | None = None) -> str:
+        """Get the content of the README, shown on the repository page."""
+        readme_files = [
+            filename for filename in README_FILENAMES if filename in self.treefiles
         ]
 
-        if not info_files:
+        if not readme_files:
             return ""
 
         return (
-            await self.get_documentation(filename=info_files[0], version=version) or ""
+            await self.get_documentation(filename=readme_files[0], version=version)
+            or ""
         )
 
     def remove(self) -> None:
@@ -819,7 +896,9 @@ class Repository:
         """Run uninstall tasks."""
         self.logger.info("%s Removing", self.string)
         if not await self.remove_local_directory():
-            raise MarketplaceError("Could not uninstall")
+            raise MarketplaceError(
+                f"Could not remove {self.data.full_name}, see the log for details"
+            )
         self.data.installed = False
         await self._async_post_uninstall()
         await async_remove_storage(
@@ -848,7 +927,7 @@ class Repository:
         local_path = self.content.path.local
 
         try:
-            if self.data.category in {"python_script", "template"}:
+            if self.data.category == "template":
                 local_path = str(resolve_in_directory(local_path, self.data.file_name))
             elif self.data.category == "theme":
                 path = resolve_in_directory(
@@ -859,13 +938,13 @@ class Repository:
                 await async_remove(self.marketplace.hass, str(path), missing_ok=True)
             elif self.data.category == "integration":
                 if not self.data.domain:
-                    if domain := DOMAIN_OVERRIDES.get(self.data.full_name):
-                        self.data.domain = domain
-                        self.content.path.local = self.localpath
-                    else:
-                        self.logger.error("%s Missing domain", self.string)
-                        return False
+                    self.logger.error("%s Missing domain", self.string)
+                    return False
                 local_path = self.content.path.local
+
+            # The folder is named by remote input, removal stays inside its category
+            if (directory := self._category_directory()) is not None:
+                local_path = str(resolve_in_directory(directory, local_path))
 
             if await async_exists(self.marketplace.hass, local_path):
                 if not is_safe(self.marketplace, local_path):
@@ -875,7 +954,7 @@ class Repository:
                     return False
                 self.logger.debug("%s Removing %s", self.string, local_path)
 
-                if self.data.category in ["python_script", "template"]:
+                if self.data.category == "template":
                     await async_remove(self.marketplace.hass, local_path)
                 else:
                     await async_remove_directory(self.marketplace.hass, local_path)
@@ -890,11 +969,24 @@ class Repository:
                 )
 
         except (OSError, MarketplaceError) as exception:
-            self.logger.debug(
+            self.logger.error(
                 "%s Removing %s failed with %s", self.string, local_path, exception
             )
             return False
         return True
+
+    def _category_directory(self) -> str | None:
+        """Return the folder the downloads of this category are written to."""
+        configuration = self.marketplace.configuration
+        directories: dict[str, str] = {
+            RepositoryCategory.INTEGRATION: "custom_components",
+            RepositoryCategory.PLUGIN: configuration.plugin_path,
+            RepositoryCategory.THEME: configuration.theme_path,
+        }
+
+        if (directory := directories.get(self.data.category)) is None:
+            return None
+        return f"{self.marketplace.core.config_path}/{directory}"
 
     async def async_pre_registration(self) -> None:
         """Run pre registration steps."""
@@ -935,13 +1027,21 @@ class Repository:
 
     async def async_install(self, *, version: str | None = None, **_: Any) -> None:
         """Run install steps."""
+        await self._async_run_install(
+            partial(self.async_install_repository, version=version)
+        )
+
+    async def _async_run_install(
+        self, install_repository: Callable[[], Awaitable[None]]
+    ) -> None:
+        """Run the install steps around writing the content."""
         await self._async_pre_install()
         self.marketplace.async_dispatch(
             MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
             {"repository": self.data.full_name, "progress": 30},
         )
         self.logger.info("%s Running installation steps", self.string)
-        await self.async_install_repository(version=version)
+        await install_repository()
         self.marketplace.async_dispatch(
             MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
             {"repository": self.data.full_name, "progress": 90},
@@ -958,6 +1058,10 @@ class Repository:
 
     async def async_post_uninstall(self) -> None:
         """Run post uninstall steps."""
+
+    async def async_replaces_built_in(self) -> bool:
+        """Return if the download takes the place of a built-in integration."""
+        return False
 
     async def _async_post_uninstall(self) -> None:
         """Run post uninstall steps."""
@@ -977,13 +1081,16 @@ class Repository:
                 "repository_id": self.data.id,
             },
         )
+
+        # Installs also come from update entities and automations, not only the
+        # panel, so the new state is stored here for all of them
+        await self.marketplace.data.async_write()
         self.logger.info("%s Post installation steps completed", self.string)
 
     async def async_install_repository(
         self, *, version: str | None = None, **_: Any
     ) -> None:
         """Common installation steps of the repository."""
-        persistent_directory = None
         force_update = version is None or (
             self.data.last_version is not None and version != self.data.last_version
         )
@@ -992,12 +1099,40 @@ class Repository:
             raise MarketplaceError("repository.content.path.local is None")
         self.validate.errors.clear()
 
-        version_to_install = version or self.version_to_download()
+        version_to_install = self._branch_for_newest_commit(
+            version or self.version_to_download()
+        )
         if version_to_install == self.data.default_branch:
             self.ref = version_to_install
         else:
             self.ref = f"tags/{version_to_install}"
 
+        LOGGER.debug("%s Version to install: %s", self.string, version_to_install)
+        await self._async_write_content(
+            partial(self._async_download_version, version_to_install)
+        )
+
+        if self.validate.success:
+            self.data.installed = True
+            self.data.installed_commit = self.data.last_commit
+
+            if version_to_install == self.data.default_branch:
+                self.data.installed_version = None
+            else:
+                self.data.installed_version = version_to_install
+
+    async def _async_download_version(self, version: str) -> None:
+        """Download the content of a version through the repository tree."""
+        if self.repository_manifest.zip_release and self.repository_manifest.filename:
+            await self.download_zip_files(self.validate)
+        else:
+            await self.download_content(version)
+
+    async def _async_write_content(
+        self, download: Callable[[], Awaitable[None]]
+    ) -> None:
+        """Write the content, putting back what was there when it fails."""
+        persistent_directory = None
         self.marketplace.async_dispatch(
             MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
             {"repository": self.data.full_name, "progress": 40},
@@ -1010,36 +1145,48 @@ class Repository:
             )
             if await async_exists(self.marketplace.hass, persistent_path):
                 persistent_directory = Backup(
-                    marketplace=self.marketplace,
-                    local_path=str(persistent_path),
-                    backup_path=tempfile.gettempdir()
-                    + "/marketplace_persistent_directory/",
+                    marketplace=self.marketplace, local_path=persistent_path
                 )
                 await self.marketplace.hass.async_add_executor_job(
                     persistent_directory.create
                 )
 
+        backup = None
         if self.data.installed and not self.content.single:
             backup = Backup(
                 marketplace=self.marketplace, local_path=self.content.path.local
             )
             await self.marketplace.hass.async_add_executor_job(backup.create)
 
+        def _restore_backups() -> None:
+            """Put back what the backups moved away."""
+            if backup is not None:
+                backup.restore()
+                backup.cleanup()
+            if persistent_directory is not None:
+                persistent_directory.restore()
+                persistent_directory.cleanup()
+
         LOGGER.debug("%s Local path is set to %s", self.string, self.content.path.local)
         LOGGER.debug(
             "%s Remote path is set to %s", self.string, self.content.path.remote
         )
-        LOGGER.debug("%s Version to install: %s", self.string, version_to_install)
 
         self.marketplace.async_dispatch(
             MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
             {"repository": self.data.full_name, "progress": 50},
         )
 
-        if self.repository_manifest.zip_release and self.repository_manifest.filename:
-            await self.download_zip_files(self.validate)
-        else:
-            await self.download_content(version_to_install)
+        try:
+            await download()
+        except Exception as exception:
+            # Whatever broke the download, the content that was there goes back
+            await self.marketplace.hass.async_add_executor_job(_restore_backups)
+            if isinstance(exception, OSError):
+                raise MarketplaceError(
+                    f"Could not write the downloaded content: {exception}"
+                ) from exception
+            raise
 
         self.marketplace.async_dispatch(
             MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
@@ -1049,13 +1196,7 @@ class Repository:
         if self.validate.errors:
             for error in self.validate.errors:
                 self.logger.error("%s %s", self.string, error)
-            if self.data.installed and not self.content.single:
-
-                def _restore_backup() -> None:
-                    backup.restore()
-                    backup.cleanup()
-
-                await self.marketplace.hass.async_add_executor_job(_restore_backup)
+            await self.marketplace.hass.async_add_executor_job(_restore_backups)
             raise MarketplaceError("Could not download, see log for details")
 
         self.marketplace.async_dispatch(
@@ -1063,7 +1204,7 @@ class Repository:
             {"repository": self.data.full_name, "progress": 80},
         )
 
-        if self.data.installed and not self.content.single:
+        if backup is not None:
             await self.marketplace.hass.async_add_executor_job(backup.cleanup)
 
         if persistent_directory is not None:
@@ -1076,15 +1217,6 @@ class Repository:
                 _restore_persistent_directory
             )
 
-        if self.validate.success:
-            self.data.installed = True
-            self.data.installed_commit = self.data.last_commit
-
-            if version_to_install == self.data.default_branch:
-                self.data.installed_version = None
-            else:
-                self.data.installed_version = version_to_install
-
     async def async_get_repository_object(
         self,
         etag: str | None = None,
@@ -1096,6 +1228,16 @@ class Repository:
             )
         except GitHubNotModifiedException as exception:
             raise NotModifiedError(exception) from exception
+        except GitHubRatelimitException as exception:
+            if not self.marketplace.github_connected:
+                raise GitHubAnonymousRateLimitError(exception) from exception
+            raise MarketplaceError(exception) from exception
+        except GitHubAuthenticationException as exception:
+            # Like every other GitHub call, a token that stopped working asks
+            # the user to connect again
+            if self.marketplace.github_connected:
+                self.marketplace.disable(DisabledReason.INVALID_TOKEN)
+            raise MarketplaceError(exception) from exception
         except GitHubException as exception:
             raise MarketplaceError(exception) from exception
 
@@ -1118,7 +1260,7 @@ class Repository:
         return response.data.tree
 
     async def get_releases(
-        self, prerelease: bool = False, returnlimit: int = 5
+        self, prerelease: bool = False, returnlimit: int = RELEASE_LIMIT
     ) -> list[GitHubReleaseModel]:
         """Return the repository releases."""
         response = await self.marketplace.async_github_api_method(
@@ -1161,6 +1303,8 @@ class Repository:
             return None
         except RepositoryExistsError:
             raise RepositoryExistsError from None
+        except GitHubAnonymousRateLimitError:
+            raise
         except MarketplaceError as exception:
             if not self.marketplace.status.startup:
                 self.logger.error("%s %s", self.string, exception)
@@ -1215,6 +1359,12 @@ class Repository:
                     self.releases.objects = filtered_releases
                     self.data.published_tags = [x.tag_name for x in filtered_releases]
 
+            except GitHubAnonymousRateLimitError:
+                raise
+            except GitHubRateLimitError:
+                # Running out of requests says nothing about the releases, the
+                # anonymous limit runs out on browsing alone.
+                self.logger.debug("%s Rate limited, keeping the releases", self.string)
             except MarketplaceError:
                 self.data.releases = False
 
@@ -1230,7 +1380,7 @@ class Repository:
         LOGGER.debug(
             "%s Running checks against %s",
             self.string,
-            f"{self.ref}".replace("tags/", ""),
+            ref_version(self.ref),
         )
 
         try:
@@ -1238,8 +1388,10 @@ class Repository:
             if not tree:
                 raise MarketplaceError("No files in tree")  # noqa: TRY301 # handled below
             self.tree = tree
-            self.tree_ref = self.ref
+            self.tree_ref = ref_version(self.ref)
             self.treefiles = [entry.path for entry in tree]
+        except GitHubAnonymousRateLimitError:
+            raise
         except MarketplaceError as exception:
             if (
                 not retry
@@ -1263,11 +1415,8 @@ class Repository:
     def gather_files_to_download(self) -> list[FileInformation]:
         """Return a list of file objects to be downloaded."""
         files: list[FileInformation] = []
-        tree = self.tree
-        ref = f"{self.ref}".replace("tags/", "")
+        ref = ref_version(self.ref)
         releaseobjects = self.releases.objects
-        category = self.data.category
-        remotelocation = self.content.path.remote
 
         if self.should_try_releases:
             for release in releaseobjects or []:
@@ -1280,6 +1429,15 @@ class Repository:
                     )
             if files:
                 return files
+
+        return self.gather_tree_files_to_download()
+
+    def gather_tree_files_to_download(self) -> list[FileInformation]:
+        """Return the files of the repository tree to be downloaded."""
+        files: list[FileInformation] = []
+        tree = self.tree
+        category = self.data.category
+        remotelocation = self.content.path.remote
 
         if self.content.single:
             files.extend(
@@ -1339,30 +1497,42 @@ class Repository:
         if release is None:
             return None
 
+        assets = release.data.get("assets", [])
+
+        # Every asset is downloaded, together they have to fit the download limit
+        if sum(asset.get("size") or 0 for asset in assets) > MAX_DOWNLOAD_SIZE:
+            raise MarketplaceError(
+                f"The release assets of {version} are larger than the "
+                f"{MAX_DOWNLOAD_SIZE} byte limit"
+            )
+
         return [
             FileInformation(
                 url=asset.get("browser_download_url"),
                 path=asset.get("name"),
                 name=asset.get("name"),
             )
-            for asset in release.data.get("assets", [])
+            for asset in assets
         ]
 
     @concurrent(concurrenttasks=10)
     async def dowload_repository_content(self, content: FileInformation) -> None:
         """Download content."""
+        self.logger.debug("%s Downloading %s", self.string, content.name)
+
+        filecontent = await self.marketplace.async_download_file(content.download_url)
+
+        if filecontent is None:
+            self.validate.errors.append(f"[{content.name}] was not downloaded.")
+            return
+
+        await self._async_write_file(content, filecontent)
+
+    async def _async_write_file(
+        self, content: FileInformation, filecontent: bytes
+    ) -> None:
+        """Write a file of the content to where it belongs below the local path."""
         try:
-            self.logger.debug("%s Downloading %s", self.string, content.name)
-
-            filecontent = await self.marketplace.async_download_file(
-                content.download_url
-            )
-
-            if filecontent is None:
-                self.validate.errors.append(f"[{content.name}] was not downloaded.")
-                return
-
-            # Save the content of the file.
             if self.content.single or content.path is None:
                 local_directory = self.content.path.local
 
@@ -1380,9 +1550,6 @@ class Repository:
             local_file_path = resolve_in_directory(
                 self.content.path.local, f"{local_directory}/{content.name}"
             )
-
-            # Check local directory
-            local_file_path.parent.mkdir(parents=True, exist_ok=True)
 
             result = await self.marketplace.async_save_file(
                 str(local_file_path), filecontent
@@ -1452,7 +1619,9 @@ class Repository:
         elif self.data.installed:
             target_version = self.data.installed_version or self.data.installed_commit
         else:
-            target_version = self.data.last_version or self.data.last_commit or self.ref
+            target_version = (
+                self.data.last_version or self.data.last_commit or ref_version(self.ref)
+            )
 
         self.logger.debug(
             "%s Getting documentation for version=%s,filename=%s",
@@ -1531,6 +1700,20 @@ class Repository:
 
         return assets[0] if assets else None
 
+    def _branch_for_newest_commit(self, version: str) -> str:
+        """Return the default branch when asked for the newest commit.
+
+        Without releases a repository is updated to its newest commit, which is
+        what the default branch holds. It is not a tag named after the commit.
+        """
+        if (
+            self.data.last_version is None
+            and self.data.default_branch
+            and version == self.data.last_commit
+        ):
+            return self.data.default_branch
+        return version
+
     async def _ensure_download_capabilities(
         self, ref: str | None, **kwargs: Any
     ) -> None:
@@ -1546,27 +1729,46 @@ class Repository:
         if not ref:
             target_manifest = self.repository_manifest
         else:
-            target_manifest = await self.get_repository_manifest(version=ref)
+            target_manifest = await self.get_repository_manifest(
+                version=self._branch_for_newest_commit(ref)
+            )
 
         if target_manifest is None:
             raise MarketplaceError(
-                f"The version {ref} for this {self.data.category} can not be used."
+                f"Version {ref} of {self.data.full_name} has no "
+                f"{RepositoryFile.REPOSITORY_MANIFEST}, which downloading needs"
             )
 
+        self._check_minimum_version(target_manifest)
+
+    def _check_minimum_version(self, manifest: RepositoryManifest) -> None:
+        """Refuse a version that needs a newer Home Assistant."""
         # The `hacs` key in hacs.json names a version of the custom integration,
         # which cannot be compared with a Home Assistant version.
         if (
-            target_manifest.homeassistant is not None
-            and self.marketplace.version < target_manifest.homeassistant
+            manifest.homeassistant is not None
+            and self.marketplace.version < manifest.homeassistant
         ):
             raise MarketplaceError(
-                f"This version requires Home Assistant {target_manifest.homeassistant} or newer."
+                f"This version requires Home Assistant {manifest.homeassistant} or newer."
             )
 
     async def async_download_repository(
         self, *, ref: str | None = None, **_: Any
     ) -> None:
         """Download the content of a repository."""
+        if (catalog_version := self._catalog_version(ref)) is not None:
+            try:
+                await self._async_download_catalog_version(
+                    catalog_version, requested=ref
+                )
+            except CatalogContentUnresolvedError as exception:
+                self.logger.info(
+                    "%s %s, downloading through the GitHub API", self.string, exception
+                )
+            else:
+                return
+
         await self._ensure_download_capabilities(ref)
         self.logger.info("Starting download, %s", ref)
         if self.display_version_or_commit == "version":
@@ -1587,6 +1789,8 @@ class Repository:
 
         try:
             await self.async_install(version=ref)
+        except GitHubAnonymousRateLimitError:
+            raise
         except MarketplaceError as exception:
             raise MarketplaceError(
                 f"Downloading {self.data.full_name} with version {ref or self.data.last_version or self.data.last_commit} failed with ({exception})"
@@ -1598,6 +1802,175 @@ class Repository:
                 MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
                 {"repository": self.data.full_name, "progress": False},
             )
+
+    def _catalog_version(self, ref: str | None) -> str | None:
+        """Return the catalog version to download without the GitHub API.
+
+        Anonymous access to the API runs out after a handful of downloads. The
+        catalog already names the version, and the files come from hosts
+        without that limit. A version the user picked keeps using the API.
+        """
+        if not self.marketplace.repositories.is_default(str(self.data.id)):
+            return None
+
+        catalog_version = self.data.last_version or self.data.last_commit
+        requested = ref if ref is not None else self.data.selected_tag
+        if requested is not None and requested != catalog_version:
+            return None
+
+        return catalog_version
+
+    async def _async_download_catalog_version(
+        self, version: str, *, requested: str | None
+    ) -> None:
+        """Download a version the catalog names, without the GitHub API."""
+        if requested is None and not self.can_download:
+            raise MarketplaceError(
+                f"This {self.data.category} is not available for download."
+            )
+
+        # Without releases the catalog names the last commit instead
+        commit = self.data.last_version is None
+        self.logger.info("Starting download, %s", version)
+        self.marketplace.async_dispatch(
+            MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+            {"repository": self.data.full_name, "progress": 10},
+        )
+
+        try:
+            download = await self._async_prepare_catalog_download(
+                version, commit=commit
+            )
+            self.marketplace.async_dispatch(
+                MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+                {"repository": self.data.full_name, "progress": 20},
+            )
+
+            try:
+                await self._async_run_install(
+                    partial(
+                        self._async_install_catalog_version,
+                        version,
+                        download,
+                        commit=commit,
+                    )
+                )
+            except GitHubAnonymousRateLimitError:
+                raise
+            except MarketplaceError as exception:
+                raise MarketplaceError(
+                    f"Downloading {self.data.full_name} with version {version} failed with ({exception})"
+                ) from exception
+        finally:
+            self.data.selected_tag = None
+            self.force_branch = False
+            self.marketplace.async_dispatch(
+                MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+                {"repository": self.data.full_name, "progress": False},
+            )
+
+    async def _async_prepare_catalog_download(
+        self, version: str, *, commit: bool
+    ) -> Callable[[], Awaitable[None]]:
+        """Work out what a catalog version writes, and return what writes it.
+
+        Nothing is written here. When the content can not be resolved, the
+        repository is left as the GitHub API path expects to find it.
+        """
+        self.validate.errors.clear()
+        if (manifest := await self.get_repository_manifest(version=version)) is None:
+            raise CatalogContentUnresolvedError(
+                f"No readable {RepositoryFile.REPOSITORY_MANIFEST} in {version}"
+            )
+
+        self._check_minimum_version(manifest)
+
+        previous_manifest = self.repository_manifest
+        self.repository_manifest = manifest
+        self.ref = version if commit else f"tags/{version}"
+        self.content.path.remote = self.remote_path
+        self.content.single = self.single_file
+
+        try:
+            return await self._async_resolve_catalog_content(version, commit=commit)
+        except MarketplaceError:
+            self.repository_manifest = previous_manifest
+            self.content.path.remote = self.remote_path
+            self.content.single = self.single_file
+            raise
+
+    async def _async_resolve_catalog_content(
+        self, version: str, *, commit: bool
+    ) -> Callable[[], Awaitable[None]]:
+        """Resolve the content of a catalog version from the repository archive."""
+        if self.repository_manifest.zip_release and self.repository_manifest.filename:
+            raise CatalogContentUnresolvedError(
+                f"A {self.data.category} can not use a ZIP release from the catalog"
+            )
+
+        archive = await self._async_open_catalog_archive(version, commit=commit)
+        try:
+            self.resolve_archive_content()
+        except MarketplaceError as exception:
+            # Files marked export-ignore are in the tree, but not in the archive
+            raise CatalogContentUnresolvedError(str(exception)) from exception
+
+        return partial(self._async_write_archive_content, archive)
+
+    async def _async_open_catalog_archive(
+        self, version: str, *, commit: bool
+    ) -> RepositoryArchive:
+        """Download the archive of a catalog version, its members make up the tree."""
+        try:
+            archive = await self._async_download_archive(version, commit=commit)
+        except MarketplaceError as exception:
+            raise CatalogContentUnresolvedError(str(exception)) from exception
+
+        self.tree = archive.tree
+        self.tree_ref = version
+        self.treefiles = [entry.path for entry in self.tree]
+        return archive
+
+    def resolve_content(self) -> None:
+        """Point the content at what the repository tree holds.
+
+        Raises MarketplaceError when the tree holds nothing to download.
+        """
+
+    def resolve_archive_content(self) -> None:
+        """Point the content at what the archive of a catalog version holds."""
+        self.resolve_content()
+
+    async def _async_write_archive_content(self, archive: RepositoryArchive) -> None:
+        """Write the content of a catalog version from its archive."""
+        if not self.data.file_name and self.content.path.remote is not None:
+            await self._async_extract_archive(archive)
+            return
+
+        for content in self._wanted_contents(self.gather_tree_files_to_download()):
+            filecontent = await self.marketplace.hass.async_add_executor_job(
+                archive.read, content.path
+            )
+            await self._async_write_file(content, filecontent)
+
+    async def _async_install_catalog_version(
+        self,
+        version: str,
+        download: Callable[[], Awaitable[None]],
+        *,
+        commit: bool,
+    ) -> None:
+        """Write the content of a catalog version and mark it downloaded."""
+        await self._async_write_content(download)
+
+        self.data.installed = True
+        self.data.installed_commit = self.data.last_commit
+        if commit:
+            self.data.installed_version = None
+        else:
+            # The catalog only names a version for repositories with releases
+            self.data.releases = True
+            self.data.installed_version = version
 
     async def async_get_releases(self, *, first: int = 30) -> list[GitHubReleaseModel]:
         """Get the last x releases of a repository."""

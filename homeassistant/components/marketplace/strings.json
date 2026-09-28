@@ -1,13 +1,12 @@
 {
   "config": {
     "abort": {
+      "activation_failed": "GitHub did not complete the connection. Try connecting again.",
       "could_not_register": "Could not register the device with GitHub.",
       "not_setup": "The Marketplace is not set up.",
-      "reauth_successful": "Reauthentication was successful.",
       "single_instance_allowed": "Only a single configuration of the Marketplace is allowed."
     },
     "error": {
-      "acc": "You need to acknowledge all the statements before continuing",
       "auth": "Personal Access Token is not correct"
     },
     "progress": {
@@ -20,15 +19,6 @@
       "reauth_confirm": {
         "description": "You need to reauthenticate with GitHub.",
         "title": "Reauthentication needed"
-      },
-      "user": {
-        "data": {
-          "acc_addons": "I know that there are no apps in the Marketplace",
-          "acc_disable": "I know that if I get issues with Home Assistant I should disable all my custom_components",
-          "acc_logs": "I know how to access Home Assistant logs",
-          "acc_untested": "I know that the Marketplace and everything inside it is custom and not tested by the Home Assistant project"
-        },
-        "description": "Before you can set up the Marketplace you need to acknowledge the following"
       }
     }
   },
@@ -44,52 +34,120 @@
     }
   },
   "exceptions": {
+    "add_failed": {
+      "message": "Adding {repository} failed: {error}"
+    },
+    "app_repository": {
+      "message": "{repository} holds apps, the Marketplace does not download apps."
+    },
+    "core_repository": {
+      "message": "The integrations of Home Assistant itself come with Home Assistant, there is nothing to add."
+    },
     "device_of_the_marketplace": {
       "message": "Cannot remove the service of the Marketplace itself."
     },
     "device_without_a_repository": {
       "message": "Cannot remove service {device_id}, it does not belong to a repository in the Marketplace."
     },
+    "disabled_rate_limit": {
+      "message": "GitHub limits how often the Marketplace can reach it. The Marketplace starts again once the limit resets."
+    },
+    "disabled_removed": {
+      "message": "The Marketplace is being removed."
+    },
     "download_failed": {
       "message": "Downloading {repository} failed: {error}"
+    },
+    "github_not_connected": {
+      "message": "Connect a GitHub account to the Marketplace first."
+    },
+    "github_rate_limited": {
+      "message": "GitHub limits how often the Marketplace can reach it without a GitHub connection. Try again later, or connect GitHub in the Marketplace for a higher limit."
+    },
+    "invalid_category": {
+      "message": "Repositories cannot be added to the {category} category."
+    },
+    "invalid_repository": {
+      "message": "Could not read a GitHub repository from {repository}."
+    },
+    "invalid_token": {
+      "message": "The GitHub token of the Marketplace is no longer valid. Connect GitHub again."
+    },
+    "not_loaded": {
+      "message": "The Marketplace is not loaded."
+    },
+    "rate_limited": {
+      "message": "GitHub limits how often the Marketplace can reach it. Try again later."
+    },
+    "releases_failed": {
+      "message": "Could not get the releases of {repository}: {error}"
+    },
+    "remove_failed": {
+      "message": "Could not remove {repository}, see the log for details."
+    },
+    "repository_downloaded": {
+      "message": "Remove the download of {repository} first."
+    },
+    "repository_exists": {
+      "message": "{repository} is already in the Marketplace."
+    },
+    "repository_not_found": {
+      "message": "The Marketplace does not know the repository with ID {repository}."
     },
     "repository_still_downloaded": {
       "message": "Cannot remove the service for {repository}, it is still downloaded."
     },
+    "restore_failed": {
+      "message": "Could not read the stored data of the Marketplace."
+    },
+    "setup_failed": {
+      "message": "Could not set up the Marketplace: {error}"
+    },
     "version_already_downloaded": {
       "message": "Version {version} of {repository} is already downloaded."
+    },
+    "warning_not_accepted": {
+      "message": "Open the Marketplace and read the warning first, downloads and updates start working once it is accepted."
     }
   },
   "issues": {
+    "appdaemon_not_supported": {
+      "description": "The Marketplace no longer manages AppDaemon apps. The apps you downloaded with it stay installed and AppDaemon keeps running them: {apps}.\n\nUpdates for these apps no longer come from the Marketplace. Keep them up to date yourself, outside of the Marketplace.",
+      "title": "AppDaemon apps are no longer managed by the Marketplace"
+    },
+    "critical_repository": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The Marketplace removed {repository} from this system and restarted Home Assistant, because the Marketplace catalog marks it as critical.\n\nThe reason given: {reason}\n\nCheck whether anything that depended on {repository} needs your attention. Select **Submit** once you have read this.",
+            "title": "{repository} was removed"
+          }
+        }
+      },
+      "title": "{repository} was removed because it is marked as critical"
+    },
+    "legacy_dashboard_resources": {
+      "description": "Your dashboard resources in YAML still load downloads from `/hacsfiles`, the path HACS used. The Marketplace keeps serving it for compatibility, but the path downloads use is `/local/community`. Change these resources in your YAML configuration:\n\n{resources}",
+      "title": "Dashboard resources use an old path"
+    },
+    "python_scripts_not_supported": {
+      "description": "The Marketplace no longer manages Python scripts. The scripts you downloaded with it stay installed and the Python scripts integration keeps running them: {scripts}.\n\nUpdates for these scripts no longer come from the Marketplace. Keep them up to date yourself, outside of the Marketplace.",
+      "title": "Python scripts are no longer managed by the Marketplace"
+    },
     "removed": {
-      "description": "Because {reason}, `{name}` has been removed from the Marketplace. Please visit the [Marketplace panel](/marketplace/repository/{repositry_id}) to remove it.",
+      "description": "Because {reason}, `{name}` has been removed from the Marketplace. Please visit the [Marketplace panel](/marketplace/repository/{repository_id}) to remove it.",
       "title": "Repository removed from the Marketplace"
     },
     "restart_required": {
       "fix_flow": {
         "step": {
           "confirm_restart": {
-            "description": "Restart of Home Assistant is required to finish download/update of {name}, click submit to restart now.",
+            "description": "Restart Home Assistant to finish the download or update of {name}. Select **Submit** to restart now.",
             "title": "Restart required"
           }
         }
       },
       "title": "Restart required"
-    }
-  },
-  "options": {
-    "abort": {
-      "not_setup": "The Marketplace is not set up.",
-      "pending_tasks": "There are pending tasks. Try again later.",
-      "release_limit_value": "The release limit needs to be between 1 and 100."
-    },
-    "step": {
-      "user": {
-        "data": {
-          "appdaemon": "Enable AppDaemon apps discovery & tracking",
-          "country": "Filter with country code"
-        }
-      }
     }
   },
   "title": "Marketplace"

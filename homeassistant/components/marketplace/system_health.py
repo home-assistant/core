@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from aiogithubapi import GitHubException
 from aiogithubapi.common.const import BASE_API_URL
 
 from homeassistant.components import system_health
@@ -29,9 +30,8 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         return {"Disabled": "The Marketplace is not loaded"}
 
     marketplace = async_get_marketplace(hass)
-    response = await marketplace.githubapi.rate_limit()
 
-    data = {
+    data: dict[str, Any] = {
         "GitHub API": system_health.async_check_can_reach_url(
             hass, BASE_API_URL, GITHUB_STATUS
         ),
@@ -45,12 +45,23 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         "Catalog Data": system_health.async_check_can_reach_url(
             hass, "https://data-v2.hacs.xyz/data.json", CLOUDFLARE_STATUS
         ),
-        "GitHub API Calls Remaining": response.data.resources.core.remaining,
+        "GitHub Connected": marketplace.github_connected,
         "Installed Version": marketplace.version,
         "Stage": marketplace.stage,
         "Available Repositories": len(marketplace.repositories.list_all),
         "Downloaded Repositories": len(marketplace.repositories.list_downloaded),
     }
+
+    # The anonymous rate limit is shared by every client on the address, it
+    # says nothing about the Marketplace.
+    if marketplace.github_connected:
+        try:
+            response = await marketplace.githubapi.rate_limit()
+        except GitHubException:
+            # GitHub being out of reach is what the checks above show already
+            data["GitHub API Calls Remaining"] = "unknown"
+        else:
+            data["GitHub API Calls Remaining"] = response.data.resources.core.remaining
 
     if marketplace.system.disabled:
         data["Disabled"] = marketplace.system.disabled_reason

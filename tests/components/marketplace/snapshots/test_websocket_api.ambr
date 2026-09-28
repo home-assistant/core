@@ -16,8 +16,6 @@
     'can_download': True,
     'category': 'integration',
     'config_flow': True,
-    'country': list([
-    ]),
     'custom': False,
     'default_branch': 'main',
     'description': 'This your first repo!',
@@ -39,6 +37,7 @@
     'releases': list([
       '1.0.0',
     ]),
+    'replaces_built_in': False,
     'selected_tag': None,
     'stars': 80,
     'state': None,

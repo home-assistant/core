@@ -8,6 +8,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
 from .base import MarketplaceConfigEntry
+from .const import CONF_WARNING_ACCEPTED
 
 
 async def async_get_config_entry_diagnostics(
@@ -16,6 +17,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     marketplace = entry.runtime_data
+    warning_acceptances = marketplace.warning_acceptances
 
     data: dict[str, Any] = {
         "entry": entry.as_dict(),
@@ -23,6 +25,17 @@ async def async_get_config_entry_diagnostics(
             "stage": marketplace.stage,
             "version": marketplace.version,
             "disabled_reason": marketplace.system.disabled_reason,
+            "github_connected": marketplace.github_connected,
+            "warning_accepted_users": len(warning_acceptances),
+            "warning_last_accepted_at": (
+                max(warning_acceptances.values()).isoformat()
+                if warning_acceptances
+                else None
+            ),
+            "warning_reminders_due": sum(
+                marketplace.warning_reminder_due(user_id)
+                for user_id in warning_acceptances
+            ),
             "new": marketplace.status.new,
             "startup": marketplace.status.startup,
             "categories": marketplace.common.categories,
@@ -40,14 +53,7 @@ async def async_get_config_entry_diagnostics(
         "repositories": [],
     }
 
-    for key in (
-        "appdaemon",
-        "country",
-        "debug",
-        "python_script",
-        "release_limit",
-        "theme",
-    ):
+    for key in ("debug",):
         data["marketplace"]["configuration"][key] = getattr(
             marketplace.configuration, key, None
         )
@@ -71,10 +77,11 @@ async def async_get_config_entry_diagnostics(
             }
         )
 
-    try:
-        rate_limit_response = await marketplace.githubapi.rate_limit()
-        data["rate_limit"] = rate_limit_response.data.as_dict
-    except GitHubException as exception:
-        data["rate_limit"] = str(exception)
+    if marketplace.github_connected:
+        try:
+            rate_limit_response = await marketplace.githubapi.rate_limit()
+            data["rate_limit"] = rate_limit_response.data.as_dict
+        except GitHubException as exception:
+            data["rate_limit"] = str(exception)
 
-    return async_redact_data(data, ("token",))
+    return async_redact_data(data, (CONF_WARNING_ACCEPTED, "token"))

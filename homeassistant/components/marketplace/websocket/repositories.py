@@ -2,36 +2,43 @@
 
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 import homeassistant.helpers.config_validation as cv
 
-from ..base import async_get_marketplace
 from ..enums import MarketplaceSignal
-from ..exceptions import MarketplaceError
+from ..exceptions import AppRepositoryError, CoreRepositoryError, MarketplaceError
 from ..utils import regex
 from ..utils.logger import LOGGER
+from .decorators import (
+    marketplace_command,
+    send_repository_not_found,
+    send_translated_error,
+)
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
+    from ..base import MarketplaceManager
+
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "marketplace/repositories/list",
-        vol.Optional("categories"): [str],
+        probatio.Required("type"): "marketplace/repositories/list",
+        probatio.Optional("categories"): [str],
     }
 )
 @websocket_api.require_admin
 @websocket_api.async_response
+@marketplace_command()
 async def marketplace_repositories_list(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
+    marketplace: MarketplaceManager,
 ) -> None:
     """List repositories."""
-    marketplace = async_get_marketplace(hass)
     connection.send_message(
         websocket_api.result_message(
             msg["id"],
@@ -43,7 +50,6 @@ async def marketplace_repositories_list(
                     "config_flow": repo.data.config_flow,
                     "can_download": repo.can_download,
                     "category": repo.data.category,
-                    "country": repo.repository_manifest.country,
                     "custom": not marketplace.repositories.is_default(
                         str(repo.data.id)
                     ),
@@ -69,7 +75,6 @@ async def marketplace_repositories_list(
                 for repo in marketplace.repositories.list_all
                 if repo.data.category
                 in msg.get("categories", marketplace.common.categories)
-                and not repo.ignored_by_country_configuration
                 and repo.data.last_fetched
             ],
         )
@@ -78,28 +83,25 @@ async def marketplace_repositories_list(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "marketplace/repositories/clear_new",
-        vol.Optional("categories"): cv.ensure_list,
-        vol.Optional("repository"): cv.string,
+        probatio.Required("type"): "marketplace/repositories/clear_new",
+        probatio.Optional("categories"): cv.ensure_list,
+        probatio.Optional("repository"): cv.string,
     }
 )
 @websocket_api.require_admin
 @websocket_api.async_response
+@marketplace_command()
 async def marketplace_repositories_clear_new(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
+    marketplace: MarketplaceManager,
 ) -> None:
     """Clear new repositories for specific categories."""
-    marketplace = async_get_marketplace(hass)
 
     if repo := msg.get("repository"):
         if (repository := marketplace.repositories.get_by_id(repo)) is None:
-            connection.send_error(
-                msg["id"],
-                "repository_not_found",
-                f"Repository with ID ({repo}) not found",
-            )
+            send_repository_not_found(connection, msg["id"], repo)
             return
         repository.data.new = False
 
@@ -118,18 +120,19 @@ async def marketplace_repositories_clear_new(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "marketplace/repositories/removed",
+        probatio.Required("type"): "marketplace/repositories/removed",
     }
 )
 @websocket_api.require_admin
 @websocket_api.async_response
+@marketplace_command()
 async def marketplace_repositories_removed(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
+    marketplace: MarketplaceManager,
 ) -> None:
     """Get information about removed repositories."""
-    marketplace = async_get_marketplace(hass)
     content = [
         repo.to_json()
         for repo in marketplace.repositories.list_removed
@@ -140,28 +143,41 @@ async def marketplace_repositories_removed(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "marketplace/repositories/add",
-        vol.Required("repository"): cv.string,
-        vol.Required("category"): vol.Lower,
+        probatio.Required("type"): "marketplace/repositories/add",
+        probatio.Required("repository"): cv.string,
+        probatio.Required("category"): probatio.Lower,
     }
 )
 @websocket_api.require_admin
 @websocket_api.async_response
+@marketplace_command(requires_accepted_warning=True, requires_github=True)
 async def marketplace_repositories_add(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
+    marketplace: MarketplaceManager,
 ) -> None:
-    """Add custom repositoriy."""
-    marketplace = async_get_marketplace(hass)
+    """Add a custom repository."""
     repository = regex.extract_repository_from_url(msg["repository"])
     category = msg["category"]
 
     if repository is None:
-        connection.send_error(
+        send_translated_error(
+            connection,
             msg["id"],
             websocket_api.ERR_INVALID_FORMAT,
-            f"Could not read a repository from '{msg['repository']}'",
+            "invalid_repository",
+            {"repository": msg["repository"]},
+        )
+        return
+
+    if category not in marketplace.common.categories:
+        send_translated_error(
+            connection,
+            msg["id"],
+            websocket_api.ERR_INVALID_FORMAT,
+            "invalid_category",
+            {"category": category},
         )
         return
 
@@ -171,59 +187,77 @@ async def marketplace_repositories_add(
     if renamed := marketplace.common.renamed_repositories.get(repository):
         repository = renamed
 
-    if category not in marketplace.common.categories:
-        LOGGER.error("%s is not a valid category for %s", category, repository)
-
-    elif not marketplace.repositories.get_by_full_name(repository):
-        try:
-            await marketplace.async_register_repository(
-                repository_full_name=repository,
-                category=category,
-            )
-
-        except MarketplaceError as exception:
-            marketplace.async_dispatch(
-                MarketplaceSignal.ERROR,
-                {
-                    "action": "add_repository",
-                    "exception": type(exception).__name__,
-                    "message": str(exception),
-                },
-            )
-
-    else:
-        marketplace.async_dispatch(
-            MarketplaceSignal.ERROR,
-            {
-                "action": "add_repository",
-                "message": f"Repository '{repository}' exists in the Marketplace.",
-            },
+    if marketplace.repositories.get_by_full_name(repository):
+        send_translated_error(
+            connection,
+            msg["id"],
+            "repository_exists",
+            "repository_exists",
+            {"repository": repository},
         )
+        return
+
+    try:
+        await marketplace.async_register_repository(
+            repository_full_name=repository,
+            category=category,
+        )
+    except CoreRepositoryError:
+        send_translated_error(
+            connection, msg["id"], "core_repository", "core_repository"
+        )
+        return
+    except AppRepositoryError:
+        send_translated_error(
+            connection,
+            msg["id"],
+            "app_repository",
+            "app_repository",
+            {"repository": repository},
+        )
+        return
+    except MarketplaceError as exception:
+        send_translated_error(
+            connection,
+            msg["id"],
+            "add_failed",
+            "add_failed",
+            {"repository": repository, "error": str(exception)},
+        )
+        return
 
     connection.send_message(websocket_api.result_message(msg["id"], {}))
 
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "marketplace/repositories/remove",
-        vol.Required("repository"): cv.string,
+        probatio.Required("type"): "marketplace/repositories/remove",
+        probatio.Required("repository"): cv.string,
     }
 )
 @websocket_api.require_admin
 @websocket_api.async_response
+@marketplace_command()
 async def marketplace_repositories_remove(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
+    marketplace: MarketplaceManager,
 ) -> None:
     """Remove custom repositoriy."""
-    marketplace = async_get_marketplace(hass)
     repository = marketplace.repositories.get_by_id(msg["repository"])
     if repository is None:
-        connection.send_error(
+        send_repository_not_found(connection, msg["id"], msg["repository"])
+        return
+
+    # Forgetting it would leave its files running, without updates
+    if repository.data.installed:
+        send_translated_error(
+            connection,
             msg["id"],
-            "repository_not_found",
-            f"Repository with ID ({msg['repository']}) not found",
+            "repository_downloaded",
+            "repository_downloaded",
+            {"repository": repository.data.full_name},
         )
         return
 

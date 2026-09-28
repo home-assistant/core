@@ -8,6 +8,7 @@ from ..enums import MarketplaceSignal, RepositoryCategory
 from ..exceptions import MarketplaceError
 from ..utils.decorator import concurrent
 from ..utils.tree import tree_entry_filename
+from ..utils.url import ref_version
 from .base import Repository
 
 if TYPE_CHECKING:
@@ -17,15 +18,14 @@ if TYPE_CHECKING:
 class ThemeRepository(Repository):
     """Theme repository."""
 
+    remote_path = "themes"
+
     def __init__(self, marketplace: MarketplaceManager, full_name: str) -> None:
         """Initialize."""
         super().__init__(marketplace=marketplace)
         self.data.full_name = full_name
-        self.data.full_name_lower = full_name.lower()
         self.data.category = RepositoryCategory.THEME
-        self.content.path.remote = "themes"
         self.content.path.local = self.localpath
-        self.content.single = False
 
     @property
     @override
@@ -45,18 +45,7 @@ class ThemeRepository(Repository):
         await self.common_validate()
 
         # Custom step 1: Validate content.
-        compliant = False
-        for treefile in self.treefiles:
-            if treefile.startswith("themes/") and treefile.endswith(".yaml"):
-                compliant = True
-                break
-        if not compliant:
-            raise MarketplaceError(
-                f"{self.string} Repository structure for {f'{self.ref}'.replace('tags/', '')} is not compliant"
-            )
-
-        if self.repository_manifest.content_in_root:
-            self.content.path.remote = ""
+        self.resolve_content()
 
         # Handle potential errors
         if self.validate.errors:
@@ -64,6 +53,29 @@ class ThemeRepository(Repository):
                 if not self.marketplace.status.startup:
                     self.logger.error("%s %s", self.string, error)
         return self.validate.success
+
+    @override
+    def resolve_content(self) -> None:
+        """Point the content at the theme in the tree."""
+        compliant = False
+        for treefile in self.treefiles:
+            if treefile.startswith("themes/") and treefile.endswith(".yaml"):
+                compliant = True
+                break
+        if not compliant:
+            raise MarketplaceError(
+                f"{self.string} Repository structure for {ref_version(self.ref)} is not compliant"
+            )
+
+        if self.repository_manifest.content_in_root:
+            self.content.path.remote = ""
+
+    @override
+    def resolve_archive_content(self) -> None:
+        """Point the content at the theme in the archive."""
+        self.resolve_content()
+        self.update_filenames()
+        self.content.path.local = self.localpath
 
     @override
     async def async_post_registration(self) -> None:
@@ -88,7 +100,7 @@ class ThemeRepository(Repository):
         await self._reload_frontend_themes()
 
     @override
-    @concurrent(concurrenttasks=10, backoff_time=5)
+    @concurrent(concurrenttasks=10)
     async def update_repository(
         self, ignore_issues: bool = False, force: bool = False
     ) -> None:

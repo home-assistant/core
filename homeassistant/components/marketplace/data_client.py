@@ -3,17 +3,20 @@
 from typing import Any
 
 from aiohttp import ClientSession, ClientTimeout
-import voluptuous as vol
+import probatio
+
+from homeassistant.util.json import json_loads
 
 from .exceptions import MarketplaceError, NotModifiedError
 from .utils.logger import LOGGER
+from .utils.response import async_read_limited
 from .utils.validate import (
     VALIDATE_FETCHED_V2_CRITICAL_REPO_SCHEMA,
     VALIDATE_FETCHED_V2_REMOVED_REPO_SCHEMA,
     VALIDATE_FETCHED_V2_REPO_DATA,
 )
 
-CRITICAL_REMOVED_VALIDATORS: dict[str | None, vol.Schema] = {
+CRITICAL_REMOVED_VALIDATORS: dict[str | None, probatio.Schema] = {
     "critical": VALIDATE_FETCHED_V2_CRITICAL_REPO_SCHEMA,
     "removed": VALIDATE_FETCHED_V2_REMOVED_REPO_SCHEMA,
 }
@@ -35,18 +38,21 @@ class CatalogClient:
     ) -> Any:
         """Do request."""
         endpoint = "/".join(v for v in (section, filename) if v is not None)
+        url = f"https://data-v2.hacs.xyz/{endpoint}"
         try:
-            response = await self._session.get(
-                f"https://data-v2.hacs.xyz/{endpoint}",
+            async with self._session.get(
+                url,
                 timeout=ClientTimeout(total=60),
                 headers={
                     "User-Agent": self._client_name,
                     "If-None-Match": self._etags.get(endpoint) or "",
                 },
-            )
-            if response.status == 304:
-                raise NotModifiedError from None  # noqa: TRY301 # re-raised untouched below
-            response.raise_for_status()
+            ) as response:
+                if response.status == 304:
+                    raise NotModifiedError from None  # noqa: TRY301 # re-raised untouched below
+                response.raise_for_status()
+                content = await async_read_limited(response, url)
+                etag = response.headers.get("etag")
         except NotModifiedError:
             raise
         except TimeoutError:
@@ -56,9 +62,9 @@ class CatalogClient:
                 f"Error fetching data from the catalog: {exception}"
             ) from exception
 
-        self._etags[endpoint] = response.headers.get("etag")
+        self._etags[endpoint] = etag
 
-        return await response.json()
+        return json_loads(content)
 
     async def get_data(self, section: str | None, *, validate: bool) -> Any:
         """Get data."""
@@ -73,7 +79,7 @@ class CatalogClient:
                     validated_repositories[key] = VALIDATE_FETCHED_V2_REPO_DATA[
                         section
                     ](repo_data)
-                except vol.Invalid as exception:
+                except probatio.Invalid as exception:
                     LOGGER.info(
                         "Got invalid data for %s (%s)",
                         repo_data.get("full_name", key),
@@ -90,7 +96,7 @@ class CatalogClient:
         for repo_data in data:
             try:
                 validated.append(validator(repo_data))
-            except vol.Invalid as exception:
+            except probatio.Invalid as exception:
                 LOGGER.info("Got invalid data for %s (%s)", section, exception)
                 continue
 

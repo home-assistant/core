@@ -14,25 +14,37 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from yarl import URL
 
+from homeassistant.auth.const import GROUP_ID_ADMIN
+from homeassistant.auth.models import User
 from homeassistant.components.marketplace.base import MarketplaceManager
-from homeassistant.components.marketplace.const import DOMAIN, VERSION_STORAGE
+from homeassistant.components.marketplace.const import (
+    CONF_WARNING_ACCEPTED,
+    DOMAIN,
+    STORAGE_VERSION,
+)
 from homeassistant.components.marketplace.repositories import (
-    AppdaemonRepository,
     IntegrationRepository,
     PluginRepository,
-    PythonScriptRepository,
     TemplateRepository,
     ThemeRepository,
 )
 from homeassistant.components.marketplace.repositories.base import Repository
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
-from . import dummy_repository_base, get_marketplace, setup_integration
-from .const import FROZEN_TIME, PROXY_HEADERS, TOKEN
+from . import (
+    create_download_folders,
+    dummy_repository_base,
+    get_marketplace,
+    setup_integration,
+)
+from .const import FROZEN_TIME, PROXY_HEADERS, TOKEN, WARNING_ACCEPTANCE
 
 from tests.common import (
+    CLIENT_ID,
     MockConfigEntry,
+    MockUser,
     async_load_json_object_fixture,
     load_json_object_fixture,
 )
@@ -183,24 +195,69 @@ def frozen_time(freezer: FrozenDateTimeFactory) -> FrozenDateTimeFactory:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def github_token() -> str | None:
+    """Return the token of the connected GitHub account, None for no account."""
+    return TOKEN
+
+
+@pytest.fixture
+def warning_accepted(hass_admin_user: MockUser) -> dict[str, Any] | None:
+    """Return the stored acceptances of the first-run warning, None for none."""
+    return {hass_admin_user.id: WARNING_ACCEPTANCE}
+
+
+@pytest.fixture
+async def second_admin_user(hass: HomeAssistant) -> User:
+    """Return a second admin, who has not accepted the warning."""
+    return await hass.auth.async_create_user("Second admin", group_ids=[GROUP_ID_ADMIN])
+
+
+@pytest.fixture
+async def second_admin_token(hass: HomeAssistant, second_admin_user: User) -> str:
+    """Return an access token of the second admin."""
+    refresh_token = await hass.auth.async_create_refresh_token(
+        second_admin_user, CLIENT_ID
+    )
+    return hass.auth.async_create_access_token(refresh_token)
+
+
+@pytest.fixture
+def config_entry_source() -> str:
+    """Return how the config entry was created."""
+    return SOURCE_USER
+
+
+@pytest.fixture
+def mock_config_entry(
+    github_token: str | None,
+    warning_accepted: dict[str, Any] | None,
+    config_entry_source: str,
+) -> MockConfigEntry:
     """Return the default mocked config entry."""
+    data: dict[str, Any] = {}
+    if github_token:
+        data[CONF_TOKEN] = github_token
+    if warning_accepted:
+        data[CONF_WARNING_ACCEPTED] = warning_accepted
+
     return MockConfigEntry(
         title="",
         domain=DOMAIN,
-        data={CONF_TOKEN: TOKEN},
-        options={"country": "ALL", "appdaemon": True},
+        source=config_entry_source,
+        data=data,
         unique_id="12345",
     )
 
 
 @pytest.fixture
-def stored_repositories(hass_storage: dict[str, Any]) -> None:
+def stored_repositories(hass_storage: dict[str, Any], config_dir: Path) -> None:
     """Seed the stored repositories with two downloaded repositories."""
+    repositories = load_json_object_fixture("stored_repositories.json", DOMAIN)
     hass_storage[f"{DOMAIN}.repositories"] = {
-        "version": VERSION_STORAGE,
-        "data": load_json_object_fixture("stored_repositories.json", DOMAIN),
+        "version": STORAGE_VERSION,
+        "data": repositories,
     }
+    create_download_folders(config_dir, repositories)
 
 
 @pytest.fixture
@@ -237,14 +294,6 @@ def mock_repository(marketplace: MarketplaceManager) -> Repository:
 
 
 @pytest.fixture
-def mock_repository_appdaemon(marketplace: MarketplaceManager) -> Repository:
-    """Return an AppDaemon repository."""
-    return dummy_repository_base(
-        marketplace, AppdaemonRepository(marketplace, "test/test")
-    )
-
-
-@pytest.fixture
 def mock_repository_integration(marketplace: MarketplaceManager) -> Repository:
     """Return an integration repository."""
     return dummy_repository_base(
@@ -257,14 +306,6 @@ def mock_repository_plugin(marketplace: MarketplaceManager) -> Repository:
     """Return a dashboard plugin repository."""
     return dummy_repository_base(
         marketplace, PluginRepository(marketplace, "test/test")
-    )
-
-
-@pytest.fixture
-def mock_repository_python_script(marketplace: MarketplaceManager) -> Repository:
-    """Return a python script repository."""
-    return dummy_repository_base(
-        marketplace, PythonScriptRepository(marketplace, "test/test")
     )
 
 

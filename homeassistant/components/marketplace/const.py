@@ -1,5 +1,6 @@
 """Constants for the Marketplace."""
 
+from datetime import timedelta
 from typing import TypeVar
 
 from homeassistant.const import __version__ as HAVERSION
@@ -18,11 +19,14 @@ TV = TypeVar("TV")
 PACKAGE_NAME = "homeassistant.components.marketplace"
 
 DEFAULT_CONCURRENT_TASKS = 15
-DEFAULT_CONCURRENT_BACKOFF_TIME = 1
+
+# How many releases are fetched to offer as versions to download
+RELEASE_LIMIT = 5
 
 # Ceiling for anything downloaded from a repository, both for the transferred
 # bytes and for the size a ZIP archive expands to.
 MAX_DOWNLOAD_SIZE = 100 * 1024 * 1024
+DOWNLOAD_CHUNK_SIZE = 64 * 1024
 
 LEGACY_HACS_REPOSITORY_ID = "172733314"
 
@@ -31,11 +35,20 @@ LEGACY_HACS_REPOSITORY_ID = "172733314"
 CATALOG_REPOSITORY = "hacs/default"
 LEGACY_HACS_INTEGRATION_REPOSITORY = "hacs/integration"
 
-VERSION_STORAGE = "6"
+STORAGE_VERSION = 1
+
+# The version the custom integration wrote its storage files with
+LEGACY_HACS_STORAGE_VERSION = "6"
 
 LEGACY_HACS_SYSTEM_ID = (
     "0717a0cd-745c-48fd-9b16-c8534c9704f9-bc944b0f-fd42-4a58-a072-ade38d1444cd"
 )
 
-# The country filter that shows the repositories of every country
-COUNTRY_ALL = "ALL"
+# Bump when the first-run warning changes enough that everyone has to read it
+# again, an acceptance of an older version no longer counts.
+WARNING_VERSION = 1
+CONF_WARNING_ACCEPTED = "warning_accepted"
+
+# The panel shows the warning again once an acceptance is this old, downloads
+# and updates keep working in the meantime.
+WARNING_REMINDER_INTERVAL = timedelta(days=90)

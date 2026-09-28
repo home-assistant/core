@@ -1,12 +1,83 @@
 # serializer version: 1
+# name: test_install_update_from_the_catalog[hacs-test-org/integration-basic-None][api_usage]
+  dict({
+    'https://github.com/hacs-test-org/integration-basic/archive/refs/tags/2.0.0.zip': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/integration-basic/2.0.0/custom_components/example/manifest.json': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/integration-basic/2.0.0/hacs.json': 1,
+  })
+# ---
+# name: test_install_update_from_the_catalog[hacs-test-org/plugin-basic-None][api_usage]
+  dict({
+    'https://github.com/hacs-test-org/plugin-basic/archive/refs/tags/2.0.0.zip': 1,
+    'https://github.com/hacs-test-org/plugin-basic/releases/download/2.0.0/plugin-basic-bundle.js': 1,
+    'https://github.com/hacs-test-org/plugin-basic/releases/download/2.0.0/plugin-basic.js': 1,
+    'https://github.com/hacs-test-org/plugin-basic/releases/download/2.0.0/plugin-basic.umd.js': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/plugin-basic/2.0.0/hacs.json': 1,
+  })
+# ---
+# name: test_install_update_from_the_catalog[hacs-test-org/template-basic-None][api_usage]
+  dict({
+    'https://github.com/hacs-test-org/template-basic/archive/refs/tags/2.0.0.zip': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/template-basic/2.0.0/hacs.json': 1,
+  })
+# ---
+# name: test_install_update_from_the_catalog[hacs-test-org/theme-basic-None][api_usage]
+  dict({
+    'https://github.com/hacs-test-org/theme-basic/archive/refs/tags/2.0.0.zip': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/theme-basic/2.0.0/hacs.json': 1,
+  })
+# ---
+# name: test_install_update_of_a_custom_repository[hacs-test-org/integration-basic-None][api_usage]
+  dict({
+    'https://api.github.com/repos/hacs-test-org/integration-basic': 1,
+    'https://api.github.com/repos/hacs-test-org/integration-basic/branches/main': 1,
+    'https://api.github.com/repos/hacs-test-org/integration-basic/contents/custom_components/example/manifest.json?ref=1.0.0': 1,
+    'https://api.github.com/repos/hacs-test-org/integration-basic/contents/hacs.json?ref=1.0.0': 1,
+    'https://api.github.com/repos/hacs-test-org/integration-basic/git/trees/1.0.0?recursive=true': 1,
+    'https://api.github.com/repos/hacs-test-org/integration-basic/releases': 1,
+    'https://github.com/hacs-test-org/integration-basic/archive/refs/tags/2.0.0.zip': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/integration-basic/1.0.0/README.md': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/integration-basic/2.0.0/hacs.json': 1,
+  })
+# ---
+# name: test_install_update_of_a_custom_repository[hacs-test-org/plugin-basic-None][api_usage]
+  dict({
+    'https://api.github.com/repos/hacs-test-org/plugin-basic': 1,
+    'https://api.github.com/repos/hacs-test-org/plugin-basic/branches/main': 1,
+    'https://api.github.com/repos/hacs-test-org/plugin-basic/contents/hacs.json?ref=1.0.0': 1,
+    'https://api.github.com/repos/hacs-test-org/plugin-basic/git/trees/1.0.0?recursive=true': 1,
+    'https://api.github.com/repos/hacs-test-org/plugin-basic/releases': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/plugin-basic/1.0.0/README.md': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/plugin-basic/1.0.0/plugin-basic.js': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/plugin-basic/2.0.0/hacs.json': 1,
+  })
+# ---
+# name: test_install_update_of_a_custom_repository[hacs-test-org/template-basic-None][api_usage]
+  dict({
+    'https://api.github.com/repos/hacs-test-org/template-basic': 1,
+    'https://api.github.com/repos/hacs-test-org/template-basic/branches/main': 1,
+    'https://api.github.com/repos/hacs-test-org/template-basic/contents/hacs.json?ref=1.0.0': 1,
+    'https://api.github.com/repos/hacs-test-org/template-basic/git/trees/1.0.0?recursive=true': 1,
+    'https://api.github.com/repos/hacs-test-org/template-basic/releases': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/template-basic/1.0.0/README.md': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/template-basic/1.0.0/example.jinja': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/template-basic/2.0.0/hacs.json': 1,
+  })
+# ---
+# name: test_install_update_of_a_custom_repository[hacs-test-org/theme-basic-None][api_usage]
+  dict({
+    'https://api.github.com/repos/hacs-test-org/theme-basic': 1,
+    'https://api.github.com/repos/hacs-test-org/theme-basic/branches/main': 1,
+    'https://api.github.com/repos/hacs-test-org/theme-basic/contents/hacs.json?ref=1.0.0': 1,
+    'https://api.github.com/repos/hacs-test-org/theme-basic/git/trees/1.0.0?recursive=true': 1,
+    'https://api.github.com/repos/hacs-test-org/theme-basic/releases': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/theme-basic/1.0.0/README.md': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/theme-basic/1.0.0/themes/example.yaml': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/theme-basic/2.0.0/hacs.json': 1,
+  })
+# ---
 # name: test_release_notes
-  '''
-  Description of the release
-  
-  <ha-alert alert-type='warning'>You need to restart Home Assistant manually after updating.</ha-alert>
-  
-  
-  '''
+  'Description of the release'
 # ---
 # name: test_update_device_info
   DeviceRegistryEntrySnapshot({
@@ -38,67 +109,6 @@
     'via_device_id': None,
   })
 # ---
-# name: test_update_entity[hacs-test-org/appdaemon-basic][entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'update',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.appdaemon_basic_update',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Appdaemon Basic update',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Appdaemon Basic update',
-    'platform': 'marketplace',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <UpdateEntityFeature: 23>,
-    'translation_key': None,
-    'unique_id': '1296265',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_update_entity[hacs-test-org/appdaemon-basic][state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
-      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Appdaemon Basic Update',
-      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
-      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
-      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.0',
-      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
-      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://github.com/hacs-test-org/appdaemon-basic',
-      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 23>,
-      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
-      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
-    }),
-    'context': <ANY>,
-    'entity_id': 'update.appdaemon_basic_update',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_update_entity[hacs-test-org/integration-basic][entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -113,20 +123,20 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.basic_integration_update',
-    'has_entity_name': False,
+    'entity_id': 'update.basic_integration',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Basic integration update',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Basic integration update',
+    'original_name': None,
     'platform': 'marketplace',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -141,8 +151,8 @@
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
-      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://brands.home-assistant.io/_/example/icon.png',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Basic integration Update',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/example/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Basic integration',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
       <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
       <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.0',
@@ -154,7 +164,7 @@
       <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.basic_integration_update',
+    'entity_id': 'update.basic_integration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -175,20 +185,20 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.plugin_basic_update',
-    'has_entity_name': False,
+    'entity_id': 'update.plugin_basic',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Plugin Basic update',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Plugin Basic update',
+    'original_name': None,
     'platform': 'marketplace',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -203,7 +213,7 @@
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Plugin Basic Update',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Plugin Basic',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
       <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
       <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.0',
@@ -215,68 +225,7 @@
       <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.plugin_basic_update',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_update_entity[hacs-test-org/python_script-basic][entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'update',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.python_script_basic_update',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Python Script Basic update',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Python Script Basic update',
-    'platform': 'marketplace',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <UpdateEntityFeature: 23>,
-    'translation_key': None,
-    'unique_id': '1296262',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_update_entity[hacs-test-org/python_script-basic][state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
-      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Python Script Basic Update',
-      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
-      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
-      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.0',
-      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
-      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://github.com/hacs-test-org/python_script-basic',
-      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 23>,
-      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
-      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
-    }),
-    'context': <ANY>,
-    'entity_id': 'update.python_script_basic_update',
+    'entity_id': 'update.plugin_basic',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -297,20 +246,20 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.template_basic_update',
-    'has_entity_name': False,
+    'entity_id': 'update.template_basic',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Template Basic update',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Template Basic update',
+    'original_name': None,
     'platform': 'marketplace',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -325,7 +274,7 @@
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Template Basic Update',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Template Basic',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
       <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
       <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.0',
@@ -337,7 +286,7 @@
       <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.template_basic_update',
+    'entity_id': 'update.template_basic',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -358,20 +307,20 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.theme_basic_update',
-    'has_entity_name': False,
+    'entity_id': 'update.theme_basic',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Theme Basic update',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Theme Basic update',
+    'original_name': None,
     'platform': 'marketplace',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -386,7 +335,7 @@
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Theme Basic Update',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Theme Basic',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
       <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
       <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.0',
@@ -398,7 +347,7 @@
       <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.theme_basic_update',
+    'entity_id': 'update.theme_basic',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

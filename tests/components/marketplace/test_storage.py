@@ -1,11 +1,13 @@
 """Tests for the Marketplace storage handlers."""
 
+import json
+from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.marketplace.const import DOMAIN, VERSION_STORAGE
+from homeassistant.components.marketplace.const import DOMAIN, STORAGE_VERSION
 from homeassistant.components.marketplace.exceptions import MarketplaceError
 from homeassistant.components.marketplace.utils.storage import (
     STORAGE_CACHE_KEY,
@@ -15,12 +17,15 @@ from homeassistant.components.marketplace.utils.storage import (
     get_storage_for_key,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 
-from . import get_marketplace, setup_integration
+from . import create_download_folders, get_marketplace, setup_integration
 from .const import REPOSITORY_INTEGRATION, REPOSITORY_PLUGIN
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    load_json_object_fixture,
+)
 
 HACS_COMMON = {
     "archived_repositories": ["hacs-test-org/archived"],
@@ -40,7 +45,16 @@ HACS_CRITICAL = [
 
 def _stored(data: Any) -> dict[str, Any]:
     """Wrap data the way the storage helper writes it to disk."""
-    return {"version": VERSION_STORAGE, "data": data}
+    return {"version": STORAGE_VERSION, "data": data}
+
+
+def _write_hacs_file(config_dir: Path, key: str, data: Any, version: Any = "6") -> None:
+    """Write a storage file the way the custom integration left it on disk."""
+    storage = config_dir / ".storage"
+    storage.mkdir(exist_ok=True)
+    (storage / key).write_text(
+        json.dumps({"version": version, "key": key, "data": data}), encoding="utf-8"
+    )
 
 
 @pytest.fixture
@@ -51,13 +65,21 @@ def hacs_repositories() -> dict[str, Any]:
 
 @pytest.fixture
 def hacs_storage(
-    hass_storage: dict[str, Any], hacs_repositories: dict[str, Any]
+    hass_storage: dict[str, Any],
+    hacs_repositories: dict[str, Any],
+    config_dir: Path,
 ) -> dict[str, Any]:
-    """Seed the storage with the files HACS left behind."""
-    hass_storage["hacs.repositories"] = _stored(hacs_repositories)
-    hass_storage["hacs.hacs"] = _stored(HACS_COMMON)
-    hass_storage["hacs.critical"] = _stored(HACS_CRITICAL)
+    """Leave the files HACS wrote on disk, with the string version it used."""
+    _write_hacs_file(config_dir, "hacs.repositories", hacs_repositories)
+    create_download_folders(config_dir, hacs_repositories)
+    _write_hacs_file(config_dir, "hacs.hacs", HACS_COMMON)
+    _write_hacs_file(config_dir, "hacs.critical", HACS_CRITICAL)
     return hass_storage
+
+
+async def test_encoded_off_the_event_loop(hass: HomeAssistant) -> None:
+    """Test the stores encode their data in the executor, the files are large."""
+    assert get_storage_for_key(hass, "repositories")._serialize_in_event_loop is False
 
 
 async def test_load(hass: HomeAssistant, hass_storage: dict[str, Any]) -> None:
@@ -72,49 +94,10 @@ async def test_load_missing(hass: HomeAssistant) -> None:
     assert await async_load_from_storage(hass, "test") == {}
 
 
-@pytest.mark.parametrize(
-    ("stored", "expected"),
-    [
-        pytest.param(_stored({"test": "test"}), {"test": "test"}, id="content"),
-        pytest.param({}, None, id="empty_file"),
-        pytest.param(
-            {"version": "0", "data": {"test": "test"}}, None, id="version_mismatch"
-        ),
-    ],
-)
-def test_synchronous_load(
-    hass: HomeAssistant,
-    stored: dict[str, Any],
-    expected: dict[str, Any] | None,
-) -> None:
-    """Test the synchronous load used to read a store off the loop."""
-    marketplace = get_storage_for_key(hass, "test")
-
-    with patch(
-        "homeassistant.components.marketplace.utils.storage.json_util.load_json",
-        return_value=stored,
-    ):
-        assert marketplace.load() == expected
-
-
-def test_synchronous_load_unreadable(hass: HomeAssistant) -> None:
-    """Test an unreadable store raises."""
-    marketplace = get_storage_for_key(hass, "test")
-
-    with (
-        patch(
-            "homeassistant.components.marketplace.utils.storage.json_util.load_json",
-            side_effect=HomeAssistantError("Not valid JSON"),
-        ),
-        pytest.raises(MarketplaceError),
-    ):
-        marketplace.load()
-
-
 async def test_remove(hass: HomeAssistant) -> None:
     """Test only the per repository stores can be removed."""
     with patch(
-        "homeassistant.components.marketplace.utils.storage.MarketplaceStorage.async_remove",
+        "homeassistant.helpers.storage.Store.async_remove",
         return_value=AsyncMock(),
     ) as async_remove_mock:
         await async_remove_storage(hass, "test")
@@ -128,7 +111,7 @@ async def test_remove_refuses_a_key_outside_the_storage(hass: HomeAssistant) -> 
     """Test that a repository id can not point the removal out of the storage."""
     with (
         patch(
-            "homeassistant.components.marketplace.utils.storage.MarketplaceStorage.async_remove",
+            "homeassistant.helpers.storage.Store.async_remove",
             return_value=AsyncMock(),
         ) as async_remove_mock,
         pytest.raises(MarketplaceError, match="is not inside"),
@@ -147,7 +130,7 @@ async def test_save_skips_unchanged_content(
     hass_storage["marketplace.test"] = _stored({"test": "test"})
 
     with patch(
-        "homeassistant.components.marketplace.utils.storage.MarketplaceStorage.async_save",
+        "homeassistant.helpers.storage.Store.async_save",
         return_value=AsyncMock(),
     ) as async_save_mock:
         await async_save_to_storage(hass, "test", {"test": "test"})
@@ -184,8 +167,14 @@ async def test_hacs_data_is_adopted(
     """Test the HACS files are copied to our own keys on the first load."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hacs_storage["marketplace.repositories"]["data"] == hacs_repositories
+    assert hacs_storage["marketplace.repositories"] == {
+        **_stored(hacs_repositories),
+        "key": "marketplace.repositories",
+        "minor_version": 1,
+    }
+    assert hacs_storage["marketplace.common"]["version"] == STORAGE_VERSION
     assert hacs_storage["marketplace.common"]["data"] == HACS_COMMON
+    assert hacs_storage["marketplace.critical"]["version"] == STORAGE_VERSION
     assert hacs_storage["marketplace.critical"]["data"] == HACS_CRITICAL
 
     marketplace = get_marketplace(hass)
@@ -202,20 +191,78 @@ async def test_hacs_data_is_adopted(
     }
 
 
-async def test_hacs_data_is_left_alone(
+@pytest.mark.parametrize(
+    "repositories",
+    [
+        pytest.param(None, id="no_repositories_file"),
+        pytest.param({}, id="empty_repositories_file"),
+    ],
+)
+async def test_hacs_data_is_adopted_as_fallback(
     hass: HomeAssistant,
-    hacs_storage: dict[str, Any],
-    hacs_repositories: dict[str, Any],
+    hass_storage: dict[str, Any],
+    config_dir: Path,
     mock_config_entry: MockConfigEntry,
+    repositories: dict[str, Any] | None,
 ) -> None:
-    """Test the HACS files stay untouched, they are what a user rolls back to."""
-    await setup_integration(hass, mock_config_entry)
-    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    """Test the older combined file is read when HACS kept its repositories there."""
+    # What the custom integration itself falls back to
+    hacs_data = await async_load_json_object_fixture(
+        hass, "hacs_install/hacs.data.json", DOMAIN
+    )
+    _write_hacs_file(config_dir, "hacs.data", hacs_data["data"])
+    create_download_folders(
+        config_dir,
+        {
+            entry["id"]: {"category": category, **entry}
+            for category, entries in hacs_data["data"]["repositories"].items()
+            for entry in entries
+        },
+    )
+    if repositories is not None:
+        _write_hacs_file(config_dir, "hacs.repositories", repositories)
 
-    assert hacs_storage["hacs.repositories"] == _stored(hacs_repositories)
-    assert hacs_storage["hacs.hacs"] == _stored(HACS_COMMON)
-    assert hacs_storage["hacs.critical"] == _stored(HACS_CRITICAL)
+    await setup_integration(hass, mock_config_entry)
+
+    adopted = hass_storage["marketplace.repositories"]["data"]
+    assert {
+        repository_id
+        for repository_id, repository in adopted.items()
+        if repository.get("installed")
+    } == {"1296266", "1296267", "1296269", "172733314"}
+    assert adopted["1296269"]["category"] == "integration"
+
+    marketplace = get_marketplace(hass)
+    assert {
+        repository.data.full_name
+        for repository in marketplace.repositories.list_downloaded
+    } == {
+        "hacs-test-org/integration-basic",
+        "hacs-test-org/plugin-basic",
+        "hacs-test-org/theme-basic",
+    }
+
+
+@pytest.mark.parametrize(
+    "contents",
+    [
+        pytest.param({"version": 1, "data": HACS_COMMON}, id="unknown_version"),
+        pytest.param(["not", "a", "storage", "file"], id="not_a_storage_file"),
+    ],
+)
+async def test_hacs_file_of_another_format_not_adopted(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    config_dir: Path,
+    contents: Any,
+) -> None:
+    """Test only a file in the format the custom integration wrote is adopted."""
+    storage = config_dir / ".storage"
+    storage.mkdir()
+    (storage / "hacs.hacs").write_text(json.dumps(contents), encoding="utf-8")
+
+    assert await async_load_from_storage(hass, "common") == {}
+    assert "marketplace.common" not in hass_storage
 
 
 async def test_own_data_wins(
@@ -252,35 +299,3 @@ async def test_fresh_install(
     marketplace = get_marketplace(hass)
     assert marketplace.status.new is True
     assert not marketplace.repositories.list_downloaded
-
-
-async def test_legacy_hacs_data_fallback(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the data file written by older HACS releases is still read."""
-    hass_storage["hacs.data"] = _stored(
-        {
-            "repositories": {
-                "integration": [
-                    {
-                        "id": "1296269",
-                        "full_name": REPOSITORY_INTEGRATION,
-                        "installed": True,
-                        "version_installed": "1.0.0",
-                    }
-                ]
-            }
-        }
-    )
-
-    await setup_integration(hass, mock_config_entry)
-
-    marketplace = get_marketplace(hass)
-    assert {
-        repo.data.full_name for repo in marketplace.repositories.list_downloaded
-    } == {REPOSITORY_INTEGRATION}
-
-    # The old file is read, never adopted under one of our own keys
-    assert "marketplace.data" not in hass_storage

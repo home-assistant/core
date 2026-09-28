@@ -3,6 +3,7 @@
 import asyncio
 import contextlib
 from datetime import UTC, datetime
+import os
 from typing import Any
 
 from homeassistant.core import Event, callback
@@ -10,15 +11,13 @@ from homeassistant.exceptions import HomeAssistantError
 
 from ..base import MarketplaceManager
 from ..const import LEGACY_HACS_REPOSITORY_ID
-from ..enums import MarketplaceSignal
+from ..enums import MarketplaceSignal, RepositoryCategory
+from ..migration import async_forget_retired_repositories
 from ..repositories.base import TOPIC_FILTER, Repository, RepositoryManifest
+from .identity import one_stored_entry_per_name
 from .logger import LOGGER
 from .path import is_safe
-from .storage import (
-    async_load_from_storage,
-    async_load_legacy_data,
-    async_save_to_storage,
-)
+from .storage import async_load_from_storage, async_save_to_storage
 
 EXPORTED_BASE_DATA: tuple[tuple[str, Any], ...] = (
     ("new", False),
@@ -45,6 +44,7 @@ EXPORTED_DOWNLOADED_REPOSITORY_DATA: tuple[tuple[str, Any], ...] = (
     ("archived", False),
     ("config_flow", False),
     ("default_branch", None),
+    ("file_name", ""),
     ("first_install", False),
     ("installed_commit", None),
     ("installed", False),
@@ -83,10 +83,17 @@ class MarketplaceData:
         await async_save_to_storage(
             self.marketplace.hass,
             "common",
+            # Copies, the data is encoded in the executor while the loop moves on
             {
-                "archived_repositories": self.marketplace.common.archived_repositories,
-                "renamed_repositories": self.marketplace.common.renamed_repositories,
-                "ignored_repositories": self.marketplace.common.ignored_repositories,
+                "archived_repositories": set(
+                    self.marketplace.common.archived_repositories
+                ),
+                "renamed_repositories": dict(
+                    self.marketplace.common.renamed_repositories
+                ),
+                "ignored_repositories": set(
+                    self.marketplace.common.ignored_repositories
+                ),
             },
         )
         await self._async_store_content_and_repos()
@@ -108,8 +115,9 @@ class MarketplaceData:
     @callback
     def async_store_repository_data(self, repository: Repository) -> None:
         """Store the repository data."""
+        # Copies, the data is encoded in the executor while the loop moves on
         data: dict[str, Any] = {
-            "repository_manifest": repository.repository_manifest.manifest
+            "repository_manifest": dict(repository.repository_manifest.manifest)
         }
 
         for key, default in (
@@ -118,7 +126,7 @@ class MarketplaceData:
             else EXPORTED_REPOSITORY_DATA
         ):
             if (value := getattr(repository.data, key, default)) != default:
-                data[key] = value
+                data[key] = value.copy() if isinstance(value, list | dict) else value
 
         if repository.data.installed_version:
             data["version_installed"] = repository.data.installed_version
@@ -142,16 +150,6 @@ class MarketplaceData:
             repositories = await async_load_from_storage(
                 self.marketplace.hass, "repositories"
             )
-            if not repositories and (
-                data := await async_load_legacy_data(self.marketplace.hass)
-            ):
-                for category, entries in data.get("repositories", {}).items():
-                    for repository in entries:
-                        repositories[repository["id"]] = {
-                            "category": category,
-                            **repository,
-                        }
-
         except HomeAssistantError as exception:
             LOGGER.error(
                 "Could not read %s, restore the file from a backup - %s",
@@ -159,6 +157,12 @@ class MarketplaceData:
                 exception,
             )
             return False
+
+        config_entry = self.marketplace.configuration.config_entry
+        assert config_entry is not None
+        async_forget_retired_repositories(
+            self.marketplace.hass, config_entry, repositories
+        )
 
         if not common and not repositories:
             # Assume new install
@@ -188,6 +192,8 @@ class MarketplaceData:
             if entry not in self.marketplace.common.ignored_repositories:
                 self.marketplace.common.ignored_repositories.add(entry)
 
+        repositories = one_stored_entry_per_name(repositories)
+
         try:
             await self.register_unknown_repositories(repositories)
 
@@ -202,11 +208,65 @@ class MarketplaceData:
                     continue
                 self.async_restore_repository(entry, repo_data)
 
+            await self._async_forget_deleted_downloads()
             self.logger.info("Restore done")
         except Exception as exception:
             self.logger.critical("[%s] Restore failed", exception, exc_info=exception)
             return False
         return True
+
+    def _download_path(self, repository: Repository) -> str | None:
+        """Return what a downloaded repository has on disk, None when not known."""
+        if not (local := repository.content.path.local):
+            return None
+
+        # Templates share one folder, only their file is their own
+        if repository.data.category == RepositoryCategory.TEMPLATE:
+            if not repository.data.file_name:
+                return None
+            return os.path.join(local, repository.data.file_name)
+
+        # Without a domain, the folder of an integration is not known
+        if (
+            repository.data.category == RepositoryCategory.INTEGRATION
+            and not repository.data.domain
+        ):
+            return None
+
+        # A shared folder says nothing about the files of one repository
+        if not is_safe(self.marketplace, local):
+            return None
+
+        return local
+
+    async def _async_forget_deleted_downloads(self) -> None:
+        """Mark what was deleted by hand as no longer downloaded."""
+        downloads = [
+            (repository, path)
+            for repository in self.marketplace.repositories.list_downloaded
+            if (path := self._download_path(repository)) is not None
+        ]
+        if not downloads:
+            return
+
+        # A symlink counts even when what it points at is not there right now,
+        # for example a network share that is not mounted yet
+        present = await self.marketplace.hass.async_add_executor_job(
+            lambda: [os.path.lexists(path) for _, path in downloads]
+        )
+
+        for (repository, _), exists in zip(downloads, present, strict=True):
+            if exists:
+                continue
+
+            self.logger.info(
+                "%s is no longer on disk, it is no longer downloaded",
+                repository.data.full_name,
+            )
+            repository.data.installed = False
+            repository.data.installed_version = None
+            repository.data.installed_commit = None
+            await repository.async_remove_entity_device()
 
     async def register_unknown_repositories(
         self, repositories: dict[str, dict[str, Any]], category: str | None = None
@@ -220,6 +280,10 @@ class MarketplaceData:
                 entry in ("0", LEGACY_HACS_REPOSITORY_ID)
                 or repo_category is None
                 or self.marketplace.repositories.is_registered(repository_id=entry)
+                # Known under another id, it takes over the new one later on
+                or self.marketplace.repositories.is_registered(
+                    repository_full_name=repo_data["full_name"].lower()
+                )
             ):
                 continue
             await self.marketplace.async_register_repository(
@@ -249,11 +313,7 @@ class MarketplaceData:
         if not repository:
             return
 
-        try:
-            self.marketplace.repositories.set_repository_id(repository, entry)
-        except ValueError as exception:
-            self.logger.warning("Duplicate IDs %s", exception)
-            return
+        self.marketplace.async_set_repository_id(repository, entry)
 
         # Restore repository attributes
         repository.data.authors = repository_data.get("authors", [])
@@ -281,6 +341,9 @@ class MarketplaceData:
         repository.data.installed_version = repository_data.get("version_installed")
         repository.data.installed_commit = repository_data.get("installed_commit")
         repository.data.manifest_name = repository_data.get("manifest_name")
+        repository.data.file_name = repository_data.get(
+            "file_name", repository.data.file_name
+        )
 
         if last_fetched := repository_data.get("last_fetched"):
             repository.data.last_fetched = datetime.fromtimestamp(last_fetched, UTC)
@@ -290,6 +353,13 @@ class MarketplaceData:
             or repository_data.get("repository_manifest")
             or {}
         )
+
+        # Stored before file names were, a template names its file in hacs.json
+        if (
+            repository.data.category == RepositoryCategory.TEMPLATE
+            and not repository.data.file_name
+        ):
+            repository.data.file_name = repository.repository_manifest.filename or ""
 
         if repository.data.prerelease == repository.data.last_version:
             repository.data.prerelease = None

@@ -1,0 +1,5 @@
+{
+  "name": "Proxy manifest",
+  "domain": "example",
+  "config_flow": true
+}

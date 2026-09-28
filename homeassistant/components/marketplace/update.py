@@ -9,10 +9,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .base import MarketplaceConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, RELEASE_LIMIT
 from .entity import RepositoryEntity
 from .enums import MarketplaceSignal, RepositoryCategory
-from .exceptions import MarketplaceError
+from .exceptions import GitHubAnonymousRateLimitError, MarketplaceError
+from .utils.logger import LOGGER
 
 
 async def async_setup_entry(
@@ -31,18 +32,15 @@ async def async_setup_entry(
 class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
     """Update entity for a downloaded repository."""
 
+    # Updating is what the device of a repository is for, it carries the name
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL
         | UpdateEntityFeature.SPECIFIC_VERSION
         | UpdateEntityFeature.PROGRESS
         | UpdateEntityFeature.RELEASE_NOTES
     )
-
-    @property
-    @override
-    def name(self) -> str | None:
-        """Return the name."""
-        return f"{self.repository.display_name} update"
 
     @property
     @override
@@ -66,14 +64,6 @@ class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
 
     @property
     @override
-    def release_summary(self) -> str | None:
-        """Return the release summary."""
-        if self.repository.pending_restart:
-            return "<ha-alert alert-type='error'>Restart of Home Assistant required</ha-alert>"
-        return None
-
-    @property
-    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend."""
         if (
@@ -82,15 +72,28 @@ class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
         ):
             return None
 
-        return (
-            f"https://brands.home-assistant.io/_/{self.repository.data.domain}/icon.png"
-        )
+        # Served by Home Assistant, which prefers the icon an integration ships
+        return f"/api/brands/integration/{self.repository.data.domain}/icon.png"
 
     @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
+        user_id = self._context.user_id if self._context else None
+
+        # Automations and scripts run without a user, someone has to have read it
+        if user_id is None:
+            warning_accepted = bool(self.marketplace.warning_acceptances)
+        else:
+            warning_accepted = self.marketplace.warning_accepted(user_id)
+
+        if not warning_accepted:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="warning_not_accepted",
+            )
+
         to_download = version or self.latest_version
         if to_download == self.installed_version:
             raise HomeAssistantError(
@@ -104,6 +107,11 @@ class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
 
         try:
             await self.repository.async_download_repository(ref=to_download)
+        except GitHubAnonymousRateLimitError as exception:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="github_rate_limited",
+            ) from exception
         except MarketplaceError as exception:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -121,10 +129,19 @@ class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
             return None
 
         if self.latest_version not in self.repository.data.published_tags:
-            releases = await self.repository.get_releases(
-                prerelease=self.repository.data.show_beta,
-                returnlimit=self.marketplace.configuration.release_limit,
-            )
+            # The notes are best effort, the releases known already still help
+            try:
+                releases = await self.repository.get_releases(
+                    prerelease=self.repository.data.show_beta,
+                    returnlimit=RELEASE_LIMIT,
+                )
+            except MarketplaceError as exception:
+                LOGGER.debug(
+                    "Could not get the releases of %s: %s",
+                    self.repository.data.full_name,
+                    exception,
+                )
+                releases = []
             if releases:
                 self.repository.data.releases = True
                 self.repository.releases.objects = releases
@@ -146,18 +163,6 @@ class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
                 release_notes += "\n\n---\n\n"
         elif any(self.repository.releases.objects):
             release_notes += self.repository.releases.objects[0].body
-
-        if self.repository.pending_update:
-            if self.repository.data.category == RepositoryCategory.INTEGRATION:
-                release_notes += (
-                    "\n\n<ha-alert alert-type='warning'>You need to restart"
-                    " Home Assistant manually after updating.</ha-alert>\n\n"
-                )
-            if self.repository.data.category == RepositoryCategory.PLUGIN:
-                release_notes += (
-                    "\n\n<ha-alert alert-type='warning'>You need to manually"
-                    " clear the frontend cache after updating.</ha-alert>\n\n"
-                )
 
         return release_notes.replace("\n#", "\n\n#")
 

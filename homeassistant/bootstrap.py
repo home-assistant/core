@@ -224,6 +224,7 @@ DEFAULT_INTEGRATIONS = {
     "hardware",
     "labs",
     "logger",
+    "marketplace",
     "network",
     "system_health",
     #

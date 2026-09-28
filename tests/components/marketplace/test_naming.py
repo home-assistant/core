@@ -43,7 +43,7 @@ ALLOWED_TOKENS_IN_FILE: dict[str, dict[str, str]] = {
         '"home-assistant-hacs",': "a GitHub topic filtered from repository topics",
     },
     "utils/validate.py": {
-        'vol.Optional("hacs")': "the minimum version key of the repository manifest",
+        'probatio.Optional("hacs")': "the minimum version key of the repository manifest",
     },
 }
 

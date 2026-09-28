@@ -3,6 +3,7 @@
 from collections import Counter
 from collections.abc import Iterable
 from http import HTTPStatus
+from pathlib import Path
 from typing import Any, TypedDict
 
 import pytest
@@ -42,15 +43,6 @@ class CategoryTestData(TypedDict):
 
 CATEGORY_TEST_DATA: tuple[CategoryTestData, ...] = (
     CategoryTestData(
-        id="1296265",
-        category=RepositoryCategory.APPDAEMON,
-        repository="hacs-test-org/appdaemon-basic",
-        files=["__init__.py", "example.py"],
-        version_base="1.0.0",
-        version_update="2.0.0",
-        prerelease="3.0.0",
-    ),
-    CategoryTestData(
         id="1296269",
         category=RepositoryCategory.INTEGRATION,
         repository="hacs-test-org/integration-basic",
@@ -64,15 +56,6 @@ CATEGORY_TEST_DATA: tuple[CategoryTestData, ...] = (
         category=RepositoryCategory.PLUGIN,
         repository="hacs-test-org/plugin-basic",
         files=["example.js", "example.js.gz"],
-        version_base="1.0.0",
-        version_update="2.0.0",
-        prerelease="3.0.0",
-    ),
-    CategoryTestData(
-        id="1296262",
-        category=RepositoryCategory.PYTHON_SCRIPT,
-        repository="hacs-test-org/python_script-basic",
-        files=["example.py"],
         version_base="1.0.0",
         version_update="2.0.0",
         prerelease="3.0.0",
@@ -149,7 +132,6 @@ def dummy_repository_base(
     if repository is None:
         repository = Repository(marketplace)
         repository.data.full_name = "test/test"
-        repository.data.full_name_lower = "test/test"
 
     repository.marketplace = marketplace
     repository.marketplace.hass = marketplace.hass
@@ -184,8 +166,37 @@ def api_usage(aioclient_mock: AiohttpClientMocker) -> dict[str, int]:
     return dict(sorted(counted.items()))
 
 
+def github_api_calls(aioclient_mock: AiohttpClientMocker) -> list[URL]:
+    """Return the requests that went to the GitHub API."""
+    return [
+        url
+        for _, url, _, _ in aioclient_mock.mock_calls
+        if url.host == "api.github.com"
+    ]
+
+
 def assert_api_usage(
     aioclient_mock: AiohttpClientMocker, snapshot: SnapshotAssertion
 ) -> None:
     """Assert the recorded request volume matches the snapshot."""
     assert api_usage(aioclient_mock) == snapshot(name="api_usage")
+
+
+def create_download_folders(config_dir: Path, repositories: dict[str, Any]) -> None:
+    """Create the folders of what stored data says is downloaded.
+
+    A downloaded repository has its files on disk, the Marketplace forgets the
+    ones that were deleted by hand.
+    """
+    for repository in repositories.values():
+        if not repository.get("installed"):
+            continue
+        if repository["category"] == "integration" and repository.get("domain"):
+            folder = config_dir / "custom_components" / repository["domain"]
+        elif repository["category"] == "plugin":
+            folder = (
+                config_dir / "www" / "community" / repository["full_name"].split("/")[1]
+            )
+        else:
+            continue
+        folder.mkdir(parents=True, exist_ok=True)

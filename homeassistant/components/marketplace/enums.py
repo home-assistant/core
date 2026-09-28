@@ -7,10 +7,8 @@ from typing import override
 class RepositoryCategory(StrEnum):
     """Repository categories the Marketplace knows about."""
 
-    APPDAEMON = "appdaemon"
     INTEGRATION = "integration"
     PLUGIN = "plugin"  # Kept for legacy purposes
-    PYTHON_SCRIPT = "python_script"
     TEMPLATE = "template"
     THEME = "theme"
 

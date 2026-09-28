@@ -4,19 +4,15 @@ import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 import inspect
-from typing import TYPE_CHECKING, Any, overload
+from typing import Any, overload
 
-from ..const import DEFAULT_CONCURRENT_BACKOFF_TIME, DEFAULT_CONCURRENT_TASKS
-
-if TYPE_CHECKING:
-    from ..base import MarketplaceManager
+from ..const import DEFAULT_CONCURRENT_TASKS
 
 
 def concurrent[**P, T](
     concurrenttasks: int = DEFAULT_CONCURRENT_TASKS,
-    backoff_time: float = DEFAULT_CONCURRENT_BACKOFF_TIME,
 ) -> Callable[[Callable[P, Awaitable[T]]], Callable[P, Coroutine[Any, Any, T]]]:
-    """Return a modified function."""
+    """Limit how many calls of the decorated function run at the same time."""
 
     max_concurrent = asyncio.Semaphore(concurrenttasks)
 
@@ -25,21 +21,8 @@ def concurrent[**P, T](
     ) -> Callable[P, Coroutine[Any, Any, T]]:
         @wraps(function)
         async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
-            marketplace: MarketplaceManager | None = getattr(
-                args[0], "marketplace", None
-            )
-
             async with max_concurrent:
-                result = await function(*args, **kwargs)
-                if (
-                    marketplace is None
-                    or marketplace.queue is None
-                    or marketplace.queue.has_pending_tasks
-                    or "update" not in function.__name__
-                ):
-                    await asyncio.sleep(backoff_time)
-
-                return result
+                return await function(*args, **kwargs)
 
         return wrapper
 

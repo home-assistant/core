@@ -11,9 +11,12 @@ import pytest
 from homeassistant.components import lovelace
 from homeassistant.components.lovelace import LOVELACE_DATA
 from homeassistant.components.marketplace.const import (
+    CONF_WARNING_ACCEPTED,
     DOMAIN,
     LEGACY_HACS_REPOSITORY_ID,
     LEGACY_HACS_SYSTEM_ID,
+    STORAGE_VERSION,
+    WARNING_VERSION,
 )
 from homeassistant.components.marketplace.migration import (
     LEGACY_HACS_DOMAIN,
@@ -21,7 +24,7 @@ from homeassistant.components.marketplace.migration import (
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_SYSTEM, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -31,10 +34,10 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from . import setup_integration
-from .const import REPOSITORY_INTEGRATION_ID, TOKEN
+from . import create_download_folders, setup_integration
+from .const import REPOSITORY_INTEGRATION_ID, TOKEN, WARNING_ACCEPTANCE
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 UPDATE_ENTITY_ID = "update.hacs_basic_integration"
 SWITCH_ENTITY_ID = "switch.hacs_basic_integration_pre_release"
@@ -214,8 +217,8 @@ async def test_takeover(
         domain for domain, _ in issue_registry.issues if domain == LEGACY_HACS_DOMAIN
     ]
 
-    # The options that only ever meant something to HACS are dropped
-    assert mock_config_entry.options == {"country": "ALL", "appdaemon": True}
+    # The options only ever meant something to HACS
+    assert mock_config_entry.options == {}
 
 
 @pytest.mark.usefixtures("stored_repositories")
@@ -244,6 +247,55 @@ async def test_takeover_runs_once(
 
     assert _registry_state(hass, mock_config_entry) == before
     assert "Took over the existing installation" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("warning_accepted", "seed_legacy_install"),
+    [
+        pytest.param(None, True, id="takeover"),
+        pytest.param(None, False, id="previous_setup_flow"),
+    ],
+)
+@pytest.mark.usefixtures("stored_repositories")
+async def test_existing_install_reads_warning(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    warning_accepted: None,
+    seed_legacy_install: bool,
+) -> None:
+    """Test an install from before the warning still has to read it."""
+    mock_config_entry.add_to_hass(hass)
+    if seed_legacy_install:
+        _seed_repository_device(mock_config_entry, device_registry)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert CONF_WARNING_ACCEPTED not in mock_config_entry.data
+    assert mock_config_entry.runtime_data.warning_acceptances == {}
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        pytest.param({}, id="new"),
+        pytest.param({CONF_TOKEN: TOKEN}, id="github_connected"),
+    ],
+)
+@pytest.mark.usefixtures("stored_repositories")
+async def test_system_entry_does_not_accept_warning(
+    hass: HomeAssistant, data: dict[str, str]
+) -> None:
+    """Test a system entry needs the warning read, connecting GitHub does not count."""
+    entry = MockConfigEntry(domain=DOMAIN, source=SOURCE_SYSTEM, data=data)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.data == data
+    assert entry.runtime_data.warning_acceptances == {}
 
 
 @pytest.mark.usefixtures("stored_repositories")
@@ -331,14 +383,12 @@ async def test_duplicate_entries_removed(
         domain=DOMAIN,
         created_at=datetime(2024, 1, 1, tzinfo=UTC),
         data=oldest_data,
-        options={"country": "ALL"},
     )
     newest = MockConfigEntry(
         title="Marketplace",
         domain=DOMAIN,
         created_at=datetime(2026, 1, 1, tzinfo=UTC),
         data=newest_data,
-        options={"country": "ALL"},
     )
     oldest.add_to_hass(hass)
     newest.add_to_hass(hass)
@@ -347,8 +397,121 @@ async def test_duplicate_entries_removed(
     await hass.async_block_till_done()
 
     assert hass.config_entries.async_entries(DOMAIN) == [oldest]
-    assert oldest.data == {CONF_TOKEN: TOKEN}
+    assert oldest.data[CONF_TOKEN] == TOKEN
     assert oldest.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("stored_repositories")
+async def test_duplicate_entries_keep_the_legacy_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the entry with the entities of HACS wins over an older one.
+
+    An older entry is left over from before a downgrade, the newer one is the
+    HACS install the user went back to and customized since.
+    """
+    oldest = MockConfigEntry(
+        title="Marketplace",
+        domain=DOMAIN,
+        created_at=datetime(2024, 1, 1, tzinfo=UTC),
+        data={},
+    )
+    newest = MockConfigEntry(
+        title="HACS",
+        domain=DOMAIN,
+        created_at=datetime(2026, 1, 1, tzinfo=UTC),
+        data={CONF_TOKEN: TOKEN},
+    )
+    oldest.add_to_hass(hass)
+    newest.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        UPDATE_DOMAIN,
+        LEGACY_HACS_DOMAIN,
+        REPOSITORY_INTEGRATION_ID,
+        config_entry=newest,
+        suggested_object_id="my_integration",
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.async_entries(DOMAIN) == [newest]
+    entity = entity_registry.async_get("update.my_integration")
+    assert entity is not None
+    assert entity.platform == DOMAIN
+
+
+OLDER_WARNING_ACCEPTANCE = {
+    "version": WARNING_VERSION,
+    "accepted_at": "2026-03-01T00:00:00+00:00",
+}
+
+
+@pytest.mark.parametrize(
+    ("oldest_data", "newest_source", "newest_data", "kept_acceptances"),
+    [
+        pytest.param({}, SOURCE_USER, {CONF_TOKEN: TOKEN}, None, id="hacs_entry"),
+        pytest.param(
+            {},
+            SOURCE_SYSTEM,
+            {CONF_WARNING_ACCEPTED: {"abc": WARNING_ACCEPTANCE}},
+            {"abc": WARNING_ACCEPTANCE},
+            id="accepted_system_entry",
+        ),
+        pytest.param(
+            {
+                CONF_WARNING_ACCEPTED: {
+                    "abc": WARNING_ACCEPTANCE,
+                    "def": OLDER_WARNING_ACCEPTANCE,
+                }
+            },
+            SOURCE_SYSTEM,
+            {
+                CONF_WARNING_ACCEPTED: {
+                    "abc": OLDER_WARNING_ACCEPTANCE,
+                    "def": WARNING_ACCEPTANCE,
+                    "ghi": OLDER_WARNING_ACCEPTANCE,
+                }
+            },
+            {
+                "abc": WARNING_ACCEPTANCE,
+                "def": WARNING_ACCEPTANCE,
+                "ghi": OLDER_WARNING_ACCEPTANCE,
+            },
+            id="newest_acceptance_per_user",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("stored_repositories")
+async def test_duplicate_entries_keep_warning_acceptance(
+    hass: HomeAssistant,
+    oldest_data: dict[str, Any],
+    newest_source: str,
+    newest_data: dict[str, Any],
+    kept_acceptances: dict[str, Any] | None,
+) -> None:
+    """Test the kept entry merges the warning acceptances of every user."""
+    oldest = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_SYSTEM,
+        created_at=datetime(2024, 1, 1, tzinfo=UTC),
+        data=oldest_data,
+    )
+    newest = MockConfigEntry(
+        domain=DOMAIN,
+        source=newest_source,
+        created_at=datetime(2026, 1, 1, tzinfo=UTC),
+        data=newest_data,
+    )
+    oldest.add_to_hass(hass)
+    newest.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.async_entries(DOMAIN) == [oldest]
+    assert oldest.data.get(CONF_WARNING_ACCEPTED) == kept_acceptances
 
 
 LEGACY_RESOURCE_URL = "/hacsfiles/plugin-basic/plugin-basic.js?hacstag=1296267100"
@@ -421,6 +584,7 @@ async def test_dashboard_resource_migration_is_idempotent(
 async def test_dashboard_resource_migration_in_yaml_mode(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that the resources of a YAML dashboard are the user's own file."""
@@ -434,6 +598,21 @@ async def test_dashboard_resource_migration_in_yaml_mode(
 
     assert _resource_urls(hass) == [LEGACY_RESOURCE_URL]
     assert "dashboard resource(s)" not in caplog.text
+
+    # The user is told what to change in their own file
+    issue = issue_registry.async_get_issue(DOMAIN, "legacy_dashboard_resources")
+    assert issue is not None
+    assert issue.translation_placeholders == {
+        "resources": f"- `{LEGACY_RESOURCE_URL}` becomes `{MIGRATED_RESOURCE_URL}`"
+    }
+
+    # Once they did, the issue goes away
+    hass.data[LOVELACE_DATA].resources = lovelace.resources.ResourceYAMLCollection(
+        [{"id": "1", "type": "module", "url": MIGRATED_RESOURCE_URL}]
+    )
+    await async_migrate_dashboard_resources(hass)
+
+    assert not issue_registry.async_get_issue(DOMAIN, "legacy_dashboard_resources")
 
 
 LEGACY_STORAGE_FILES = ("hacs.hacs", "hacs.repositories", "hacs.critical", "hacs.data")
@@ -535,7 +714,7 @@ async def test_no_legacy_integration(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert not (config_dir / "custom_components").exists()
+    assert not (config_dir / "custom_components" / "hacs").exists()
     assert _remaining_storage(config_dir) == set()
 
 
@@ -651,3 +830,231 @@ async def test_legacy_files_removal_runs_once(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert REMOVED_LOG not in caplog.text
+
+
+APPDAEMON_DOWNLOADED_ID = "990001"
+APPDAEMON_UNNAMED_ID = "990002"
+APPDAEMON_NOT_DOWNLOADED_ID = "990003"
+
+APPDAEMON_REPOSITORIES: dict[str, dict[str, Any]] = {
+    APPDAEMON_DOWNLOADED_ID: {
+        "category": "appdaemon",
+        "full_name": "hacs-test-org/appdaemon-basic",
+        "installed": True,
+        "repository_manifest": {"name": "Basic app"},
+        "version_installed": "1.0.0",
+    },
+    APPDAEMON_UNNAMED_ID: {
+        "category": "appdaemon",
+        "full_name": "hacs-test-org/motion_lights-app",
+        "installed": True,
+    },
+    APPDAEMON_NOT_DOWNLOADED_ID: {
+        "category": "appdaemon",
+        "full_name": "hacs-test-org/appdaemon-other",
+    },
+}
+
+
+def _seed_stored_repositories(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    appdaemon_repositories: dict[str, dict[str, Any]],
+) -> None:
+    """Store the regular repositories next to the given AppDaemon ones."""
+    repositories = load_json_object_fixture("stored_repositories.json", DOMAIN)
+    hass_storage[f"{DOMAIN}.repositories"] = {
+        "version": STORAGE_VERSION,
+        "data": {**repositories, **appdaemon_repositories},
+    }
+    create_download_folders(Path(hass.config.config_dir), repositories)
+
+
+def _seed_appdaemon_registry_entries(
+    entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    repository_id: str,
+) -> dr.DeviceEntry:
+    """Create the device and entities of a downloaded AppDaemon app."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, repository_id)},
+        name="Basic app",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+
+    for domain in (UPDATE_DOMAIN, SWITCH_DOMAIN):
+        entity_registry.async_get_or_create(
+            domain,
+            DOMAIN,
+            repository_id,
+            config_entry=entry,
+            device_id=device.id,
+        )
+
+    return device
+
+
+async def test_appdaemon_repositories_forgotten(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    config_dir: Path,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the stored AppDaemon apps are forgotten, but stay on disk."""
+    _seed_stored_repositories(hass, hass_storage, APPDAEMON_REPOSITORIES)
+    app_file = config_dir / "appdaemon" / "apps" / "basic" / "basic.py"
+    app_file.parent.mkdir(parents=True)
+    app_file.write_text("import appdaemon", encoding="utf-8")
+
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_TOKEN: TOKEN})
+    entry.add_to_hass(hass)
+    device = _seed_appdaemon_registry_entries(
+        entry, device_registry, entity_registry, APPDAEMON_DOWNLOADED_ID
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    marketplace = entry.runtime_data
+    for repository_id in APPDAEMON_REPOSITORIES:
+        assert marketplace.repositories.get_by_id(repository_id) is None
+    assert marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID) is not None
+
+    assert device_registry.async_get(device.id) is None
+    for domain in (UPDATE_DOMAIN, SWITCH_DOMAIN):
+        assert (
+            entity_registry.async_get_entity_id(domain, DOMAIN, APPDAEMON_DOWNLOADED_ID)
+            is None
+        )
+
+    # Only the downloaded apps are listed, the files are left alone
+    issue = issue_registry.async_get_issue(DOMAIN, "appdaemon_not_supported")
+    assert issue is not None
+    assert issue.is_fixable is False
+    assert issue.is_persistent is False
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders == {"apps": "Basic app, Motion Lights App"}
+    assert app_file.read_text(encoding="utf-8") == "import appdaemon"
+
+    # Unloading writes the stored data, without the AppDaemon apps
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    stored = hass_storage[f"{DOMAIN}.repositories"]["data"]
+    assert REPOSITORY_INTEGRATION_ID in stored
+    assert not set(APPDAEMON_REPOSITORIES) & set(stored)
+
+    # With nothing left to report, the next start has nothing to say
+    ir.async_delete_issue(hass, DOMAIN, "appdaemon_not_supported")
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, "appdaemon_not_supported") is None
+    assert app_file.exists()
+
+
+async def test_appdaemon_repositories_not_downloaded(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test AppDaemon apps that were never downloaded are dropped quietly."""
+    _seed_stored_repositories(
+        hass,
+        hass_storage,
+        {
+            APPDAEMON_NOT_DOWNLOADED_ID: APPDAEMON_REPOSITORIES[
+                APPDAEMON_NOT_DOWNLOADED_ID
+            ]
+        },
+    )
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_TOKEN: TOKEN})
+    await setup_integration(hass, entry)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert (
+        entry.runtime_data.repositories.get_by_id(APPDAEMON_NOT_DOWNLOADED_ID) is None
+    )
+    assert issue_registry.async_get_issue(DOMAIN, "appdaemon_not_supported") is None
+
+
+PYTHON_SCRIPT_DOWNLOADED_ID = "990011"
+PYTHON_SCRIPT_NOT_DOWNLOADED_ID = "990012"
+
+PYTHON_SCRIPT_REPOSITORIES: dict[str, dict[str, Any]] = {
+    PYTHON_SCRIPT_DOWNLOADED_ID: {
+        "category": "python_script",
+        "full_name": "hacs-test-org/python_script-basic",
+        "installed": True,
+        "repository_manifest": {"name": "Basic script"},
+        "version_installed": "1.0.0",
+    },
+    PYTHON_SCRIPT_NOT_DOWNLOADED_ID: {
+        "category": "python_script",
+        "full_name": "hacs-test-org/python_script-other",
+    },
+}
+
+
+async def test_python_scripts_forgotten_next_to_appdaemon(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    config_dir: Path,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test python scripts are forgotten like AppDaemon apps, each with its issue."""
+    _seed_stored_repositories(
+        hass, hass_storage, {**APPDAEMON_REPOSITORIES, **PYTHON_SCRIPT_REPOSITORIES}
+    )
+    script_file = config_dir / "python_scripts" / "basic.py"
+    script_file.parent.mkdir(parents=True)
+    script_file.write_text("logger.info('hello')", encoding="utf-8")
+
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_TOKEN: TOKEN})
+    entry.add_to_hass(hass)
+    device = _seed_appdaemon_registry_entries(
+        entry, device_registry, entity_registry, PYTHON_SCRIPT_DOWNLOADED_ID
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    marketplace = entry.runtime_data
+    for repository_id in PYTHON_SCRIPT_REPOSITORIES:
+        assert marketplace.repositories.get_by_id(repository_id) is None
+    assert device_registry.async_get(device.id) is None
+
+    issue = issue_registry.async_get_issue(DOMAIN, "python_scripts_not_supported")
+    assert issue is not None
+    assert issue.translation_placeholders == {"scripts": "Basic script"}
+    assert issue_registry.async_get_issue(DOMAIN, "appdaemon_not_supported")
+
+    # The python_script integration keeps running what was downloaded
+    assert script_file.read_text(encoding="utf-8") == "logger.info('hello')"
+
+
+@pytest.mark.usefixtures("stored_repositories")
+async def test_options_cleared(hass: HomeAssistant) -> None:
+    """Test every option is cleared, including ones the Marketplace never knew."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_TOKEN: TOKEN},
+        options={"country": "NL", "appdaemon": True, "unknown": "dropped"},
+    )
+    await setup_integration(hass, entry)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.options == {}
+
+    configuration = entry.runtime_data.configuration
+    for option in ("country", "appdaemon", "unknown"):
+        assert not hasattr(configuration, option)

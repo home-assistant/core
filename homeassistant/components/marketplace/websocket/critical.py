@@ -2,12 +2,13 @@
 
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 import homeassistant.helpers.config_validation as cv
 
-from ..utils.storage import async_load_from_storage, async_save_to_storage
+from ..critical import async_acknowledge_critical_repository
+from ..utils.storage import async_load_from_storage
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "marketplace/critical/list",
+        probatio.Required("type"): "marketplace/critical/list",
     }
 )
 @websocket_api.require_admin
@@ -36,8 +37,8 @@ async def marketplace_critical_list(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "marketplace/critical/acknowledge",
-        vol.Required("repository"): cv.string,
+        probatio.Required("type"): "marketplace/critical/acknowledge",
+        probatio.Required("repository"): cv.string,
     }
 )
 @websocket_api.require_admin
@@ -48,11 +49,5 @@ async def marketplace_critical_acknowledge(
     msg: dict[str, Any],
 ) -> None:
     """Acknowledge critical repository."""
-    repository = msg["repository"]
-
-    critical = await async_load_from_storage(hass, "critical")
-    for repo in critical:
-        if repository == repo["repository"]:
-            repo["acknowledged"] = True
-    await async_save_to_storage(hass, "critical", critical)
+    critical = await async_acknowledge_critical_repository(hass, msg["repository"])
     connection.send_message(websocket_api.result_message(msg["id"], critical))

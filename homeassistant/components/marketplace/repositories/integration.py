@@ -1,8 +1,11 @@
 """Class for integration repositories."""
 
-import re
+from collections.abc import Awaitable, Callable
+from functools import partial
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, override
 
+from homeassistant import components
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.loader import (
     async_clear_custom_components_cache,
@@ -11,18 +14,22 @@ from homeassistant.loader import (
 
 from ..const import DOMAIN
 from ..enums import MarketplaceSignal, RepositoryCategory, RepositoryFile
-from ..exceptions import AppRepositoryError, MarketplaceError
+from ..exceptions import (
+    AppRepositoryError,
+    CatalogContentUnresolvedError,
+    MarketplaceError,
+)
 from ..utils.decode import decode_content
 from ..utils.decorator import concurrent
 from ..utils.filters import get_first_directory_in_directory
 from ..utils.json import json_loads_object
 from ..utils.logger import LOGGER
+from ..utils.url import github_raw_file, ref_version
+from ..utils.validate import VALID_DOMAIN
 from .base import Repository
 
 if TYPE_CHECKING:
     from ..base import MarketplaceManager
-
-VALID_DOMAIN = re.compile(r"^[a-z0-9_]+$")
 
 
 def _validated_domain(domain: Any) -> str:
@@ -40,13 +47,13 @@ def _validated_domain(domain: Any) -> str:
 class IntegrationRepository(Repository):
     """Integration repository."""
 
+    remote_path = "custom_components"
+
     def __init__(self, marketplace: MarketplaceManager, full_name: str) -> None:
         """Initialize."""
         super().__init__(marketplace=marketplace)
         self.data.full_name = full_name
-        self.data.full_name_lower = full_name.lower()
         self.data.category = RepositoryCategory.INTEGRATION
-        self.content.path.remote = "custom_components"
         self.content.path.local = self.localpath
 
     @property
@@ -99,6 +106,16 @@ class IntegrationRepository(Repository):
             )
 
     @override
+    async def async_replaces_built_in(self) -> bool:
+        """Return if the domain belongs to an integration of Home Assistant."""
+        if not self.data.domain:
+            return False
+
+        # The same check the loader makes before loading a custom integration
+        manifest = Path(components.__file__).parent / self.data.domain / "manifest.json"
+        return await self.marketplace.hass.async_add_executor_job(manifest.is_file)
+
+    @override
     async def async_post_uninstall(self) -> None:
         """Run post uninstall steps."""
         if self.data.config_flow:
@@ -112,41 +129,11 @@ class IntegrationRepository(Repository):
         await self.common_validate()
 
         # Custom step 1: Validate content.
-        if self.repository_manifest.content_in_root:
-            self.content.path.remote = ""
-
-        if self.content.path.remote == "custom_components":
-            name = get_first_directory_in_directory(self.tree, "custom_components")
-            if name is None:
-                if (
-                    "repository.json" in self.treefiles
-                    or "repository.yaml" in self.treefiles
-                    or "repository.yml" in self.treefiles
-                ):
-                    raise AppRepositoryError
-                raise MarketplaceError(
-                    f"{self.string} Repository structure for {f'{self.ref}'.replace('tags/', '')} is not compliant"
-                )
-            self.content.path.remote = f"custom_components/{name}"
+        self.resolve_content()
 
         # Get the content of manifest.json
         if manifest := await self.async_get_integration_manifest():
-            try:
-                self.integration_manifest = manifest
-                self.data.authors = manifest.get("codeowners", [])
-                self.data.domain = _validated_domain(manifest["domain"])
-                self.data.manifest_name = manifest.get("name")
-                self.data.config_flow = manifest.get("config_flow", False)
-
-            except KeyError as exception:
-                self.validate.errors.append(
-                    f"Missing expected key '{exception}' in {RepositoryFile.MAINIFEST_JSON}"
-                )
-                LOGGER.error(
-                    "Missing expected key '%s' in '%s'",
-                    exception,
-                    RepositoryFile.MAINIFEST_JSON,
-                )
+            self._use_integration_manifest(manifest)
 
         # Set local path
         self.content.path.local = self.localpath
@@ -159,7 +146,7 @@ class IntegrationRepository(Repository):
         return self.validate.success
 
     @override
-    @concurrent(concurrenttasks=10, backoff_time=5)
+    @concurrent(concurrenttasks=10)
     async def update_repository(
         self, ignore_issues: bool = False, force: bool = False
     ) -> None:
@@ -176,22 +163,7 @@ class IntegrationRepository(Repository):
 
         # Get the content of manifest.json
         if manifest := await self.async_get_integration_manifest():
-            try:
-                self.integration_manifest = manifest
-                self.data.authors = manifest.get("codeowners", [])
-                self.data.domain = _validated_domain(manifest["domain"])
-                self.data.manifest_name = manifest.get("name")
-                self.data.config_flow = manifest.get("config_flow", False)
-
-            except KeyError as exception:
-                self.validate.errors.append(
-                    f"Missing expected key '{exception}' in {RepositoryFile.MAINIFEST_JSON}"
-                )
-                LOGGER.error(
-                    "Missing expected key '%s' in '%s'",
-                    exception,
-                    RepositoryFile.MAINIFEST_JSON,
-                )
+            self._use_integration_manifest(manifest)
 
         # Set local path
         self.content.path.local = self.localpath
@@ -208,6 +180,85 @@ class IntegrationRepository(Repository):
                 },
             )
 
+    @override
+    def resolve_content(self) -> None:
+        """Point the content at the integration directory in the tree."""
+        if self.repository_manifest.content_in_root:
+            self.content.path.remote = ""
+
+        if self.content.path.remote == "custom_components":
+            name = get_first_directory_in_directory(self.tree, "custom_components")
+            if name is None:
+                if (
+                    "repository.json" in self.treefiles
+                    or "repository.yaml" in self.treefiles
+                    or "repository.yml" in self.treefiles
+                ):
+                    raise AppRepositoryError
+                raise MarketplaceError(
+                    f"{self.string} Repository structure for {ref_version(self.ref)} is not compliant"
+                )
+            self.content.path.remote = f"custom_components/{name}"
+
+    def _use_integration_manifest(self, manifest: dict[str, Any]) -> None:
+        """Take the details of the integration from its manifest.json."""
+        try:
+            domain = _validated_domain(manifest["domain"])
+            # The files of a download stay where they are, removal needs to find them
+            if self.data.installed and self.data.domain not in (None, domain):
+                raise MarketplaceError(
+                    f"{self.data.full_name} changed its domain from "
+                    f"'{self.data.domain}' to '{domain}', remove it and download "
+                    "it again"
+                )
+
+            self.integration_manifest = manifest
+            self.data.authors = manifest.get("codeowners", [])
+            self.data.domain = domain
+            self.data.manifest_name = manifest.get("name")
+            self.data.config_flow = manifest.get("config_flow", False)
+
+        except KeyError as exception:
+            self.validate.errors.append(
+                f"Missing expected key '{exception}' in {RepositoryFile.MAINIFEST_JSON}"
+            )
+            LOGGER.error(
+                "Missing expected key '%s' in '%s'",
+                exception,
+                RepositoryFile.MAINIFEST_JSON,
+            )
+
+    @override
+    async def _async_resolve_catalog_content(
+        self, version: str, *, commit: bool
+    ) -> Callable[[], Awaitable[None]]:
+        """Resolve the content of a catalog version, and read its manifest.json."""
+        download: Callable[[], Awaitable[None]]
+        if self.repository_manifest.zip_release and self.repository_manifest.filename:
+            # Without the tree, the catalog domain names the directory
+            if self.data.domain is None:
+                raise CatalogContentUnresolvedError("The catalog names no domain")
+            if self.repository_manifest.content_in_root:
+                self.content.path.remote = ""
+            else:
+                self.content.path.remote = f"custom_components/{self.data.domain}"
+            download = partial(self.download_zip_files, self.validate)
+        else:
+            download = await super()._async_resolve_catalog_content(
+                version, commit=commit
+            )
+
+        manifest_path = self._integration_manifest_path()
+        manifest = await self._async_download_integration_manifest(
+            version, manifest_path
+        )
+        if manifest is None or "domain" not in manifest:
+            raise CatalogContentUnresolvedError(f"No usable {manifest_path}")
+
+        self._use_integration_manifest(manifest)
+        self.content.path.local = self.localpath
+        return download
+
     async def reload_custom_components(self) -> None:
         """Reload custom_components (and config flows)in HA."""
         self.logger.info("Reloading custom_component cache")
@@ -215,15 +266,17 @@ class IntegrationRepository(Repository):
         await async_get_custom_components(self.marketplace.hass)
         self.logger.info("Custom_component cache reloaded")
 
+    def _integration_manifest_path(self) -> str:
+        """Return the path of the manifest.json in the repository."""
+        if self.repository_manifest.content_in_root:
+            return RepositoryFile.MAINIFEST_JSON
+        return f"{self.content.path.remote}/{RepositoryFile.MAINIFEST_JSON}"
+
     async def async_get_integration_manifest(
         self, ref: str | None = None
     ) -> dict[str, Any] | None:
         """Get the content of the manifest.json file."""
-        manifest_path = (
-            "manifest.json"
-            if self.repository_manifest.content_in_root
-            else f"{self.content.path.remote}/{RepositoryFile.MAINIFEST_JSON}"
-        )
+        manifest_path = self._integration_manifest_path()
 
         if manifest_path not in (entry.path for entry in self.tree):
             raise MarketplaceError(
@@ -249,23 +302,27 @@ class IntegrationRepository(Repository):
         self, *, version: str | None, **kwargs: Any
     ) -> dict[str, Any] | None:
         """Get the content of the manifest.json file."""
-        manifest_path = (
-            "manifest.json"
-            if self.repository_manifest.content_in_root
-            else f"{self.content.path.remote}/{RepositoryFile.MAINIFEST_JSON}"
-        )
+        manifest_path = self._integration_manifest_path()
 
         if manifest_path not in (entry.path for entry in self.tree):
             raise MarketplaceError(
                 f"No {RepositoryFile.MAINIFEST_JSON} file found '{manifest_path}'"
             )
 
+        return await self._async_download_integration_manifest(version, manifest_path)
+
+    async def _async_download_integration_manifest(
+        self, version: str | None, manifest_path: str
+    ) -> dict[str, Any] | None:
+        """Download the manifest.json of a version, None when it is not there."""
         self.logger.debug(
             "%s Getting manifest.json for version=%s", self.string, version
         )
         try:
             result = await self.marketplace.async_download_file(
-                f"https://raw.githubusercontent.com/{self.data.full_name}/{version}/{manifest_path}",
+                github_raw_file(
+                    repository=self.data.full_name, ref=version, path=manifest_path
+                ),
                 nolog=True,
             )
             if result is None:

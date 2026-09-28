@@ -1,25 +1,44 @@
 """Tests for the Marketplace setup."""
 
+import asyncio
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiogithubapi import GitHubAuthenticationException, GitHubException
+from aiogithubapi import (
+    GitHubAuthenticationException,
+    GitHubException,
+    GitHubRatelimitException,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.marketplace import async_remove_config_entry_device
+from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.const import DOMAIN, LEGACY_HACS_SYSTEM_ID
 from homeassistant.components.marketplace.enums import DisabledReason
-from homeassistant.components.marketplace.exceptions import MarketplaceError
+from homeassistant.components.marketplace.exceptions import (
+    GitHubRateLimitError,
+    MarketplaceError,
+)
 from homeassistant.components.marketplace.utils.data import MarketplaceData
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_SYSTEM,
+    ConfigEntryDisabler,
+    ConfigEntryState,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.setup import async_setup_component
 
-from . import assert_api_usage, get_marketplace, setup_integration
+from . import assert_api_usage, get_marketplace, github_api_calls, setup_integration
 from .const import (
     REPOSITORY_INTEGRATION,
     REPOSITORY_INTEGRATION_ID,
@@ -48,22 +67,157 @@ async def test_load_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_restart_issues_removed_on_start(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the restart issues of earlier downloads go once Home Assistant started."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "restart_required_1296269_tags/1.0.0",
+        is_fixable=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="restart_required",
+        translation_placeholders={"name": "Basic integration"},
+    )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "removed_1296269",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="removed",
+        translation_placeholders={
+            "name": "Basic integration",
+            "reason": "it is gone",
+            "repository_id": "1296269",
+        },
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert not issue_registry.async_get_issue(
+        DOMAIN, "restart_required_1296269_tags/1.0.0"
+    )
+    # Anything else the Marketplace reported stays
+    assert issue_registry.async_get_issue(DOMAIN, "removed_1296269")
+
+
+async def test_legacy_plugin_path(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    config_dir: Path,
+) -> None:
+    """Test downloaded plugins still load from the path HACS served them on."""
+    plugin = config_dir / "www" / "community" / "plugin-basic" / "plugin-basic.js"
+    plugin.parent.mkdir(parents=True)
+    plugin.write_text("customElements.define()", encoding="utf-8")
+
+    await setup_integration(hass, mock_config_entry)
+    # A reload must not try to register the path a second time
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+
+    client = await hass_client()
+    response = await client.get("/hacsfiles/plugin-basic/plugin-basic.js")
+    assert response.status == HTTPStatus.OK
+    assert await response.text() == "customElements.define()"
+
+
+async def test_legacy_plugin_path_without_plugins(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the old path is only served for an install that has plugins."""
+    await setup_integration(hass, mock_config_entry)
+
+    client = await hass_client()
+    response = await client.get("/hacsfiles/plugin-basic/plugin-basic.js")
+    assert response.status == HTTPStatus.NOT_FOUND
+
+
+async def test_unload_keeps_running_when_platforms_stay(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a failed unload leaves the Marketplace working."""
+    await setup_integration(hass, mock_config_entry)
+
+    with patch.object(
+        hass.config_entries, "async_unload_platforms", return_value=False
+    ):
+        assert not await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.FAILED_UNLOAD
+    assert not mock_config_entry.runtime_data.system.disabled
+
+
+async def test_custom_repository_updates_without_custom_repositories(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test nothing waits for custom repository updates when there are none."""
+    await setup_integration(hass, mock_config_entry)
+    marketplace = get_marketplace(hass)
+
+    with patch.object(
+        mock_config_entry, "async_create_background_task"
+    ) as create_background_task:
+        await marketplace.async_update_downloaded_custom_repositories()
+
+    create_background_task.assert_not_called()
+
+
+@pytest.mark.usefixtures("stored_repositories")
+async def test_custom_repository_update_failure_still_updates_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a failing custom repository update does not leave entities waiting."""
+    await setup_integration(hass, mock_config_entry)
+    marketplace = get_marketplace(hass)
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+
+    with (
+        patch.object(marketplace.repositories, "is_default", return_value=False),
+        patch.object(
+            repository, "update_repository", side_effect=MarketplaceError("boom")
+        ),
+        patch.object(
+            marketplace.coordinators[repository.data.category],
+            "async_update_listeners",
+        ) as update_listeners,
+    ):
+        await marketplace.async_update_downloaded_custom_repositories()
+        await marketplace.queue.execute()
+        async with asyncio.timeout(5):
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+    update_listeners.assert_called()
+
+
 @pytest.mark.parametrize(
-    ("side_effect", "state"),
+    ("side_effect", "state", "translation_key"),
     [
         pytest.param(
             GitHubAuthenticationException("Bad credentials"),
             ConfigEntryState.SETUP_ERROR,
+            "invalid_token",
             id="authentication",
         ),
         pytest.param(
             GitHubException("GitHub is having a moment"),
             ConfigEntryState.SETUP_RETRY,
+            "setup_failed",
             id="github_api",
         ),
         pytest.param(
             MarketplaceError("Something went wrong"),
             ConfigEntryState.SETUP_RETRY,
+            "setup_failed",
             id="marketplace",
         ),
     ],
@@ -73,6 +227,7 @@ async def test_setup_failure(
     mock_config_entry: MockConfigEntry,
     side_effect: Exception,
     state: ConfigEntryState,
+    translation_key: str,
 ) -> None:
     """Test a failure while setting up leaves the entry for core to handle."""
     mock_config_entry.add_to_hass(hass)
@@ -81,6 +236,7 @@ async def test_setup_failure(
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is state
+    assert mock_config_entry.error_reason_translation_key == translation_key
 
 
 async def test_setup_retries_without_restored_data(
@@ -94,20 +250,29 @@ async def test_setup_retries_without_restored_data(
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "restore_failed"
 
 
 @pytest.mark.parametrize(
-    ("reason", "state"),
+    ("reason", "state", "translation_key"),
     [
         pytest.param(
             DisabledReason.INVALID_TOKEN,
             ConfigEntryState.SETUP_ERROR,
+            "invalid_token",
             id="invalid_token",
         ),
         pytest.param(
             DisabledReason.RATE_LIMIT,
             ConfigEntryState.SETUP_RETRY,
+            "disabled_rate_limit",
             id="rate_limit",
+        ),
+        pytest.param(
+            DisabledReason.REMOVED,
+            ConfigEntryState.SETUP_RETRY,
+            "disabled_removed",
+            id="removed",
         ),
     ],
 )
@@ -116,6 +281,7 @@ async def test_setup_with_a_disabled_marketplace(
     mock_config_entry: MockConfigEntry,
     reason: DisabledReason,
     state: ConfigEntryState,
+    translation_key: str,
 ) -> None:
     """Test a Marketplace that ends up disabled while setting up fails the setup."""
 
@@ -130,6 +296,7 @@ async def test_setup_with_a_disabled_marketplace(
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is state
+    assert mock_config_entry.error_reason_translation_key == translation_key
 
 
 async def test_setup_asks_to_reauthenticate_for_an_invalid_token(
@@ -177,14 +344,12 @@ async def test_entities_for_downloaded_repositories(
     assert [entity.entity_id for entity in entities] == [
         "switch.basic_integration_pre_release",
         "switch.basic_plugin_pre_release",
-        "update.basic_integration_update",
-        "update.basic_plugin_update",
+        "update.basic_integration",
+        "update.basic_plugin",
     ]
     assert entities == snapshot(name="entities")
 
-    assert hass.states.get("update.basic_integration_update") == snapshot(
-        name="update_state"
-    )
+    assert hass.states.get("update.basic_integration") == snapshot(name="update_state")
 
 
 @pytest.mark.usefixtures("stored_repositories")
@@ -386,3 +551,151 @@ async def test_www_directory_left_alone(
 
     assert get_marketplace(hass).status.created_www_directory is False
     assert "dashboard resources are served after a restart" not in caplog.text
+
+
+async def test_system_entry_created(hass: HomeAssistant) -> None:
+    """Test the Marketplace sets itself up without a GitHub account."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].source == SOURCE_SYSTEM
+    assert entries[0].data == {}
+    assert entries[0].state is ConfigEntryState.LOADED
+    assert not get_marketplace(hass).github_connected
+
+
+@pytest.mark.parametrize(
+    "disabled_by",
+    [
+        pytest.param(None, id="enabled"),
+        pytest.param(ConfigEntryDisabler.USER, id="disabled"),
+    ],
+)
+async def test_system_entry_not_created_twice(
+    hass: HomeAssistant, disabled_by: ConfigEntryDisabler | None
+) -> None:
+    """Test an existing entry, disabled or not, is the one the Marketplace keeps."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, disabled_by=disabled_by)
+    config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.async_entries(DOMAIN) == [config_entry]
+    assert config_entry.disabled_by is disabled_by
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+@pytest.mark.parametrize("github_token", [None])
+@pytest.mark.usefixtures("stored_repositories")
+async def test_setup_without_github(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test setting up without an account leaves GitHub alone."""
+    # The client must not pick up a token that happens to be in the environment
+    monkeypatch.setenv("GITHUB_TOKEN", "from_the_environment")
+
+    await setup_integration(hass, mock_config_entry)
+
+    marketplace = get_marketplace(hass)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert not marketplace.github_connected
+    assert not marketplace.system.disabled
+    assert marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+
+    # The background work that talks to GitHub is not scheduled
+    assert len(marketplace.recurring_tasks) == 2
+    await marketplace.async_update_downloaded_custom_repositories()
+    assert not marketplace.queue.has_pending_tasks
+    assert await marketplace.async_can_update() == 0
+
+    assert not github_api_calls(aioclient_mock)
+
+    # Anonymous calls go out without a token
+    await marketplace.githubapi.rate_limit()
+    _, url, _, headers = aioclient_mock.mock_calls[-1]
+    assert url.host == "api.github.com"
+    assert "Authorization" not in headers
+
+
+@pytest.mark.parametrize("github_token", [None])
+async def test_setup_authentication_failure_without_github(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test there is nothing to reauthenticate without a connected account."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch.object(
+        MarketplaceData,
+        "restore",
+        side_effect=GitHubAuthenticationException("Bad credentials"),
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(
+            GitHubRatelimitException("API rate limit exceeded"),
+            GitHubRateLimitError,
+            id="rate_limit",
+        ),
+        pytest.param(
+            GitHubAuthenticationException("Bad credentials"),
+            MarketplaceError,
+            id="authentication",
+        ),
+    ],
+)
+@pytest.mark.parametrize("github_token", [None])
+async def test_anonymous_github_errors_do_not_disable(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    side_effect: Exception,
+    error: type[MarketplaceError],
+) -> None:
+    """Test an anonymous refusal only fails the call that hit it."""
+    with pytest.raises(error):
+        await marketplace.async_github_api_method(AsyncMock(side_effect=side_effect))
+    await hass.async_block_till_done()
+
+    assert not marketplace.system.disabled
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "reason"),
+    [
+        pytest.param(
+            GitHubRatelimitException("API rate limit exceeded"),
+            DisabledReason.RATE_LIMIT,
+            id="rate_limit",
+        ),
+        pytest.param(
+            GitHubAuthenticationException("Bad credentials"),
+            DisabledReason.INVALID_TOKEN,
+            id="authentication",
+        ),
+    ],
+)
+async def test_connected_github_errors_disable(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    side_effect: Exception,
+    reason: DisabledReason,
+) -> None:
+    """Test a refusal of the connected account disables the Marketplace."""
+    with pytest.raises(MarketplaceError):
+        await marketplace.async_github_api_method(AsyncMock(side_effect=side_effect))
+
+    assert marketplace.system.disabled_reason is reason

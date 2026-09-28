@@ -9630,6 +9630,50 @@ async def test_migrated_custom_integration_domain(
 
 
 @pytest.mark.parametrize("load_registries", [False])
+@pytest.mark.parametrize("mode", ["recovery_mode", "safe_mode"])
+async def test_migrated_custom_integration_domain_recovery_mode(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+    mode: str,
+) -> None:
+    """Test recovery and safe mode leave the entries of a taken over integration."""
+    setattr(hass.config, mode, True)
+    hass_storage[config_entries.STORAGE_KEY] = {
+        "version": config_entries.STORAGE_VERSION,
+        "minor_version": config_entries.STORAGE_VERSION_MINOR,
+        "data": {
+            "entries": [
+                {
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "data": {"token": "abc123"},
+                    "disabled_by": None,
+                    "discovery_keys": {},
+                    "domain": "hacs",
+                    "entry_id": "0a8bd02d0d58c7debf5daf7941c9afe2",
+                    "minor_version": 1,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "options": {},
+                    "pref_disable_new_entities": False,
+                    "pref_disable_polling": False,
+                    "source": "user",
+                    "subentries": {},
+                    "title": "HACS",
+                    "unique_id": "12345",
+                    "version": 1,
+                },
+            ]
+        },
+    }
+
+    manager = config_entries.ConfigEntries(hass, {})
+    await manager.async_initialize()
+
+    assert manager.async_domains() == ["hacs"]
+    assert "Migrated config entries" not in caplog.text
+
+
+@pytest.mark.parametrize("load_registries", [False])
 async def test_domain_not_migrated(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
