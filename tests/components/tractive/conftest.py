@@ -4,7 +4,12 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+from aiotractive import PetStatus, TrackerStatus, TractiveStatus
 from aiotractive.exceptions import TractiveError
+from aiotractive.models import (
+    update_pet_from_health_overview,
+    update_tracker_from_event,
+)
 from aiotractive.trackable_object import TrackableObject
 from aiotractive.tracker import Tracker
 import pytest
@@ -19,9 +24,19 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 def mock_tractive_client() -> Generator[AsyncMock]:
     """Mock a Tractive client."""
 
+    def _tracker_status(entry: MockConfigEntry, tracker_id: str) -> TrackerStatus:
+        """Return the tracker status stored on the mocked client."""
+        status = entry.runtime_data.coordinator.client.status
+        return status.trackers.setdefault(tracker_id, TrackerStatus())
+
+    def _send_tracker_event(entry: MockConfigEntry, event: dict[str, Any]) -> None:
+        """Apply a tracker event to the status and notify the coordinator."""
+        update_tracker_from_event(_tracker_status(entry, event["tracker_id"]), event)
+        entry.runtime_data.coordinator.async_set_updated_data(None)
+
     def send_hardware_event(
         entry: MockConfigEntry, event: dict[str, Any] | None = None
-    ):
+    ) -> None:
         """Send hardware event."""
         if event is None:
             event = {
@@ -31,21 +46,11 @@ def mock_tractive_client() -> Generator[AsyncMock]:
                 "tracker_state_reason": "POWER_SAVING",
                 "charging_state": "CHARGING",
             }
-        coord = entry.runtime_data.coordinator
-        tracker_id = event["tracker_id"]
-        coord.client.status["trackers"].setdefault(tracker_id, {}).update(
-            {
-                "battery_level": event["hardware"]["battery_level"],
-                "tracker_state": event["tracker_state"].lower(),
-                "power_saving": event.get("tracker_state_reason") == "POWER_SAVING",
-                "battery_charging": event["charging_state"] == "CHARGING",
-            }
-        )
-        coord.async_set_updated_data(None)
+        _send_tracker_event(entry, event)
 
     def send_health_overview_event(
         entry: MockConfigEntry, event: dict[str, Any] | None = None
-    ):
+    ) -> None:
         """Send health overview event."""
         if event is None:
             event = {
@@ -57,25 +62,16 @@ def mock_tractive_client() -> Generator[AsyncMock]:
                 },
                 "activity": {"minutesGoal": 200, "minutesActive": 150},
             }
-        coord = entry.runtime_data.coordinator
-        pet_id = event["petId"]
         data = event.get("content", event)
-        activity = data.get("activity") or {}
-        sleep = data.get("sleep") or {}
-        coord.client.status["pets"].setdefault(pet_id, {}).update(
-            {
-                "daily_goal": activity.get("minutesGoal"),
-                "minutes_active": activity.get("minutesActive"),
-                "minutes_day_sleep": sleep.get("minutesDaySleep"),
-                "minutes_night_sleep": sleep.get("minutesNightSleep"),
-                "minutes_rest": sleep.get("minutesCalm"),
-            }
+        status = entry.runtime_data.coordinator.client.status
+        update_pet_from_health_overview(
+            status.pets.setdefault(data["petId"], PetStatus()), data
         )
-        coord.async_set_updated_data(None)
+        entry.runtime_data.coordinator.async_set_updated_data(None)
 
     def send_position_event(
         entry: MockConfigEntry, event: dict[str, Any] | None = None
-    ):
+    ) -> None:
         """Send position event."""
         if event is None:
             event = {
@@ -86,21 +82,11 @@ def mock_tractive_client() -> Generator[AsyncMock]:
                     "sensor_used": "GPS",
                 },
             }
-        coord = entry.runtime_data.coordinator
-        tracker_id = event["tracker_id"]
-        pos = event["position"]
-        latlong = pos.get("latlong", [None, None])
-        coord.client.status["trackers"].setdefault(tracker_id, {}).update(
-            {
-                "latitude": latlong[0],
-                "longitude": latlong[1],
-                "accuracy": pos.get("accuracy"),
-                "sensor_used": pos.get("sensor_used"),
-            }
-        )
-        coord.async_set_updated_data(None)
+        _send_tracker_event(entry, event)
 
-    def send_switch_event(entry: MockConfigEntry, event: dict[str, Any] | None = None):
+    def send_switch_event(
+        entry: MockConfigEntry, event: dict[str, Any] | None = None
+    ) -> None:
         """Send switch event."""
         if event is None:
             event = {
@@ -109,26 +95,7 @@ def mock_tractive_client() -> Generator[AsyncMock]:
                 "led_control": {"active": False},
                 "live_tracking": {"active": True},
             }
-        coord = entry.runtime_data.coordinator
-        tracker_id = event["tracker_id"]
-        if switch_data := event.get("buzzer_control"):
-            coord.client.status["trackers"].setdefault(tracker_id, {})["buzzer"] = (
-                switch_data.get("active")
-            )
-        if switch_data := event.get("led_control"):
-            coord.client.status["trackers"].setdefault(tracker_id, {})["led"] = (
-                switch_data.get("active")
-            )
-        if switch_data := event.get("live_tracking"):
-            coord.client.status["trackers"].setdefault(tracker_id, {})[
-                "live_tracking"
-            ] = switch_data.get("active")
-        hw_data = event.get("hardware", {})
-        if "power_saving_zone_id" in hw_data:
-            coord.client.status["trackers"][tracker_id]["power_saving"] = (
-                hw_data.get("power_saving_zone_id") is not None
-            )
-        coord.async_set_updated_data(None)
+        _send_tracker_event(entry, event)
 
     def send_server_unavailable_event(entry: MockConfigEntry) -> None:
         """Send server unavailable event."""
@@ -142,7 +109,7 @@ def mock_tractive_client() -> Generator[AsyncMock]:
 
     with patch("aiotractive.Tractive", autospec=True) as mock_client:
         client = mock_client.return_value
-        client.status = {"trackers": {}, "pets": {}}
+        client.status = TractiveStatus()
         client.authenticate.return_value = {"user_id": "12345"}
         client.trackable_objects.return_value = [
             Mock(

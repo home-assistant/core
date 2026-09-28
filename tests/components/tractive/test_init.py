@@ -180,12 +180,10 @@ async def test_missing_sleep_data(
     mock_tractive_client.send_health_overview_event(mock_config_entry, event)
     await hass.async_block_till_done()
 
-    status = mock_config_entry.runtime_data.coordinator.client.status["pets"][
-        "pet_id_123"
-    ]
-    assert status.get(ATTR_MINUTES_DAY_SLEEP) is None
-    assert status.get(ATTR_MINUTES_NIGHT_SLEEP) is None
-    assert status.get(ATTR_MINUTES_REST) is None
+    status = mock_config_entry.runtime_data.coordinator.client.status.pets["pet_id_123"]
+    assert getattr(status, ATTR_MINUTES_DAY_SLEEP) is None
+    assert getattr(status, ATTR_MINUTES_NIGHT_SLEEP) is None
+    assert getattr(status, ATTR_MINUTES_REST) is None
 
 
 @pytest.mark.parametrize(("activity_data"), [None, {}, {"unexpected": 123}])
@@ -203,11 +201,9 @@ async def test_missing_activity_data(
     mock_tractive_client.send_health_overview_event(mock_config_entry, event)
     await hass.async_block_till_done()
 
-    status = mock_config_entry.runtime_data.coordinator.client.status["pets"][
-        "pet_id_123"
-    ]
-    assert status.get(ATTR_DAILY_GOAL) is None
-    assert status.get(ATTR_MINUTES_ACTIVE) is None
+    status = mock_config_entry.runtime_data.coordinator.client.status.pets["pet_id_123"]
+    assert getattr(status, ATTR_DAILY_GOAL) is None
+    assert getattr(status, ATTR_MINUTES_ACTIVE) is None
 
 
 @pytest.mark.parametrize("sensor", ["activity_label", "calories", "sleep_label"])

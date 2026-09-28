@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from aiotractive import PetStatus, TrackerStatus
+
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -47,3 +49,13 @@ class TractiveEntity(CoordinatorEntity[TractiveCoordinator]):
                 ),
                 entry_type=DeviceEntryType.SERVICE,
             )
+
+    @property
+    def _tracker_status(self) -> TrackerStatus:
+        """Return the live status of the tracker."""
+        return self.coordinator.client.status.trackers[self._tracker_id]
+
+    @property
+    def _pet_status(self) -> PetStatus:
+        """Return the live status of the pet."""
+        return self.coordinator.client.status.pets[self._pet_id]

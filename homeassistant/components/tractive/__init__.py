@@ -5,11 +5,15 @@ import logging
 from typing import TYPE_CHECKING
 
 import aiotractive
+from aiotractive import PetStatus, TrackerStatus
+from aiotractive.models import (
+    merge_tracker_status,
+    tracker_status_from_rest,
+    update_pet_from_health_overview,
+)
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
-    ATTR_BATTERY_CHARGING,
-    ATTR_BATTERY_LEVEL,
     CONF_EMAIL,
     CONF_PASSWORD,
     EVENT_HOMEASSISTANT_STOP,
@@ -20,18 +24,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    ATTR_BUZZER,
-    ATTR_DAILY_GOAL,
-    ATTR_LED,
-    ATTR_MINUTES_ACTIVE,
-    ATTR_MINUTES_DAY_SLEEP,
-    ATTR_MINUTES_NIGHT_SLEEP,
-    ATTR_MINUTES_REST,
-    ATTR_TRACKER_STATE,
-    CLIENT_ID,
-    DOMAIN,
-)
+from .const import CLIENT_ID, DOMAIN
 from .coordinator import (
     Trackables,
     TractiveConfigEntry,
@@ -137,42 +130,17 @@ def _populate_initial_status(
 ) -> None:
     """Populate the initial status from fetched data."""
     for item in trackables:
-        tracker_id = item.tracker_details["_id"]
-        client.status.setdefault("trackers", {}).setdefault(tracker_id, {})
-        tracker_state = item.tracker_details.get("state")
-        client.status["trackers"][tracker_id].update(
-            {
-                ATTR_BATTERY_LEVEL: item.hw_info.get("battery_level"),
-                ATTR_TRACKER_STATE: tracker_state.lower() if tracker_state else None,
-                ATTR_BATTERY_CHARGING: item.tracker_details.get("charging_state")
-                == "CHARGING",
-            }
+        merge_tracker_status(
+            client.status.trackers.setdefault(
+                item.tracker_details["_id"], TrackerStatus()
+            ),
+            tracker_status_from_rest(
+                item.tracker_details, item.hw_info, item.pos_report
+            ),
         )
-        pos_report = item.pos_report
-        client.status["trackers"][tracker_id].update(
-            {
-                "latitude": pos_report.get("latlong", [None, None])[0],
-                "longitude": pos_report.get("latlong", [None, None])[1],
-                "accuracy": pos_report.get("pos_uncertainty"),
-                "sensor_used": pos_report.get("sensor_used"),
-            }
-        )
-
-        pet_id = item.trackable["_id"]
-        client.status.setdefault("pets", {}).setdefault(pet_id, {})
-        health_overview = item.health_overview
-        if health_overview:
-            activity = health_overview.get("activity") or {}
-            sleep = health_overview.get("sleep") or {}
-            client.status["pets"][pet_id].update(
-                {
-                    ATTR_DAILY_GOAL: activity.get("minutesGoal"),
-                    ATTR_MINUTES_ACTIVE: activity.get("minutesActive"),
-                    ATTR_MINUTES_DAY_SLEEP: sleep.get("minutesDaySleep"),
-                    ATTR_MINUTES_NIGHT_SLEEP: sleep.get("minutesNightSleep"),
-                    ATTR_MINUTES_REST: sleep.get("minutesCalm"),
-                }
-            )
+        pet_status = client.status.pets.setdefault(item.trackable["_id"], PetStatus())
+        if item.health_overview:
+            update_pet_from_health_overview(pet_status, item.health_overview)
 
 
 async def _generate_trackables(

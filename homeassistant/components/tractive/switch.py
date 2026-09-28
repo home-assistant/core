@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_BUZZER, ATTR_LED, ATTR_LIVE_TRACKING, ATTR_POWER_SAVING, DOMAIN
+from .const import ATTR_BUZZER, ATTR_LED, ATTR_LIVE_TRACKING, DOMAIN
 from .coordinator import Trackables, TractiveConfigEntry, TractiveCoordinator
 from .entity import TractiveEntity
 
@@ -92,20 +92,19 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
     @override
     def available(self) -> bool:
         """Return if entity is available."""
-        if not self.coordinator.last_update_success:
+        status = self._tracker_status
+        if status.power_saving_zone:
             return False
-        status = self.coordinator.client.status["trackers"].get(self._tracker_id, {})
-        if status.get(ATTR_POWER_SAVING):
-            return False
-        return self.entity_description.key in status
+        return (
+            super().available
+            and getattr(status, self.entity_description.key) is not None
+        )
 
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        status = self.coordinator.client.status["trackers"].get(self._tracker_id, {})
-        if self.entity_description.key in status:
-            self._attr_is_on = status[self.entity_description.key]
+        self._attr_is_on = getattr(self._tracker_status, self.entity_description.key)
         super()._handle_coordinator_update()
 
     @override

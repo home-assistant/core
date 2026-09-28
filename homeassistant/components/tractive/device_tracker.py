@@ -58,17 +58,13 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        status = self.coordinator.client.status["trackers"].get(self._tracker_id, {})
-        latitude = status.get("latitude")
-        if latitude is not None:
-            self._attr_latitude = latitude
-        longitude = status.get("longitude")
-        if longitude is not None:
-            self._attr_longitude = longitude
-        accuracy = status.get("accuracy")
-        if accuracy is not None:
-            self._attr_location_accuracy = accuracy
-        sensor_used = status.get("sensor_used")
-        if sensor_used is not None:
-            self._source_type = sensor_used
+        status = self._tracker_status
+        if status.latitude is not None:
+            self._attr_latitude = status.latitude
+        if status.longitude is not None:
+            self._attr_longitude = status.longitude
+        if status.accuracy is not None:
+            self._attr_location_accuracy = status.accuracy
+        if status.sensor_used is not None:
+            self._source_type = status.sensor_used
         super()._handle_coordinator_update()

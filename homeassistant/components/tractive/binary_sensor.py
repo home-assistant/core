@@ -40,17 +40,16 @@ class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
     @override
     def available(self) -> bool:
         """Return if entity is available."""
-        if not self.coordinator.last_update_success:
-            return False
-        status = self.coordinator.client.status["trackers"].get(self._tracker_id, {})
-        return status.get(self.entity_description.key) is not None
+        return (
+            super().available
+            and getattr(self._tracker_status, self.entity_description.key) is not None
+        )
 
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        status = self.coordinator.client.status["trackers"].get(self._tracker_id, {})
-        self._attr_is_on = status.get(self.entity_description.key)
+        self._attr_is_on = getattr(self._tracker_status, self.entity_description.key)
         super()._handle_coordinator_update()
 
 

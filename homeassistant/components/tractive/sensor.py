@@ -4,6 +4,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
+from aiotractive import PetStatus, TrackerStatus
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -62,31 +64,27 @@ class TractiveSensor(TractiveEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    def _status(self) -> TrackerStatus | PetStatus:
+        """Return the status section this sensor reads from."""
+        if self.entity_description.hardware_sensor:
+            return self._tracker_status
+        return self._pet_status
+
+    @property
     @override
     def available(self) -> bool:
         """Return if entity is available."""
-        if not self.coordinator.last_update_success:
-            return False
-        if self.entity_description.hardware_sensor:
-            section = self.coordinator.client.status["trackers"].get(
-                self._tracker_id, {}
-            )
-        else:
-            section = self.coordinator.client.status["pets"].get(self._pet_id, {})
-        return section.get(self.entity_description.key) is not None
+        return (
+            super().available
+            and getattr(self._status, self.entity_description.key) is not None
+        )
 
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self.entity_description.hardware_sensor:
-            status = self.coordinator.client.status["trackers"].get(
-                self._tracker_id, {}
-            )
-        else:
-            status = self.coordinator.client.status["pets"].get(self._pet_id, {})
         self._attr_native_value = self.entity_description.value_fn(
-            status.get(self.entity_description.key)
+            getattr(self._status, self.entity_description.key)
         )
         super()._handle_coordinator_update()
 

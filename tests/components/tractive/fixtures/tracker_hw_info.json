@@ -6,6 +6,6 @@
   "_type": "device_hw_report",
   "_version": "e87646946",
   "report_id": "098123",
-  "power_saving_zone_id": "abcdef12345",
+  "power_saving_zone_id": null,
   "hw_status": null
 }
