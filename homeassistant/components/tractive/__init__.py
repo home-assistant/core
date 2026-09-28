@@ -139,14 +139,13 @@ def _populate_initial_status(
     for item in trackables:
         tracker_id = item.tracker_details["_id"]
         client.status.setdefault("trackers", {}).setdefault(tracker_id, {})
-        hw_info = item.hw_info
+        tracker_state = item.tracker_details.get("state")
         client.status["trackers"][tracker_id].update(
             {
-                ATTR_BATTERY_LEVEL: hw_info.get("battery_level"),
-                ATTR_TRACKER_STATE: item.tracker_details.get(
-                    "tracker_state", ""
-                ).lower(),
-                ATTR_BATTERY_CHARGING: hw_info.get("charging_state") == "CHARGING",
+                ATTR_BATTERY_LEVEL: item.hw_info.get("battery_level"),
+                ATTR_TRACKER_STATE: tracker_state.lower() if tracker_state else None,
+                ATTR_BATTERY_CHARGING: item.tracker_details.get("charging_state")
+                == "CHARGING",
             }
         )
         pos_report = item.pos_report
