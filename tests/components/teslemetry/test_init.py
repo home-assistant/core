@@ -10,8 +10,14 @@ import time
 from types import MappingProxyType
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiohttp import ClientResponseError
-from aiopowerwall import PowerwallError
+from aiohttp import ClientError, ClientResponseError
+from aiopowerwall import (
+    PowerwallAuthenticationError,
+    PowerwallConnectionError,
+    PowerwallError,
+    PowerwallProtocolError,
+    PowerwallRateLimitError,
+)
 from bleak.exc import BleakError
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -81,7 +87,11 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
 )
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -1279,7 +1289,9 @@ async def test_stream_rejected_token_starts_reauth(
 
 SITE_ID = 123456
 HOST = "192.168.91.1"
+NEW_HOST = "192.168.91.2"
 PASSWORD = "abcde"
+GATEWAY_ISSUE_ID = f"gateway_not_found_{SITE_ID}"
 
 # aiopowerwall's PowerwallClient parses the PEM at construction time, so tests
 # that build one need a real (if undersized, for speed) RSA key rather than
@@ -1499,7 +1511,7 @@ async def test_local_control_unexpected_typeerror_is_not_swallowed(
             return_value=_TEST_RSA_KEY_PEM,
         ),
         patch(
-            "homeassistant.components.teslemetry.PowerwallClient",
+            "homeassistant.components.teslemetry.helpers.PowerwallClient",
             side_effect=TypeError("unexpected argument"),
         ),
         patch("homeassistant.components.teslemetry.PLATFORMS", []),
@@ -1576,6 +1588,274 @@ async def test_energy_site_router_command_routing(
     assert result == expected
     local.assert_awaited_once_with(50)
     assert cloud.await_count == cloud_awaits
+
+
+async def _setup_entry_with_powerwall(
+    hass: HomeAssistant, entry: MockConfigEntry, gateway_lookup: AsyncMock
+) -> None:
+    """Set up an entry whose paired site's gateway lookup is mocked."""
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_gateway_address",
+            new=gateway_lookup,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def test_local_gateway_reachable_skips_lookup(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+) -> None:
+    """A gateway reachable at its stored host is used without a cloud lookup."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    gateway_lookup = AsyncMock(return_value=NEW_HOST)
+
+    await _setup_entry_with_powerwall(hass, entry, gateway_lookup)
+
+    router = entry.runtime_data.energysites[0].api
+    assert isinstance(router, EnergySiteRouter)
+    assert router.primary.powerwall.host == HOST
+    mock_powerwall_connect.assert_awaited_once()
+    gateway_lookup.assert_not_awaited()
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is None
+
+
+@pytest.mark.parametrize(
+    "connect_error",
+    [
+        pytest.param(PowerwallConnectionError("unreachable"), id="unreachable"),
+        pytest.param(PowerwallProtocolError("Login failed (404)"), id="other_device"),
+        pytest.param(PowerwallAuthenticationError("denied"), id="password_rejected"),
+    ],
+)
+async def test_local_gateway_rediscovered_through_cloud(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+    connect_error: PowerwallError,
+) -> None:
+    """A gateway that fails at its stored host but connects at a new address is moved."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_connect.side_effect = [connect_error, "GATEWAY-DIN"]
+
+    await _setup_entry_with_powerwall(hass, entry, AsyncMock(return_value=NEW_HOST))
+
+    assert entry.state is ConfigEntryState.LOADED
+    subentry = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0]
+    assert subentry.data == {
+        CONF_SITE_ID: SITE_ID,
+        CONF_HOST: NEW_HOST,
+        CONF_PASSWORD: PASSWORD,
+    }
+    router = entry.runtime_data.energysites[0].api
+    assert isinstance(router, EnergySiteRouter)
+    assert router.primary.powerwall.host == NEW_HOST
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is None
+
+
+@pytest.mark.parametrize(
+    ("connect_error", "lookup_result"),
+    [
+        pytest.param(PowerwallConnectionError("unreachable"), [None], id="no_address"),
+        pytest.param(
+            PowerwallConnectionError("unreachable"), [HOST], id="same_address"
+        ),
+        pytest.param(
+            PowerwallConnectionError("unreachable"),
+            [NEW_HOST],
+            id="new_address_unreachable",
+        ),
+        pytest.param(
+            PowerwallConnectionError("unreachable"),
+            InvalidResponse(),
+            id="invalid_response",
+        ),
+        pytest.param(
+            PowerwallConnectionError("unreachable"), ClientError(), id="client_error"
+        ),
+        pytest.param(
+            PowerwallProtocolError("Login failed (404)"),
+            [None],
+            id="other_device_no_address",
+        ),
+    ],
+)
+async def test_local_gateway_not_found_raises_repair(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+    connect_error: PowerwallError,
+    lookup_result: list[str | None] | Exception,
+) -> None:
+    """A gateway that cannot be rediscovered raises a repair and keeps cloud control."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_connect.side_effect = connect_error
+
+    await _setup_entry_with_powerwall(hass, entry, AsyncMock(side_effect=lookup_result))
+
+    assert entry.state is ConfigEntryState.LOADED
+    subentry = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0]
+    assert subentry.data[CONF_HOST] == HOST
+    router = entry.runtime_data.energysites[0].api
+    assert isinstance(router, EnergySiteRouter)
+    assert router.primary.powerwall.host == HOST
+    issue = issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID)
+    assert issue is not None
+    assert issue.is_fixable
+    assert issue.translation_key == "gateway_not_found"
+    assert issue.translation_placeholders == {"site": "Energy Site"}
+    assert issue.data == {
+        "entry_id": entry.entry_id,
+        "subentry_id": subentry.subentry_id,
+    }
+
+
+@pytest.mark.parametrize(
+    "connect_error",
+    [
+        pytest.param(PowerwallProtocolError("Login failed (404)"), id="protocol"),
+        pytest.param(PowerwallAuthenticationError("denied"), id="password_rejected"),
+    ],
+)
+async def test_local_gateway_refusal_at_confirmed_address(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+    connect_error: PowerwallError,
+) -> None:
+    """A refusal at the address the cloud confirms is not a moved gateway."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_connect.side_effect = connect_error
+    gateway_lookup = AsyncMock(return_value=HOST)
+
+    await _setup_entry_with_powerwall(hass, entry, gateway_lookup)
+
+    assert entry.state is ConfigEntryState.LOADED
+    router = entry.runtime_data.energysites[0].api
+    assert isinstance(router, EnergySiteRouter)
+    assert router.primary.powerwall.host == HOST
+    gateway_lookup.assert_awaited_once()
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is None
+
+
+async def test_local_gateway_rate_limited_skips_lookup(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+) -> None:
+    """A rate-limited gateway answered at its address, so no lookup runs."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_connect.side_effect = PowerwallRateLimitError("busy")
+    gateway_lookup = AsyncMock(return_value=NEW_HOST)
+
+    await _setup_entry_with_powerwall(hass, entry, gateway_lookup)
+
+    assert entry.state is ConfigEntryState.LOADED
+    router = entry.runtime_data.energysites[0].api
+    assert isinstance(router, EnergySiteRouter)
+    assert router.primary.powerwall.host == HOST
+    gateway_lookup.assert_not_awaited()
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is None
+
+
+async def test_local_gateway_repair_cleared_after_local_success(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+) -> None:
+    """The gateway repair clears once a later setup connects locally."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_connect.side_effect = PowerwallConnectionError("unreachable")
+    gateway_lookup = AsyncMock(return_value=None)
+
+    await _setup_entry_with_powerwall(hass, entry, gateway_lookup)
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is not None
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    mock_powerwall_connect.side_effect = None
+    await _setup_entry_with_powerwall(hass, entry, gateway_lookup)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is None
+
+
+async def test_local_gateway_repair_cleared_when_rate_limited(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+) -> None:
+    """The gateway repair clears once a later setup finds the gateway rate limiting."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_connect.side_effect = PowerwallConnectionError("unreachable")
+    gateway_lookup = AsyncMock(return_value=None)
+
+    await _setup_entry_with_powerwall(hass, entry, gateway_lookup)
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is not None
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    mock_powerwall_connect.side_effect = PowerwallRateLimitError("busy")
+    await _setup_entry_with_powerwall(hass, entry, gateway_lookup)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is None
+
+
+async def test_local_gateway_repair_cleared_at_confirmed_address(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+) -> None:
+    """The gateway repair clears once a later setup confirms the gateway's address."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_connect.side_effect = PowerwallConnectionError("unreachable")
+    gateway_lookup = AsyncMock(return_value=None)
+
+    await _setup_entry_with_powerwall(hass, entry, gateway_lookup)
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is not None
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    mock_powerwall_connect.side_effect = PowerwallProtocolError("Login failed (404)")
+    gateway_lookup = AsyncMock(return_value=HOST)
+    await _setup_entry_with_powerwall(hass, entry, gateway_lookup)
+
+    assert entry.state is ConfigEntryState.LOADED
+    gateway_lookup.assert_awaited_once()
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is None
+
+
+async def test_local_gateway_repair_cleared_without_subentry(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """The gateway repair clears once the site is no longer set up for local control."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        GATEWAY_ISSUE_ID,
+        is_fixable=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="gateway_not_found",
+        translation_placeholders={"site": "Energy Site"},
+    )
+
+    await _setup_account_no_subentry(hass)
+
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is None
 
 
 async def test_stale_cleanup_preserves_foreign_subentry(hass: HomeAssistant) -> None:

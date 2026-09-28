@@ -54,7 +54,6 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     def device_info(self) -> dr.DeviceInfo:
         """Return device information."""
         serial = self.device.serial_number
-        assert serial is not None
         identity = self.device.identity
         return dr.DeviceInfo(
             identifiers={(DOMAIN, serial)},
