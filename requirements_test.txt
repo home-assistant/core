@@ -14,7 +14,7 @@ coverage==7.16.1
 freezegun==1.5.5
 # librt is an internal mypy dependency
 librt==0.13.0
-license-expression==30.4.3
+license-expression==30.4.4
 mock-open==1.4.0
 mypy==2.3.1
 prek==0.2.28
