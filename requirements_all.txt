@@ -1734,7 +1734,7 @@ nextdns==5.1.0
 nhc==0.8.1
 
 # homeassistant.components.nibe_heatpump
-nibe==2.24.0
+nibe==2.25.0
 
 # homeassistant.components.nice_go
 nice-go==1.0.3
@@ -1807,7 +1807,7 @@ ondilo==0.5.0
 onedrive-personal-sdk==0.1.7
 
 # homeassistant.components.onvif
-onvif-zeep-async==4.2.1
+onvif-zeep-async==4.3.0
 
 # homeassistant.components.onvif
 onvif_parsers==2.5.0
@@ -3129,7 +3129,7 @@ sofar-modbus==0.17.0
 solaredge-web==0.4.0
 
 # homeassistant.components.solaredge_modbus
-solaredged==0.3.0
+solaredged==0.4.0
 
 # homeassistant.components.solarlog
 solarlog_cli==0.7.1
@@ -3487,7 +3487,6 @@ xknxproject==3.10.0
 # homeassistant.components.rest
 # homeassistant.components.startca
 # homeassistant.components.ted5000
-# homeassistant.components.zestimate
 xmltodict==1.0.4
 
 # homeassistant.components.xs1

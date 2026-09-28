@@ -170,7 +170,7 @@ MQTT_ORIGIN_INFO_SCHEMA = probatio.All(
 def valid_message_expiry_interval(value: Any) -> int:
     """Return Message Expiry Interval in seconds."""
     if isinstance(value, int):
-        return cv.positive_int(value)  # type: ignore[no-any-return]
+        return cv.positive_int(value)
     return int(cv.positive_time_period_dict(value).total_seconds())
 
 

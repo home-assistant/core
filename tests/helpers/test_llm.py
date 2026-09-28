@@ -1314,7 +1314,7 @@ async def test_selector_serializer(
     ) == {"type": "number", "minimum": 100, "maximum": 1000}
     assert selector_serializer(selector.ConditionSelector()) == {
         "type": "array",
-        "items": {"nullable": True, "type": "string"},
+        "items": {"nullable": True},
     }
     assert selector_serializer(selector.ConfigEntrySelector()) == {"type": "string"}
     assert selector_serializer(selector.ConstantSelector({"value": "test"})) == {
