@@ -29,9 +29,6 @@ from homeassistant.components.stream import (
 from homeassistant.components.web_rtc import async_get_ice_servers
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
-
-# CONF_FILENAME and the SERVICE_* constants are re-exported for consumers
-# importing them from the camera component root.
 from homeassistant.const import (  # noqa: F401
     CONF_FILENAME,
     CONTENT_TYPE_MULTIPART,
