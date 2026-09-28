@@ -62,6 +62,9 @@
     },
     "response_incomplete": {
       "message": "The response is incomplete: {reason}"
+    },
+    "stream_ended": {
+      "message": "The server ended the response before it was complete"
     }
   }
 }

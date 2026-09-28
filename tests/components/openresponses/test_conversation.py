@@ -10,8 +10,10 @@ from openresponses_client import (
     ErrorEvent,
     FunctionCall,
     InternalServerError,
+    ReasoningItem,
     Response,
     StreamingEvent,
+    UnknownItem,
 )
 from openresponses_client.models import (
     ErrorPayload,
@@ -20,10 +22,12 @@ from openresponses_client.models import (
     ResponseError,
     ResponseFailedEvent,
     ResponseIncompleteEvent,
+    ResponseOutputItemAddedEvent,
     ResponseOutputItemDoneEvent,
     ResponseOutputTextDeltaEvent,
     ResponseReasoningDeltaEvent,
     ResponseReasoningSummaryTextDeltaEvent,
+    ResponseRefusalDeltaEvent,
 )
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -93,22 +97,26 @@ async def test_function_call(
     mock_chat_log: MockChatLog,  # noqa: F811
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test function calls are run and their results sent back."""
+    """Test function calls are run and output items are sent back in order."""
+    reasoning = ReasoningItem(id="rs_1", encrypted_content="encrypted")
+    provider_item = UnknownItem.from_dict({"type": "acme:search", "id": "acme_1"})
+    function_call_1 = FunctionCall(
+        call_id="call_1", name="test_tool", arguments='{"param1": "value1"}'
+    )
+    function_call_2 = FunctionCall(call_id="call_2", name="test_tool", arguments="")
     mock_client.stream.side_effect = [
         MockStream(
             [
+                ResponseOutputItemAddedEvent(item=reasoning),
                 ResponseReasoningDeltaEvent(delta="Let me "),
                 ResponseReasoningSummaryTextDeltaEvent(delta="check."),
-                ResponseOutputItemDoneEvent(
-                    item=FunctionCall(
-                        call_id="call_1",
-                        name="test_tool",
-                        arguments='{"param1": "value1"}',
-                    )
-                ),
-                ResponseOutputItemDoneEvent(
-                    item=FunctionCall(call_id="call_2", name="test_tool", arguments="")
-                ),
+                ResponseOutputItemDoneEvent(item=reasoning),
+                ResponseOutputItemAddedEvent(item=provider_item),
+                ResponseOutputItemDoneEvent(item=provider_item),
+                ResponseOutputItemAddedEvent(item=function_call_1),
+                ResponseOutputItemDoneEvent(item=function_call_1),
+                ResponseOutputItemAddedEvent(item=function_call_2),
+                ResponseOutputItemDoneEvent(item=function_call_2),
                 ResponseCompletedEvent(),
             ]
         ),
@@ -131,6 +139,24 @@ async def test_function_call(
     assert mock_chat_log.content[1:] == snapshot
     assert mock_client.stream.call_count == 2
     assert mock_client.stream.call_args.kwargs["input"][1:] == snapshot(name="input")
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_refusal(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+) -> None:
+    """Test a refusal of the model is returned as the answer."""
+    mock_client.stream.return_value = MockStream(
+        [ResponseRefusalDeltaEvent(delta="I can't help."), ResponseCompletedEvent()]
+    )
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=AGENT_ID
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech["plain"]["speech"] == "I can't help."
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -186,6 +212,11 @@ async def test_function_call(
             "The model returned invalid tool arguments: Expecting property name "
             "enclosed in double quotes: line 1 column 2 (char 1)",
             id="invalid_tool_arguments",
+        ),
+        pytest.param(
+            [ResponseOutputTextDeltaEvent(delta="Hello")],
+            "The server ended the response before it was complete",
+            id="stream_ended",
         ),
     ],
 )

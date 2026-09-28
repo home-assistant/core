@@ -92,9 +92,34 @@
       'agent_id': 'conversation.gpt_oss_20b',
       'content': None,
       'created': HAFakeDatetime(2026, 9, 28, 12, 0, tzinfo=datetime.timezone.utc),
-      'native': None,
+      'native': dict({
+        'content': None,
+        'encrypted_content': 'encrypted',
+        'extra': dict({
+        }),
+        'id': 'rs_1',
+        'status': None,
+        'summary': list([
+        ]),
+        'type': 'reasoning',
+      }),
       'role': 'assistant',
       'thinking_content': 'Let me check.',
+      'tool_calls': None,
+    }),
+    dict({
+      'agent_id': 'conversation.gpt_oss_20b',
+      'content': None,
+      'created': HAFakeDatetime(2026, 9, 28, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'extra': dict({
+        }),
+        'id': 'acme_1',
+        'status': None,
+        'type': 'acme:search',
+      }),
+      'role': 'assistant',
+      'thinking_content': None,
       'tool_calls': list([
         dict({
           'external': False,
@@ -151,6 +176,24 @@
     dict({
       'content': 'Please call the test tool',
       'role': 'user',
+    }),
+    dict({
+      'content': None,
+      'encrypted_content': 'encrypted',
+      'extra': dict({
+      }),
+      'id': 'rs_1',
+      'status': None,
+      'summary': list([
+      ]),
+      'type': 'reasoning',
+    }),
+    dict({
+      'extra': dict({
+      }),
+      'id': 'acme_1',
+      'status': None,
+      'type': 'acme:search',
     }),
     dict({
       'arguments': '{"param1":"value1"}',
