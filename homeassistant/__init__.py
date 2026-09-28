@@ -1,6 +1,8 @@
 """Init file for Home Assistant."""
 
+from os import environ
 import ssl
+import sys
 from typing import Self
 
 import certifi
@@ -28,6 +30,11 @@ class _CertifiSSLContext(ssl.SSLContext):
         super().__init__()
         self.verify_flags |= ssl.VERIFY_X509_PARTIAL_CHAIN | ssl.VERIFY_X509_STRICT
         self.load_verify_locations(cafile=certifi.where())
+        # Match ssl.create_default_context(), which httpx used
+        if (keylogfile := environ.get("SSLKEYLOGFILE")) and not (
+            sys.flags.ignore_environment
+        ):
+            self.keylog_filename = keylogfile
 
 
 # httpx2 defaults to truststore, which on Linux reloads the system CA store on

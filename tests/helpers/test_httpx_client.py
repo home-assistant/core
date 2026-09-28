@@ -420,3 +420,16 @@ async def test_httpcore2_does_not_mutate_ssl_context_alpn(
             await pool.request("GET", "https://example.com/")
 
     mock_set_alpn.assert_called_once_with(context, list(alpn_protocols))
+
+
+@pytest.mark.parametrize("create_context", DEFAULT_SSL_CONTEXT_FACTORIES)
+def test_default_ssl_context_honors_sslkeylogfile(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    create_context: Callable[[], ssl.SSLContext],
+) -> None:
+    """Test httpx2 default SSL contexts honor SSLKEYLOGFILE, like httpx did."""
+    keylog_file = tmp_path / "keylog.txt"
+    monkeypatch.setenv("SSLKEYLOGFILE", str(keylog_file))
+
+    assert create_context().keylog_filename == str(keylog_file)
