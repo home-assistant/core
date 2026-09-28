@@ -13,6 +13,7 @@ VEHICLE_REDACT = [
     "vehicle_id",
     "vin",
     "tokens",
+    "backseat_token",
     "id_s",
     "drive_state_active_route_latitude",
     "drive_state_active_route_longitude",
@@ -23,7 +24,7 @@ VEHICLE_REDACT = [
 ]
 
 ENERGY_LIVE_REDACT = ["vin"]
-ENERGY_INFO_REDACT = ["installation_date"]
+ENERGY_INFO_REDACT = ["installation_date", "serial_number"]
 
 
 async def async_get_config_entry_diagnostics(
