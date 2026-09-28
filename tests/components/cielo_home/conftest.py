@@ -71,6 +71,7 @@ def mock_cielo_device_api() -> Generator[MagicMock]:
     device_api.min_temp.return_value = 10
     device_api.max_temp.return_value = 35
     device_api.target_temperature_step.return_value = 1
+    device_api.precision.return_value = 1
     device_api.hvac_mode.return_value = HVACMode.COOL
     device_api.hvac_modes.return_value = [HVACMode.OFF, HVACMode.COOL]
     device_api.mode_supports_temperature.return_value = True
