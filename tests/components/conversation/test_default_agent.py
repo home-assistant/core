@@ -15,6 +15,7 @@ from homeassistant.components import conversation, cover, media_player, weather
 from homeassistant.components.conversation import (
     DOMAIN,
     async_get_agent,
+    const,
     default_agent,
     get_agent_manager,
 )
@@ -2689,8 +2690,8 @@ async def test_language_region(hass: HomeAssistant, init_components) -> None:
         "conversation",
         "process",
         {
-            conversation.ATTR_TEXT: "turn on the kitchen",
-            conversation.ATTR_LANGUAGE: language,
+            const.ATTR_TEXT: "turn on the kitchen",
+            const.ATTR_LANGUAGE: language,
         },
     )
     await hass.async_block_till_done()
@@ -2758,7 +2759,7 @@ async def test_turn_on_area(
     await hass.services.async_call(
         "conversation",
         "process",
-        {conversation.ATTR_TEXT: "turn on lights in the kitchen"},
+        {const.ATTR_TEXT: "turn on lights in the kitchen"},
     )
     await hass.async_block_till_done()
 
@@ -2777,7 +2778,7 @@ async def test_turn_on_area(
     await hass.services.async_call(
         "conversation",
         "process",
-        {conversation.ATTR_TEXT: "turn on lights in the kitchen"},
+        {const.ATTR_TEXT: "turn on lights in the kitchen"},
     )
     await hass.async_block_till_done()
 
@@ -2787,7 +2788,7 @@ async def test_turn_on_area(
     await hass.services.async_call(
         "conversation",
         "process",
-        {conversation.ATTR_TEXT: "turn on lights in the basement"},
+        {const.ATTR_TEXT: "turn on lights in the basement"},
     )
     await hass.async_block_till_done()
 
@@ -2851,7 +2852,7 @@ async def test_light_area_same_name(
     await hass.services.async_call(
         "conversation",
         "process",
-        {conversation.ATTR_TEXT: "turn on light in the kitchen"},
+        {const.ATTR_TEXT: "turn on light in the kitchen"},
     )
     await hass.async_block_till_done()
 
@@ -3464,8 +3465,8 @@ async def test_language_with_alternative_code(
             "conversation",
             "process",
             {
-                conversation.ATTR_TEXT: sentence,
-                conversation.ATTR_LANGUAGE: lang_code,
+                const.ATTR_TEXT: sentence,
+                const.ATTR_LANGUAGE: lang_code,
             },
         )
         await hass.async_block_till_done()

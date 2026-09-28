@@ -15,8 +15,10 @@ from homeassistant.components.conversation import (
     async_get_chat_log,
     async_handle_intents,
     async_handle_sentence_triggers,
+    const,
     default_agent,
 )
+from homeassistant.components.conversation.agent_manager import agent_id_validator
 from homeassistant.components.conversation.const import HOME_ASSISTANT_AGENT
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.core import Context, HomeAssistant
@@ -51,11 +53,11 @@ async def test_turn_on_intent(
     hass.states.async_set("light.kitchen", "off")
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
-    data = {conversation.ATTR_TEXT: sentence}
+    data = {const.ATTR_TEXT: sentence}
     if agent_id is not None:
-        data[conversation.ATTR_AGENT_ID] = agent_id
+        data[const.ATTR_AGENT_ID] = agent_id
     if conversation_id is not None:
-        data[conversation.ATTR_CONVERSATION_ID] = conversation_id
+        data[const.ATTR_CONVERSATION_ID] = conversation_id
     result = await hass.services.async_call(
         "conversation",
         "process",
@@ -78,7 +80,7 @@ async def test_service_fails(hass: HomeAssistant, init_components) -> None:
     with (
         pytest.raises(HomeAssistantError),
         patch(
-            "homeassistant.components.conversation.async_converse",
+            "homeassistant.components.conversation.services.async_converse",
             side_effect=intent.IntentHandleError,
         ),
     ):
@@ -97,7 +99,7 @@ async def test_turn_off_intent(hass: HomeAssistant, init_components, sentence) -
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_off")
 
     await hass.services.async_call(
-        "conversation", "process", {conversation.ATTR_TEXT: sentence}
+        "conversation", "process", {const.ATTR_TEXT: sentence}
     )
     await hass.async_block_till_done()
 
@@ -208,10 +210,10 @@ async def test_agent_id_validator_invalid_agent(
 ) -> None:
     """Test validating agent id."""
     with pytest.raises(probatio.Invalid):
-        conversation.agent_id_validator("invalid_agent")
+        agent_id_validator("invalid_agent")
 
-    conversation.agent_id_validator(conversation.HOME_ASSISTANT_AGENT)
-    conversation.agent_id_validator("conversation.home_assistant")
+    agent_id_validator(conversation.HOME_ASSISTANT_AGENT)
+    agent_id_validator("conversation.home_assistant")
 
 
 async def test_get_agent_info(
