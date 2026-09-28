@@ -49,54 +49,84 @@
       }),
       'programs': list([
         dict({
+          'controller_info': dict({
+            'rain_delay': 0,
+            'rain_sensor': False,
+            'station_delay': 0,
+          }),
           'days_of_week': list([
-            'MONDAY',
-            'TUESDAY',
+            1,
+            2,
           ]),
-          'frequency': 'CUSTOM',
+          'durations': list([
+            dict({
+              'duration': 1500.0,
+              'zone': 1,
+            }),
+            dict({
+              'duration': 1200.0,
+              'zone': 2,
+            }),
+            dict({
+              'duration': 420.0,
+              'zone': 3,
+            }),
+            dict({
+              'duration': 1200.0,
+              'zone': 4,
+            }),
+            dict({
+              'duration': 600.0,
+              'zone': 5,
+            }),
+          ]),
+          'frequency': 0,
           'period': None,
-          'program': 'PGM A',
+          'program': 0,
           'starts': list([
-            '04:00',
+            '04:00:00',
           ]),
           'synchro': 2,
-          'zone_minutes': dict({
-            'Zone 1': 25,
-            'Zone 2': 20,
-            'Zone 3': 7,
-            'Zone 4': 20,
-            'Zone 5': 10,
-          }),
         }),
         dict({
+          'controller_info': dict({
+            'rain_delay': 0,
+            'rain_sensor': False,
+            'station_delay': 0,
+          }),
           'days_of_week': list([
-            'SUNDAY',
-            'THURSDAY',
+            0,
+            4,
           ]),
-          'frequency': 'CUSTOM',
+          'durations': list([
+          ]),
+          'frequency': 0,
           'period': None,
-          'program': 'PGM B',
+          'program': 1,
           'starts': list([
           ]),
           'synchro': 2,
-          'zone_minutes': dict({
-          }),
         }),
         dict({
+          'controller_info': dict({
+            'rain_delay': 0,
+            'rain_sensor': False,
+            'station_delay': 0,
+          }),
           'days_of_week': list([
           ]),
-          'frequency': 'CUSTOM',
+          'durations': list([
+          ]),
+          'frequency': 0,
           'period': None,
-          'program': 'PGM C',
+          'program': 2,
           'starts': list([
           ]),
           'synchro': 0,
-          'zone_minutes': dict({
-          }),
         }),
       ]),
-      'zone_schedules': list([
-      ]),
+      'zone_schedules': dict({
+      }),
     }),
     'state': dict({
       'active_zones': list([
