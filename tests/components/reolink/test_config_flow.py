@@ -464,97 +464,6 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-@pytest.mark.parametrize(
-    ("device_uid", "other_entry_mac", "reason", "username", "unique_id"),
-    [
-        pytest.param(
-            TEST_UID,
-            TEST_MAC_CAM,
-            "reauth_successful",
-            TEST_USERNAME2,
-            format_mac(TEST_MAC2),
-            id="same_device_on_other_interface",
-        ),
-        pytest.param(
-            "OTHER0123456789A",
-            TEST_MAC_CAM,
-            "unique_id_mismatch",
-            TEST_USERNAME,
-            format_mac(TEST_MAC),
-            id="different_device",
-        ),
-        pytest.param(
-            TEST_UID,
-            TEST_MAC2,
-            "already_configured",
-            TEST_USERNAME,
-            format_mac(TEST_MAC),
-            id="other_interface_has_its_own_entry",
-        ),
-    ],
-)
-async def test_reauth_mac_change(
-    hass: HomeAssistant,
-    reolink_host: MagicMock,
-    device_uid: str,
-    other_entry_mac: str,
-    reason: str,
-    username: str,
-    unique_id: str,
-) -> None:
-    """Test a reauth flow when the device reports another MAC address."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=format_mac(TEST_MAC),
-        data={
-            CONF_HOST: TEST_HOST,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-            CONF_PORT: TEST_PORT,
-            CONF_USE_HTTPS: TEST_USE_HTTPS,
-            CONF_BC_PORT: TEST_BC_PORT,
-            CONF_BC_CONNECT: TEST_BC_CON,
-            CONF_BC_ONLY: False,
-            CONF_UID: TEST_UID,
-        },
-        options={
-            CONF_PROTOCOL: DEFAULT_PROTOCOL,
-        },
-        title=TEST_NVR_NAME,
-    )
-    config_entry.add_to_hass(hass)
-    MockConfigEntry(domain=DOMAIN, unique_id=format_mac(other_entry_mac)).add_to_hass(
-        hass
-    )
-
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    reolink_host.mac_address = TEST_MAC2
-    reolink_host.uid = device_uid
-
-    result = await config_entry.start_reauth_flow(hass)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_USERNAME: TEST_USERNAME2,
-            CONF_PASSWORD: TEST_PASSWORD2,
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == reason
-    assert config_entry.data[CONF_HOST] == TEST_HOST
-    assert config_entry.data[CONF_USERNAME] == username
-    assert config_entry.unique_id == unique_id
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_flow(hass: HomeAssistant) -> None:
     """Successful flow from DHCP discovery."""
     dhcp_data = DhcpServiceInfo(
@@ -927,44 +836,71 @@ async def test_reconfig(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
-    ("device_uid", "other_entry_mac", "reason", "host", "unique_id"),
+    ("source", "user_input", "success_reason"),
     [
         pytest.param(
+            config_entries.SOURCE_REAUTH,
+            {CONF_USERNAME: TEST_USERNAME2, CONF_PASSWORD: TEST_PASSWORD2},
+            "reauth_successful",
+            id="reauth",
+        ),
+        pytest.param(
+            config_entries.SOURCE_RECONFIGURE,
+            {
+                CONF_HOST: TEST_HOST2,
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+            },
+            "reconfigure_successful",
+            id="reconfigure",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("uid_supported", "device_uid", "other_entry_mac", "abort_reason"),
+    [
+        pytest.param(
+            True,
             TEST_UID,
             TEST_MAC_CAM,
-            "reconfigure_successful",
-            TEST_HOST2,
-            format_mac(TEST_MAC2),
+            None,
             id="same_device_on_other_interface",
         ),
         pytest.param(
+            True,
             "OTHER0123456789A",
             TEST_MAC_CAM,
             "unique_id_mismatch",
-            TEST_HOST,
-            format_mac(TEST_MAC),
             id="different_device",
         ),
         pytest.param(
+            False,
+            TEST_UID,
+            TEST_MAC_CAM,
+            "unique_id_mismatch",
+            id="uid_not_supported",
+        ),
+        pytest.param(
+            True,
             TEST_UID,
             TEST_MAC2,
             "already_configured",
-            TEST_HOST,
-            format_mac(TEST_MAC),
             id="other_interface_has_its_own_entry",
         ),
     ],
 )
-async def test_reconfig_mac_change(
+async def test_reauth_reconfig_mac_change(
     hass: HomeAssistant,
     reolink_host: MagicMock,
+    source: str,
+    user_input: dict[str, str],
+    success_reason: str,
+    uid_supported: bool,
     device_uid: str,
     other_entry_mac: str,
-    reason: str,
-    host: str,
-    unique_id: str,
+    abort_reason: str | None,
 ) -> None:
-    """Test a reconfiguration flow when the device reports another MAC address."""
+    """Test a reauth or reconfigure flow when the device reports another MAC address."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=format_mac(TEST_MAC),
@@ -994,24 +930,35 @@ async def test_reconfig_mac_change(
 
     reolink_host.mac_address = TEST_MAC2
     reolink_host.uid = device_uid
+    reolink_host.supported.side_effect = lambda channel, capability: (
+        capability != "UID" or uid_supported
+    )
 
-    result = await config_entry.start_reconfigure_flow(hass)
+    if source == config_entries.SOURCE_REAUTH:
+        result = await config_entry.start_reauth_flow(hass)
+    else:
+        result = await config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: TEST_HOST2,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-        },
+        result["flow_id"], user_input
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == reason
-    assert config_entry.data[CONF_HOST] == host
+    if abort_reason is None:
+        # the entry follows the device to its new MAC address
+        assert result["reason"] == success_reason
+        assert config_entry.data[CONF_HOST] == user_input.get(CONF_HOST, TEST_HOST)
+        assert config_entry.data[CONF_USERNAME] == user_input[CONF_USERNAME]
+        assert config_entry.data[CONF_PASSWORD] == user_input[CONF_PASSWORD]
+        assert config_entry.unique_id == format_mac(TEST_MAC2)
+        return
+
+    assert result["reason"] == abort_reason
+    assert config_entry.data[CONF_HOST] == TEST_HOST
     assert config_entry.data[CONF_USERNAME] == TEST_USERNAME
-    assert config_entry.unique_id == unique_id
+    assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD
+    assert config_entry.unique_id == format_mac(TEST_MAC)
