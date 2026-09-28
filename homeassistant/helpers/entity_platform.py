@@ -1348,7 +1348,9 @@ class EntityPlatform:
                 return
 
             if tasks := [
-                create_eager_task(self._async_update_entity(entity), loop=self.hass.loop)
+                create_eager_task(
+                    self._async_update_entity(entity), loop=self.hass.loop
+                )
                 for entity in self.entities.values()
                 if entity.should_poll
             ]:
