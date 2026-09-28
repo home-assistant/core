@@ -99,6 +99,9 @@
     "connection_error": {
       "message": "An error occurred while connecting to the device {device_id}"
     },
+    "firmware_check_failed": {
+      "message": "An error occurred while checking for the latest energieleser firmware versions"
+    },
     "unknown_device": {
       "message": "The device type for {device_id} is unknown or unsupported"
     }

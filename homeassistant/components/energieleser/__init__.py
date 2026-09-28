@@ -7,10 +7,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
-from .coordinator import EnergieleserConfigEntry, EnergieleserCoordinator
+from .const import DOMAIN, FIRMWARE_COORDINATOR
+from .coordinator import (
+    EnergieleserConfigEntry,
+    EnergieleserCoordinator,
+    EnergieleserFirmwareCoordinator,
+)
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.UPDATE]
 
 
 async def async_setup_entry(
@@ -24,6 +28,13 @@ async def async_setup_entry(
     coordinator = EnergieleserCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
+    if FIRMWARE_COORDINATOR not in hass.data:
+        firmware_coordinator = EnergieleserFirmwareCoordinator(hass)
+        hass.data[FIRMWARE_COORDINATOR] = firmware_coordinator
+        await firmware_coordinator.async_register_shutdown()
+        hass.async_create_background_task(
+            firmware_coordinator.async_refresh(), f"{DOMAIN} firmware check"
+        )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

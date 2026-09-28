@@ -1,12 +1,21 @@
 """Constants for the energieleser integration."""
 
 import logging
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from energieleser import DeviceType
 
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from .coordinator import EnergieleserFirmwareCoordinator
+
 DOMAIN: Final = "energieleser"
 LOGGER = logging.getLogger(__package__)
+
+FIRMWARE_COORDINATOR: HassKey[EnergieleserFirmwareCoordinator] = HassKey(
+    f"{DOMAIN}_firmware_coordinator"
+)
 
 # Firmware version is only advertised via the mDNS TXT "version" property, not the
 # device API, so it is captured during discovery and stored on the config entry.
