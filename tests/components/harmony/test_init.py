@@ -1,8 +1,8 @@
 """Test init of Logitch Harmony Hub integration."""
 
-import asyncio
-from unittest.mock import patch
+from unittest.mock import AsyncMock
 
+from aioharmony.exceptions import TimeOut
 import pytest
 
 from homeassistant.components.harmony.const import DOMAIN
@@ -100,17 +100,11 @@ async def test_connect_timeout_retries_setup(
     harmony_client: FakeHarmonyClient,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test a hub that does not answer the connection does not hold up setup."""
-
-    async def _never_answers() -> bool:
-        await asyncio.Event().wait()
-        return True
-
-    harmony_client.connect = _never_answers
+    """Test a hub that times out on connect closes the client and retries setup."""
+    harmony_client.connect = AsyncMock(side_effect=TimeOut)
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.harmony.data.CONNECT_TIMEOUT", 0):
-        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     harmony_client.close.assert_awaited_once()

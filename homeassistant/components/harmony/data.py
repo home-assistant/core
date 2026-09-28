@@ -1,6 +1,5 @@
 """Harmony data object which contains the Harmony Client."""
 
-import asyncio
 from collections.abc import Iterable
 import logging
 
@@ -18,9 +17,6 @@ from .subscriber import HarmonySubscriberMixin
 
 _LOGGER = logging.getLogger(__name__)
 
-# The library probes the hub without a timeout, and a hub that is still booting
-# drops the connection attempt, which takes the kernel minutes to give up on
-CONNECT_TIMEOUT = 30
 
 type HarmonyConfigEntry = ConfigEntry[HarmonyData]
 
@@ -117,8 +113,7 @@ class HarmonyData(HarmonySubscriberMixin):
 
         connected = False
         try:
-            async with asyncio.timeout(CONNECT_TIMEOUT):
-                connected = await self._client.connect()
+            connected = await self._client.connect()
         except (TimeoutError, aioexc.TimeOut) as err:
             await self._client.close()
             raise ConfigEntryNotReady(
