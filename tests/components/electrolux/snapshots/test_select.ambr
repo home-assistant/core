@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_select[select.ceiling_hood_fan_speed-entry]
+# name: test_select[select.ceiling_hood_fan_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -22,7 +22,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.ceiling_hood_fan_speed',
+    'entity_id': 'select.ceiling_hood_fan_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -30,12 +30,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Fan speed',
+    'object_id_base': 'Fan level',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Fan speed',
+    'original_name': 'Fan level',
     'platform': 'electrolux',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -45,10 +45,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select[select.ceiling_hood_fan_speed-state]
+# name: test_select[select.ceiling_hood_fan_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ceiling Hood Fan speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ceiling Hood Fan level',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'boost',
         'breeze',
@@ -59,7 +59,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.ceiling_hood_fan_speed',
+    'entity_id': 'select.ceiling_hood_fan_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -386,7 +386,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_select[select.peacock_hob_fan_speed-entry]
+# name: test_select[select.peacock_hob_fan_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -409,7 +409,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.peacock_hob_fan_speed',
+    'entity_id': 'select.peacock_hob_fan_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -417,12 +417,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Fan speed',
+    'object_id_base': 'Fan level',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Fan speed',
+    'original_name': 'Fan level',
     'platform': 'electrolux',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -432,10 +432,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select[select.peacock_hob_fan_speed-state]
+# name: test_select[select.peacock_hob_fan_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Peacock hob Fan speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Peacock hob Fan level',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'boost',
         'breeze',
@@ -446,7 +446,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.peacock_hob_fan_speed',
+    'entity_id': 'select.peacock_hob_fan_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -262,17 +262,17 @@ async def test_select_structured_oven_program(
     [
         # fan speed tests
         (
-            "select.peacock_hob_fan_speed",
+            "select.peacock_hob_fan_level",
             "low",
             [{"hobHood": {"hobToHoodFanSpeed": "STEP_1"}}],
         ),
         (
-            "select.peacock_hob_fan_speed",
+            "select.peacock_hob_fan_level",
             "medium",
             [{"hobHood": {"hobToHoodFanSpeed": "STEP_2"}}],
         ),
         (
-            "select.peacock_hob_fan_speed",
+            "select.peacock_hob_fan_level",
             "high",
             [{"hobHood": {"hobToHoodFanSpeed": "STEP_3"}}],
         ),
@@ -330,17 +330,17 @@ async def test_select_hob(
     [
         # fan level tests
         (
-            "select.ceiling_hood_fan_speed",
+            "select.ceiling_hood_fan_level",
             "low",
             [{"hoodFanLevel": "STEP_1"}],
         ),
         (
-            "select.ceiling_hood_fan_speed",
+            "select.ceiling_hood_fan_level",
             "medium",
             [{"hoodFanLevel": "STEP_2"}],
         ),
         (
-            "select.ceiling_hood_fan_speed",
+            "select.ceiling_hood_fan_level",
             "high",
             [{"hoodFanLevel": "STEP_3"}],
         ),
