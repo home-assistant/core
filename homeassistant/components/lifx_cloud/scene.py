@@ -12,10 +12,13 @@ import probatio
 from homeassistant.components.scene import Scene
 from homeassistant.const import CONF_PLATFORM, CONF_TIMEOUT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,6 +96,9 @@ class LifxCloudScene(Scene):
             async with asyncio.timeout(self._timeout):
                 await httpsession.put(url, headers=self._headers)
 
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except TimeoutError, aiohttp.ClientError:
-            _LOGGER.exception("Error on %s", url)
+        except (TimeoutError, aiohttp.ClientError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="activate_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
