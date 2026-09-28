@@ -3138,7 +3138,7 @@ solaredge-local==0.2.3
 solaredge-web==0.4.0
 
 # homeassistant.components.solaredge_modbus
-solaredged==0.2.3
+solaredged==0.2.4
 
 # homeassistant.components.solarlog
 solarlog_cli==0.7.1
