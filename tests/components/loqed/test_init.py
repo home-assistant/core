@@ -9,6 +9,7 @@ from freezegun.api import FrozenDateTimeFactory
 from loqedAPI import loqed
 import pytest
 
+from homeassistant.components.cloud import CloudNotConnected
 from homeassistant.components.loqed.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID
@@ -288,6 +289,35 @@ async def test_setup_cloudhook_in_bridge(
         await hass.async_block_till_done()
 
     lock.registerWebhook.assert_called_with(f"{get_url(hass)}/api/webhook/Webhook_id")
+
+
+async def test_setup_retries_when_cloudhook_unavailable(
+    hass: HomeAssistant, config_entry: MockConfigEntry, lock: loqed.Lock
+) -> None:
+    """Test setup retries when Nabu Casa reports a subscription but is disconnected."""
+    config: dict[str, Any] = {DOMAIN: {}}
+    config_entry.add_to_hass(hass)
+
+    lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
+
+    with (
+        patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock),
+        patch(
+            "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
+        ),
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_create_cloudhook",
+            side_effect=CloudNotConnected,
+        ),
+    ):
+        await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_cloudhook_from_entry_in_bridge(

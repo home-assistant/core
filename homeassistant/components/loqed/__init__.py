@@ -5,6 +5,7 @@ import re
 import aiohttp
 from loqedAPI import loqed
 
+from homeassistant.components import cloud
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -40,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LoqedConfigEntry) -> boo
 
     try:
         await coordinator.ensure_webhooks()
-    except (TimeoutError, aiohttp.ClientError) as ex:
+    except (TimeoutError, aiohttp.ClientError, cloud.CloudNotAvailable) as ex:
         raise ConfigEntryNotReady(f"Unable to connect to bridge at {host}") from ex
 
     await coordinator.async_config_entry_first_refresh()
