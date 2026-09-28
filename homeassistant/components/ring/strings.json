@@ -116,6 +116,9 @@
       "last_motion": {
         "name": "Last motion"
       },
+      "last_recording": {
+        "name": "Last recording"
+      },
       "mic_volume": {
         "name": "Mic volume"
       },
@@ -155,6 +158,9 @@
     },
     "api_timeout": {
       "message": "Timeout communicating with Ring API"
+    },
+    "chime_type_unknown": {
+      "message": "The in-home chime type changed and is no longer supported. Reload the Ring integration."
     },
     "no_subscription": {
       "message": "Ring Protect subscription required for snapshots"
