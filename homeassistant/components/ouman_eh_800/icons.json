@@ -1,5 +1,13 @@
 {
   "entity": {
+    "binary_sensor": {
+      "summer_function": {
+        "default": "mdi:weather-sunny-off",
+        "state": {
+          "on": "mdi:weather-sunny"
+        }
+      }
+    },
     "sensor": {
       "valve_position": {
         "default": "mdi:pipe-valve"
