@@ -782,6 +782,18 @@ jobs:
             fi
             . venv/bin/activate
             pytest benchmarks --codspeed --no-cov -o addopts=""
+      # Start once outside CodSpeed first, so the measured start is a restart of
+      # an existing installation instead of a fresh one.
+      - name: Prime the startup benchmark
+        run: venv/bin/python -m homeassistant --config benchmarks/startup --skip-pip
+      # A real CLI start, imports included, with the allocator we ship with. A
+      # full start with PYTHONMALLOC=malloc makes around 7 million allocations,
+      # far more than the memory instrument handles well.
+      - name: Run startup benchmark
+        uses: CodSpeedHQ/action@373d6868929f444bc08d901fd0eb0ad52a8875ea # v5.2.1
+        with:
+          mode: memory
+          config: benchmarks/codspeed.yml
 
   prepare-pytest-full:
     name: Split tests for full run

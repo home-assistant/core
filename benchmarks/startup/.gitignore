@@ -1,0 +1,4 @@
+# Everything Home Assistant writes while running the startup benchmark.
+*
+!.gitignore
+!configuration.yaml

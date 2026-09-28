@@ -1,0 +1,15 @@
+# Config for the startup memory benchmark (see benchmarks/codspeed.yml).
+# Nothing but the default integrations, and an automation that stops Home
+# Assistant as soon as it has started, so the benchmarked command exits.
+
+http:
+  server_host: 127.0.0.1
+  server_port: 18123
+
+automation:
+  - alias: Stop after startup
+    triggers:
+      - trigger: homeassistant
+        event: start
+    actions:
+      - action: homeassistant.stop

@@ -1,0 +1,7 @@
+# Benchmarks the CodSpeed CLI runs as plain commands, next to the pytest suite.
+# This lives in benchmarks/ rather than the repository root on purpose: the CLI
+# looks for a config file upward from the working directory, and the pytest
+# benchmark step should not pick this one up.
+benchmarks:
+  - name: Start Home Assistant
+    exec: venv/bin/python -m homeassistant --config benchmarks/startup --skip-pip
