@@ -13,8 +13,8 @@ from homeassistant.const import ATTR_BATTERY_CHARGING, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import Trackables, TractiveConfigEntry, TractiveCoordinator
 from .const import ATTR_POWER_SAVING
+from .coordinator import Trackables, TractiveConfigEntry, TractiveCoordinator
 from .entity import TractiveEntity
 
 

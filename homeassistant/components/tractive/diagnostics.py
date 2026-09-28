@@ -6,7 +6,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
-from . import TractiveConfigEntry
+from .coordinator import TractiveConfigEntry
 
 TO_REDACT = {CONF_PASSWORD, CONF_EMAIL, "title", "_id"}
 

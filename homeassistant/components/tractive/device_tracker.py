@@ -6,7 +6,7 @@ from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import Trackables, TractiveConfigEntry, TractiveCoordinator
+from .coordinator import Trackables, TractiveConfigEntry, TractiveCoordinator
 from .entity import TractiveEntity
 
 

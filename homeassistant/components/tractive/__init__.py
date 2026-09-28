@@ -1,14 +1,12 @@
 """The tractive integration."""
 
 import asyncio
-from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import aiotractive
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
@@ -17,11 +15,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     ATTR_BUZZER,
@@ -35,6 +32,12 @@ from .const import (
     CLIENT_ID,
     DOMAIN,
 )
+from .coordinator import (
+    Trackables,
+    TractiveConfigEntry,
+    TractiveCoordinator,
+    TractiveData,
+)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -44,79 +47,6 @@ PLATFORMS = [
 ]
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class Trackables:
-    """A class that describes trackables."""
-
-    tracker: aiotractive.tracker.Tracker
-    trackable: dict[str, Any]
-    tracker_details: dict[str, Any]
-    hw_info: dict[str, Any]
-    pos_report: dict[str, Any] | None
-    health_overview: dict[str, Any]
-
-
-@dataclass(slots=True)
-class TractiveData:
-    """Class for Tractive data."""
-
-    coordinator: TractiveCoordinator
-    trackables: list[Trackables]
-
-
-type TractiveConfigEntry = ConfigEntry[TractiveData]
-
-
-class TractiveCoordinator(DataUpdateCoordinator[None]):
-    """Coordinator for Tractive data."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        client: aiotractive.Tractive,
-        user_id: str,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            config_entry=config_entry,
-            name="Tractive",
-            update_interval=None,
-        )
-        self.client = client
-        self.user_id = user_id
-
-    async def _async_update_data(self) -> None:
-        """No polling needed — data comes via push updates."""
-        return
-
-    async def _async_setup(self) -> None:
-        """Set up the coordinator and register push update listener."""
-        self.client.subscribe_updates(self._async_handle_update)
-
-    @callback
-    def _async_handle_update(self, error: Exception | None = None) -> None:
-        """Handle updated data or connection errors from the Tractive API."""
-        if error is not None:
-            self.async_set_update_error(error)
-            if isinstance(error, aiotractive.exceptions.UnauthorizedError):
-                self.config_entry.async_start_reauth(self._hass)
-        else:
-            self.async_set_updated_data(None)
-
-    async def async_start(self) -> None:
-        """Start the background event listener."""
-        await self.client.async_start_listener()
-
-    async def async_shutdown(self) -> None:
-        """Shutdown the coordinator."""
-        await self.client.async_stop_listener()
-        await self.client.close()
-        await super().async_shutdown()
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> bool:
@@ -163,6 +93,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> 
 
     await coordinator.async_config_entry_first_refresh()
     await coordinator.async_start()
+
+    # Register the tracker devices so entities on the pet devices can resolve
+    # their via_device link at construction time.
+    device_registry = dr.async_get(hass)
+    for item in filtered_trackables:
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            configuration_url="https://my.tractive.com/",
+            identifiers={(DOMAIN, item.tracker_details["_id"])},
+            translation_key="tracker",
+            translation_placeholders={"id": item.tracker_details["_id"]},
+            manufacturer="Tractive GmbH",
+            sw_version=item.tracker_details["fw_version"],
+            model_id=item.tracker_details["model_number"],
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -12,8 +12,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import Trackables, TractiveConfigEntry, TractiveCoordinator
 from .const import ATTR_BUZZER, ATTR_LED, ATTR_LIVE_TRACKING, ATTR_POWER_SAVING, DOMAIN
+from .coordinator import Trackables, TractiveConfigEntry, TractiveCoordinator
 from .entity import TractiveEntity
 
 _LOGGER = logging.getLogger(__name__)
