@@ -29,6 +29,7 @@ SUBSYSTEM_BATTERIES: Final = "batteries"
 SUBSYSTEM_EXPORT_CONTROL: Final = "export_control"
 SUBSYSTEM_GRID_STATUS: Final = "grid_status"
 SUBSYSTEM_METERS: Final = "meters"
+SUBSYSTEM_STORAGE_CAPACITY: Final = "storage_capacity"
 SUBSYSTEM_STORAGE_CONTROL: Final = "storage_control"
 
 # The writable control blocks, as an UpdateReport names them. Export control's

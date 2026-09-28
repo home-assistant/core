@@ -1185,7 +1185,7 @@ class _ScriptRun:
 
     def _get_pos_time_period_template(self, key: str) -> timedelta:
         try:
-            return cv.positive_time_period(  # type: ignore[no-any-return]
+            return cv.positive_time_period(
                 template.render_complex(self._action[key], self._variables)
             )
         except (exceptions.TemplateError, probatio.Invalid) as ex:
