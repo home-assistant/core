@@ -128,7 +128,7 @@
         "parse_error": "[%key:component::rest::exceptions::parse_error::message%]",
         "state_class_validation_error": "\"{state_class}\" is not a valid state class for device class \"{device_class}\"; expected \"{state_classes_string}\"",
         "timeout_error": "[%key:component::rest::common::timeout_error%]",
-        "unit_required_error": "Device class \"{device_class}\" requires \"{unit_string}\"",
+        "unit_required_error": "Device class \"{device_class}\" requires \"{units_string}\"",
         "unit_validation_error": "\"{unit}\" is not a valid unit for device class \"{device_class}\"; expected \"{units_string}\"",
         "xml_parse_error": "REST result could not be parsed as XML: {xml_parse_error_message}"
       },
