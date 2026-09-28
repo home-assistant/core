@@ -21,6 +21,11 @@ _LOGGER = logging.getLogger(__name__)
 type BluettiModbusConfigEntry = ConfigEntry[BluettiModbusRuntimeData]
 
 
+def wrong_device_issue_id(entry: ConfigEntry) -> str:
+    """Return the ID of the repair issue for a different device at the address."""
+    return f"wrong_device_{entry.entry_id}"
+
+
 class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Polls a BLUETTI power station for its decoded field values."""
 
@@ -59,7 +64,7 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         values = self._device.values
         # An address can be reassigned to a different physical unit after setup.
         serial = str(values["d_serial"])
-        issue_id = f"wrong_device_{self.config_entry.entry_id}"
+        issue_id = wrong_device_issue_id(self.config_entry)
         if serial != self.config_entry.unique_id:
             ir.async_create_issue(
                 self.hass,
