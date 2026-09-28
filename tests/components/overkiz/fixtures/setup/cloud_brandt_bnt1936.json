@@ -1,0 +1,401 @@
+{
+  "creationTime": 1725857417000,
+  "lastUpdateTime": 1725857417000,
+  "id": "SETUP-1234-5678-1936",
+  "location": {
+    "creationTime": 1725857417000,
+    "lastUpdateTime": 1725857417000,
+    "city": "*",
+    "country": "*",
+    "postalCode": "*",
+    "addressLine1": "*",
+    "timezone": "Europe/Paris",
+    "longitude": "*",
+    "latitude": "*",
+    "twilightMode": 2,
+    "twilightAngle": "CIVIL",
+    "twilightCity": "paris",
+    "summerSolsticeDuskMinutes": 1290,
+    "winterSolsticeDuskMinutes": 990,
+    "twilightOffsetEnabled": false,
+    "dawnOffset": 0,
+    "duskOffset": 0,
+    "countryCode": "FR"
+  },
+  "gateways": [
+    {
+      "gatewayId": "1234-5678-1936",
+      "type": 102,
+      "subType": 0,
+      "placeOID": "e904ccfc-f05d-456d-a526-929867ce9d49",
+      "autoUpdateEnabled": false,
+      "alive": true,
+      "timeReliable": true,
+      "connectivity": {
+        "status": "OK",
+        "protocolVersion": "4.13"
+      },
+      "upToDate": false,
+      "updateStatus": "READY_TO_UPDATE",
+      "syncInProgress": false,
+      "mode": "ACTIVE",
+      "functions": "CALENDAR,TRIGGER"
+    }
+  ],
+  "devices": [
+    {
+      "creationTime": 1725857417000,
+      "lastUpdateTime": 1725857417000,
+      "label": "Brandt gateway",
+      "deviceURL": "ogp://1234-5678-1936/16000210",
+      "shortcut": false,
+      "controllableName": "ogp:Gateway",
+      "definition": {
+        "commands": [
+          { "commandName": "identify", "nparams": 0 },
+          { "commandName": "reboot", "nparams": 0 },
+          { "commandName": "sendPrivate", "nparams": 1 },
+          { "commandName": "setName", "nparams": 1 },
+          { "commandName": "update", "nparams": 0 }
+        ],
+        "states": [
+          { "type": "DataState", "qualifiedName": "core:ActivePartitionState" },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:AvailabilityState"
+          },
+          { "type": "DataState", "qualifiedName": "core:NameState" },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:FirmwareRevisionState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SignalQualityState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "DynamicGateway",
+        "uiProfiles": ["Specific"],
+        "uiClass": "ProtocolGateway",
+        "qualifiedName": "ogp:Gateway",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        { "name": "core:NameState", "type": 3, "value": "Brandt gateway" },
+        { "name": "core:AvailabilityState", "type": 3, "value": "available" },
+        { "name": "core:StatusState", "type": 3, "value": "available" },
+        { "name": "core:SignalQualityState", "type": 1, "value": 83 },
+        { "name": "core:FirmwareRevisionState", "type": 3, "value": "4.13" }
+      ],
+      "attributes": [
+        { "name": "core:Manufacturer", "type": 3, "value": "Brandt" },
+        {
+          "name": "core:Technology",
+          "type": 3,
+          "value": "Brandt_UBB_OGP_Gateway_HF005"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "e904ccfc-f05d-456d-a526-929867ce9d49",
+      "widget": "DynamicGateway",
+      "type": 1,
+      "oid": "b79c5811-4e63-491c-a0d4-119368db3823",
+      "uiClass": "ProtocolGateway"
+    },
+    {
+      "creationTime": 1725857417000,
+      "lastUpdateTime": 1725857417000,
+      "label": "Kitchen oven",
+      "deviceURL": "ogp://1234-5678-1936/16000211",
+      "shortcut": false,
+      "controllableName": "ogp:Oven",
+      "metadata": "{\"baking_from_mobile\": true, \"favorite_id\": \"\", \"smart_cooking\": false}",
+      "definition": {
+        "commands": [
+          { "commandName": "activateOption", "nparams": 1 },
+          { "commandName": "deactivateOption", "nparams": 1 },
+          { "commandName": "identify", "nparams": 0 },
+          { "commandName": "sendPrivate", "nparams": 1 },
+          { "commandName": "setMode", "nparams": 1 },
+          { "commandName": "setName", "nparams": 1 },
+          { "commandName": "setRecipe", "nparams": 1 },
+          { "commandName": "setTargetTemperature", "nparams": 1 },
+          { "commandName": "setTargetTime", "nparams": 1 },
+          { "commandName": "setTargetWeight", "nparams": 1 },
+          { "commandName": "setTimezone", "nparams": 1 },
+          { "commandName": "start", "nparams": 0 },
+          { "commandName": "stop", "nparams": 0 }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ActivatedOptionsState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:AvailabilityState"
+          },
+          { "type": "DataState", "qualifiedName": "core:AvailableModesState" },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:AvailableOptionsState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:AvailableRecipesState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:CurrentCycleStageState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:CycleStageSequenceState"
+          },
+          { "type": "DataState", "qualifiedName": "core:ErrorState" },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:FirmwareRevisionState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["locked", "unlocked"],
+            "qualifiedName": "core:LockedUnlockedState"
+          },
+          { "type": "DataState", "qualifiedName": "core:ModeState" },
+          { "type": "DataState", "qualifiedName": "core:NameState" },
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open"],
+            "qualifiedName": "core:OpenClosedState"
+          },
+          { "type": "DataState", "qualifiedName": "core:OpenState" },
+          { "type": "DataState", "qualifiedName": "core:RecipeState" },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RemainingTimeState"
+          },
+          { "type": "DataState", "qualifiedName": "core:RunningTimerState" },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SignalQualityState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["started", "stopped"],
+            "qualifiedName": "core:StartedStoppedState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetTemperatureCurrentLowerBoundState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetTemperatureCurrentUpperBoundState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:TargetTemperatureReachedState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetTimeState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetWeightState"
+          },
+          { "type": "DataState", "qualifiedName": "core:TimezoneState" },
+          {
+            "type": "DataState",
+            "qualifiedName": "ogp:UnavailableFeaturesState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "DynamicOven",
+        "uiProfiles": [
+          "StatefulStartStopOven",
+          "StatefulStartStop",
+          "StartStop",
+          "StatefulThermostat",
+          "Thermostat",
+          "LockStatus"
+        ],
+        "uiClass": "Oven",
+        "qualifiedName": "ogp:Oven",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        { "name": "core:NameState", "type": 3, "value": "Kitchen oven" },
+        { "name": "core:AvailabilityState", "type": 3, "value": "available" },
+        { "name": "core:StatusState", "type": 3, "value": "available" },
+        {
+          "name": "core:ErrorState",
+          "type": 11,
+          "value": { "key": "internal", "message": "NO_ERROR" }
+        },
+        { "name": "core:FirmwareRevisionState", "type": 3, "value": "326" },
+        { "name": "core:TargetTemperatureState", "type": 2, "value": 180 },
+        {
+          "name": "core:TargetTemperatureReachedState",
+          "type": 6,
+          "value": true
+        },
+        {
+          "name": "core:TargetTemperatureCurrentLowerBoundState",
+          "type": 2,
+          "value": 35
+        },
+        {
+          "name": "core:TargetTemperatureCurrentUpperBoundState",
+          "type": 2,
+          "value": 250
+        },
+        { "name": "core:ModeState", "type": 3, "value": "fanCooking" },
+        {
+          "name": "core:AvailableModesState",
+          "type": 10,
+          "value": [
+            "defrost",
+            "bottomHeat",
+            "bottomFan",
+            "conventional",
+            "conventionalFan",
+            "fannedGrill",
+            "keepingWarm",
+            "fanCooking",
+            "combinedHeat",
+            "bread",
+            "drying",
+            "pizza",
+            "eco",
+            "auto"
+          ]
+        },
+        { "name": "core:OpenState", "type": 6, "value": false },
+        { "name": "core:OpenClosedState", "type": 3, "value": "closed" },
+        { "name": "core:LockedUnlockedState", "type": 3, "value": "unlocked" },
+        { "name": "core:RecipeState", "type": 3, "value": "custom" },
+        {
+          "name": "core:AvailableRecipesState",
+          "type": 10,
+          "value": [
+            "fish",
+            "rareBeef",
+            "pizza",
+            "rareLamb",
+            "souffle",
+            "vegetables",
+            "pork",
+            "chicken",
+            "saltTart",
+            "sweetTart",
+            "cookies",
+            "cake"
+          ]
+        },
+        { "name": "core:TargetWeightState", "type": 1, "value": 0 },
+        { "name": "core:TargetTimeState", "type": 1, "value": 6600 },
+        { "name": "core:RemainingTimeState", "type": 1, "value": 6598 },
+        { "name": "core:RunningTimerState", "type": 6, "value": true },
+        {
+          "name": "core:AvailableOptionsState",
+          "type": 10,
+          "value": ["remotedGuide", "booster", "demo"]
+        },
+        { "name": "core:ActivatedOptionsState", "type": 10, "value": [] },
+        {
+          "name": "core:CycleStageSequenceState",
+          "type": 10,
+          "value": ["cooking", "end"]
+        },
+        {
+          "name": "core:CurrentCycleStageState",
+          "type": 3,
+          "value": "cooking"
+        },
+        { "name": "core:StartedStoppedState", "type": 3, "value": "started" },
+        { "name": "core:TimezoneState", "type": 3, "value": "Europe/Paris" },
+        { "name": "core:SignalQualityState", "type": 1, "value": 80 },
+        {
+          "name": "ogp:UnavailableFeaturesState",
+          "type": 10,
+          "value": [
+            {
+              "feature": "recipeControl",
+              "commands": ["*"],
+              "states": ["*"],
+              "cause": "modeConstraint"
+            },
+            {
+              "feature": "weightControl",
+              "commands": ["*"],
+              "states": ["*"],
+              "cause": "modeConstraint"
+            },
+            {
+              "feature": "dimming",
+              "commands": ["*"],
+              "states": ["*"],
+              "cause": "modeConstraint"
+            }
+          ]
+        }
+      ],
+      "attributes": [
+        { "name": "core:Manufacturer", "type": 3, "value": "Brandt" },
+        {
+          "name": "core:ManufacturerReference",
+          "type": 3,
+          "value": "BOP7543LX-1"
+        },
+        {
+          "name": "core:Technology",
+          "type": 3,
+          "value": "Brandt_UBB_OGP_Smart_Oven"
+        },
+        { "name": "core:TargetTemperatureLowerBound", "type": 1, "value": 35 },
+        { "name": "core:TargetTemperatureUpperBound", "type": 1, "value": 275 },
+        { "name": "core:TargetTimeLowerBound", "type": 1, "value": 60 },
+        { "name": "core:TargetTimeUpperBound", "type": 1, "value": 36000 }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "e904ccfc-f05d-456d-a526-929867ce9d49",
+      "widget": "DynamicOven",
+      "type": 1,
+      "oid": "f2bfbd46-404d-4597-8a32-f9e895cfebfc",
+      "uiClass": "Oven"
+    }
+  ],
+  "zones": [],
+  "resellerDelegationType": "NEVER",
+  "oid": "94a3798d-5923-490f-8a63-8e05d7f97e44",
+  "rootPlace": {
+    "creationTime": 1725857417000,
+    "lastUpdateTime": 1725857417000,
+    "label": "Home",
+    "type": 0,
+    "oid": "e904ccfc-f05d-456d-a526-929867ce9d49",
+    "subPlaces": []
+  },
+  "features": []
+}
