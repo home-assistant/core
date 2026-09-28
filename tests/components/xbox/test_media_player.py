@@ -1,7 +1,6 @@
 """Test the Xbox media_player platform."""
 
 from collections.abc import Generator
-from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
 
@@ -9,6 +8,7 @@ from httpx import HTTPStatusError, RequestError, TimeoutException
 import pytest
 from pythonxbox.api.provider.catalog.models import CatalogResponse
 from pythonxbox.api.provider.smartglass.models import (
+    CommandResponse,
     SmartglassConsoleStatus,
     VolumeDirection,
 )
@@ -320,10 +320,10 @@ async def test_media_player_turn_on_failed(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    xbox_live_client.smartglass.wake_up.side_effect = (
-        HTTPStatusError(
-            "", request=Mock(), response=Mock(status_code=HTTPStatus.NOT_FOUND)
-        ),
+    xbox_live_client.smartglass.wake_up.return_value = CommandResponse(
+        **await async_load_json_object_fixture(
+            hass, "smartglass_command_response_error.json", DOMAIN
+        )  # type: ignore[reportArgumentType]
     )
 
     with pytest.raises(HomeAssistantError) as e:

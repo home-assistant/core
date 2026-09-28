@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from aiolifx_themes.themes import ThemeLibrary
+from lifx import ThemeLibrary
 import probatio
 
 from homeassistant.components.light import (
@@ -15,17 +15,20 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
     COLOR_GROUP,
+    LIGHT_TURN_ON_SCHEMA,
     VALID_BRIGHTNESS,
     VALID_BRIGHTNESS_PCT,
 )
-from homeassistant.const import ATTR_MODE
+from homeassistant.const import ATTR_MODE, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import async_register_platform_entity_service
 from homeassistant.helpers.target import (
     TargetSelection,
     async_extract_referenced_entity_ids,
 )
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     ATTR_CHANGE,
@@ -33,8 +36,11 @@ from .const import (
     ATTR_CLOUD_SATURATION_MIN,
     ATTR_CYCLES,
     ATTR_DIRECTION,
+    ATTR_DURATION,
+    ATTR_INFRARED,
     ATTR_PALETTE,
     ATTR_PERIOD,
+    ATTR_POWER,
     ATTR_POWER_ON,
     ATTR_SATURATION_MAX,
     ATTR_SATURATION_MIN,
@@ -42,6 +48,7 @@ from .const import (
     ATTR_SPEED,
     ATTR_SPREAD,
     ATTR_THEME,
+    ATTR_ZONES,
     DATA_LIFX_MANAGER,
     DOMAIN,
     SERVICE_EFFECT_COLORLOOP,
@@ -52,11 +59,33 @@ from .const import (
     SERVICE_EFFECT_SKY,
     SERVICE_EFFECT_STOP,
     SERVICE_PAINT_THEME,
+    SERVICE_SET_HEV_CYCLE_STATE,
+    SERVICE_SET_STATE,
 )
-from .util import async_entry_is_legacy
 
 if TYPE_CHECKING:
     from .manager import LIFXManager
+
+LIFX_SET_STATE_SCHEMA: VolDictType = {
+    **LIGHT_TURN_ON_SCHEMA,
+    ATTR_INFRARED: probatio.All(probatio.Coerce(int), probatio.Clamp(min=0, max=255)),
+    ATTR_ZONES: probatio.All(cv.ensure_list, [cv.positive_int]),
+    ATTR_POWER: cv.boolean,
+}
+
+LIFX_SET_HEV_CYCLE_STATE_SCHEMA: VolDictType = {
+    probatio.Required(ATTR_POWER): cv.boolean,
+    ATTR_DURATION: probatio.All(
+        probatio.Coerce(float), probatio.Clamp(min=0, max=86400)
+    ),
+}
+
+
+# The firmware effect palette is carried in a fixed sixteen color field
+EFFECT_PALETTE_MAX = 16
+EFFECT_PALETTE_MIN = 2
+# The Sky effect palette maps onto six named slots rather than the full field
+EFFECT_SKY_PALETTE_MAX = 6
 
 EFFECT_MOVE_DIRECTION_LEFT = "left"
 EFFECT_MOVE_DIRECTION_RIGHT = "right"
@@ -86,8 +115,13 @@ LIFX_EFFECT_SCHEMA = {
 LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
-        probatio.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
-        probatio.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
+        # A brightness of zero would pulse to black
+        probatio.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): probatio.All(
+            VALID_BRIGHTNESS, probatio.Clamp(min=1)
+        ),
+        probatio.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): probatio.All(
+            VALID_BRIGHTNESS_PCT, probatio.Clamp(min=1)
+        ),
         probatio.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
         probatio.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): probatio.All(
             probatio.Coerce(tuple), probatio.ExactSequence((cv.byte, cv.byte, cv.byte))
@@ -123,11 +157,12 @@ LIFX_EFFECT_COLORLOOP_SCHEMA = cv.make_entity_service_schema(
         **LIFX_EFFECT_SCHEMA,
         probatio.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
         probatio.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
+        # A saturation of zero switches the bulb to color temperature mode
         ATTR_SATURATION_MAX: probatio.All(
-            probatio.Coerce(int), probatio.Clamp(min=0, max=100)
+            probatio.Coerce(int), probatio.Clamp(min=1, max=100)
         ),
         ATTR_SATURATION_MIN: probatio.All(
-            probatio.Coerce(int), probatio.Clamp(min=0, max=100)
+            probatio.Coerce(int), probatio.Clamp(min=1, max=100)
         ),
         ATTR_PERIOD: probatio.All(probatio.Coerce(float), probatio.Clamp(min=0.05)),
         ATTR_CHANGE: probatio.All(
@@ -165,9 +200,13 @@ LIFX_EFFECT_MORPH_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
         ATTR_SPEED: probatio.All(probatio.Coerce(int), probatio.Clamp(min=1, max=25)),
-        probatio.Exclusive(ATTR_THEME, COLOR_GROUP): probatio.In(ThemeLibrary().themes),
+        probatio.Exclusive(ATTR_THEME, COLOR_GROUP): probatio.In(
+            ThemeLibrary.get_available_themes()
+        ),
         probatio.Exclusive(ATTR_PALETTE, COLOR_GROUP): probatio.All(
-            cv.ensure_list, [HSBK_SCHEMA]
+            cv.ensure_list,
+            [HSBK_SCHEMA],
+            probatio.Length(min=EFFECT_PALETTE_MIN, max=EFFECT_PALETTE_MAX),
         ),
     }
 )
@@ -179,7 +218,7 @@ LIFX_EFFECT_MOVE_SCHEMA = cv.make_entity_service_schema(
             probatio.Coerce(float), probatio.Clamp(min=0.1, max=60)
         ),
         ATTR_DIRECTION: probatio.In(EFFECT_MOVE_DIRECTIONS),
-        probatio.Optional(ATTR_THEME): probatio.In(ThemeLibrary().themes),
+        probatio.Optional(ATTR_THEME): probatio.In(ThemeLibrary.get_available_themes()),
     }
 )
 
@@ -196,7 +235,11 @@ LIFX_EFFECT_SKY_SCHEMA = cv.make_entity_service_schema(
         ATTR_CLOUD_SATURATION_MAX: probatio.All(
             probatio.Coerce(int), probatio.Clamp(min=0, max=255)
         ),
-        ATTR_PALETTE: probatio.All(cv.ensure_list, [HSBK_SCHEMA]),
+        ATTR_PALETTE: probatio.All(
+            cv.ensure_list,
+            [HSBK_SCHEMA],
+            probatio.Length(min=1, max=EFFECT_SKY_PALETTE_MAX),
+        ),
     }
 )
 
@@ -204,11 +247,15 @@ LIFX_PAINT_THEME_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
         ATTR_TRANSITION: probatio.All(
-            probatio.Coerce(int), probatio.Clamp(min=1, max=3600)
+            probatio.Coerce(int), probatio.Clamp(min=0, max=3600)
         ),
-        probatio.Exclusive(ATTR_THEME, COLOR_GROUP): probatio.In(ThemeLibrary().themes),
+        probatio.Exclusive(ATTR_THEME, COLOR_GROUP): probatio.In(
+            ThemeLibrary.get_available_themes()
+        ),
         probatio.Exclusive(ATTR_PALETTE, COLOR_GROUP): probatio.All(
-            cv.ensure_list, [HSBK_SCHEMA]
+            cv.ensure_list,
+            [HSBK_SCHEMA],
+            probatio.Length(min=EFFECT_PALETTE_MIN, max=EFFECT_PALETTE_MAX),
         ),
     }
 )
@@ -226,20 +273,14 @@ SERVICES_SCHEMA = {
 
 
 def _get_manager(service: ServiceCall) -> LIFXManager:
-    """Return the LIFX manager, raising a user-facing error if unavailable."""
+    """Return the LIFX manager, raising a user-facing error if no entry is loaded."""
     hass = service.hass
-    # The manager is stored before the connection and first refresh are awaited,
-    # so its presence alone does not mean a device is usable.
-    if (manager := hass.data.get(DATA_LIFX_MANAGER)) is None or all(
-        async_entry_is_legacy(entry)
-        for entry in hass.config_entries.async_loaded_entries(DOMAIN)
-    ):
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="not_loaded",
         )
-
-    return manager
+    return hass.data[DATA_LIFX_MANAGER]
 
 
 async def _async_start_effect(service: ServiceCall) -> None:
@@ -249,13 +290,34 @@ async def _async_start_effect(service: ServiceCall) -> None:
         service.hass, TargetSelection(service.data)
     )
     all_referenced = referenced.referenced | referenced.indirectly_referenced
-    if all_referenced:
-        await manager.start_effect(all_referenced, service.service, **service.data)
+    await manager.start_effect(
+        all_referenced,
+        service,
+        # An area or label that holds no usable LIFX light is a sweep that
+        # caught nothing, not the mistake naming one directly is
+        strict=bool(referenced.referenced),
+    )
 
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Register the LIFX effect services."""
+    """Register the LIFX actions."""
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_STATE,
+        entity_domain=Platform.LIGHT,
+        schema=LIFX_SET_STATE_SCHEMA,
+        func="set_state",
+    )
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_HEV_CYCLE_STATE,
+        entity_domain=Platform.LIGHT,
+        schema=LIFX_SET_HEV_CYCLE_STATE_SCHEMA,
+        func="set_hev_cycle_state",
+    )
     for service, schema in SERVICES_SCHEMA.items():
         hass.services.async_register(
             DOMAIN, service, _async_start_effect, schema=schema

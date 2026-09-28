@@ -28,7 +28,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.data_entry_flow import AbortFlow, UnknownFlow
 from homeassistant.helpers.device_registry import format_mac
 
 from . import async_get_provisioning_futures
@@ -407,11 +407,17 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
                     if next_flow_id:
                         _LOGGER.debug("Received next flow ID: %s", next_flow_id)
-                        self._provision_result = self.async_abort(
-                            reason="provision_successful",
-                            next_flow=(FlowType.CONFIG_FLOW, next_flow_id),
-                        )
-                        return
+                        try:
+                            self._provision_result = self.async_abort(
+                                reason="provision_successful",
+                                next_flow=(FlowType.CONFIG_FLOW, next_flow_id),
+                            )
+                        except UnknownFlow:
+                            # The other integration aborted its flow, for example
+                            # because the device is already configured
+                            _LOGGER.debug("Next flow %s is gone", next_flow_id)
+                        else:
+                            return
 
                     if redirect_url:
                         self._provision_result = self.async_abort(

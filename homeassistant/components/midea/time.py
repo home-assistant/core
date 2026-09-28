@@ -4,6 +4,7 @@ from datetime import time
 from typing import cast, override
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -14,7 +15,9 @@ PARALLEL_UPDATES = 0
 
 TIMES: list[TimeEntityDescription] = [
     TimeEntityDescription(
-        key="timing_regeneration", translation_key="timing_regeneration"
+        key="timing_regeneration",
+        translation_key="timing_regeneration",
+        entity_category=EntityCategory.CONFIG,
     )
 ]
 

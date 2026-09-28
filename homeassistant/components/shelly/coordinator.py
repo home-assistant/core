@@ -534,7 +534,6 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._ota_event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._connect_task: asyncio.Task | None = None
-        entry.async_on_unload(entry.add_update_listener(self._async_update_listener))
 
     @cached_property
     def bluetooth_source(self) -> str:
@@ -618,15 +617,6 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._event_listeners.append(event_callback)
 
         return _unsubscribe
-
-    async def _async_update_listener(
-        self, hass: HomeAssistant, entry: ShellyConfigEntry
-    ) -> None:
-        """Reconfigure on update."""
-        async with self._connection_lock:
-            if self.connected:
-                self._async_run_disconnected_events()
-                await self._async_run_connected_events()
 
     @callback
     def _async_device_event_handler(self, event_data: dict[str, Any]) -> None:

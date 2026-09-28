@@ -42,6 +42,23 @@ class MockIntentHandler(intent.IntentHandler):
         return self._mock_slot_schema
 
 
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param(None, True, id="none"),
+        pytest.param("", True, id="empty-string"),
+        pytest.param(" \t", True, id="whitespace-string"),
+        pytest.param(0, False, id="zero"),
+        pytest.param(False, False, id="false"),
+        pytest.param([], False, id="empty-list"),
+        pytest.param({}, False, id="empty-dict"),
+    ],
+)
+def test_is_blank_slot_value(value: object, expected: bool) -> None:
+    """Test identifying intent slot values that represent an unspecified slot."""
+    assert intent.is_blank_slot_value(value) is expected
+
+
 async def test_async_match_states(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,

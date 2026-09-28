@@ -168,11 +168,10 @@ def _get_token(host, username, password):
             return result["token"]
         except KeyError:
             error_message = (
-                "Xiaomi token cannot be refreshed, response from "
-                "url: [%s] \nwith parameter: [%s] \nwas: [%s]"
+                "Xiaomi token cannot be refreshed, response from url: [%s] was: [%s]"
             )
-            _LOGGER.exception(error_message, url, data, result)
+            _LOGGER.exception(error_message, url, result)
             return None
 
-    _LOGGER.error("Invalid response: [%s] at url: [%s] with data [%s]", res, url, data)
+    _LOGGER.error("Invalid response: [%s] at url: [%s]", res, url)
     return None
