@@ -2638,11 +2638,20 @@ async def test_options_flow_abort_zigbee_firmware(
     assert result["reason"] == "zigbee_firmware"
 
 
-async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
-    """Test we get the form."""
+@pytest.mark.parametrize(
+    ("configured_host", "expected_host"),
+    [
+        pytest.param("0.0.0.0", "1.1.1.1", id="ip_updated"),
+        pytest.param("shelly1pm.local", "shelly1pm.local", id="hostname_kept"),
+    ],
+)
+async def test_zeroconf_already_configured(
+    hass: HomeAssistant, configured_host: str, expected_host: str
+) -> None:
+    """Test zeroconf updates a configured IP but keeps a configured hostname."""
 
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id="test-mac", data={CONF_HOST: "0.0.0.0"}
+        domain=DOMAIN, unique_id="test-mac", data={CONF_HOST: configured_host}
     )
     entry.add_to_hass(hass)
 
@@ -2659,8 +2668,7 @@ async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    # Test config entry got updated with latest IP
-    assert entry.data[CONF_HOST] == "1.1.1.1"
+    assert entry.data[CONF_HOST] == expected_host
 
 
 async def test_zeroconf_ignored(hass: HomeAssistant) -> None:
@@ -3060,6 +3068,11 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.AUTO
 
+    # Initial setup plus one reload per options change
+    await hass.async_block_till_done()
+    assert len(mock_rpc_device.initialize.mock_calls) == 5
+    assert entry.state is ConfigEntryState.LOADED
+
     await hass.config_entries.async_unload(entry.entry_id)
 
 
@@ -3104,15 +3117,25 @@ async def test_zeroconf_already_configured_triggers_refresh_mac_in_name(
     assert len(mock_rpc_device.initialize.mock_calls) == 2
 
 
+@pytest.mark.parametrize(
+    "configured_host",
+    [
+        pytest.param("1.1.1.1", id="ip"),
+        pytest.param("shelly1pm.local", id="hostname"),
+    ],
+)
 async def test_zeroconf_already_configured_triggers_refresh(
-    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    configured_host: str,
 ) -> None:
     """Test zeroconf discovery triggers refresh via get_info mac."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="AABBCCDDEEFF",
         data={
-            CONF_HOST: "1.1.1.1",
+            CONF_HOST: configured_host,
             CONF_GEN: 2,
             CONF_SLEEP_PERIOD: 0,
             CONF_MODEL: MODEL_1,
@@ -3143,6 +3166,43 @@ async def test_zeroconf_already_configured_triggers_refresh(
     )
     await hass.async_block_till_done()
     assert len(mock_rpc_device.initialize.mock_calls) == 2
+
+
+async def test_zeroconf_host_update_loaded_entry(
+    hass: HomeAssistant, mock_rpc_device: Mock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test zeroconf updating the host of a loaded entry reloads it without warning."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="AABBCCDDEEFF",
+        data={
+            CONF_HOST: "0.0.0.0",
+            CONF_GEN: 2,
+            CONF_SLEEP_PERIOD: 0,
+            CONF_MODEL: MODEL_1,
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(mock_rpc_device.initialize.mock_calls) == 1
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={"mac": "AABBCCDDEEFF", "type": MODEL_1, "auth": False},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "1.1.1.1"
+    assert len(mock_rpc_device.initialize.mock_calls) == 2
+    assert "has an update listener" not in caplog.text
 
 
 async def test_zeroconf_sleeping_device_not_triggers_refresh(

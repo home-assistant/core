@@ -1,5 +1,6 @@
 """Common tests for HomematicIP devices."""
 
+from typing import Any
 from unittest.mock import patch
 
 from homematicip.base.enums import EventType
@@ -330,3 +331,36 @@ async def test_hmip_child_device_links_to_access_point(
     assert access_point_device is not None
 
     assert child_device.via_device_id == access_point_device.id
+
+
+async def test_hmip_unknown_device_type(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    default_mock_hap_factory: HomeFactory,
+    unknown_type_device_data: dict[str, Any],
+) -> None:
+    """Test a device whose type the library does not know yet."""
+    await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Unknown Device"], extra_devices=[unknown_type_device_data]
+    )
+
+    entities = [
+        entry
+        for entry in entity_registry.entities.values()
+        if entry.unique_id.startswith(unknown_type_device_data["id"])
+    ]
+    assert sorted(entry.unique_id for entry in entities) == [
+        "3014F711000000000UNKNOWN_1_button",
+        "3014F711000000000UNKNOWN_2_button",
+    ]
+
+    device = device_registry.async_get(entities[0].device_id)
+    assert device is not None
+    assert (DOMAIN, unknown_type_device_data["id"]) in device.identifiers
+    assert {entry.device_id for entry in entities} == {device.id}
+
+    for entry in entities:
+        state = hass.states.get(entry.entity_id)
+        assert state is not None
+        assert state.state != STATE_UNAVAILABLE
