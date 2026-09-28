@@ -57,7 +57,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         hass: HomeAssistant,
         envoy: Envoy,
         entry: EnphaseConfigEntry,
-        session: ClientSession | None = None,
+        session: ClientSession,
     ) -> None:
         """Initialize DataUpdateCoordinator for the envoy."""
         self.envoy = envoy
@@ -74,7 +74,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._cancel_mac_verification: CALLBACK_TYPE | None = None
         self.token_lifetime = 0
         self._acb_sleep_soc_band: str | None = None
-        self._client_session: ClientSession | None = session
+        self._client_session: ClientSession = session
         super().__init__(
             hass,
             _LOGGER,
@@ -218,7 +218,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return
         except RuntimeError as err:
             # We may get session is closed if we still run at unload
-            if self._client_session and self._client_session.closed:
+            if self._client_session.closed:
                 _LOGGER.debug(
                     "%s: Client is closed when reading firmware: %s", self.name, err
                 )
@@ -272,7 +272,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return
         except RuntimeError as err:
             # We may get session is closed if we still run at unload
-            if self._client_session and self._client_session.closed:
+            if self._client_session.closed:
                 _LOGGER.debug(
                     "%s: Client is closed when reading interface information: %s",
                     self.name,
