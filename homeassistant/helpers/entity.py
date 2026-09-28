@@ -522,8 +522,6 @@ class Entity(
     _update_staged = False
     # Whether the entity has acquired a parallel_updates permit
     _update_acquired: bool = False
-    # The current update task for this entity, if any
-    _updating_task: asyncio.Task | None = None
 
     # _verified_state_writable is set to True if the entity has been verified
     # to be writable. This is used to avoid repeated checks.
@@ -1374,9 +1372,11 @@ class Entity(
 
         self._update_staged = True
 
+        semaphore = self.parallel_updates
+
         # Process update sequential
-        if self.parallel_updates:
-            await self.parallel_updates.acquire()
+        if semaphore:
+            await semaphore.acquire()
             # Mark that we've successfully acquired a permit
             self._update_acquired = True
 
@@ -1396,12 +1396,12 @@ class Entity(
             self._update_staged = False
             if warning:
                 update_warn.cancel()
-            if self.parallel_updates:
-                # Clear acquired flag before releasing the permit so
-                # semaphore accounting remains consistent.
+            if semaphore:
+                # Clear the acquired flag before releasing the original semaphore
+                # instance so stale platform recovery cannot corrupt accounting.
                 if self._update_acquired:
                     self._update_acquired = False
-                self.parallel_updates.release()
+                semaphore.release()
 
     @callback
     def async_on_remove(self, func: CALLBACK_TYPE) -> None:
