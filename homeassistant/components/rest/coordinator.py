@@ -70,7 +70,11 @@ class RestCoordinator(DataUpdateCoordinator[None]):
         ):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="endpoint_error",
+                translation_key=(
+                    "endpoint_error"
+                    if not isinstance(self.rest.last_exception, TimeoutError)
+                    else "timeout_error"
+                ),
                 translation_placeholders={
                     "endpoint_error_message": str(self.rest.last_exception)
                 },

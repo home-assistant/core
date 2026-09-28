@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
 from types import MethodType
-from typing import Any, override
+from typing import Any, cast, override
 from xml.parsers.expat import ExpatError
 
 import probatio
@@ -118,7 +118,11 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
                 rest = create_rest_data_from_config_entry(self.hass, user_input)
                 await rest.async_update()
                 if rest.last_exception:
-                    errors["base"] = "endpoint_error"
+                    errors["base"] = (
+                        "endpoint_error"
+                        if not isinstance(rest.last_exception, TimeoutError)
+                        else "timeout_error"
+                    )
                     placeholders["endpoint_error_message"] = str(rest.last_exception)
                 if not errors:
                     self._title = f"{user_input[CONF_METHOD]} {Template(user_input[CONF_RESOURCE], self.hass).async_render()}"
@@ -212,7 +216,9 @@ def _validate_unit(data: dict[str, Any]) -> dict[str, Any]:
             units_string = f"one of {', '.join(sorted_units)}"
 
         raise probatio.Invalid(
-            translation_key="unit_validation_error",
+            translation_key=(
+                "unit_validation_error" if unit is not None else "unit_required_error"
+            ),
             placeholders={
                 "unit": unit,
                 "device_class": device_class,
@@ -287,8 +293,9 @@ class SubentryConfig:
 
     default_name: str
     flow_schema: probatio.Schema
-    post_schema_validation: probatio.Schema | None = None
-    rest_validation: Callable[[RestData], Callable[[Any], Any]] | None = None
+    post_schema_validation: (
+        Callable[[RestData], probatio.Schema] | probatio.Schema | None
+    ) = None
 
 
 SUBENTRY_CONFIG: dict[Platform, SubentryConfig] = {
@@ -299,22 +306,13 @@ SUBENTRY_CONFIG: dict[Platform, SubentryConfig] = {
     Platform.SENSOR: SubentryConfig(
         default_name=DEFAULT_SENSOR_NAME,
         flow_schema=SENSOR_SUBENTRY_FLOW_SCHEMA,
-        post_schema_validation=probatio.Schema(
-            probatio.All(_validate_unit, _validate_state_class)
+        post_schema_validation=lambda data: probatio.Schema(
+            probatio.All(
+                _validate_unit, _validate_state_class, _validate_sensor_rest_data(data)
+            )
         ),
-        rest_validation=_validate_sensor_rest_data,
     ),
 }
-
-
-def _map_errors_to_schema(
-    exc: probatio.Invalid, errors: dict[str, str], placeholders: dict[str, str]
-) -> None:
-    """Map subentry validation errors to the schema."""
-    for error in [exc] if not isinstance(exc, probatio.MultipleInvalid) else exc.errors:
-        path = error.path[0] if error.path else "base"
-        errors[path] = exc.translation_key or str(exc)
-        placeholders.update(exc.placeholders)
 
 
 class RestSubentryFlow(ConfigSubentryFlow):
@@ -333,26 +331,33 @@ class RestSubentryFlow(ConfigSubentryFlow):
             if schema_validator := SUBENTRY_CONFIG[
                 Platform(self._subentry_type)
             ].post_schema_validation:
-                try:
-                    schema_validator(user_input)
-                except probatio.Invalid as exc:
-                    _map_errors_to_schema(exc, errors, placeholders)
-            if rest_validator := SUBENTRY_CONFIG[
-                Platform(self._subentry_type)
-            ].rest_validation:
-                if len(entry.subentries) == 0:
-                    await entry.runtime_data.async_refresh()
-                if entry.runtime_data.rest.data is not None:
+                if callable(schema_validator):
+                    if len(entry.subentries) == 0:
+                        await entry.runtime_data.async_refresh()
+                        if entry.runtime_data.rest.data is not None:
+                            schema_validator = schema_validator(entry.runtime_data.rest)
+                        else:
+                            ex = cast(
+                                HomeAssistantError,
+                                entry.runtime_data.last_exception,
+                            )
+                            errors["base"] = ex.translation_key or "endpoint_error"
+                            placeholders = placeholders | (
+                                ex.translation_placeholders
+                                or {"endpoint_error_message": str(ex)}
+                            )
+                if isinstance(schema_validator, probatio.Schema):
                     try:
-                        rest_validator(entry.runtime_data.rest)(user_input)
+                        schema_validator(user_input)
                     except probatio.Invalid as exc:
-                        _map_errors_to_schema(exc, errors, placeholders)
-                else:
-                    errors["base"] = "endpoint_error"
-                    placeholders["endpoint_error_message"] = str(
-                        entry.runtime_data.rest.last_exception
-                        or entry.runtime_data.last_exception
-                    )
+                        for error in (
+                            [exc]
+                            if not isinstance(exc, probatio.MultipleInvalid)
+                            else exc.errors
+                        ):
+                            path = error.path[0] if error.path else "base"
+                            errors[path] = exc.translation_key or str(exc)
+                            placeholders.update(exc.placeholders)
             if not errors:
                 title: str = user_input.get(
                     CONF_NAME,

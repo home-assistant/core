@@ -11,6 +11,7 @@
     "picture": "Picture",
     "picture_description": "Defines a template for the picture of the entity.",
     "template_error": "Error rendering template: {template_error_message}",
+    "timeout_error": "Timeout communicating with resource",
     "value_template": "Value Template",
     "value_template_description": "Defines a [template]({docs_url_template_data_processing}) to extract the value. `value` or `value_json` can be used."
   },
@@ -24,7 +25,8 @@
       "decoding_error": "Error decoding response: {decoding_error_message}",
       "endpoint_error": "[%key:component::rest::common::endpoint_error%]",
       "invalid url": "Invalid URL",
-      "template_error": "[%key:component::rest::common::template_error%]"
+      "template_error": "[%key:component::rest::common::template_error%]",
+      "timeout_error": "[%key:component::rest::common::timeout_error%]"
     },
     "initiate_flow": {
       "user": "Add RESTful Resource"
@@ -124,6 +126,8 @@
         "no_json": "[%key:component::rest::exceptions::no_json::message%]",
         "parse_error": "[%key:component::rest::exceptions::parse_error::message%]",
         "state_class_validation_error": "\"{state_class}\" is not a valid state class for device class \"{device_class}\"; expected \"{state_classes_string}\"",
+        "timeout_error": "[%key:component::rest::common::timeout_error%]",
+        "unit_required_error": "Device class \"{device_class}\" requires \"{unit_string}\"",
         "unit_validation_error": "\"{unit}\" is not a valid unit for device class \"{device_class}\"; expected \"{units_string}\"",
         "xml_parse_error": "REST result could not be parsed as XML: {xml_parse_error_message}"
       },
@@ -179,6 +183,9 @@
     },
     "template_error": {
       "message": "[%key:component::rest::common::template_error%]"
+    },
+    "timeout_error": {
+      "message": "[%key:component::rest::common::timeout_error%]"
     },
     "turn_off_failed": {
       "message": "Failed to turn off {resource}"

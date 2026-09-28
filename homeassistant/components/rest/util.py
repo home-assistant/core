@@ -34,7 +34,7 @@ def parse_json_attributes_raise_error(
             translation_domain=DOMAIN,
             translation_key="invalid_result",
             translation_placeholders={
-                "json_path": json_attrs_path or "",
+                "json_path": json_attrs_path or "$",
             },
         )
     except (
