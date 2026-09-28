@@ -19,12 +19,8 @@ from hassil.intents import (
     TextSlotValue,
     WildcardSlotList,
 )
-from hassil.recognize import (
-    MISSING_ENTITY,
-    RecognizeResult,
-    recognize_all,
-    recognize_best,
-)
+from hassil.models import MatchEntity
+from hassil.recognize import MISSING_ENTITY, RecognizeResult, recognize_all
 from hassil.string_matcher import UnmatchedRangeEntity, UnmatchedTextEntity
 from hassil.util import merge_dict, remove_punctuation
 from home_assistant_intents import (
@@ -106,6 +102,12 @@ _DEVICE_REGISTRY_UPDATE_FIELDS = [
 ]
 
 _DEFAULT_EXPOSED_ATTRIBUTES = {"device_class"}
+
+# Slot value metadata: the areas a matched name, area or floor covers
+_METADATA_AREA_IDS = "area_ids"
+_METADATA_FROM_CONTEXT = "from_context"
+
+type _SlotValueTuple = tuple[str, str, dict[str, Any], dict[str, Any]]
 
 
 ERROR_SENTINEL = sentinel("ERROR_SENTINEL")
@@ -863,7 +865,7 @@ class DefaultAgent(ConversationEntity):
 
         if not skip_exposed_match:
             start_time = time.monotonic()
-            strict_result = self._recognize_strict(
+            strict_result = _recognize_strict(
                 user_input, lang_intents, slot_lists, intent_context, language
             )
             _LOGGER.debug(
@@ -908,7 +910,7 @@ class DefaultAgent(ConversationEntity):
             }
 
             start_time = time.monotonic()
-            strict_result = self._recognize_strict(
+            strict_result = _recognize_strict(
                 user_input,
                 lang_intents,
                 unexposed_entities_slot_lists,
@@ -1066,11 +1068,16 @@ class DefaultAgent(ConversationEntity):
 
         return self._unexposed_names_list
 
-    def _get_entity_name_tuples(
-        self, exposed: bool
-    ) -> Iterable[tuple[str, str, dict[str, Any]]]:
-        """Yield (input name, output name, context) tuples for entities."""
+    def _get_entity_name_tuples(self, exposed: bool) -> list[_SlotValueTuple]:
+        """Return (input name, output name, context, metadata) tuples for entities.
+
+        Metadata holds the areas of all entities sharing a name, since hassil
+        only reports the first matching value of a slot list.
+        """
         entity_registry = er.async_get(self.hass)
+
+        name_tuples: list[_SlotValueTuple] = []
+        name_area_ids: dict[str, set[str]] = {}
 
         for state in self.hass.states.async_all():
             entity_exposed = async_should_expose(self.hass, DOMAIN, state.entity_id)
@@ -1092,6 +1099,10 @@ class DefaultAgent(ConversationEntity):
                     context[attr] = state.attributes[attr]
 
             entity_entry = entity_registry.async_get(state.entity_id)
+            area_id: str | None = None
+            if entity_entry is not None:
+                area_id = er.async_get_effective_area_id(self.hass, entity_entry)
+
             for name in intent.async_get_entity_aliases(
                 self.hass, entity_entry, state=state
             ):
@@ -1101,26 +1112,14 @@ class DefaultAgent(ConversationEntity):
                     # An empty name would match anywhere in the input.
                     continue
 
-                yield (input_name, name, context)
+                area_ids = name_area_ids.setdefault(input_name.lower(), set())
+                if area_id is not None:
+                    area_ids.add(area_id)
+                name_tuples.append(
+                    (input_name, name, context, {_METADATA_AREA_IDS: area_ids})
+                )
 
-    def _recognize_strict(
-        self,
-        user_input: ConversationInput,
-        lang_intents: LanguageIntents,
-        slot_lists: dict[str, SlotList],
-        intent_context: dict[str, Any] | None,
-        language: str,
-    ) -> RecognizeResult | None:
-        """Search intents for a strict match to user input."""
-        return recognize_best(
-            user_input.text,
-            lang_intents.intents,
-            slot_lists=slot_lists,
-            intent_context=intent_context,
-            language=language,
-            best_metadata_key=METADATA_CUSTOM_SENTENCE,
-            best_slot_name="name",
-        )
+        return name_tuples
 
     async def _build_speech(
         self,
@@ -1373,14 +1372,17 @@ class DefaultAgent(ConversationEntity):
         # have the same name. The intent matcher doesn't gather all matching
         # values for a list, just the first. So we will need to match by name no
         # matter what.
-        exposed_entity_names = list(self._get_entity_name_tuples(exposed=True))
+        exposed_entity_names = self._get_entity_name_tuples(exposed=True)
         _LOGGER.debug("Exposed entities: %s", exposed_entity_names)
 
         # Expose all areas.
         areas = ar.async_get(self.hass)
-        area_names = []
+        area_names: list[_SlotValueTuple] = []
         for area in areas.async_list_areas():
-            area_names.append((remove_punctuation(area.name).strip(), area.name))
+            area_metadata = {_METADATA_AREA_IDS: {area.id}}
+            area_names.append(
+                (remove_punctuation(area.name).strip(), area.name, {}, area_metadata)
+            )
             if not area.aliases:
                 continue
 
@@ -1389,13 +1391,28 @@ class DefaultAgent(ConversationEntity):
                 if not alias:
                     continue
 
-                area_names.append((remove_punctuation(alias).strip(), alias))
+                area_names.append(
+                    (remove_punctuation(alias).strip(), alias, {}, area_metadata)
+                )
 
         # Expose all floors.
         floors = fr.async_get(self.hass)
-        floor_names = []
+        floor_names: list[_SlotValueTuple] = []
         for floor in floors.async_list_floors():
-            floor_names.append((remove_punctuation(floor.name).strip(), floor.name))
+            floor_metadata = {
+                _METADATA_AREA_IDS: {
+                    area.id
+                    for area in ar.async_entries_for_floor(areas, floor.floor_id)
+                }
+            }
+            floor_names.append(
+                (
+                    remove_punctuation(floor.name).strip(),
+                    floor.name,
+                    {},
+                    floor_metadata,
+                )
+            )
             if not floor.aliases:
                 continue
 
@@ -1404,7 +1421,9 @@ class DefaultAgent(ConversationEntity):
                 if not alias:
                     continue
 
-                floor_names.append((remove_punctuation(alias).strip(), floor.name))
+                floor_names.append(
+                    (remove_punctuation(alias).strip(), floor.name, {}, floor_metadata)
+                )
 
         name_list = TextSlotList.from_tuples(exposed_entity_names, allow_template=False)
 
@@ -1433,7 +1452,16 @@ class DefaultAgent(ConversationEntity):
         if satellite_area is None:
             return None
 
-        return {"area": {"value": satellite_area.name, "text": satellite_area.name}}
+        return {
+            "area": {
+                "value": satellite_area.name,
+                "text": satellite_area.name,
+                "metadata": {
+                    _METADATA_AREA_IDS: {satellite_area.id},
+                    _METADATA_FROM_CONTEXT: True,
+                },
+            }
+        }
 
     def _get_satellite_area_and_device(
         self, satellite_id: str | None, device_id: str | None = None
@@ -1670,6 +1698,113 @@ class DefaultAgent(ConversationEntity):
     async def async_get_language_scores(self) -> dict[str, LanguageScores]:
         """Get support scores per language."""
         return await self.hass.async_add_executor_job(get_language_scores)
+
+
+def _recognize_strict(
+    user_input: ConversationInput,
+    lang_intents: LanguageIntents,
+    slot_lists: dict[str, SlotList],
+    intent_context: dict[str, Any] | None,
+    language: str,
+) -> RecognizeResult | None:
+    """Search intents for the best strict match to user input."""
+    results = list(
+        recognize_all(
+            user_input.text,
+            lang_intents.intents,
+            slot_lists=slot_lists,
+            intent_context=intent_context,
+            language=language,
+        )
+    )
+
+    if custom_results := [
+        result
+        for result in results
+        if result.intent_metadata
+        and result.intent_metadata.get(METADATA_CUSTOM_SENTENCE)
+    ]:
+        results = custom_results
+
+    # A matched name normally beats a domain or area match. Drop names that are
+    # not where the sentence points, so such an alternative wins instead.
+    if nameless_results := [
+        result for result in results if _get_matched_name(result) is None
+    ]:
+        context_area = _get_context_area(nameless_results)
+        results = [
+            result for result in results if _is_name_in_scope(result, context_area)
+        ]
+
+    return min(results, key=_result_sort_key, default=None)
+
+
+def _get_matched_name(result: RecognizeResult) -> MatchEntity | None:
+    """Return the name matched from the name list, if any."""
+    name = result.entities.get("name")
+    if name is None or name.is_wildcard:
+        return None
+    return name
+
+
+def _get_context_area(results: list[RecognizeResult]) -> MatchEntity | None:
+    """Return the satellite area, if a result was matched with it."""
+    for result in results:
+        area = result.entities.get("area")
+        if (
+            area is not None
+            and area.metadata is not None
+            and area.metadata.get(_METADATA_FROM_CONTEXT)
+        ):
+            return area
+    return None
+
+
+def _is_name_in_scope(
+    result: RecognizeResult, context_area: MatchEntity | None
+) -> bool:
+    """Check that an entity with the matched name is where the sentence points."""
+    if (name_area_ids := _get_area_ids(_get_matched_name(result))) is None:
+        return True
+
+    area = result.entities.get("area")
+    floor = result.entities.get("floor")
+    if area is None and floor is None:
+        # No location in the sentence, so the satellite area applies
+        area = context_area
+
+    for location in (area, floor):
+        area_ids = _get_area_ids(location)
+        if area_ids is not None and name_area_ids.isdisjoint(area_ids):
+            return False
+
+    return True
+
+
+def _get_area_ids(entity: MatchEntity | None) -> set[str] | None:
+    """Return the areas of a matched name, area or floor, if known."""
+    if entity is None or entity.metadata is None:
+        return None
+    return entity.metadata.get(_METADATA_AREA_IDS)
+
+
+def _result_sort_key(result: RecognizeResult) -> tuple[int, int, int, int, str]:
+    """Prefer a longer name, fewer wildcards, more literal text, less wildcard text."""
+    name = _get_matched_name(result)
+    num_wildcards = 0
+    wildcard_text_len = 0
+    for entity in result.entities_list:
+        if entity.is_wildcard:
+            num_wildcards += 1
+            wildcard_text_len += len(entity.text or "")
+
+    return (
+        -len(name.text) if name is not None else 0,
+        num_wildcards,
+        -result.text_chunks_matched,
+        wildcard_text_len,
+        result.intent.name,
+    )
 
 
 def _merge_intent_responses(
