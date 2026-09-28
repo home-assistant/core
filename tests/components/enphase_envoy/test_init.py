@@ -850,36 +850,34 @@ async def test_background_task_cancel_at_unload(
 @pytest.mark.parametrize(
     ("test_target", "envoy_method", "exc", "msg"),
     [
-        (
+        pytest.param(
             "_async_fetch_and_compare_mac",
             "interface_settings",
             RuntimeError,
             "Some other runtime error",
+            id="mac_verification_runtimeerror",
         ),
-        (
+        pytest.param(
             "_async_try_refresh_firmware",
             "setup",
             RuntimeError,
             "Some other runtime error",
+            id="firmware_refresh_runtimeerror",
         ),
-        (
+        pytest.param(
             "_async_fetch_and_compare_mac",
             "interface_settings",
             ValueError,
             "Some other error",
+            id="mac_verification_valueerror",
         ),
-        (
+        pytest.param(
             "_async_try_refresh_firmware",
             "setup",
             ValueError,
             "Some other error",
+            id="firmware_refresh_valueerror",
         ),
-    ],
-    ids=[
-        "mac_verification_runtimeerror",
-        "firmware_refresh_runtimeerror",
-        "mac_verification_valueerror",
-        "firmware_refresh_valueerror",
     ],
 )
 @respx.mock
@@ -889,7 +887,7 @@ async def test_coordinator_background_tasks_reraised_error(
     mock_envoy: AsyncMock,
     test_target: str,
     envoy_method: str,
-    exc: RuntimeError | ValueError,
+    exc: type[Exception],
     msg: str,
 ) -> None:
     """Test coordinator background task handling raised error."""
@@ -908,43 +906,41 @@ async def test_coordinator_background_tasks_reraised_error(
 @pytest.mark.parametrize(
     ("envoy_method", "exc", "msg", "time_step"),
     [
-        (
+        pytest.param(
             "interface_settings",
             RuntimeError("Session is closed"),
             "Client is closed when reading interface information",
             MAC_VERIFICATION_DELAY,
+            id="mac_verification_runtimeerror",
         ),
-        (
+        pytest.param(
             "setup",
             RuntimeError("Session is closed"),
             "Client is closed when reading firmware",
             FIRMWARE_REFRESH_INTERVAL,
+            id="firmware_refresh_runtimeerror",
         ),
-        (
+        pytest.param(
             "interface_settings",
-            EnvoyClientClosedError,
+            EnvoyClientClosedError("client closed before request"),
             "Client is closed when reading interface information",
             MAC_VERIFICATION_DELAY,
+            id="mac_verification_envoyclientclosederror",
         ),
-        (
+        pytest.param(
             "setup",
-            EnvoyClientClosedError,
+            EnvoyClientClosedError("client closed before request"),
             "Client is closed when reading firmware",
             FIRMWARE_REFRESH_INTERVAL,
+            id="firmware_refresh_envoyclientclosederror",
         ),
-        (
+        pytest.param(
             "setup",
-            EnvoyError,
+            EnvoyError("some other envoy error"),
             "Error reading firmware",
             FIRMWARE_REFRESH_INTERVAL,
+            id="firmware_refresh_envoyerror",
         ),
-    ],
-    ids=[
-        "mac_verification_runtimeerror",
-        "firmware_refresh_runtimeeror",
-        "mac_verification_envoyclientclosederror",
-        "firmware_refresh_envoyclientclosederror",
-        "firmware_refresh_envoyerror",
     ],
 )
 @respx.mock
@@ -955,7 +951,7 @@ async def test_coordinator_background_tasks_session_is_closed(
     caplog: pytest.LogCaptureFixture,
     freezer: FrozenDateTimeFactory,
     envoy_method: str,
-    exc: RuntimeError | EnvoyClientClosedError | EnvoyError,
+    exc: Exception,
     msg: str,
     time_step: timedelta,
 ) -> None:
