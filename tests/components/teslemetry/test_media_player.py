@@ -252,3 +252,31 @@ async def test_update_streaming(
     # Ensure the restored state is the same as the previous state
     state = hass.states.get("media_player.test_media_player")
     assert state == snapshot(name="on")
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_streaming_center_display_keeps_playback_state(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+) -> None:
+    """Test center display changes do not override the playback state."""
+
+    await setup_platform(hass, [Platform.MEDIA_PLAYER])
+
+    for data, expected in (
+        ({Signal.MEDIA_PLAYBACK_STATUS: "Playing"}, MediaPlayerState.PLAYING),
+        ({Signal.CENTER_DISPLAY: "Driving"}, MediaPlayerState.PLAYING),
+        ({Signal.CENTER_DISPLAY: "On"}, MediaPlayerState.PLAYING),
+        ({Signal.CENTER_DISPLAY: "Off"}, MediaPlayerState.OFF),
+    ):
+        mock_add_listener.send(
+            {
+                "vin": VEHICLE_DATA_ALT["response"]["vin"],
+                "data": data,
+                "createdAt": "2024-10-04T10:45:17.537Z",
+            }
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get("media_player.test_media_player")
+        assert state.state == expected
