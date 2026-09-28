@@ -14,6 +14,7 @@ from pyicloud.exceptions import (
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
     PyiCloudServiceNotActivatedException,
+    PyiCloudServiceUnavailable,
 )
 import voluptuous as vol
 
@@ -186,7 +187,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         """Return whether iCloud has a route to send a verification code."""
         return self.api is not None and self.api.two_factor_delivery_method != "unknown"
 
-    def _report_undeliverable_code(self, user_input, step_id):
+    async def _report_undeliverable_code(self, user_input, step_id):
         """Send the flow back to the password when no code can be sent.
 
         iCloud can report a challenge whose delivery route was never
@@ -205,7 +206,8 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             # Dropping the service only clears it from memory. The stored
             # session is what the next login reads back, and it is the one
             # that produced a challenge nothing can deliver a code for.
-            self.api.session.clear_persistence()
+            # Clearing it touches the filesystem, so it goes to the executor.
+            await self.hass.async_add_executor_job(self.api.session.clear_persistence)
         self.api = None
         self._forced_2fa = False
         return self._show_setup_form(
@@ -306,7 +308,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if self._requires_2fa:
             if not self._code_can_be_delivered():
-                return self._report_undeliverable_code(user_input, step_id)
+                return await self._report_undeliverable_code(user_input, step_id)
             return await self.async_step_verification_code()
 
         if self.api.requires_2sa:
@@ -322,6 +324,13 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("No device found in the iCloud account: %s", self._username)
             self.api = None
             return self.async_abort(reason="no_device")
+        except PyiCloudServiceUnavailable as error:
+            # iCloud failing rather than refusing. The stored session is not at
+            # fault and must not be thrown away over an outage: it carries the
+            # trust token that keeps the user from being asked for a code
+            # again.
+            _LOGGER.error("iCloud is unavailable for %s: %s", self._username, error)
+            return self._show_setup_form(user_input, {"base": "unknown"}, step_id)
         except (
             PyiCloud2FARequiredException,
             PyiCloudAuthRequiredException,
@@ -336,7 +345,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 isinstance(error, PyiCloudAPIResponseException) and is_2fa_status(error)
             ):
                 if not self._code_can_be_delivered():
-                    return self._report_undeliverable_code(user_input, step_id)
+                    return await self._report_undeliverable_code(user_input, step_id)
                 # The session that was challenged is the one the code has to
                 # go through, so it is kept.
                 self._forced_2fa = True

@@ -8,6 +8,7 @@ from pyicloud.exceptions import (
     PyiCloud2FARequiredException,
     PyiCloudAPIResponseException,
     PyiCloudFailedLoginException,
+    PyiCloudServiceUnavailable,
 )
 import pytest
 from requests import Response
@@ -654,3 +655,27 @@ async def test_create_icloud_storage_dir(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == CONF_TRUSTED_DEVICE
         makedirs_mock.assert_called_once()
+
+
+async def test_device_fetch_during_an_outage_keeps_the_session(
+    hass: HomeAssistant,
+) -> None:
+    """Test that iCloud being unavailable is reported without losing the session.
+
+    PyiCloudServiceUnavailable derives straight from PyiCloudException, so it
+    misses the handled set and used to escape as an unhandled flow error. It
+    is iCloud failing rather than refusing: the stored session is not at fault
+    and carries the trust token, so it has to survive the outage.
+    """
+    with _service_rejecting_the_device_fetch(
+        PyiCloudServiceUnavailable("iCloud is unavailable")
+    ) as service_mock:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+    service_mock.return_value.session.clear_persistence.assert_not_called()
