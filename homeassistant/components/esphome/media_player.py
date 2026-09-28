@@ -131,6 +131,14 @@ class EsphomeMediaPlayer(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play command with media url to the media player."""
+        enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE)
+        # The device can only append to its playlist, not insert after the current item
+        if enqueue == MediaPlayerEnqueue.NEXT:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="enqueue_mode_not_supported",
+                translation_placeholders={"enqueue": enqueue},
+            )
         if media_source.is_media_source_id(media_id):
             sourced_media = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
@@ -159,7 +167,7 @@ class EsphomeMediaPlayer(
             self._key,
             command=(
                 MediaPlayerCommand.ENQUEUE
-                if kwargs.get(ATTR_MEDIA_ENQUEUE) == MediaPlayerEnqueue.ADD
+                if enqueue == MediaPlayerEnqueue.ADD
                 else None
             ),
             media_url=media_id,

@@ -142,6 +142,9 @@
     "action_call_timeout": {
       "message": "Timeout waiting for response from action call {call_name} on {device_name}"
     },
+    "enqueue_mode_not_supported": {
+      "message": "Enqueue mode {enqueue} is not supported."
+    },
     "error_communicating_with_device": {
       "message": "Error communicating with the device {device_name}: {error}"
     },

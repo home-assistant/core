@@ -446,7 +446,6 @@ async def test_media_player_repeat_all_not_supported(
     ("enqueue", "command"),
     [
         pytest.param(MediaPlayerEnqueue.ADD, MediaPlayerCommand.ENQUEUE, id="add"),
-        pytest.param(MediaPlayerEnqueue.NEXT, None, id="next"),
         pytest.param(MediaPlayerEnqueue.PLAY, None, id="play"),
         pytest.param(MediaPlayerEnqueue.REPLACE, None, id="replace"),
     ],
@@ -499,6 +498,50 @@ async def test_media_player_play_media_enqueue(
         announcement=None,
         device_id=0,
     )
+
+
+async def test_media_player_play_media_enqueue_next_not_supported(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test that the next enqueue mode raises an error."""
+    entity_info = [
+        MediaPlayerInfo(
+            object_id="mymedia_player",
+            key=1,
+            name="my media_player",
+            feature_flags=(
+                EspMediaPlayerEntityFeature.PLAY_MEDIA
+                | EspMediaPlayerEntityFeature.MEDIA_ENQUEUE
+            ),
+        )
+    ]
+    states = [
+        MediaPlayerEntityState(
+            key=1, volume=50, muted=False, state=MediaPlayerState.PLAYING
+        )
+    ]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_my_media_player",
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: "http://www.example.com/xy.mp3",
+                ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.NEXT,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "enqueue_mode_not_supported"
+    mock_client.media_player_command.assert_not_called()
 
 
 async def test_media_player_entity_with_source(
