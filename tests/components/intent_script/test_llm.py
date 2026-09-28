@@ -64,10 +64,15 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
 
 async def test_intent_scripts_exposed(hass: HomeAssistant) -> None:
     """Test intent scripts are exposed as LLM tools with slugified names."""
-    names = await _tool_names(hass)
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
+    tools = {tool.name: tool for tool in result.tools}
     # The user-provided "Tell a joke" name is slugified into a valid tool name.
-    assert "intent_script__Tell_a_joke" in names
-    assert "intent_script__LightAction" in names
+    assert "intent_script__Tell_a_joke" in tools
+    assert "intent_script__LightAction" in tools
+
+    # The intents come from user configuration, so only the integration is known.
+    assert tools["intent_script__Tell_a_joke"].integration == "intent_script"
+    assert tools["intent_script__LightAction"].integration == "intent_script"
 
 
 async def test_intent_script_platform_filtered(hass: HomeAssistant) -> None:

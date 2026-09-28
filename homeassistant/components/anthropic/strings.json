@@ -212,6 +212,9 @@
   "issues": {
     "model_deprecated": {
       "fix_flow": {
+        "error": {
+          "api_error": "[%key:component::anthropic::config_subentries::conversation::error::api_error%]"
+        },
         "step": {
           "init": {
             "data": {

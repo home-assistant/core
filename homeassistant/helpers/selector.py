@@ -1762,6 +1762,7 @@ class NumericThresholdSelector(Selector[NumericThresholdSelectorConfig]):
 class ObjectSelectorField(TypedDict, total=False):
     """Class to represent an object selector fields dict."""
 
+    default: Any
     label: str
     required: bool
     selector: Required[Selector | dict[str, Any]]
@@ -1790,6 +1791,7 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
                     probatio.Required("selector"): probatio.Any(
                         Selector, validate_selector
                     ),
+                    probatio.Optional("default"): cv.match_all,
                     probatio.Optional("required"): bool,
                     probatio.Optional("label"): str,
                 }

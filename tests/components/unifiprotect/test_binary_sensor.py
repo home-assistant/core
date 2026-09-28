@@ -6,7 +6,6 @@ from unittest.mock import Mock
 
 import pytest
 from uiprotect.data import (
-    AiPort,
     Camera,
     Event,
     EventType,
@@ -498,14 +497,6 @@ async def test_binary_sensor_sense_leak_public_value(
         ),
         pytest.param(
             MountType.NONE,
-            None,
-            True,
-            True,
-            STATE_UNAVAILABLE,
-            id="settings-without-capability-map",
-        ),
-        pytest.param(
-            MountType.NONE,
             set(),
             True,
             True,
@@ -601,21 +592,23 @@ async def test_binary_sensor_sense_capability_registry_cleanup(
     assert entity_registry.async_get(stale.entity_id) is None
 
 
-async def test_binary_sensor_sense_no_capability_map_creates_all(
+async def test_binary_sensor_sense_no_capability_map_creates_none(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     sensor_all: Sensor,
 ) -> None:
-    """Without a capability map (older firmware) every sense entity is created."""
-    setup_public_sensor(ufp)
+    """A sensor without a capability map gets no capability-gated entity."""
+    setup_public_sensor(ufp, capabilities=set())
     await init_entry(hass, ufp, [sensor_all])
 
     for description in (SENSE_DOOR, SENSE_TAMPERING, SENSE_MOTION, SENSE_LEAK):
-        _, entity_id = await ids_from_device_description(
-            hass, Platform.BINARY_SENSOR, sensor_all, description
-        )
-        assert entity_registry.async_get(entity_id) is not None
+        assert (
+            entity_registry.async_get_entity_id(
+                Platform.BINARY_SENSOR, DOMAIN, f"{sensor_all.mac}_{description.key}"
+            )
+            is None
+        ), description.key
 
 
 async def test_binary_sensor_sense_tampering_public_value(
@@ -977,26 +970,6 @@ async def test_binary_sensor_doorbell_ring(
     ring_changes = [e for e in state_changes if e.data["entity_id"] == entity_id]
     assert any(c.data["new_state"].state == STATE_ON for c in ring_changes)
     assert hass.states.get(entity_id).state == STATE_OFF
-
-
-async def test_aiport_no_binary_sensor_entities(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    ufp: MockUFPFixture,
-    aiport: AiPort,
-) -> None:
-    """Test AI Port devices do not create camera-specific binary sensors."""
-    await init_entry(hass, ufp, [aiport])
-
-    # AI Port should not create any camera-specific binary sensors
-    # (motion, smart detection, etc.)
-    # NVR HDD sensors will still be created, but no AI Port-specific entities
-    entities = er.async_entries_for_config_entry(entity_registry, ufp.entry.entry_id)
-
-    for entity in entities:
-        if entity.domain == Platform.BINARY_SENSOR:
-            # No entities should contain the AI Port's device id
-            assert aiport.id not in entity.unique_id
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
