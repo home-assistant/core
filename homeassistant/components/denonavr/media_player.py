@@ -525,7 +525,8 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
             raise
         # Keeps last_update_success and the Audyssey entities in step with
         # a fetch made outside the coordinator. Not async_set_updated_data():
-        # that cancels the refresh set_dynamic_eq queued for the other zones.
+        # that cancels the refresh set_dynamic_eq queued, which reads the
+        # other zones while Telnet is down.
         self._audyssey_coordinator.last_update_success = True
         self._audyssey_coordinator.async_update_listeners()
 
@@ -544,5 +545,7 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
             raise
 
         # The option governs the recurring poll alone. Safe inside the
-        # decorator's lock: async_request_refresh() only schedules.
+        # decorator's lock: async_request_refresh() only schedules. It skips
+        # while Telnet is healthy: the PS echo confirms this zone, and the
+        # other zones' copies wait for their next read.
         await self._audyssey_coordinator.async_request_refresh()

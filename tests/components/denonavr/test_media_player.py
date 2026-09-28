@@ -821,8 +821,8 @@ async def test_update_audyssey_keeps_a_pending_audyssey_refresh(
     """The action's own fetch must not cancel the refresh set_dynamic_eq queued.
 
     Dynamic EQ is receiver-wide and Telnet never pushes the other zones'
-    copies, so that refresh is what brings them in step. The real cooldown
-    is needed: the action has to land inside it.
+    copies, so with Telnet down that refresh is what brings them in step.
+    The real cooldown is needed: the action has to land inside it.
     """
     await setup_denonavr(hass)
     calls_before = client.async_update_audyssey.await_count
