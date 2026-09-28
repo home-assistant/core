@@ -18,8 +18,7 @@ from .const import DOMAIN, INTENT_SET_TEMPERATURE
 # with the same arguments has no further effect.
 LLM_ANNOTATIONS = ToolAnnotations(idempotent=True, open_world=False)
 
-# Intents owned by this integration that are exposed as LLM tools, with the
-# title shown for each.
+# Intents owned by this integration that are exposed as LLM tools.
 LLM_INTENTS = {
     INTENT_SET_TEMPERATURE: "Set temperature",
 }

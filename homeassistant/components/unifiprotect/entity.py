@@ -73,7 +73,7 @@ def _async_capability_supported(
 
     Smart-detect capabilities are answered by the master object (the private
     camera in hybrid, the public one otherwise). Sensor capabilities come from
-    the public capability map; without one every description is created.
+    the public capability map; a sensor without one supports none.
     """
     if (capability := description.ufp_capability) is None:
         return True
@@ -82,7 +82,7 @@ def _async_capability_supported(
             "Camera | PublicCamera", private if private is not None else public
         )
         return camera.can_detect(capability)
-    if not isinstance(public, PublicSensor) or not public.has_feature_flags:
+    if not isinstance(public, PublicSensor):
         return True
     return public.supports(capability)
 
@@ -96,8 +96,8 @@ def async_remove_unsupported_sense_entities(
 ) -> None:
     """Remove registry entries for sense entities the device cannot support.
 
-    Only acts when a public capability map is present (newer firmware); a console
-    upgrade then drops the never-functional entities created before the map existed.
+    Drops the never-functional entities created before the capability map
+    existed, and those of a sensor that reports no map.
     """
     entity_registry = er.async_get(hass)
     is_public_only = data.api.is_public_only
@@ -720,8 +720,8 @@ class ProtectEntityDescription(EntityDescription, Generic[T]):  # noqa: UP046
     # is often compound (e.g. mount type plus a settings flag).
     ufp_public_enabled_fn: Callable[[PublicDeviceModel], bool] | None = None
     # Capability required to create the entity: a sensor capability is checked
-    # against the public capability map (without one every description is
-    # created), a smart-detect type against the camera's advertised types.
+    # against the public capability map, a smart-detect type against the
+    # camera's advertised types.
     ufp_capability: SensorFeatureCapability | SmartDetectObjectType | None = None
     ufp_perm: PermRequired | None = None
 
