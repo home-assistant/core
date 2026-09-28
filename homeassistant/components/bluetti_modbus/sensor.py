@@ -2,10 +2,9 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any, cast, override
 
-from bluetti_modbus_lib import InverterStatus
+from bluetti_modbus_lib import InverterStatus, PvType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -29,8 +28,6 @@ from homeassistant.helpers.typing import StateType
 from .coordinator import BluettiModbusConfigEntry
 from .entity import BluettiModbusEntity
 
-_LOGGER = logging.getLogger(__name__)
-
 PARALLEL_UPDATES = 0
 
 _INVERTER_STATUS: dict[InverterStatus, str] = {
@@ -44,14 +41,13 @@ _INVERTER_STATUS: dict[InverterStatus, str] = {
     InverterStatus.AbnormalOffGrid: "abnormal_off_grid",
 }
 
-# Keyed by member name: bluetti_modbus_lib does not export PvType.
-_PV_TYPE: dict[str, str] = {
-    "Reserve": "reserve",
-    "Car": "car",
-    "Adapter": "adapter",
-    "Other": "other",
-    "DcPv": "dc_pv",
-    "AcPv": "ac_pv",
+_PV_TYPE: dict[PvType, str] = {
+    PvType.Reserve: "reserve",
+    PvType.Car: "car",
+    PvType.Adapter: "adapter",
+    PvType.Other: "other",
+    PvType.DcPv: "dc_pv",
+    PvType.AcPv: "ac_pv",
 }
 
 
@@ -59,23 +55,12 @@ def _as_is(value: Any) -> StateType:
     return cast(StateType, value)
 
 
-_unmapped_pv_types: set[str] = set()
-
-
 def _inverter_status(value: Any) -> StateType:
     return _INVERTER_STATUS.get(value)
 
 
 def _pv_type(value: Any) -> StateType:
-    if value is None:
-        return None
-    if (state := _PV_TYPE.get(value.name)) is None and (
-        value.name not in _unmapped_pv_types
-    ):
-        # A member renamed upstream would otherwise read unknown silently.
-        _unmapped_pv_types.add(value.name)
-        _LOGGER.warning("Unknown PV input type %s", value.name)
-    return state
+    return _PV_TYPE.get(value)
 
 
 @dataclass(frozen=True, kw_only=True)

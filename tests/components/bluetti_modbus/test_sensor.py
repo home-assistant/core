@@ -1,8 +1,6 @@
 """Tests for the BLUETTI Modbus sensor entities."""
 
-from unittest.mock import patch
-
-from bluetti_modbus_lib import get_device
+from bluetti_modbus_lib import PvType, get_device
 from modbus_connection.mock import MockModbusUnit
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -157,30 +155,4 @@ async def test_pv_input_type_states(
 
 def test_pv_input_type_states_cover_the_library_enum() -> None:
     """A PV input type added to the library needs a state here first."""
-    field = get_device("balco260").get_field("pv_1_i_type")
-    assert field is not None
-    pv_type = type(field.decode([100]))
-
-    assert sorted(member.value for member in pv_type) == [0, 1, 2, 3, 100, 101]
-
-
-async def test_unknown_pv_input_type_is_logged_once(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """A PV input type missing from the state table reads unknown, logged once."""
-    with (
-        patch.dict(
-            "homeassistant.components.bluetti_modbus.sensor._PV_TYPE", {}, clear=True
-        ),
-        patch(
-            "homeassistant.components.bluetti_modbus.sensor._unmapped_pv_types", set()
-        ),
-    ):
-        await _setup(hass, mock_config_entry)
-
-    state = hass.states.get(PV_1_TYPE_ENTITY)
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
-    assert caplog.text.count("Unknown PV input type DcPv") == 1
+    assert sorted(member.value for member in PvType) == [0, 1, 2, 3, 100, 101]
