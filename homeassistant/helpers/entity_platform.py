@@ -1319,17 +1319,13 @@ class EntityPlatform:
                 new_semaphore = asyncio.Semaphore(
                     self._parallel_updates_semaphore_limit
                 )
-                # Rebind the semaphore for any entity that has NOT yet
-                # acquired a permit (either idle or queued) to the new
-                # semaphore so they will acquire from the replacement.
-                # Preserve the old semaphore instance for entities that
-                # have already acquired a permit to avoid corrupting
-                # semaphore accounting.
-                old_semaphore = self.parallel_updates
+                # Rebind any entity that has not yet acquired a permit so
+                # idle and queued work continues using the replacement
+                # semaphore while active updates keep their original one.
                 for entity in self.entities.values():
                     if not getattr(entity, "_update_acquired", False):
                         entity.parallel_updates = new_semaphore
-                # Replace the platform semaphore for future acquirers
+                # Replace the platform semaphore for future acquirers.
                 self.parallel_updates = new_semaphore
 
         async with self._process_updates:
@@ -1350,7 +1346,9 @@ class EntityPlatform:
 
             if entities_to_update:
                 tasks = [
-                    create_eager_task(entity.async_update_ha_state(True), loop=self.hass.loop)
+                    create_eager_task(
+                        entity.async_update_ha_state(True), loop=self.hass.loop
+                    )
                     for entity in entities_to_update
                 ]
 
@@ -1358,7 +1356,7 @@ class EntityPlatform:
 
                 # Log per-entity cancellation or exceptions with entity id to
                 # make debugging easier and to address reviewer requests.
-                for entity, result in zip(entities_to_update, results):
+                for entity, result in zip(entities_to_update, results, strict=True):
                     if isinstance(result, asyncio.CancelledError):
                         self.logger.warning(
                             "Polling for entity %s was cancelled",
