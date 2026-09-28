@@ -877,7 +877,7 @@ async def test_background_task_cancel_at_unload(
     ],
     ids=[
         "mac_verification_runtimeerror",
-        "firmware_refresh_runtimeeror",
+        "firmware_refresh_runtimeerror",
         "mac_verification_valueerror",
         "firmware_refresh_valueerror",
     ],
