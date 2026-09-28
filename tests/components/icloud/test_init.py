@@ -947,7 +947,6 @@ async def test_reauth_challenge_without_a_delivery_route_asks_for_the_password(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "send_verification_code"}
-
     # The forced challenge goes with the session, or the retry below reads it
     # and comes straight back here even though the login succeeded.
     working_api = MagicMock()
@@ -1009,3 +1008,45 @@ async def test_reauth_device_fetch_rejected_as_a_failed_login_is_reported(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
+
+
+async def test_an_undeliverable_challenge_drops_the_stored_session(
+    hass: HomeAssistant, service_2fa: Mock
+) -> None:
+    """Test that a challenge with no delivery route clears the stored session.
+
+    Dropping the service only clears it from memory. The stored session is
+    what the next login reads back, and it is the one that produced a
+    challenge nothing can deliver a code for, so it has to go too.
+    """
+    service_2fa.return_value.requires_2fa = True
+    service_2fa.return_value.requires_2sa = False
+    service_2fa.return_value.two_factor_delivery_method = "unknown"
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    flows = [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+
+    service_2fa.return_value.session.clear_persistence.reset_mock()
+
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        return_value=service_2fa.return_value,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flows[0]["flow_id"], {CONF_PASSWORD: "new-password"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "send_verification_code"}
+    assert service_2fa.return_value.session.clear_persistence.called

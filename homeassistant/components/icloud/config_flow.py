@@ -201,6 +201,11 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         _LOGGER.error(
             "iCloud has no way to send a verification code for %s", self._username
         )
+        if self.api is not None:
+            # Dropping the service only clears it from memory. The stored
+            # session is what the next login reads back, and it is the one
+            # that produced a challenge nothing can deliver a code for.
+            self.api.session.clear_persistence()
         self.api = None
         self._forced_2fa = False
         return self._show_setup_form(
