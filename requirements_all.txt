@@ -3129,7 +3129,7 @@ sofar-modbus==0.17.0
 solaredge-web==0.4.0
 
 # homeassistant.components.solaredge_modbus
-solaredged==0.2.4
+solaredged==0.3.0
 
 # homeassistant.components.solarlog
 solarlog_cli==0.7.1
