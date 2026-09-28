@@ -44,6 +44,13 @@ BATTERY_SERIAL_BASE = 57648
 BATTERY_RATED_ENERGY = 57666
 BATTERY_OFFSETS = (0, 256, 768)
 
+# A SunSpec model chain for the captured device, which records none of its own.
+# It describes what that dump holds, the inverter and its three-phase meter,
+# and then the DER storage block an inverter on an IEEE 1547-2018 grid profile
+# serves. Model 713 lands above the first meter, where a second meter would go.
+_CHAIN = ((1, 65), (103, 50), (1, 65), (203, 105), (713, 7))
+STORAGE_CAPACITY_BASE = 40295
+
 
 def tcp_data(unit_id: int = UNIT_ID) -> dict[str, Any]:
     """Config entry data for an inverter reached over Modbus TCP."""
@@ -101,6 +108,33 @@ def add_second_meter(unit: MockModbusUnit, serial_number: str) -> None:
         }
     )
     unit.holding.update(block)
+
+
+def add_storage_capacity(unit: MockModbusUnit, state_of_charge: int) -> None:
+    """Wire a DER storage block (SunSpec model 713) onto a seeded unit.
+
+    ``state_of_charge`` is the raw register value; the scale factor written
+    here is -2, so 5960 is 59.60%. The block sits where a second meter would,
+    so do not combine this with ``add_second_meter``.
+    """
+    address = 40002
+    for model_id, length in _CHAIN:
+        unit.holding.update({address: model_id, address + 1: length})
+        address += length + 2
+
+    unit.holding[address] = 0xFFFF  # end of chain
+
+    unit.holding.update(
+        {
+            STORAGE_CAPACITY_BASE + 2: 0xFFFF,  # energy rating, not implemented
+            STORAGE_CAPACITY_BASE + 3: 0xFFFF,  # energy available, not implemented
+            STORAGE_CAPACITY_BASE + 4: state_of_charge,
+            STORAGE_CAPACITY_BASE + 5: 0xFFFF,  # state of health, not implemented
+            STORAGE_CAPACITY_BASE + 6: 0xFFFF,  # status, not implemented
+            STORAGE_CAPACITY_BASE + 7: 0xFFFE,  # both scale factors are -2
+            STORAGE_CAPACITY_BASE + 8: 0xFFFE,
+        }
+    )
 
 
 @pytest.fixture
