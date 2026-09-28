@@ -170,14 +170,14 @@
     "step": {
       "init": {
         "data": {
-          "parse_todo_edit": "Parse edited to-do list items",
-          "parse_todo_new": "Parse new to-do list items",
-          "parser": "Mealie parser"
+          "parse_todo_edit": "Recognize food in edited items",
+          "parse_todo_new": "Recognize food in new items",
+          "parser": "Recognition method"
         },
         "data_description": {
-          "parse_todo_edit": "When enabled, Mealie parses edited to-do list items to find matches in your food items and identify quantities and units. If a confident match is found, the food item, unit, and quantity are updated in Mealie. If disabled, the item is updated as entered.",
-          "parse_todo_new": "When enabled, Mealie parses new to-do list items to find matches in your food items and identify quantities and units. If a confident match is found, the food item, unit, and quantity are added to Mealie separately. Otherwise, the item is added as a note.",
-          "parser": "The parser to use for processing to-do list items.\nIf you select OpenAI, you must set up an API key in Mealie."
+          "parse_todo_edit": "When enabled, Mealie checks edited to-do list items to find matches in your food items and identify quantities and units. If it finds a confident match, Mealie updates the food item, unit, and quantity are updated in Mealie. If disabled, the item is updated as entered.",
+          "parse_todo_new": "When enabled, Mealie checks new to-do list items to find matches in your food items and identify quantities and units. If a finds a confident match, Mealie adds the food item, unit, and quantity are added to Mealie separately. Otherwise, the item is added as a note.",
+          "parser": "The method to use for processing to-do list items.\nIf you select OpenAI, you must set up an API key in Mealie."
         }
       }
     }
