@@ -161,15 +161,18 @@ def mock_add_listener():
     ) as mock_add_listener:
         mock_add_listener.listeners = []
 
-        def unsubscribe() -> None:
-            return
-
         def side_effect(callback, filters, internal=False):
-            mock_add_listener.listeners.append((callback, filters))
+            listener = (callback, filters)
+            mock_add_listener.listeners.append(listener)
+
+            def unsubscribe() -> None:
+                mock_add_listener.listeners.remove(listener)
+
             return unsubscribe
 
         def send(event) -> None:
-            for listener, filters in mock_add_listener.listeners:
+            # Listeners may unsubscribe or subscribe while handling the event
+            for listener, filters in list(mock_add_listener.listeners):
                 if recursive_match(filters, event):
                     listener(event)
 
