@@ -772,7 +772,14 @@ jobs:
         with:
           mode: simulation,memory
           # No token: auth uses the OIDC id-token minted by the job permissions.
+          # The memory instrument hooks the libc allocator, but pymalloc serves
+          # most Python objects from its own arenas and hides them. Route every
+          # allocation through malloc for the memory run only, so the simulation
+          # numbers keep measuring the allocator we ship with.
           run: |
+            if [ "${CODSPEED_RUNNER_MODE}" = "memory" ]; then
+              export PYTHONMALLOC=malloc
+            fi
             . venv/bin/activate
             pytest benchmarks --codspeed --no-cov -o addopts=""
 
