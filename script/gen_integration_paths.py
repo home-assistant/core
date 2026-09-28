@@ -51,6 +51,8 @@ def get_transitive_dependencies(
             if dependency in found or dependency == integration:
                 continue
             if dependency not in dependencies:
+                # hassfest rejects unknown dependencies: this only guards
+                # against a KeyError on a branch that hasn't been validated
                 continue
             found.add(dependency)
             queue.extend(dependencies[dependency])
