@@ -335,3 +335,12 @@ def mock_stream_connected():
         return_value=True,
     ) as mock_stream_connected:
         yield mock_stream_connected
+
+
+@pytest.fixture(autouse=True)
+def mock_powerwall_connect() -> Generator[AsyncMock]:
+    """Mock the local Powerwall gateway connection."""
+    with patch(
+        "aiopowerwall.PowerwallClient.connect", return_value="GATEWAY-DIN"
+    ) as mock_connect:
+        yield mock_connect
