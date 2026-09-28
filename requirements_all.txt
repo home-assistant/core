@@ -947,7 +947,7 @@ emoji==2.8.0
 emulated-roku==0.3.0
 
 # homeassistant.components.energieleser
-energieleser==0.1.6
+energieleser==0.1.7
 
 # homeassistant.components.huisbaasje
 energyflip-api-client==0.3.0
@@ -1644,7 +1644,7 @@ mitsubishi-comfort==0.6.0
 moat-ble==0.1.1
 
 # homeassistant.components.modbus
-modbus-connection[tmodbus]==4.12.1
+modbus-connection[tmodbus]==4.12.3
 
 # homeassistant.components.moehlenhoff_alpha2
 moehlenhoff-alpha2==1.4.0
@@ -2561,7 +2561,7 @@ pyqwikswitch==0.93
 pyrail==0.4.1
 
 # homeassistant.components.rainbird
-pyrainbird==6.5.0
+pyrainbird==6.6.0
 
 # homeassistant.components.playstation_network
 pyrate-limiter==4.5.0
@@ -3138,7 +3138,7 @@ solaredge-local==0.2.3
 solaredge-web==0.4.0
 
 # homeassistant.components.solaredge_modbus
-solaredged==0.2.3
+solaredged==0.2.4
 
 # homeassistant.components.solarlog
 solarlog_cli==0.7.1
