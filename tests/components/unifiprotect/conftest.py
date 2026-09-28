@@ -14,7 +14,6 @@ from uiprotect import ProtectApiClient
 from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
     NVR,
-    AiPort,
     Bootstrap,
     Camera,
     Chime,
@@ -151,7 +150,6 @@ def bootstrap_fixture(nvr: NVR):
     data["liveviews"] = []
     data["events"] = []
     data["chimes"] = []
-    data["aiports"] = []
 
     return Bootstrap.from_unifi_dict(**data)
 
@@ -514,19 +512,6 @@ def chime():
     yield Chime.from_unifi_dict(**data)
 
     Chime.model_config["validate_assignment"] = True
-
-
-@pytest.fixture(name="aiport")
-def aiport_fixture():
-    """Mock UniFi Protect AI Port device."""
-
-    # disable pydantic validation so mocking can happen
-    AiPort.model_config["validate_assignment"] = False
-
-    data = load_json_object_fixture("sample_aiport.json", DOMAIN)
-    yield AiPort.from_unifi_dict(**data)
-
-    AiPort.model_config["validate_assignment"] = True
 
 
 @pytest.fixture(name="fixed_now")
