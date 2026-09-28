@@ -99,9 +99,11 @@ enum34==1000000000.0.0
 typing==1000000000.0.0
 uuid==1000000000.0.0
 
-# httpx2 and many other libraries require anyio with a loose version
-# constraint. Pin it so we can directly link HA versions to the anyio version.
+# httpx2 requires httpcore2, and httpcore2 requires anyio and h11, but the
+# version constraints on anyio and h11 are quite loose. Pin them so we can
+# directly link HA versions to these library versions.
 anyio==4.14.2
+h11==0.16.0
 
 # Ensure we run compatible with musllinux build env
 numpy==2.3.2
