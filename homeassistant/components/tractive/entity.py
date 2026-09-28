@@ -1,33 +1,30 @@
 """A entity class for Tractive integration."""
 
-from typing import Any, override
+from typing import Any
 
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import TractiveClient, TractiveConfigEntry
-from .const import DOMAIN, SERVER_UNAVAILABLE
+from . import TractiveCoordinator
+from .const import DOMAIN
 
 
-class TractiveEntity(Entity):
+class TractiveEntity(CoordinatorEntity[TractiveCoordinator]):
     """Tractive entity class."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        entry: TractiveConfigEntry,
-        client: TractiveClient,
+        coordinator: TractiveCoordinator,
         trackable: dict[str, Any],
         tracker_details: dict[str, Any],
-        dispatcher_signal: str,
         hardware_entity: bool = True,
     ) -> None:
         """Initialize tracker entity."""
+        super().__init__(coordinator)
+        self._pet_id = trackable["_id"]
+        self._tracker_id = tracker_details["_id"]
         if hardware_entity:
             self._attr_device_info = DeviceInfo(
                 configuration_url="https://my.tractive.com/",
@@ -42,49 +39,6 @@ class TractiveEntity(Entity):
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, trackable["_id"])},
                 name=trackable["details"]["name"],
-                via_device_id=dr.async_get_device_id_by_identifier(
-                    hass,
-                    (DOMAIN, tracker_details["_id"]),
-                    config_entry_id=entry.entry_id,
-                ),
+                via_device=(DOMAIN, tracker_details["_id"]),
                 entry_type=DeviceEntryType.SERVICE,
             )
-
-        self._user_id = client.user_id
-        self._tracker_id = tracker_details["_id"]
-        self._client = client
-        self._dispatcher_signal = dispatcher_signal
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        if not self._client.subscribed:
-            self._client.subscribe()
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                self._dispatcher_signal,
-                self.handle_status_update,
-            )
-        )
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{SERVER_UNAVAILABLE}-{self._user_id}",
-                self.handle_server_unavailable,
-            )
-        )
-
-    @callback
-    def handle_status_update(self, event: dict[str, Any]) -> None:
-        """Handle status update."""
-        self._attr_available = event[self.entity_description.key] is not None
-        self.async_write_ha_state()
-
-    @callback
-    def handle_server_unavailable(self) -> None:
-        """Handle server unavailable."""
-        self._attr_available = False
-        self.async_write_ha_state()

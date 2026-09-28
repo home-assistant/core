@@ -1,14 +1,12 @@
 """Support for Tractive device trackers."""
 
-from typing import Any, override
+from typing import override
 
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import Trackables, TractiveClient, TractiveConfigEntry
-from .const import SERVER_UNAVAILABLE, TRACKER_POSITION_UPDATED
+from . import Trackables, TractiveConfigEntry, TractiveCoordinator
 from .entity import TractiveEntity
 
 
@@ -18,10 +16,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tractive device trackers."""
-    client = entry.runtime_data.client
+    coordinator = entry.runtime_data.coordinator
     trackables = entry.runtime_data.trackables
 
-    entities = [TractiveDeviceTracker(hass, entry, client, item) for item in trackables]
+    entities = [TractiveDeviceTracker(coordinator, item) for item in trackables]
 
     async_add_entities(entities)
 
@@ -32,21 +30,12 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
     _attr_translation_key = "tracker"
     _attr_name = None
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        entry: TractiveConfigEntry,
-        client: TractiveClient,
-        item: Trackables,
-    ) -> None:
+    def __init__(self, coordinator: TractiveCoordinator, item: Trackables) -> None:
         """Initialize tracker entity."""
         super().__init__(
-            hass,
-            entry,
-            client,
+            coordinator,
             item.trackable,
             item.tracker_details,
-            f"{TRACKER_POSITION_UPDATED}-{item.tracker_details['_id']}",
         )
 
         # A tracker that has been switched off for a while has no position
@@ -66,33 +55,20 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         return SourceType.GPS
 
     @callback
-    def _handle_position_update(self, event: dict[str, Any]) -> None:
-        self._attr_latitude = event["latitude"]
-        self._attr_longitude = event["longitude"]
-        self._attr_location_accuracy = event["accuracy"]
-        self._source_type = event["sensor_used"]
-        self._attr_available = True
-        self.async_write_ha_state()
-
     @override
-    # pylint: disable-next=home-assistant-missing-super-call
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        if not self._client.subscribed:
-            self._client.subscribe()
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{TRACKER_POSITION_UPDATED}-{self._tracker_id}",
-                self._handle_position_update,
-            )
-        )
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{SERVER_UNAVAILABLE}-{self._user_id}",
-                self.handle_server_unavailable,
-            )
-        )
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        status = self.coordinator.client.status["trackers"].get(self._tracker_id, {})
+        latitude = status.get("latitude")
+        if latitude is not None:
+            self._attr_latitude = latitude
+        longitude = status.get("longitude")
+        if longitude is not None:
+            self._attr_longitude = longitude
+        accuracy = status.get("accuracy")
+        if accuracy is not None:
+            self._attr_location_accuracy = accuracy
+        sensor_used = status.get("sensor_used")
+        if sensor_used is not None:
+            self._source_type = sensor_used
+        super()._handle_coordinator_update()

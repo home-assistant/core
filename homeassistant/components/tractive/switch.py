@@ -12,15 +12,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import Trackables, TractiveClient, TractiveConfigEntry
-from .const import (
-    ATTR_BUZZER,
-    ATTR_LED,
-    ATTR_LIVE_TRACKING,
-    ATTR_POWER_SAVING,
-    DOMAIN,
-    TRACKER_SWITCH_STATUS_UPDATED,
-)
+from . import Trackables, TractiveConfigEntry, TractiveCoordinator
+from .const import ATTR_BUZZER, ATTR_LED, ATTR_LIVE_TRACKING, ATTR_POWER_SAVING, DOMAIN
 from .entity import TractiveEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,11 +54,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tractive switches."""
-    client = entry.runtime_data.client
+    coordinator = entry.runtime_data.coordinator
     trackables = entry.runtime_data.trackables
 
     entities = [
-        TractiveSwitch(hass, entry, client, item, description)
+        TractiveSwitch(coordinator, item, description)
         for description in SWITCH_TYPES
         for item in trackables
     ]
@@ -80,38 +73,40 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        entry: TractiveConfigEntry,
-        client: TractiveClient,
+        coordinator: TractiveCoordinator,
         item: Trackables,
         description: TractiveSwitchEntityDescription,
     ) -> None:
         """Initialize switch entity."""
         super().__init__(
-            hass,
-            entry,
-            client,
+            coordinator,
             item.trackable,
             item.tracker_details,
-            f"{TRACKER_SWITCH_STATUS_UPDATED}-{item.tracker_details['_id']}",
         )
-
         self._attr_unique_id = f"{item.trackable['_id']}_{description.key}"
         self._tracker = item.tracker
         self._method = getattr(self, description.method)
         self.entity_description = description
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if not self.coordinator.last_update_success:
+            return False
+        status = self.coordinator.client.status["trackers"].get(self._tracker_id, {})
+        if status.get(ATTR_POWER_SAVING):
+            return False
+        return self.entity_description.key in status
+
     @callback
     @override
-    def handle_status_update(self, event: dict[str, Any]) -> None:
-        """Handle status update."""
-        if ATTR_POWER_SAVING in event:
-            self._attr_available = not event[ATTR_POWER_SAVING]
-
-        if self.entity_description.key in event:
-            self._attr_is_on = event[self.entity_description.key]
-
-        self.async_write_ha_state()
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        status = self.coordinator.client.status["trackers"].get(self._tracker_id, {})
+        if self.entity_description.key in status:
+            self._attr_is_on = status[self.entity_description.key]
+        super()._handle_coordinator_update()
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -124,7 +119,6 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
                 translation_key="failed_to_turn_on",
                 translation_placeholders={"entity": self.entity_id},
             ) from error
-        # Write state back to avoid switch flips with a slow response
         if result["pending"]:
             self._attr_is_on = True
             self.async_write_ha_state()
@@ -140,7 +134,6 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
                 translation_key="failed_to_turn_off",
                 translation_placeholders={"entity": self.entity_id},
             ) from error
-        # Write state back to avoid switch flips with a slow response
         if result["pending"]:
             self._attr_is_on = False
             self.async_write_ha_state()

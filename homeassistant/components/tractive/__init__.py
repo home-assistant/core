@@ -17,11 +17,11 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     ATTR_BUZZER,
@@ -31,17 +31,9 @@ from .const import (
     ATTR_MINUTES_DAY_SLEEP,
     ATTR_MINUTES_NIGHT_SLEEP,
     ATTR_MINUTES_REST,
-    ATTR_POWER_SAVING,
     ATTR_TRACKER_STATE,
     CLIENT_ID,
     DOMAIN,
-    RECONNECT_INTERVAL,
-    SERVER_UNAVAILABLE,
-    SWITCH_KEY_MAP,
-    TRACKER_HARDWARE_STATUS_UPDATED,
-    TRACKER_HEALTH_OVERVIEW_UPDATED,
-    TRACKER_POSITION_UPDATED,
-    TRACKER_SWITCH_STATUS_UPDATED,
 )
 
 PLATFORMS = [
@@ -50,7 +42,6 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,11 +62,61 @@ class Trackables:
 class TractiveData:
     """Class for Tractive data."""
 
-    client: TractiveClient
+    coordinator: TractiveCoordinator
     trackables: list[Trackables]
 
 
 type TractiveConfigEntry = ConfigEntry[TractiveData]
+
+
+class TractiveCoordinator(DataUpdateCoordinator[None]):
+    """Coordinator for Tractive data."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        client: aiotractive.Tractive,
+        user_id: str,
+        config_entry: ConfigEntry,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name="Tractive",
+            update_interval=None,
+        )
+        self.client = client
+        self.user_id = user_id
+
+    async def _async_update_data(self) -> None:
+        """No polling needed — data comes via push updates."""
+        return
+
+    async def _async_setup(self) -> None:
+        """Set up the coordinator and register push update listener."""
+        self.client.subscribe_updates(self._async_handle_update)
+
+    @callback
+    def _async_handle_update(self, error: Exception | None = None) -> None:
+        """Handle updated data or connection errors from the Tractive API."""
+        if error is not None:
+            self.async_set_update_error(error)
+            if isinstance(error, aiotractive.exceptions.UnauthorizedError):
+                self.config_entry.async_start_reauth(self._hass)
+        else:
+            self.async_set_updated_data(None)
+
+    async def async_start(self) -> None:
+        """Start the background event listener."""
+        await self.client.async_start_listener()
+
+    async def async_shutdown(self) -> None:
+        """Shutdown the coordinator."""
+        await self.client.async_stop_listener()
+        await self.client.close()
+        await super().async_shutdown()
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> bool:
@@ -100,13 +141,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> 
     if TYPE_CHECKING:
         assert creds is not None
 
-    tractive = TractiveClient(hass, client, creds["user_id"], entry)
+    coordinator = TractiveCoordinator(hass, client, creds["user_id"], entry)
 
     trackables = []
     try:
         for obj in await client.trackable_objects():
-            # To avoid hitting Tractive API rate limits, we add a small
-            # delay between requests to fetch trackable details.
             await asyncio.sleep(2)
             trackables.append(await _generate_trackables(client, obj))
     except aiotractive.exceptions.TractiveError as error:
@@ -116,43 +155,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> 
         await client.close()
         raise
 
-    # When the pet defined in Tractive has no tracker linked we get None as `trackable`.
-    # So we have to remove None values from trackables list.
     filtered_trackables = [item for item in trackables if item]
 
-    entry.runtime_data = TractiveData(tractive, filtered_trackables)
+    _populate_initial_status(coordinator.client, filtered_trackables)
 
-    # Register the tracker devices so entities on the pet devices can resolve
-    # their via_device link at construction time.
-    device_registry = dr.async_get(hass)
-    for item in filtered_trackables:
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            configuration_url="https://my.tractive.com/",
-            identifiers={(DOMAIN, item.tracker_details["_id"])},
-            translation_key="tracker",
-            translation_placeholders={"id": item.tracker_details["_id"]},
-            manufacturer="Tractive GmbH",
-            sw_version=item.tracker_details["fw_version"],
-            model_id=item.tracker_details["model_number"],
-        )
+    entry.runtime_data = TractiveData(coordinator, filtered_trackables)
+
+    await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_start()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Send initial health overview data to sensors after platforms are set up
-    for item in filtered_trackables:
-        if item.health_overview:
-            tractive.send_health_overview_update(item.health_overview)
+    coordinator.async_set_updated_data(None)
 
     async def cancel_listen_task(_: Event) -> None:
-        await tractive.unsubscribe()
+        await coordinator.async_shutdown()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cancel_listen_task)
     )
-    entry.async_on_unload(tractive.unsubscribe)
+    entry.async_on_unload(coordinator.async_shutdown)
 
-    # Remove sensor entities that are no longer supported by the Tractive API
     entity_reg = er.async_get(hass)
     for item in filtered_trackables:
         for key in ("activity_label", "calories", "sleep_label"):
@@ -164,6 +187,50 @@ async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> 
     return True
 
 
+def _populate_initial_status(
+    client: aiotractive.Tractive, trackables: list[Trackables]
+) -> None:
+    """Populate the initial status from fetched data."""
+    for item in trackables:
+        tracker_id = item.tracker_details["_id"]
+        client.status.setdefault("trackers", {}).setdefault(tracker_id, {})
+        hw_info = item.hw_info
+        client.status["trackers"][tracker_id].update(
+            {
+                ATTR_BATTERY_LEVEL: hw_info.get("battery_level"),
+                ATTR_TRACKER_STATE: item.tracker_details.get(
+                    "tracker_state", ""
+                ).lower(),
+                ATTR_BATTERY_CHARGING: hw_info.get("charging_state") == "CHARGING",
+            }
+        )
+        pos_report = item.pos_report
+        client.status["trackers"][tracker_id].update(
+            {
+                "latitude": pos_report.get("latlong", [None, None])[0],
+                "longitude": pos_report.get("latlong", [None, None])[1],
+                "accuracy": pos_report.get("pos_uncertainty"),
+                "sensor_used": pos_report.get("sensor_used"),
+            }
+        )
+
+        pet_id = item.trackable["_id"]
+        client.status.setdefault("pets", {}).setdefault(pet_id, {})
+        health_overview = item.health_overview
+        if health_overview:
+            activity = health_overview.get("activity") or {}
+            sleep = health_overview.get("sleep") or {}
+            client.status["pets"][pet_id].update(
+                {
+                    ATTR_DAILY_GOAL: activity.get("minutesGoal"),
+                    ATTR_MINUTES_ACTIVE: activity.get("minutesActive"),
+                    ATTR_MINUTES_DAY_SLEEP: sleep.get("minutesDaySleep"),
+                    ATTR_MINUTES_NIGHT_SLEEP: sleep.get("minutesNightSleep"),
+                    ATTR_MINUTES_REST: sleep.get("minutesCalm"),
+                }
+            )
+
+
 async def _generate_trackables(
     client: aiotractive.Tractive,
     trackable: aiotractive.trackable_object.TrackableObject,
@@ -171,7 +238,6 @@ async def _generate_trackables(
     """Generate trackables."""
     trackable_data = await trackable.details()
 
-    # Check that the pet has tracker linked.
     if not trackable_data.get("device_id"):
         return None
 
@@ -186,7 +252,6 @@ async def _generate_trackables(
     tracker = client.tracker(trackable_data["device_id"])
     trackable_pet = client.trackable_object(trackable_data["_id"])
 
-    # Sequential fetching to prevent HTTP 429 Rate Limits
     tracker_details = await tracker.details()
     hw_info = await tracker.hw_info()
     pos_report = await tracker.pos_report()
@@ -206,177 +271,3 @@ async def _generate_trackables(
 async def async_unload_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-class TractiveClient:
-    """A Tractive client."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        client: aiotractive.Tractive,
-        user_id: str,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the client."""
-        self._hass = hass
-        self._client = client
-        self._user_id = user_id
-        self._last_hw_time = 0
-        self._last_pos_time = 0
-        self._listen_task: asyncio.Task | None = None
-        self._config_entry = config_entry
-
-    @property
-    def user_id(self) -> str:
-        """Return user id."""
-        return self._user_id
-
-    @property
-    def subscribed(self) -> bool:
-        """Return True if subscribed."""
-        if self._listen_task is None:
-            return False
-
-        return not self._listen_task.cancelled()
-
-    def subscribe(self) -> None:
-        """Start event listener coroutine."""
-        self._listen_task = asyncio.create_task(self._listen())
-
-    async def unsubscribe(self) -> None:
-        """Stop event listener coroutine."""
-        if self._listen_task:
-            self._listen_task.cancel()
-        await self._client.close()
-
-    async def _listen(self) -> None:
-        server_was_unavailable = False
-        while True:
-            try:
-                async for event in self._client.events():
-                    _LOGGER.debug("Received event: %s", event)
-                    if server_was_unavailable:
-                        _LOGGER.debug("Tractive is back online")
-                        server_was_unavailable = False
-                    if event["message"] == "health_overview":
-                        self.send_health_overview_update(event)
-                        continue
-                    if (
-                        "hardware" in event
-                        and self._last_hw_time != event["hardware"]["time"]
-                    ):
-                        self._last_hw_time = event["hardware"]["time"]
-                        self._send_hardware_update(event)
-                        self._send_switch_update(event)
-                    if (
-                        "position" in event
-                        and self._last_pos_time != event["position"]["time"]
-                    ):
-                        self._last_pos_time = event["position"]["time"]
-                        self._send_position_update(event)
-                    # If any key belonging to the switch is present in the event,
-                    # we send a switch status update
-                    if bool(set(SWITCH_KEY_MAP.values()).intersection(event)):
-                        self._send_switch_update(event)
-            except aiotractive.exceptions.UnauthorizedError:
-                self._config_entry.async_start_reauth(self._hass)
-                await self.unsubscribe()
-                _LOGGER.error(
-                    "Authentication failed for %s, try reconfiguring device",
-                    self._config_entry.data[CONF_EMAIL],
-                )
-                return
-            except (KeyError, TypeError) as error:
-                _LOGGER.error("Error while listening for events: %s", error)
-                continue
-            except aiotractive.exceptions.TractiveError:
-                _LOGGER.debug(
-                    (
-                        "Tractive is not available. Internet connection is down?"
-                        " Sleeping %i seconds and retrying"
-                    ),
-                    RECONNECT_INTERVAL.total_seconds(),
-                )
-                self._last_hw_time = 0
-                self._last_pos_time = 0
-                async_dispatcher_send(
-                    self._hass, f"{SERVER_UNAVAILABLE}-{self._user_id}"
-                )
-                await asyncio.sleep(RECONNECT_INTERVAL.total_seconds())
-                server_was_unavailable = True
-                continue
-
-    def _send_hardware_update(self, event: dict[str, Any]) -> None:
-        # Sometimes hardware event doesn't contain complete data.
-        payload = {
-            ATTR_BATTERY_LEVEL: event["hardware"]["battery_level"],
-            ATTR_TRACKER_STATE: event["tracker_state"].lower(),
-            ATTR_POWER_SAVING: event.get("tracker_state_reason") == "POWER_SAVING",
-            ATTR_BATTERY_CHARGING: event["charging_state"] == "CHARGING",
-        }
-        self._dispatch_tracker_event(
-            TRACKER_HARDWARE_STATUS_UPDATED, event["tracker_id"], payload
-        )
-
-    def _send_switch_update(self, event: dict[str, Any]) -> None:
-        # Sometimes the event contains data for all switches, sometimes only for one.
-        payload = {}
-        for switch, key in SWITCH_KEY_MAP.items():
-            if switch_data := event.get(key):
-                payload[switch] = switch_data["active"]
-                # A timed out LED or buzzer is still reported as active, with
-                # no time remaining
-                if (
-                    switch in (ATTR_BUZZER, ATTR_LED)
-                    and switch_data.get("remaining") == 0
-                ):
-                    payload[switch] = False
-        if hardware := event.get("hardware", {}):
-            payload[ATTR_POWER_SAVING] = (
-                hardware.get("power_saving_zone_id") is not None
-            )
-        self._dispatch_tracker_event(
-            TRACKER_SWITCH_STATUS_UPDATED, event["tracker_id"], payload
-        )
-
-    def send_health_overview_update(self, event: dict[str, Any]) -> None:
-        """Handle health_overview events from Tractive API."""
-        # The health_overview response can be at root level or wrapped in 'content'
-        # Handle both structures for compatibility
-        data = event.get("content", event)
-
-        activity = data.get("activity") or {}
-        sleep = data.get("sleep") or {}
-
-        payload = {
-            ATTR_DAILY_GOAL: activity.get("minutesGoal"),
-            ATTR_MINUTES_ACTIVE: activity.get("minutesActive"),
-            ATTR_MINUTES_DAY_SLEEP: sleep.get("minutesDaySleep"),
-            ATTR_MINUTES_NIGHT_SLEEP: sleep.get("minutesNightSleep"),
-            # Calm minutes can be used as rest indicator
-            ATTR_MINUTES_REST: sleep.get("minutesCalm"),
-        }
-        self._dispatch_tracker_event(
-            TRACKER_HEALTH_OVERVIEW_UPDATED, data["petId"], payload
-        )
-
-    def _send_position_update(self, event: dict[str, Any]) -> None:
-        payload = {
-            "latitude": event["position"]["latlong"][0],
-            "longitude": event["position"]["latlong"][1],
-            "accuracy": event["position"]["accuracy"],
-            "sensor_used": event["position"]["sensor_used"],
-        }
-        self._dispatch_tracker_event(
-            TRACKER_POSITION_UPDATED, event["tracker_id"], payload
-        )
-
-    def _dispatch_tracker_event(
-        self, event_name: str, tracker_id: str, payload: dict[str, Any]
-    ) -> None:
-        async_dispatcher_send(
-            self._hass,
-            f"{event_name}-{tracker_id}",
-            payload,
-        )

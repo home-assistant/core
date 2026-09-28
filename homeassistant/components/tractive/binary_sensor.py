@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, override
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -13,8 +13,8 @@ from homeassistant.const import ATTR_BATTERY_CHARGING, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import Trackables, TractiveClient, TractiveConfigEntry
-from .const import ATTR_POWER_SAVING, TRACKER_HARDWARE_STATUS_UPDATED
+from . import Trackables, TractiveConfigEntry, TractiveCoordinator
+from .const import ATTR_POWER_SAVING
 from .entity import TractiveEntity
 
 
@@ -23,33 +23,35 @@ class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        entry: TractiveConfigEntry,
-        client: TractiveClient,
+        coordinator: TractiveCoordinator,
         item: Trackables,
         description: TractiveBinarySensorEntityDescription,
     ) -> None:
         """Initialize sensor entity."""
         super().__init__(
-            hass,
-            entry,
-            client,
+            coordinator,
             item.trackable,
             item.tracker_details,
-            f"{TRACKER_HARDWARE_STATUS_UPDATED}-{item.tracker_details['_id']}",
         )
-
         self._attr_unique_id = f"{item.trackable['_id']}_{description.key}"
-        self._attr_available = False
         self.entity_description = description
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if not self.coordinator.last_update_success:
+            return False
+        status = self.coordinator.client.status["trackers"].get(self._tracker_id, {})
+        return status.get(self.entity_description.key) is not None
 
     @callback
     @override
-    def handle_status_update(self, event: dict[str, Any]) -> None:
-        """Handle status update."""
-        self._attr_is_on = event[self.entity_description.key]
-
-        super().handle_status_update(event)
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        status = self.coordinator.client.status["trackers"].get(self._tracker_id, {})
+        self._attr_is_on = status.get(self.entity_description.key)
+        super()._handle_coordinator_update()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -80,11 +82,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tractive device trackers."""
-    client = entry.runtime_data.client
+    coordinator = entry.runtime_data.coordinator
     trackables = entry.runtime_data.trackables
 
     entities = [
-        TractiveBinarySensor(hass, entry, client, item, description)
+        TractiveBinarySensor(coordinator, item, description)
         for description in SENSOR_TYPES
         for item in trackables
         if description.supported(item.tracker_details)

@@ -1,7 +1,7 @@
 """Test init of Tractive integration."""
 
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from aiotractive.exceptions import TractiveError, UnauthorizedError
 import pytest
@@ -47,12 +47,10 @@ async def test_unload_entry(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    with patch("homeassistant.components.tractive.TractiveClient.unsubscribe"):
-        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    assert not hass.data.get(DOMAIN)
 
 
 @pytest.mark.parametrize(
@@ -135,13 +133,10 @@ async def test_unsubscribe_on_ha_stop(
     """Test unsuscribe when HA stops."""
     await init_integration(hass, mock_config_entry)
 
-    with patch(
-        "homeassistant.components.tractive.TractiveClient.unsubscribe"
-    ) as mock_unsuscribe:
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
 
-    assert mock_unsuscribe.called
+    mock_tractive_client.close.assert_called_once()
 
 
 async def test_server_unavailable(
@@ -154,19 +149,16 @@ async def test_server_unavailable(
 
     await init_integration(hass, mock_config_entry)
 
-    # send event to make the entity available
     mock_tractive_client.send_hardware_event(mock_config_entry)
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
-    # send server unavailable event, the entity should be unavailable
-    mock_tractive_client.send_server_unavailable_event(hass)
+    mock_tractive_client.send_server_unavailable_event(mock_config_entry)
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
-    # send event to make the entity available once again
     mock_tractive_client.send_hardware_event(mock_config_entry)
     await hass.async_block_till_done()
 
@@ -185,16 +177,15 @@ async def test_missing_sleep_data(
 
     await init_integration(hass, mock_config_entry)
 
-    with patch(
-        "homeassistant.components.tractive.async_dispatcher_send"
-    ) as async_dispatcher_send_mock:
-        mock_tractive_client.send_health_overview_event(mock_config_entry, event)
+    mock_tractive_client.send_health_overview_event(mock_config_entry, event)
+    await hass.async_block_till_done()
 
-    assert async_dispatcher_send_mock.call_count == 1
-    payload = async_dispatcher_send_mock.mock_calls[0][1][2]
-    assert payload[ATTR_MINUTES_DAY_SLEEP] is None
-    assert payload[ATTR_MINUTES_NIGHT_SLEEP] is None
-    assert payload[ATTR_MINUTES_REST] is None
+    status = mock_config_entry.runtime_data.coordinator.client.status["pets"][
+        "pet_id_123"
+    ]
+    assert status.get(ATTR_MINUTES_DAY_SLEEP) is None
+    assert status.get(ATTR_MINUTES_NIGHT_SLEEP) is None
+    assert status.get(ATTR_MINUTES_REST) is None
 
 
 @pytest.mark.parametrize(("activity_data"), [None, {}, {"unexpected": 123}])
@@ -209,15 +200,14 @@ async def test_missing_activity_data(
 
     await init_integration(hass, mock_config_entry)
 
-    with patch(
-        "homeassistant.components.tractive.async_dispatcher_send"
-    ) as async_dispatcher_send_mock:
-        mock_tractive_client.send_health_overview_event(mock_config_entry, event)
+    mock_tractive_client.send_health_overview_event(mock_config_entry, event)
+    await hass.async_block_till_done()
 
-    assert async_dispatcher_send_mock.call_count == 1
-    payload = async_dispatcher_send_mock.mock_calls[0][1][2]
-    assert payload[ATTR_DAILY_GOAL] is None
-    assert payload[ATTR_MINUTES_ACTIVE] is None
+    status = mock_config_entry.runtime_data.coordinator.client.status["pets"][
+        "pet_id_123"
+    ]
+    assert status.get(ATTR_DAILY_GOAL) is None
+    assert status.get(ATTR_MINUTES_ACTIVE) is None
 
 
 @pytest.mark.parametrize("sensor", ["activity_label", "calories", "sleep_label"])
