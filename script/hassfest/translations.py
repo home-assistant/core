@@ -64,15 +64,15 @@ REMOVED_TITLE_MSG = (
     "manifest."
 )
 
-# Schemas are shared between integrations, validators read the integration from here
-_CURRENT_TRANSLATION: ContextVar[tuple[Config, Integration]] = ContextVar(
-    "current_translation"
-)
-
 MOVED_TRANSLATIONS_DIRECTORY_MSG = (
     "The '.translations' directory has been moved, the new name is 'translations', "
     "starting with Home Assistant 0.112 your translations will no longer "
     "load if you do not move/rename this "
+)
+
+# Schemas are shared between integrations, validators read the integration from here
+_CURRENT_TRANSLATION: ContextVar[tuple[Config, Integration]] = ContextVar(
+    "current_translation"
 )
 
 
@@ -212,7 +212,11 @@ def gen_data_entry_schema(
     mandatory_description: str | None = None,
     subentry_flow: bool = False,
 ) -> probatio.All:
-    """Generate a data entry schema."""
+    """Generate a data entry schema.
+
+    The schema must run through _with_integration. Its validators read the
+    integration from _CURRENT_TRANSLATION and raise LookupError otherwise.
+    """
     step_title_class = probatio.Required if require_step_title else probatio.Optional
     schema = {
         probatio.Optional("flow_title"): translation_value_validator,
@@ -367,6 +371,11 @@ def _with_integration(
     return validate
 
 
+def _frontend_issues(integration: Integration) -> frozenset[str]:
+    """Return the issues the frontend handles for the integration."""
+    return frozenset(FRONTEND_HANDLED_ISSUES.get(integration.domain, ()))
+
+
 def gen_strings_schema(
     config: Config, integration: Integration
 ) -> Callable[[Any], Any]:
@@ -374,7 +383,7 @@ def gen_strings_schema(
     return _with_integration(
         _gen_strings_schema(
             integration.integration_type == IntegrationType.HELPER,
-            frozenset(FRONTEND_HANDLED_ISSUES.get(integration.domain, ())),
+            _frontend_issues(integration),
         ),
         config,
         integration,
@@ -634,7 +643,7 @@ def gen_auth_schema(config: Config, integration: Integration) -> Callable[[Any],
                 )
             },
             probatio.Optional("issues"): gen_issues_schema(
-                frozenset(FRONTEND_HANDLED_ISSUES.get(integration.domain, ()))
+                _frontend_issues(integration)
             ),
             **_EXCEPTIONS_SCHEMA,
         }
@@ -642,8 +651,10 @@ def gen_auth_schema(config: Config, integration: Integration) -> Callable[[Any],
     return _with_integration(schema, config, integration)
 
 
-def gen_ha_hardware_schema(config: Config, integration: Integration):
-    """Generate auth schema."""
+def gen_ha_hardware_schema(
+    config: Config, integration: Integration
+) -> Callable[[Any], Any]:
+    """Generate ha_hardware schema."""
     schema = probatio.Schema(
         {
             str: {
