@@ -209,6 +209,15 @@ async def test_polling_continues_when_update_hangs(hass: HomeAssistant) -> None:
     blocked_update_release.set()
     await hass.async_block_till_done()
 
+    # Replacement semaphore must respect the configured parallel_updates
+    # limit and must not be inflated by the release of the originally
+    # acquired semaphore.
+    assert platform_handle.parallel_updates is not None
+    assert (
+        platform_handle.parallel_updates._value
+        == platform.PARALLEL_UPDATES
+    )
+
 
 async def test_stale_poll_reset_keeps_original_semaphore_for_inflight_updates(
     hass: HomeAssistant,
