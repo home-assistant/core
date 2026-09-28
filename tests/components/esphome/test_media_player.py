@@ -418,6 +418,47 @@ async def test_media_player_playlist_commands(
     )
 
 
+@pytest.mark.parametrize("repeat", [RepeatMode.ONE, RepeatMode.OFF])
+async def test_media_player_repeat_state(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+    repeat: RepeatMode,
+) -> None:
+    """Test that the repeat mode is kept after it is set."""
+    entity_info = [
+        MediaPlayerInfo(
+            object_id="mymedia_player",
+            key=1,
+            name="my media_player",
+            feature_flags=EspMediaPlayerEntityFeature.REPEAT_SET,
+        )
+    ]
+    states = [
+        MediaPlayerEntityState(
+            key=1, volume=50, muted=False, state=MediaPlayerState.PLAYING
+        )
+    ]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_REPEAT_SET,
+        {
+            ATTR_ENTITY_ID: "media_player.test_my_media_player",
+            ATTR_MEDIA_REPEAT: repeat,
+        },
+        blocking=True,
+    )
+    state = hass.states.get("media_player.test_my_media_player")
+    assert state is not None
+    assert state.attributes[ATTR_MEDIA_REPEAT] == repeat
+
+
 async def test_media_player_repeat_all_not_supported(
     hass: HomeAssistant,
     mock_client: APIClient,

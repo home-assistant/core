@@ -59,7 +59,17 @@ _STATES: EsphomeEnumMapper[EspMediaPlayerState, MediaPlayerState] = EsphomeEnumM
     }
 )
 
-# Flags without a native API command are left out, so the entity does not expose them
+# The native API has no commands for these flags
+_UNSUPPORTED_FEATURES = (
+    EspMediaPlayerEntityFeature.SEEK
+    | EspMediaPlayerEntityFeature.PREVIOUS_TRACK
+    | EspMediaPlayerEntityFeature.NEXT_TRACK
+    | EspMediaPlayerEntityFeature.SELECT_SOURCE
+    | EspMediaPlayerEntityFeature.SELECT_SOUND_MODE
+    | EspMediaPlayerEntityFeature.SHUFFLE_SET
+    | EspMediaPlayerEntityFeature.GROUPING
+)
+
 _FEATURES = {
     EspMediaPlayerEntityFeature.PAUSE: MediaPlayerEntityFeature.PAUSE,
     EspMediaPlayerEntityFeature.VOLUME_SET: MediaPlayerEntityFeature.VOLUME_SET,
@@ -93,12 +103,15 @@ class EsphomeMediaPlayer(
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
-        esp_flags = EspMediaPlayerEntityFeature(
-            self._static_info.feature_flags_compat(self._api_version)
+        esp_flags = (
+            EspMediaPlayerEntityFeature(
+                self._static_info.feature_flags_compat(self._api_version)
+            )
+            & ~_UNSUPPORTED_FEATURES
         )
         flags = MediaPlayerEntityFeature(0)
         for espflag in esp_flags:
-            flags |= _FEATURES.get(espflag, MediaPlayerEntityFeature(0))
+            flags |= _FEATURES[espflag]
         self._attr_supported_features = flags
         self._entry_data.media_player_formats[self] = (
             self._static_info.supported_formats
@@ -340,6 +353,9 @@ class EsphomeMediaPlayer(
             ),
             device_id=self._static_info.device_id,
         )
+        # The device does not report its repeat mode
+        self._attr_repeat = repeat
+        self.async_write_ha_state()
 
     @convert_api_error_ha_error
     @override
