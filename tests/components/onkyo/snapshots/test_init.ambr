@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_device
+# name: test_device[receiver]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
@@ -28,4 +28,44 @@
     'sw_version': None,
     'via_device_id': None,
   })
+# ---
+# name: test_device[zones]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'disabled_by': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onkyo',
+          '0009B0123456_zone2',
+        ),
+      }),
+      'labels': set({
+      }),
+      'name': 'Zone 2',
+      'name_by_user': None,
+      'parent_device_id': <ANY>,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'disabled_by': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onkyo',
+          '0009B0123456_zone3',
+        ),
+      }),
+      'labels': set({
+      }),
+      'name': 'Zone 3',
+      'name_by_user': None,
+      'parent_device_id': <ANY>,
+    }),
+  ])
 # ---

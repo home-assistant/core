@@ -50,18 +50,18 @@
       }
     }
   },
-  "entity": {
-    "media_player": {
-      "zone2": {
-        "name": "Zone 2"
-      },
-      "zone3": {
-        "name": "Zone 3"
-      },
-      "zone4": {
-        "name": "Zone 4"
-      }
+  "device": {
+    "zone2": {
+      "name": "Zone 2"
     },
+    "zone3": {
+      "name": "Zone 3"
+    },
+    "zone4": {
+      "name": "Zone 4"
+    }
+  },
+  "entity": {
     "switch": {
       "mute_center": {
         "name": "Mute center"

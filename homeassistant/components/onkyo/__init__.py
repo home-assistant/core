@@ -33,6 +33,7 @@ class OnkyoData:
     """Config Entry data."""
 
     manager: ReceiverManager
+    device_id: str
     sources: dict[InputSource, str]
     sound_modes: dict[ListeningMode, str]
 
@@ -69,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
 
     # Registered here, so that the device is present even before any zone or
     # feature of the receiver has announced itself.
-    dr.async_get(hass).async_get_or_create(
+    device = dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, info.identifier)},
         name=info.model_name,
@@ -82,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
     sound_modes_store: dict[str, str] = entry.options.get(OPTION_LISTENING_MODES, {})
     sound_modes = {ListeningMode(k): v for k, v in sound_modes_store.items()}
 
-    entry.runtime_data = OnkyoData(manager, sources, sound_modes)
+    entry.runtime_data = OnkyoData(manager, device.id, sources, sound_modes)
 
     ChannelMutingCoordinator(hass, entry, manager)
 

@@ -46,7 +46,11 @@ async def test_device(
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, RECEIVER_INFO.identifier), mock_config_entry.entry_id
     )
-    assert device == snapshot
+    assert device == snapshot(name="receiver")
+    assert device is not None
+    assert dr.async_entries_for_parent_device(device_registry, device.id) == snapshot(
+        name="zones"
+    )
 
 
 @pytest.mark.usefixtures("mock_receiver")

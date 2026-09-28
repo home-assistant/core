@@ -14,6 +14,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.device_registry import ChildDeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.hass_dict import HassKey
 
@@ -160,6 +161,7 @@ async def async_setup_entry(
             zone_entity = OnkyoMediaPlayer(
                 manager,
                 zone,
+                device_id=data.device_id,
                 volume_resolution=volume_resolution,
                 max_volume=max_volume,
                 sources=sources,
@@ -190,6 +192,7 @@ class OnkyoMediaPlayer(OnkyoEntity, MediaPlayerEntity):
         manager: ReceiverManager,
         zone: Zone,
         *,
+        device_id: str,
         volume_resolution: VolumeResolution,
         max_volume: float,
         sources: dict[InputSource, str],
@@ -199,11 +202,17 @@ class OnkyoMediaPlayer(OnkyoEntity, MediaPlayerEntity):
         super().__init__(manager)
         self._zone = zone
 
-        if zone is Zone.MAIN:
-            self._attr_name = None
-        else:
-            self._attr_translation_key = ZONE_TRANSLATION_KEYS[zone]
-        self._attr_unique_id = f"{manager.info.identifier}_{zone.value}"
+        identifier = manager.info.identifier
+        self._attr_name = None
+        self._attr_unique_id = f"{identifier}_{zone.value}"
+
+        # Every zone other than the main one is a child device of the receiver.
+        if zone is not Zone.MAIN:
+            self._attr_device_info = ChildDeviceInfo(
+                identifiers={(DOMAIN, self._attr_unique_id)},
+                parent_device_id=device_id,
+                translation_key=ZONE_TRANSLATION_KEYS[zone],
+            )
 
         self._volume_resolution = volume_resolution
         self._max_volume = max_volume
