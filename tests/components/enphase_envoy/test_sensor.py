@@ -1965,7 +1965,7 @@ async def test_sensor_daily_production_consumption_phase_upper_limit(
         ].watt_hours_today += DAILY_PRODUCTION_UPPER_LIMIT
         mock_envoy.data.system_consumption_phases[
             phase
-        ].watt_hours_today += DAILY_PRODUCTION_UPPER_LIMIT
+        ].watt_hours_today += DAILY_CONSUMPTION_UPPER_LIMIT
 
     # force HA to detect changed data by changing raw
     mock_envoy.data.raw = {"I": "am changed again"}
