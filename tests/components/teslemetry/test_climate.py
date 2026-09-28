@@ -489,3 +489,36 @@ async def test_climate_streaming_drive_side(
 
     state = hass.states.get("climate.test_climate")
     assert state.attributes[ATTR_TEMPERATURE] == target_temperature
+
+
+@pytest.mark.parametrize(
+    ("hvac_power", "expected"),
+    [
+        pytest.param("HvacPowerStateOn", HVACMode.HEAT_COOL, id="on"),
+        pytest.param(
+            "HvacPowerStatePrecondition", HVACMode.HEAT_COOL, id="precondition"
+        ),
+        pytest.param("HvacPowerStateOverheatProtect", HVACMode.OFF, id="overheat"),
+        pytest.param("HvacPowerStateOff", HVACMode.OFF, id="off"),
+    ],
+)
+async def test_climate_streaming_hvac_power(
+    hass: HomeAssistant,
+    mock_add_listener: AsyncMock,
+    hvac_power: str,
+    expected: HVACMode,
+) -> None:
+    """Tests that preconditioning reports the streaming climate as on."""
+
+    await setup_platform(hass, [Platform.CLIMATE])
+
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {Signal.HVAC_POWER: hvac_power},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("climate.test_climate").state == expected
