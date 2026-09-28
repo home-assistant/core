@@ -35,6 +35,8 @@ CODEC_TO_MIMETYPE = {
     "OGG": "application/ogg",
 }
 
+MAX_SEARCH_RESULTS = 100
+
 
 async def async_get_media_source(hass: HomeAssistant) -> RadioMediaSource:
     """Set up Radio Browser media source."""
@@ -144,7 +146,14 @@ class RadioMediaSource(MediaSource):
             return SearchMedia(
                 result=self._async_build_stations(
                     radios,
-                    await radios.search(name=query.search_query, hide_broken=True),
+                    # Order by popularity so the limit keeps the best matches
+                    await radios.search(
+                        name=query.search_query,
+                        hide_broken=True,
+                        limit=MAX_SEARCH_RESULTS,
+                        order=Order.CLICK_COUNT,
+                        reverse=True,
+                    ),
                 )
             )
         except (DNSError, RadioBrowserError) as e:
