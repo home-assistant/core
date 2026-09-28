@@ -24,7 +24,11 @@ _LOGGER = logging.getLogger(__name__)
 
 # Tankerkoenig marks a station that never closes with `wholeDay` and sends no opening
 # times for it. Publishing that as an opening time keeps a single attribute for both.
-WHOLE_DAY_OPENING_TIME = {"text": "Mo-So", "start": "00:00:00", "end": "24:00:00"}
+WHOLE_DAY_OPENING_TIME = {
+    "days": "Mo-So",
+    "start_time": "00:00:00",
+    "end_time": "23:59:59",
+}
 
 
 async def async_setup_entry(
@@ -66,9 +70,9 @@ class StationOpenBinarySensorEntity(TankerkoenigCoordinatorEntity, BinarySensorE
         elif station.opening_times:
             attrs[ATTR_OPENING_TIMES] = [
                 {
-                    "start": opening_time.start,
-                    "end": opening_time.end,
-                    "text": opening_time.text,
+                    "days": opening_time.text,
+                    "start_time": opening_time.start,
+                    "end_time": opening_time.end,
                 }
                 for opening_time in station.opening_times
             ]

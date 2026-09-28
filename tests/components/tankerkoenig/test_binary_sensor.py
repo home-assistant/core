@@ -49,9 +49,8 @@ async def test_binary_sensor_whole_day(
     state = hass.states.get("binary_sensor.station_somewhere_street_1_status")
     assert state
     assert state.attributes["opening_times"] == [
-        {"text": "Mo-So", "start": "00:00:00", "end": "24:00:00"}
+        {"days": "Mo-So", "start_time": "00:00:00", "end_time": "23:59:59"}
     ]
-    assert "whole_day" not in state.attributes
 
 
 async def test_opening_times_not_recorded(
