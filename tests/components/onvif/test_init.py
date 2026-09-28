@@ -1,8 +1,9 @@
 """Tests for the ONVIF integration __init__ module."""
 
-import asyncio
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
+
+from onvif.exceptions import ONVIFTimeoutError
 
 from homeassistant.components.onvif.const import CONF_SNAPSHOT_AUTH, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -149,8 +150,8 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     assert (host, port, username, password) == (HOST, PORT, USERNAME, PASSWORD)
 
 
-async def test_setup_entry_snapshot_probe_never_completes(hass: HomeAssistant) -> None:
-    """Test a snapshot endpoint that never ends does not hold up setup."""
+async def test_setup_entry_snapshot_probe_timeout(hass: HomeAssistant) -> None:
+    """Test a snapshot probe that times out does not hold up setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title=NAME,
@@ -165,24 +166,21 @@ async def test_setup_entry_snapshot_probe_never_completes(hass: HomeAssistant) -
     )
     entry.add_to_hass(hass)
 
-    async def _never_ends(profile_token: str, basic_auth: bool = False) -> bytes:
-        await asyncio.Event().wait()
-        return b""
-
-    with (
-        patch("homeassistant.components.onvif.device.ONVIFCamera") as mock_camera_cls,
-        patch("homeassistant.components.onvif.SNAPSHOT_TIMEOUT", 0),
-    ):
+    with patch("homeassistant.components.onvif.device.ONVIFCamera") as mock_camera_cls:
         setup_mock_onvif_camera(mock_camera_cls, with_full_setup=True)
         media_service = mock_camera_cls.create_media_service.return_value
         media_service.GetServiceCapabilities.return_value = SimpleNamespace(
             SnapshotUri=True
         )
-        mock_camera_cls.get_snapshot.side_effect = _never_ends
+        mock_camera_cls.get_snapshot.side_effect = ONVIFTimeoutError("Timed out")
 
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
+    # both auth methods are probed, each with the tighter setup timeout
+    assert [
+        call.kwargs["timeout"] for call in mock_camera_cls.get_snapshot.call_args_list
+    ] == [10, 10]
     # nothing learned about the snapshot auth, so setup will probe again next time
     assert CONF_SNAPSHOT_AUTH not in entry.data

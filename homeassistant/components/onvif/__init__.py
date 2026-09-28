@@ -1,6 +1,5 @@
 """The ONVIF integration."""
 
-import asyncio
 from contextlib import AsyncExitStack, suppress
 from http import HTTPStatus
 import logging
@@ -132,12 +131,13 @@ async def _get_snapshot_auth(device: ONVIFDevice) -> str | None:
 
     for basic_auth in (False, True):
         method = HTTP_BASIC_AUTHENTICATION if basic_auth else HTTP_DIGEST_AUTHENTICATION
-        with suppress(ONVIFError, TimeoutError):
-            async with asyncio.timeout(SNAPSHOT_TIMEOUT):
-                if await device.device.get_snapshot(
-                    device.profiles[0].token, basic_auth
-                ):
-                    return method
+        with suppress(ONVIFError):
+            if await device.device.get_snapshot(
+                device.profiles[0].token,
+                basic_auth,
+                timeout=SNAPSHOT_TIMEOUT.total_seconds(),
+            ):
+                return method
 
     return None
 
