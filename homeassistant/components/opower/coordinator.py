@@ -679,11 +679,14 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             rate_period = _rate_period_statistics(
                 key, id_prefix, name_prefix, consumption_unit_class, consumption_unit
             )
-            statistic_id = rate_period.metadata["consumption"]["statistic_id"]
-            if await get_instance(self.hass).async_add_executor_job(
-                get_last_statistics, self.hass, 1, statistic_id, True, {"sum"}
-            ):
-                rate_periods[key] = rate_period
+            # Any of the four counts, so a period with one of them deleted by
+            # hand is still rebuilt instead of dropped.
+            for statistic_id in sorted(rate_period.statistic_ids()):
+                if await get_instance(self.hass).async_add_executor_job(
+                    get_last_statistics, self.hass, 1, statistic_id, True, {"sum"}
+                ):
+                    rate_periods[key] = rate_period
+                    break
 
     async def _async_init_rate_period_sums(
         self, rate_periods: dict[str, _RatePeriodStatistics], start: datetime
