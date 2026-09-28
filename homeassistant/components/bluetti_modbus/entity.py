@@ -10,7 +10,7 @@ from .coordinator import BluettiModbusConfigEntry, BluettiModbusDataUpdateCoordi
 
 
 def bluetti_modbus_device_info(
-    serial: str, sw_version: str | None = None, *, host: str
+    serial: str, sw_version: str, *, host: str
 ) -> DeviceInfo:
     """Return device information for a BLUETTI Modbus device."""
     return DeviceInfo(
