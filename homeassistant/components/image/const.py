@@ -18,6 +18,9 @@ class ImageEntityStateAttribute(StrEnum):
 
 
 DOMAIN: Final = "image"
+
+ATTR_FILENAME: Final = "filename"
+SERVICE_SNAPSHOT: Final = "snapshot"
 DATA_COMPONENT: HassKey[EntityComponent[ImageEntity]] = HassKey(DOMAIN)
 
 IMAGE_TIMEOUT: Final = 10
