@@ -1344,14 +1344,33 @@ class EntityPlatform:
                         await entity.async_update_ha_state(True)
                 return
 
-            if tasks := [
-                create_eager_task(
-                    entity.async_update_ha_state(True), loop=self.hass.loop
-                )
-                for entity in self.entities.values()
-                if entity.should_poll
-            ]:
-                await asyncio.gather(*tasks)
+            entities_to_update = [
+                entity for entity in self.entities.values() if entity.should_poll
+            ]
+
+            if entities_to_update:
+                tasks = [
+                    create_eager_task(entity.async_update_ha_state(True), loop=self.hass.loop)
+                    for entity in entities_to_update
+                ]
+
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+
+                # Log per-entity cancellation or exceptions with entity id to
+                # make debugging easier and to address reviewer requests.
+                for entity, result in zip(entities_to_update, results):
+                    if isinstance(result, asyncio.CancelledError):
+                        self.logger.warning(
+                            "Polling for entity %s was cancelled",
+                            entity.entity_id,
+                        )
+                    elif isinstance(result, Exception):
+                        # Preserve original traceback in logs
+                        self.logger.exception(
+                            "Error updating entity %s during poll",
+                            entity.entity_id,
+                            exc_info=result,
+                        )
 
     @property
     def domain(self) -> str:
