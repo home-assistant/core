@@ -1835,6 +1835,9 @@ openerz-api==0.3.0
 # homeassistant.components.openhome
 openhomedevice==2.5
 
+# homeassistant.components.openresponses
+openresponses-client==0.0.1a1
+
 # homeassistant.components.openrgb
 openrgb-python==0.3.7
 
