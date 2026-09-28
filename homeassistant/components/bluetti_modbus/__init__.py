@@ -42,7 +42,7 @@ async def async_setup_entry(
 
     # Firmware versions come from the first refresh's own values - device
     # identity, so they go on DeviceInfo rather than becoming sensors.
-    values = device.values
+    values = coordinator.data
     sw_version = (
         f"ARM {values['d_ver_arm']}, DSP {values['d_ver_dsp']}, "
         f"IoT {values['d_iot_ver']}"
