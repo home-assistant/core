@@ -1,9 +1,11 @@
 """Tests for the diagnostics data provided by the Sonos integration."""
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
 
 from homeassistant.components.sonos.const import DOMAIN
+from homeassistant.components.sonos.diagnostics import TO_REDACT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 
@@ -65,24 +67,29 @@ async def test_diagnostics_device(
     )
 
 
-async def test_diagnostics_strips_third_party_media_servers(
+@pytest.mark.parametrize("key", sorted(TO_REDACT))
+async def test_diagnostics_redacts_keys(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     async_autosetup_sonos,
     config_entry: MockConfigEntry,
+    key: str,
 ) -> None:
-    """Test third_party_media_servers_x is removed at any level."""
+    """Test sensitive keys are redacted at any level."""
     speaker = config_entry.runtime_data.discovered["RINCON_test"]
     speaker._last_event_cache = {
         "zone_group_topology": {
-            "third_party_media_servers_x": "secret",
-            "nested": [{"third_party_media_servers_x": "secret", "keep": 1}],
+            key: "secret",
+            "nested": [{key: "secret", "keep": 1}],
         }
     }
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
-    assert "third_party_media_servers_x" not in str(result)
+    assert "secret" not in str(result)
     assert result["discovered"]["RINCON_test"]["_last_event_cache"] == {
-        "zone_group_topology": {"nested": [{"keep": 1}]}
+        "zone_group_topology": {
+            key: "**REDACTED**",
+            "nested": [{key: "**REDACTED**", "keep": 1}],
+        }
     }
