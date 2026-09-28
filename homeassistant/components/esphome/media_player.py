@@ -95,13 +95,16 @@ class EsphomeMediaPlayer(
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
-        esp_flags = EspMediaPlayerEntityFeature(
-            self._static_info.feature_flags_compat(self._api_version)
+        # The entity does not implement search
+        esp_flags = (
+            EspMediaPlayerEntityFeature(
+                self._static_info.feature_flags_compat(self._api_version)
+            )
+            & ~EspMediaPlayerEntityFeature.SEARCH_MEDIA
         )
         flags = MediaPlayerEntityFeature(0)
         for espflag in esp_flags:
-            # The entity does not implement search, so SEARCH_MEDIA has no mapping
-            flags |= _FEATURES.get(espflag, MediaPlayerEntityFeature(0))
+            flags |= _FEATURES[espflag]
         self._attr_supported_features = flags
         self._entry_data.media_player_formats[self] = (
             self._static_info.supported_formats
