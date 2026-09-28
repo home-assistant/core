@@ -5,7 +5,7 @@ import logging
 from typing import NoReturn, override
 
 from aiohttp import ClientError, ClientResponseError
-from place.errors import PlaceFulfillmentError
+from place.errors import PlaceFulfillmentError, PlaceMqttConnectionError
 from place.messages import PlaceMessages, message_kind, parse_payload
 from place.models.device_shadow import PlaceDeviceShadow
 from place.models.discover_device import DiscoverDevice
@@ -72,12 +72,19 @@ class PlaceCoordinator(DataUpdateCoordinator[dict[str, PlaceDeviceShadow]]):
         await self.hass.async_add_executor_job(self._start_mqtt)
 
     def _start_mqtt(self) -> None:
-        """Connect MQTT and subscribe to shadow topics (runs in executor)."""
+        """Connect MQTT, wait for CONNACK, and subscribe to shadow topics.
+
+        Runs in executor.
+        """
         self.mqtt_client.connect(
             on_message=self._on_mqtt_message,
             on_connect=self._on_mqtt_connect,
         )
         self.mqtt_client.loop_start()
+        try:
+            self.mqtt_client.wait_for_connection()
+        except PlaceMqttConnectionError as err:
+            raise ConfigEntryNotReady(err) from err
 
     def _on_mqtt_connect(self) -> None:
         """Subscribe to shadow topics for all discovered devices."""

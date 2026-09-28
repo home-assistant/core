@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from place.config import OAUTH2_TOKEN_URL
-from place.errors import PlaceFulfillmentError
+from place.errors import PlaceFulfillmentError, PlaceMqttConnectionError
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
@@ -253,6 +253,26 @@ async def test_setup_discover_transient_failure(
     """Test that a 5xx from device discovery retries setup."""
     mock_provider.discover.side_effect = ClientResponseError(
         request_info=MagicMock(), history=(), status=HTTPStatus.SERVICE_UNAVAILABLE
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_get_iot_credentials",
+    "mock_provider",
+)
+async def test_setup_mqtt_connection_rejected(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mqtt_client: MagicMock,
+) -> None:
+    """Test that a rejected MQTT connection retries setup."""
+    mock_mqtt_client.wait_for_connection.side_effect = PlaceMqttConnectionError(
+        "MQTT connection rejected"
     )
 
     await setup_integration(hass, mock_config_entry)
