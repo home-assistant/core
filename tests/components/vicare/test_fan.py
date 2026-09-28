@@ -93,3 +93,34 @@ async def test_standby_quickmode(
     ):
         await async_update_entity(hass, entity_id)
     assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:fan-auto"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_standby_quickmode_with_a_second_fan(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a second fan without the quickmode does not stop the refresh."""
+    fixtures: list[Fixture] = [
+        Fixture({"type:ventilation"}, "vicare/VitoPure.json"),
+        Fixture({"type:ventilation"}, "vicare/ViAir300F.json"),
+    ]
+    vicare_data = MockPyViCare(fixtures).as_vicare_data()
+    api = vicare_data.devices[0].api
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}._setup_vicare_api", return_value=vicare_data),
+        patch(f"{MODULE}.PLATFORMS", [Platform.FAN]),
+        patch.object(api, "getVentilationQuickmode", return_value=True),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    entity_id = hass.states.async_entity_ids(FAN_DOMAIN)[0]
+    assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:fan-off"
+
+    # The fixture itself reports the quickmode as inactive.
+    await async_update_entity(hass, entity_id)
+    assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:fan-auto"
