@@ -2331,7 +2331,7 @@ pyintelliclima==0.4.1
 pyintesishome==2.5.0
 
 # homeassistant.components.iont
-pyiont==0.1.0
+pyiont==0.1.1
 
 # homeassistant.components.ipma
 pyipma==3.0.10

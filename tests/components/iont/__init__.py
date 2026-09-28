@@ -33,7 +33,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 MOCK_HOST = "192.168.1.60"
-MOCK_PORT = 502
+MOCK_PORT = 30502
 MOCK_USER_INPUT = {CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT}
 MOCK_TITLE = "IONT charger"
 

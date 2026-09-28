@@ -10,9 +10,8 @@ LOGGER = logging.getLogger(__package__)
 MANUFACTURER: Final = "IONT"
 DEFAULT_NAME: Final = "IONT charger"
 
-# The charger listens on the standard Modbus TCP port and answers on any unit
-# ID, so neither is worth asking for beyond the port.
-DEFAULT_PORT: Final = 502
+# IONT chargers serve Modbus TCP on port 30502 and answer on any unit ID.
+DEFAULT_PORT: Final = 30502
 UNIT_ID: Final = 1
 
 # Local Modbus is cheap to read, and an automation steering the charger on
