@@ -9,7 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from uiprotect import NvrError, ProtectApiClient
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import NVR, Bootstrap, CloudAccount, Light, Version
-from uiprotect.data.public_devices import PublicCamera, PublicNVR
+from uiprotect.data.public_devices import PublicCamera
 from uiprotect.exceptions import BadRequest, ClientError, NotAuthorized
 from uiprotect.websocket import WebsocketState
 
@@ -717,7 +717,7 @@ async def test_public_only_setup_nameless_nvr(
     """A public NVR without name or type keeps a nameless device, not an empty name."""
     nvr = ufp_public_only.api.public_bootstrap.nvr
     nvr.name = nvr.device_type = nvr.type = None
-    nvr.display_name = PublicNVR.display_name.fget(nvr)
+    nvr.display_name = ""
 
     await setup_public_only()
 
