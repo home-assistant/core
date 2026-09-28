@@ -3,10 +3,16 @@
 from unittest.mock import AsyncMock, PropertyMock
 
 import aiohttp
+from freezegun.api import FrozenDateTimeFactory
 from lunatone_rest_api_client.models.info import Tier
 import pytest
 
 from homeassistant.components.lunatone.const import DOMAIN, MANUFACTURER
+from homeassistant.components.lunatone.coordinator import (
+    DEFAULT_DEVICES_UPDATE_INTERVAL,
+    DEFAULT_INFO_UPDATE_INTERVAL,
+    DEFAULT_SENSORS_UPDATE_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
@@ -22,7 +28,7 @@ from . import (
     setup_integration,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_load_unload_config_entry(
@@ -297,3 +303,58 @@ async def test_config_entry_unique_id_update(
     entities = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
     for entity in entities:
         assert entity.unique_id.startswith(expected_unique_id)
+
+
+async def test_coordinators_remove_stale_devices(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinators remove stale devices."""
+    await setup_integration(hass, mock_config_entry)
+
+    unique_id = mock_config_entry.unique_id
+    assert unique_id is not None
+
+    mock_lunatone_info.data.lines.pop("1")
+
+    freezer.tick(DEFAULT_INFO_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{unique_id}-line1"), mock_config_entry.entry_id
+    )
+    assert device_entry is None
+
+    mock_lunatone_devices.data.devices = [
+        device for device in mock_lunatone_devices.data.devices if device.id != 6
+    ]
+
+    freezer.tick(DEFAULT_DEVICES_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{unique_id}-device6"), mock_config_entry.entry_id
+    )
+    assert device_entry is None
+
+    mock_lunatone_sensors.data.sensors = [
+        sensor for sensor in mock_lunatone_sensors.data.sensors if sensor.id != 3
+    ]
+
+    freezer.tick(DEFAULT_SENSORS_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{unique_id}-line0-d24-address0"),
+        mock_config_entry.entry_id,
+    )
+    assert device_entry is None
