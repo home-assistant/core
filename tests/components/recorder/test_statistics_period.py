@@ -54,6 +54,7 @@ def _unoptimized_statistics(
     period_start_end: Callable[[float], tuple[float, float]],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
     max_bind_vars: int,
+    mean_type: StatisticMeanType = StatisticMeanType.NONE,
 ) -> Sequence[Row]:
     """Execute the unoptimized query path for result comparison."""
     return execute_stmt_lambda_element(
@@ -88,10 +89,14 @@ def test_endpoint_statement_cache_key(
 ) -> None:
     """Cache by query structure, without retaining sensor or timestamp values."""
     baseline = statistics._generate_statistics_period_stmt(
-        [1], ((0.0, 86400.0),), {"sum"}
+        [1],
+        ((0.0, 86400.0),),
+        {"sum"},
     )._generate_cache_key()
     actual = statistics._generate_statistics_period_stmt(
-        metadata_ids, bounds, types
+        metadata_ids,
+        bounds,
+        types,
     )._generate_cache_key()
     assert baseline is not None
     assert actual is not None
@@ -99,13 +104,29 @@ def test_endpoint_statement_cache_key(
 
 
 @pytest.mark.parametrize(
-    ("types", "same_key"),
+    ("types", "mean_type", "same_key"),
     [
-        pytest.param({"mean"}, True, id="same-columns"),
-        pytest.param({"min"}, False, id="different-min-column"),
-        pytest.param({"max"}, False, id="different-max-column"),
+        pytest.param(
+            {"mean"},
+            StatisticMeanType.ARITHMETIC,
+            True,
+            id="same-columns",
+        ),
+        pytest.param(
+            {"min"},
+            StatisticMeanType.NONE,
+            False,
+            id="different-min-column",
+        ),
+        pytest.param(
+            {"max"},
+            StatisticMeanType.NONE,
+            False,
+            id="different-max-column",
+        ),
         pytest.param(
             {"mean", "min", "max"},
+            StatisticMeanType.ARITHMETIC,
             False,
             id="different-all-aggregate-columns",
         ),
@@ -113,6 +134,7 @@ def test_endpoint_statement_cache_key(
 )
 def test_aggregate_statement_cache_key(
     types: set[Literal["max", "mean", "min"]],
+    mean_type: StatisticMeanType,
     same_key: bool,
 ) -> None:
     """Cache aggregate queries by selected columns."""
@@ -120,17 +142,50 @@ def test_aggregate_statement_cache_key(
         [1],
         ((0.0, 86400.0),),
         {"mean"},
+        StatisticMeanType.ARITHMETIC,
     )._generate_cache_key()
 
     actual = statistics._generate_statistics_period_stmt(
         [2],
         ((1.0, 86401.0),),
         types,
+        mean_type,
     )._generate_cache_key()
 
     assert baseline is not None
     assert actual is not None
     assert (actual == baseline) is same_key
+
+
+def test_mean_type_changes_statement_cache_key() -> None:
+    """Cache arithmetic and circular mean queries separately."""
+    arithmetic = statistics._generate_statistics_period_stmt(
+        [1],
+        ((0.0, 86400.0),),
+        {"mean"},
+        StatisticMeanType.ARITHMETIC,
+    )._generate_cache_key()
+
+    circular = statistics._generate_statistics_period_stmt(
+        [1],
+        ((0.0, 86400.0),),
+        {"mean"},
+        StatisticMeanType.CIRCULAR,
+    )._generate_cache_key()
+
+    assert arithmetic is not None
+    assert circular is not None
+    assert arithmetic != circular
+
+
+def test_mean_period_statement_requires_mean_type() -> None:
+    """Require a mean type when mean is selected."""
+    with pytest.raises(AssertionError):
+        statistics._generate_statistics_period_stmt(
+            [1],
+            ((0.0, 86400.0),),
+            {"mean"},
+        )
 
 
 @pytest.mark.parametrize(
@@ -220,6 +275,7 @@ async def test_aggregate_cached_parameters(statistics_session: Session) -> None:
             [1],
             ((0.0, 86400.0),),
             types,
+            StatisticMeanType.ARITHMETIC,
         ),
         orm_rows=False,
     )
@@ -230,6 +286,7 @@ async def test_aggregate_cached_parameters(statistics_session: Session) -> None:
             [2],
             ((86400.0, 172800.0),),
             types,
+            StatisticMeanType.ARITHMETIC,
         ),
         orm_rows=False,
     )
@@ -272,6 +329,7 @@ async def test_mixed_cached_parameters(statistics_session: Session) -> None:
             [1],
             ((0.0, 86400.0),),
             types,
+            StatisticMeanType.ARITHMETIC,
         ),
         orm_rows=False,
     )
@@ -282,6 +340,7 @@ async def test_mixed_cached_parameters(statistics_session: Session) -> None:
             [2],
             ((86400.0, 172800.0),),
             types,
+            StatisticMeanType.ARITHMETIC,
         ),
         orm_rows=False,
     )
@@ -457,6 +516,7 @@ async def test_arithmetic_mean_query_limits(
             statistics.reduce_day_ts_factory()[1],
             {"mean"},
             budget,
+            StatisticMeanType.ARITHMETIC,
         )
     assert execute.call_count == queries
     assert [(r.metadata_id, r.start_ts, r.mean) for r in rows] == [
@@ -1060,14 +1120,6 @@ async def test_circular_statistics_without_mean_use_fast_path(
             id="hour",
         ),
         pytest.param(
-            "angle",
-            "°",
-            StatisticMeanType.CIRCULAR,
-            "day",
-            {"mean"},
-            id="circular",
-        ),
-        pytest.param(
             "power",
             "W",
             StatisticMeanType.NONE,
@@ -1086,7 +1138,7 @@ async def test_mean_fallback(
     period: Literal["hour", "day"],
     types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> None:
-    """Fall back for hourly, circular-mean, and unavailable-mean requests."""
+    """Fall back for hourly and unavailable-mean requests."""
     statistics_session.query(StatisticsMeta).filter(StatisticsMeta.id == 1).update(
         {
             StatisticsMeta.unit_class: unit_class,
@@ -1118,3 +1170,142 @@ async def test_mean_fallback(
         )
     optimized.assert_not_called()
     assert result["test:statistic_1"]
+
+
+async def test_circular_mean_uses_fast_path(
+    statistics_session: Session,
+    hass: HomeAssistant,
+) -> None:
+    """Reduce circular mean statistics in the database."""
+    statistics_session.query(StatisticsMeta).filter(StatisticsMeta.id == 1).update(
+        {
+            StatisticsMeta.mean_type: StatisticMeanType.CIRCULAR,
+            StatisticsMeta.unit_class: "angle",
+            StatisticsMeta.unit_of_measurement: "°",
+            StatisticsMeta.has_sum: False,
+        }
+    )
+
+    start = datetime(2024, 1, 1, tzinfo=dt_util.UTC)
+
+    statistics_session.add_all(
+        [
+            Statistics(
+                metadata_id=1,
+                start_ts=start.timestamp(),
+                mean=350.0,
+                mean_weight=1.0,
+            ),
+            Statistics(
+                metadata_id=1,
+                start_ts=(start + timedelta(hours=1)).timestamp(),
+                mean=20.0,
+                mean_weight=1.0,
+            ),
+        ]
+    )
+    statistics_session.commit()
+
+    with patch.object(
+        statistics,
+        "_get_statistics_period_rows",
+        side_effect=_unoptimized_statistics,
+    ) as baseline:
+        expected = statistics._statistics_during_period_with_session(
+            hass,
+            statistics_session,
+            start,
+            start + timedelta(days=1),
+            {"test:statistic_1"},
+            "day",
+            None,
+            {"mean"},
+        )
+
+    baseline.assert_called_once()
+
+    with patch.object(
+        statistics,
+        "_get_statistics_period_rows",
+        wraps=statistics._get_statistics_period_rows,
+    ) as optimized:
+        actual = statistics._statistics_during_period_with_session(
+            hass,
+            statistics_session,
+            start,
+            start + timedelta(days=1),
+            {"test:statistic_1"},
+            "day",
+            None,
+            {"mean"},
+        )
+
+    optimized.assert_called_once()
+
+    assert actual.keys() == expected.keys()
+    for statistic_id, rows in expected.items():
+        assert len(actual[statistic_id]) == len(rows)
+        for actual_row, expected_row in zip(actual[statistic_id], rows, strict=True):
+            assert actual_row == pytest.approx(
+                expected_row,
+                rel=1e-12,
+                abs=1e-12,
+            )
+
+    assert actual["test:statistic_1"][0]["mean"] == pytest.approx(5.0)
+
+
+async def test_mixed_mean_types_fall_back(
+    statistics_session: Session,
+    hass: HomeAssistant,
+) -> None:
+    """Fall back when arithmetic and circular means are requested together."""
+    statistics_session.query(StatisticsMeta).filter(StatisticsMeta.id == 1).update(
+        {
+            StatisticsMeta.mean_type: StatisticMeanType.ARITHMETIC,
+            StatisticsMeta.unit_class: None,
+            StatisticsMeta.unit_of_measurement: None,
+        }
+    )
+    statistics_session.query(StatisticsMeta).filter(StatisticsMeta.id == 2).update(
+        {
+            StatisticsMeta.mean_type: StatisticMeanType.CIRCULAR,
+            StatisticsMeta.unit_class: None,
+            StatisticsMeta.unit_of_measurement: None,
+        }
+    )
+
+    start = datetime(2024, 1, 1, tzinfo=dt_util.UTC)
+
+    statistics_session.add_all(
+        [
+            Statistics(
+                metadata_id=1,
+                start_ts=start.timestamp(),
+                mean=10.0,
+                mean_weight=1.0,
+            ),
+            Statistics(
+                metadata_id=2,
+                start_ts=start.timestamp(),
+                mean=350.0,
+                mean_weight=1.0,
+            ),
+        ]
+    )
+    statistics_session.commit()
+
+    with patch.object(statistics, "_get_statistics_period_rows") as optimized:
+        result = statistics._statistics_during_period_with_session(
+            hass,
+            statistics_session,
+            start,
+            start + timedelta(days=1),
+            {"test:statistic_1", "test:statistic_2"},
+            "day",
+            None,
+            {"mean"},
+        )
+
+    optimized.assert_not_called()
+    assert result

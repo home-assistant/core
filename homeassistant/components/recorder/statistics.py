@@ -1484,6 +1484,7 @@ def _generate_statistics_period_stmt(
     metadata_ids: list[int] | None,
     period_bounds: tuple[tuple[float, float], ...],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    mean_type: StatisticMeanType = StatisticMeanType.NONE,
 ) -> Select:
     """Select reduced statistics for each calendar period."""
     queries = []
@@ -1491,11 +1492,20 @@ def _generate_statistics_period_stmt(
     aggregate_types = types & {"mean", "min", "max"}
     endpoint_types = types & {"sum", "state", "last_reset"}
 
+    mean_columns: tuple[Label, ...] = ()
+    if "mean" in aggregate_types:
+        assert mean_type is not StatisticMeanType.NONE
+        mean_columns = (
+            query_circular_mean(Statistics)
+            if mean_type is StatisticMeanType.CIRCULAR
+            else (func.avg(Statistics.mean).label("mean"),)
+        )
+
     # Aggregate statistics are reduced over all rows in the calendar period.
     aggregate_columns = {
-        "mean": func.avg(Statistics.mean).label("mean"),
-        "min": func.min(Statistics.min).label("min"),
-        "max": func.max(Statistics.max).label("max"),
+        "mean": mean_columns,
+        "min": (func.min(Statistics.min).label("min"),),
+        "max": (func.max(Statistics.max).label("max"),),
     }
 
     for lower, upper in period_bounds:
@@ -1510,9 +1520,9 @@ def _generate_statistics_period_stmt(
             )
 
             # Reduce requested aggregate values inside the database.
-            for key, aggregate_column in aggregate_columns.items():
+            for key, aggregate_columns_for_type in aggregate_columns.items():
                 if key in aggregate_types:
-                    query = query.add_columns(aggregate_column)
+                    query = query.add_columns(*aggregate_columns_for_type)
 
         if endpoint_types:
             # Endpoint values must come from the last actual Statistics row
@@ -1553,9 +1563,14 @@ def _generate_statistics_period_stmt(
 
     # Aggregate values already live in the reduced subquery, so add them once
     # regardless of whether this is aggregate-only or mixed.
-    for key in aggregate_columns:
+    for key, aggregate_columns_for_type in aggregate_columns.items():
         if key in aggregate_types:
-            columns = columns.add_columns(getattr(reduced.c, key))
+            columns = columns.add_columns(
+                *(
+                    getattr(reduced.c, aggregate_column.name)
+                    for aggregate_column in aggregate_columns_for_type
+                )
+            )
 
     if not endpoint_types:
         return columns
@@ -1600,6 +1615,7 @@ def _get_statistics_period_rows(
     period_start_end: Callable[[float], tuple[float, float]],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
     max_bind_vars: int,
+    mean_type: StatisticMeanType = StatisticMeanType.NONE,
 ) -> list[Row]:
     """Fetch reduced rows for each statistic and calendar period."""
     rows: list[Row] = []
@@ -1637,7 +1653,9 @@ def _get_statistics_period_rows(
             max_bind_vars // (2 + len(ids or ())),
         )
         for period_bounds in batched(bounds, periods_per_query, strict=False):
-            stmt = _generate_statistics_period_stmt(ids, period_bounds, types)
+            stmt = _generate_statistics_period_stmt(
+                ids, period_bounds, types, mean_type
+            )
             rows.extend(
                 cast(
                     Sequence[Row],
@@ -2347,20 +2365,25 @@ def _statistics_during_period_with_session(
         Statistics if period != "5minute" else StatisticsShortTerm
     )
     stats: Sequence[Row]
-    # Check if we can reduce the statistics to a single row per period, which is more efficient than fetching all rows.
+
+    # The optimized query can only use one mean aggregation strategy at a time.
+    mean_types = (
+        {
+            meta["mean_type"]
+            for _, meta in metadata.values()
+            if meta["mean_type"] is not StatisticMeanType.NONE
+        }
+        if "mean" in types
+        else set()
+    )
+    mean_type = next(iter(mean_types), StatisticMeanType.NONE)
     supported_types = {"mean", "min", "max", "sum", "state", "last_reset"}
     if (
         types
         and period in {"day", "week", "month", "year"}
         and types <= supported_types
-        and (
-            "mean" not in types
-            or all(
-                meta["mean_type"]
-                in (StatisticMeanType.NONE, StatisticMeanType.ARITHMETIC)
-                for _, meta in metadata.values()
-            )
-        )
+        and len(mean_types) <= 1
+        and ("mean" not in types or mean_type is not StatisticMeanType.NONE)
     ):
         factories = {
             "day": reduce_day_ts_factory,
@@ -2377,6 +2400,7 @@ def _statistics_during_period_with_session(
             period_start_end,
             types,
             get_instance(hass).max_bind_vars,
+            mean_type,
         )
     else:
         stmt = _generate_statistics_during_period_stmt(
