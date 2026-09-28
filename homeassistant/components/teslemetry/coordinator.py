@@ -379,8 +379,14 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Return the current totals; there is nothing to fetch.
 
         Only reached through the generic entity update service, which must not
-        fail on a coordinator the stream alone feeds.
+        fail on a coordinator the stream alone feeds, nor revive stale totals
+        while the stream is down.
         """
+        if not self.last_update_success:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="stream_disconnected",
+            )
         return self.data
 
     def handle_stream_update(self, event: EnergyTotalsEvent) -> None:
