@@ -10,6 +10,7 @@ from homeassistant import config_entries
 from homeassistant.components.energyid.config_flow import EnergyIDConfigFlow
 from homeassistant.components.energyid.const import (
     CONF_DEVICE_NAME,
+    CONF_ENABLE_DIRECTIVES,
     CONF_PROVISIONING_KEY,
     CONF_PROVISIONING_SECRET,
     DOMAIN,
@@ -29,6 +30,14 @@ TEST_PROVISIONING_SECRET = "test_prov_secret"
 TEST_RECORD_NUMBER = "site_12345"
 TEST_RECORD_NAME = "My Test Site"
 MAX_POLLING_ATTEMPTS = 60
+
+
+def _mock_client() -> MagicMock:
+    """Return a client mock that also supports the signal options follow-up."""
+    client = MagicMock()
+    client.get_directives = AsyncMock(return_value=[])
+    client.close = AsyncMock()
+    return client
 
 
 @pytest.fixture(name="mock_polling_interval", autouse=True)
@@ -51,7 +60,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 async def test_config_flow_user_step_success_claimed(hass: HomeAssistant) -> None:
     """Test user step where device is already claimed."""
-    mock_client = MagicMock()
+    mock_client = _mock_client()
     mock_client.authenticate = AsyncMock(return_value=True)
     mock_client.recordNumber = TEST_RECORD_NUMBER
     mock_client.recordName = TEST_RECORD_NAME
@@ -80,6 +89,7 @@ async def test_config_flow_user_step_success_claimed(hass: HomeAssistant) -> Non
         assert result2["data"][CONF_PROVISIONING_KEY] == TEST_PROVISIONING_KEY
         assert result2["data"][CONF_PROVISIONING_SECRET] == TEST_PROVISIONING_SECRET
         assert result2["description"] == "add_sensor_mapping_hint"
+        assert result2["next_flow"][0] is config_entries.FlowType.OPTIONS_FLOW
 
         # Check unique_id is set correctly
         entry = hass.config_entries.async_get_entry(result2["result"].entry_id)
@@ -90,13 +100,53 @@ async def test_config_flow_user_step_success_claimed(hass: HomeAssistant) -> Non
         assert entry.data[CONF_DEVICE_ID] == entry.unique_id
 
 
+async def test_options_flow_enables_automatic_directive_discovery(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test users can opt into every authorized signal without reconnecting."""
+    result = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["data_schema"]({}) == {CONF_ENABLE_DIRECTIVES: True}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_ENABLE_DIRECTIVES: True},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options == {CONF_ENABLE_DIRECTIVES: True}
+
+
+async def test_options_flow_defaults_reflect_current_choice(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the options form preselects the previously stored choice."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_ENABLE_DIRECTIVES: False},
+    )
+
+    result = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["data_schema"]({}) == {CONF_ENABLE_DIRECTIVES: False}
+
+
 async def test_config_flow_auth_and_claim_step_success(hass: HomeAssistant) -> None:
     """Test auth_and_claim step where the device becomes claimed after polling."""
-    mock_unclaimed_client = MagicMock()
+    mock_unclaimed_client = _mock_client()
     mock_unclaimed_client.authenticate = AsyncMock(return_value=False)
     mock_unclaimed_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
 
-    mock_claimed_client = MagicMock()
+    mock_claimed_client = _mock_client()
     mock_claimed_client.authenticate = AsyncMock(return_value=True)
     mock_claimed_client.recordNumber = TEST_RECORD_NUMBER
     mock_claimed_client.recordName = TEST_RECORD_NAME
@@ -146,7 +196,7 @@ async def test_config_flow_auth_and_claim_step_success(hass: HomeAssistant) -> N
 
 async def test_config_flow_claim_timeout(hass: HomeAssistant) -> None:
     """Test claim step when polling times out and user continues."""
-    mock_unclaimed_client = MagicMock()
+    mock_unclaimed_client = _mock_client()
     mock_unclaimed_client.authenticate = AsyncMock(return_value=False)
     mock_unclaimed_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
 
@@ -212,7 +262,7 @@ async def test_duplicate_unique_id_prevented(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    mock_client = MagicMock()
+    mock_client = _mock_client()
     mock_client.authenticate = AsyncMock(return_value=True)
     mock_client.recordNumber = TEST_RECORD_NUMBER
     mock_client.recordName = TEST_RECORD_NAME
@@ -268,7 +318,7 @@ async def test_multiple_different_devices_allowed(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    mock_client = MagicMock()
+    mock_client = _mock_client()
     mock_client.authenticate = AsyncMock(return_value=True)
     mock_client.recordNumber = TEST_RECORD_NUMBER
     mock_client.recordName = TEST_RECORD_NAME
@@ -364,7 +414,7 @@ async def test_config_flow_external_step_claimed_during_display(
         nonlocal call_count
         call_count += 1
 
-        mock_client = MagicMock()
+        mock_client = _mock_client()
         if call_count == 1:
             mock_client.authenticate = AsyncMock(return_value=False)
             mock_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
@@ -411,7 +461,7 @@ async def test_config_flow_external_step_claimed_during_display(
 
 async def test_config_flow_auth_and_claim_step_not_claimed(hass: HomeAssistant) -> None:
     """Test auth_and_claim step when device is not claimed after polling."""
-    mock_client = MagicMock()
+    mock_client = _mock_client()
     mock_client.authenticate = AsyncMock(return_value=False)
     mock_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
     with patch(
@@ -459,7 +509,7 @@ async def test_config_flow_reauth_success(
     entry.add_to_hass(hass)
 
     # Mock client for successful reauth
-    mock_client = MagicMock()
+    mock_client = _mock_client()
     mock_client.authenticate = AsyncMock(return_value=True)
     mock_client.recordNumber = "site_12345"
     mock_client.recordName = "My Test Site"
@@ -508,7 +558,7 @@ async def test_config_flow_client_response_error(
     expected_error: str,
 ) -> None:
     """Test config flow with ClientResponseError."""
-    mock_client = MagicMock()
+    mock_client = _mock_client()
     mock_client.authenticate.side_effect = ClientResponseError(
         request_info=MagicMock(),
         history=(),
@@ -554,7 +604,7 @@ async def test_config_flow_reauth_needs_claim(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     # Mock client that needs claiming
-    mock_client = MagicMock()
+    mock_client = _mock_client()
     mock_client.authenticate = AsyncMock(return_value=False)
     mock_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
 
@@ -598,7 +648,7 @@ async def test_async_get_supported_subentry_types(hass: HomeAssistant) -> None:
 
 async def test_polling_stops_on_invalid_auth_error(hass: HomeAssistant) -> None:
     """Test polling stops on invalid_auth error during auth_and_claim."""
-    mock_unclaimed_client = MagicMock()
+    mock_unclaimed_client = _mock_client()
     mock_unclaimed_client.authenticate = AsyncMock(return_value=False)
     mock_unclaimed_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
 
@@ -649,7 +699,7 @@ async def test_polling_stops_on_invalid_auth_error(hass: HomeAssistant) -> None:
 
 async def test_polling_stops_on_cannot_connect_error(hass: HomeAssistant) -> None:
     """Test polling stops on cannot_connect error during auth_and_claim."""
-    mock_unclaimed_client = MagicMock()
+    mock_unclaimed_client = _mock_client()
     mock_unclaimed_client.authenticate = AsyncMock(return_value=False)
     mock_unclaimed_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
 
@@ -696,7 +746,7 @@ async def test_polling_stops_on_cannot_connect_error(hass: HomeAssistant) -> Non
 
 async def test_auth_and_claim_subsequent_auth_error(hass: HomeAssistant) -> None:
     """Test auth_and_claim handles auth errors during polling."""
-    mock_unclaimed_client = MagicMock()
+    mock_unclaimed_client = _mock_client()
     mock_unclaimed_client.authenticate = AsyncMock(return_value=False)
     mock_unclaimed_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
 
@@ -763,7 +813,7 @@ async def test_reauth_with_error(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    mock_client = MagicMock()
+    mock_client = _mock_client()
     mock_client.authenticate = AsyncMock(
         side_effect=ClientResponseError(
             request_info=MagicMock(),
@@ -808,12 +858,12 @@ async def test_polling_cancellation_on_auth_failure(hass: HomeAssistant) -> None
         call_count += 1
         if call_count == 1:
             # First client for initial claimless auth
-            mock_client = MagicMock()
+            mock_client = _mock_client()
             mock_client.authenticate = AsyncMock(return_value=False)
             mock_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
             return mock_client
         # Subsequent client for polling check - fails authentication
-        mock_client = MagicMock()
+        mock_client = _mock_client()
 
         async def auth_with_error():
             nonlocal auth_call_count
@@ -878,12 +928,12 @@ async def test_polling_cancellation_on_success(hass: HomeAssistant) -> None:
         call_count += 1
         if call_count == 1:
             # First client for initial claimless auth
-            mock_client = MagicMock()
+            mock_client = _mock_client()
             mock_client.authenticate = AsyncMock(return_value=False)
             mock_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
             return mock_client
         # Subsequent client for polling check - device now claimed
-        mock_client = MagicMock()
+        mock_client = _mock_client()
 
         async def auth_success():
             nonlocal auth_call_count
@@ -930,7 +980,7 @@ async def test_polling_cancellation_on_success(hass: HomeAssistant) -> None:
         )
         assert result_done["type"] is FlowResultType.CREATE_ENTRY
 
-        # Verify polling was cancelled - the auth count should not increase
+        # The signal options flow is local and performs no additional authentication.
         assert auth_call_count == 2
 
         # Wait a bit and verify no further authentication attempts from polling

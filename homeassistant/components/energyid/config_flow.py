@@ -3,26 +3,31 @@
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientError, ClientResponseError
 from energyid_webhooks.client_v2 import WebhookClient
 import probatio
 
 from homeassistant.config_entries import (
+    SOURCE_USER,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
+    FlowType,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
+from homeassistant.helpers.selector import BooleanSelector
 
 from .const import (
     CONF_DEVICE_NAME,
+    CONF_ENABLE_DIRECTIVES,
     CONF_PROVISIONING_KEY,
     CONF_PROVISIONING_SECRET,
     DOMAIN,
@@ -32,6 +37,9 @@ from .const import (
     POLLING_INTERVAL,
 )
 from .energyid_sensor_mapping_flow import EnergyIDSensorMappingFlowHandler
+
+if TYPE_CHECKING:
+    from . import EnergyIDConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +51,16 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._flow_data: dict[str, Any] = {}
         self._polling_task: asyncio.Task | None = None
+
+    @override
+    async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
+        """Offer directive selection immediately after connecting EnergyID."""
+        options_result = await self.hass.config_entries.options.async_init(
+            result["result"].entry_id,
+            context={"source": SOURCE_USER},
+        )
+        result["next_flow"] = (FlowType.OPTIONS_FLOW, options_result["flow_id"])
+        return result
 
     async def _perform_auth_and_get_details(self) -> str | None:
         """Authenticate with EnergyID and retrieve device details."""
@@ -295,3 +313,44 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {"sensor_mapping": EnergyIDSensorMappingFlowHandler}
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: EnergyIDConfigEntry,
+    ) -> EnergyIDOptionsFlow:
+        """Return the options flow."""
+        return EnergyIDOptionsFlow()
+
+
+class EnergyIDOptionsFlow(OptionsFlow):
+    """Enable automatic discovery of record directives."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage optional inbound EnergyID directives."""
+        if user_input is not None:
+            return self.async_create_entry(
+                data={
+                    CONF_ENABLE_DIRECTIVES: user_input[CONF_ENABLE_DIRECTIVES],
+                }
+            )
+
+        directives_enabled = self.config_entry.options.get(CONF_ENABLE_DIRECTIVES, True)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Optional(
+                        CONF_ENABLE_DIRECTIVES,
+                        default=directives_enabled,
+                    ): BooleanSelector()
+                }
+            ),
+            description_placeholders={
+                "directives_url": "https://app.energyid.eu/integrations/home-assistant"
+            },
+        )
