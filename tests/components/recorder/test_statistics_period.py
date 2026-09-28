@@ -991,6 +991,63 @@ async def test_aggregate_statistics_allow_missing_mean(
     assert actual["test:statistic_2"][0]["max"] == 18.0
 
 
+async def test_circular_statistics_without_mean_use_fast_path(
+    statistics_session: Session,
+    hass: HomeAssistant,
+) -> None:
+    """Use the optimized period query for circular statistics without mean."""
+    statistics_session.query(StatisticsMeta).filter(StatisticsMeta.id == 1).update(
+        {
+            StatisticsMeta.mean_type: StatisticMeanType.CIRCULAR,
+            StatisticsMeta.unit_class: "angle",
+            StatisticsMeta.unit_of_measurement: "°",
+        }
+    )
+
+    start = datetime(2024, 1, 1, tzinfo=dt_util.UTC)
+    statistics_session.add_all(
+        [
+            Statistics(
+                metadata_id=1,
+                start_ts=start.timestamp(),
+                mean=350.0,
+                mean_weight=1.0,
+                min=340.0,
+                max=355.0,
+            ),
+            Statistics(
+                metadata_id=1,
+                start_ts=(start + timedelta(hours=1)).timestamp(),
+                mean=10.0,
+                mean_weight=1.0,
+                min=5.0,
+                max=20.0,
+            ),
+        ]
+    )
+    statistics_session.commit()
+
+    with patch.object(
+        statistics,
+        "_get_statistics_period_rows",
+        wraps=statistics._get_statistics_period_rows,
+    ) as optimized:
+        result = statistics._statistics_during_period_with_session(
+            hass,
+            statistics_session,
+            start,
+            start + timedelta(days=1),
+            {"test:statistic_1"},
+            "day",
+            None,
+            {"min", "max"},
+        )
+
+    optimized.assert_called_once()
+    assert result["test:statistic_1"][0]["min"] == 5.0
+    assert result["test:statistic_1"][0]["max"] == 355.0
+
+
 @pytest.mark.parametrize(
     ("unit_class", "unit", "mean_type", "period", "types"),
     [
