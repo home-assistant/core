@@ -1,6 +1,7 @@
 """Config Flow for the RESTful integration."""
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from functools import partial
 from types import MethodType
 from typing import Any, override
@@ -65,107 +66,8 @@ from .schema import (
 )
 from .util import parse_json_attributes_raise_error
 
-FLOW_SCHEMA = "flow_schema"
-VALIDATOR = "validator"
 NO_PLATFORM = "none"
 
-
-def _validate_unit(options: dict[str, Any]) -> None:
-    """Validate unit of measurement, from template config_flow.py."""
-    if (
-        (device_class := options.get(CONF_DEVICE_CLASS))
-        and (units := DEVICE_CLASS_UNITS.get(device_class)) is not None
-        and (unit := options.get(CONF_UNIT_OF_MEASUREMENT)) not in units
-    ):
-        # Sort twice to make sure strings with same case-insensitive order of
-        # letters are sorted consistently still.
-        sorted_units = sorted(
-            sorted(
-                [f"'{unit!s}'" if unit else "no unit of measurement" for unit in units],
-            ),
-            key=str.casefold,
-        )
-        if len(sorted_units) == 1:
-            units_string = sorted_units[0]
-        else:
-            units_string = f"one of {', '.join(sorted_units)}"
-
-        raise probatio.Invalid(
-            f"'{unit}' is not a valid unit for device class '{device_class}'; "
-            f"expected {units_string}"
-        )
-
-
-def _validate_state_class(options: dict[str, Any]) -> None:
-    """Validate state class. From template config_flow.py."""
-    if (
-        (state_class := options.get(CONF_STATE_CLASS))
-        and (device_class := options.get(CONF_DEVICE_CLASS))
-        and (state_classes := DEVICE_CLASS_STATE_CLASSES.get(device_class)) is not None
-        and state_class not in state_classes
-    ):
-        sorted_state_classes = sorted(
-            [f"'{state_class!s}'" for state_class in state_classes],
-            key=str.casefold,
-        )
-        if len(sorted_state_classes) == 0:
-            state_classes_string = "no state class"
-        elif len(sorted_state_classes) == 1:
-            state_classes_string = sorted_state_classes[0]
-        else:
-            state_classes_string = f"one of {', '.join(sorted_state_classes)}"
-
-        raise probatio.Invalid(
-            f"'{state_class}' is not a valid state class for device class "
-            f"'{device_class}'; expected {state_classes_string}"
-        )
-
-
-def _validate_sensor_input(
-    input: dict[str, Any], rest: RestData
-) -> tuple[dict[str, str], dict[str, str]]:
-    """Validate input for sensor subentry."""
-    errors: dict[str, str] = {}
-    placeholders: dict[str, str] = {}
-    if input.get(CONF_JSON_ATTRS):
-        attrs = [item["item"] for item in input[CONF_JSON_ATTRS]]
-        try:
-            parse_json_attributes_raise_error(
-                rest.data_without_xml(), attrs, input.get(CONF_JSON_ATTRS_PATH)
-            )
-        except HomeAssistantError as exc:
-            if exc.translation_key is not None:
-                errors["base"] = exc.translation_key
-                placeholders = exc.translation_placeholders or {}
-        except ExpatError as exc:
-            errors["base"] = "xml_parse_error"
-            placeholders["xml_parse_error_message"] = str(exc)
-    try:
-        _validate_unit(input)
-    except probatio.Invalid as exc:
-        errors[CONF_UNIT_OF_MEASUREMENT] = "unit_validation_error"
-        placeholders["unit_validation_error_message"] = str(exc)
-    try:
-        _validate_state_class(input)
-    except probatio.Invalid as exc:
-        errors[CONF_STATE_CLASS] = "state_class_validation_error"
-        placeholders["state_class_validation_error_message"] = str(exc)
-
-    return errors, placeholders
-
-
-SUBENTRY_CONFIG: dict[Platform, dict[str, Any]] = {
-    Platform.BINARY_SENSOR: {
-        CONF_NAME: DEFAULT_BINARY_SENSOR_NAME,
-        FLOW_SCHEMA: BINARY_SENSOR_SUBENTRY_FLOW_SCHEMA,
-        VALIDATOR: None,
-    },
-    Platform.SENSOR: {
-        CONF_NAME: DEFAULT_SENSOR_NAME,
-        FLOW_SCHEMA: SENSOR_SUBENTRY_FLOW_SCHEMA,
-        VALIDATOR: _validate_sensor_input,
-    },
-}
 
 MATCH_ON = {
     CONF_RESOURCE,
@@ -289,6 +191,132 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
         return dict.fromkeys(CONFIG_ENTRY_PLATFORMS, RestSubentryFlow)
 
 
+def _validate_unit(data: dict[str, Any]) -> dict[str, Any]:
+    """Validate unit of measurement, from template config_flow.py."""
+    if (
+        (device_class := data.get(CONF_DEVICE_CLASS))
+        and (units := DEVICE_CLASS_UNITS.get(device_class)) is not None
+        and (unit := data.get(CONF_UNIT_OF_MEASUREMENT)) not in units
+    ):
+        # Sort twice to make sure strings with same case-insensitive order of
+        # letters are sorted consistently still.
+        sorted_units = sorted(
+            sorted(
+                [f"'{unit!s}'" if unit else "no unit of measurement" for unit in units],
+            ),
+            key=str.casefold,
+        )
+        if len(sorted_units) == 1:
+            units_string = sorted_units[0]
+        else:
+            units_string = f"one of {', '.join(sorted_units)}"
+
+        raise probatio.Invalid(
+            translation_key="unit_validation_error",
+            placeholders={
+                "unit": unit,
+                "device_class": device_class,
+                "units_string": units_string,
+            },
+            path=[CONF_UNIT_OF_MEASUREMENT],
+        )
+    return data
+
+
+def _validate_state_class(data: dict[str, Any]) -> dict[str, Any]:
+    """Validate state class. From template config_flow.py."""
+    if (
+        (state_class := data.get(CONF_STATE_CLASS))
+        and (device_class := data.get(CONF_DEVICE_CLASS))
+        and (state_classes := DEVICE_CLASS_STATE_CLASSES.get(device_class)) is not None
+        and state_class not in state_classes
+    ):
+        sorted_state_classes = sorted(
+            [f"'{state_class!s}'" for state_class in state_classes],
+            key=str.casefold,
+        )
+        if len(sorted_state_classes) == 0:
+            state_classes_string = "no state class"
+        elif len(sorted_state_classes) == 1:
+            state_classes_string = sorted_state_classes[0]
+        else:
+            state_classes_string = f"one of {', '.join(sorted_state_classes)}"
+
+        raise probatio.Invalid(
+            translation_key="state_class_validation_error",
+            placeholders={
+                "state_class": state_class,
+                "device_class": device_class,
+                "state_classes_string": state_classes_string,
+            },
+            path=[CONF_STATE_CLASS],
+        )
+    return data
+
+
+def _validate_sensor_rest_data(rest: RestData) -> Callable[[Any], Any]:
+    """Parameterized validator for sensor_input."""
+
+    def check_data(data: dict[str, Any]) -> dict[str, Any]:
+        if data.get(CONF_JSON_ATTRS):
+            attrs = [item["item"] for item in data[CONF_JSON_ATTRS]]
+            try:
+                parse_json_attributes_raise_error(
+                    rest.data_without_xml(), attrs, data.get(CONF_JSON_ATTRS_PATH)
+                )
+            except HomeAssistantError as exc:
+                if exc.translation_key is not None:
+                    raise probatio.Invalid(
+                        translation_key=exc.translation_key,
+                        placeholders=exc.translation_placeholders,
+                    ) from exc
+            except ExpatError as exc:
+                raise probatio.Invalid(
+                    translation_key="xml_parse_error",
+                    placeholders={"xml_parse_error_message": str(exc)},
+                ) from exc
+
+        return data
+
+    return check_data
+
+
+@dataclass
+class SubentryConfig:
+    """Class to hold subentry config helpers/validators."""
+
+    default_name: str
+    flow_schema: probatio.Schema
+    post_schema_validation: probatio.Schema | None = None
+    rest_validation: Callable[[RestData], Callable[[Any], Any]] | None = None
+
+
+SUBENTRY_CONFIG: dict[Platform, SubentryConfig] = {
+    Platform.BINARY_SENSOR: SubentryConfig(
+        default_name=DEFAULT_BINARY_SENSOR_NAME,
+        flow_schema=BINARY_SENSOR_SUBENTRY_FLOW_SCHEMA,
+    ),
+    Platform.SENSOR: SubentryConfig(
+        default_name=DEFAULT_SENSOR_NAME,
+        flow_schema=SENSOR_SUBENTRY_FLOW_SCHEMA,
+        post_schema_validation=probatio.Schema(
+            probatio.All(_validate_unit, _validate_state_class)
+        ),
+        rest_validation=_validate_sensor_rest_data,
+    ),
+}
+
+
+def _map_errors_to_schema(
+    exc: probatio.Invalid, errors: dict[str, str], placeholders: dict[str, str]
+) -> None:
+    """Map subentry validation errors to the schema."""
+    for error in [exc] if not isinstance(exc, probatio.MultipleInvalid) else exc.errors:
+        path = error.path[0] if error.path else "base"
+        errors[path] = exc.translation_key or str(exc)
+        placeholders.update(exc.placeholders)
+
+
 class RestSubentryFlow(ConfigSubentryFlow):
     """Base class for subentry flows."""
 
@@ -302,19 +330,23 @@ class RestSubentryFlow(ConfigSubentryFlow):
         if entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="config_entry_not_loaded")
         if user_input is not None:
-            validator: (
-                Callable[
-                    [dict[str, Any], RestData], tuple[dict[str, str], dict[str, str]]
-                ]
-                | None
-            ) = SUBENTRY_CONFIG[Platform(self._subentry_type)][VALIDATOR]
-            if validator is not None:
+            if schema_validator := SUBENTRY_CONFIG[
+                Platform(self._subentry_type)
+            ].post_schema_validation:
+                try:
+                    schema_validator(user_input)
+                except probatio.Invalid as exc:
+                    _map_errors_to_schema(exc, errors, placeholders)
+            if rest_validator := SUBENTRY_CONFIG[
+                Platform(self._subentry_type)
+            ].rest_validation:
                 if len(entry.subentries) == 0:
                     await entry.runtime_data.async_refresh()
                 if entry.runtime_data.rest.data is not None:
-                    errors, placeholders = validator(
-                        user_input, entry.runtime_data.rest
-                    )
+                    try:
+                        rest_validator(entry.runtime_data.rest)(user_input)
+                    except probatio.Invalid as exc:
+                        _map_errors_to_schema(exc, errors, placeholders)
                 else:
                     errors["base"] = "endpoint_error"
                     placeholders["endpoint_error_message"] = str(
@@ -323,7 +355,8 @@ class RestSubentryFlow(ConfigSubentryFlow):
                     )
             if not errors:
                 title: str = user_input.get(
-                    CONF_NAME, SUBENTRY_CONFIG[Platform(self._subentry_type)][CONF_NAME]
+                    CONF_NAME,
+                    SUBENTRY_CONFIG[Platform(self._subentry_type)].default_name,
                 )
                 return self.async_create_entry(
                     title=title,
@@ -344,7 +377,7 @@ class RestSubentryFlow(ConfigSubentryFlow):
             errors=errors,
             data_schema=(
                 self.add_suggested_values_to_schema(
-                    SUBENTRY_CONFIG[Platform(self._subentry_type)][FLOW_SCHEMA],
+                    SUBENTRY_CONFIG[Platform(self._subentry_type)].flow_schema,
                     user_input or {},
                 )
             ),

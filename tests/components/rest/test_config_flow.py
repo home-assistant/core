@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     Platform,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
@@ -268,10 +269,8 @@ async def test_sensor_subentry_flow_invalid_unit_state_class(
     )
     assert result["type"] == FlowResultType.FORM
     assert result["errors"][CONF_UNIT_OF_MEASUREMENT] == "unit_validation_error"
-    assert (
-        "'$' is not a valid unit"
-        in result["description_placeholders"]["unit_validation_error_message"]
-    )
+    assert result["description_placeholders"]["unit"] == "$"
+
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         get_subentry_data[SENSOR_DATA]["data"]
@@ -288,10 +287,8 @@ async def test_sensor_subentry_flow_invalid_unit_state_class(
     )
     assert result["type"] == FlowResultType.FORM
     assert result["errors"][CONF_STATE_CLASS] == "state_class_validation_error"
-    assert (
-        "'measurement' is not a valid state class"
-        in result["description_placeholders"]["state_class_validation_error_message"]
-    )
+    assert result["description_placeholders"]["state_class"] == "measurement"
+
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         get_subentry_data[SENSOR_DATA]["data"]
@@ -302,7 +299,10 @@ async def test_sensor_subentry_flow_invalid_unit_state_class(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         get_subentry_data[SENSOR_DATA]["data"]
-        | {CONF_DEVICE_CLASS: SensorDeviceClass.GAS},
+        | {
+            CONF_DEVICE_CLASS: SensorDeviceClass.GAS,
+            CONF_UNIT_OF_MEASUREMENT: UnitOfVolume.LITERS,
+        },
     )
     assert result["type"] == FlowResultType.FORM
     assert result["errors"][CONF_STATE_CLASS] == "state_class_validation_error"

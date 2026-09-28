@@ -123,8 +123,8 @@
         "invalid_result": "[%key:component::rest::exceptions::invalid_result::message%]",
         "no_json": "[%key:component::rest::exceptions::no_json::message%]",
         "parse_error": "[%key:component::rest::exceptions::parse_error::message%]",
-        "state_class_validation_error": "{state_class_validation_error_message}",
-        "unit_validation_error": "{unit_validation_error_message}",
+        "state_class_validation_error": "\"{state_class}\" is not a valid state class for device class \"{device_class}\"; expected \"{state_classes_string}\"",
+        "unit_validation_error": "\"{unit}\" is not a valid unit for device class \"{device_class}\"; expected \"{units_string}\"",
         "xml_parse_error": "REST result could not be parsed as XML: {xml_parse_error_message}"
       },
       "initiate_flow": {
