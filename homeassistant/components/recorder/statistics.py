@@ -2294,16 +2294,15 @@ def _statistics_during_period_with_session(
         Statistics if period != "5minute" else StatisticsShortTerm
     )
     stats: Sequence[Row]
-    if (
-        period in {"day", "week", "month", "year"}
-        and types <= {"sum", "state", "last_reset"}
-    ) or (
-        period == "day"
-        and types == {"mean"}
-        and all(
-            meta["mean_type"] == StatisticMeanType.ARITHMETIC
-            and meta["unit_class"] == PowerConverter.UNIT_CLASS
-            for _, meta in metadata.values()
+    # Check if we can reduce the statistics to a single row per period, which is more efficient than fetching all rows.
+    if period in {"day", "week", "month", "year"} and (
+        types <= {"sum", "state", "last_reset"}
+        or (
+            types == {"mean"}
+            and all(
+                meta["mean_type"] == StatisticMeanType.ARITHMETIC
+                for _, meta in metadata.values()
+            )
         )
     ):
         factories = {

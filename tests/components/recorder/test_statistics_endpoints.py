@@ -33,7 +33,7 @@ async def endpoint_session(
         session.add_all(
             StatisticsMeta(
                 id=metadata_id,
-                statistic_id=f"test:energy_{metadata_id}",
+                statistic_id=f"test:statistic_{metadata_id}",
                 source="test",
                 has_sum=True,
                 mean_type=StatisticMeanType.NONE,
@@ -385,29 +385,47 @@ async def test_endpoint_unbounded_sensor_filter(
 
 
 @pytest.mark.parametrize("timezone", ["UTC", "Europe/Amsterdam", "America/Havana"])
+@pytest.mark.parametrize("period", ["day", "week", "month", "year"])
 @pytest.mark.parametrize("start_month", [3, 10])
-@pytest.mark.parametrize("unit", ["W", "kW"])
-@pytest.mark.parametrize("statistic_ids", [None, {"test:energy_1", "test:energy_2"}])
+@pytest.mark.parametrize(
+    ("unit_class", "statistic_unit", "requested_units"),
+    [
+        pytest.param("power", "W", {"power": "kW"}, id="power"),
+        pytest.param(
+            "temperature",
+            "°C",
+            {"temperature": "°F"},
+            id="temperature",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "statistic_ids", [None, {"test:statistic_1", "test:statistic_2"}]
+)
 @pytest.mark.parametrize("bounded", [False, True])
-async def test_power_means_match_original(
+async def test_arithmetic_means_match_original(
     endpoint_session: Session,
     hass: HomeAssistant,
     timezone: str,
+    period: Literal["day", "week", "month", "year"],
     start_month: int,
-    unit: str,
+    unit_class: str,
+    statistic_unit: str,
+    requested_units: dict[str, str],
     statistic_ids: set[str] | None,
     bounded: bool,
 ) -> None:
-    """Preserve calendar boundaries, missing values, conversion and future imports."""
+    """Preserve arithmetic mean semantics, conversion and calendar boundaries."""
     await hass.config.async_set_time_zone(timezone)
     endpoint_session.query(StatisticsMeta).update(
         {
             StatisticsMeta.mean_type: StatisticMeanType.ARITHMETIC,
-            StatisticsMeta.unit_class: "power",
-            StatisticsMeta.unit_of_measurement: "W",
+            StatisticsMeta.unit_class: unit_class,
+            StatisticsMeta.unit_of_measurement: statistic_unit,
             StatisticsMeta.has_sum: False,
         }
     )
+
     start = datetime(2024, start_month, 26, 7, tzinfo=dt_util.UTC)
     samples = [
         (0, -1500.0),
@@ -420,6 +438,7 @@ async def test_power_means_match_original(
         (120, 100.0),
         (20000, 700.0),
     ]
+
     endpoint_session.add_all(
         Statistics(
             metadata_id=metadata_id,
@@ -431,9 +450,13 @@ async def test_power_means_match_original(
         for hour, value in samples
     )
     endpoint_session.commit()
+
     end_time = {False: None, True: start + timedelta(days=10)}[bounded]
+
     with patch.object(
-        statistics, "_get_statistics_period_rows", side_effect=_unreduced_statistics
+        statistics,
+        "_get_statistics_period_rows",
+        side_effect=_unreduced_statistics,
     ) as baseline:
         expected = statistics._statistics_during_period_with_session(
             hass,
@@ -441,32 +464,43 @@ async def test_power_means_match_original(
             start,
             end_time,
             statistic_ids,
-            "day",
-            {"power": unit},
+            period,
+            requested_units,
             {"mean"},
         )
+
     assert baseline.call_count == 1
+
     actual = statistics._statistics_during_period_with_session(
         hass,
         endpoint_session,
         start,
         end_time,
         statistic_ids,
-        "day",
-        {"power": unit},
+        period,
+        requested_units,
         {"mean"},
     )
+
     assert actual.keys() == expected.keys()
     for statistic_id, rows in expected.items():
         assert len(actual[statistic_id]) == len(rows)
-        for actual_row, expected_row in zip(actual[statistic_id], rows, strict=True):
-            assert actual_row == pytest.approx(expected_row, rel=1e-12, abs=1e-12)
+        for actual_row, expected_row in zip(
+            actual[statistic_id],
+            rows,
+            strict=True,
+        ):
+            assert actual_row == pytest.approx(
+                expected_row,
+                rel=1e-12,
+                abs=1e-12,
+            )
 
 
 @pytest.mark.parametrize(
     ("days", "budget", "queries"), [(401, 4000, 2), (5, 4, 5), (5, 3, 10)]
 )
-async def test_power_mean_query_limits(
+async def test_arithmetic_mean_query_limits(
     endpoint_session: Session, days: int, budget: int, queries: int
 ) -> None:
     """Bound UNION terms and bind parameters without weighting arithmetic means."""
@@ -516,9 +550,6 @@ async def test_power_mean_query_limits(
             "power", "W", StatisticMeanType.ARITHMETIC, "hour", {"mean"}, id="hour"
         ),
         pytest.param(
-            "power", "W", StatisticMeanType.ARITHMETIC, "month", {"mean"}, id="month"
-        ),
-        pytest.param(
             "power",
             "W",
             StatisticMeanType.ARITHMETIC,
@@ -529,23 +560,15 @@ async def test_power_mean_query_limits(
         pytest.param(
             "angle", "°", StatisticMeanType.CIRCULAR, "day", {"mean"}, id="circular"
         ),
-        pytest.param(
-            "temperature",
-            "°C",
-            StatisticMeanType.ARITHMETIC,
-            "day",
-            {"mean"},
-            id="other-units",
-        ),
     ],
 )
-async def test_power_mean_fallback(
+async def test_mean_fallback(
     endpoint_session: Session,
     hass: HomeAssistant,
     unit_class: str,
     unit: str,
     mean_type: StatisticMeanType,
-    period: Literal["hour", "month", "day"],
+    period: Literal["hour", "day"],
     types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> None:
     """Retain the existing path for unoptimized requests."""
@@ -573,16 +596,16 @@ async def test_power_mean_fallback(
             endpoint_session,
             start,
             start + timedelta(hours=1),
-            {"test:energy_1"},
+            {"test:statistic_1"},
             period,
             None,
             types,
         )
     optimized.assert_not_called()
-    assert result["test:energy_1"]
+    assert result["test:statistic_1"]
 
 
-async def test_power_mean_cached_parameters(endpoint_session: Session) -> None:
+async def test_arithmetic_mean_cached_parameters(endpoint_session: Session) -> None:
     """Do not leak sensor or time bounds between equal query shapes."""
     endpoint_session.add_all(
         [
