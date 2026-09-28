@@ -45,6 +45,9 @@
       }
     },
     "sensor": {
+      "program_next_run": {
+        "name": "{program} next run"
+      },
       "raindelay": {
         "name": "Raindelay"
       }
