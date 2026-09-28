@@ -26,6 +26,7 @@ SUBSYSTEM_INVERTER: Final = "inverter"
 # How the library names the blocks it probes for.
 SUBSYSTEM_BATTERIES: Final = "batteries"
 SUBSYSTEM_METERS: Final = "meters"
+SUBSYSTEM_STORAGE_CAPACITY: Final = "storage_capacity"
 
 # The writable control blocks, as an UpdateReport names them. Export control's
 # read spans storage control, so the library reads and reports the two as one.

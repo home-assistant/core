@@ -4339,21 +4339,10 @@
       "iot_class": "cloud_polling"
     },
     "melnor": {
-      "name": "Melnor",
-      "integrations": {
-        "melnor": {
-          "integration_type": "device",
-          "config_flow": true,
-          "iot_class": "local_polling",
-          "name": "Melnor Bluetooth"
-        },
-        "raincloud": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "cloud_polling",
-          "name": "Melnor RainCloud"
-        }
-      }
+      "name": "Melnor Bluetooth",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "meraki": {
       "name": "Meraki",
@@ -5162,6 +5151,11 @@
       "name": "Ogemray",
       "integration_type": "virtual",
       "supported_by": "shelly"
+    },
+    "ogeneral": {
+      "name": "O General",
+      "integration_type": "virtual",
+      "supported_by": "fujitsu_fglair"
     },
     "ohmconnect": {
       "name": "OhmConnect",
@@ -8539,12 +8533,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
-    },
-    "zestimate": {
-      "name": "Zestimate",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
     },
     "zeversolar": {
       "name": "Zeversolar",
