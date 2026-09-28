@@ -210,6 +210,56 @@ async def test_polling_continues_when_update_hangs(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
+async def test_stale_poll_reset_keeps_original_semaphore_for_inflight_updates(
+    hass: HomeAssistant,
+) -> None:
+    """Test stale polling recovery does not rebind in-flight updates to a new semaphore."""
+    scan_interval = timedelta(seconds=1)
+    platform = MockPlatform()
+    platform.PARALLEL_UPDATES = 1
+    mock_platform(hass, "platform.test_domain", platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass, scan_interval)
+    component._platforms = {}
+    await component.async_setup({DOMAIN: {"platform": "platform"}})
+    await hass.async_block_till_done()
+
+    platform_handle = list(component._platforms.values())[-1]
+    blocked_update_started = asyncio.Event()
+    blocked_update_release = asyncio.Event()
+
+    blocked = MockEntity(should_poll=True)
+
+    async def _blocked_update() -> None:
+        """Block forever until released."""
+        blocked_update_started.set()
+        await blocked_update_release.wait()
+
+    blocked.async_update = _blocked_update
+
+    healthy = MockEntity(should_poll=True)
+    healthy.async_update = AsyncMock()
+
+    await platform_handle.async_add_entities([blocked, healthy])
+
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval)
+    await blocked_update_started.wait()
+    await asyncio.sleep(0)
+
+    original_semaphore = blocked.parallel_updates
+    assert original_semaphore is not None
+
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 2)
+    await asyncio.sleep(0)
+
+    assert blocked.parallel_updates is original_semaphore
+    assert healthy.parallel_updates is not original_semaphore
+    assert healthy.parallel_updates is not None
+
+    blocked_update_release.set()
+    await hass.async_block_till_done()
+
+
 async def test_polling_continues_when_update_hangs_with_parallel_updates(
     hass: HomeAssistant,
 ) -> None:
