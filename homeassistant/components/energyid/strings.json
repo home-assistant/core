@@ -67,6 +67,20 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "directive": {
+        "name": "{directive_name}",
+        "state": {
+          "bad_moment": "Bad moment",
+          "good_moment": "Good moment",
+          "neutral": "Neutral",
+          "very_bad_moment": "Very bad moment",
+          "very_good_moment": "Very good moment"
+        }
+      }
+    }
+  },
   "exceptions": {
     "auth_connection_error": {
       "message": "Connection error authenticating with EnergyID."

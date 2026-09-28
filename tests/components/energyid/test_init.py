@@ -1453,3 +1453,19 @@ async def test_changing_directive_option_reloads_entry(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.runtime_data.directive_coordinator.directives_enabled
     mock_webhook_client.get_directives.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_webhook_client")
+async def test_unload_fails_when_platform_unload_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the entry reports a failed unload when a platform does not unload."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch.object(
+        hass.config_entries, "async_unload_platforms", return_value=False
+    ):
+        assert not await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.FAILED_UNLOAD

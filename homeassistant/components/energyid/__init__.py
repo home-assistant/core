@@ -8,7 +8,12 @@ import logging
 from aiohttp import ClientError, ClientResponseError
 from energyid_webhooks.client_v2 import WebhookClient
 
-from homeassistant.const import CONF_DEVICE_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
@@ -38,6 +43,7 @@ from .coordinator import (
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_UPLOAD_INTERVAL_SECONDS = 60
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> bool:
@@ -97,6 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
     )
     # Directives are optional, so a failed first fetch must not block the upload path.
     await directive_coordinator.async_refresh()
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def _async_synchronize_sensors(now: dt.datetime | None = None) -> None:
         """Callback for periodically synchronizing sensor data."""
@@ -366,6 +373,9 @@ def _async_handle_state_change(
 async def async_unload_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> bool:
     """Unload a config entry."""
     _LOGGER.debug("Unloading EnergyID entry for %s", entry.title)
+
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        return False
 
     try:
         # Unload subentries if present (guarded for test and reload scenarios)
