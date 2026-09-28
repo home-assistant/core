@@ -69,22 +69,22 @@
   },
   "exceptions": {
     "auth_connection_error": {
-      "message": "Connection error authenticating with EnergyID: {error}"
+      "message": "Connection error authenticating with EnergyID."
     },
     "auth_http_error": {
-      "message": "HTTP error authenticating with EnergyID: {error}"
+      "message": "HTTP error authenticating with EnergyID."
     },
     "auth_timeout": {
-      "message": "Timeout authenticating with EnergyID: {error}"
+      "message": "Timeout authenticating with EnergyID."
     },
     "auth_unexpected_error": {
-      "message": "Unexpected error authenticating with EnergyID: {error}"
+      "message": "Unexpected error authenticating with EnergyID."
     },
     "device_not_claimed": {
       "message": "This Home Assistant connection is not claimed in EnergyID. Re-authenticate to claim it."
     },
     "invalid_credentials": {
-      "message": "Invalid provisioning credentials: {error}"
+      "message": "Invalid provisioning credentials."
     }
   }
 }

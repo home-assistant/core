@@ -78,7 +78,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="auth_timeout",
-            translation_placeholders={"error": str(err)},
         ) from err
     except ClientResponseError as err:
         # 401/403 = invalid credentials, trigger reauth
@@ -86,20 +85,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_credentials",
-                translation_placeholders={"error": str(err)},
             ) from err
         # Other HTTP errors are likely temporary
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="auth_http_error",
-            translation_placeholders={"error": str(err)},
         ) from err
     except ClientError as err:
         # Network/connection errors are temporary
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="auth_connection_error",
-            translation_placeholders={"error": str(err)},
         ) from err
     except Exception as err:
         # Unknown errors - log and retry (safer than forcing reauth)
@@ -107,7 +103,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="auth_unexpected_error",
-            translation_placeholders={"error": str(err)},
         ) from err
 
     if not is_claimed:
