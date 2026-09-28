@@ -460,6 +460,4 @@ class BluettiModbusSensor(BluettiModbusEntity, SensorEntity):
     @override
     def native_value(self) -> StateType:
         """Return the field's most recently read value."""
-        return self.entity_description.value_fn(
-            self.coordinator.device.values.get(self._field_name)
-        )
+        return self.entity_description.value_fn(self.coordinator.data[self._field_name])

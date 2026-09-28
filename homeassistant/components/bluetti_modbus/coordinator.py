@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for the BLUETTI Modbus integration."""
 
 from dataclasses import dataclass
-from typing import override
+from typing import Any, override
 
 from bluetti_modbus_lib import Balco260
 from modbus_connection import ModbusError
@@ -18,8 +18,8 @@ from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 type BluettiModbusConfigEntry = ConfigEntry[BluettiModbusRuntimeData]
 
 
-class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[None]):
-    """Polls a BLUETTI power station; its values are read from ``device.values``."""
+class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Polls a BLUETTI power station for its decoded field values."""
 
     config_entry: BluettiModbusConfigEntry
 
@@ -30,7 +30,7 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[None]):
         device: Balco260,
     ) -> None:
         """Initialize the coordinator."""
-        self.device = device
+        self._device = device
         super().__init__(
             hass,
             LOGGER,
@@ -40,12 +40,12 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
 
     @override
-    async def _async_update_data(self) -> None:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Poll the device."""
         # Besides BluettiModbusConnectionError, the library lets a device still
         # busy after its retry, or a failed teardown of the link, through unwrapped.
         try:
-            await self.device.async_update_with_retry()
+            await self._device.async_update_with_retry()
         except ModbusError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -53,8 +53,9 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
+        values = self._device.values
         # An address can be reassigned to a different physical unit after setup.
-        serial = str(self.device.values["d_serial"])
+        serial = str(values["d_serial"])
         issue_id = f"wrong_device_{self.config_entry.entry_id}"
         if serial != self.config_entry.unique_id:
             ir.async_create_issue(
@@ -75,6 +76,7 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 translation_key="wrong_device",
             )
         ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+        return values
 
 
 @dataclass(kw_only=True)
