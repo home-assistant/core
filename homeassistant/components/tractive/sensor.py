@@ -1,10 +1,9 @@
 """Support for Tractive sensors."""
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from aiotractive import PetStatus, TrackerStatus
+from aiotractive import Trackable
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,7 +17,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -30,7 +29,7 @@ from .const import (
     ATTR_MINUTES_REST,
     ATTR_TRACKER_STATE,
 )
-from .coordinator import Trackables, TractiveConfigEntry, TractiveCoordinator
+from .coordinator import TractiveConfigEntry, TractiveCoordinator
 from .entity import TractiveEntity
 
 
@@ -39,7 +38,6 @@ class TractiveSensorEntityDescription(SensorEntityDescription):
     """Class describing Tractive sensor entities."""
 
     hardware_sensor: bool = False
-    value_fn: Callable[[StateType], StateType] = lambda state: state
 
 
 class TractiveSensor(TractiveEntity, SensorEntity):
@@ -50,43 +48,31 @@ class TractiveSensor(TractiveEntity, SensorEntity):
     def __init__(
         self,
         coordinator: TractiveCoordinator,
-        item: Trackables,
+        trackable: Trackable,
         description: TractiveSensorEntityDescription,
     ) -> None:
         """Initialize sensor entity."""
-        super().__init__(
-            coordinator,
-            item.trackable,
-            item.tracker_details,
-            description.hardware_sensor,
-        )
-        self._attr_unique_id = f"{item.trackable['_id']}_{description.key}"
+        super().__init__(coordinator, trackable, description.hardware_sensor)
+        self._attr_unique_id = f"{trackable.pet_id}_{description.key}"
         self.entity_description = description
 
     @property
-    def _status(self) -> TrackerStatus | PetStatus:
-        """Return the status section this sensor reads from."""
-        if self.entity_description.hardware_sensor:
-            return self._tracker_status
-        return self._pet_status
+    @override
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        status = (
+            self._tracker_status
+            if self.entity_description.hardware_sensor
+            else self._pet_status
+        )
+        value: StateType = getattr(status, self.entity_description.key)
+        return value
 
     @property
     @override
     def available(self) -> bool:
         """Return if entity is available."""
-        return (
-            super().available
-            and getattr(self._status, self.entity_description.key) is not None
-        )
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_native_value = self.entity_description.value_fn(
-            getattr(self._status, self.entity_description.key)
-        )
-        super()._handle_coordinator_update()
+        return super().available and self.native_value is not None
 
 
 SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
@@ -148,14 +134,11 @@ async def async_setup_entry(
     entry: TractiveConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Tractive device trackers."""
-    coordinator = entry.runtime_data.coordinator
-    trackables = entry.runtime_data.trackables
+    """Set up Tractive sensors."""
+    coordinator = entry.runtime_data
 
-    entities = [
-        TractiveSensor(coordinator, item, description)
+    async_add_entities(
+        TractiveSensor(coordinator, trackable, description)
         for description in SENSOR_TYPES
-        for item in trackables
-    ]
-
-    async_add_entities(entities)
+        for trackable in coordinator.trackables
+    )

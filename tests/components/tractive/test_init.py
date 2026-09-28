@@ -7,22 +7,18 @@ from aiotractive.exceptions import TractiveError, UnauthorizedError
 import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.tractive.const import (
-    ATTR_DAILY_GOAL,
-    ATTR_MINUTES_ACTIVE,
-    ATTR_MINUTES_DAY_SLEEP,
-    ATTR_MINUTES_NIGHT_SLEEP,
-    ATTR_MINUTES_REST,
-    DOMAIN,
-)
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE
+from homeassistant.components.tractive.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
 
 from tests.common import MockConfigEntry
+
+BATTERY_ENTITY_ID = "sensor.tracker_device_id_123_battery"
+ACTIVITY_ENTITY_ID = "sensor.test_pet_activity_time"
 
 
 async def test_setup_entry(
@@ -34,6 +30,7 @@ async def test_setup_entry(
     await init_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_tractive_client.listen.assert_called_once()
 
 
 async def test_unload_entry(
@@ -56,9 +53,10 @@ async def test_unload_entry(
 @pytest.mark.parametrize(
     ("method", "exc", "entry_state"),
     [
-        ("authenticate", UnauthorizedError, ConfigEntryState.SETUP_ERROR),
-        ("authenticate", TractiveError, ConfigEntryState.SETUP_RETRY),
-        ("trackable_objects", TractiveError, ConfigEntryState.SETUP_RETRY),
+        ("async_fetch_trackables", UnauthorizedError, ConfigEntryState.SETUP_ERROR),
+        ("async_fetch_trackables", TractiveError, ConfigEntryState.SETUP_RETRY),
+        ("async_fetch_status", UnauthorizedError, ConfigEntryState.SETUP_ERROR),
+        ("async_fetch_status", TractiveError, ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_setup_failed(
@@ -66,7 +64,7 @@ async def test_setup_failed(
     mock_tractive_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     method: str,
-    exc: Exception,
+    exc: type[Exception],
     entry_state: ConfigEntryState,
 ) -> None:
     """Test for setup failure."""
@@ -77,92 +75,68 @@ async def test_setup_failed(
     assert mock_config_entry.state is entry_state
 
 
-async def test_config_not_ready(
-    hass: HomeAssistant,
-    mock_tractive_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test for setup failure if the tracker_details doesn't contain '_id'."""
-    mock_tractive_client.tracker.return_value.details.return_value.pop("_id")
-
-    await init_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_trackable_without_details(
-    hass: HomeAssistant,
-    mock_tractive_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test a successful setup entry."""
-    mock_tractive_client.trackable_objects.return_value[0].details.return_value = {
-        "device_id": "xyz098"
-    }
-
-    await init_integration(hass, mock_config_entry)
-
-    assert (
-        "Tracker xyz098 has no details and will be skipped."
-        " This happens for shared trackers" in caplog.text
-    )
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-
-async def test_trackable_without_device_id(
-    hass: HomeAssistant,
-    mock_tractive_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a successful setup entry."""
-    mock_tractive_client.trackable_objects.return_value[0].details.return_value = {
-        "device_id": None
-    }
-
-    await init_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-
-async def test_unsubscribe_on_ha_stop(
-    hass: HomeAssistant,
-    mock_tractive_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test unsuscribe when HA stops."""
-    await init_integration(hass, mock_config_entry)
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
-
-    mock_tractive_client.close.assert_called_once()
-
-
 async def test_server_unavailable(
     hass: HomeAssistant,
     mock_tractive_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test states of the sensor."""
-    entity_id = "sensor.tracker_device_id_123_battery"
+    """Test entities become unavailable on a channel error and recover."""
+    await init_integration(hass, mock_config_entry)
+
+    # Initial value comes from the REST status
+    assert hass.states.get(BATTERY_ENTITY_ID).state == "96"
+
+    mock_tractive_client.send_error_event(TractiveError("Connection lost"))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(BATTERY_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    # The library notifies without an error once the channel reconnects
+    mock_tractive_client.send_error_event(None)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(BATTERY_ENTITY_ID).state == "96"
+
+    mock_tractive_client.send_hardware_event()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(BATTERY_ENTITY_ID).state == "88"
+
+
+async def test_pet_without_health_data(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test pet sensors are unavailable until health data arrives."""
+    mock_tractive_client.status.pets.clear()
 
     await init_integration(hass, mock_config_entry)
 
-    mock_tractive_client.send_hardware_event(mock_config_entry)
+    assert hass.states.get(ACTIVITY_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    mock_tractive_client.send_health_overview_event()
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+    assert hass.states.get(ACTIVITY_ENTITY_ID).state == "150"
 
-    mock_tractive_client.send_server_unavailable_event(mock_config_entry)
+
+async def test_reauth_on_unauthorized(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a reauth flow is started when the channel reports an auth error."""
+    await init_integration(hass, mock_config_entry)
+
+    mock_tractive_client.send_error_event(UnauthorizedError())
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-
-    mock_tractive_client.send_hardware_event(mock_config_entry)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+    assert hass.states.get(BATTERY_ENTITY_ID).state == STATE_UNAVAILABLE
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 @pytest.mark.parametrize(("sleep_data"), [None, {}, {"unexpected": 123}])
@@ -177,13 +151,15 @@ async def test_missing_sleep_data(
 
     await init_integration(hass, mock_config_entry)
 
-    mock_tractive_client.send_health_overview_event(mock_config_entry, event)
+    mock_tractive_client.send_health_overview_event(event)
     await hass.async_block_till_done()
 
-    status = mock_config_entry.runtime_data.coordinator.client.status.pets["pet_id_123"]
-    assert getattr(status, ATTR_MINUTES_DAY_SLEEP) is None
-    assert getattr(status, ATTR_MINUTES_NIGHT_SLEEP) is None
-    assert getattr(status, ATTR_MINUTES_REST) is None
+    for entity_id in (
+        "sensor.test_pet_day_sleep",
+        "sensor.test_pet_night_sleep",
+        "sensor.test_pet_rest_time",
+    ):
+        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(("activity_data"), [None, {}, {"unexpected": 123}])
@@ -198,12 +174,11 @@ async def test_missing_activity_data(
 
     await init_integration(hass, mock_config_entry)
 
-    mock_tractive_client.send_health_overview_event(mock_config_entry, event)
+    mock_tractive_client.send_health_overview_event(event)
     await hass.async_block_till_done()
 
-    status = mock_config_entry.runtime_data.coordinator.client.status.pets["pet_id_123"]
-    assert getattr(status, ATTR_DAILY_GOAL) is None
-    assert getattr(status, ATTR_MINUTES_ACTIVE) is None
+    for entity_id in ("sensor.test_pet_daily_goal", "sensor.test_pet_activity_time"):
+        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("sensor", ["activity_label", "calories", "sleep_label"])

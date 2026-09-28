@@ -1,8 +1,6 @@
 """A entity class for Tractive integration."""
 
-from typing import Any
-
-from aiotractive import PetStatus, TrackerStatus
+from aiotractive import PetStatus, Trackable, TrackerStatus
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -20,31 +18,30 @@ class TractiveEntity(CoordinatorEntity[TractiveCoordinator]):
     def __init__(
         self,
         coordinator: TractiveCoordinator,
-        trackable: dict[str, Any],
-        tracker_details: dict[str, Any],
+        trackable: Trackable,
         hardware_entity: bool = True,
     ) -> None:
         """Initialize tracker entity."""
         super().__init__(coordinator)
-        self._pet_id = trackable["_id"]
-        self._tracker_id = tracker_details["_id"]
+        self._pet_id = trackable.pet_id
+        self._tracker_id = trackable.tracker_id
         if hardware_entity:
             self._attr_device_info = DeviceInfo(
                 configuration_url="https://my.tractive.com/",
-                identifiers={(DOMAIN, tracker_details["_id"])},
+                identifiers={(DOMAIN, trackable.tracker_id)},
                 translation_key="tracker",
-                translation_placeholders={"id": tracker_details["_id"]},
+                translation_placeholders={"id": trackable.tracker_id},
                 manufacturer="Tractive GmbH",
-                sw_version=tracker_details["fw_version"],
-                model_id=tracker_details["model_number"],
+                sw_version=trackable.tracker_details["fw_version"],
+                model_id=trackable.tracker_details["model_number"],
             )
         else:
             self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, trackable["_id"])},
-                name=trackable["details"]["name"],
+                identifiers={(DOMAIN, trackable.pet_id)},
+                name=trackable.name,
                 via_device_id=dr.async_get_device_id_by_identifier(
                     coordinator.hass,
-                    (DOMAIN, tracker_details["_id"]),
+                    (DOMAIN, trackable.tracker_id),
                     config_entry_id=coordinator.config_entry.entry_id,
                 ),
                 entry_type=DeviceEntryType.SERVICE,
@@ -53,9 +50,10 @@ class TractiveEntity(CoordinatorEntity[TractiveCoordinator]):
     @property
     def _tracker_status(self) -> TrackerStatus:
         """Return the live status of the tracker."""
-        return self.coordinator.client.status.trackers[self._tracker_id]
+        return self.coordinator.data.trackers[self._tracker_id]
 
     @property
     def _pet_status(self) -> PetStatus:
         """Return the live status of the pet."""
-        return self.coordinator.client.status.pets[self._pet_id]
+        # Pets without health data have no status entry until the first event
+        return self.coordinator.data.pets.get(self._pet_id, PetStatus())

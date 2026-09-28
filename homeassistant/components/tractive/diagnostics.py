@@ -20,7 +20,7 @@ async def async_get_config_entry_diagnostics(
     return async_redact_data(
         {
             "config_entry": config_entry.as_dict(),
-            "trackables": [item.trackable for item in trackables],
+            "trackables": [item.pet_details for item in trackables],
         },
         TO_REDACT,
     )
