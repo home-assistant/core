@@ -294,6 +294,7 @@ class EntityPlatform:
         self._process_updates: asyncio.Lock | None = None
 
         self.parallel_updates: asyncio.Semaphore | None = None
+        self._parallel_updates_semaphore_limit: int | None = None
         self._update_in_sequence: bool = False
 
         # Platform is None for the EntityComponent "catch-all" EntityPlatform
@@ -363,7 +364,10 @@ class EntityPlatform:
 
         if parallel_updates is not None:
             self.parallel_updates = asyncio.Semaphore(parallel_updates)
+            self._parallel_updates_semaphore_limit = parallel_updates
             self._update_in_sequence = parallel_updates == 1
+        else:
+            self._parallel_updates_semaphore_limit = None
 
         return self.parallel_updates
 
@@ -1302,13 +1306,21 @@ class EntityPlatform:
         if self._process_updates.locked():
             self.logger.warning(
                 "Updating %s %s took longer than the scheduled update interval %s; "
-                "resetting the polling lock to allow future polling",
+                "resetting the stale polling state to allow future polling",
                 self.platform_name,
                 self.domain,
                 self.scan_interval,
             )
             self._process_updates = asyncio.Lock()
-            return
+            if (
+                self._parallel_updates_semaphore_limit is not None
+                and self.parallel_updates is not None
+            ):
+                self.parallel_updates = asyncio.Semaphore(
+                    self._parallel_updates_semaphore_limit
+                )
+                for entity in self.entities.values():
+                    entity.parallel_updates = self.parallel_updates
 
         async with self._process_updates:
             if self._update_in_sequence or len(self.entities) <= 1:
