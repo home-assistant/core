@@ -17,9 +17,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
-from .conftest import SERIAL, SERIAL_ADDRESS
+from .conftest import HOST, SERIAL, SERIAL_ADDRESS
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -208,14 +208,16 @@ async def test_dead_link_on_the_retry_still_fails_the_refresh(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_identity_mismatch_after_setup_fails_the_refresh(
+async def test_identity_mismatch_raises_a_repair_issue_until_resolved(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     mock_modbus_unit: MockModbusUnit,
 ) -> None:
-    """An address reassigned to a different device stops updating, not just goes stale."""
+    """A different device at the address goes unavailable with a repair issue."""
     await _setup(hass, mock_config_entry)
+    issue_id = f"wrong_device_{mock_config_entry.entry_id}"
 
     mock_modbus_unit.holding[SERIAL_ADDRESS] = 1
     await _tick(hass, freezer)
@@ -223,6 +225,22 @@ async def test_identity_mismatch_after_setup_fails_the_refresh(
     state = hass.states.get(VOLTAGE_ENTITY)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.severity is ir.IssueSeverity.ERROR
+    assert issue.translation_placeholders == {
+        "host": HOST,
+        "expected": SERIAL,
+        "found": "1",
+    }
+
+    mock_modbus_unit.holding[SERIAL_ADDRESS] = int(SERIAL)
+    await _tick(hass, freezer)
+
+    state = hass.states.get(VOLTAGE_ENTITY)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_excluded_fields_are_dropped_from_the_read_plan(

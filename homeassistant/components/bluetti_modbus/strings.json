@@ -229,5 +229,11 @@
     "wrong_device": {
       "message": "The device at this address is a different device than the one this entry was set up for."
     }
+  },
+  "issues": {
+    "wrong_device": {
+      "description": "The device at {host} reports serial number {found}, not {expected}, the power station this entry was set up for. Its entities stay unavailable until that power station answers at this address again. If it has moved, remove this entry and add the power station again at its new address.",
+      "title": "A different BLUETTI device answers at {host}"
+    }
   }
 }
