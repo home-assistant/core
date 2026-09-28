@@ -394,7 +394,7 @@
           'climate_state_battery_heater_no_power': None,
           'climate_state_cabin_overheat_protection': 'On',
           'climate_state_cabin_overheat_protection_actively_cooling': False,
-          'climate_state_climate_keeper_mode': 'keep',
+          'climate_state_climate_keeper_mode': 'on',
           'climate_state_cop_activation_temperature': 'High',
           'climate_state_defrost_mode': 0,
           'climate_state_driver_temp_setting': 22,

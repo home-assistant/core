@@ -234,6 +234,39 @@ async def test_climate_state_unknown(
     assert hass.states.get("climate.test_climate").state == STATE_UNKNOWN
 
 
+@pytest.mark.parametrize(
+    ("keeper_mode", "preset_mode"),
+    [
+        pytest.param("on", "keep", id="keep"),
+        pytest.param("dog", "dog", id="dog"),
+        pytest.param(None, None, id="unknown"),
+    ],
+)
+async def test_climate_polling_keeper_mode(
+    hass: HomeAssistant,
+    mock_metadata: AsyncMock,
+    mock_vehicle_data: AsyncMock,
+    keeper_mode: str | None,
+    preset_mode: str | None,
+) -> None:
+    """Test that a polling vehicle maps Tesla's climate keeper mode to a preset."""
+
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"]["LRW3F7EK4NC700000"]["polling"] = True
+    mock_metadata.return_value = metadata
+
+    data = deepcopy(VEHICLE_DATA_ALT)
+    data["response"]["climate_state"]["climate_keeper_mode"] = keeper_mode
+    mock_vehicle_data.return_value = data
+
+    await setup_platform(hass, [Platform.CLIMATE])
+
+    assert (
+        hass.states.get("climate.test_climate").attributes[ATTR_PRESET_MODE]
+        == preset_mode
+    )
+
+
 async def test_invalid_error(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Tests service error is handled."""
 
