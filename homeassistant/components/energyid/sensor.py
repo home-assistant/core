@@ -61,39 +61,31 @@ async def async_setup_entry(
     @callback
     def _async_sync_directives() -> None:
         """Add newly granted directives and prune revoked ones."""
-        # Prune only once the authorized set is known, never after a failed fetch.
-        if not directives_enabled or coordinator.available_resources is not None:
-            authorized_unique_ids = (
-                {
-                    f"{unique_id_prefix}{directive_id}"
-                    for directive_id in coordinator.available_resources
-                }
-                if directives_enabled and coordinator.available_resources
-                else set()
-            )
-            for registry_entry in er.async_entries_for_config_entry(
-                entity_registry, entry.entry_id
-            ):
-                if (
-                    registry_entry.platform == DOMAIN
-                    and registry_entry.unique_id not in authorized_unique_ids
-                ):
-                    entity_registry.async_remove(registry_entry.entity_id)
-                    known_directives.discard(
-                        registry_entry.unique_id.removeprefix(unique_id_prefix)
-                    )
-
-        if not directives_enabled or not coordinator.available_resources:
+        # The granted set is only trusted after a successful fetch.
+        if not coordinator.last_update_success:
             return
+        resources = coordinator.data.resources if directives_enabled else {}
+        authorized_unique_ids = {
+            f"{unique_id_prefix}{directive_id}" for directive_id in resources
+        }
+        for registry_entry in er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
+        ):
+            if (
+                registry_entry.platform == DOMAIN
+                and registry_entry.unique_id not in authorized_unique_ids
+            ):
+                entity_registry.async_remove(registry_entry.entity_id)
+                known_directives.discard(
+                    registry_entry.unique_id.removeprefix(unique_id_prefix)
+                )
 
-        new_directives = set(coordinator.available_resources) - known_directives
+        new_directives = set(resources) - known_directives
         if not new_directives:
             return
         known_directives.update(new_directives)
         async_add_entities(
-            EnergyIDDirectiveSensor(
-                entry, coordinator, coordinator.available_resources[directive_id]
-            )
+            EnergyIDDirectiveSensor(entry, coordinator, resources[directive_id])
             for directive_id in new_directives
         )
 
@@ -133,13 +125,15 @@ class EnergyIDDirectiveSensor(
     @property
     def snapshot(self) -> EnergyIDDirectiveSnapshot:
         """Return the fetched schedule of this directive."""
-        return self.coordinator.data[self.directive_id]
+        return self.coordinator.data.schedules[self.directive_id]
 
     @property
     @override
     def available(self) -> bool:
         """Return whether the schedule of this directive was fetched."""
-        return super().available and self.directive_id in self.coordinator.data
+        return (
+            super().available and self.directive_id in self.coordinator.data.schedules
+        )
 
     @property
     @override

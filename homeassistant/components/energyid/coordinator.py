@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import override
 
@@ -44,9 +44,15 @@ class EnergyIDDirectiveSnapshot:
     next_change: DirectiveSignal | None
 
 
-class EnergyIDDirectiveCoordinator(
-    DataUpdateCoordinator[dict[str, EnergyIDDirectiveSnapshot]]
-):
+@dataclass(frozen=True)
+class EnergyIDDirectivesData:
+    """Directives granted to the linked device and their fetched schedules."""
+
+    resources: dict[str, DirectiveResource]
+    schedules: dict[str, EnergyIDDirectiveSnapshot]
+
+
+class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]):
     """Poll record-scoped directives without affecting outbound uploads."""
 
     def __init__(
@@ -66,89 +72,72 @@ class EnergyIDDirectiveCoordinator(
         )
         self.client = client
         self.directives_enabled = async_directives_enabled(config_entry)
-        # None until fetched once; an empty dict means no directives are granted.
-        self.available_resources: dict[str, DirectiveResource] | None = None
-        self._access_checked_without_token = False
 
     @override
-    async def _async_update_data(
-        self,
-    ) -> dict[str, EnergyIDDirectiveSnapshot]:
-        """Fetch all directives made available to this linked device."""
+    async def _async_update_data(self) -> EnergyIDDirectivesData:
+        """Fetch all directives granted to this linked device."""
         if not self.directives_enabled:
-            self.available_resources = {}
-            return {}
+            return EnergyIDDirectivesData(resources={}, schedules={})
 
         try:
             if not isinstance(self.client.api_access_token, str):
-                if not self._access_checked_without_token:
-                    self._access_checked_without_token = True
-                    return {}
                 await self.client.authenticate()
-                if not isinstance(self.client.api_access_token, str):
-                    return {}
             resources = await self.client.get_directives()
         except PermissionError:
-            return {}
+            return EnergyIDDirectivesData(resources={}, schedules={})
         except (ClientError, OSError, TimeoutError, ValueError) as err:
-            if self.available_resources is None:
-                _LOGGER.debug("Directives are unavailable during setup: %s", err)
-                return {}
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="directives_update_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        self.available_resources = {resource.id: resource for resource in resources}
-
-        async def async_get_schedule(
-            resource: DirectiveResource,
-        ) -> DirectiveData | None:
-            try:
-                return await self.client.get_directive_data(resource.id)
-            except (
-                PermissionError,
-                ClientError,
-                OSError,
-                TimeoutError,
-                ValueError,
-            ) as err:
-                _LOGGER.debug(
-                    "EnergyID directive %s is unavailable: %s", resource.id, err
-                )
-                return None
-
         schedules = await asyncio.gather(
-            *(async_get_schedule(resource) for resource in resources)
+            *(self._async_get_schedule(resource) for resource in resources)
+        )
+        now = dt_util.utcnow()
+        snapshots = {
+            resource.id: _snapshot(resource, schedule, now)
+            for resource, schedule in zip(resources, schedules, strict=True)
+            if schedule is not None
+        }
+        return EnergyIDDirectivesData(
+            resources={resource.id: resource for resource in resources},
+            schedules=snapshots,
         )
 
-        now = dt_util.utcnow()
-        snapshots: dict[str, EnergyIDDirectiveSnapshot] = {}
-        for resource, schedule in zip(resources, schedules, strict=True):
-            if schedule is None:
-                continue
-            current = max(
-                (point for point in schedule.data if point.timestamp <= now),
-                key=lambda point: point.timestamp,
-                default=None,
-            )
-            next_change = next(
-                (
-                    point
-                    for point in schedule.data
-                    if point.timestamp > now
-                    and (current is None or point.signal != current.signal)
-                ),
-                None,
-            )
-            snapshots[resource.id] = EnergyIDDirectiveSnapshot(
-                resource=resource,
-                schedule=schedule,
-                current=current,
-                next_change=next_change,
-            )
-        return snapshots
+    async def _async_get_schedule(
+        self, resource: DirectiveResource
+    ) -> DirectiveData | None:
+        """Return the schedule of one directive, or None when it is unavailable."""
+        try:
+            return await self.client.get_directive_data(resource.id)
+        except (PermissionError, ClientError, OSError, TimeoutError, ValueError) as err:
+            _LOGGER.debug("EnergyID directive %s is unavailable: %s", resource.id, err)
+            return None
+
+
+def _snapshot(
+    resource: DirectiveResource, schedule: DirectiveData, now: datetime
+) -> EnergyIDDirectiveSnapshot:
+    """Derive the current and next signal of a directive from its schedule."""
+    current = max(
+        (point for point in schedule.data if point.timestamp <= now),
+        key=lambda point: point.timestamp,
+        default=None,
+    )
+    next_change = next(
+        (
+            point
+            for point in schedule.data
+            if point.timestamp > now
+            and (current is None or point.signal != current.signal)
+        ),
+        None,
+    )
+    return EnergyIDDirectiveSnapshot(
+        resource=resource, schedule=schedule, current=current, next_change=next_change
+    )
 
 
 @dataclass

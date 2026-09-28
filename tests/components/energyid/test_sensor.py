@@ -482,13 +482,6 @@ async def test_directive_access_denied(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test a device without directive access gets no sensors and no error."""
-    resource, _ = _directive_fixture()
-    registry_entry = entity_registry.async_get_or_create(
-        "sensor",
-        "energyid",
-        f"EA-TEST_{resource.id}",
-        config_entry=mock_config_entry,
-    )
     hass.config_entries.async_update_entry(
         mock_config_entry, options={CONF_ENABLE_DIRECTIVES: True}
     )
@@ -501,5 +494,92 @@ async def test_directive_access_denied(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert hass.states.get(registry_entry.entity_id) is None
-    assert entity_registry.async_get(registry_entry.entity_id) is not None
+    assert not er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+
+
+async def test_stale_directive_pruned_once_grants_are_known(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a stale entity survives a failed startup fetch but not an empty grant."""
+    stale_entry = entity_registry.async_get_or_create(
+        "sensor",
+        "energyid",
+        "EA-TEST_revoked",
+        config_entry=mock_config_entry,
+    )
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_ENABLE_DIRECTIVES: True}
+    )
+    mock_webhook_client.api_access_token = "device-token"
+    mock_webhook_client.get_directives = AsyncMock(
+        side_effect=ClientError("EnergyID briefly unreachable")
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(stale_entry.entity_id) is not None
+
+    mock_webhook_client.get_directives = AsyncMock(return_value=[])
+    freezer.tick(DIRECTIVE_UPDATE_INTERVAL + dt.timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entity_registry.async_get(stale_entry.entity_id) is None
+
+
+async def test_granted_directive_with_failing_schedule_is_discovered(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a newly granted directive appears even while its schedule fails."""
+    resource, schedule = _directive_fixture()
+    failing_resource = DirectiveResource(
+        id="22222222-2222-2222-2222-222222222222",
+        title="Unavailable planner",
+        description="Broken upstream",
+        properties=("color", "signal"),
+        signal_provider=SignalProvider(
+            id="provider-2",
+            display_name="Provider 2",
+            logo_url=None,
+        ),
+    )
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_ENABLE_DIRECTIVES: True}
+    )
+    mock_webhook_client.api_access_token = "device-token"
+    mock_webhook_client.get_directives = AsyncMock(return_value=[resource])
+    mock_webhook_client.get_directive_data = AsyncMock(return_value=schedule)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    async def get_directive_data(directive_id: str) -> DirectiveData:
+        if directive_id == failing_resource.id:
+            raise ClientError("upstream failed")
+        return schedule
+
+    mock_webhook_client.get_directives.return_value = [resource, failing_resource]
+    mock_webhook_client.get_directive_data = AsyncMock(side_effect=get_directive_data)
+    freezer.tick(DIRECTIVE_UPDATE_INTERVAL + dt.timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    states = {
+        registry_entry.unique_id: state.state
+        for registry_entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if (state := hass.states.get(registry_entry.entity_id)) is not None
+    }
+    assert states[f"EA-TEST_{failing_resource.id}"] == STATE_UNAVAILABLE
+    assert states[f"EA-TEST_{resource.id}"] == "very_good_moment"

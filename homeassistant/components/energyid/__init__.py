@@ -106,7 +106,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
         directive_coordinator=directive_coordinator,
         mappings={},
     )
-    await directive_coordinator.async_config_entry_first_refresh()
+    # Directives are optional, so a failed first fetch must not block the upload path.
+    await directive_coordinator.async_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def _async_synchronize_sensors(now: dt.datetime | None = None) -> None:
