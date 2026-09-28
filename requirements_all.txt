@@ -2716,9 +2716,6 @@ python-duco-connectivity==0.18.0
 # homeassistant.components.ecobee
 python-ecobee-api==0.4.1
 
-# homeassistant.components.etherscan
-python-etherscan-api==0.0.3
-
 # homeassistant.components.familyhub
 python-family-hub-local==0.0.2
 
