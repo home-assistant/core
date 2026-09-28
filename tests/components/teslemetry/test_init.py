@@ -850,6 +850,20 @@ async def test_vehicle_polling_version_update(
     assert device.sw_version == "2026.2.0"
 
 
+@pytest.mark.usefixtures("mock_legacy")
+async def test_polling_vehicle_skips_stream_setup(
+    hass: HomeAssistant,
+    mock_stream_get_config: AsyncMock,
+    mock_stream_update_config: AsyncMock,
+) -> None:
+    """A polling vehicle never reads or changes its streaming config."""
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    mock_stream_get_config.assert_not_called()
+    mock_stream_update_config.assert_not_called()
+
+
 @pytest.mark.parametrize(
     ("keep_one_enabled", "expected_polled"),
     [

@@ -802,7 +802,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
     # Run all first refreshes
     await asyncio.gather(
-        *(async_setup_stream(hass, entry, vehicle) for vehicle in vehicles),
+        *(
+            async_setup_stream(hass, entry, vehicle)
+            for vehicle in vehicles
+            if not vehicle.poll
+        ),
         *(
             vehicle.coordinator.async_config_entry_first_refresh()
             for vehicle in vehicles
