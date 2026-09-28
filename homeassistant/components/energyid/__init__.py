@@ -1,6 +1,5 @@
 """The EnergyID integration."""
 
-from dataclasses import dataclass
 import datetime as dt
 from datetime import timedelta
 import functools
@@ -9,20 +8,13 @@ import logging
 from aiohttp import ClientError, ClientResponseError
 from energyid_webhooks.client_v2 import WebhookClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    Event,
-    EventStateChangedData,
-    HomeAssistant,
-    callback,
-)
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -41,26 +33,17 @@ from .const import (
     CONF_PROVISIONING_SECRET,
     DOMAIN,
 )
-from .coordinator import EnergyIDDirectiveCoordinator, async_directives_enabled
+from .coordinator import (
+    EnergyIDConfigEntry,
+    EnergyIDDirectiveCoordinator,
+    EnergyIDRuntimeData,
+    async_directives_enabled,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-type EnergyIDConfigEntry = ConfigEntry[EnergyIDRuntimeData]
-
 DEFAULT_UPLOAD_INTERVAL_SECONDS = 60
 PLATFORMS = [Platform.SENSOR]
-
-
-@dataclass
-class EnergyIDRuntimeData:
-    """Runtime data for the EnergyID integration."""
-
-    client: WebhookClient
-    directive_coordinator: EnergyIDDirectiveCoordinator
-    mappings: dict[str, str]
-    state_listener: CALLBACK_TYPE | None = None
-    registry_tracking_listener: CALLBACK_TYPE | None = None
-    unavailable_logged: bool = False
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> bool:

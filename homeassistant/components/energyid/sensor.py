@@ -1,6 +1,6 @@
 """Sensor platform for EnergyID directives."""
 
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 from energyid_webhooks.directives import DirectiveResource
 
@@ -18,13 +18,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import (
+    EnergyIDConfigEntry,
     EnergyIDDirectiveCoordinator,
     EnergyIDDirectiveSnapshot,
     async_directives_enabled,
 )
-
-if TYPE_CHECKING:
-    from . import EnergyIDConfigEntry
 
 PARALLEL_UPDATES = 0
 

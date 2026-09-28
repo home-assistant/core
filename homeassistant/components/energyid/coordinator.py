@@ -15,7 +15,7 @@ from energyid_webhooks.directives import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -24,6 +24,8 @@ from .const import CONF_ENABLE_DIRECTIVES, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 DIRECTIVE_UPDATE_INTERVAL = timedelta(minutes=5)
+
+type EnergyIDConfigEntry = ConfigEntry[EnergyIDRuntimeData]
 
 
 @callback
@@ -147,3 +149,15 @@ class EnergyIDDirectiveCoordinator(
                 next_change=next_change,
             )
         return snapshots
+
+
+@dataclass
+class EnergyIDRuntimeData:
+    """Runtime data for the EnergyID integration."""
+
+    client: WebhookClient
+    directive_coordinator: EnergyIDDirectiveCoordinator
+    mappings: dict[str, str]
+    state_listener: CALLBACK_TYPE | None = None
+    registry_tracking_listener: CALLBACK_TYPE | None = None
+    unavailable_logged: bool = False

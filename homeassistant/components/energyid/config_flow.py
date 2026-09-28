@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 from aiohttp import ClientError, ClientResponseError
 from energyid_webhooks.client_v2 import WebhookClient
@@ -36,10 +36,8 @@ from .const import (
     NAME,
     POLLING_INTERVAL,
 )
+from .coordinator import EnergyIDConfigEntry
 from .energyid_sensor_mapping_flow import EnergyIDSensorMappingFlowHandler
-
-if TYPE_CHECKING:
-    from . import EnergyIDConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
