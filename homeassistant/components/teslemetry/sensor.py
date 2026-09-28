@@ -1724,6 +1724,14 @@ async def async_setup_entry(
         for energysite in entry.runtime_data.energysites
         for description in ENERGY_HISTORY_DESCRIPTIONS
         if energysite.history_coordinator is not None
+        and (
+            "battery" not in description.key
+            or energysite.info_coordinator.data.get("components_battery")
+        )
+        and (
+            "solar" not in description.key
+            or energysite.info_coordinator.data.get("components_solar")
+        )
     )
 
     if entry.runtime_data.stream is not None:

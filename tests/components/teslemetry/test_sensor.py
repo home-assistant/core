@@ -748,6 +748,35 @@ async def test_energy_history_unavailable_while_stream_disconnected(
 
 
 @pytest.mark.parametrize(
+    ("components", "missing"),
+    [
+        pytest.param({"battery": False}, "battery", id="solar_only"),
+        pytest.param({"solar": False}, "solar", id="battery_only"),
+    ],
+)
+async def test_energy_history_sensors_match_site_components(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_site_info: AsyncMock,
+    components: dict[str, bool],
+    missing: str,
+) -> None:
+    """History sensors are only created for the components a site has."""
+    site_info = deepcopy(SITE_INFO)
+    site_info["response"]["components"].update(components)
+    mock_site_info.side_effect = lambda: deepcopy(site_info)
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    created = {
+        key
+        for key in ENERGY_HISTORY_FIELDS
+        if entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, f"123456-{key}")
+    }
+    assert created == {key for key in ENERGY_HISTORY_FIELDS if missing not in key}
+
+
+@pytest.mark.parametrize(
     ("scopes", "expected"),
     [
         pytest.param(METADATA["scopes"], True, id="location_scope"),
