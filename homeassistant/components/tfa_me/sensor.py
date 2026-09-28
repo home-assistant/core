@@ -266,19 +266,14 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
         if (data := self.coordinator.data.entities.get(self.uid)) is None:
             return None
 
-        last_update_ts = int(data["ts"])
-        utc_now_ts = int(dt_util.utcnow().timestamp())
-        timeout = self.coordinator.get_device_timeout(self.sensor_id)
-
-        if (utc_now_ts - last_update_ts) > timeout:
+        if not self._is_measurement_fresh(data):
             return None
 
-        desc: TFAmeSensorEntityDescription = self.entity_description
+        desc = self.entity_description
 
         if desc.value_fn is not None:
             return desc.value_fn(self, data)
 
-        # Generic fallback
         return data.get("value")
 
     @property
@@ -294,4 +289,18 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
     @override
     def available(self) -> bool:
         """Return whether the entity is available."""
-        return super().available and self.uid in self.coordinator.data.entities
+        if not super().available:
+            return False
+
+        if (data := self.coordinator.data.entities.get(self.uid)) is None:
+            return False
+
+        return self._is_measurement_fresh(data)
+
+    def _is_measurement_fresh(self, data: dict[str, Any]) -> bool:
+        """Return whether the measurement is still fresh."""
+        last_update_ts = int(data["ts"])
+        utc_now_ts = int(dt_util.utcnow().timestamp())
+        timeout = self.coordinator.get_device_timeout(self.sensor_id)
+
+        return (utc_now_ts - last_update_ts) <= timeout

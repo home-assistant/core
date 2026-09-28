@@ -82,7 +82,7 @@ async def test_stale_sensor_value_returns_unknown(
             break
 
     assert temperature_state is not None
-    assert temperature_state.state == "unknown"
+    assert temperature_state.state == "unavailable"
 
 
 async def test_new_measurement_added_once(
