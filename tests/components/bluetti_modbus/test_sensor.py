@@ -5,7 +5,10 @@ from modbus_connection.mock import MockModbusUnit
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.bluetti_modbus.const import EXCLUDED_FIELDS
+from homeassistant.components.bluetti_modbus.const import (
+    DEVICE_INFO_FIELDS,
+    EXCLUDED_FIELDS,
+)
 from homeassistant.components.bluetti_modbus.sensor import SENSOR_DESCRIPTIONS
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import EntityCategory
@@ -21,9 +24,6 @@ TOTAL_BATTERY_LEVEL_ENTITY = "sensor.balco260_total_battery_soc"
 CYCLE_COUNT_ENTITY = "sensor.balco260_battery_cycle_count"
 INVERTER_POWER_ENTITY = "sensor.balco260_total_inverter_power"
 PV_1_TYPE_ENTITY = "sensor.balco260_pv_1_input_type"
-
-# Shown as DeviceInfo (serial number, firmware) rather than as sensors.
-DEVICE_INFO_FIELDS = {"d_serial", "d_ver_arm", "d_ver_dsp", "d_iot_ver"}
 
 
 async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -76,16 +76,18 @@ async def test_only_the_present_charge_level_is_a_battery_sensor(
     assert hass.states.get(TOTAL_BATTERY_LEVEL_ENTITY) is None
 
 
-def test_every_readable_field_has_exactly_one_description() -> None:
-    """The static description table and the library's register map stay in step."""
+def test_fields_partition_the_library_profile() -> None:
+    """Every library field is a sensor, excluded, or device info, exactly once."""
     device = get_device("balco260")
     assert device is not None
-    expected = set(device.field_names()) - EXCLUDED_FIELDS - DEVICE_INFO_FIELDS
-
     keys = [description.key for description in SENSOR_DESCRIPTIONS]
+    sensors = set(keys)
 
-    assert len(keys) == len(set(keys))
-    assert set(keys) == expected
+    assert len(keys) == len(sensors)
+    assert sensors | EXCLUDED_FIELDS | DEVICE_INFO_FIELDS == set(device.field_names())
+    assert not sensors & EXCLUDED_FIELDS
+    assert not sensors & DEVICE_INFO_FIELDS
+    assert not EXCLUDED_FIELDS & DEVICE_INFO_FIELDS
 
 
 async def test_diagnostic_fields_are_categorized_as_diagnostic(

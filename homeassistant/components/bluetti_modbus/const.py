@@ -19,6 +19,11 @@ DEFAULT_UNIT_ID: Final = 1
 # The device's Modbus TCP stack becomes unresponsive when polled faster.
 SCAN_INTERVAL: Final = timedelta(seconds=30)
 
+# Read on every poll, but shown on the device rather than as sensors.
+DEVICE_INFO_FIELDS: Final = frozenset(
+    {"d_serial", "d_ver_arm", "d_ver_dsp", "d_iot_ver"}
+)
+
 # Left out of the read plan as well as entity creation.
 EXCLUDED_FIELDS: Final = frozenset(
     {
