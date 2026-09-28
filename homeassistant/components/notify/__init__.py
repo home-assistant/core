@@ -1,13 +1,12 @@
 """Provides functionality to notify people."""
 
 from datetime import timedelta
-from enum import IntFlag
 from functools import partial
 import logging
 from typing import Any, final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.components import persistent_notification as pn
 from homeassistant.config_entries import ConfigEntry
@@ -33,6 +32,7 @@ from .const import (  # noqa: F401
     SERVICE_NOTIFY,
     SERVICE_PERSISTENT_NOTIFICATION,
     SERVICE_SEND_MESSAGE,
+    NotifyEntityFeature,
 )
 from .legacy import (  # noqa: F401
     BaseNotificationService,
@@ -54,16 +54,13 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = vol.Schema(
-    {vol.Required(CONF_PLATFORM): cv.string, vol.Optional(CONF_NAME): cv.string},
-    extra=vol.ALLOW_EXTRA,
+PLATFORM_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_PLATFORM): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
+    },
+    extra=probatio.ALLOW_EXTRA,
 )
-
-
-class NotifyEntityFeature(IntFlag):
-    """Supported features of a notify entity."""
-
-    TITLE = 1
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -84,8 +81,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SEND_MESSAGE,
         {
-            vol.Required(ATTR_MESSAGE): cv.string,
-            vol.Optional(ATTR_TITLE): cv.string,
+            probatio.Required(ATTR_MESSAGE): cv.string,
+            probatio.Optional(ATTR_TITLE): cv.string,
         },
         "_async_send_message",
     )

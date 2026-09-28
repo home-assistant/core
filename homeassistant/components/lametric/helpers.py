@@ -34,12 +34,14 @@ def lametric_exception_handler[_LaMetricEntityT: LaMetricEntity, **_P](
             self.coordinator.last_update_success = False
             self.coordinator.async_update_listeners()
             raise HomeAssistantError(
-                "Error communicating with the LaMetric device"
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
             ) from error
 
         except LaMetricError as error:
             raise HomeAssistantError(
-                "Invalid response from the LaMetric device"
+                translation_domain=DOMAIN,
+                translation_key="invalid_response",
             ) from error
 
     return handler

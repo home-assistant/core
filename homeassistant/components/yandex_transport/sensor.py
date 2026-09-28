@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from aioymaps import CaptchaError, NoSessionError, YandexMapsRequester
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -35,9 +35,11 @@ SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_STOP_ID): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_ROUTE, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        probatio.Required(CONF_STOP_ID): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_ROUTE, default=[]): probatio.All(
+            cv.ensure_list, [cv.string]
+        ),
     }
 )
 

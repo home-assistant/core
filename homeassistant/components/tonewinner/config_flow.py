@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from tonewinner_rs232 import ReceiverInfo, TonewinnerReceiver
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntryState,
@@ -18,9 +18,9 @@ from .const import CONF_SERIAL_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_SERIAL_PORT): SerialPortSelector(),
+        probatio.Required(CONF_SERIAL_PORT): SerialPortSelector(),
     }
 )
 

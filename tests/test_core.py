@@ -14,9 +14,9 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun import freeze_time
+import probatio
 import pytest
 from pytest_unordered import unordered
-import voluptuous as vol
 
 from homeassistant import core as ha
 from homeassistant.const import (
@@ -2205,7 +2205,7 @@ async def test_service_call_event_contains_original_data(hass: HomeAssistant) ->
     events = async_capture_events(hass, EVENT_CALL_SERVICE)
 
     calls = async_mock_service(
-        hass, "test", "service", vol.Schema({"number": vol.Coerce(int)})
+        hass, "test", "service", probatio.Schema({"number": probatio.Coerce(int)})
     )
 
     context = ha.Context()
@@ -3529,11 +3529,11 @@ async def test_async_listen_with_run_immediately_deprecated(
         pass
 
     func = getattr(hass.bus, method)
-    func(EVENT_HOMEASSISTANT_START, _test, run_immediately=run_immediately)
-    assert (
-        f"Detected code that calls `{method}` with run_immediately. "
-        "This will stop working in Home Assistant 2025.5"
-    ) in caplog.text
+    with pytest.raises(
+        RuntimeError,
+        match=f"Detected code that calls `{method}` with run_immediately. Please report this issue",
+    ):
+        func(EVENT_HOMEASSISTANT_START, _test, run_immediately=run_immediately)
 
 
 async def test_async_fire_thread_safety(hass: HomeAssistant) -> None:

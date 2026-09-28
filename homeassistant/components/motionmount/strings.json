@@ -8,7 +8,6 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_response": "Failed to connect due to an invalid response from the MotionMount.",
       "not_connected": "Failed to connect.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "time_out": "[%key:common::config_flow::error::timeout_connect%]"
     },
     "error": {

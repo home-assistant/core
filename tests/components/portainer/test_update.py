@@ -1,25 +1,44 @@
 """Tests for the Portainer update platform."""
 
+from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pyportainer.exceptions import (
     PortainerAuthenticationError,
     PortainerConnectionError,
 )
+from pyportainer.models.docker import DockerContainer, PortainerImageUpdateStatus
+from pyportainer.watcher import PortainerImageWatcherResult
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.update import ATTR_INSTALLED_VERSION
-from homeassistant.const import Platform
+from homeassistant.components.portainer.const import DOMAIN
+from homeassistant.components.portainer.coordinator import DEFAULT_SCAN_INTERVAL
+from homeassistant.components.update import ATTR_INSTALLED_VERSION, ATTR_LATEST_VERSION
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_array_fixture,
+    snapshot_platform,
+)
 
 ENTITY_ID = "update.funny_chatelet_image_update_available"
+CONTAINER_IMAGE = "docker.io/library/ubuntu:latest"
+INSTALLED_DIGEST = (
+    "sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb"
+)
+RECREATED_CONTAINER_ID = (
+    "0011facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf"
+)
 
 
 @pytest.fixture(autouse=True)
@@ -158,3 +177,152 @@ async def test_update_using_cache(
     )
 
     mock_portainer_client.get_image.assert_not_called()
+
+
+async def _watch_all_containers(hass: HomeAssistant, watcher: MagicMock) -> None:
+    """Give the watcher a result for every container, as after its first run."""
+    containers = cast(
+        list[dict[str, Any]],
+        await async_load_json_array_fixture(hass, "containers.json", DOMAIN),
+    )
+    watcher.results = {
+        (1, container["Id"]): PortainerImageWatcherResult(
+            endpoint_id=1,
+            container_id=container["Id"],
+            status=PortainerImageUpdateStatus(
+                update_available=True,
+                local_digest=INSTALLED_DIGEST,
+                registry_digest="sha256:newdigest123456789",
+            ),
+        )
+        for container in containers
+    }
+    watcher.last_check = 1234
+
+
+async def _recreate_container(hass: HomeAssistant, client: AsyncMock) -> None:
+    """Give the funny_chatelet container a new ID, as a recreate does."""
+    containers = cast(
+        list[dict[str, Any]],
+        await async_load_json_array_fixture(hass, "containers.json", DOMAIN),
+    )
+    recreated = next(
+        container for container in containers if "/funny_chatelet" in container["Names"]
+    )
+    recreated["Id"] = RECREATED_CONTAINER_ID
+    client.get_containers.return_value = [
+        DockerContainer.from_dict(container) for container in containers
+    ]
+
+
+async def test_update_recreated_container(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_portainer_client: AsyncMock,
+    mock_portainer_watcher: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a recreated container gets its image checked instead of staying unknown."""
+    await _watch_all_containers(hass, mock_portainer_watcher)
+
+    with patch(
+        "homeassistant.components.portainer._PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    # The watcher only has a result for the old container ID
+    await _recreate_container(hass, mock_portainer_client)
+    mock_portainer_client.container_image_status.return_value = (
+        PortainerImageUpdateStatus(
+            update_available=False,
+            local_digest=INSTALLED_DIGEST,
+            registry_digest=INSTALLED_DIGEST,
+        )
+    )
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_portainer_client.container_image_status.assert_called_once_with(
+        1, CONTAINER_IMAGE
+    )
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_LATEST_VERSION] == "sha256:afcc7f1ac1b4"
+
+    # The result is kept until the watcher runs again, not fetched every poll
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_portainer_client.container_image_status.assert_called_once()
+
+
+async def test_update_recreated_container_before_watcher_ran(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_portainer_client: AsyncMock,
+    mock_portainer_watcher: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a container is left to the watcher's first run."""
+    with patch(
+        "homeassistant.components.portainer._PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    await _recreate_container(hass, mock_portainer_client)
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_portainer_client.container_image_status.assert_not_called()
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(PortainerConnectionError("conn"), id="connection"),
+        pytest.param(PortainerAuthenticationError("auth"), id="authentication"),
+    ],
+)
+async def test_update_recreated_container_check_fails(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_portainer_client: AsyncMock,
+    mock_portainer_watcher: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+) -> None:
+    """Test a failed image check leaves the update unknown without failing the refresh."""
+    await _watch_all_containers(hass, mock_portainer_watcher)
+
+    with patch(
+        "homeassistant.components.portainer._PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    await _recreate_container(hass, mock_portainer_client)
+    mock_portainer_client.container_image_status.side_effect = exception
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.runtime_data.last_update_success
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN

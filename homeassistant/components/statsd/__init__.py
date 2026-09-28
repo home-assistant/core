@@ -2,8 +2,8 @@
 
 import logging
 
+import probatio
 import statsd
-import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PREFIX, EVENT_STATE_CHANGED
 from homeassistant.core import HomeAssistant
@@ -22,22 +22,22 @@ DEFAULT_PREFIX = "hass"
 DEFAULT_RATE = 1
 DOMAIN = "statsd"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
-                vol.Optional(CONF_ATTR, default=False): cv.boolean,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
-                vol.Optional(CONF_RATE, default=DEFAULT_RATE): vol.All(
-                    vol.Coerce(int), vol.Range(min=1)
+                probatio.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
+                probatio.Optional(CONF_ATTR, default=False): cv.boolean,
+                probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                probatio.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
+                probatio.Optional(CONF_RATE, default=DEFAULT_RATE): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=1)
                 ),
-                vol.Optional(CONF_VALUE_MAP): dict,
+                probatio.Optional(CONF_VALUE_MAP): dict,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

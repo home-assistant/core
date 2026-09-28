@@ -4,7 +4,7 @@ from collections.abc import Callable
 import logging
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import siren
 from homeassistant.components.siren import (
@@ -71,21 +71,23 @@ STATE = "state"
 
 PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
-        vol.Optional(CONF_AVAILABLE_TONES): cv.ensure_list,
-        vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_COMMAND_OFF_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-        vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-        vol.Optional(CONF_STATE_OFF): cv.string,
-        vol.Optional(CONF_STATE_ON): cv.string,
-        vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_SUPPORT_DURATION, default=True): cv.boolean,
-        vol.Optional(CONF_SUPPORT_VOLUME_SET, default=True): cv.boolean,
+        probatio.Optional(CONF_AVAILABLE_TONES): cv.ensure_list,
+        probatio.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_COMMAND_OFF_TEMPLATE): cv.template,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+        probatio.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+        probatio.Optional(CONF_STATE_OFF): cv.string,
+        probatio.Optional(CONF_STATE_ON): cv.string,
+        probatio.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_SUPPORT_DURATION, default=True): cv.boolean,
+        probatio.Optional(CONF_SUPPORT_VOLUME_SET, default=True): cv.boolean,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA))
+DISCOVERY_SCHEMA = probatio.All(
+    PLATFORM_SCHEMA_MODERN.extend({}, extra=probatio.REMOVE_EXTRA)
+)
 
 MQTT_SIREN_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -243,8 +245,8 @@ class MqttSiren(MqttEntity, SirenEntity):
             # process attributes
             try:
                 params: SirenTurnOnServiceParameters
-                params = vol.All(TURN_ON_SCHEMA)(json_payload)
-            except vol.MultipleInvalid as invalid_siren_parameters:
+                params = probatio.All(TURN_ON_SCHEMA)(json_payload)
+            except probatio.MultipleInvalid as invalid_siren_parameters:
                 _LOGGER.warning(
                     "Unable to update siren state attributes from payload '%s': %s",
                     json_payload,

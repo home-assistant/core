@@ -5,6 +5,7 @@ from copy import deepcopy
 import logging
 from typing import Any, override
 
+import probatio
 from pysiaalarm import (
     InvalidAccountFormatError,
     InvalidAccountLengthError,
@@ -12,7 +13,6 @@ from pysiaalarm import (
     InvalidKeyLengthError,
     SIAAccount,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_PORT, CONF_PROTOCOL
@@ -33,25 +33,25 @@ from .hub import SIAConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-HUB_SCHEMA = vol.Schema(
+HUB_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PORT): int,
-        vol.Optional(CONF_PROTOCOL, default="TCP"): vol.In(["TCP", "UDP"]),
-        vol.Required(CONF_ACCOUNT): str,
-        vol.Optional(CONF_ENCRYPTION_KEY): str,
-        vol.Required(CONF_PING_INTERVAL, default=1): int,
-        vol.Required(CONF_ZONES, default=1): int,
-        vol.Optional(CONF_ADDITIONAL_ACCOUNTS, default=False): bool,
+        probatio.Required(CONF_PORT): int,
+        probatio.Optional(CONF_PROTOCOL, default="TCP"): probatio.In(["TCP", "UDP"]),
+        probatio.Required(CONF_ACCOUNT): str,
+        probatio.Optional(CONF_ENCRYPTION_KEY): str,
+        probatio.Required(CONF_PING_INTERVAL, default=1): int,
+        probatio.Required(CONF_ZONES, default=1): int,
+        probatio.Optional(CONF_ADDITIONAL_ACCOUNTS, default=False): bool,
     }
 )
 
-ACCOUNT_SCHEMA = vol.Schema(
+ACCOUNT_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ACCOUNT): str,
-        vol.Optional(CONF_ENCRYPTION_KEY): str,
-        vol.Required(CONF_PING_INTERVAL, default=1): int,
-        vol.Required(CONF_ZONES, default=1): int,
-        vol.Optional(CONF_ADDITIONAL_ACCOUNTS, default=False): bool,
+        probatio.Required(CONF_ACCOUNT): str,
+        probatio.Optional(CONF_ENCRYPTION_KEY): str,
+        probatio.Required(CONF_PING_INTERVAL, default=1): int,
+        probatio.Required(CONF_ZONES, default=1): int,
+        probatio.Optional(CONF_ADDITIONAL_ACCOUNTS, default=False): bool,
     }
 )
 
@@ -203,13 +203,13 @@ class SIAOptionsFlowHandler(OptionsFlow):
             return self.async_show_form(
                 step_id="options",
                 description_placeholders={"account": account},
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_ZONES,
                             default=self.options[CONF_ACCOUNTS][account][CONF_ZONES],
                         ): int,
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_IGNORE_TIMESTAMPS,
                             default=self.options[CONF_ACCOUNTS][account][
                                 CONF_IGNORE_TIMESTAMPS

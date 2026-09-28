@@ -4,8 +4,8 @@ from collections.abc import Iterable
 import logging
 from typing import Any, override
 
+import probatio
 import pyitachip2ir
-import voluptuous as vol
 
 from homeassistant.components import remote
 from homeassistant.components.remote import (
@@ -44,23 +44,23 @@ EMPTY_COMMAND_PLACEHOLDER = '""'
 
 PLATFORM_SCHEMA = REMOTE_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_MAC): cv.string,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Required(CONF_DEVICES): vol.All(
+        probatio.Optional(CONF_MAC): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_DEVICES): probatio.All(
             cv.ensure_list,
             [
                 {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_MODADDR): cv.positive_int,
-                    vol.Required(CONF_CONNADDR): cv.positive_int,
-                    vol.Optional(CONF_IR_COUNT): cv.positive_int,
-                    vol.Required(CONF_COMMANDS): vol.All(
+                    probatio.Optional(CONF_NAME): cv.string,
+                    probatio.Optional(CONF_MODADDR): cv.positive_int,
+                    probatio.Required(CONF_CONNADDR): cv.positive_int,
+                    probatio.Optional(CONF_IR_COUNT): cv.positive_int,
+                    probatio.Required(CONF_COMMANDS): probatio.All(
                         cv.ensure_list,
                         [
                             {
-                                vol.Required(CONF_NAME): cv.string,
-                                vol.Required(CONF_DATA): cv.string,
+                                probatio.Required(CONF_NAME): cv.string,
+                                probatio.Required(CONF_DATA): cv.string,
                             }
                         ],
                     ),

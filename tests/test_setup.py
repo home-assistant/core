@@ -5,8 +5,8 @@ import threading
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries, loader, setup
 from homeassistant.config_entries import ConfigEntry
@@ -51,7 +51,7 @@ def mock_handlers():
 
 async def test_validate_component_config(hass: HomeAssistant) -> None:
     """Test validating component configuration."""
-    config_schema = vol.Schema({"comp_conf": {"hello": str}}, required=True)
+    config_schema = probatio.Schema({"comp_conf": {"hello": str}}, required=True)
     mock_integration(hass, MockModule("comp_conf", config_schema=config_schema))
 
     with assert_setup_component(0):
@@ -584,7 +584,7 @@ async def test_component_setup_with_validation_and_dependency(
 async def test_platform_specific_config_validation(hass: HomeAssistant) -> None:
     """Test platform that specifies config."""
     platform_schema = cv.PLATFORM_SCHEMA.extend(
-        {"valid": True}, extra=vol.PREVENT_EXTRA
+        {"valid": True}, extra=probatio.PREVENT_EXTRA
     )
 
     mock_setup = Mock(spec_set=True)

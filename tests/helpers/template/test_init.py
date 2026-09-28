@@ -6,8 +6,8 @@ import gc
 from unittest.mock import patch
 
 from freezegun import freeze_time
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
@@ -882,10 +882,10 @@ async def test_is_static_still_ast_evals(hass: HomeAssistant) -> None:
 async def test_result_wrappers(hass: HomeAssistant) -> None:
     """Test result wrappers."""
     for text, native, orig_type, schema in (
-        ("[1, 2]", [1, 2], list, vol.Schema([int])),
-        ("{1, 2}", {1, 2}, set, vol.Schema({int})),
-        ("(1, 2)", (1, 2), tuple, vol.ExactSequence([int, int])),
-        ('{"hello": True}', {"hello": True}, dict, vol.Schema({"hello": bool})),
+        ("[1, 2]", [1, 2], list, probatio.Schema([int])),
+        ("{1, 2}", {1, 2}, set, probatio.Schema({int})),
+        ("(1, 2)", (1, 2), tuple, probatio.ExactSequence([int, int])),
+        ('{"hello": True}', {"hello": True}, dict, probatio.Schema({"hello": bool})),
     ):
         result = render(hass, text)
         assert isinstance(result, orig_type)

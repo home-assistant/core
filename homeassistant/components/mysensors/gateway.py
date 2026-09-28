@@ -9,7 +9,7 @@ import sys
 from typing import Any
 
 from mysensors import BaseAsyncGateway, Message, Sensor, get_const, mysensors
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.mqtt import (
     DOMAIN as MQTT_DOMAIN,
@@ -58,7 +58,7 @@ def is_serial_port(value: str) -> str:
         ports = (f"COM{idx + 1}" for idx in range(256))
         if value in ports:
             return value
-        raise vol.Invalid(f"{value} is not a serial port")
+        raise probatio.Invalid(f"{value} is not a serial port")
     return cv.isdevice(value)
 
 
@@ -67,7 +67,9 @@ def is_socket_address(value: str) -> str:
     try:
         socket.getaddrinfo(value, None)
     except OSError as err:
-        raise vol.Invalid("Device is not a valid domain name or ip address") from err
+        raise probatio.Invalid(
+            "Device is not a valid domain name or ip address"
+        ) from err
     return value
 
 

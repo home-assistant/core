@@ -7,7 +7,6 @@
       "invalid_discovery_info": "Invalid discovery information received",
       "missing_capabilities": "The MCP server does not support a required capability (Tools)",
       "reauth_account_mismatch": "The authenticated user does not match the MCP Server user that needed re-authentication.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },

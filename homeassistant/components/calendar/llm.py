@@ -4,15 +4,21 @@ from datetime import timedelta
 from operator import attrgetter
 from typing import cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, intent
-from homeassistant.helpers.llm import LLM_API_ASSIST, LLMContext, Tool, ToolInput
+from homeassistant.helpers.llm import (
+    LLM_API_ASSIST,
+    LLMContext,
+    Tool,
+    ToolAnnotations,
+    ToolInput,
+    ToolResult,
+)
 from homeassistant.util import dt as dt_util
-from homeassistant.util.json import JsonObjectType
 
 from . import SERVICE_GET_EVENTS
 from .const import DOMAIN
@@ -22,25 +28,30 @@ class CalendarGetEventsTool(Tool):
     """LLM Tool allowing querying a calendar."""
 
     name = "calendar__get_events"
+    title = "Get calendar events"
     description = (
         "Get events from a calendar. "
         "When asked if something happens, search the whole week. "
         "Results are RFC 5545 which means 'end' is exclusive."
     )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
 
     def __init__(self, calendars: list[str]) -> None:
         """Init the get events tool."""
-        self.parameters = vol.Schema(
+        self.parameters = probatio.Schema(
             {
-                vol.Required("calendar"): vol.In(calendars),
-                vol.Required("range"): vol.In(["today", "week"]),
+                probatio.Required("calendar"): probatio.In(calendars),
+                probatio.Required("range"): probatio.In(["today", "week"]),
             }
         )
 
     @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
-    ) -> JsonObjectType:
+    ) -> ToolResult:
         """Query a calendar."""
         data = self.parameters(tool_input.tool_args)
         result = intent.async_match_targets(
@@ -52,7 +63,7 @@ class CalendarGetEventsTool(Tool):
             ),
         )
         if not result.is_match:
-            return {"success": False, "error": "Calendar not found"}
+            return ToolResult(data={"error": "Calendar not found"}, error=True)
 
         entity_id = result.states[0].entity_id
         if data["range"] == "today":
@@ -82,7 +93,7 @@ class CalendarGetEventsTool(Tool):
             for event in cast(dict, service_result)[entity_id]["events"]
         ]
 
-        return {"success": True, "result": events}
+        return ToolResult(data={"events": events})
 
 
 @callback

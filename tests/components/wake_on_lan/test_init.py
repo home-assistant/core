@@ -2,8 +2,8 @@
 
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.wake_on_lan import DOMAIN, SERVICE_SEND_MAGIC_PACKET
 from homeassistant.config_entries import ConfigEntryState
@@ -85,7 +85,7 @@ async def test_send_magic_packet(hass: HomeAssistant) -> None:
         assert "ip_address" not in mocked_wakeonlan.mock_calls[0][2]
 
         mocked_wakeonlan.reset_mock()
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             await hass.services.async_call(
                 DOMAIN,
                 SERVICE_SEND_MAGIC_PACKET,

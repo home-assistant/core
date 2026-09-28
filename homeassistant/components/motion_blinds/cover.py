@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from motionblinds import BlindType
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -72,9 +72,15 @@ TDBU_DEVICE_MAP = {
 
 
 SET_ABSOLUTE_POSITION_SCHEMA: VolDictType = {
-    vol.Required(ATTR_ABSOLUTE_POSITION): vol.All(cv.positive_int, vol.Range(max=100)),
-    vol.Optional(ATTR_TILT_POSITION): vol.All(cv.positive_int, vol.Range(max=100)),
-    vol.Optional(ATTR_WIDTH): vol.All(cv.positive_int, vol.Range(max=100)),
+    probatio.Required(ATTR_ABSOLUTE_POSITION): probatio.All(
+        cv.positive_int, probatio.Range(max=100)
+    ),
+    probatio.Optional(ATTR_TILT_POSITION): probatio.All(
+        cv.positive_int, probatio.Range(max=100)
+    ),
+    probatio.Optional(ATTR_WIDTH): probatio.All(
+        cv.positive_int, probatio.Range(max=100)
+    ),
 }
 
 

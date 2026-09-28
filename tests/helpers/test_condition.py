@@ -12,10 +12,10 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
 from pytest_unordered import unordered
 from sqlalchemy.exc import SQLAlchemyError
-import voluptuous as vol
 
 from homeassistant.components.device_automation import (
     DOMAIN as DEVICE_AUTOMATION_DOMAIN,
@@ -175,7 +175,7 @@ def assert_condition_trace(expected):
 )
 async def test_invalid_condition(hass: HomeAssistant, config: dict, error: str) -> None:
     """Test if validating an invalid condition raises."""
-    with pytest.raises(vol.Invalid, match=error):
+    with pytest.raises(probatio.Invalid, match=error):
         cv.CONDITION_SCHEMA(config)
 
 
@@ -538,7 +538,7 @@ async def test_malformed_and_condition_list_shorthand(hass: HomeAssistant) -> No
         "condition": ["bad", "syntax"],
     }
 
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         cv.CONDITION_SCHEMA(config)
 
 
@@ -1385,15 +1385,25 @@ async def test_state_raises(hass: HomeAssistant) -> None:
         test.async_check()
 
 
-async def test_state_for(hass: HomeAssistant) -> None:
-    """Test state with duration."""
+@pytest.mark.parametrize(
+    "req_state",
+    [
+        pytest.param("100", id="scalar"),
+        pytest.param(["100"], id="single_item_list"),
+    ],
+)
+async def test_state_for(hass: HomeAssistant, req_state: str | list[str]) -> None:
+    """Test state with duration.
+
+    A single-element list `state` is equivalent to the scalar form.
+    """
     config = {
         "condition": "and",
         "conditions": [
             {
                 "condition": "state",
                 "entity_id": ["sensor.temperature"],
-                "state": "100",
+                "state": req_state,
                 "for": {"seconds": 5},
             },
         ],
@@ -1462,6 +1472,56 @@ async def test_state_for_invalid_template(
         assert not test.async_check()
 
 
+@pytest.mark.parametrize(
+    ("extra_config", "error"),
+    [
+        pytest.param(
+            {"attribute": "battery_level"},
+            r"Cannot use 'for' with an attribute",
+            id="attribute",
+        ),
+        pytest.param(
+            {"state": ["100", "200"]},
+            r"Cannot use 'for' with a list of states",
+            id="list_of_states",
+        ),
+        pytest.param(
+            {"state": []},
+            r"Cannot use 'for' with a list of states",
+            id="empty_list",
+        ),
+        pytest.param(
+            {"state": "input_number.threshold"},
+            r"Cannot use 'for' with a state referencing an entity",
+            id="state_from_entity",
+        ),
+        pytest.param(
+            {"state": ["input_number.threshold"]},
+            r"Cannot use 'for' with a state referencing an entity",
+            id="single_item_list_from_entity",
+        ),
+    ],
+)
+def test_state_for_not_allowed(extra_config: dict[str, Any], error: str) -> None:
+    """Test state condition rejects `for` with unsupported `state`/`attribute`.
+
+    `for` is anchored to the entity's last_changed, which reflects a single
+    current state. It therefore cannot be combined with an attribute, a list
+    that is not a single state, or a state resolved from another entity (even as
+    a single-element list). A single-element literal list behaves like the
+    scalar form (see `test_state_for`).
+    """
+    config = {
+        "condition": "state",
+        "entity_id": "sensor.temperature",
+        "state": "100",
+        "for": {"seconds": 5},
+        **extra_config,
+    }
+    with pytest.raises(probatio.Invalid, match=error):
+        cv.CONDITION_SCHEMA(config)
+
+
 async def test_state_unknown_attribute(hass: HomeAssistant) -> None:
     """Test that state returns False on unknown attribute."""
     # Unknown attribute
@@ -1492,6 +1552,44 @@ async def test_state_unknown_attribute(hass: HomeAssistant) -> None:
             ],
         }
     )
+
+
+@pytest.mark.parametrize(
+    ("req_state", "attribute_value", "expected"),
+    [
+        # A list `state` is matched as alternatives, so the attribute value must
+        # equal one of the items; the list itself is never compared as a whole.
+        pytest.param(["a", "b"], "a", True, id="item_in_list"),
+        pytest.param(["a", "b"], ["a", "b"], False, id="list_is_not_an_item"),
+        # Nesting the list makes the list value itself one of the items to match.
+        pytest.param([["a", "b"]], ["a", "b"], True, id="list_in_list_of_lists"),
+        pytest.param([["a", "b"]], "a", False, id="scalar_not_in_list_of_lists"),
+    ],
+)
+async def test_state_attribute_list_matching(
+    hass: HomeAssistant,
+    req_state: list[Any],
+    attribute_value: str | list[str],
+    expected: bool,
+) -> None:
+    """Test how a state-attribute condition matches against a list `state`.
+
+    A list `state` is treated as alternatives (match any item), so a list-valued
+    attribute only matches when the list is nested as an item of `state`. This
+    documents the current behavior; the implementation is unchanged.
+    """
+    config = {
+        "condition": "state",
+        "entity_id": "sensor.test",
+        "attribute": "options",
+        "state": req_state,
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("sensor.test", "on", {"options": attribute_value})
+    assert test.async_check() is expected
 
 
 async def test_state_multiple_entities(hass: HomeAssistant) -> None:
@@ -2450,7 +2548,7 @@ async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
     assert await async_validate_condition_config(hass, config_1) == config_1
     assert await async_validate_condition_config(hass, config_2) == config_2
     with pytest.raises(
-        vol.Invalid, match="Invalid condition 'test.unknown_cond' specified"
+        probatio.Invalid, match="Invalid condition 'test.unknown_cond' specified"
     ):
         await async_validate_condition_config(hass, config_3)
 
@@ -2468,8 +2566,8 @@ async def test_platform_migrate_condition(hass: HomeAssistant) -> None:
     """Test a condition platform with a migration."""
 
     OPTIONS_SCHEMA_DICT = {
-        vol.Required("option_1"): str,
-        vol.Optional("option_2"): int,
+        probatio.Required("option_1"): str,
+        probatio.Optional("option_2"): int,
     }
 
     class MockCondition(Condition):
@@ -3585,7 +3683,7 @@ async def test_numerical_condition_schema_requires_above_or_below(
         CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
         CONF_OPTIONS: {},
     }
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await async_validate_condition_config(hass, config)
 
 
@@ -3593,7 +3691,7 @@ async def test_numerical_condition_schema_requires_above_or_below(
     ("above", "below", "expected_result"),
     [
         (10.0, 10.0, does_not_raise()),
-        (20.0, 10.0, pytest.raises(vol.Invalid, match="must not be greater")),
+        (20.0, 10.0, pytest.raises(probatio.Invalid, match="must not be greater")),
     ],
 )
 async def test_numerical_condition_schema_above_must_be_less_than_below(
@@ -4045,7 +4143,7 @@ async def test_numerical_condition_with_unit_schema_rejects_invalid_units(
             }
         },
     }
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await async_validate_condition_config(hass, config)
 
 

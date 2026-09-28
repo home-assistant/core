@@ -1,6 +1,6 @@
 """Repairs platform for the demo integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
@@ -27,7 +27,7 @@ class DemoFixFlow(RepairsFlow):
         if user_input is not None:
             return self.async_create_entry(data={})
 
-        return self.async_show_form(step_id="confirm", data_schema=vol.Schema({}))
+        return self.async_show_form(step_id="confirm", data_schema=probatio.Schema({}))
 
 
 class DemoColdTeaFixFlow(RepairsFlow):

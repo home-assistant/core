@@ -2,8 +2,8 @@
 
 from unittest.mock import Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 import yaml
 
 from homeassistant import config, core as ha
@@ -338,7 +338,7 @@ async def test_turn_on_off_toggle_schema(
 
     for service in SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE:
         for invalid in None, "nothing", ENTITY_MATCH_ALL, ENTITY_MATCH_NONE:
-            with pytest.raises(vol.Invalid):
+            with pytest.raises(probatio.Invalid):
                 await hass.services.async_call(
                     ha.DOMAIN,
                     service,

@@ -7,7 +7,7 @@ from typing import Any, override
 
 from gcal_sync.api import GoogleCalendarService
 from gcal_sync.exceptions import ApiException, ApiForbiddenException
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -268,12 +268,12 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_CALENDAR_ACCESS,
                         default=self.config_entry.options.get(CONF_CALENDAR_ACCESS),
-                    ): vol.In(
+                    ): probatio.In(
                         {
                             "read_write": "Read/Write access (can create events)",
                             "read_only": "Read-only access",

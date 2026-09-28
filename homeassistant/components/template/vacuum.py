@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
@@ -75,24 +75,24 @@ SCRIPT_FIELDS = (
 
 CLEAN_AREA_GROUP = "clean_area_group"
 
-VACUUM_COMMON_SCHEMA = vol.Schema(
+VACUUM_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
-        vol.Optional(CONF_FAN_SPEED): cv.template,
-        vol.Optional(CONF_STATE): cv.template,
-        vol.Inclusive(
+        probatio.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
+        probatio.Optional(CONF_FAN_SPEED): cv.template,
+        probatio.Optional(CONF_STATE): cv.template,
+        probatio.Inclusive(
             CONF_SEGMENTS,
             CLEAN_AREA_GROUP,
             f"Options `{CONF_SEGMENTS}` and `{CONF_CLEAN_SEGMENTS}` must both exist",
         ): cv.template,
-        vol.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_RETURN_TO_BASE): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
-        vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
-        vol.Inclusive(
+        probatio.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
+        probatio.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
+        probatio.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
+        probatio.Optional(SERVICE_RETURN_TO_BASE): cv.SCRIPT_SCHEMA,
+        probatio.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
+        probatio.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
+        probatio.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
+        probatio.Inclusive(
             CONF_CLEAN_SEGMENTS,
             CLEAN_AREA_GROUP,
             f"Options `{CONF_SEGMENTS}` and `{CONF_CLEAN_SEGMENTS}` must both exist",
@@ -104,7 +104,7 @@ _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
     attributes=(VacuumEntityCapabilityAttribute, VacuumEntityStateAttribute)
 )
 
-VACUUM_YAML_SCHEMA = vol.All(
+VACUUM_YAML_SCHEMA = probatio.All(
     VACUUM_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
         make_template_entity_common_schema(VACUUM_DOMAIN, DEFAULT_NAME).schema
     ),

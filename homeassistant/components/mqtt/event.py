@@ -4,7 +4,7 @@ from collections.abc import Callable
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import event
 from homeassistant.components.event import (
@@ -51,22 +51,22 @@ MQTT_EVENT_ATTRIBUTES_BLOCKED = frozenset(
 
 DEFAULT_NAME = "MQTT Event"
 DEFAULT_FORCE_UPDATE = False
-DEVICE_CLASS_SCHEMA = vol.All(vol.Lower, vol.Coerce(EventDeviceClass))
+DEVICE_CLASS_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(EventDeviceClass))
 
 _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
     {
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASS_SCHEMA,
-        vol.Optional(CONF_NAME): vol.Any(None, cv.string),
-        vol.Required(CONF_EVENT_TYPES): vol.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASS_SCHEMA,
+        probatio.Optional(CONF_NAME): probatio.Any(None, cv.string),
+        probatio.Required(CONF_EVENT_TYPES): probatio.All(cv.ensure_list, [cv.string]),
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA_MODERN = vol.All(
+PLATFORM_SCHEMA_MODERN = probatio.All(
     _PLATFORM_SCHEMA_BASE,
 )
 
-DISCOVERY_SCHEMA = vol.All(
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+DISCOVERY_SCHEMA = probatio.All(
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=probatio.REMOVE_EXTRA),
 )
 
 

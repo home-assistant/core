@@ -3,7 +3,7 @@
 import logging
 from typing import Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_ICON,
@@ -48,13 +48,17 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 STORAGE_FIELDS: VolDictType = {
-    vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): vol.Coerce(int),
-    vol.Required(CONF_NAME): vol.All(cv.string, vol.Length(min=1)),
-    vol.Optional(CONF_MAXIMUM, default=None): vol.Any(None, vol.Coerce(int)),
-    vol.Optional(CONF_MINIMUM, default=None): vol.Any(None, vol.Coerce(int)),
-    vol.Optional(CONF_RESTORE, default=True): cv.boolean,
-    vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
+    probatio.Optional(CONF_ICON): cv.icon,
+    probatio.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): probatio.Coerce(int),
+    probatio.Required(CONF_NAME): probatio.All(cv.string, probatio.Length(min=1)),
+    probatio.Optional(CONF_MAXIMUM, default=None): probatio.Any(
+        None, probatio.Coerce(int)
+    ),
+    probatio.Optional(CONF_MINIMUM, default=None): probatio.Any(
+        None, probatio.Coerce(int)
+    ),
+    probatio.Optional(CONF_RESTORE, default=True): cv.boolean,
+    probatio.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
 }
 
 
@@ -64,30 +68,30 @@ def _none_to_empty_dict[_T](value: _T | None) -> _T | dict[str, Any]:
     return value
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: cv.schema_with_slug_keys(
-            vol.All(
+            probatio.All(
                 _none_to_empty_dict,
                 {
-                    vol.Optional(CONF_ICON): cv.icon,
-                    vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): vol.Coerce(
-                        int
+                    probatio.Optional(CONF_ICON): cv.icon,
+                    probatio.Optional(
+                        CONF_INITIAL, default=DEFAULT_INITIAL
+                    ): probatio.Coerce(int),
+                    probatio.Optional(CONF_NAME): cv.string,
+                    probatio.Optional(CONF_MAXIMUM, default=None): probatio.Any(
+                        None, probatio.Coerce(int)
                     ),
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_MAXIMUM, default=None): vol.Any(
-                        None, vol.Coerce(int)
+                    probatio.Optional(CONF_MINIMUM, default=None): probatio.Any(
+                        None, probatio.Coerce(int)
                     ),
-                    vol.Optional(CONF_MINIMUM, default=None): vol.Any(
-                        None, vol.Coerce(int)
-                    ),
-                    vol.Optional(CONF_RESTORE, default=True): cv.boolean,
-                    vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
+                    probatio.Optional(CONF_RESTORE, default=True): cv.boolean,
+                    probatio.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
                 },
             )
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -125,7 +129,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(SERVICE_RESET, None, "async_reset")
     component.async_register_entity_service(
         SERVICE_SET_VALUE,
-        {vol.Required(VALUE): vol.Coerce(int)},
+        {probatio.Required(VALUE): probatio.Coerce(int)},
         "async_set_value",
     )
 
@@ -135,7 +139,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class CounterStorageCollection(collection.DictStorageCollection):
     """Input storage based collection."""
 
-    CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
+    CREATE_UPDATE_SCHEMA = probatio.Schema(STORAGE_FIELDS)
 
     @override
     async def _process_create_data(self, data: dict) -> dict:

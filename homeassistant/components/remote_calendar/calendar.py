@@ -39,7 +39,7 @@ async def async_setup_entry(
     """Set up the remote calendar platform."""
     coordinator = entry.runtime_data
     entity = RemoteCalendarEntity(coordinator, entry)
-    async_add_entities([entity], True)
+    async_add_entities([entity])
 
 
 class RemoteCalendarEntity(

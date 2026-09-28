@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from aioflo.errors import RequestError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -13,8 +13,8 @@ from homeassistant.exceptions import HomeAssistantError
 from . import async_get_flo_api
 from .const import CONF_USE_SSO, DOMAIN, LOGGER
 
-DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_USERNAME): str, probatio.Required(CONF_PASSWORD): str}
 )
 
 

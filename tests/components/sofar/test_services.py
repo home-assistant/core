@@ -1,11 +1,11 @@
-"""Test the Sofar Inverter Modbus services."""
+"""Tests for the Sofar integration services."""
 
 from unittest.mock import patch
 
 from modbus_connection import ModbusError
 from modbus_connection.mock import MockModbusConnection
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.sofar.const import DOMAIN
 from homeassistant.components.sofar.services import (
@@ -292,7 +292,7 @@ async def test_value_past_the_selector_bounds_is_refused(
     """Test the schema bounds a scripted call, which skips the selectors."""
     entry, _ = await _setup_hybrid(hass)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             service,

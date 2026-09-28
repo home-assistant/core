@@ -38,6 +38,20 @@
       'on': None,
       'screensaver': dict({
         'enabled': False,
+        'modes': dict({
+          'screen_off': None,
+          'time_based': dict({
+            'enabled': True,
+            'end_time': None,
+            'local_end_time': None,
+            'local_start_time': '01:00:39',
+            'start_time': '00:00:39',
+          }),
+          'when_dark': dict({
+            'enabled': False,
+          }),
+        }),
+        'widget': '08b8eac21074f8f7e5a29f2855ba8060',
       }),
       'width': 37,
     }),

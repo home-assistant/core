@@ -1,6 +1,6 @@
 """The songpal component."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME, Platform
@@ -11,13 +11,16 @@ from homeassistant.helpers.typing import ConfigType
 from .const import CONF_ENDPOINT, DOMAIN
 from .services import async_setup_services
 
-SONGPAL_CONFIG_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_NAME): cv.string, vol.Required(CONF_ENDPOINT): cv.string}
+SONGPAL_CONFIG_SCHEMA = probatio.Schema(
+    {
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_ENDPOINT): cv.string,
+    }
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {vol.Optional(DOMAIN): vol.All(cv.ensure_list, [SONGPAL_CONFIG_SCHEMA])},
-    extra=vol.ALLOW_EXTRA,
+CONFIG_SCHEMA = probatio.Schema(
+    {probatio.Optional(DOMAIN): probatio.All(cv.ensure_list, [SONGPAL_CONFIG_SCHEMA])},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 PLATFORMS = [Platform.MEDIA_PLAYER]

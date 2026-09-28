@@ -292,7 +292,7 @@ class ReolinkUpdateEntity(
             self, reolink_data, channel, reolink_data.firmware_coordinator
         )
         ReolinkChannelCoordinatorEntity.__init__(
-            self, reolink_data, channel, reolink_data.firmware_coordinator
+            self, reolink_data, channel, coordinator=reolink_data.firmware_coordinator
         )
 
 

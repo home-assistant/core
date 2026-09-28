@@ -13,8 +13,8 @@ from opendisplay import (
     BLEConnectionError,
 )
 from PIL import Image as PILImage
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.opendisplay.const import CONF_ENCRYPTION_KEY, DOMAIN
@@ -255,7 +255,7 @@ async def test_upload_image_invalid_mode(
     """Test that invalid mode strings are rejected by the schema."""
     device_id = _device_id(hass, mock_config_entry)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "upload_image",

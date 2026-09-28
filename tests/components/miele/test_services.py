@@ -4,9 +4,9 @@ from datetime import timedelta
 from unittest.mock import MagicMock, Mock
 
 from aiohttp import ClientResponseError
+from probatio import MultipleInvalid
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from voluptuous import MultipleInvalid
 
 from homeassistant.components.miele.const import DOMAIN
 from homeassistant.components.miele.services import (

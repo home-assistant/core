@@ -19,8 +19,8 @@ from typing import (
     override,
 )
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -212,7 +212,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_GET_FORECASTS,
-        {vol.Required("type"): vol.In(("daily", "hourly", "twice_daily"))},
+        {probatio.Required("type"): probatio.In(("daily", "hourly", "twice_daily"))},
         async_get_forecasts_service,
         required_features=[
             WeatherEntityFeature.FORECAST_DAILY,

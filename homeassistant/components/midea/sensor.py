@@ -1,9 +1,12 @@
 """Midea Sensor entities."""
 
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import cast, override
 
 from midealocal.const import DeviceType
+from midealocal.devices.ea import MideaEADevice
+from midealocal.devices.ec import MideaECDevice
 
 from homeassistant.components.sensor import (
     EntityCategory,
@@ -29,6 +32,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .entity import MideaConfigEntry, MideaEntity
 
@@ -40,106 +44,6 @@ class MideaSensorEntityDescription(SensorEntityDescription):
     """Describes Midea sensor entity."""
 
     models: list[DeviceType] | None = None
-
-
-COOKER_MODES: list[str] = [
-    "smart",
-    "reserve",
-    "cook_rice",
-    "fast_cook_rice",
-    "standard_cook_rice",
-    "gruel",
-    "cook_congee",
-    "stew_soup",
-    "stewing",
-    "heat_rice",
-    "make_cake",
-    "yoghourt",
-    "soup_rice",
-    "coarse_rice",
-    "five_ceeals_rice",
-    "eight_treasures_rice",
-    "crispy_rice",
-    "shelled_rice",
-    "eight_treasures_congee",
-    "infant_congee",
-    "older_rice",
-    "rice_soup",
-    "rice_paste",
-    "egg_custard",
-    "warm_milk",
-    "hot_spring_egg",
-    "millet_congee",
-    "firewood_rice",
-    "few_rice",
-    "red_potato",
-    "corn",
-    "quick_freeze_bun",
-    "steam_ribs",
-    "steam_egg",
-    "coarse_congee",
-    "steep_rice",
-    "appetizing_congee",
-    "corn_congee",
-    "sprout_rice",
-    "luscious_rice",
-    "luscious_boiled",
-    "fast_rice",
-    "fast_boil",
-    "bean_rice_congee",
-    "fast_congee",
-    "baby_congee",
-    "cook_soup",
-    "congee_coup",
-    "steam_corn",
-    "steam_red_potato",
-    "boil_congee",
-    "delicious_steam",
-    "boil_egg",
-    "rice_wine",
-    "fruit_vegetable_paste",
-    "vegetable_porridge",
-    "pork_porridge",
-    "fragrant_rice",
-    "assorte_rice",
-    "steame_fish",
-    "baby_rice",
-    "essence_rice",
-    "fragrant_dense_congee",
-    "one_two_cook",
-    "original_steame",
-    "hot_fast_rice",
-    "online_celebrity_rice",
-    "sushi_rice",
-    "stone_bowl_rice",
-    "no_water_treat",
-    "keep_fresh",
-    "low_sugar_rice",
-    "black_buckwheat_rice",
-    "resveratrol_rice",
-    "yellow_wheat_rice",
-    "green_buckwheat_rice",
-    "roughage_rice",
-    "millet_mixed_rice",
-    "iron_pan_rice",
-    "olla_pan_rice",
-    "vegetable_rice",
-    "baby_side",
-    "regimen_congee",
-    "earthen_pot_congee",
-    "regimen_soup",
-    "pottery_jar_soup",
-    "canton_soup",
-    "nutrition_stew",
-    "northeast_stew",
-    "uncap_boil",
-    "trichromatic_coarse_grain",
-    "four_color_vegetables",
-    "egg",
-    "chop",
-    "clean",
-    "keep_warm",
-]
 
 
 SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
@@ -375,14 +279,14 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         translation_key="mode",
         models=[DeviceType.EA],
         device_class=SensorDeviceClass.ENUM,
-        options=COOKER_MODES,
+        options=MideaEADevice.mode_options(),
     ),
     MideaSensorEntityDescription(
         key="mode",
         translation_key="mode",
         models=[DeviceType.EC],
         device_class=SensorDeviceClass.ENUM,
-        options=[*COOKER_MODES, "diy"],
+        options=MideaECDevice.mode_options(),
     ),
     MideaSensorEntityDescription(
         key="tank",
@@ -566,6 +470,17 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
             "dry_zone",
             "freeze_warm",
         ],
+    ),
+    MideaSensorEntityDescription(
+        key="time_remaining",
+        translation_key="time_remaining",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    MideaSensorEntityDescription(
+        key="heating_time_remaining",
+        translation_key="time_remaining",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        models=[DeviceType.E2],
     ),
     MideaSensorEntityDescription(
         key="wash_time",
@@ -808,15 +723,16 @@ class MideaSensor(MideaEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Native value of the sensor."""
         value = self._device.get_attribute(self.entity_description.key)
-        if (
-            self.entity_description.key == "indoor_humidity"
-            and isinstance(value, (int, float))
-            and value in {0, 0xFF}
-        ):
-            return None
         if value == "unknown":
             return None
+        if self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
+            if not isinstance(value, (int, float)) or value <= 0:
+                return None
+            # round to the closest minute
+            return (dt_util.utcnow() + timedelta(seconds=30)).replace(
+                second=0, microsecond=0
+            ) + timedelta(minutes=value)
         return cast("StateType", value)

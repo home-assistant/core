@@ -12,7 +12,7 @@ from aioamazondevices.exceptions import (
     CannotRetrieveData,
 )
 from aioamazondevices.structures import AmazonSaveDataConfig
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
@@ -22,23 +22,23 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_LOGIN_DATA, DOMAIN
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_CODE): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_CODE): cv.string,
     }
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_CODE): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_CODE): cv.string,
     }
 )
-STEP_RECONFIGURE = vol.Schema(
+STEP_RECONFIGURE = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_CODE): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_CODE): cv.string,
     }
 )
 

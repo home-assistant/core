@@ -5,7 +5,7 @@ import logging
 import math
 from typing import Any, Concatenate, override
 
-import voluptuous as vol
+import probatio
 import yeelight
 from yeelight import Flow, RGBTransition, SleepTransition, flows
 from yeelight.aio import AsyncBulb
@@ -162,46 +162,52 @@ EFFECTS_MAP = {
     EFFECT_TEA_TIME: flows.tea_time,
 }
 
-VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Range(min=1, max=100))
+VALID_BRIGHTNESS = probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=100))
 
 SERVICE_SCHEMA_SET_MODE: VolDictType = {
-    vol.Required(ATTR_MODE): vol.In([mode.name.lower() for mode in PowerMode])
+    probatio.Required(ATTR_MODE): probatio.In([mode.name.lower() for mode in PowerMode])
 }
 
-SERVICE_SCHEMA_SET_MUSIC_MODE: VolDictType = {vol.Required(ATTR_MODE_MUSIC): cv.boolean}
+SERVICE_SCHEMA_SET_MUSIC_MODE: VolDictType = {
+    probatio.Required(ATTR_MODE_MUSIC): cv.boolean
+}
 
 SERVICE_SCHEMA_START_FLOW = YEELIGHT_FLOW_TRANSITION_SCHEMA
 
 SERVICE_SCHEMA_SET_COLOR_SCENE: VolDictType = {
-    vol.Required(ATTR_RGB_COLOR): vol.All(
-        vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte))
+    probatio.Required(ATTR_RGB_COLOR): probatio.All(
+        probatio.Coerce(tuple), probatio.ExactSequence((cv.byte, cv.byte, cv.byte))
     ),
-    vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+    probatio.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
 SERVICE_SCHEMA_SET_HSV_SCENE: VolDictType = {
-    vol.Required(ATTR_HS_COLOR): vol.All(
-        vol.Coerce(tuple),
-        vol.ExactSequence(
+    probatio.Required(ATTR_HS_COLOR): probatio.All(
+        probatio.Coerce(tuple),
+        probatio.ExactSequence(
             (
-                vol.All(vol.Coerce(float), vol.Range(min=0, max=359)),
-                vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
+                probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=359)),
+                probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=100)),
             )
         ),
     ),
-    vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+    probatio.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
 SERVICE_SCHEMA_SET_COLOR_TEMP_SCENE: VolDictType = {
-    vol.Required(ATTR_KELVIN): vol.All(vol.Coerce(int), vol.Range(min=1700, max=6500)),
-    vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+    probatio.Required(ATTR_KELVIN): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=1700, max=6500)
+    ),
+    probatio.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
 SERVICE_SCHEMA_SET_COLOR_FLOW_SCENE = YEELIGHT_FLOW_TRANSITION_SCHEMA
 
 SERVICE_SCHEMA_SET_AUTO_DELAY_OFF_SCENE: VolDictType = {
-    vol.Required(ATTR_MINUTES): vol.All(vol.Coerce(int), vol.Range(min=1, max=60)),
-    vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+    probatio.Required(ATTR_MINUTES): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=1, max=60)
+    ),
+    probatio.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
 
@@ -736,7 +742,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         """Activate flash."""
         if not flash:
             return
-        if int(self._get_property("color_mode")) != 1 or not self.hs_color:
+        if self.color_mode is not ColorMode.RGB or not self.hs_color:
             _LOGGER.error("Flash supported currently only in RGB mode")
             return
 
@@ -914,7 +920,11 @@ class YeelightColorLightSupport(YeelightBaseLight):
     @override
     def color_mode(self) -> ColorMode:
         """Return the color mode."""
-        color_mode = int(self._get_property("color_mode"))
+        raw_color_mode = self._get_property("color_mode")
+        if raw_color_mode is None:
+            # an ambilight stops reporting its mode while the main light is off
+            return ColorMode.UNKNOWN
+        color_mode = int(raw_color_mode)
         if color_mode == 1:  # RGB
             return ColorMode.RGB
         if color_mode == 2:  # color temperature

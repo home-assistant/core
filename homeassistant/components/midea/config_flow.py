@@ -14,7 +14,8 @@ from midealocal.const import DeviceType, ProtocolVersion
 from midealocal.device import MideaDevice
 from midealocal.devices import device_selector
 from midealocal.discover import discover
-import voluptuous as vol
+from midealocal.exceptions import MideaCloudError
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -76,7 +77,7 @@ def _select_and_connect(
 
     Returns None if there is no device implementation for device_type.
     """
-    dm = device_selector(
+    dm: MideaDevice | None = device_selector(
         "",
         device_id,
         device_type,
@@ -112,6 +113,8 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         self.supports: dict = {}
         self.cloud: MideaCloud | None = None
         self._login_data: dict[str, str] | None = None
+        self._cloud_error: str | None = None
+        self._cloud_error_code: int | None = None
         unsorted = dict(MIDEA_DEVICE_NAMES)
 
         # sort and assign supports
@@ -127,9 +130,32 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         self.preset_cloud_name: str = preset_account["cloud_name"]
 
     def _clear_login_state(self) -> None:
-        """Clear flow-scoped credentials and cloud."""
+        """Clear flow-scoped credentials and cloud.
+
+        The pending cloud error/code are intentionally left in place: this is
+        called right before re-showing a form that still needs to render that
+        error. They are refreshed on the next cloud call (``_check_cloud_login``
+        resets them) or when ``async_step_auto`` re-runs with input.
+        """
         self._login_data = None
         self.cloud = None
+
+    def _reset_cloud_error(self) -> None:
+        """Forget any cloud error carried over from a previous submit."""
+        self._cloud_error = None
+        self._cloud_error_code = None
+
+    def _form_error(self, error: str | None) -> dict[str, Any]:
+        """Build async_show_form error kwargs, adding the cloud error code if known."""
+        if not error:
+            return {"errors": None}
+        result: dict[str, Any] = {"errors": {"base": error}}
+        # only the cloud error slug carries a numeric code to show alongside it
+        if error == self._cloud_error and self._cloud_error_code is not None:
+            result["description_placeholders"] = {
+                "error_code": str(self._cloud_error_code)
+            }
+        return result
 
     def _already_configured(self, device_id: str, ip_address: str) -> bool:
         """Check device from json with device_id or ip address."""
@@ -197,7 +223,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 cloud_server_options,
                 default_server,
                 user_input=user_input,
-                error="login_failed",
+                error=self._cloud_error or "login_failed",
             )
         # user not login, show login form in UI
         return self._show_login_credentials_form(
@@ -215,11 +241,11 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         error: str | None = None,
     ) -> ConfigFlowResult:
         """Show the login form, retaining any previously entered values."""
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_ACCOUNT): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Required(
+                probatio.Required(CONF_ACCOUNT): str,
+                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(
                     CONF_SERVER,
                     default=default_server,
                 ): SelectSelector(
@@ -234,7 +260,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="login_credentials",
             data_schema=schema,
-            errors={"base": error} if error else None,
+            **self._form_error(error),
         )
 
     async def async_step_auth_method(
@@ -261,14 +287,14 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
             return await self.async_step_auth_method(
-                error="preset_login_failed",
+                error=self._cloud_error or "preset_login_failed",
             )
 
         return self.async_show_form(
             step_id="auth_method",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         "login_mode",
                         default=LOGIN_MODE_PRESET,
                     ): SelectSelector(
@@ -282,7 +308,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
-            errors={"base": error} if error else None,
+            **self._form_error(error),
         )
 
     async def async_step_list(
@@ -355,8 +381,8 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         # show discovery device input form with auto or ip address in web UI
         return self.async_show_form(
             step_id="search",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_IP_ADDRESS, default="auto"): str},
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_IP_ADDRESS, default="auto"): str},
             ),
             errors={"base": error} if error else None,
         )
@@ -385,8 +411,16 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 account,
                 password,
             )
+        self._reset_cloud_error()
         # check cloud login after self.cloud exist
-        if await self.cloud.login():
+        try:
+            logged_in = await self.cloud.login()
+        except MideaCloudError as err:
+            LOGGER.debug("Cloud login to %s failed: %s", cloud_name, err)
+            self._cloud_error = err.translation_key
+            self._cloud_error_code = err.code
+            return False
+        if logged_in:
             LOGGER.debug(
                 "Cloud login succeeded for %s",
                 cloud_name,
@@ -410,7 +444,20 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.cloud is not None
 
         # get device token/key from cloud, plus the well-known default keys
-        keys = await self.cloud.get_cloud_keys(appliance_id)
+        try:
+            keys = await self.cloud.get_cloud_keys(appliance_id)
+        except MideaCloudError as err:
+            # A cloud rejection (e.g. code 3201) is not fatal: a V3 device may
+            # still authenticate with a built-in default key. Remember the error
+            # for display and keep going with the default keys only.
+            LOGGER.debug(
+                "Cloud rejected the token request for device %s: %s",
+                appliance_id,
+                err,
+            )
+            self._cloud_error = err.translation_key
+            self._cloud_error_code = err.code
+            keys = {}
         if default_key:
             keys = {**keys, **(await MideaCloud.get_default_keys())}
         error = "connect_error"
@@ -447,7 +494,10 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         LOGGER.debug(
             "Unable to connect device with all the token/key",
         )
-        return {"error": error}
+        result: dict[str, Any] = {"error": error}
+        if self._cloud_error is not None:
+            result["cloud_error"] = self._cloud_error
+        return result
 
     async def async_step_auto(
         self,
@@ -457,6 +507,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Discovery device detail info."""
         # input device exist
         if user_input is not None:
+            self._reset_cloud_error()
             device_id = user_input[CONF_DEVICE]
             device = self.devices[device_id]
             self.found_device = {
@@ -486,6 +537,10 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 # phase 1, try with user input login data
                 keys = await self._check_key_from_cloud(device_id)
+                # _check_key_from_cloud sets the pending cloud error/code on a
+                # cloud rejection; keep phase 1's in case phase 2 is less specific
+                phase1_error = self._cloud_error
+                phase1_error_code = self._cloud_error_code
 
                 # no available key, continue the phase 2
                 if not keys.get("token") or not keys.get("key"):
@@ -496,10 +551,14 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
 
                     # get key phase 2: reinit cloud with preset account
                     if not await self._check_cloud_login(force_login=True):
+                        # _check_cloud_login clears the pending error; if it only
+                        # returned False (no raise), fall back to phase 1's error.
+                        if not self._cloud_error and phase1_error:
+                            self._cloud_error = phase1_error
+                            self._cloud_error_code = phase1_error_code
+                        error = self._cloud_error or "preset_login_failed"
                         self._clear_login_state()
-                        return await self.async_step_auto(
-                            error="preset_login_failed",
-                        )
+                        return await self.async_step_auto(error=error)
                     # try to get a passed key, without default_key
                     keys = await self._check_key_from_cloud(
                         device_id,
@@ -512,10 +571,12 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                             "Can't get available token from Midea server for device %s",
                             device_id,
                         )
+                        if not self._cloud_error and phase1_error:
+                            self._cloud_error = phase1_error
+                            self._cloud_error_code = phase1_error_code
+                        error = self._cloud_error or "token_unavailable"
                         self._clear_login_state()
-                        return await self.async_step_auto(
-                            error="token_unavailable",
-                        )
+                        return await self.async_step_auto(error=error)
                 # get key pass
                 self.found_device[CONF_TOKEN] = keys["token"]
                 self.found_device[CONF_KEY] = keys["key"]
@@ -531,15 +592,15 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         # show available device list in UI
         return self.async_show_form(
             step_id="auto",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_DEVICE,
                         default=next(iter(self.available_device.keys())),
-                    ): vol.In(self.available_device),
+                    ): probatio.In(self.available_device),
                 },
             ),
-            errors={"base": error} if error else None,
+            **self._form_error(error),
         )
 
     def _found_device_to_user_input(self) -> dict[str, Any]:
@@ -678,7 +739,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not result:
                     return self._show_manually_form(
                         user_input,
-                        error="preset_login_failed",
+                        error=self._cloud_error or "preset_login_failed",
                     )
                 # try to get a passed key
                 keys = await self._check_key_from_cloud(int(user_input[CONF_DEVICE_ID]))
@@ -691,7 +752,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     return self._show_manually_form(
                         user_input,
-                        error="token_unavailable",
+                        error=keys.get("cloud_error") or "token_unavailable",
                     )
 
                 # set token/key from preset account
@@ -743,9 +804,9 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_IP_ADDRESS,
                         default=(user_input or entry.data)[CONF_IP_ADDRESS],
                     ): str
@@ -761,43 +822,43 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Show the manual step form, retaining any previously entered values."""
         protocol = self.found_device.get(CONF_PROTOCOL)
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_DEVICE_ID,
                     default=self.found_device.get(CONF_DEVICE_ID),
                 ): int,
-                vol.Required(
+                probatio.Required(
                     CONF_TYPE,
                     default=(self.found_device.get(CONF_TYPE) or DeviceType.AC),
-                ): vol.In(self.supports),
-                vol.Required(
+                ): probatio.In(self.supports),
+                probatio.Required(
                     CONF_IP_ADDRESS,
                     default=self.found_device.get(CONF_IP_ADDRESS),
                 ): str,
-                vol.Required(
+                probatio.Required(
                     CONF_PORT,
                     default=(self.found_device.get(CONF_PORT) or 6444),
                 ): int,
-                vol.Required(
+                probatio.Required(
                     CONF_PROTOCOL,
                     default=(protocol or ProtocolVersion.V3),
-                ): vol.In(
+                ): probatio.In(
                     [protocol] if protocol else ProtocolVersion,
                 ),
-                vol.Required(
+                probatio.Required(
                     CONF_MODEL,
                     default=(self.found_device.get(CONF_MODEL) or "Unknown"),
                 ): str,
-                vol.Required(
+                probatio.Required(
                     CONF_SUBTYPE,
                     default=(self.found_device.get(CONF_SUBTYPE) or 0),
                 ): int,
-                vol.Optional(
+                probatio.Optional(
                     CONF_TOKEN,
                     default=(self.found_device.get(CONF_TOKEN) or ""),
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_KEY,
                     default=(self.found_device.get(CONF_KEY) or ""),
                 ): str,
@@ -808,7 +869,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="manually",
             data_schema=schema,
-            errors={"base": error} if error else None,
+            **self._form_error(error),
         )
 
     @override

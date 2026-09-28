@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from gatus_api import EndpointStatus, Result
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
@@ -21,6 +22,7 @@ from tests.common import (
 )
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_setup_and_states(
     hass: HomeAssistant,
     mock_gatus_client: AsyncMock,
@@ -153,6 +155,7 @@ async def test_sensor_missing_status_code(
     hass: HomeAssistant,
     mock_gatus_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that a result missing status code evaluates to STATE_UNKNOWN for status code sensor."""
     mock_gatus_client.get_endpoints_statuses.return_value = [
@@ -165,6 +168,11 @@ async def test_sensor_missing_status_code(
     ]
 
     await setup_integration(hass, mock_config_entry)
+    entity_registry.async_update_entity(
+        "sensor.backend_service_status_code", disabled_by=None
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.backend_service_status_code")
     assert state is not None
@@ -225,3 +233,25 @@ async def test_sensor_missing_dns_rcode(
 
     state = hass.states.get("sensor.backend_service_dns_response_code")
     assert state is None
+
+
+async def test_diagnostic_sensors_disabled_by_default(
+    hass: HomeAssistant,
+    mock_gatus_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that diagnostic sensors are disabled by default."""
+    await setup_integration(hass, mock_config_entry)
+
+    for sensor_key in (
+        "status_code",
+        "last_event",
+        "certificate_expiration",
+        "dns_response_code",
+    ):
+        entity_id = f"sensor.core_backend_service_{sensor_key}"
+        assert hass.states.get(entity_id) is None
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

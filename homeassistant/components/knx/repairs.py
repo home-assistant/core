@@ -5,7 +5,7 @@ from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, Final
 
-import voluptuous as vol
+import probatio
 from xknx.exceptions.exception import InvalidSecureConfiguration
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 
@@ -175,14 +175,14 @@ class DataSecureGroupIssueRepairFlow(RepairsFlow):
                 return self.finish_flow(new_entry_data)
 
         fields = {
-            vol.Required(CONF_KEYRING_FILE): selector.FileSelector(
+            probatio.Required(CONF_KEYRING_FILE): selector.FileSelector(
                 config=selector.FileSelectorConfig(accept=".knxkeys")
             ),
-            vol.Required(CONF_KNX_KNXKEY_PASSWORD): selector.TextSelector(),
+            probatio.Required(CONF_KNX_KNXKEY_PASSWORD): selector.TextSelector(),
         }
         return self.async_show_form(
             step_id="secure_knxkeys",
-            data_schema=vol.Schema(fields),
+            data_schema=probatio.Schema(fields),
             errors=errors,
         )
 

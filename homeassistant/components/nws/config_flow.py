@@ -4,8 +4,8 @@ import logging
 from typing import Any, override
 
 import aiohttp
+import probatio
 from pynws import SimpleNWS
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
@@ -80,16 +80,16 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_API_KEY): str,
-                vol.Required(
+                probatio.Required(CONF_API_KEY): str,
+                probatio.Required(
                     CONF_LATITUDE, default=self.hass.config.latitude
                 ): cv.latitude,
-                vol.Required(
+                probatio.Required(
                     CONF_LONGITUDE, default=self.hass.config.longitude
                 ): cv.longitude,
-                vol.Optional(CONF_STATION): str,
+                probatio.Optional(CONF_STATION): str,
             }
         )
 
@@ -142,10 +142,10 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
                         _LOGGER.exception("Unexpected exception")
                         errors["base"] = "unknown"
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_API_KEY): str,
-                vol.Required(CONF_LOCATION_ENTITY): EntitySelector(
+                probatio.Required(CONF_API_KEY): str,
+                probatio.Required(CONF_LOCATION_ENTITY): EntitySelector(
                     EntitySelectorConfig(
                         domain=["person", "device_tracker", "zone"],
                     )
