@@ -634,74 +634,6 @@ async def test_coordinator_firmware_refresh(
 
 
 @respx.mock
-async def test_coordinator_firmware_refresh_with_envoy_error(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_envoy: AsyncMock,
-    freezer: FrozenDateTimeFactory,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test coordinator scheduled firmware check."""
-    await setup_integration(hass, config_entry)
-
-    caplog.set_level(logging.DEBUG)
-    logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
-        logging.DEBUG
-    )
-
-    mock_envoy.setup.side_effect = EnvoyError
-    freezer.tick(FIRMWARE_REFRESH_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert "Error reading firmware:" in caplog.text
-
-
-@respx.mock
-async def test_coordinator_firmware_refresh_with_session_is_closed(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_envoy: AsyncMock,
-    freezer: FrozenDateTimeFactory,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test coordinator firmware check handling session closed."""
-    await setup_integration(hass, config_entry)
-
-    caplog.set_level(logging.DEBUG)
-    logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
-        logging.DEBUG
-    )
-
-    mock_envoy.setup.side_effect = EnvoyClientClosedError
-    freezer.tick(FIRMWARE_REFRESH_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert "Client is closed when reading firmware" in caplog.text
-
-    caplog.clear()
-    mock_envoy.setup.side_effect = RuntimeError("Session is closed")
-    await config_entry.runtime_data._async_try_refresh_firmware()
-
-    assert "Client is closed when reading firmware" in caplog.text
-
-
-@respx.mock
-async def test_coordinator_firmware_refresh_with_runtime_error(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_envoy: AsyncMock,
-) -> None:
-    """Test coordinator firmware check reraising RuntimeError."""
-    await setup_integration(hass, config_entry)
-
-    mock_envoy.setup.side_effect = RuntimeError("Some other runtime error")
-    with pytest.raises(RuntimeError, match="Some other runtime error"):
-        await config_entry.runtime_data._async_try_refresh_firmware()
-
-
-@respx.mock
 async def test_coordinator_interface_information(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -837,52 +769,6 @@ async def test_coordinator_interface_information_mac_also_in_other_device(
     }
 
 
-@respx.mock
-async def test_coordinator_interface_information_session_is_closed(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_envoy: AsyncMock,
-    freezer: FrozenDateTimeFactory,
-    caplog: pytest.LogCaptureFixture,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test coordinator interface mac verification handling session is closed."""
-    await setup_integration(hass, config_entry)
-
-    caplog.set_level(logging.DEBUG)
-    logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
-        logging.DEBUG
-    )
-
-    mock_envoy.interface_settings.side_effect = RuntimeError("Session is closed")
-    freezer.tick(MAC_VERIFICATION_DELAY)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert "Client is closed when reading interface information" in caplog.text
-
-
-@respx.mock
-async def test_coordinator_interface_information_runtime_error(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_envoy: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test coordinator interface mac verification handling RuntimeError."""
-    await setup_integration(hass, config_entry)
-    caplog.set_level(logging.DEBUG)
-
-    mock_envoy.interface_settings.side_effect = RuntimeError("Some other runtime error")
-    with pytest.raises(RuntimeError, match="Some other runtime error"):
-        await config_entry.runtime_data._async_fetch_and_compare_mac()
-
-    caplog.clear()
-    mock_envoy.interface_settings.side_effect = EnvoyClientClosedError
-    await config_entry.runtime_data._async_fetch_and_compare_mac()
-    assert "Client is closed when reading interface information" in caplog.text
-
-
 @pytest.mark.freeze_time("2024-07-23 00:00:00+00:00")
 async def test_retry_timeout_settings(
     hass: HomeAssistant,
@@ -959,3 +845,132 @@ async def test_background_task_cancel_at_unload(
 
     assert "Mock Interface settings start" in caplog.text
     assert "Mock Interface settings end" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("test_target", "envoy_method", "exc", "msg"),
+    [
+        (
+            "_async_fetch_and_compare_mac",
+            "interface_settings",
+            RuntimeError,
+            "Some other runtime error",
+        ),
+        (
+            "_async_try_refresh_firmware",
+            "setup",
+            RuntimeError,
+            "Some other runtime error",
+        ),
+        (
+            "_async_fetch_and_compare_mac",
+            "interface_settings",
+            ValueError,
+            "Some other error",
+        ),
+        (
+            "_async_try_refresh_firmware",
+            "setup",
+            ValueError,
+            "Some other error",
+        ),
+    ],
+    ids=["mac", "firmware", "mac_value", "firmware_value"],
+)
+@respx.mock
+async def test_coordinator_background_tasks_reraised_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+    test_target: str,
+    envoy_method: str,
+    exc: Exception,
+    msg: str,
+) -> None:
+    """Test coordinator background task handling raised error."""
+    await setup_integration(hass, config_entry)
+    caplog.set_level(logging.DEBUG)
+    coordinator = config_entry.runtime_data
+
+    def raise_error() -> None:
+        raise exc(msg)
+
+    caplog.clear()
+    test_with = getattr(coordinator, test_target)
+    setattr(mock_envoy, envoy_method, raise_error)
+    with pytest.raises(exc, match=msg):
+        await test_with()
+
+
+@pytest.mark.parametrize(
+    ("envoy_method", "exc", "msg", "time_step"),
+    [
+        (
+            "interface_settings",
+            RuntimeError("Session is closed"),
+            "Client is closed when reading interface information",
+            MAC_VERIFICATION_DELAY,
+        ),
+        (
+            "setup",
+            RuntimeError("Session is closed"),
+            "Client is closed when reading firmware",
+            FIRMWARE_REFRESH_INTERVAL,
+        ),
+        (
+            "interface_settings",
+            EnvoyClientClosedError,
+            "Client is closed when reading interface information",
+            MAC_VERIFICATION_DELAY,
+        ),
+        (
+            "setup",
+            EnvoyClientClosedError,
+            "Client is closed when reading firmware",
+            FIRMWARE_REFRESH_INTERVAL,
+        ),
+        (
+            "setup",
+            EnvoyError,
+            "Error reading firmware",
+            FIRMWARE_REFRESH_INTERVAL,
+        ),
+    ],
+    ids=[
+        "mac",
+        "firmware",
+        "mac_envoyclosed",
+        "firmware_envoyclosed",
+        "firmware_envoyerror",
+    ],
+)
+@respx.mock
+async def test_coordinator_background_tasks_session_is_closed(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    envoy_method: str,
+    exc: Exception,
+    msg: str,
+    time_step: timedelta,
+) -> None:
+    """Test coordinator background task handling RuntimeError."""
+    await setup_integration(hass, config_entry)
+    logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
+        logging.DEBUG
+    )
+    caplog.set_level(logging.DEBUG)
+
+    def raise_error() -> None:
+        raise exc
+
+    caplog.clear()  # test_with = getattr(coordinator, test_target)
+    setattr(mock_envoy, envoy_method, raise_error)
+    freezer.tick(time_step)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert msg in caplog.text
