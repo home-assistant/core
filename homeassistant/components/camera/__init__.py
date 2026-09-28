@@ -73,7 +73,11 @@ from .const import (
     CameraState,
     StreamType,
 )
-from .helper import get_camera_from_entity_id
+from .helper import (
+    _async_get_stream_image,
+    _async_stream_endpoint_url,
+    get_camera_from_entity_id,
+)
 from .img_util import (
     TurboJPEGSingleton,  # noqa: F401
     scale_jpeg_camera_image,
@@ -216,25 +220,6 @@ async def async_get_image(
     """
     camera = get_camera_from_entity_id(hass, entity_id)
     return await _async_get_image(camera, timeout, width, height)
-
-
-async def _async_get_stream_image(
-    camera: Camera,
-    width: int | None = None,
-    height: int | None = None,
-    wait_for_next_keyframe: bool = False,
-) -> bytes | None:
-    if (provider := camera.webrtc_provider) and (
-        image := await provider.async_get_image(camera, width=width, height=height)
-    ) is not None:
-        return image
-    if not camera.stream and CameraEntityFeature.STREAM in camera.supported_features:
-        camera.stream = await camera.async_create_stream()
-    if camera.stream:
-        return await camera.stream.async_get_image(
-            width=width, height=height, wait_for_next_keyframe=wait_for_next_keyframe
-        )
-    return None
 
 
 async def async_get_stream_source(hass: HomeAssistant, entity_id: str) -> str | None:
@@ -1132,20 +1117,6 @@ async def async_handle_play_stream_service(
         blocking=True,
         context=service_call.context,
     )
-
-
-async def _async_stream_endpoint_url(
-    hass: HomeAssistant, camera: Camera, fmt: str
-) -> str:
-    stream = await camera.async_create_stream()
-    if not stream:
-        raise HomeAssistantError(
-            f"{camera.entity_id} does not support play stream service"
-        )
-
-    stream.add_provider(fmt)
-    await stream.start()
-    return stream.endpoint_url(fmt)
 
 
 async def async_handle_record_service(
