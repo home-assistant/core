@@ -43,9 +43,6 @@
       "b_c": {
         "name": "Battery current"
       },
-      "b_c_total": {
-        "name": "Total battery current"
-      },
       "b_cell_count": {
         "name": "Cell count"
       },
@@ -72,9 +69,6 @@
       },
       "b_v": {
         "name": "Battery voltage"
-      },
-      "b_v_total": {
-        "name": "Total battery voltage"
       },
       "d_inverter_1_c": {
         "name": "Inverter current"
