@@ -677,3 +677,36 @@ async def test_energy_history_unavailable_while_stream_disconnected(
     mock_energy_totals_stream.send(is_cache=True)
     await hass.async_block_till_done()
     assert hass.states.get(ENERGY_HISTORY_ENTITY).state == "0.036"
+
+
+@pytest.mark.parametrize(
+    ("scopes", "expected"),
+    [
+        pytest.param(METADATA["scopes"], True, id="location_scope"),
+        pytest.param(
+            [scope for scope in METADATA["scopes"] if scope != "vehicle_location"],
+            False,
+            id="no_location_scope",
+        ),
+    ],
+)
+async def test_location_sensors_require_location_scope(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_metadata: AsyncMock,
+    scopes: list[str],
+    expected: bool,
+) -> None:
+    """Test location sensors are only created with the vehicle location scope."""
+
+    mock_metadata.return_value = {**METADATA, "scopes": scopes}
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    for key in ("gps_heading", "drive_state_active_route_destination"):
+        assert (
+            entity_registry.async_get_entity_id(
+                Platform.SENSOR, DOMAIN, f"{VEHICLE_VIN}-{key}"
+            )
+            is not None
+        ) is expected
