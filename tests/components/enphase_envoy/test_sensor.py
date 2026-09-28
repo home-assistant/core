@@ -1976,3 +1976,18 @@ async def test_sensor_daily_production_consumption_phase_upper_limit(
     for name in PHASE_NAMES:
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
         assert entity_state.state == "unknown"
+
+    # test actual reported value
+    for phase in PHASENAMES:
+        mock_envoy.data.system_production_phases[phase].watt_hours_today = 2**32
+        mock_envoy.data.system_consumption_phases[phase].watt_hours_today = 2**32
+
+    # force HA to detect changed data by changing raw
+    mock_envoy.data.raw = {"I": "am changed again"}
+    # Move time to next update
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    for name in PHASE_NAMES:
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
+        assert entity_state.state == "unknown"
