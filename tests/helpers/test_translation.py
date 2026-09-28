@@ -995,35 +995,48 @@ async def test_invalidate_translations_during_load(hass: HomeAssistant) -> None:
     """An older load cannot restore invalidated strings or English fallbacks."""
     started = asyncio.Event()
     resume = asyncio.Event()
+    strings = {
+        "en": {"sensor": {"title": "Old"}, "light": {"title": "Light"}},
+        "de": {"sensor": {"title": "Alt"}, "light": {"title": "Licht"}},
+    }
 
-    async def load_stale(*args: Any) -> dict[str, dict[str, Any]]:
-        started.set()
-        await resume.wait()
-        return {
-            "en": {"sensor": {"title": "Old"}, "light": {"title": "Light"}},
-            "de": {"sensor": {"title": "Alt"}, "light": {"title": "Licht"}},
+    async def load_strings(
+        hass: HomeAssistant,
+        languages: list[str],
+        components: set[str],
+        integrations: dict[str, Any],
+    ) -> dict[str, dict[str, Any]]:
+        # Read before blocking, so the first load returns the stale strings.
+        result = {
+            language: {
+                component: strings[language][component] for component in components
+            }
+            for language in languages
         }
+        if not started.is_set():
+            started.set()
+            await resume.wait()
+        return result
 
     with patch(
         "homeassistant.helpers.translation._async_get_component_strings",
-        side_effect=load_stale,
+        side_effect=load_strings,
     ) as load:
         task = hass.async_create_task(
             translation.async_get_translations(hass, "de", "title", {"sensor", "light"})
         )
         await started.wait()
         translation.async_invalidate_translations(hass, {"sensor"})
-        load.side_effect = None
-        load.return_value = {
-            "en": {"sensor": {"title": "New"}},
-            "de": {"sensor": {"title": "Neu"}},
-        }
+        strings["en"]["sensor"] = {"title": "New"}
+        strings["de"]["sensor"] = {"title": "Neu"}
         resume.set()
         assert await task == {
             "component.sensor.title": "Neu",
             "component.light.title": "Licht",
         }
-        assert load.await_count == 2
+        # English and German are loaded twice: once for the stale and
+        # once for the reloaded components.
+        assert load.await_count == 4
         assert load.call_args.args[2] == {"sensor"}
 
     assert translation.async_get_cached_translations(hass, "en", "title", "sensor") == {
@@ -1069,3 +1082,61 @@ async def test_invalidate_translations_after_custom_integration_removal(
         == expected
     )
     assert await loader.async_get_integration(hass, domain) is custom
+
+
+async def test_non_english_reuses_english_cache(hass: HomeAssistant) -> None:
+    """Test a non-English load shares the cached English fallback strings."""
+    integration = Mock(file_path=pathlib.Path(__file__))
+    integration.name = "Component A"
+
+    component_strings = {
+        "en": {
+            "issues": {
+                "broken": {"title": "A is broken"},
+                "detached": {"title": "A detached"},
+            }
+        },
+        "de": {"issues": {"broken": {"title": "A kaputt"}}},
+    }
+    loaded_languages: list[set[str]] = []
+
+    def mock_load_translation_files(
+        files: dict[str, dict[str, Any]],
+    ) -> dict[str, dict[str, Any]]:
+        """Return language-keyed strings and record the languages loaded."""
+        loaded_languages.append(set(files))
+        return {
+            language: dict.fromkeys(comps, component_strings[language])
+            for language, comps in files.items()
+        }
+
+    cache = translation._async_get_translations_cache(hass)
+
+    with (
+        patch(
+            "homeassistant.helpers.translation._load_translations_files_by_language",
+            mock_load_translation_files,
+        ),
+        patch(
+            "homeassistant.helpers.translation.async_get_integrations",
+            return_value={"comp_a": integration},
+        ),
+    ):
+        await cache.async_load("en", {"comp_a"})
+        await cache.async_load("de", {"comp_a"})
+
+    # English was already cached, so only the German file is read again.
+    assert loaded_languages == [{"en"}, {"de"}]
+
+    english = translation.async_get_cached_translations(hass, "en", "issues", "comp_a")
+    german = translation.async_get_cached_translations(hass, "de", "issues", "comp_a")
+    assert german == {
+        "component.comp_a.issues.broken.title": "A kaputt",
+        "component.comp_a.issues.detached.title": "A detached",
+    }
+    # The English fallback strings are shared, not duplicated.
+    key = "component.comp_a.issues.detached.title"
+    german_key = next(k for k in german if k == key)
+    english_key = next(k for k in english if k == key)
+    assert german_key is english_key
+    assert german[key] is english[key]

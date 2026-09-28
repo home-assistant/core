@@ -228,9 +228,6 @@ class _TranslationCache:
             language,
             components,
         )
-        # Fetch the English resources, as a fallback for missing keys
-        languages = [LOCALE_EN] if language == LOCALE_EN else [LOCALE_EN, language]
-
         integrations: dict[str, Integration] = {}
         ints_or_excs = await async_get_integrations(self.hass, components)
         for domain, int_or_exc in ints_or_excs.items():
@@ -260,8 +257,18 @@ class _TranslationCache:
                     ):
                         integrations[domain] = integration
 
-        translation_by_language_strings = await _async_get_component_strings(
-            self.hass, languages, components, integrations
+        # English is the fallback for missing keys. Seed the requested
+        # language from the English cache so both share the same strings.
+        english_to_load: set[str] = set()
+        english_strings: dict[str, Any] = {}
+        if language != LOCALE_EN and (
+            english_to_load := components - loaded.setdefault(LOCALE_EN, set())
+        ):
+            english_strings = await self._async_get_strings(
+                LOCALE_EN, english_to_load, integrations
+            )
+        translation_strings = await self._async_get_strings(
+            language, components, integrations
         )
 
         # An invalidation during I/O must also discard the stale load.
@@ -271,29 +278,39 @@ class _TranslationCache:
             if self.generations.get(component, 0) == generations[component]
         }
 
-        # English is always the fallback language so we load them first
-        self._build_category_cache(
-            language, components, translation_by_language_strings[LOCALE_EN]
-        )
-
         if language != LOCALE_EN:
-            # Now overlay the requested language on top of the English
-            self._build_category_cache(
-                language, components, translation_by_language_strings[language]
-            )
+            english_to_load &= components
+            self._build_category_cache(LOCALE_EN, english_to_load, english_strings)
+            loaded[LOCALE_EN].update(english_to_load)
+            self._copy_english_category_cache(language, components)
 
-            loaded_english_components = loaded.setdefault(LOCALE_EN, set())
-            # English is the fallback for missing keys, so cache it for every
-            # not-yet-cached component, not only when the whole batch is new.
-            if english_to_cache := components - loaded_english_components:
-                self._build_category_cache(
-                    LOCALE_EN,
-                    english_to_cache,
-                    translation_by_language_strings[LOCALE_EN],
-                )
-                loaded_english_components.update(english_to_cache)
-
+        self._build_category_cache(language, components, translation_strings)
         loaded[language].update(components)
+
+    async def _async_get_strings(
+        self,
+        language: str,
+        components: set[str],
+        integrations: dict[str, Integration],
+    ) -> dict[str, Any]:
+        """Load translation files for one language."""
+        translation_by_language_strings = await _async_get_component_strings(
+            self.hass, [language], components, integrations
+        )
+        return translation_by_language_strings[language]
+
+    @callback
+    def _copy_english_category_cache(self, language: str, components: set[str]) -> None:
+        """Copy the cached English resources of components into a language."""
+        cached = self.cache_data.cache.setdefault(language, {})
+        for category, english_category_cache in self.cache_data.cache[
+            LOCALE_EN
+        ].items():
+            category_cache = cached.setdefault(category, {})
+            for component in components.intersection(english_category_cache):
+                category_cache.setdefault(component, {}).update(
+                    english_category_cache[component]
+                )
 
     def _validate_placeholders(
         self,
