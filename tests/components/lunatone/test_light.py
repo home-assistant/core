@@ -16,7 +16,10 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     DOMAIN as LIGHT_DOMAIN,
 )
-from homeassistant.components.lunatone.coordinator import DEFAULT_INFO_UPDATE_INTERVAL
+from homeassistant.components.lunatone.coordinator import (
+    DEFAULT_DEVICES_UPDATE_INTERVAL,
+    DEFAULT_INFO_UPDATE_INTERVAL,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -55,6 +58,34 @@ async def test_setup(
         assert entity_entry
         assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
         assert entity_state == snapshot(name=f"{entity_entry.entity_id}-state")
+
+
+async def test_device_added_after_setup(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a device added after setup creates an entity."""
+    entity_id = "light.device_1"
+    device = mock_lunatone_devices.data.devices.pop(0)
+
+    await setup_integration(hass, mock_config_entry)
+
+    entity = hass.states.get(entity_id)
+    assert entity is None
+
+    mock_lunatone_devices.data.devices.append(device)
+
+    freezer.tick(DEFAULT_DEVICES_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity = hass.states.get(entity_id)
+    assert entity
 
 
 async def test_turn_on_off(

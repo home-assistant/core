@@ -1,5 +1,8 @@
 """Platform for Lunatone sensor integration."""
 
+from collections.abc import Callable
+import contextlib
+from functools import partial
 from typing import Final, override
 
 from lunatone_rest_api_client import Sensor
@@ -18,7 +21,7 @@ from homeassistant.const import (
     UnitOfRatio,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -92,23 +95,74 @@ async def async_setup_entry(
     coordinator_info = config_entry.runtime_data.coordinator_info
     coordinator_sensors = config_entry.runtime_data.coordinator_sensors
 
-    assert config_entry.unique_id is not None
+    config_entry_unique_id = config_entry.unique_id
+    assert config_entry_unique_id is not None
 
-    entities: list[SensorEntity] = [
-        LunatoneDALILineStatusSensor(coordinator_info, line_id, config_entry.unique_id)
-        for line_id in map(int, coordinator_info.data.lines)
-    ]
+    def _add_entities(
+        entity_builder: dict[str, Callable[[], SensorEntity]], known_entities: set[str]
+    ) -> None:
+        current_entities = set(entity_builder)
+        new_entities = current_entities - known_entities
+        stale_entities = known_entities - current_entities
+
+        if new_entities:
+            with contextlib.suppress(ValueError):
+                async_add_entities(
+                    [
+                        entity_builder[entity_unique_id]()
+                        for entity_unique_id in new_entities
+                    ]
+                )
+                known_entities.update(new_entities)
+        if stale_entities:
+            known_entities.difference_update(stale_entities)
+
+    known_line_status_entities: set[str] = set()
+
+    @callback
+    def _check_line_status_entities() -> None:
+        entity_builder: dict[str, Callable[[], SensorEntity]] = {}
+        for line_id in map(int, coordinator_info.data.lines):
+            unique_id = LunatoneDALILineStatusSensor.construct_unique_id(
+                config_entry_unique_id, line_id
+            )
+            entity_builder[unique_id] = partial(
+                LunatoneDALILineStatusSensor,
+                coordinator_info,
+                line_id,
+                config_entry_unique_id,
+            )
+        _add_entities(entity_builder, known_line_status_entities)
+
+    _check_line_status_entities()
+    config_entry.async_on_unload(
+        coordinator_info.async_add_listener(_check_line_status_entities)
+    )
 
     if coordinator_sensors is not None:
-        entities.extend(
-            LunatoneSensor(
-                coordinator_sensors, description, sensor_id, config_entry.unique_id
-            )
-            for sensor_id, sensor_data in coordinator_sensors.data.items()
-            if (description := SENSOR_TYPES.get(sensor_data.data.type))
-        )
+        known_sensor_entities: set[str] = set()
 
-    async_add_entities(entities)
+        @callback
+        def _check_sensor_entities() -> None:
+            entity_builder: dict[str, Callable[[], SensorEntity]] = {}
+            for sensor_id, sensor in coordinator_sensors.data.items():
+                if description := SENSOR_TYPES.get(sensor.data.type):
+                    unique_id = LunatoneSensor.construct_unique_id(
+                        config_entry_unique_id, sensor_id, description.key
+                    )
+                    entity_builder[unique_id] = partial(
+                        LunatoneSensor,
+                        coordinator_sensors,
+                        description,
+                        sensor_id,
+                        config_entry_unique_id,
+                    )
+            _add_entities(entity_builder, known_sensor_entities)
+
+        _check_sensor_entities()
+        config_entry.async_on_unload(
+            coordinator_sensors.async_add_listener(_check_sensor_entities)
+        )
 
 
 class LunatoneSensor(
