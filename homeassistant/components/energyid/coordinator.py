@@ -126,6 +126,9 @@ def _snapshot(
         key=lambda point: point.timestamp,
         default=None,
     )
+    interval = dt_util.parse_duration(schedule.interval)
+    if current and interval and now >= current.timestamp + interval:
+        current = None
     next_change = next(
         (
             point

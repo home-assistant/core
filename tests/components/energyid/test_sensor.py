@@ -23,9 +23,13 @@ from homeassistant.util import dt as dt_util
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-def _directive_fixture() -> tuple[DirectiveResource, DirectiveData]:
-    """Return one current directive and its next change."""
-    now = dt_util.utcnow().replace(second=0, microsecond=0)
+def _directive_fixture(
+    good_slots: int = 1,
+) -> tuple[DirectiveResource, DirectiveData]:
+    """Return a directive with 15 minute slots: good ones first, then a neutral one."""
+    slot_start = dt_util.utcnow().replace(second=0, microsecond=0) - dt.timedelta(
+        minutes=5
+    )
     resource = DirectiveResource(
         id="11111111-1111-1111-1111-111111111111",
         title="Community planner",
@@ -37,24 +41,28 @@ def _directive_fixture() -> tuple[DirectiveResource, DirectiveData]:
             logo_url=None,
         ),
     )
+    points = [
+        DirectiveSignal(
+            timestamp=slot_start + dt.timedelta(minutes=15 * slot),
+            signal="++",
+            color="#00750e",
+            raw_value=0,
+        )
+        for slot in range(good_slots)
+    ]
+    points.append(
+        DirectiveSignal(
+            timestamp=slot_start + dt.timedelta(minutes=15 * good_slots),
+            signal="0",
+            color="#EBEBEB",
+            raw_value=0,
+        )
+    )
     schedule = DirectiveData(
         title=resource.title,
         description=resource.description,
         interval="PT15M",
-        data=(
-            DirectiveSignal(
-                timestamp=now - dt.timedelta(minutes=15),
-                signal="++",
-                color="#00750e",
-                raw_value=0,
-            ),
-            DirectiveSignal(
-                timestamp=now + dt.timedelta(minutes=15),
-                signal="0",
-                color="#EBEBEB",
-                raw_value=0,
-            ),
-        ),
+        data=tuple(points),
     )
     return resource, schedule
 
@@ -365,7 +373,7 @@ async def test_directive_access_granted_after_setup(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test API access granted later is picked up by re-authenticating."""
-    resource, schedule = _directive_fixture()
+    resource, schedule = _directive_fixture(good_slots=4)
     hass.config_entries.async_update_entry(
         mock_config_entry, options={CONF_ENABLE_DIRECTIVES: True}
     )
@@ -446,7 +454,7 @@ async def test_directive_unavailable_while_update_fails(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a failed poll marks the sensor unavailable until the next success."""
-    resource, schedule = _directive_fixture()
+    resource, schedule = _directive_fixture(good_slots=4)
     hass.config_entries.async_update_entry(
         mock_config_entry, options={CONF_ENABLE_DIRECTIVES: True}
     )
@@ -583,3 +591,43 @@ async def test_granted_directive_with_failing_schedule_is_discovered(
     }
     assert states[f"EA-TEST_{failing_resource.id}"] == STATE_UNAVAILABLE
     assert states[f"EA-TEST_{resource.id}"] == "very_good_moment"
+
+
+async def test_directive_expires_after_its_last_slot(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a schedule whose last slot has ended no longer reports a signal."""
+    resource, schedule = _directive_fixture()
+    expired_schedule = DirectiveData(
+        title=schedule.title,
+        description=schedule.description,
+        interval=schedule.interval,
+        data=(
+            DirectiveSignal(
+                timestamp=dt_util.utcnow() - dt.timedelta(hours=3),
+                signal="++",
+                color="#00750e",
+                raw_value=0,
+            ),
+        ),
+    )
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_ENABLE_DIRECTIVES: True}
+    )
+    mock_webhook_client.api_access_token = "device-token"
+    mock_webhook_client.get_directives = AsyncMock(return_value=[resource])
+    mock_webhook_client.get_directive_data = AsyncMock(return_value=expired_schedule)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    [registry_entry] = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    state = hass.states.get(registry_entry.entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes["next_change"] is None
