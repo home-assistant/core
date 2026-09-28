@@ -98,6 +98,9 @@
       "bypass_infinite": {
         "name": "Break function never expires"
       },
+      "camera_light": {
+        "name": "Camera light"
+      },
       "child_lock": {
         "name": "Child lock"
       },
