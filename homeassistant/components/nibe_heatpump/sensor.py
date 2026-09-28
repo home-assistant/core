@@ -1,5 +1,6 @@
 """The Nibe Heat Pump sensors."""
 
+from math import ceil, log10
 from typing import override
 
 from nibe.coil import Coil, CoilData
@@ -247,6 +248,8 @@ class Sensor(CoilEntity, SensorEntity):
 
         if state_class := NATURE_TO_STATE_CLASS.get(coil.nature):
             self._attr_state_class = state_class
+
+        self._attr_suggested_display_precision = ceil(log10(abs(coil.factor)))
 
     @override
     def _async_read_coil(self, data: CoilData):
