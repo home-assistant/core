@@ -50,6 +50,9 @@
       },
       "raindelay": {
         "name": "Raindelay"
+      },
+      "zone_run_time": {
+        "name": "{program} run time"
       }
     }
   },

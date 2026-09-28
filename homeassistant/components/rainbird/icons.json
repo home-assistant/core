@@ -21,6 +21,9 @@
       },
       "raindelay": {
         "default": "mdi:water-off"
+      },
+      "zone_run_time": {
+        "default": "mdi:timer-outline"
       }
     }
   },
