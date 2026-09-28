@@ -28,7 +28,7 @@
           "host": "The hostname or IP address of your IONT charger. Modbus TCP has to be enabled on the charger first, in its administration interface.",
           "port": "The TCP port the charger listens on for Modbus requests. The default is 502."
         },
-        "description": "Connect to your IONT charger over your local network to monitor and control charging."
+        "description": "Connect to your IONT charger over your local network to monitor charging."
       }
     }
   },

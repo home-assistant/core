@@ -71,11 +71,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices:
-    status: exempt
-    comment: |
-      Connectors are wired into the charger by hand; the entry reads their
-      count when it loads and reloading picks a change up.
+  dynamic-devices: todo
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
