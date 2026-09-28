@@ -1,5 +1,7 @@
 """Base entities for the BLUETTI Modbus integration."""
 
+from yarl import URL
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -8,10 +10,11 @@ from .coordinator import BluettiModbusConfigEntry, BluettiModbusDataUpdateCoordi
 
 
 def bluetti_modbus_device_info(
-    serial: str, sw_version: str | None = None
+    serial: str, sw_version: str | None = None, *, host: str
 ) -> DeviceInfo:
     """Return device information for a BLUETTI Modbus device."""
     return DeviceInfo(
+        configuration_url=str(URL.build(scheme="http", host=host)),
         identifiers={(DOMAIN, serial)},
         manufacturer="BLUETTI",
         model=MODEL,

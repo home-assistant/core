@@ -82,6 +82,7 @@ async def test_device_info(
     assert device_entry.model == "Balco 260"
     assert device_entry.model_id == "Balco260"
     assert device_entry.name == "Balco 260"
+    assert device_entry.configuration_url == f"http://{HOST}"
 
 
 async def test_firmware_versions_are_device_metadata_not_a_sensor(
