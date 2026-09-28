@@ -56,7 +56,7 @@ async def async_setup_entry(
     directives_enabled = async_directives_enabled(entry)
     entity_registry = er.async_get(hass)
     known_directives: set[str] = set()
-    unique_id_prefix = f"{coordinator.client.recordNumber}_"
+    unique_id_prefix = f"{entry.entry_id}_"
 
     @callback
     def _async_sync_directives() -> None:
@@ -113,7 +113,7 @@ class EnergyIDDirectiveSensor(
         """Initialize a directive sensor."""
         super().__init__(coordinator)
         self.directive_id = resource.id
-        self._attr_unique_id = f"{coordinator.client.recordNumber}_{resource.id}"
+        self._attr_unique_id = f"{entry.entry_id}_{resource.id}"
         self._attr_translation_placeholders = {"directive_name": resource.title}
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},

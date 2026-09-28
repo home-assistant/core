@@ -152,7 +152,9 @@ async def test_get_directive_schedule_skips_unavailable_directive(
     await hass.async_block_till_done()
 
     entity_ids = {
-        registry_entry.unique_id.removeprefix("EA-TEST_"): registry_entry.entity_id
+        registry_entry.unique_id.removeprefix(
+            f"{mock_config_entry.entry_id}_"
+        ): registry_entry.entity_id
         for registry_entry in er.async_entries_for_config_entry(
             entity_registry, mock_config_entry.entry_id
         )

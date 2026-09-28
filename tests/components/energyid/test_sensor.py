@@ -150,16 +150,22 @@ async def test_multiple_directive_sensors(
         entity_registry, mock_config_entry.entry_id
     )
     assert {entry.unique_id for entry in entries} == {
-        f"EA-TEST_{first_resource.id}",
-        f"EA-TEST_{second_resource.id}",
+        f"{mock_config_entry.entry_id}_{first_resource.id}",
+        f"{mock_config_entry.entry_id}_{second_resource.id}",
     }
     states = {
         entry.unique_id: state
         for entry in entries
         if (state := hass.states.get(entry.entity_id)) is not None
     }
-    assert states[f"EA-TEST_{first_resource.id}"].state == "very_good_moment"
-    assert states[f"EA-TEST_{second_resource.id}"].state == "very_bad_moment"
+    assert (
+        states[f"{mock_config_entry.entry_id}_{first_resource.id}"].state
+        == "very_good_moment"
+    )
+    assert (
+        states[f"{mock_config_entry.entry_id}_{second_resource.id}"].state
+        == "very_bad_moment"
+    )
 
 
 async def test_directive_requires_opt_in(
@@ -263,8 +269,11 @@ async def test_unavailable_directive_does_not_block_other_directives(
         for entry in entries
         if (state := hass.states.get(entry.entity_id)) is not None
     }
-    assert states[f"EA-TEST_{unavailable_resource.id}"] == STATE_UNAVAILABLE
-    assert states[f"EA-TEST_{resource.id}"] == "very_good_moment"
+    assert (
+        states[f"{mock_config_entry.entry_id}_{unavailable_resource.id}"]
+        == STATE_UNAVAILABLE
+    )
+    assert states[f"{mock_config_entry.entry_id}_{resource.id}"] == "very_good_moment"
 
 
 async def test_registry_preserved_when_startup_fetch_fails(
@@ -278,7 +287,7 @@ async def test_registry_preserved_when_startup_fetch_fails(
     registry_entry = entity_registry.async_get_or_create(
         "sensor",
         "energyid",
-        f"EA-TEST_{resource.id}",
+        f"{mock_config_entry.entry_id}_{resource.id}",
         config_entry=mock_config_entry,
         suggested_object_id="my_customized_directive",
     )
@@ -295,7 +304,7 @@ async def test_registry_preserved_when_startup_fetch_fails(
 
     preserved = entity_registry.async_get(registry_entry.entity_id)
     assert preserved is not None
-    assert preserved.unique_id == f"EA-TEST_{resource.id}"
+    assert preserved.unique_id == f"{mock_config_entry.entry_id}_{resource.id}"
 
 
 async def test_revoked_directive_removed_and_regrant_rediscovered(
@@ -346,7 +355,9 @@ async def test_revoked_directive_removed_and_regrant_rediscovered(
     entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert {entry.unique_id for entry in entries} == {f"EA-TEST_{first_resource.id}"}
+    assert {entry.unique_id for entry in entries} == {
+        f"{mock_config_entry.entry_id}_{first_resource.id}"
+    }
 
     mock_webhook_client.get_directives.return_value = [
         first_resource,
@@ -360,8 +371,8 @@ async def test_revoked_directive_removed_and_regrant_rediscovered(
         entity_registry, mock_config_entry.entry_id
     )
     assert {entry.unique_id for entry in entries} == {
-        f"EA-TEST_{first_resource.id}",
-        f"EA-TEST_{second_resource.id}",
+        f"{mock_config_entry.entry_id}_{first_resource.id}",
+        f"{mock_config_entry.entry_id}_{second_resource.id}",
     }
 
 
@@ -518,7 +529,7 @@ async def test_stale_directive_pruned_once_grants_are_known(
     stale_entry = entity_registry.async_get_or_create(
         "sensor",
         "energyid",
-        "EA-TEST_revoked",
+        f"{mock_config_entry.entry_id}_revoked",
         config_entry=mock_config_entry,
     )
     hass.config_entries.async_update_entry(
@@ -589,8 +600,11 @@ async def test_granted_directive_with_failing_schedule_is_discovered(
         )
         if (state := hass.states.get(registry_entry.entity_id)) is not None
     }
-    assert states[f"EA-TEST_{failing_resource.id}"] == STATE_UNAVAILABLE
-    assert states[f"EA-TEST_{resource.id}"] == "very_good_moment"
+    assert (
+        states[f"{mock_config_entry.entry_id}_{failing_resource.id}"]
+        == STATE_UNAVAILABLE
+    )
+    assert states[f"{mock_config_entry.entry_id}_{resource.id}"] == "very_good_moment"
 
 
 async def test_directive_expires_after_its_last_slot(
