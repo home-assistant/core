@@ -83,7 +83,7 @@ RESPONSE_OK = {"response": {}, "error": None}
 # (heated rear bench, no third row, no seat cooling).
 VEHICLE_CONFIG = {
     "rear_seat_heaters": 1,
-    "third_row_seats": "None",
+    "third_row_seats": False,
     "has_seat_cooling": False,
 }
 
