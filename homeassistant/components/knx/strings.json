@@ -505,6 +505,7 @@
     "dpt_reference": {
       "description": "Browse supported KNX datapoint types",
       "search_label": "Search {count} items",
+      "search_label_singular": "Search {count} item",
       "title": "DPT reference"
     },
     "entities": {
