@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from jwt import encode
@@ -969,6 +969,7 @@ async def test_coordinator_background_tasks_session_is_closed(
 
     with patch(
         "aiohttp.ClientSession.closed",
+        new_callable=PropertyMock,
         return_value=True,
     ):
         caplog.clear()
