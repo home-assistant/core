@@ -1354,8 +1354,6 @@ class EntityPlatform:
 
                 results = await asyncio.gather(*tasks, return_exceptions=True)
 
-                # Log per-entity cancellation or exceptions with entity id to
-                # make debugging easier and to address reviewer requests.
                 for entity, result in zip(entities_to_update, results, strict=True):
                     if isinstance(result, asyncio.CancelledError):
                         self.logger.warning(
