@@ -324,9 +324,6 @@ class TeslemetryStreamingClimateEntity(
                 self._async_handle_climate_keeper_mode
             )
         )
-        self.async_on_remove(
-            self.vehicle.stream_vehicle.listen_RightHandDrive(self._async_handle_rhd)
-        )
 
         if self.side == TeslemetryClimateSide.DRIVER:
             if self.rhd:
@@ -376,10 +373,6 @@ class TeslemetryStreamingClimateEntity(
     def _async_handle_hvac_temperature_request(self, data: float | None) -> None:
         self._attr_target_temperature = data
         self.async_write_ha_state()
-
-    def _async_handle_rhd(self, data: bool | None) -> None:
-        if data is not None:
-            self.rhd = data
 
 
 COP_MODES = {
