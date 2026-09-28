@@ -110,7 +110,6 @@
         "aiohttp-asyncmdnsresolver",
         "yarl",
         "httpx2",
-        "httpcore2",
         "requests",
         "urllib3",
         "certifi",
