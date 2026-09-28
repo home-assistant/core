@@ -9,5 +9,5 @@
   "iot_class": "local_polling",
   "loggers": ["modbus_connection", "pyiont", "tmodbus"],
   "quality_scale": "bronze",
-  "requirements": ["pyiont==0.1.1"]
+  "requirements": ["pyiont==0.1.0"]
 }
