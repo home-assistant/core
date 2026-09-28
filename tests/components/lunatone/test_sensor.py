@@ -45,8 +45,9 @@ async def test_setup(
         (1, "sensor.test_temperature", "22"),
         (2, "sensor.test_air_humidity", "55"),
         (3, "sensor.dali_line_0_a02_temperature", "20"),
+        (4, "sensor.test_cpu_temperature", "50"),
     ],
-    ids=["temperature", "air_humidity", "dali_temperature"],
+    ids=["temperature", "air_humidity", "dali_temperature", "cpu_temperature"],
 )
 async def test_sensor_value_update(
     hass: HomeAssistant,

@@ -44,12 +44,14 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        translation_key="air_humidity",
     ),
     SensorType.AIR_PRESSURE: SensorEntityDescription(
         key="air_pressure",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
+        translation_key="air_pressure",
     ),
     SensorType.AIR_QUALITY: SensorEntityDescription(
         key="air_quality",
@@ -61,6 +63,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
+        translation_key="eco2",
     ),
     SensorType.LIGHT: SensorEntityDescription(
         key="light",
@@ -80,6 +83,15 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+}
+SPECIAL_SENSOR_TYPES: Final[dict[tuple[str, SensorType], SensorEntityDescription]] = {
+    ("CPU temperature", SensorType.TEMPERATURE): SensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="cpu_temperature",
+    )
 }
 
 
@@ -102,10 +114,18 @@ async def async_setup_entry(
     if coordinator_sensors is not None:
         entities.extend(
             LunatoneSensor(
-                coordinator_sensors, description, sensor_id, config_entry.unique_id
+                coordinator_sensors,
+                description,
+                sensor_id,
+                config_entry.unique_id,
             )
-            for sensor_id, sensor_data in coordinator_sensors.data.items()
-            if (description := SENSOR_TYPES.get(sensor_data.data.type))
+            for sensor_id, sensor in coordinator_sensors.data.items()
+            if (
+                description := (
+                    SPECIAL_SENSOR_TYPES.get((sensor.data.name, sensor.data.type))
+                    or SENSOR_TYPES.get(sensor.data.type)
+                )
+            )
         )
 
     async_add_entities(entities)
@@ -132,9 +152,8 @@ class LunatoneSensor(
         self._config_entry_unique_id = config_entry_unique_id
         self._sensor_id = sensor_id
 
-        self._attr_name = self.sensor.data.name
         self._attr_unique_id = (
-            f"{config_entry_unique_id}-sensor{sensor_id}-{description.key}"
+            f"{self._config_entry_unique_id}-sensor{sensor_id}-{description.key}"
         )
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self._config_entry_unique_id)},
