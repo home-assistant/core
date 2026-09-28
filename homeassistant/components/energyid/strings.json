@@ -97,7 +97,7 @@
           "enable_directives": "Receive EnergyID directives"
         },
         "data_description": {
-          "enable_directives": "Create a sensor for every directive this EnergyID record may access, including directives granted later."
+          "enable_directives": "Poll EnergyID for every directive this record may access, including directives granted later."
         },
         "description": "Directives tell you when it is a good or bad moment to use electricity. What a directive means for your installation is decided by its provider.\n\nManage access: {directives_url}",
         "title": "EnergyID directives"

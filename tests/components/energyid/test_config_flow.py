@@ -128,7 +128,7 @@ async def test_options_flow_defaults_reflect_current_choice(
     """Test the options form preselects the previously stored choice."""
     hass.config_entries.async_update_entry(
         mock_config_entry,
-        options={CONF_ENABLE_DIRECTIVES: False},
+        options={CONF_ENABLE_DIRECTIVES: True},
     )
 
     result = await hass.config_entries.options.async_init(
@@ -137,7 +137,7 @@ async def test_options_flow_defaults_reflect_current_choice(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["data_schema"]({}) == {CONF_ENABLE_DIRECTIVES: False}
+    assert result["data_schema"]({}) == {CONF_ENABLE_DIRECTIVES: True}
 
 
 async def test_config_flow_auth_and_claim_step_success(hass: HomeAssistant) -> None:
