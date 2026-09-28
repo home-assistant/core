@@ -3487,7 +3487,6 @@ xknxproject==3.10.0
 # homeassistant.components.rest
 # homeassistant.components.startca
 # homeassistant.components.ted5000
-# homeassistant.components.zestimate
 xmltodict==1.0.4
 
 # homeassistant.components.xs1
