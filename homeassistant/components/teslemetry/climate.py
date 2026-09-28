@@ -23,12 +23,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import TeslemetryConfigEntry
-from .const import DOMAIN, TeslemetryClimateSide
+from .const import TeslemetryClimateSide
 from .entity import (
     TeslemetryRootEntity,
     TeslemetryVehiclePollingEntity,
@@ -412,15 +411,12 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryRootEntity, ClimateEntit
         """Set the climate temperature."""
 
         if temp := kwargs.get(ATTR_TEMPERATURE):
-            if (cop_mode := COP_TEMPERATURES.get(temp)) is None:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_cop_temp",
-                )
+            # Temperatures converted from Fahrenheit rarely hit a level exactly
+            level = min(COP_TEMPERATURES, key=lambda t: abs(t - temp))
             self.raise_for_scope(Scope.VEHICLE_CMDS)
 
-            await handle_vehicle_command(self.api.set_cop_temp(cop_mode))
-            self._attr_target_temperature = temp
+            await handle_vehicle_command(self.api.set_cop_temp(COP_TEMPERATURES[level]))
+            self._attr_target_temperature = level
 
         if mode := kwargs.get(ATTR_HVAC_MODE):
             # Set HVAC mode will call write_ha_state
