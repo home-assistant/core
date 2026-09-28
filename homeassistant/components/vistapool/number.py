@@ -44,13 +44,12 @@ class VistapoolNumberEntityDescription(NumberEntityDescription):
 
 def _max_electrolysis(coordinator: VistapoolDataUpdateCoordinator) -> float:
     """Read the cell's hardware max, falling back to a safe default."""
+    # The path is typed in the library's coercion map, so an unparsable value
+    # already comes back as None rather than reaching float().
     raw = coordinator.get_value("hidro.maxAllowedValue")
     if raw is None:
         return 50.0
-    try:
-        return float(raw) / 10
-    except TypeError, ValueError:
-        return 50.0
+    return float(raw) / 10
 
 
 NUMBER_DESCRIPTIONS: tuple[VistapoolNumberEntityDescription, ...] = (
@@ -231,14 +230,12 @@ class VistapoolNumber(VistapoolEntity, NumberEntity):
     @override
     def native_value(self) -> float | None:
         """Return the scaled current value."""
+        # Every number path is typed in the library's coercion map, so an
+        # unparsable value already comes back as None rather than reaching float().
         raw = self.coordinator.get_value(self.entity_description.value_path)
         if raw is None:
             return None
-        try:
-            value = float(raw)
-        except TypeError, ValueError:
-            return None
-        return value / self.entity_description.scale
+        return float(raw) / self.entity_description.scale
 
     @override
     async def async_set_native_value(self, value: float) -> None:

@@ -295,7 +295,7 @@ async def test_spawn_error(
 
     with (
         patch(
-            "homeassistant.components.command_line.notify.asyncio.create_subprocess_shell",
+            "homeassistant.components.command_line.utils.asyncio.create_subprocess_shell",
             side_effect=OSError("exec failed"),
         ),
         pytest.raises(HomeAssistantError) as exc_info,
@@ -356,7 +356,7 @@ async def test_timeout_cleanup(
 
     with (
         patch(
-            "homeassistant.components.command_line.notify.asyncio.create_subprocess_shell",
+            "homeassistant.components.command_line.utils.asyncio.create_subprocess_shell",
             return_value=mock_proc,
         ),
         pytest.raises(HomeAssistantError) as exc_info,
@@ -397,7 +397,7 @@ async def test_cancelled_kills_process(
 
     with (
         patch(
-            "homeassistant.components.command_line.notify.asyncio.create_subprocess_shell",
+            "homeassistant.components.command_line.utils.asyncio.create_subprocess_shell",
             return_value=mock_proc,
         ),
         pytest.raises(asyncio.CancelledError),

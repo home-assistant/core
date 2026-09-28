@@ -186,6 +186,9 @@
     "allowlist_external_dirs_error": {
       "message": "File path has not been configured in allowlist_external_dirs."
     },
+    "cannot_connect": {
+      "message": "Could not connect to Telegram."
+    },
     "entry_not_loaded": {
       "message": "{telegram_bot} is not loaded"
     },

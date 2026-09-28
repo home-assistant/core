@@ -1,7 +1,6 @@
 """Containers for a script or automation trace."""
 
 import abc
-from collections import deque
 from collections.abc import Iterator
 from dataclasses import dataclass
 import datetime as dt
@@ -81,7 +80,7 @@ class ActionTrace(BaseTrace):
         context: Context,
     ) -> None:
         """Container for script trace."""
-        self._trace: dict[str, deque[TraceElement]] | None = None
+        self._trace: dict[str, list[TraceElement]] | None = None
         self._config = config
         self._blueprint_inputs = blueprint_inputs
         self.context: Context = context
@@ -98,7 +97,7 @@ class ActionTrace(BaseTrace):
             trace_set_child_id(self.key, self.run_id)
         trace_id_set((self.key, self.run_id))
 
-    def set_trace(self, trace: dict[str, deque[TraceElement]] | None) -> None:
+    def set_trace(self, trace: dict[str, list[TraceElement]] | None) -> None:
         """Set action trace."""
         self._trace = trace
 
@@ -111,6 +110,10 @@ class ActionTrace(BaseTrace):
         self._timestamp_finish = dt_util.utcnow()
         self._state = "stopped"
         self._script_execution = script_execution_get()
+        if self._trace:
+            for elements in self._trace.values():
+                for element in elements:
+                    element.finish()
 
     @override
     def as_extended_dict(self) -> dict[str, Any]:

@@ -37,7 +37,6 @@ from .const import (
     CONF_SYNC_STATE,
     CONTROLLER_MODES,
     CURRENT_HVAC_ACTIONS,
-    DOMAIN,
     KNX_MODULE_KEY,
     ClimateConf,
 )
@@ -51,7 +50,6 @@ from .entity import (
 from .knx_module import KNXModule
 from .schema import ClimateSchema
 from .storage.const import (
-    CONF_ENTITY,
     CONF_GA_ACTIVE,
     CONF_GA_CONTROLLER_MODE,
     CONF_GA_CONTROLLER_STATUS,
@@ -73,7 +71,11 @@ from .storage.const import (
     CONF_IGNORE_AUTO_MODE,
     CONF_TARGET_TEMPERATURE,
 )
-from .storage.entity_store_schema import ConfClimateFanSpeedMode, ConfSetpointShiftMode
+from .storage.entity_store_schema import (
+    ConfClimateFanSpeedMode,
+    ConfSetpointShiftMode,
+    KnxEntityData,
+)
 from .storage.util import ConfigExtractor
 
 ATTR_COMMAND_VALUE = "command_value"
@@ -698,17 +700,17 @@ class KnxUiClimate(_KnxClimate, KnxUiEntity):
     _device: XknxClimate
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: ConfigType
+        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
     ) -> None:
         """Initialize of a KNX climate device."""
         super().__init__(
             knx_module=knx_module,
             unique_id=unique_id,
-            entity_config=config[CONF_ENTITY],
+            entity_config=config.entity,
         )
-        knx_conf = ConfigExtractor(config[DOMAIN])
+        knx_conf = ConfigExtractor(config.knx)
         self._device = _create_climate_ui(
-            knx_module.xknx, knx_conf, config[CONF_ENTITY][CONF_NAME]
+            knx_module.xknx, knx_conf, config.entity.xknx_name
         )
 
         default_hvac_mode = HVACMode(knx_conf.get(ClimateConf.DEFAULT_CONTROLLER_MODE))

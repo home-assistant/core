@@ -5,8 +5,8 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/indi_allsky",
   "integration_type": "service",
-  "iot_class": "local_polling",
+  "iot_class": "local_push",
   "loggers": ["aioindiallsky"],
   "quality_scale": "bronze",
-  "requirements": ["aioindiallsky==0.1.2"]
+  "requirements": ["aioindiallsky==0.1.3"]
 }
