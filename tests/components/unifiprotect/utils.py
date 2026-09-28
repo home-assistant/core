@@ -150,6 +150,13 @@ def registered_keys(
     }
 
 
+def make_streamless_public_camera(camera: Camera, **kwargs: Any) -> Mock:
+    """Build a public camera without RTSPS streams (snapshot-only)."""
+    public = make_public_camera(camera, **kwargs)
+    public.rtsps_streams = None
+    return public
+
+
 def normalize_name(name: str) -> str:
     """Normalize name."""
 
@@ -485,6 +492,7 @@ def make_public_sensor(
     for name in (
         "is_contact_sensor_enabled",
         "is_leak_sensor_enabled",
+        "is_leak_detection_enabled",
         "is_motion_sensor_enabled",
         "is_alarm_sensor_enabled",
         "is_temperature_sensor_enabled",

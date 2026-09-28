@@ -57,6 +57,7 @@ from .utils import (
     make_public_camera,
     make_public_light,
     make_public_sensor,
+    make_streamless_public_camera,
     public_device_ws_message,
     registered_keys,
     remove_entities,
@@ -1177,13 +1178,6 @@ async def test_switch_sense_public_switches_ignore_local_permissions(
 _SMART_KEYS = {key for key, _, _ in CAMERA_SWITCHES_DETECTION_READ}
 
 
-def _make_streamless_public_camera(camera: Camera) -> Mock:
-    """Build a public camera without RTSPS streams (snapshot-only)."""
-    public = make_public_camera(camera)
-    public.rtsps_streams = None
-    return public
-
-
 @pytest.mark.parametrize(
     ("key", "object_types", "audio_types"), CAMERA_SWITCHES_DETECTION_READ
 )
@@ -1291,7 +1285,7 @@ async def test_switch_hybrid_public_sensor_without_private_deferred(
     [
         pytest.param(
             "doorbell",
-            _make_streamless_public_camera,
+            make_streamless_public_camera,
             "smart_person",
             "set_person_detection",
             {"high_fps"},
@@ -1388,7 +1382,7 @@ async def test_public_only_switch_camera_capability_gating(
     """Without a private object the detection switches gate on the public capability."""
     doorbell.feature_flags.smart_detect_types = [SmartDetectObjectType.PERSON]
     doorbell.feature_flags.smart_detect_audio_types = []
-    public = _make_streamless_public_camera(doorbell)
+    public = make_streamless_public_camera(doorbell)
     ufp_public_only.api.public_bootstrap.cameras[doorbell.id] = public
 
     await setup_public_only()
@@ -1408,7 +1402,7 @@ async def test_public_only_switch_camera_capability_gating(
             id="sensor",
         ),
         pytest.param(
-            "doorbell", _make_streamless_public_camera, "smart_person", id="camera"
+            "doorbell", make_streamless_public_camera, "smart_person", id="camera"
         ),
     ],
 )

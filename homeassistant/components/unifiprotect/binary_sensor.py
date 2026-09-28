@@ -65,32 +65,6 @@ _RELAY_INPUT_STATE_MAP: dict[RelayInputState, bool] = {
 }
 
 
-def _async_motion_sensor_enabled_public(obj: PublicDeviceModel) -> bool:
-    # Mirrors Sensor.is_motion_sensor_enabled over the public API.
-    sensor = cast(PublicSensor, obj)
-    return sensor.mount_type is not MountType.LEAK and sensor.motion_settings.is_enabled
-
-
-def _async_contact_sensor_enabled_public(obj: PublicDeviceModel) -> bool:
-    # Mirrors Sensor.is_contact_sensor_enabled over the public API.
-    return cast(PublicSensor, obj).is_contact_sensor_enabled
-
-
-def _async_leak_sensor_enabled_public(obj: PublicDeviceModel) -> bool:
-    # Leak-mounted (UP Sense), or the capability map advertises water_leak with a
-    # leak channel enabled — the USL family detects leaks without a leak mount.
-    # Settings alone are not a valid gate: sensors without the capability report
-    # inert default leak settings.
-    sensor = cast(PublicSensor, obj)
-    return sensor.is_leak_sensor_enabled or (
-        sensor.supports(SensorFeatureCapability.WATER_LEAK)
-        and (
-            sensor.leak_settings.is_internal_enabled
-            or sensor.leak_settings.is_external_enabled
-        )
-    )
-
-
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class ProtectBinaryEntityDescription(
     ProtectEntityDescription, BinarySensorEntityDescription
@@ -324,7 +298,6 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="smart_obj_any",
         translation_key="object_detected",
-        # The public feature flags carry no has_smart_detect.
         ufp_required_field="feature_flags.smart_detect_types",
         ufp_public_value="is_smart_currently_detected",
         ufp_event_driven=True,
@@ -480,7 +453,7 @@ MOUNTABLE_SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="contact",
         device_class=BinarySensorDeviceClass.DOOR,
         ufp_public_value="is_opened",
-        ufp_public_enabled_fn=_async_contact_sensor_enabled_public,
+        ufp_public_enabled_fn=operator.attrgetter("is_contact_sensor_enabled"),
         ufp_capability=SensorFeatureCapability.OPEN,
     ),
 )
@@ -490,7 +463,7 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="leak",
         device_class=BinarySensorDeviceClass.MOISTURE,
         ufp_public_value="is_leak_detected",
-        ufp_public_enabled_fn=_async_leak_sensor_enabled_public,
+        ufp_public_enabled_fn=operator.attrgetter("is_leak_detection_enabled"),
         ufp_capability=SensorFeatureCapability.WATER_LEAK,
     ),
     ProtectBinaryEntityDescription(
@@ -503,7 +476,7 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
         ufp_public_value="is_motion_detected",
-        ufp_public_enabled_fn=_async_motion_sensor_enabled_public,
+        ufp_public_enabled_fn=operator.attrgetter("is_motion_sensor_enabled"),
         ufp_capability=SensorFeatureCapability.MOTION,
     ),
     ProtectBinaryEntityDescription(
@@ -965,9 +938,7 @@ async def async_setup_entry(
 
     entities = _async_model_entities(data)
     if not api.is_public_only:
-        # The doorbell binary cannot be built here: its required field and its
-        # value both resolve through the private bootstrap. The NVR disks are
-        # private-only too.
+        # Doorbell ring and NVR disks read the private bootstrap.
         entities += _async_event_entities(data)
         entities += _async_nvr_entities(data)
     async_add_entities(entities)

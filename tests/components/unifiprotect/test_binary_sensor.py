@@ -53,6 +53,7 @@ from .utils import (
     make_public_camera,
     make_public_light,
     make_public_sensor,
+    make_streamless_public_camera,
     public_device_ws_message,
     registered_keys,
     remove_entities,
@@ -1071,20 +1072,11 @@ async def test_public_only_binary_sensors_end_to_end(
     light: Light,
     sensor_all: Sensor,
 ) -> None:
-    """An API-key-only entry enumerates binary sensors from the public API.
-
-    Only descriptions reading a public value qualify, and the read-only
-    mirrors are skipped because an API key can always write, so nothing here
-    duplicates the switch or light entity of the same setting. A detection
-    pushed on the public devices websocket reaches the entities.
-    """
+    """An API-key-only entry builds public binary sensors, without read-only mirrors."""
     # One audio type so the audio family is exercised alongside the objects.
     doorbell.feature_flags.smart_detect_audio_types = [SmartDetectAudioType.SMOKE]
-    public_camera = make_public_camera(doorbell)
-    # No RTSPS streams: this entry is about the binary sensors, not the camera.
-    public_camera.rtsps_streams = None
     pb = ufp_public_only.api.public_bootstrap
-    pb.cameras = {doorbell.id: public_camera}
+    pb.cameras = {doorbell.id: make_streamless_public_camera(doorbell)}
     pb.lights = {light.id: make_public_light(light)}
     pb.sensors = {sensor_all.id: make_public_sensor(sensor_all)}
 
@@ -1120,10 +1112,9 @@ async def test_public_only_binary_sensors_end_to_end(
     )
     assert hass.states.get(entity_id).state == STATE_OFF
 
-    detected = make_public_camera(
+    detected = make_streamless_public_camera(
         doorbell, is_smart_currently_detected=True, is_person_currently_detected=True
     )
-    detected.rtsps_streams = None
     pb.cameras = {doorbell.id: detected}
     ufp_public_only.devices_ws_subscription(public_device_ws_message(detected))
     await hass.async_block_till_done()
@@ -1131,21 +1122,30 @@ async def test_public_only_binary_sensors_end_to_end(
     assert hass.states.get(entity_id).state == STATE_ON
 
 
-def _make_streamless_public_camera(camera: Camera) -> Mock:
-    public = make_public_camera(camera)
-    public.rtsps_streams = None
-    return public
-
-
 @pytest.mark.parametrize(
-    ("fixture_name", "make", "key"),
+    ("fixture_name", "make", "key", "expected_keys"),
     [
-        pytest.param("doorbell", _make_streamless_public_camera, "motion", id="camera"),
-        pytest.param("light", make_public_light, "dark", id="light"),
+        pytest.param(
+            "doorbell",
+            make_streamless_public_camera,
+            "motion",
+            {
+                "motion",
+                "smart_obj_animal",
+                "smart_obj_any",
+                "smart_obj_person",
+                "smart_obj_vehicle",
+            },
+            id="camera",
+        ),
+        pytest.param(
+            "light", make_public_light, "dark", {"dark", "motion"}, id="light"
+        ),
         pytest.param(
             "sensor_all",
             partial(make_public_sensor, capabilities={SensorFeatureCapability.MOTION}),
             "motion",
+            {"battery_low", "motion"},
             id="sensor",
         ),
     ],
@@ -1160,6 +1160,7 @@ async def test_public_only_binary_sensor_added_after_setup(
     fixture_name: str,
     make: Callable[[Any], Mock],
     key: str,
+    expected_keys: set[str],
 ) -> None:
     """A device added after setup gets its binary sensors from its add frame."""
     await setup_public_only()
@@ -1176,7 +1177,12 @@ async def test_public_only_binary_sensor_added_after_setup(
     await hass.async_block_till_done()
 
     keys = registered_keys(entity_registry, Platform.BINARY_SENSOR, device.mac)
-    assert key in keys
+    assert keys == expected_keys
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.BINARY_SENSOR, DOMAIN, f"{device.mac}_{key}"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_OFF
 
     # A re-delivered frame must not add the entities a second time.
     ufp_public_only.devices_ws_subscription(msg)
@@ -1207,6 +1213,9 @@ async def test_public_only_binary_sensor_sense_registry_cleanup(
     await setup_public_only()
 
     assert entity_registry.async_get(stale.entity_id) is None
+    assert "motion" in registered_keys(
+        entity_registry, Platform.BINARY_SENSOR, sensor_all.mac
+    )
 
 
 async def test_object_detected_needs_advertised_types(
@@ -1215,11 +1224,7 @@ async def test_object_detected_needs_advertised_types(
     ufp: MockUFPFixture,
     doorbell: Camera,
 ) -> None:
-    """A camera advertising no smart detection types gets no object detected sensor.
-
-    The gate reads the advertised types, not the private ``has_smart_detect``
-    flag, so that both device models answer it the same way.
-    """
+    """A camera advertising no smart detection types gets no object detected sensor."""
     doorbell.feature_flags.has_smart_detect = True
     doorbell.feature_flags.smart_detect_types = []
 

@@ -129,11 +129,8 @@ def _async_public_only_entities(
 ) -> list[BaseProtectEntity]:
     """Build the entities a public device supports without a private fill.
 
-    Only descriptions reading a public value qualify; the required field and
-    the capability are checked against the public object. An API key always
-    writes what it can read, so a ``NO_WRITE`` description (the read-only
-    mirror of a setting a writable entity already exposes) would duplicate
-    that entity here and is skipped.
+    ``NO_WRITE`` mirrors are skipped: an API key can always write, so the
+    writable entity already exposes the setting.
     """
     entities: list[BaseProtectEntity] = []
     for description in descs:
