@@ -1021,8 +1021,8 @@ async def test_error_no_device_on_floor_exposed(
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_best",
-        return_value=recognize_result,
+        "homeassistant.components.conversation.default_agent.recognize_all",
+        return_value=[recognize_result],
     ):
         result = await conversation.async_converse(
             hass, "turn on test light on the ground floor", None, Context(), None
@@ -1320,8 +1320,8 @@ async def test_error_no_domain(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_best",
-        return_value=recognize_result,
+        "homeassistant.components.conversation.default_agent.recognize_all",
+        return_value=[recognize_result],
     ):
         result = await conversation.async_converse(
             hass, "turn on the fans", None, Context(), None
@@ -1355,8 +1355,8 @@ async def test_error_no_domain_exposed(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_best",
-        return_value=recognize_result,
+        "homeassistant.components.conversation.default_agent.recognize_all",
+        return_value=[recognize_result],
     ):
         result = await conversation.async_converse(
             hass, "turn on the fans", None, Context(), None
@@ -1529,8 +1529,8 @@ async def test_error_no_device_class(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_best",
-        return_value=recognize_result,
+        "homeassistant.components.conversation.default_agent.recognize_all",
+        return_value=[recognize_result],
     ):
         result = await conversation.async_converse(
             hass, "open the windows", None, Context(), None
@@ -1578,8 +1578,8 @@ async def test_error_no_device_class_exposed(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_best",
-        return_value=recognize_result,
+        "homeassistant.components.conversation.default_agent.recognize_all",
+        return_value=[recognize_result],
     ):
         result = await conversation.async_converse(
             hass, "open all the windows", None, Context(), None
@@ -1689,8 +1689,8 @@ async def test_error_no_device_class_on_floor_exposed(
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_best",
-        return_value=recognize_result,
+        "homeassistant.components.conversation.default_agent.recognize_all",
+        return_value=[recognize_result],
     ):
         result = await conversation.async_converse(
             hass, "open ground floor windows", None, Context(), None
@@ -1711,8 +1711,8 @@ async def test_error_no_device_class_on_floor_exposed(
 async def test_error_no_intent(hass: HomeAssistant) -> None:
     """Test response with an intent match failure."""
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_best",
-        return_value=None,
+        "homeassistant.components.conversation.default_agent.recognize_all",
+        return_value=[],
     ):
         result = await conversation.async_converse(
             hass, "do something", None, Context(), None
@@ -3131,6 +3131,123 @@ async def test_light_area_same_name(
     assert call.domain == LIGHT_DOMAIN
     assert call.service == "turn_on"
     assert call.data == {"entity_id": [kitchen_light.entity_id]}
+
+
+@pytest.mark.usefixtures("init_components")
+@pytest.mark.parametrize(
+    ("named_light_name", "named_light_area", "text", "expected_entity_ids"),
+    [
+        pytest.param(
+            "light",
+            "bedroom",
+            "turn on the light",
+            {"light.named"},
+            id="implicit_area_name_inside",
+        ),
+        pytest.param(
+            "light",
+            "kitchen",
+            "turn on the light",
+            {"light.bedroom_ceiling"},
+            id="implicit_area_name_outside",
+        ),
+        pytest.param(
+            "light",
+            None,
+            "turn on the light",
+            {"light.bedroom_ceiling"},
+            id="implicit_area_name_unassigned",
+        ),
+        pytest.param(
+            "light",
+            "kitchen",
+            "turn on the kitchen light",
+            {"light.named"},
+            id="spoken_area_name_inside",
+        ),
+        pytest.param(
+            "light",
+            "bedroom",
+            "turn on the kitchen light",
+            {"light.kitchen_ceiling"},
+            id="spoken_area_name_outside",
+        ),
+        pytest.param(
+            "light",
+            "kitchen",
+            "turn on the light on the downstairs floor",
+            {"light.named"},
+            id="spoken_floor_name_inside",
+        ),
+        pytest.param(
+            "light",
+            "bedroom",
+            "turn on the light on the downstairs floor",
+            {"light.kitchen_ceiling"},
+            id="spoken_floor_name_outside",
+        ),
+        pytest.param(
+            "kitchen light",
+            "bedroom",
+            "turn on the kitchen light",
+            {"light.named"},
+            id="spoken_area_in_name_outside",
+        ),
+        pytest.param(
+            "desk",
+            "kitchen",
+            "turn on the desk",
+            {"light.named"},
+            id="no_alternative",
+        ),
+    ],
+)
+async def test_name_match_scope(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    floor_registry: fr.FloorRegistry,
+    named_light_name: str,
+    named_light_area: str | None,
+    text: str,
+    expected_entity_ids: set[str],
+) -> None:
+    """Test that a name match only wins if the entity is where the sentence points."""
+    turn_on_calls = async_mock_service(hass, "light", "turn_on")
+
+    floor_downstairs = floor_registry.async_create("downstairs")
+    floor_upstairs = floor_registry.async_create("upstairs")
+    area_kitchen = area_registry.async_get_or_create("kitchen")
+    area_registry.async_update(area_kitchen.id, floor_id=floor_downstairs.floor_id)
+    area_bedroom = area_registry.async_get_or_create("bedroom")
+    area_registry.async_update(area_bedroom.id, floor_id=floor_upstairs.floor_id)
+    area_ids = {"kitchen": area_kitchen.id, "bedroom": area_bedroom.id, None: None}
+
+    for object_id, name, area_id in (
+        ("kitchen_ceiling", "kitchen ceiling", area_kitchen.id),
+        ("bedroom_ceiling", "bedroom ceiling", area_bedroom.id),
+        ("named", named_light_name, area_ids[named_light_area]),
+    ):
+        entry = entity_registry.async_get_or_create(
+            "light",
+            "demo",
+            object_id,
+            suggested_object_id=object_id,
+            original_name=name,
+        )
+        entity_registry.async_update_entity(entry.entity_id, area_id=area_id)
+        hass.states.async_set(entry.entity_id, STATE_OFF, {ATTR_FRIENDLY_NAME: name})
+
+    satellite = entity_registry.async_get_or_create("assist_satellite", "demo", "sat")
+    entity_registry.async_update_entity(satellite.entity_id, area_id=area_bedroom.id)
+
+    result = await conversation.async_converse(
+        hass, text, None, Context(), None, satellite_id=satellite.entity_id
+    )
+    await hass.async_block_till_done()
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert {call.data["entity_id"][0] for call in turn_on_calls} == expected_entity_ids
 
 
 async def test_custom_sentences_priority(
