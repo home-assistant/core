@@ -199,6 +199,26 @@ TURN_SIGNAL_STATES = {
 }
 
 
+def _listen_charger_power(
+    vehicle: TeslemetryStreamVehicle, callback: Callable[[StateType], None]
+) -> Callable[[], None]:
+    """Listen for charger power, which arrives as AC or DC power."""
+    power: dict[str, float | None] = {"ac": None, "dc": None}
+
+    def _update(key: str, value: float | None) -> None:
+        power[key] = value
+        callback(power["dc"] or power["ac"])
+
+    unsub_ac = vehicle.listen_ACChargingPower(lambda value: _update("ac", value))
+    unsub_dc = vehicle.listen_DCChargingPower(lambda value: _update("dc", value))
+
+    def _unsubscribe() -> None:
+        unsub_ac()
+        unsub_dc()
+
+    return _unsubscribe
+
+
 @dataclass(frozen=True, kw_only=True)
 class TeslemetryVehicleSensorEntityDescription(SensorEntityDescription):
     """Describes Teslemetry Sensor entity."""
@@ -252,7 +272,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="charge_state_charge_energy_added",
         polling=True,
-        streaming_listener=lambda vehicle, callback: vehicle.listen_ACChargingEnergyIn(
+        streaming_listener=lambda vehicle, callback: vehicle.listen_DCChargingEnergyIn(
             callback
         ),
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -263,9 +283,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="charge_state_charger_power",
         polling=True,
-        streaming_listener=lambda vehicle, callback: vehicle.listen_ACChargingPower(
-            callback
-        ),
+        streaming_listener=_listen_charger_power,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,

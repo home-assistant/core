@@ -169,7 +169,7 @@ async def test_sensors_streaming(
             "data": {
                 Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
                 Signal.BATTERY_LEVEL: 90,
-                Signal.AC_CHARGING_ENERGY_IN: 10,
+                Signal.DC_CHARGING_ENERGY_IN: 10,
                 Signal.AC_CHARGING_POWER: 2,
                 Signal.CHARGING_CABLE_TYPE: None,
                 Signal.TIME_TO_FULL_CHARGE: 0.166666667,
@@ -398,6 +398,45 @@ async def test_sensors_streaming_unit_conversion(
     state = hass.states.get(entity_id)
     assert state is not None
     assert float(state.state) == pytest.approx(expected_state)
+
+
+async def test_sensors_streaming_dc_charging(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+) -> None:
+    """Test streamed charge energy added and charger power cover DC charging."""
+    await setup_platform(hass, [Platform.SENSOR])
+    vin = VEHICLE_DATA_ALT["response"]["vin"]
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {
+                Signal.AC_CHARGING_ENERGY_IN: 0,
+                Signal.AC_CHARGING_POWER: 0,
+                Signal.DC_CHARGING_ENERGY_IN: 31.5,
+                Signal.DC_CHARGING_POWER: 148.2,
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test_charge_energy_added").state == "31.5"
+    assert hass.states.get("sensor.test_charger_power").state == "148.2"
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {
+                Signal.AC_CHARGING_POWER: 7,
+                Signal.DC_CHARGING_POWER: 0,
+            },
+            "createdAt": "2024-10-04T10:45:18.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test_charger_power").state == "7"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
