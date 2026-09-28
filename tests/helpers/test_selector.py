@@ -1394,6 +1394,33 @@ def test_object_selector_schema(schema, valid_selections, invalid_selections) ->
     _test_selector("object", schema, valid_selections, invalid_selections)
 
 
+@pytest.mark.parametrize(
+    "default",
+    [
+        pytest.param(0, id="zero"),
+        pytest.param(False, id="false"),
+        pytest.param("", id="empty-string"),
+        pytest.param([], id="empty-list"),
+        pytest.param({}, id="empty-dict"),
+    ],
+)
+def test_object_selector_field_default(default: object) -> None:
+    """Test object selector field default."""
+    validated = selector.validate_selector(
+        {
+            "object": {
+                "fields": {
+                    "field": {
+                        "selector": {"text": {}},
+                        "default": default,
+                    }
+                }
+            }
+        }
+    )
+    assert validated["object"]["fields"]["field"]["default"] == default
+
+
 def test_object_selector_uses_selectors(snapshot: SnapshotAssertion) -> None:
     """Test ObjectSelector serializer with Selector in ObjectSelectorField."""
 
@@ -1408,6 +1435,7 @@ def test_object_selector_uses_selectors(snapshot: SnapshotAssertion) -> None:
                 "selector": selector.NumberSelector(
                     selector.NumberSelectorConfig(min=0, max=100)
                 ),
+                "default": 0,
             },
         },
         "multiple": True,
@@ -1935,11 +1963,58 @@ def test_theme_selector_schema(schema, valid_selections, invalid_selections) -> 
                 },
             ),
         ),
+        (
+            {
+                "accept": ["image/*"],
+                "image_upload": True,
+            },
+            (
+                {
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                },
+                {
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                    "metadata": {},
+                },
+            ),
+            (
+                None,
+                "abc",
+                {},
+                {
+                    # We do not allow entity_id when accept is set
+                    "entity_id": "sensor.abc",
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                    "metadata": {},
+                },
+            ),
+        ),
     ],
 )
 def test_media_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test media selector."""
     _test_selector("media", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        # image_upload can only be used when accept is not empty
+        {"image_upload": True},
+        {"image_upload": True, "accept": []},
+    ],
+)
+def test_media_selector_schema_error(
+    schema: dict[str, bool | list[str]],
+) -> None:
+    """Test media selector with invalid config."""
+    with pytest.raises(
+        probatio.Invalid, match="image_upload can only be used when accept is not empty"
+    ):
+        selector.validate_selector({"media": schema})
 
 
 @pytest.mark.parametrize(

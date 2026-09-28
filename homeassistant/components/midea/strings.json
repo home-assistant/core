@@ -118,6 +118,9 @@
       "arofene_link": {
         "name": "Methanal"
       },
+      "door_warn": {
+        "name": "Door warning"
+      },
       "fall_asleep_status": {
         "name": "Fall asleep"
       },

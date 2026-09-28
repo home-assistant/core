@@ -696,12 +696,19 @@ class TimeSMAFilter(Filter, SensorEntity):
         self._time_window = window_size
         self.last_leak: FilterState | None = None
         self.queue = deque[FilterState]()
+        # running time weighted sum of the queue, so a sample costs no pass over it
+        self._queue_sum: float = 0
 
     def _leak(self, left_boundary: datetime) -> None:
         """Remove timeouted elements."""
         while self.queue:
             if self.queue[0].timestamp + self._time_window <= left_boundary:
                 self.last_leak = self.queue.popleft()
+                if self.queue:
+                    self._queue_sum -= self._weighted(self.last_leak, self.queue[0])
+                else:
+                    # nothing left to weigh, so drop any rounding drift as well
+                    self._queue_sum = 0
             else:
                 return
 
@@ -710,21 +717,30 @@ class TimeSMAFilter(Filter, SensorEntity):
         """Implement the Simple Moving Average filter."""
 
         self._leak(new_state.timestamp)
+        if self.queue:
+            self._queue_sum += self._weighted(self.queue[-1], new_state)
         self.queue.append(copy(new_state))
 
-        moving_sum: float = 0
+        # the stretch before the oldest queued sample is covered by the value that
+        # left the window last, or by that oldest sample while nothing has left yet
         start = new_state.timestamp - self._time_window
-        prev_state = self.last_leak if self.last_leak is not None else self.queue[0]
-        for state in self.queue:
-            # We can cast safely here thanks to self._only_numbers = True
-            prev_state_value = cast(float, prev_state.state)
-            moving_sum += (state.timestamp - start).total_seconds() * prev_state_value
-            start = state.timestamp
-            prev_state = state
+        lead_state = self.last_leak if self.last_leak is not None else self.queue[0]
+        # We can cast safely here thanks to self._only_numbers = True
+        lead_value = cast(float, lead_state.state)
+        lead_seconds = (self.queue[0].timestamp - start).total_seconds()
+        moving_sum = lead_seconds * lead_value + self._queue_sum
 
         new_state.state = moving_sum / self._time_window.total_seconds()
 
         return new_state
+
+    @staticmethod
+    def _weighted(state: FilterState, until: FilterState) -> float:
+        """Return the value of a state weighted by the time until the next one."""
+        # The cast is safe, the base filter only lets numbers through
+        return (until.timestamp - state.timestamp).total_seconds() * cast(
+            float, state.state
+        )
 
 
 @FILTERS.register(FILTER_NAME_THROTTLE)

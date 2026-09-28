@@ -21,6 +21,7 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
     PTZPatrol,
     PublicDeviceModel,
+    Relay,
     WSAction,
     WSSubscriptionMessage,
 )
@@ -48,12 +49,13 @@ from .const import (
     DISPATCH_ADOPT,
     DISPATCH_CHANNELS,
     DISPATCH_PUBLIC_ADD,
+    DISPATCH_RELAYS,
     DOMAIN,
 )
 from .utils import async_get_devices_by_type
 
 _LOGGER = logging.getLogger(__name__)
-type ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
+type ProtectDeviceType = ProtectAdoptableDeviceModel | NVR | PublicDeviceModel
 type UFPConfigEntry = ConfigEntry[ProtectData]
 
 
@@ -80,27 +82,38 @@ def _async_dispatch_id(entry: UFPConfigEntry, dispatch: str) -> str:
     return f"{DOMAIN}.{entry.entry_id}.{dispatch}"
 
 
+# Device families the public API alone provides; the private bootstrap has no
+# store for them, so hybrid has no adopt path either and their add always goes
+# through the public add signal.
+_PUBLIC_ONLY_MODELS = {ModelType.FOB, ModelType.RELAY, ModelType.SIREN}
+
+
 def _pair_public_private[
     PublicDeviceT: PublicDeviceModel,
     PrivateDeviceT: ProtectAdoptableDeviceModel,
 ](
     public_devices: dict[str, PublicDeviceT],
     private_devices: dict[str, PrivateDeviceT],
+    *,
+    ignore_unadopted: bool = True,
 ) -> Generator[tuple[PublicDeviceT | None, PrivateDeviceT | None]]:
     """Pair public-master devices with their private fill by shared id.
 
     The public map is the master list; the matching private device is attached
     when present (hybrid) and ``None`` in public-only mode. An adopted private
     device not (yet) mirrored publicly is yielded as ``(None, private)`` so the
-    caller can defer it. Devices not adopted by us are skipped on both sides.
+    caller can defer it. Devices not adopted by us are skipped on both sides
+    unless ``ignore_unadopted`` is false (the adopt button needs them).
     """
     for device_id, public in public_devices.items():
         private = private_devices.get(device_id)
-        if private is not None and not private.is_adopted_by_us:
+        if ignore_unadopted and private is not None and not private.is_adopted_by_us:
             continue
         yield public, private
     for device_id, private in private_devices.items():
-        if device_id in public_devices or not private.is_adopted_by_us:
+        if device_id in public_devices or (
+            ignore_unadopted and not private.is_adopted_by_us
+        ):
             continue
         yield None, private
 
@@ -144,6 +157,7 @@ class ProtectData:
         self.adopt_signal = _async_dispatch_id(entry, DISPATCH_ADOPT)
         self.add_signal = _async_dispatch_id(entry, DISPATCH_ADD)
         self.channels_signal = _async_dispatch_id(entry, DISPATCH_CHANNELS)
+        self.relay_signal = _async_dispatch_id(entry, DISPATCH_RELAYS)
         self.public_add_signal = _async_dispatch_id(entry, DISPATCH_PUBLIC_ADD)
         # PTZ patrol cache: camera_id -> list of patrols
         self.ptz_patrols: dict[str, list[PTZPatrol]] = {}
@@ -196,6 +210,32 @@ class ProtectData:
         """Get all cameras."""
         return cast(
             Generator[Camera], self.get_by_types({ModelType.CAMERA}, ignore_unadopted)
+        )
+
+    def get_public_devices(
+        self, model_type: ModelType, *, ignore_unadopted: bool = True
+    ) -> Generator[tuple[PublicDeviceModel | None, ProtectAdoptableDeviceModel | None]]:
+        """Yield ``(public, private)`` pairs of a model type (see _pair_public_private).
+
+        Without a public bootstrap every private device is yielded unpaired, so
+        hybrid enumeration is unchanged when the public API is unavailable.
+        """
+        api = self.api
+        public_devices: dict[str, PublicDeviceModel] = {}
+        if (
+            api.has_public_bootstrap
+            and (store := api.public_bootstrap.store_for(model_type)) is not None
+        ):
+            public_devices = cast(dict[str, PublicDeviceModel], store)
+        # An API-key-only client never initializes the private bootstrap;
+        # accessing it would raise.
+        private_devices: dict[str, ProtectAdoptableDeviceModel] = (
+            {}
+            if api.is_public_only
+            else async_get_devices_by_type(api.bootstrap, model_type)
+        )
+        yield from _pair_public_private(
+            public_devices, private_devices, ignore_unadopted=ignore_unadopted
         )
 
     def get_public_cameras(
@@ -299,20 +339,21 @@ class ProtectData:
 
         The first successful refresh fixes the add-dedup baseline: platforms
         enumerate that snapshot at setup, so only devices appearing later are
-        offered through the add signal. Public-only mode only, matching the
-        dispatch gate: hybrid never dispatches adds.
+        offered through the add signal. Covers the same devices as the
+        dispatch gate (see _async_uses_public_add).
         """
         await self.api.update_public()
         if self._public_baseline_taken:
             return
         self._public_baseline_taken = True
         api = self.api
-        if not api.is_public_only or not api.has_public_bootstrap:
+        if not api.has_public_bootstrap:
             return
         self._known_public_macs.update(
             device.mac
             for device in api.public_bootstrap.all_devices()
             if isinstance(device, PublicDeviceModel)
+            and self._async_uses_public_add(device)
         )
 
     @callback
@@ -327,19 +368,27 @@ class ProtectData:
         self._known_public_macs.clear()
 
     @callback
+    def _async_uses_public_add(self, device: PublicDeviceModel) -> bool:
+        """Whether a device is discovered through the public add signal.
+
+        Every device in public-only mode. Hybrid discovers through the private
+        adopt path, where a second add would clash on unique_id, so only the
+        families without a private counterpart qualify there.
+        """
+        return self.api.is_public_only or device.model in _PUBLIC_ONLY_MODELS
+
+    @callback
     def _async_dispatch_new_public_device(self, device: PublicDeviceModel) -> None:
         """Offer a public device to the platforms, once per mac.
 
-        Public-only mode only: hybrid discovers new devices through the private
-        adopt path, and a second add would clash on unique_id. Cameras are
-        excluded, the channels signal owns their (re-)enumeration. Dedup
-        happens here so platforms can add without their own duplicate checks.
+        Cameras are offered too: the channels signal only serves the camera
+        platform. Dedup happens here so platforms can add without their own
+        duplicate checks.
         """
         api = self.api
         if (
-            not api.is_public_only
-            or not api.has_public_bootstrap
-            or device.model is ModelType.CAMERA
+            not api.has_public_bootstrap
+            or not self._async_uses_public_add(device)
             or device.mac in self._known_public_macs
         ):
             return
@@ -374,9 +423,15 @@ class ProtectData:
         if isinstance(new_obj, PublicDeviceModel):
             if new_obj.model is ModelType.CAMERA:
                 self._async_reenumerate_camera_on_public_change(new_obj, message)
-            elif message.action is WSAction.ADD:
+            if message.action is WSAction.ADD:
                 self._async_dispatch_new_public_device(new_obj)
             self._async_signal_public_update(new_obj.mac, new_obj)
+            if (
+                isinstance(new_obj, Relay)
+                and self.api.has_public_bootstrap
+                and new_obj.id in self.api.public_bootstrap.relays
+            ):
+                async_dispatcher_send(self._hass, self.relay_signal, new_obj)
 
     @callback
     def _async_reenumerate_camera_on_public_change(
@@ -482,14 +537,15 @@ class ProtectData:
             return
         self._async_process_public_updates()
         # A device that appeared during the gap gets no add frame, so re-offer
-        # everything; the dispatch helper drops what platforms already know.
+        # everything. Platforms and dispatch helpers drop what they already know.
         if self.api.has_public_bootstrap:
             for public in list(self.api.public_bootstrap.cameras.values()):
                 async_dispatcher_send(self._hass, self.channels_signal, public)
-            if self.api.is_public_only:
-                for device in list(self.api.public_bootstrap.all_devices()):
-                    if isinstance(device, PublicDeviceModel):
-                        self._async_dispatch_new_public_device(device)
+            for device in list(self.api.public_bootstrap.all_devices()):
+                if isinstance(device, PublicDeviceModel):
+                    self._async_dispatch_new_public_device(device)
+            for relay in list(self.api.public_bootstrap.relays.values()):
+                async_dispatcher_send(self._hass, self.relay_signal, relay)
 
     @callback
     def _async_signal_nvr_update(self) -> None:
@@ -791,7 +847,7 @@ class ProtectData:
 
     @callback
     def async_get_public_device(
-        self, device: ProtectDeviceType | PublicDeviceModel
+        self, device: ProtectDeviceType
     ) -> PublicDeviceModel | None:
         """Return the public-API object matching a device, if available."""
         api = self.api
