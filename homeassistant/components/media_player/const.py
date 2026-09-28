@@ -7,11 +7,10 @@ import probatio
 
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from homeassistant.helpers.entity_component import EntityComponent
-
     from . import MediaPlayerEntity
 
 DOMAIN: Final = "media_player"
