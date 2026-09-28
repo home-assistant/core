@@ -367,11 +367,6 @@ def _with_integration(
     return validate
 
 
-def _frontend_issues(integration: Integration) -> frozenset[str]:
-    """Return the issues the frontend handles for the integration."""
-    return frozenset(FRONTEND_HANDLED_ISSUES.get(integration.domain, ()))
-
-
 def gen_strings_schema(
     config: Config, integration: Integration
 ) -> Callable[[Any], Any]:
@@ -379,7 +374,7 @@ def gen_strings_schema(
     return _with_integration(
         _gen_strings_schema(
             integration.integration_type == IntegrationType.HELPER,
-            _frontend_issues(integration),
+            frozenset(FRONTEND_HANDLED_ISSUES.get(integration.domain, ())),
         ),
         config,
         integration,
@@ -639,7 +634,7 @@ def gen_auth_schema(config: Config, integration: Integration) -> Callable[[Any],
                 )
             },
             probatio.Optional("issues"): gen_issues_schema(
-                _frontend_issues(integration)
+                frozenset(FRONTEND_HANDLED_ISSUES.get(integration.domain, ()))
             ),
             **_EXCEPTIONS_SCHEMA,
         }
