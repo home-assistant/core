@@ -113,6 +113,7 @@ FAKE_JSON = {
                 "temperature": {"value": "23.8", "unit": "°C"},
                 "humidity": {"value": "35", "unit": "%"},
                 "barometric_pressure": {"value": "1011.0", "unit": "hPa"},
+                "co2": {"value": "520.3", "unit": "ppm"},
             },
         },
         {

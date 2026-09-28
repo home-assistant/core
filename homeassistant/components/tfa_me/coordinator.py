@@ -66,7 +66,6 @@ class TFAmeUpdateCoordinator(DataUpdateCoordinator[TFAmeCoordinatorData]):
 
         # Try to update data from station URL: e.g. "http://192.168.1.38/sensors"
         try:
-            # Fetch all available sensors as JSON from TFA.me station/gateway
             json_data = await self._client.async_get_sensors()
 
             filtered_list, gateway_id, gateway_sw = self._client.parse_and_filter_json(
