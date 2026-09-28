@@ -4,13 +4,12 @@ import contextlib
 import logging
 from typing import override
 
+import probatio
 from TISApi.api import TISApi
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PORT
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
 
 from .const import DEVICES_DICT, DOMAIN
 
@@ -47,8 +46,8 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Show the setup form to the user."""
 
-        schema = vol.Schema(
-            {vol.Required(CONF_PORT, default=6000): cv.port},
+        schema = probatio.Schema(
+            {probatio.Required(CONF_PORT, default=6000): int},
         )
         return self.async_show_form(
             step_id="user",
