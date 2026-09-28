@@ -2,8 +2,8 @@
 
 from unittest.mock import patch
 
+from probatio.error import Invalid
 import pytest
-from voluptuous.error import Invalid
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant
@@ -82,11 +82,11 @@ async def test_notify(
     assert len(mock_client.mock_calls) == 5
 
 
-async def test_notify_voluptuous_error(
+async def test_notify_probatio_error(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
 ) -> None:
-    """Test voluptuous error thrown when drafting email."""
+    """Test probatio error thrown when drafting email."""
     await setup_integration()
 
     with pytest.raises(ValueError) as ex:

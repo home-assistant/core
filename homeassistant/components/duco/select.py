@@ -21,6 +21,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN, VENTILATION_CAPABLE_NODE_TYPES
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
+from .helpers import remove_stale_node_ids
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,6 +64,7 @@ async def async_setup_entry(
     @callback
     def _async_add_new_entities() -> None:
         """Add select entities for newly discovered controllable nodes."""
+        remove_stale_node_ids(coordinator, known_nodes)
         options_by_node = _discover_ventilation_options(coordinator.data.node_actions)
         new_entities: list[DucoVentilationStateSelect] = []
 
@@ -129,9 +131,7 @@ class DucoVentilationStateSelect(DucoEntity, SelectEntity):
         try:
             # SelectEntity exposes string options, and passing the raw API value
             # through keeps newly added Duco states forward-compatible.
-            await self.coordinator.client.async_set_ventilation_state(
-                self._node_id, option
-            )
+            await self.coordinator.async_set_ventilation_state(self._node_id, option)
         except DucoRateLimitError as err:
             _LOGGER.warning("Duco write rate limit exceeded for node %s", self._node_id)
             raise HomeAssistantError(
@@ -143,7 +143,3 @@ class DucoVentilationStateSelect(DucoEntity, SelectEntity):
                 translation_domain=DOMAIN,
                 translation_key="failed_to_set_state",
             ) from err
-
-        # Duco may normalize the requested action on readback, such as
-        # MAN1x2 -> MAN1 or AUTO -> CNT1, so refresh the authoritative state.
-        await self.coordinator.async_refresh()

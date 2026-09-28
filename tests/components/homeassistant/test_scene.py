@@ -2,8 +2,8 @@
 
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
 import yaml
 
 from homeassistant import config
@@ -322,7 +322,7 @@ async def test_ensure_no_intersection(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "scene", {"scene": {}})
     await hass.async_block_till_done()
 
-    with pytest.raises(vol.MultipleInvalid) as ex:
+    with pytest.raises(probatio.MultipleInvalid) as ex:
         await hass.services.async_call(
             "scene",
             "create",

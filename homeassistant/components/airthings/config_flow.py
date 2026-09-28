@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 import airthings
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ID
@@ -14,10 +14,10 @@ from .const import CONF_SECRET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ID): str,
-        vol.Required(CONF_SECRET): str,
+        probatio.Required(CONF_ID): str,
+        probatio.Required(CONF_SECRET): str,
     }
 )
 

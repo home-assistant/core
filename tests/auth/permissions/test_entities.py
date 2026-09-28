@@ -1,7 +1,7 @@
 """Tests for entity permissions."""
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.auth.permissions.entities import (
     ENTITY_POLICY_SCHEMA,
@@ -32,7 +32,7 @@ def test_entities_empty() -> None:
 def test_entities_false() -> None:
     """Test entity ID policy."""
     policy = False
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         ENTITY_POLICY_SCHEMA(policy)
 
 
@@ -64,7 +64,7 @@ def test_entities_domains_domain_true() -> None:
 def test_entities_domains_domain_false() -> None:
     """Test entity ID policy."""
     policy = {"domains": {"light": False}}
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         ENTITY_POLICY_SCHEMA(policy)
 
 
@@ -79,7 +79,7 @@ def test_entities_entity_ids_true() -> None:
 def test_entities_entity_ids_false() -> None:
     """Test entity ID policy."""
     policy = {"entity_ids": False}
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         ENTITY_POLICY_SCHEMA(policy)
 
 
@@ -95,7 +95,7 @@ def test_entities_entity_ids_entity_id_true() -> None:
 def test_entities_entity_ids_entity_id_false() -> None:
     """Test entity ID policy."""
     policy = {"entity_ids": {"light.kitchen": False}}
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         ENTITY_POLICY_SCHEMA(policy)
 
 
@@ -247,12 +247,14 @@ def test_entities_areas_area_inherited_from_parent(hass: HomeAssistant) -> None:
                 area_id="mock-area-id",
             )
         },
-    )
-    # The child has no area of its own and inherits the parent's area.
-    device_registry._child_devices["mock-child-id"] = ChildDeviceEntry(
-        config_entry_id="mock-config-entry",
-        id="mock-child-id",
-        parent_device_id="mock-parent-id",
+        # The child has no area of its own and inherits the parent's area.
+        {
+            "mock-child-id": ChildDeviceEntry(
+                config_entry_id="mock-config-entry",
+                id="mock-child-id",
+                parent_device_id="mock-parent-id",
+            )
+        },
     )
 
     policy = {"area_ids": {"mock-area-id": {"read": True, "control": True}}}

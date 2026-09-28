@@ -3,7 +3,7 @@
 import logging
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.http import KEY_HASS
 from homeassistant.components.network import async_get_source_ip
@@ -53,39 +53,41 @@ from .upnp import DescriptionXmlView, async_create_upnp_datagram_endpoint
 _LOGGER = logging.getLogger(__name__)
 
 
-CONFIG_ENTITY_SCHEMA = vol.Schema(
+CONFIG_ENTITY_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_ENTITY_NAME): cv.string,
-        vol.Optional(CONF_ENTITY_HIDDEN): cv.boolean,
+        probatio.Optional(CONF_ENTITY_NAME): cv.string,
+        probatio.Optional(CONF_ENTITY_HIDDEN): cv.boolean,
     }
 )
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_HOST_IP): cv.string,
-                vol.Optional(CONF_LISTEN_PORT, default=DEFAULT_LISTEN_PORT): cv.port,
-                vol.Optional(CONF_ADVERTISE_IP): cv.string,
-                vol.Optional(CONF_ADVERTISE_PORT): cv.port,
-                vol.Optional(CONF_UPNP_BIND_MULTICAST): cv.boolean,
-                vol.Optional(CONF_OFF_MAPS_TO_ON_DOMAINS): cv.ensure_list,
-                vol.Optional(CONF_EXPOSE_BY_DEFAULT): cv.boolean,
-                vol.Optional(CONF_EXPOSED_DOMAINS): cv.ensure_list,
-                vol.Optional(CONF_TYPE, default=DEFAULT_TYPE): vol.Any(
+                probatio.Optional(CONF_HOST_IP): cv.string,
+                probatio.Optional(
+                    CONF_LISTEN_PORT, default=DEFAULT_LISTEN_PORT
+                ): cv.port,
+                probatio.Optional(CONF_ADVERTISE_IP): cv.string,
+                probatio.Optional(CONF_ADVERTISE_PORT): cv.port,
+                probatio.Optional(CONF_UPNP_BIND_MULTICAST): cv.boolean,
+                probatio.Optional(CONF_OFF_MAPS_TO_ON_DOMAINS): cv.ensure_list,
+                probatio.Optional(CONF_EXPOSE_BY_DEFAULT): cv.boolean,
+                probatio.Optional(CONF_EXPOSED_DOMAINS): cv.ensure_list,
+                probatio.Optional(CONF_TYPE, default=DEFAULT_TYPE): probatio.Any(
                     TYPE_ALEXA, TYPE_GOOGLE
                 ),
-                vol.Optional(CONF_ENTITIES): vol.Schema(
+                probatio.Optional(CONF_ENTITIES): probatio.Schema(
                     {cv.entity_id: CONFIG_ENTITY_SCHEMA}
                 ),
-                vol.Optional(
+                probatio.Optional(
                     CONF_LIGHTS_ALL_DIMMABLE, default=DEFAULT_LIGHTS_ALL_DIMMABLE
                 ): cv.boolean,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

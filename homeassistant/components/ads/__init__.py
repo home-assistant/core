@@ -2,8 +2,8 @@
 
 import logging
 
+import probatio
 import pyads
-import voluptuous as vol
 
 from homeassistant.const import (
     CONF_DEVICE,
@@ -48,24 +48,24 @@ CONF_ADS_VALUE = "value"
 
 SERVICE_WRITE_DATA_BY_NAME = "write_data_by_name"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_DEVICE): cv.string,
-                vol.Required(CONF_PORT): cv.port,
-                vol.Optional(CONF_IP_ADDRESS): cv.string,
+                probatio.Required(CONF_DEVICE): cv.string,
+                probatio.Required(CONF_PORT): cv.port,
+                probatio.Optional(CONF_IP_ADDRESS): cv.string,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-SCHEMA_SERVICE_WRITE_DATA_BY_NAME = vol.Schema(
+SCHEMA_SERVICE_WRITE_DATA_BY_NAME = probatio.Schema(
     {
-        vol.Required(CONF_ADS_TYPE): vol.Coerce(AdsType),
-        vol.Required(CONF_ADS_VALUE): vol.Coerce(int),
-        vol.Required(CONF_ADS_VAR): cv.string,
+        probatio.Required(CONF_ADS_TYPE): probatio.Coerce(AdsType),
+        probatio.Required(CONF_ADS_VALUE): probatio.Coerce(int),
+        probatio.Required(CONF_ADS_VAR): cv.string,
     }
 )
 

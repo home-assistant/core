@@ -10,14 +10,14 @@ from bluecurrent_api.exceptions import (
     RequestLimitReached,
     WebsocketError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
 
 from .const import DOMAIN, LOGGER
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_TOKEN): str})
+DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_API_TOKEN): str})
 
 
 class BlueCurrentConfigFlow(ConfigFlow, domain=DOMAIN):

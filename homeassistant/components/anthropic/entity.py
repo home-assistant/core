@@ -57,13 +57,9 @@ from anthropic.types import (
     ThinkingConfigDisabledParam,
     ThinkingConfigEnabledParam,
     ThinkingDelta,
-    ToolChoiceAnyParam,
-    ToolChoiceAutoParam,
-    ToolChoiceToolParam,
     ToolParam,
     ToolSearchToolBm25_20251119Param,
     ToolSearchToolResultBlock,
-    ToolUnionParam,
     ToolUseBlock,
     ToolUseBlockParam,
     Usage,
@@ -103,8 +99,7 @@ from anthropic.types.web_fetch_tool_result_block import (
 from anthropic.types.web_fetch_tool_result_block_param import (
     Content as WebFetchToolResultBlockParamContentParam,
 )
-import voluptuous as vol
-from voluptuous_openapi import convert
+import probatio
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -113,7 +108,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import (
@@ -150,7 +145,9 @@ def _format_tool(
 ) -> ToolParam:
     """Format tool specification."""
     unsupported_keys = {"oneOf", "anyOf", "allOf"}
-    schema = convert(tool.parameters, custom_serializer=custom_serializer)
+    schema = probatio.to_openapi(
+        tool.parameters, custom_serializer=custom_serializer, openapi_version="3.1.0"
+    )
     schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
 
     return ToolParam(
@@ -244,11 +241,11 @@ def _convert_content(  # noqa: C901
                     "tool_use_id": content.tool_call_id,
                     "content": cast(
                         WebSearchToolResultBlockParamContentParam,
-                        content.tool_result["content"]
-                        if "content" in content.tool_result
+                        content.result.data["content"]
+                        if "content" in content.result.data
                         else {
                             "type": "web_search_tool_result_error",
-                            "error_code": content.tool_result.get(
+                            "error_code": content.result.data.get(
                                 "error_code", "unavailable"
                             ),
                         },
@@ -260,7 +257,7 @@ def _convert_content(  # noqa: C901
                     "tool_use_id": content.tool_call_id,
                     "content": cast(
                         CodeExecutionToolResultBlockParamContentParam,
-                        content.tool_result,
+                        content.result.data,
                     ),
                 }
             elif content.tool_name == "bash_code_execution":
@@ -269,7 +266,7 @@ def _convert_content(  # noqa: C901
                     "tool_use_id": content.tool_call_id,
                     "content": cast(
                         BashCodeExecutionToolResultBlockParamContentParam,
-                        content.tool_result,
+                        content.result.data,
                     ),
                 }
             elif content.tool_name == "text_editor_code_execution":
@@ -278,7 +275,7 @@ def _convert_content(  # noqa: C901
                     "tool_use_id": content.tool_call_id,
                     "content": cast(
                         TextEditorCodeExecutionToolResultBlockParamContentParam,
-                        content.tool_result,
+                        content.result.data,
                     ),
                 }
             elif content.tool_name == "tool_search":
@@ -287,7 +284,7 @@ def _convert_content(  # noqa: C901
                     "tool_use_id": content.tool_call_id,
                     "content": cast(
                         ToolSearchToolResultBlockParamContentParam,
-                        content.tool_result,
+                        content.result.data,
                     ),
                 }
             elif content.tool_name == "web_fetch":
@@ -296,14 +293,15 @@ def _convert_content(  # noqa: C901
                     "tool_use_id": content.tool_call_id,
                     "content": cast(
                         WebFetchToolResultBlockParamContentParam,
-                        content.tool_result,
+                        content.result.data,
                     ),
                 }
             else:
                 tool_result_block = {
                     "type": "tool_result",
                     "tool_use_id": content.tool_call_id,
-                    "content": json_dumps(content.tool_result),
+                    "content": json_dumps(content.result.data),
+                    "is_error": content.result.error,
                 }
                 external_tool = False
             if not messages or messages[-1]["role"] != (
@@ -527,12 +525,10 @@ class AnthropicDeltaStream:
         self,
         chat_log: conversation.ChatLog,
         stream: AsyncStream[MessageStreamEvent],
-        output_tool: str | None = None,
     ) -> None:
         """Initialize the delta stream."""
         self._chat_log: conversation.ChatLog = chat_log
         self._stream: AsyncStream[MessageStreamEvent] = stream
-        self._output_tool: str | None = output_tool
 
         self._buffer: deque[
             conversation.AssistantContentDeltaDict
@@ -665,15 +661,6 @@ class AnthropicDeltaStream:
             input=input,
         )
         self._current_tool_args = ""
-        if name == self._output_tool:
-            if self._first_block or self._content_details.has_content():
-                if self._content_details:
-                    self._content_details.delete_empty()
-                    self._buffer.append({"native": self._content_details})
-                self._content_details = ContentDetails()
-                self._content_details.add_citation_detail()
-                self._buffer.append({"role": "assistant"})
-                self._first_block = False
 
     def on_text_block(self, text: str, citations: list[TextCitation] | None) -> None:
         """Handle TextBlock."""
@@ -779,11 +766,15 @@ class AnthropicDeltaStream:
                 "role": "tool_result",
                 "tool_call_id": tool_use_id,
                 "tool_name": tool_name.removesuffix("_tool_result"),
-                "tool_result": {
-                    "content": cast(JsonArrayType, [x.to_dict() for x in content])
-                }
-                if isinstance(content, list)
-                else cast(JsonObjectType, content.to_dict()),
+                "result": llm.ToolResult(
+                    data={
+                        "content": cast(JsonArrayType, [x.to_dict() for x in content])
+                    }
+                    if isinstance(content, list)
+                    else cast(JsonObjectType, content.to_dict()),
+                    error=not isinstance(content, list)
+                    and content.type.endswith("_tool_result_error"),
+                ),
             }
         )
         self._first_block = True
@@ -809,14 +800,7 @@ class AnthropicDeltaStream:
 
     def on_input_json_delta(self, partial_json: str) -> None:
         """Handle InputJSONDelta."""
-        if (
-            self._current_tool_block is not None
-            and self._current_tool_block["name"] == self._output_tool
-        ):
-            self._content_details.citation_details[-1].length += len(partial_json)
-            self._buffer.append({"content": partial_json})
-        else:
-            self._current_tool_args += partial_json
+        self._current_tool_args += partial_json
 
     def on_text_delta(self, text: str) -> None:
         """Handle TextDelta."""
@@ -840,9 +824,6 @@ class AnthropicDeltaStream:
     def on_content_block_stop_event(self, index: int) -> None:
         """Handle RawContentBlockStopEvent."""
         if self._current_tool_block is not None:
-            if self._current_tool_block["name"] == self._output_tool:
-                self._current_tool_block = None
-                return
             tool_args = (
                 json.loads(self._current_tool_args) if self._current_tool_args else {}
             )
@@ -923,19 +904,18 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
-    async def _get_model_args(  # noqa: C901
+    async def _get_model_args(
         self,
         chat_log: conversation.ChatLog,
-        structure_name: str | None = None,
-        structure: vol.Schema | None = None,
-    ) -> tuple[MessageCreateParamsStreaming, str | None]:
+        structure: probatio.Schema | None = None,
+    ) -> MessageCreateParamsStreaming:
         """Get the model arguments."""
         options: dict[str, Any] = DEFAULT | self.subentry.data
 
         preloaded_tools = [
-            "HassTurnOn",
-            "HassTurnOff",
-            "GetLiveContext",
+            "intent__HassTurnOn",
+            "intent__HassTurnOff",
+            "homeassistant__GetLiveContext",
             "code_execution",
             "web_search",
             "web_fetch",
@@ -1004,7 +984,15 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                     effort=options[CONF_THINKING_EFFORT]
                 )
 
-        tools: list[ToolUnionParam] = []
+        tools: list[
+            ToolParam
+            | CodeExecutionTool20250825Param
+            | WebSearchTool20250305Param
+            | WebSearchTool20260209Param
+            | WebFetchTool20250910Param
+            | WebFetchTool20260209Param
+            | ToolSearchToolBm25_20251119Param
+        ] = []
         if chat_log.llm_api:
             tools = [
                 _format_tool(tool, chat_log.llm_api.custom_serializer)
@@ -1097,75 +1085,21 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 )
             )
 
-        if structure and structure_name:
-            if (
-                self.model_info.capabilities
-                and self.model_info.capabilities.structured_outputs.supported
-            ):
-                # Native structured output for those models who support it.
-                structure_name = None
-                model_args.setdefault("output_config", OutputConfigParam())[
-                    "format"
-                ] = JSONOutputFormatParam(
+        if structure:
+            model_args.setdefault("output_config", OutputConfigParam())["format"] = (
+                JSONOutputFormatParam(
                     type="json_schema",
-                    schema={
-                        **convert(
+                    schema=anthropic.transform_schema(
+                        probatio.to_openapi(
                             structure,
                             custom_serializer=chat_log.llm_api.custom_serializer
                             if chat_log.llm_api
                             else llm.selector_serializer,
-                        ),
-                        "additionalProperties": False,
-                    },
+                            openapi_version="3.1.0",
+                        )
+                    ),
                 )
-            elif model_args["thinking"]["type"] == "disabled":
-                structure_name = slugify(structure_name)
-                if not tools:
-                    # Simplest case: no tools and no extended thinking
-                    # Add a tool and force its use
-                    model_args["tool_choice"] = ToolChoiceToolParam(
-                        type="tool",
-                        name=structure_name,
-                    )
-                else:
-                    # Second case: tools present but no extended thinking
-                    # Allow the model to use any tool but not text response
-                    # The model should know to use the right tool by its description
-                    model_args["tool_choice"] = ToolChoiceAnyParam(
-                        type="any",
-                    )
-            else:
-                # Extended thinking is enabled. With extended thinking, we cannot
-                # force tool use or disable text responses, so we add a hint to the
-                # system prompt instead. With extended thinking, the model should be
-                # smart enough to use the tool.
-                structure_name = slugify(structure_name)
-                model_args["tool_choice"] = ToolChoiceAutoParam(
-                    type="auto",
-                )
-
-                model_args["system"].append(  # type: ignore[union-attr]
-                    TextBlockParam(
-                        type="text",
-                        text=f"Claude MUST use the '{structure_name}' tool to provide "
-                        "the final answer instead of plain text.",
-                    )
-                )
-
-            if structure_name:
-                tools.append(
-                    ToolParam(
-                        name=structure_name,
-                        description="Use this tool to reply to the user",
-                        input_schema=convert(
-                            structure,
-                            custom_serializer=chat_log.llm_api.custom_serializer
-                            if chat_log.llm_api
-                            else llm.selector_serializer,
-                        ),
-                    )
-                )
-                preloaded_tools.append(structure_name)
+            )
 
         if tools:
             if options[CONF_TOOL_SEARCH] and len(tools) > len(preloaded_tools) + 1:
@@ -1181,19 +1115,16 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
 
             model_args["tools"] = tools
 
-        return model_args, structure_name
+        return model_args
 
     async def _async_handle_chat_log(
         self,
         chat_log: conversation.ChatLog,
-        structure_name: str | None = None,
-        structure: vol.Schema | None = None,
+        structure: probatio.Schema | None = None,
         max_iterations: int = MAX_TOOL_ITERATIONS,
     ) -> None:
         """Generate an answer for the chat log."""
-        model_args, structure_name = await self._get_model_args(
-            chat_log, structure_name, structure
-        )
+        model_args = await self._get_model_args(chat_log, structure)
         coordinator = self.entry.runtime_data
         client = coordinator.client
 
@@ -1207,11 +1138,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                         content
                         async for content in chat_log.async_add_delta_content_stream(
                             self.entity_id,
-                            AnthropicDeltaStream(
-                                chat_log,
-                                stream,
-                                output_tool=structure_name or None,
-                            ),
+                            AnthropicDeltaStream(chat_log, stream),
                         )
                     ]
                 )

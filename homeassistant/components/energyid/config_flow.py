@@ -7,7 +7,7 @@ from typing import Any, override
 
 from aiohttp import ClientError, ClientResponseError
 from energyid_webhooks.client_v2 import WebhookClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -168,10 +168,10 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PROVISIONING_KEY): str,
-                    vol.Required(CONF_PROVISIONING_SECRET): cv.string,
+                    probatio.Required(CONF_PROVISIONING_KEY): str,
+                    probatio.Required(CONF_PROVISIONING_SECRET): cv.string,
                 }
             ),
             errors=errors,
@@ -274,10 +274,10 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PROVISIONING_KEY): str,
-                    vol.Required(CONF_PROVISIONING_SECRET): cv.string,
+                    probatio.Required(CONF_PROVISIONING_KEY): str,
+                    probatio.Required(CONF_PROVISIONING_SECRET): cv.string,
                 }
             ),
             errors=errors,

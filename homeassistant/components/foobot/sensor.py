@@ -6,7 +6,7 @@ from typing import Any, override
 
 import aiohttp
 from foobot_async import FoobotClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -83,7 +83,10 @@ PARALLEL_UPDATES = 1
 TIMEOUT = 10
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_TOKEN): cv.string, vol.Required(CONF_USERNAME): cv.string}
+    {
+        probatio.Required(CONF_TOKEN): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+    }
 )
 
 

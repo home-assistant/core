@@ -4,10 +4,10 @@ import logging
 from typing import Any, override
 
 from aiohttp.client_exceptions import ClientError
+import probatio
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
 from pyControl4.error_handling import BadCredentials, NotFound, Unauthorized
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -34,11 +34,11 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -167,16 +167,16 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
                 # Polling interval is user-configurable, which is no longer allowed
                 # pylint: disable-next=home-assistant-config-flow-polling-field
-                vol.Optional(
+                probatio.Optional(
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(
                         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                     ),
-                ): vol.All(cv.positive_int, vol.Clamp(min=MIN_SCAN_INTERVAL)),
+                ): probatio.All(cv.positive_int, probatio.Clamp(min=MIN_SCAN_INTERVAL)),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

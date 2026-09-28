@@ -72,9 +72,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.78.0
-grpcio-status==1.78.0
-grpcio-reflection==1.78.0
+grpcio==1.83.1
+grpcio-status==1.83.1
+grpcio-reflection==1.83.1
 
 # boto3 and botocore are shared requirements of multiple integrations,
 # with botocore also being a transitive dependency of aiobotocore, which
@@ -105,7 +105,7 @@ uuid==1000000000.0.0
 # even newer versions seem to introduce new issues, it's useful
 # for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.13.0
+anyio==4.14.2
 h11==0.16.0
 httpcore==1.0.9
 
@@ -114,7 +114,7 @@ httpcore==1.0.9
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==2.5.2
+numpy==2.3.2
 pandas==2.3.3
 
 # Constrain multidict to avoid typing issues
@@ -140,7 +140,7 @@ iso4217!=1.10.20220401
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==6.32.0
+protobuf==7.36.0
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
@@ -237,9 +237,6 @@ caio<0.12.3
 # https://github.com/auth0/auth0-python/releases/tag/5.0.0
 auth0-python<5.0
 
-# Setuptools >=82.0.0 doesn't contain pkg_resources anymore
-setuptools<82.0.0
-
 # backoff and python-backoff share the same package name
 # pin versions which are mostly compatible to each other
 backoff==2.2.1
@@ -252,7 +249,7 @@ python-backoff<2.4.0
 azure-kusto-data==4.5.1
 azure-kusto-ingest==4.5.1
 coloredlogs==15.0.1
-setuptools==81.0.0
+setuptools==84.0.0
 
 # Pin cffi to 2.0.0 to avoid version mismatch with the pre-baked _cffi_backend in the base image.
 # https://github.com/home-assistant/core/issues/175832

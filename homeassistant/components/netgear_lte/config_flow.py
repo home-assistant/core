@@ -5,7 +5,7 @@ from typing import Any, override
 from aiohttp.cookiejar import CookieJar
 from eternalegypt import Error, Modem
 from eternalegypt.eternalegypt import Information
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
@@ -44,10 +44,10 @@ class NetgearLTEFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_HOST): str,
-                        vol.Required(CONF_PASSWORD): str,
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Required(CONF_PASSWORD): str,
                     }
                 ),
                 user_input or {CONF_HOST: DEFAULT_HOST},

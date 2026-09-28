@@ -58,6 +58,46 @@ async def test_setup_entry_api_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_start_push_auth_error(
+    hass: HomeAssistant,
+    mock_actron_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup entry raises ConfigEntryAuthFailed when starting push fails."""
+    mock_actron_api.start_push.side_effect = ActronAirAuthError("Auth failed")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.parametrize(
+    ("push_enabled", "expected_stop_push_calls"),
+    [
+        pytest.param(True, 1, id="push_enabled"),
+        pytest.param(False, 0, id="push_unavailable"),
+    ],
+)
+async def test_unload_entry_stops_push(
+    hass: HomeAssistant,
+    mock_actron_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    push_enabled: bool,
+    expected_stop_push_calls: int,
+) -> None:
+    """Test push is only stopped on unload when it was started."""
+    mock_actron_api.start_push.return_value = push_enabled
+
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_actron_api.stop_push.call_count == expected_stop_push_calls
+
+
 @pytest.mark.parametrize(
     "identifier",
     [

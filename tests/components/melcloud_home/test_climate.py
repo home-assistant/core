@@ -127,8 +127,7 @@ async def test_ata_hvac_modes(
 
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get(ATA_ENTITY_ID)
-    assert state is not None
+    assert (state := hass.states.get(ATA_ENTITY_ID))
     assert state.attributes["hvac_modes"] == expected_hvac_modes
 
 
@@ -469,8 +468,7 @@ async def test_ata_temperature_range_by_mode(
 
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get(ATA_ENTITY_ID)
-    assert state is not None
+    assert (state := hass.states.get(ATA_ENTITY_ID))
     assert state.attributes["min_temp"] == expected_min
     assert state.attributes["max_temp"] == expected_max
 
@@ -489,8 +487,7 @@ async def test_ata_no_capabilities_temperature_range(
 
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get(ATA_ENTITY_ID)
-    assert state is not None
+    assert (state := hass.states.get(ATA_ENTITY_ID))
     assert state.attributes["min_temp"] == 7
     assert state.attributes["max_temp"] == 35
     assert HVACMode.FAN_ONLY in state.attributes["hvac_modes"]
@@ -517,12 +514,10 @@ async def test_atw_zone_temperature_range(
 
     await setup_integration(hass, mock_config_entry)
 
-    state1 = hass.states.get(ATW_ZONE1_ENTITY_ID)
-    assert state1 is not None
+    assert (state1 := hass.states.get(ATW_ZONE1_ENTITY_ID))
     assert state1.attributes["min_temp"] == 10.0
     assert state1.attributes["max_temp"] == 30.0
 
-    state2 = hass.states.get(ATW_ZONE2_ENTITY_ID)
-    assert state2 is not None
+    assert (state2 := hass.states.get(ATW_ZONE2_ENTITY_ID))
     assert state2.attributes["min_temp"] == 12.0
     assert state2.attributes["max_temp"] == 28.0

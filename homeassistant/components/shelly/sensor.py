@@ -26,6 +26,7 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfFrequency,
+    UnitOfInformation,
     UnitOfPower,
     UnitOfPressure,
     UnitOfRatio,
@@ -1731,6 +1732,18 @@ RPC_SENSORS: Final = {
             (right := status["right"]) is not None
             and right.get("vial", {}).get("level", -1) != -1
         ),
+    ),
+    "storage_fs_free": RpcSensorDescription(
+        key="storage",
+        sub_key="fs_free",
+        translation_key="storage_free_space",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        removal_condition=lambda _, status, key: not status[key]["present"],
     ),
 }
 

@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from knocki import KnockiClient, KnockiConnectionError, KnockiInvalidAuthError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
@@ -14,10 +14,10 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN, LOGGER
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 

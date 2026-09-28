@@ -8,7 +8,7 @@ import threading
 from typing import Any
 
 from pilight import pilight
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_HOST,
@@ -40,27 +40,27 @@ type EVENT_TYPE = Event[dict[str, Any]]
 # The Pilight code schema depends on the protocol. Thus only require to have
 # the protocol information. Ensure that protocol is in a list otherwise
 # segfault in pilight-daemon, https://github.com/pilight/pilight/issues/296
-RF_CODE_SCHEMA = vol.Schema(
-    {vol.Required(CONF_PROTOCOL): vol.All(cv.ensure_list, [cv.string])},
-    extra=vol.ALLOW_EXTRA,
+RF_CODE_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_PROTOCOL): probatio.All(cv.ensure_list, [cv.string])},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 SERVICE_NAME = "send"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_WHITELIST, default={}): {cv.string: [cv.string]},
-                vol.Optional(CONF_SEND_DELAY, default=DEFAULT_SEND_DELAY): vol.Coerce(
-                    float
-                ),
+                probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+                probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                probatio.Optional(CONF_WHITELIST, default={}): {cv.string: [cv.string]},
+                probatio.Optional(
+                    CONF_SEND_DELAY, default=DEFAULT_SEND_DELAY
+                ): probatio.Coerce(float),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

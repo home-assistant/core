@@ -5,7 +5,7 @@ from typing import override
 
 from connect_box import ConnectBox
 from connect_box.exceptions import ConnectBoxError, ConnectBoxLoginError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -24,8 +24,8 @@ DEFAULT_IP = "192.168.0.1"
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_HOST, default=DEFAULT_IP): cv.string,
     }
 )
 

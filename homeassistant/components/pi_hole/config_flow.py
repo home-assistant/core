@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from hole.exceptions import HoleError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -67,25 +67,27 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
-                    vol.Required(
+                    probatio.Required(
+                        CONF_HOST, default=user_input.get(CONF_HOST, "")
+                    ): str,
+                    probatio.Required(
                         CONF_PORT, default=user_input.get(CONF_PORT, 80)
-                    ): vol.Coerce(int),
-                    vol.Required(
+                    ): probatio.Coerce(int),
+                    probatio.Required(
                         CONF_LOCATION,
                         default=user_input.get(CONF_LOCATION, DEFAULT_LOCATION),
                     ): str,
-                    vol.Required(
+                    probatio.Required(
                         CONF_API_KEY,
                         default=user_input.get(CONF_API_KEY),
                     ): str,
-                    vol.Required(
+                    probatio.Required(
                         CONF_SSL,
                         default=user_input.get(CONF_SSL, DEFAULT_SSL),
                     ): bool,
-                    vol.Required(
+                    probatio.Required(
                         CONF_VERIFY_SSL,
                         default=user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
                     ): bool,
@@ -120,7 +122,7 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_HOST: self._config[CONF_HOST],
                 CONF_LOCATION: self._config[CONF_LOCATION],
             },
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
             errors=errors,
         )
 

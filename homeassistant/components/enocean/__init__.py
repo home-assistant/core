@@ -1,7 +1,7 @@
 """Support for EnOcean devices."""
 
 from enocean_async import Gateway
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DEVICE
@@ -18,8 +18,9 @@ from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 
 type EnOceanConfigEntry = ConfigEntry[Gateway]
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.Schema({probatio.Required(CONF_DEVICE): cv.string})},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

@@ -15,15 +15,56 @@ from demetriek import (
     Sound,
 )
 
-from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
+from homeassistant.components.notify import (
+    ATTR_DATA,
+    BaseNotificationService,
+    NotifyEntity,
+)
 from homeassistant.const import CONF_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.enum import try_parse_enum
 
 from .const import CONF_CYCLES, CONF_ICON_TYPE, CONF_PRIORITY, CONF_SOUND
-from .coordinator import LaMetricConfigEntry
+from .coordinator import LaMetricConfigEntry, LaMetricDataUpdateCoordinator
+from .entity import LaMetricEntity
+from .helpers import lametric_exception_handler
+
+PARALLEL_UPDATES = 1
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: LaMetricConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up LaMetric notify entity based on a config entry."""
+    async_add_entities([LaMetricNotifyEntity(entry.runtime_data)])
+
+
+class LaMetricNotifyEntity(LaMetricEntity, NotifyEntity):
+    """Representation of a LaMetric notify entity."""
+
+    _attr_translation_key = "message"
+
+    def __init__(self, coordinator: LaMetricDataUpdateCoordinator) -> None:
+        """Initialize the notify entity."""
+        super().__init__(coordinator=coordinator)
+        self._attr_unique_id = f"{coordinator.data.serial_number}-message"
+
+    @lametric_exception_handler
+    @override
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
+        """Send a message to the LaMetric device."""
+        await self.coordinator.lametric.notify(
+            notification=Notification(
+                icon_type=NotificationIconType.NONE,
+                priority=NotificationPriority.INFO,
+                model=Model(frames=[Simple(text=message)]),
+            )
+        )
 
 
 async def async_get_service(

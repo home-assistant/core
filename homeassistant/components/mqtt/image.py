@@ -7,7 +7,7 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 import httpx
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import image
 from homeassistant.components.image import DEFAULT_CONTENT_TYPE, ImageEntity
@@ -52,9 +52,9 @@ GET_IMAGE_TIMEOUT = 10
 def validate_topic_required(config: ConfigType) -> ConfigType:
     """Ensure at least one subscribe topic is configured."""
     if CONF_IMAGE_TOPIC not in config and CONF_URL_TOPIC not in config:
-        raise vol.Invalid("Expected one of [`image_topic`, `url_topic`], got none")
+        raise probatio.Invalid("Expected one of [`image_topic`, `url_topic`], got none")
     if CONF_CONTENT_TYPE in config and CONF_URL_TOPIC in config:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             "Option `content_type` can not be used together with `url_topic`"
         )
     return config
@@ -62,19 +62,22 @@ def validate_topic_required(config: ConfigType) -> ConfigType:
 
 PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_CONTENT_TYPE): cv.string,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Exclusive(CONF_URL_TOPIC, "image_topic"): valid_subscribe_topic,
-        vol.Exclusive(CONF_IMAGE_TOPIC, "image_topic"): valid_subscribe_topic,
-        vol.Optional(CONF_IMAGE_ENCODING): vol.In({"b64", "raw"}),
-        vol.Optional(CONF_URL_TEMPLATE): cv.template,
+        probatio.Optional(CONF_CONTENT_TYPE): cv.string,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Exclusive(CONF_URL_TOPIC, "image_topic"): valid_subscribe_topic,
+        probatio.Exclusive(CONF_IMAGE_TOPIC, "image_topic"): valid_subscribe_topic,
+        probatio.Optional(CONF_IMAGE_ENCODING): probatio.In({"b64", "raw"}),
+        probatio.Optional(CONF_URL_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA_MODERN = vol.All(PLATFORM_SCHEMA_BASE.schema, validate_topic_required)
+PLATFORM_SCHEMA_MODERN = probatio.All(
+    PLATFORM_SCHEMA_BASE.schema, validate_topic_required
+)
 
-DISCOVERY_SCHEMA = vol.All(
-    PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA), validate_topic_required
+DISCOVERY_SCHEMA = probatio.All(
+    PLATFORM_SCHEMA_BASE.extend({}, extra=probatio.REMOVE_EXTRA),
+    validate_topic_required,
 )
 
 
@@ -172,7 +175,7 @@ class MqttImage(MqttEntity, ImageEntity):
         except MqttValueTemplateException as exc:
             _LOGGER.warning(exc)
             return
-        except vol.Invalid:
+        except probatio.Invalid:
             _LOGGER.error(
                 "Invalid image URL '%s' received at topic %s",
                 msg.payload,

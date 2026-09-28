@@ -6,7 +6,7 @@ from functools import lru_cache, partial
 import operator
 import re
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_DOMAINS,
@@ -77,26 +77,26 @@ def convert_filter(config: dict[str, list[str]]) -> EntityFilter:
     return EntityFilter(config)
 
 
-BASE_FILTER_SCHEMA = vol.Schema(
+BASE_FILTER_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_EXCLUDE_DOMAINS, default=[]): vol.All(
+        probatio.Optional(CONF_EXCLUDE_DOMAINS, default=[]): probatio.All(
             cv.ensure_list, [cv.string]
         ),
-        vol.Optional(CONF_EXCLUDE_ENTITY_GLOBS, default=[]): vol.All(
+        probatio.Optional(CONF_EXCLUDE_ENTITY_GLOBS, default=[]): probatio.All(
             cv.ensure_list, [cv.string]
         ),
-        vol.Optional(CONF_EXCLUDE_ENTITIES, default=[]): cv.entity_ids,
-        vol.Optional(CONF_INCLUDE_DOMAINS, default=[]): vol.All(
+        probatio.Optional(CONF_EXCLUDE_ENTITIES, default=[]): cv.entity_ids,
+        probatio.Optional(CONF_INCLUDE_DOMAINS, default=[]): probatio.All(
             cv.ensure_list, [cv.string]
         ),
-        vol.Optional(CONF_INCLUDE_ENTITY_GLOBS, default=[]): vol.All(
+        probatio.Optional(CONF_INCLUDE_ENTITY_GLOBS, default=[]): probatio.All(
             cv.ensure_list, [cv.string]
         ),
-        vol.Optional(CONF_INCLUDE_ENTITIES, default=[]): cv.entity_ids,
+        probatio.Optional(CONF_INCLUDE_ENTITIES, default=[]): cv.entity_ids,
     }
 )
 
-FILTER_SCHEMA = vol.All(BASE_FILTER_SCHEMA, convert_filter)
+FILTER_SCHEMA = probatio.All(BASE_FILTER_SCHEMA, convert_filter)
 
 
 def convert_include_exclude_filter(
@@ -117,28 +117,30 @@ def convert_include_exclude_filter(
     )
 
 
-INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER = vol.Schema(
+INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER = probatio.Schema(
     {
-        vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_ENTITY_GLOBS, default=[]): vol.All(
+        probatio.Optional(CONF_DOMAINS, default=[]): probatio.All(
             cv.ensure_list, [cv.string]
         ),
-        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+        probatio.Optional(CONF_ENTITY_GLOBS, default=[]): probatio.All(
+            cv.ensure_list, [cv.string]
+        ),
+        probatio.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
     }
 )
 
-INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA = vol.Schema(
+INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA = probatio.Schema(
     {
-        vol.Optional(
+        probatio.Optional(
             CONF_INCLUDE, default=INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER({})
         ): INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER,
-        vol.Optional(
+        probatio.Optional(
             CONF_EXCLUDE, default=INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER({})
         ): INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER,
     }
 )
 
-INCLUDE_EXCLUDE_FILTER_SCHEMA = vol.All(
+INCLUDE_EXCLUDE_FILTER_SCHEMA = probatio.All(
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA, convert_include_exclude_filter
 )
 

@@ -32,6 +32,7 @@ BINARY_SENSORS = [
     TechnoVEBinarySensorDescription(
         key="conflict_in_sharing_config",
         translation_key="conflict_in_sharing_config",
+        device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda station: station.info.conflict_in_sharing_config,
     ),

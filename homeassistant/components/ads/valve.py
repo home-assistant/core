@@ -2,8 +2,8 @@
 
 from typing import override
 
+import probatio
 import pyads
-import voluptuous as vol
 
 from homeassistant.components.valve import (
     DEVICE_CLASSES_SCHEMA as VALVE_DEVICE_CLASSES_SCHEMA,
@@ -26,9 +26,9 @@ DEFAULT_NAME = "ADS valve"
 
 PLATFORM_SCHEMA = VALVE_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ADS_VAR): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): VALVE_DEVICE_CLASSES_SCHEMA,
+        probatio.Required(CONF_ADS_VAR): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_DEVICE_CLASS): VALVE_DEVICE_CLASSES_SCHEMA,
     }
 )
 

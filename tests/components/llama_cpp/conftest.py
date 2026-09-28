@@ -127,7 +127,7 @@ class MockChatLog(conversation.ChatLog):
                 raise ValueError(
                     f"Tool {tool_input.id} not found ({self._mock_tool_results})"
                 )
-            return self._mock_tool_results[tool_input.id]
+            return llm.ToolResult(data=self._mock_tool_results[tool_input.id])
 
         self._llm_api.async_call_tool = async_call_tool
 

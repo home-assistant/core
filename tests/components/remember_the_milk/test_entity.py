@@ -7,7 +7,7 @@ from aiortm import AioRTMError, AuthError
 import pytest
 
 from homeassistant.components.remember_the_milk import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -356,3 +356,5 @@ async def test_services_auth_errors(
 
     assert error_message in caplog.text
     assert entry.state is ConfigEntryState.SETUP_ERROR
+    flows = list(entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+    assert len(flows) == 1

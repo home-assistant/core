@@ -1306,13 +1306,16 @@ async def test_tasks_logged_that_block_stage_1(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we log tasks that delay stage 1 startup."""
+    task: asyncio.Task | None = None
 
     def gen_domain_setup(domain):
         async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-            async def _not_marked_background_task():
-                await asyncio.sleep(0.2)
+            nonlocal task
 
-            hass.async_create_task(_not_marked_background_task())
+            async def _not_marked_background_task():
+                await hass.loop.create_future()
+
+            task = hass.async_create_task(_not_marked_background_task())
             await asyncio.sleep(0.1)
             return True
 
@@ -1331,12 +1334,16 @@ async def test_tasks_logged_that_block_stage_1(
     with (
         patch.object(bootstrap, "STAGE_1_TIMEOUT", 0),
         patch.object(bootstrap, "COOLDOWN_TIME", 0),
+        patch.object(bootstrap, "WRAP_UP_TIMEOUT", 0),
         patch.object(
             bootstrap, "STAGE_1_INTEGRATIONS", {*original_stage_1, "normal_integration"}
         ),
     ):
         await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
-        await hass.async_block_till_done()
+
+    task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await task
 
     assert "Setup timed out for stage 1 waiting on" in caplog.text
     assert "waiting on" in caplog.text
@@ -1348,13 +1355,16 @@ async def test_tasks_logged_that_block_stage_2(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we log tasks that delay stage 2 startup."""
+    task: asyncio.Task | None = None
 
     def gen_domain_setup(domain):
         async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-            async def _not_marked_background_task():
-                await asyncio.sleep(0.2)
+            nonlocal task
 
-            hass.async_create_task(_not_marked_background_task())
+            async def _not_marked_background_task():
+                await hass.loop.create_future()
+
+            task = hass.async_create_task(_not_marked_background_task())
             await asyncio.sleep(0.1)
             return True
 
@@ -1372,9 +1382,13 @@ async def test_tasks_logged_that_block_stage_2(
     with (
         patch.object(bootstrap, "STAGE_2_TIMEOUT", 0),
         patch.object(bootstrap, "COOLDOWN_TIME", 0),
+        patch.object(bootstrap, "WRAP_UP_TIMEOUT", 0),
     ):
         await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
-        await hass.async_block_till_done()
+
+    task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await task
 
     assert "Setup timed out for stage 2 waiting on" in caplog.text
     assert "waiting on" in caplog.text

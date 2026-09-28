@@ -26,6 +26,7 @@ from homeassistant.components.cast.const import (
 )
 from homeassistant.components.cast.media_player import ChromecastInfo
 from homeassistant.components.media_player import (
+    DOMAIN as MP_DOMAIN,
     BrowseMedia,
     MediaClass,
     MediaPlayerEntityFeature,
@@ -2112,6 +2113,22 @@ async def test_disconnect_on_stop(hass: HomeAssistant) -> None:
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     assert chromecast.disconnect.call_count == 1
+
+
+async def test_stop_listener_removed_with_entity(hass: HomeAssistant) -> None:
+    """Test the stop listener is removed when the entity is removed."""
+    info = get_fake_chromecast_info()
+    await async_setup_media_player_cast(hass, info)
+    stop_listeners = hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STOP]
+
+    entity = hass.data[MP_DOMAIN].get_entity("media_player.speaker")
+    await entity.async_remove()
+    await hass.async_block_till_done()
+
+    assert (
+        hass.bus.async_listeners().get(EVENT_HOMEASSISTANT_STOP, 0)
+        == stop_listeners - 1
+    )
 
 
 async def test_entry_setup_no_config(hass: HomeAssistant) -> None:

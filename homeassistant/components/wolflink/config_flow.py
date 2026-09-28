@@ -4,7 +4,7 @@ import logging
 from typing import override
 
 from httpx import RequestError
-import voluptuous as vol
+import probatio
 from wolf_comm.token_auth import InvalidAuth
 from wolf_comm.wolf_client import FetchFailed, WolfClient
 
@@ -15,8 +15,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-USER_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+USER_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_USERNAME): str, probatio.Required(CONF_PASSWORD): str}
 )
 
 

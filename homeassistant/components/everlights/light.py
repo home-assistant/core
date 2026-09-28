@@ -4,8 +4,8 @@ from datetime import timedelta
 import logging
 from typing import Any, cast, override
 
+import probatio
 import pyeverlights
-import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_HOSTS): vol.All(cv.ensure_list, [cv.string])}
+    {probatio.Required(CONF_HOSTS): probatio.All(cv.ensure_list, [cv.string])}
 )
 
 

@@ -8,7 +8,7 @@ from crownstone_cloud.exceptions import (
     CrownstoneAuthenticationError,
     CrownstoneUnknownError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import usb
 from homeassistant.config_entries import (
@@ -86,8 +86,8 @@ class BaseCrownstoneFlowHandler(ConfigEntryBaseFlow):
 
         return self.async_show_form(
             step_id="usb_config",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_USB_PATH): vol.In(ports_as_string)}
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_USB_PATH): probatio.In(ports_as_string)}
             ),
         )
 
@@ -98,7 +98,9 @@ class BaseCrownstoneFlowHandler(ConfigEntryBaseFlow):
         if user_input is None:
             return self.async_show_form(
                 step_id="usb_manual_config",
-                data_schema=vol.Schema({vol.Required(CONF_USB_MANUAL_PATH): str}),
+                data_schema=probatio.Schema(
+                    {probatio.Required(CONF_USB_MANUAL_PATH): str}
+                ),
             )
 
         self.usb_path = user_input[CONF_USB_MANUAL_PATH]
@@ -117,7 +119,9 @@ class BaseCrownstoneFlowHandler(ConfigEntryBaseFlow):
         if user_input is None and sphere_id is None:
             return self.async_show_form(
                 step_id="usb_sphere_config",
-                data_schema=vol.Schema({CONF_USB_SPHERE: vol.In(spheres.keys())}),
+                data_schema=probatio.Schema(
+                    {CONF_USB_SPHERE: probatio.In(spheres.keys())}
+                ),
             )
 
         if sphere_id:
@@ -156,8 +160,11 @@ class CrownstoneConfigFlowHandler(BaseCrownstoneFlowHandler, ConfigFlow, domain=
         if user_input is None:
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
+                data_schema=probatio.Schema(
+                    {
+                        probatio.Required(CONF_EMAIL): str,
+                        probatio.Required(CONF_PASSWORD): str,
+                    }
                 ),
             )
 
@@ -181,8 +188,11 @@ class CrownstoneConfigFlowHandler(BaseCrownstoneFlowHandler, ConfigFlow, domain=
         if errors:
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
+                data_schema=probatio.Schema(
+                    {
+                        probatio.Required(CONF_EMAIL): str,
+                        probatio.Required(CONF_PASSWORD): str,
+                    }
                 ),
                 errors=errors,
             )
@@ -225,16 +235,16 @@ class CrownstoneOptionsFlowHandler(BaseCrownstoneFlowHandler, OptionsFlow):
         usb_path = self.config_entry.options.get(CONF_USB_PATH)
         usb_sphere = self.config_entry.options.get(CONF_USB_SPHERE)
 
-        options_schema = vol.Schema(
-            {vol.Optional(CONF_USE_USB_OPTION, default=usb_path is not None): bool}
+        options_schema = probatio.Schema(
+            {probatio.Optional(CONF_USE_USB_OPTION, default=usb_path is not None): bool}
         )
         if usb_path is not None and len(spheres) > 1:
             options_schema = options_schema.extend(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_USB_SPHERE_OPTION,
                         default=self.cloud.cloud_data.data[usb_sphere].name,
-                    ): vol.In(spheres.keys())
+                    ): probatio.In(spheres.keys())
                 }
             )
 
