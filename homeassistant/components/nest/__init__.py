@@ -469,6 +469,7 @@ class NestEventMediaThumbnailView(NestEventViewBase):
         contents = media.contents
         if (content_type := media.content_type) == "image/jpeg":
             image = Image(media.event_image_type.content_type, contents)
+            await img_util.async_ensure_turbojpeg(self.hass)
             contents = img_util.scale_jpeg_camera_image(
                 image, THUMBNAIL_SIZE_PX, THUMBNAIL_SIZE_PX
             )
