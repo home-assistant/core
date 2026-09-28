@@ -1547,7 +1547,7 @@ lojack-api==0.7.2
 london-tube-status==0.7
 
 # homeassistant.components.loqed
-loqedAPI==2.1.11
+loqedAPI==2.1.15
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.4

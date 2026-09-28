@@ -204,8 +204,6 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle lock selection when multiple locks are available."""
         if user_input is not None:
-            if self._api_token is None:
-                return await self.async_step_user()
             return await self.async_step_user(
                 {**user_input, CONF_API_TOKEN: self._api_token}
             )

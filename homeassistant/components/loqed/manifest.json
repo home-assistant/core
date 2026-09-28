@@ -9,7 +9,7 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "quality_scale": "bronze",
-  "requirements": ["loqedAPI==2.1.11"],
+  "requirements": ["loqedAPI==2.1.15"],
   "zeroconf": [
     {
       "name": "loqed*",

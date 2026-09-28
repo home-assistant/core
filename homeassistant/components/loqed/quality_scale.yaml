@@ -40,9 +40,18 @@ rules:
     status: exempt
     comment: This integration does not provide an options flow.
   docs-installation-parameters: done
-  entity-unavailable: done
+  entity-unavailable:
+    status: todo
+    comment: >-
+      Webhook payloads never carry an online/offline signal; that is only
+      present in the one-time status fetch at setup. Needs a loqedAPI/bridge
+      change or a watchdog poll to detect connectivity loss.
   integration-owner: done
-  log-when-unavailable: done
+  log-when-unavailable:
+    status: todo
+    comment: >-
+      Depends on entity-unavailable; there is no connectivity signal to log
+      transitions for yet.
   parallel-updates: todo
   reauthentication-flow: todo
   test-coverage: done

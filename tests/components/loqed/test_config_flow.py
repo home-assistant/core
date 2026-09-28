@@ -3,20 +3,19 @@
 from collections.abc import Callable
 from ipaddress import ip_address
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import aiohttp
 from loqedAPI import loqed
 
 from homeassistant import config_entries
-from homeassistant.components.loqed.config_flow import LoqedConfigFlow
 from homeassistant.components.loqed.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from tests.common import async_load_json_object_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_API_TOKEN = "eyadiuyfasiuasf"
@@ -199,17 +198,44 @@ async def test_create_entry_user_with_pick_lock(
     mock_lock.getWebhooks.assert_awaited()
 
 
-async def test_pick_lock_without_api_token(hass: HomeAssistant) -> None:
-    """Test picking a lock restarts the user step without an API token."""
-    flow = LoqedConfigFlow()
-    flow._locks = [{"id": "Foo", "name": "MyLock"}]
-    user_step = AsyncMock(return_value={"type": FlowResultType.FORM})
+async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
+    """Test zeroconf aborts when the bridge is already configured."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="***REDACTED***",
+        data={"bridge_ip": "192.168.12.34"},
+    ).add_to_hass(hass)
 
-    with patch.object(flow, "async_step_user", user_step):
-        result = await flow.async_step_pick_lock({"lock_id": "Foo"})
+    result = await _async_init_zeroconf_flow(hass)
 
-    assert result == {"type": FlowResultType.FORM}
-    user_step.assert_awaited_once_with()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_user_flow_already_configured(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    patch_lock_creation_flow: Callable[[dict[str, Any], loqed.Lock, str], Any],
+) -> None:
+    """Test the user flow aborts when the lock is already configured."""
+    MockConfigEntry(domain=DOMAIN, unique_id="aabbccddeeff").add_to_hass(hass)
+
+    result = await _async_init_user_flow(hass)
+
+    mock_lock = Mock(spec=loqed.Lock, id="Foo")
+    all_locks_response = await async_load_json_object_fixture(
+        hass, "get_all_locks.json", DOMAIN
+    )
+
+    with patch_lock_creation_flow(all_locks_response, mock_lock, TEST_WEBHOOK_ID):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_TOKEN: TEST_API_TOKEN},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_cannot_connect(
