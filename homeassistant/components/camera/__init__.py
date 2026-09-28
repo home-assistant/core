@@ -74,8 +74,8 @@ from .const import (
     StreamType,
 )
 from .helper import (
-    _async_get_stream_image,
-    _async_stream_endpoint_url,
+    async_get_stream_image,
+    async_stream_endpoint_url,
     get_camera_from_entity_id,
 )
 from .img_util import (
@@ -162,7 +162,7 @@ class CameraCapabilities:
 async def async_request_stream(hass: HomeAssistant, entity_id: str, fmt: str) -> str:
     """Request a stream for a camera entity."""
     camera = get_camera_from_entity_id(hass, entity_id)
-    return await _async_stream_endpoint_url(hass, camera, fmt)
+    return await async_stream_endpoint_url(hass, camera, fmt)
 
 
 async def _async_get_image(
@@ -182,7 +182,7 @@ async def _async_get_image(
     with suppress(asyncio.CancelledError, TimeoutError):
         async with asyncio.timeout(timeout):
             image_bytes = (
-                await _async_get_stream_image(
+                await async_get_stream_image(
                     camera, width=width, height=height, wait_for_next_keyframe=False
                 )
                 if camera.use_stream_for_stills
@@ -946,7 +946,7 @@ async def ws_camera_stream(
     try:
         entity_id = msg["entity_id"]
         camera = get_camera_from_entity_id(hass, entity_id)
-        url = await _async_stream_endpoint_url(hass, camera, fmt=msg["format"])
+        url = await async_stream_endpoint_url(hass, camera, fmt=msg["format"])
         connection.send_result(msg["id"], {"url": url})
     except HomeAssistantError as ex:
         _LOGGER.error("Error requesting stream: %s", ex)
@@ -1073,7 +1073,7 @@ async def async_handle_snapshot_service(
     try:
         async with asyncio.timeout(CAMERA_IMAGE_TIMEOUT):
             image = (
-                await _async_get_stream_image(camera, wait_for_next_keyframe=True)
+                await async_get_stream_image(camera, wait_for_next_keyframe=True)
                 if camera.use_stream_for_stills
                 else await camera.async_camera_image()
             )
@@ -1103,7 +1103,7 @@ async def async_handle_play_stream_service(
     """Handle play stream services calls."""
     hass = camera.hass
     fmt = service_call.data[ATTR_FORMAT]
-    url = await _async_stream_endpoint_url(camera.hass, camera, fmt)
+    url = await async_stream_endpoint_url(camera.hass, camera, fmt)
     url = f"{get_url(hass)}{url}"
 
     await hass.services.async_call(

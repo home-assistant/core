@@ -26,12 +26,13 @@ def get_camera_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
     return camera
 
 
-async def _async_get_stream_image(
+async def async_get_stream_image(
     camera: Camera,
     width: int | None = None,
     height: int | None = None,
     wait_for_next_keyframe: bool = False,
 ) -> bytes | None:
+    """Return a still image from the camera's stream."""
     if (provider := camera.webrtc_provider) and (
         image := await provider.async_get_image(camera, width=width, height=height)
     ) is not None:
@@ -45,9 +46,10 @@ async def _async_get_stream_image(
     return None
 
 
-async def _async_stream_endpoint_url(
+async def async_stream_endpoint_url(
     hass: HomeAssistant, camera: Camera, fmt: str
 ) -> str:
+    """Start the camera stream and return its endpoint URL."""
     stream = await camera.async_create_stream()
     if not stream:
         raise HomeAssistantError(
