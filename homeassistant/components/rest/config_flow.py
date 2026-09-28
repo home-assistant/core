@@ -334,18 +334,18 @@ class RestSubentryFlow(ConfigSubentryFlow):
                 if callable(schema_validator):
                     if len(entry.subentries) == 0:
                         await entry.runtime_data.async_refresh()
-                        if entry.runtime_data.rest.data is not None:
-                            schema_validator = schema_validator(entry.runtime_data.rest)
-                        else:
-                            ex = cast(
-                                HomeAssistantError,
-                                entry.runtime_data.last_exception,
-                            )
-                            errors["base"] = ex.translation_key or "endpoint_error"
-                            placeholders = placeholders | (
-                                ex.translation_placeholders
-                                or {"endpoint_error_message": str(ex)}
-                            )
+                    if entry.runtime_data.rest.data is not None:
+                        schema_validator = schema_validator(entry.runtime_data.rest)
+                    else:
+                        ex = cast(
+                            HomeAssistantError,
+                            entry.runtime_data.last_exception,
+                        )
+                        errors["base"] = ex.translation_key or "endpoint_error"
+                        placeholders = placeholders | (
+                            ex.translation_placeholders
+                            or {"endpoint_error_message": str(ex)}
+                        )
                 if isinstance(schema_validator, probatio.Schema):
                     try:
                         schema_validator(user_input)

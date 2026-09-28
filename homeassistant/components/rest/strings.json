@@ -122,6 +122,7 @@
       },
       "entry_type": "[%key:component::sensor::title%]",
       "error": {
+        "endpoint_error": "[%key:component::rest::common::endpoint_error%]",
         "invalid_result": "[%key:component::rest::exceptions::invalid_result::message%]",
         "no_json": "[%key:component::rest::exceptions::no_json::message%]",
         "parse_error": "[%key:component::rest::exceptions::parse_error::message%]",
