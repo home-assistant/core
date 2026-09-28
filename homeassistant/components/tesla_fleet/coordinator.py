@@ -27,10 +27,12 @@ from homeassistant.components.recorder.models import (
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
+    statistics_during_period,
 )
-from homeassistant.const import CONF_TOKEN, UnitOfEnergy
+from homeassistant.const import CONF_TOKEN, Platform, UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.unit_conversion import EnergyConverter
 
@@ -113,6 +115,36 @@ def _get_last_statistics_for_statistic_ids(
             ).get(statistic_id)
         )
     }
+
+
+def _get_sensor_statistics(
+    hass: HomeAssistant, sensors: dict[str, str], end: datetime
+) -> dict[str, list[StatisticData]]:
+    """Return each sensor's hourly statistics as hourly energy, keyed by field."""
+    history: dict[str, list[StatisticData]] = {}
+    for entity_id, rows in statistics_during_period(
+        hass,
+        dt_util.utc_from_timestamp(0),
+        end,
+        set(sensors),
+        "hour",
+        {EnergyConverter.UNIT_CLASS: UnitOfEnergy.WATT_HOUR},
+        {"sum"},
+    ).items():
+        previous = 0.0
+        statistics: list[StatisticData] = []
+        for row in rows:
+            total = row["sum"] or 0.0
+            statistics.append(
+                StatisticData(
+                    start=dt_util.utc_from_timestamp(row["start"]),
+                    state=total - previous,
+                    sum=total,
+                )
+            )
+            previous = total
+        history[sensors[entity_id]] = statistics
+    return history
 
 
 def _aggregate_energy_history_by_hour(
@@ -530,6 +562,8 @@ class TeslaFleetEnergySiteStatisticsCoordinator(DataUpdateCoordinator[None]):
         first_run_start = dt_util.as_utc(today).replace(
             minute=0, second=0, microsecond=0
         )
+        if not last_stats:
+            await self._async_copy_sensor_history(last_stats, first_run_start)
         # Resume from the newest field so one that stops reporting can't hold
         # imports back. Fields commit separately, so a crash between commits
         # can leave a gap in a field that fell behind.
@@ -572,6 +606,43 @@ class TeslaFleetEnergySiteStatisticsCoordinator(DataUpdateCoordinator[None]):
             window_start = dt_util.as_utc(day)
             day = next_day
 
+    async def _async_copy_sensor_history(
+        self, last_stats: dict[str, StatisticData], end: datetime
+    ) -> None:
+        """Start each statistic from its sensor's history so switching keeps it."""
+        entity_registry = er.async_get(self.hass)
+        site_id = self.api.energy_site_id
+        if not (
+            sensors := {
+                entity_id: key
+                for key in ENERGY_HISTORY_FIELDS
+                if (
+                    entity_id := entity_registry.async_get_entity_id(
+                        Platform.SENSOR, DOMAIN, f"{site_id}-{key}"
+                    )
+                )
+            }
+        ):
+            return
+        history = await get_instance(self.hass).async_add_executor_job(
+            _get_sensor_statistics, self.hass, sensors, end
+        )
+        for key, statistics in history.items():
+            async_add_external_statistics(self.hass, self._metadata(key), statistics)
+            last_stats[build_statistic_id(site_id, key)] = statistics[-1]
+
+    def _metadata(self, key: str) -> StatisticMetaData:
+        """Return the external statistic metadata for a field."""
+        return StatisticMetaData(
+            mean_type=StatisticMeanType.NONE,
+            has_sum=True,
+            name=f"{self.site_name} {key.replace('_', ' ')}",
+            source=DOMAIN,
+            statistic_id=build_statistic_id(self.api.energy_site_id, key),
+            unit_class=EnergyConverter.UNIT_CLASS,
+            unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        )
+
     @callback
     def _add_statistics(
         self,
@@ -609,16 +680,9 @@ class TeslaFleetEnergySiteStatisticsCoordinator(DataUpdateCoordinator[None]):
                 )
 
             if statistics:
-                metadata = StatisticMetaData(
-                    mean_type=StatisticMeanType.NONE,
-                    has_sum=True,
-                    name=f"{self.site_name} {key.replace('_', ' ')}",
-                    source=DOMAIN,
-                    statistic_id=statistic_id,
-                    unit_class=EnergyConverter.UNIT_CLASS,
-                    unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+                async_add_external_statistics(
+                    self.hass, self._metadata(key), statistics
                 )
-                async_add_external_statistics(self.hass, metadata, statistics)
                 last_stats[statistic_id] = statistics[-1]
 
 

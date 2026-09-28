@@ -18,15 +18,25 @@ from tesla_fleet_api.exceptions import (
 )
 
 from homeassistant.components.recorder import Recorder
+from homeassistant.components.recorder.const import DOMAIN as RECORDER_DOMAIN
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMeanType,
+    StatisticMetaData,
+)
 from homeassistant.components.recorder.statistics import (
     StatisticsRow,
+    async_import_statistics,
     statistics_during_period,
 )
+from homeassistant.components.tesla_fleet.const import DOMAIN
 from homeassistant.components.tesla_fleet.coordinator import ENERGY_STATISTICS_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import CONF_TOKEN
+from homeassistant.const import CONF_TOKEN, Platform, UnitOfEnergy
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import EnergyConverter
 
 from . import setup_platform
 
@@ -466,6 +476,53 @@ async def test_independent_baselines_and_new_fields(
     }
     stats = await _get_hourly_stats(hass, set(expected))
     assert {key: rows[-1]["sum"] for key, rows in stats.items()} == expected
+
+
+async def test_copy_sensor_history(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    history_responses: dict[str | None, dict[str, Any]],
+) -> None:
+    """Start a new statistic from its sensor's history, in Wh per hour."""
+    sensor = entity_registry.async_get_or_create(
+        Platform.SENSOR, DOMAIN, f"{SITE_ID}-{GRID}"
+    )
+    async_import_statistics(
+        hass,
+        StatisticMetaData(
+            mean_type=StatisticMeanType.NONE,
+            has_sum=True,
+            name=None,
+            source=RECORDER_DOMAIN,
+            statistic_id=sensor.entity_id,
+            unit_class=EnergyConverter.UNIT_CLASS,
+            unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        ),
+        [
+            StatisticData(start=datetime.fromisoformat(start), state=state, sum=total)
+            for start, state, total in (
+                ("2023-06-02T04:00:00+00:00", 2.0, 0.0),
+                ("2023-06-02T05:00:00+00:00", 2.1, 0.1),
+                ("2023-06-02T06:00:00+00:00", 2.25, 0.25),
+                # From the first import onward, Tesla's history is used instead.
+                ("2023-06-02T07:00:00+00:00", 0.4, 0.4),
+            )
+        ],
+    )
+    await async_wait_recording_done(hass)
+    history_responses[None] = _history((AFTER, {GRID: 20}))
+    history_responses[END_DATE] = _history((LAST, {GRID: 50}))
+
+    await _setup(hass, normal_config_entry)
+
+    stats = await _get_hourly_stats(hass, {GRID_STATISTIC_ID})
+    assert _hourly_rows(stats[GRID_STATISTIC_ID]) == [
+        ("2023-06-02T04:00:00+00:00", 0, 0),
+        ("2023-06-02T05:00:00+00:00", 100, 100),
+        ("2023-06-02T06:00:00+00:00", 50, 150),
+        ("2023-06-02T07:00:00+00:00", 20, 170),
+    ]
 
 
 @pytest.mark.parametrize(
