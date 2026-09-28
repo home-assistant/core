@@ -1320,7 +1320,7 @@ class EntityPlatform:
                     self._parallel_updates_semaphore_limit
                 )
                 for entity in self.entities.values():
-                    if entity.parallel_updates is not self.parallel_updates:
+                    if not entity._update_staged:
                         entity.parallel_updates = new_semaphore
                 self.parallel_updates = new_semaphore
 
