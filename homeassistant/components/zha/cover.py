@@ -22,10 +22,9 @@ from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import ZHAEntity
+from .entity import ZHASupportedFeaturesEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
-    EntityData,
     async_add_entities as zha_async_add_entities,
     convert_zha_error_to_ha_error,
     get_zha_data,
@@ -53,19 +52,12 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-class ZhaCover(ZHAEntity, CoverEntity):
+class ZhaCover(ZHASupportedFeaturesEntity, CoverEntity):
     """Representation of a ZHA cover."""
 
-    def __init__(self, entity_data: EntityData) -> None:
-        """Initialize the ZHA cover."""
-        super().__init__(entity_data)
-
-        if self.entity_data.entity.info_object.device_class is not None:
-            self._attr_device_class = CoverDeviceClass(
-                self.entity_data.entity.info_object.device_class
-            )
-
     @staticmethod
+    @functools.cache
+    @override
     def _convert_supported_features(
         zha_features: ZHACoverEntityFeature,
     ) -> CoverEntityFeature:
@@ -91,42 +83,45 @@ class ZhaCover(ZHAEntity, CoverEntity):
 
         return features
 
-    @property
     @override
-    def supported_features(self) -> CoverEntityFeature:
-        """Return the supported features."""
-        zha_features: ZHACoverEntityFeature = self.entity_data.entity.supported_features
-        return self._convert_supported_features(zha_features)
+    def _update_capability_attrs(self) -> None:
+        """Re-derive capability attributes from the cached state."""
+        super()._update_capability_attrs()
+
+        device_class = self._zha_state.device_class
+        self._attr_device_class = (
+            CoverDeviceClass(device_class) if device_class is not None else None
+        )
 
     @property
     @override
     def is_closed(self) -> bool | None:
         """Return True if the cover is closed."""
-        return self.entity_data.entity.is_closed
+        return self._zha_state.is_closed
 
     @property
     @override
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
-        return self.entity_data.entity.is_opening
+        return self._zha_state.is_opening
 
     @property
     @override
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
-        return self.entity_data.entity.is_closing
+        return self._zha_state.is_closing
 
     @property
     @override
     def current_cover_position(self) -> int | None:
         """Return the current position of ZHA cover."""
-        return self.entity_data.entity.current_cover_position
+        return self._zha_state.current_position
 
     @property
     @override
     def current_cover_tilt_position(self) -> int | None:
         """Return the current tilt position of the cover."""
-        return self.entity_data.entity.current_cover_tilt_position
+        return self._zha_state.current_tilt_position
 
     @convert_zha_error_to_ha_error()
     @override

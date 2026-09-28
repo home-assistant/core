@@ -21,7 +21,7 @@ async def async_setup_entry(
     client = entry.runtime_data.client
     trackables = entry.runtime_data.trackables
 
-    entities = [TractiveDeviceTracker(client, item) for item in trackables]
+    entities = [TractiveDeviceTracker(hass, entry, client, item) for item in trackables]
 
     async_add_entities(entities)
 
@@ -32,9 +32,17 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
     _attr_translation_key = "tracker"
     _attr_name = None
 
-    def __init__(self, client: TractiveClient, item: Trackables) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: TractiveConfigEntry,
+        client: TractiveClient,
+        item: Trackables,
+    ) -> None:
         """Initialize tracker entity."""
         super().__init__(
+            hass,
+            entry,
             client,
             item.trackable,
             item.tracker_details,

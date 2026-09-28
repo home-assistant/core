@@ -26,6 +26,15 @@ MOCK_CONF_PUB_KEY = (
 )
 
 
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.html5.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
 @pytest.fixture(name="config_entry")
 def mock_config_entry() -> MockConfigEntry:
     """Mock ntfy configuration entry."""
@@ -82,6 +91,7 @@ def mock_jwt() -> Generator[MagicMock]:
 
     with (
         patch("homeassistant.components.html5.notify.jwt") as mock_client,
+        patch("homeassistant.components.html5.http.jwt", new=mock_client),
     ):
         mock_client.encode.return_value = "JWT"
         mock_client.decode.return_value = {"target": "device"}
@@ -113,4 +123,15 @@ def mock_vapid() -> Generator[MagicMock]:
             "urgency": "normal",
             "priority": "normal",
         }
+        yield mock_client
+
+
+@pytest.fixture
+def mock_save() -> Generator[MagicMock]:
+    """Mock save_json."""
+
+    with (
+        patch("homeassistant.components.html5.http.save_json") as mock_client,
+        patch("homeassistant.components.html5.notify.save_json", new=mock_client),
+    ):
         yield mock_client

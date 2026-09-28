@@ -133,11 +133,11 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'Badkamer',
         'Vakantie',
         'Weekschema',
         'Test',
-        'off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -175,11 +175,11 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bathroom Thermostat schedule',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'Badkamer',
         'Vakantie',
         'Weekschema',
         'Test',
-        'off',
       ]),
     }),
     'context': <ANY>,
@@ -259,11 +259,11 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'Badkamer',
         'Vakantie',
         'Weekschema',
         'Test',
-        'off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -301,11 +301,11 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Thermostat schedule',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'Badkamer',
         'Vakantie',
         'Weekschema',
         'Test',
-        'off',
       ]),
     }),
     'context': <ANY>,
@@ -385,12 +385,12 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
         'Badkamer Schema',
         'CV Jessie',
-        'off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -428,12 +428,12 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Badkamer Thermostat schedule',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
         'Badkamer Schema',
         'CV Jessie',
-        'off',
       ]),
     }),
     'context': <ANY>,
@@ -452,12 +452,12 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
         'Badkamer Schema',
         'CV Jessie',
-        'off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -495,16 +495,73 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bios Thermostat schedule',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
         'Badkamer Schema',
         'CV Jessie',
-        'off',
       ]),
     }),
     'context': <ANY>,
     'entity_id': 'select.bios_thermostat_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_adam_select_entities[platforms0][select.garage_thermostat_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.garage_thermostat_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thermostat schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thermostat schedule',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'select_schedule',
+    'unique_id': '446ac08dd04d4eff8ac57489757b7314-select_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_adam_select_entities[platforms0][select.garage_thermostat_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Thermostat schedule',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.garage_thermostat_schedule',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -519,12 +576,12 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
         'Badkamer Schema',
         'CV Jessie',
-        'off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -562,12 +619,12 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jessie Thermostat schedule',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
         'Badkamer Schema',
         'CV Jessie',
-        'off',
       ]),
     }),
     'context': <ANY>,
@@ -586,12 +643,12 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
         'Badkamer Schema',
         'CV Jessie',
-        'off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -629,12 +686,12 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer Thermostat schedule',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
         'Badkamer Schema',
         'CV Jessie',
-        'off',
       ]),
     }),
     'context': <ANY>,
@@ -653,9 +710,9 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'Winter',
         'Test ',
-        'off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -693,9 +750,9 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Anna Thermostat schedule',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'Winter',
         'Test ',
-        'off',
       ]),
     }),
     'context': <ANY>,

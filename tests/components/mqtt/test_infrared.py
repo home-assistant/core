@@ -184,6 +184,12 @@ async def test_receiving_command_success_using_value_template(
             False,
         ),
         (
+            '""',
+            "Ignoring payload for infrared.test on topic test-topic, with template None",
+            logging.DEBUG,
+            False,
+        ),
+        (
             "None",
             "Ignoring payload for infrared.test on topic test-topic, with template None",
             logging.DEBUG,
@@ -386,14 +392,14 @@ async def test_discovery_ir_entity_succeeds(
                 "name": "test",
                 "command_topic": "test-topic",
             },
-            "Error 'not a valid value for dictionary value @ data['schema']'",
+            "Error 'expected 'emitter' or 'receiver' at 'schema''",
         ),
         (
             {
                 "schema": "emitter",
                 "name": "test",
             },
-            "Error 'required key not provided @ data['command_topic']'",
+            "Error 'required key not provided at 'command_topic''",
         ),
         (
             {
@@ -401,14 +407,14 @@ async def test_discovery_ir_entity_succeeds(
                 "name": "test",
                 "state_topic": "test-topic",
             },
-            "Error 'not a valid value for dictionary value @ data['schema']'",
+            "Error 'expected 'emitter' or 'receiver' at 'schema''",
         ),
         (
             {
                 "schema": "receiver",
                 "name": "test",
             },
-            "Error 'required key not provided @ data['state_topic']'",
+            "Error 'required key not provided at 'state_topic''",
         ),
     ],
 )

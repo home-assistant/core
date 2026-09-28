@@ -1,0 +1,134 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'entry': dict({
+      'data': dict({
+        'host': '**REDACTED**',
+        'model': 'MP-60',
+        'serial_number': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'lyngdorf',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Lyngdorf',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'ranges': dict({
+      'lipsync_range': dict({
+        'max': 500,
+        'min': 0,
+        'step': 1,
+      }),
+      'trim_bass_range': dict({
+        'max': 12.0,
+        'min': -12.0,
+        'step': 0.1,
+      }),
+      'trim_centre_range': dict({
+        'max': 10.0,
+        'min': -10.0,
+        'step': 0.1,
+      }),
+      'trim_height_range': dict({
+        'max': 10.0,
+        'min': -10.0,
+        'step': 0.1,
+      }),
+      'trim_lfe_range': dict({
+        'max': 10.0,
+        'min': -10.0,
+        'step': 0.1,
+      }),
+      'trim_surround_range': dict({
+        'max': 10.0,
+        'min': -10.0,
+        'step': 0.1,
+      }),
+      'trim_treble_range': dict({
+        'max': 12.0,
+        'min': -12.0,
+        'step': 0.1,
+      }),
+    }),
+    'ssdp': None,
+    'state': dict({
+      'audio_information': 'Stereo',
+      'audio_input': 'optical',
+      'available_audio_inputs': list([
+        'optical',
+        'aux',
+      ]),
+      'available_room_perfect_positions': list([
+        'Global',
+        'Focus 1',
+      ]),
+      'available_sound_modes': list([
+      ]),
+      'available_sources': list([
+      ]),
+      'available_stream_types': list([
+        'AirPlay',
+        'DLNA',
+      ]),
+      'available_video_inputs': list([
+        'hdmi',
+      ]),
+      'available_voicings': list([
+        'Neutral',
+        'Music',
+        'Movie',
+      ]),
+      'connected': True,
+      'lipsync': 50.0,
+      'model': 'MP_60',
+      'mute_enabled': False,
+      'power_on': False,
+      'room_perfect_position': 'Focus 1',
+      'sound_mode': None,
+      'source': None,
+      'streaming_source': 'AirPlay',
+      'trim_bass': 3.0,
+      'trim_centre': 0.0,
+      'trim_height': 4.0,
+      'trim_lfe': 3.0,
+      'trim_surround': 0.0,
+      'trim_treble': 0.0,
+      'video_information': '4K HDR',
+      'video_input': 'hdmi',
+      'voicing': 'Neutral',
+      'volume': -40.0,
+      'zone_b_audio_input': 'aux',
+      'zone_b_mute_enabled': False,
+      'zone_b_power_on': False,
+      'zone_b_source': None,
+      'zone_b_streaming_source': 'DLNA',
+      'zone_b_volume': -40.0,
+    }),
+  })
+# ---
+# name: test_diagnostics_includes_ssdp_description
+  dict({
+    'ssdp_location': '**REDACTED**',
+    'ssdp_server': None,
+    'ssdp_st': 'urn:schemas-upnp-org:device:MediaRenderer:2',
+    'ssdp_udn': '**REDACTED**',
+    'ssdp_usn': '**REDACTED**',
+    'upnp': dict({
+      'deviceType': 'urn:schemas-upnp-org:device:MediaRenderer:2',
+      'friendlyName': 'Solar',
+      'manufacturer': 'Lyngdorf',
+      'modelName': 'MP-60',
+      'serialNumber': '**REDACTED**',
+    }),
+  })
+# ---

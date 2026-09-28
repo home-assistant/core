@@ -1,11 +1,14 @@
 """The tests for the Template device_tracker platform."""
 
+from enum import StrEnum
+from itertools import chain
 from typing import Any
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import device_tracker, template, zone
+from homeassistant.components.template.device_tracker import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_ICON,
@@ -21,6 +24,8 @@ from homeassistant.helpers.typing import ConfigType
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_attributes_template,
+    assert_extra_template_attributes,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -204,7 +209,7 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(template_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    template_entity = entity_registry.async_get("device_tracker.my_template")
+    template_entity = entity_registry.async_get("device_tracker.mock_title_my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
 
@@ -685,6 +690,21 @@ async def test_flow_preview(
             },
         ),
         (
+            # Missing Key
+            STATE_HOME,
+            {
+                "in_zones": [],
+                "location_accuracy": 10.0,
+            },
+            STATE_UNKNOWN,
+            {
+                "in_zones": [],
+                "latitude": None,
+                "longitude": None,
+                "gps_accuracy": None,
+            },
+        ),
+        (
             STATE_UNAVAILABLE,
             {
                 "in_zones": [],
@@ -771,3 +791,105 @@ async def test_restore_state(
     assert state.attributes["latitude"] == 32.88
     assert state.attributes["longitude"] == 117.24
     assert state.attributes["gps_accuracy"] == 20.0
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass, TEST_TRACKER, style, TEST_MINIMUM_REQUIREMENTS
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(
+        chain(
+            device_tracker.DeviceTrackerEntityCapabilityAttribute,
+            device_tracker.DeviceTrackerEntityStateAttribute,
+            device_tracker.TrackerEntityStateAttribute,
+        )
+    ),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_TRACKER,
+        style,
+        0,
+        {
+            **TEST_MINIMUM_REQUIREMENTS,
+            "attributes": {str(attribute): "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass,
+        TEST_TRACKER,
+        style,
+        TEST_MINIMUM_REQUIREMENTS,
+        caplog,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(
+        chain(
+            device_tracker.DeviceTrackerEntityCapabilityAttribute,
+            device_tracker.DeviceTrackerEntityStateAttribute,
+            device_tracker.TrackerEntityStateAttribute,
+        )
+    ),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: StrEnum | str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_TRACKER,
+        style,
+        1,
+        {
+            **TEST_MINIMUM_REQUIREMENTS,
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_TRACKER.entity_id}: {attribute}"
+    assert error in caplog.text

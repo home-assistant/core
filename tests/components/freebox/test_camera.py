@@ -42,10 +42,12 @@ async def test_label_change_propagates(
     router: Mock,
 ) -> None:
     """Test camera label changes from the API update the device registry."""
-    await setup_platform(hass, CAMERA_DOMAIN)
+    mock_entry = await setup_platform(hass, CAMERA_DOMAIN)
 
     camera_node_id = 15  # Caméra I from fixture
-    device = device_registry.async_get_device(identifiers={(DOMAIN, camera_node_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, camera_node_id), mock_entry.entry_id
+    )
     assert device is not None
     assert device.name == "Caméra I"
 
@@ -60,7 +62,9 @@ async def test_label_change_propagates(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, camera_node_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, camera_node_id), mock_entry.entry_id
+    )
     assert device is not None
     assert device.name == "Caméra entrée"
 

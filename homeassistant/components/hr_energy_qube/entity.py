@@ -28,5 +28,5 @@ class QubeEntity(CoordinatorEntity[QubeCoordinator]):
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer="Qube",
             model="Heat Pump",
-            sw_version=entry.runtime_data.sw_version,
+            sw_version=coordinator.sw_version,
         )

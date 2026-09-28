@@ -3,9 +3,9 @@
 from collections.abc import Callable
 from typing import Any
 
+import probatio
 from pydeconz.errors import RequestError
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.deconz.const import (
     CONF_BRIDGE_ID,
@@ -142,7 +142,7 @@ async def test_configure_service_with_faulty_field(hass: HomeAssistant) -> None:
     """Test that service fails on a bad field."""
     data = {SERVICE_FIELD: "light/2", SERVICE_DATA: {}}
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
         )
@@ -363,8 +363,8 @@ async def test_remove_orphaned_entries_service(
         len(
             [
                 entry
-                for entry in device_registry.devices.values()
-                if config_entry_setup.entry_id in entry.config_entries
+                for entry in device_registry.devices
+                if entry.config_entry_id == config_entry_setup.entry_id
             ]
         )
         == 4  # Gateway, light, switch and orphan
@@ -399,8 +399,8 @@ async def test_remove_orphaned_entries_service(
         len(
             [
                 entry
-                for entry in device_registry.devices.values()
-                if config_entry_setup.entry_id in entry.config_entries
+                for entry in device_registry.devices
+                if entry.config_entry_id == config_entry_setup.entry_id
             ]
         )
         == 3  # Gateway, light and switch

@@ -4,6 +4,7 @@
     'config': dict({
       'data': dict({
         'country': 'IT',
+        'device_id': 'AAAAAAAA',
         'password': '**REDACTED**',
         'username': '**REDACTED**',
       }),
@@ -11,7 +12,7 @@
       'discovery_keys': dict({
       }),
       'domain': 'ecovacs',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -57,6 +58,7 @@
     'config': dict({
       'data': dict({
         'country': 'IT',
+        'device_id': 'HA-test_home',
         'override_mqtt_url': '**REDACTED**',
         'override_rest_url': '**REDACTED**',
         'password': '**REDACTED**',
@@ -66,7 +68,7 @@
       'discovery_keys': dict({
       }),
       'domain': 'ecovacs',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,

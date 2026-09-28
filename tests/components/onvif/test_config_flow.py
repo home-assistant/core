@@ -1,7 +1,7 @@
 """Test ONVIF config flow."""
 
 import logging
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -27,6 +27,8 @@ from . import (
     setup_mock_onvif_camera,
     setup_onvif_integration,
 )
+
+from tests.common import MockConfigEntry
 
 DISCOVERY = [
     {
@@ -757,6 +759,69 @@ async def test_discovered_by_dhcp_does_not_update_if_no_matching_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
+
+
+async def test_discovered_by_dhcp_updates_all_matching_onvif_entries(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test dhcp updates every matching ONVIF entry and skips other domains.
+
+    A MAC can be shared by several registry devices, one per config entry. The flow
+    must update the host of every ONVIF config entry owning such a device and request
+    a reload for it, while leaving devices owned by other domains untouched.
+    """
+    onvif_entry_1 = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MAC,
+        data={CONF_HOST: "1.2.3.4"},
+        entry_id="onvif1",
+    )
+    onvif_entry_1.add_to_hass(hass)
+    onvif_entry_2 = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aa:bb:cc:dd:ee:00",
+        data={CONF_HOST: "2.3.4.5"},
+        entry_id="onvif2",
+    )
+    onvif_entry_2.add_to_hass(hass)
+    other_entry = MockConfigEntry(
+        domain="other_domain",
+        data={CONF_HOST: "9.9.9.9"},
+        entry_id="other",
+    )
+    other_entry.add_to_hass(hass)
+
+    connections = {(dr.CONNECTION_NETWORK_MAC, MAC)}
+    device_registry.async_get_or_create(
+        config_entry_id=onvif_entry_1.entry_id, connections=connections
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=onvif_entry_2.entry_id, connections=connections
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id, connections=connections
+    )
+    assert len(device_registry.async_get_devices(connections=connections)) == 3
+
+    with patch.object(
+        hass.config_entries, "async_reload", new_callable=AsyncMock
+    ) as mock_reload:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    # Both matching ONVIF entries are updated to the discovered host and reloaded.
+    assert onvif_entry_1.data[CONF_HOST] == DHCP_DISCOVERY.ip
+    assert onvif_entry_2.data[CONF_HOST] == DHCP_DISCOVERY.ip
+    assert {call.args[0] for call in mock_reload.call_args_list} == {
+        onvif_entry_1.entry_id,
+        onvif_entry_2.entry_id,
+    }
+    # The device owned by another domain is left untouched.
+    assert other_entry.data[CONF_HOST] == "9.9.9.9"
 
 
 def _get_schema_default(schema, key_name):

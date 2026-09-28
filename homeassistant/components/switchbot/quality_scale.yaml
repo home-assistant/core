@@ -73,10 +73,7 @@ rules:
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: exempt
-    comment: |
-      No custom icons.
+  icon-translations: done
   reconfiguration-flow:
     status: exempt
     comment: |

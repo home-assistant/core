@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from aiowatttime import Client
 from aiowatttime.errors import CoordinatesNotFoundError, InvalidCredentialsError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
@@ -31,31 +31,31 @@ CONF_LOCATION_TYPE = "location_type"
 LOCATION_TYPE_COORDINATES = "Specify coordinates"
 LOCATION_TYPE_HOME = "Use home location"
 
-STEP_COORDINATES_DATA_SCHEMA = vol.Schema(
+STEP_COORDINATES_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_LATITUDE): cv.latitude,
-        vol.Required(CONF_LONGITUDE): cv.longitude,
+        probatio.Required(CONF_LATITUDE): cv.latitude,
+        probatio.Required(CONF_LONGITUDE): cv.longitude,
     }
 )
 
-STEP_LOCATION_DATA_SCHEMA = vol.Schema(
+STEP_LOCATION_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_LOCATION_TYPE): vol.In(
+        probatio.Required(CONF_LOCATION_TYPE): probatio.In(
             [LOCATION_TYPE_HOME, LOCATION_TYPE_COORDINATES]
         ),
     }
 )
 
-STEP_REAUTH_CONFIRM_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_CONFIRM_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -77,7 +77,11 @@ class WattTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         self._data: dict[str, Any] = {}
 
     async def _async_validate_credentials(
-        self, username: str, password: str, error_step_id: str, error_schema: vol.Schema
+        self,
+        username: str,
+        password: str,
+        error_step_id: str,
+        error_schema: probatio.Schema,
     ) -> ConfigFlowResult:
         """Validate input credentials and proceed accordingly."""
         session = aiohttp_client.async_get_clientsession(self.hass)
@@ -145,7 +149,7 @@ class WattTimeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             grid_region = await self._client.emissions.async_get_grid_region(
-                user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE]
+                user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE], "co2_moer"
             )
         except CoordinatesNotFoundError:
             return self.async_show_form(
@@ -168,8 +172,8 @@ class WattTimeConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: self._data[CONF_PASSWORD],
                 CONF_LATITUDE: user_input[CONF_LATITUDE],
                 CONF_LONGITUDE: user_input[CONF_LONGITUDE],
-                CONF_BALANCING_AUTHORITY: grid_region["name"],
-                CONF_BALANCING_AUTHORITY_ABBREV: grid_region["abbrev"],
+                CONF_BALANCING_AUTHORITY: grid_region["region_full_name"],
+                CONF_BALANCING_AUTHORITY_ABBREV: grid_region["region"],
             },
         )
 
@@ -248,9 +252,9 @@ class WattTimeOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_SHOW_ON_MAP,
                         default=self.config_entry.options.get(CONF_SHOW_ON_MAP, True),
                     ): bool

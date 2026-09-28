@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from requests import RequestException
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
@@ -28,7 +28,11 @@ from . import DATA_SCHLUTER_API, DATA_SCHLUTER_SESSION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_SCAN_INTERVAL): vol.All(vol.Coerce(int), vol.Range(min=1))}
+    {
+        probatio.Optional(CONF_SCAN_INTERVAL): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1)
+        )
+    }
 )
 
 

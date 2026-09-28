@@ -1,13 +1,13 @@
 """The iZone integration."""
 
 import pizone
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_EXCLUDE, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_CONFIG, DOMAIN
@@ -20,19 +20,19 @@ from .discovery import (
     yaml_excluded_uids,
 )
 
-PLATFORMS = [Platform.CLIMATE]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_EXCLUDE, default=[]): vol.All(
+                probatio.Optional(CONF_EXCLUDE, default=[]): probatio.All(
                     cv.ensure_list, [cv.string]
                 )
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -184,6 +184,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> boo
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
+
+    # Register the controller device before forwarding platforms so zone
+    # entities can resolve their via_device_id parent at construction time.
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, controller.device_uid)},
+        manufacturer="IZone",
+        model=controller.sys_type,
+        name=f"iZone Controller {controller.device_uid}",
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -192,9 +204,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> boo
 async def async_migrate_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> bool:
     """Migrate old config entry schema to the current version."""
     if entry.version == 1:
-        # Clear legacy data only.
-        # Raising ConfigEntryNotReady from async_migrate_entry would permanently land
-        # the entry in MIGRATION_ERROR with no retry path.
         hass.config_entries.async_update_entry(entry, version=2, data={})
         return True
     return False

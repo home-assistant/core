@@ -3,8 +3,8 @@
 from datetime import timedelta
 import logging
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -27,10 +27,10 @@ SCAN_INTERVAL = timedelta(hours=4)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_QUOTE): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_BASE, default=DEFAULT_BASE): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_QUOTE): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(CONF_BASE, default=DEFAULT_BASE): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 

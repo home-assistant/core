@@ -16,7 +16,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 - Run "python3" in current virtual environment to ensure the correct Python version is used for testing.
 - When entering a new environment or worktree, run `script/setup` to set up the virtual environment with all development dependencies (pylint, pre-commit hooks, etc.). This is required before committing. If uv reports that no download was found for the required Python version, the environment is running an outdated version of uv; upgrade it with `curl -LsSf https://astral.sh/uv/install.sh | sh` and run `script/setup` again.
 - .vscode/tasks.json contains useful commands used for development.
-- After finishing a code session, run `uv run prek run --all-files` to check for linting and formatting issues.
+- After finishing a code session, run `uv run --no-sync prek run --all-files` to check for linting and formatting issues.
 
 ## Python Syntax Notes
 
@@ -26,7 +26,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 ## Testing
 
-- Use `uv run pytest` to run tests
+- Use `uv run --no-sync pytest` to run tests
 - After modifying `strings.json` for an integration, regenerate the English translation file before running tests: `python3 -m script.translations develop --integration <integration_name>`. Tests load translations from the generated `translations/en.json`, not directly from `strings.json`.
 - When writing or modifying tests, ensure all test function parameters have type annotations.
 - Prefer concrete types (for example, `HomeAssistant`, `MockConfigEntry`, etc.) over `Any`.
@@ -45,6 +45,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 - Do not add comments that just restate the code on the following line(s) (e.g. `# Check if initialized` above `if self.initialized:`). Comments should only explain why (non-obvious constraints, surprising behavior, or workarounds), never what. Never add comments that justify a change by referencing what the code looked like before. Comments in tests that explain why a function call or assertion is made are ok.
 - Do not add section or divider comments (e.g. `# --- XYZ Triggers ---`) inside or outside of functions, since those can easily become stale and be misleading.
 - When catching exceptions, try-clauses should be as small as possible, i.e. avoid wrapping large blocks of code in a try-clause, and avoid catching exceptions from functions that are not expected to raise them.
+- Sensitive service actions, i.e. those that can change configuration or have security implications, should require an admin user. Register them with the `async_register_admin_service` service helper, which checks this for you.
 
 ## AI policy
 

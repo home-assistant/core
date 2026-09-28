@@ -5,7 +5,7 @@ import json
 from typing import Any, Literal, override
 
 from aiokafka import AIOKafkaProducer
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_IP_ADDRESS,
@@ -27,23 +27,23 @@ CONF_FILTER = "filter"
 CONF_TOPIC = "topic"
 CONF_SECURITY_PROTOCOL = "security_protocol"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_IP_ADDRESS): cv.string,
-                vol.Required(CONF_PORT): cv.port,
-                vol.Required(CONF_TOPIC): cv.string,
-                vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
-                vol.Optional(CONF_SECURITY_PROTOCOL, default="PLAINTEXT"): vol.In(
-                    ["PLAINTEXT", "SSL", "SASL_SSL"]
-                ),
-                vol.Optional(CONF_USERNAME): cv.string,
-                vol.Optional(CONF_PASSWORD): cv.string,
+                probatio.Required(CONF_IP_ADDRESS): cv.string,
+                probatio.Required(CONF_PORT): cv.port,
+                probatio.Required(CONF_TOPIC): cv.string,
+                probatio.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
+                probatio.Optional(
+                    CONF_SECURITY_PROTOCOL, default="PLAINTEXT"
+                ): probatio.In(["PLAINTEXT", "SSL", "SASL_SSL"]),
+                probatio.Optional(CONF_USERNAME): cv.string,
+                probatio.Optional(CONF_PASSWORD): cv.string,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

@@ -4,8 +4,8 @@ import logging
 from typing import Any, override
 import urllib
 
+import probatio
 from twilio.base.exceptions import TwilioRestException
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_TARGET,
@@ -23,8 +23,8 @@ CONF_FROM_NUMBER = "from_number"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_FROM_NUMBER): vol.All(
-            cv.string, vol.Match(r"^\+?[1-9]\d{1,14}$")
+        probatio.Required(CONF_FROM_NUMBER): probatio.All(
+            cv.string, probatio.Match(r"^\+?[1-9]\d{1,14}$")
         )
     }
 )

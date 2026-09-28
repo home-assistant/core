@@ -6,11 +6,12 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from pyimouapi.exceptions import ImouException
+from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 from pyimouapi.ha_device import ImouHaDevice, ImouHaDeviceManager
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -83,6 +84,11 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 fresh_devices = await self._device_manager.async_get_devices()
         except TimeoutError as err:
             raise UpdateFailed(f"Timeout while fetching data: {err}") from err
+        except InvalidAppIdOrSecretException as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
         except ImouException as err:
             raise UpdateFailed(f"Error fetching Imou devices: {err}") from err
 
@@ -96,41 +102,22 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         try:
             async with asyncio.timeout(UPDATE_TIMEOUT):
-                results = await asyncio.gather(
-                    *(
-                        self._device_manager.async_update_device_status(device)
-                        for device in devices
-                    ),
-                    return_exceptions=True,
-                )
+                await self._device_manager.async_update_devices_status(devices)
         except TimeoutError as err:
             raise UpdateFailed(f"Timeout while fetching data: {err}") from err
-
-        failures: list[Exception] = []
-        for device, result in zip(devices, results, strict=True):
-            if isinstance(result, BaseException) and not isinstance(result, Exception):
-                # Propagate CancelledError and other BaseExceptions instead of
-                # swallowing them as a regular device failure.
-                raise result
-            if not isinstance(result, Exception):
-                continue
-            device_key = imou_device_identifier(device)
-            _LOGGER.warning(
-                "Error updating status for Imou device %s: %s",
-                device_key,
-                result,
-            )
-            failures.append(result)
-        if failures and len(failures) == len(devices):
-            raise UpdateFailed(
-                f"Error updating Imou devices: {failures[0]}"
-            ) from failures[0]
+        except InvalidAppIdOrSecretException as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
+        except ImouException as err:
+            raise UpdateFailed(f"Error updating Imou devices: {err}") from err
 
     def _async_add_remove_devices(self, fresh_by_key: dict[str, ImouHaDevice]) -> None:
         """Add new devices, remove devices no longer in the account.
 
         This only tracks which devices exist on the account; per-device state
-        is updated in place by `async_update_device_status`, so devices that
+        is updated in place by `async_update_devices_status`, so devices that
         remain on the account keep their existing object and are not replaced.
         """
         if not self._devices_initialized:
@@ -152,10 +139,7 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 if device := device_registry.async_get_device_by_identifier(
                     (DOMAIN, device_key), self.config_entry.entry_id
                 ):
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
+                    device_registry.async_remove_device(device.id)
 
         if new_keys := current_keys - known_keys:
             _LOGGER.debug("New Imou device(s) found: %s", ", ".join(new_keys))

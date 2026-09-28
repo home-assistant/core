@@ -99,13 +99,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MELCloud Home climate entities from a config entry."""
+    coordinator = entry.runtime_data.coordinator
 
     async_setup_unit_entities(
-        entry.runtime_data,
+        coordinator,
         async_add_entities,
-        lambda units: (ATAClimateEntity(entry.runtime_data, unit) for unit in units),
+        lambda units: (ATAClimateEntity(coordinator, unit) for unit in units),
         lambda units: (
-            ATWZoneClimateEntity(entry.runtime_data, unit, zone_number)
+            ATWZoneClimateEntity(coordinator, unit, zone_number)
             for unit in units
             for zone_number in (
                 [1, 2]

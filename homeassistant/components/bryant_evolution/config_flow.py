@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from evolutionhttp import BryantEvolutionLocalClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_FILENAME
@@ -13,9 +13,9 @@ from .const import CONF_SYSTEM_ZONE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_FILENAME, default="/dev/ttyUSB0"): str,
+        probatio.Required(CONF_FILENAME, default="/dev/ttyUSB0"): str,
     }
 )
 

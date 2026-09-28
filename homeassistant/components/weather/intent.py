@@ -2,7 +2,7 @@
 
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import intent
@@ -20,7 +20,7 @@ class GetWeatherIntent(intent.IntentHandler):
 
     intent_type = INTENT_GET_WEATHER
     description = "Gets the current weather"
-    slot_schema = {vol.Optional("name"): intent.non_empty_string}
+    slot_schema = {probatio.Optional("name"): intent.non_empty_string}
     platforms = {DOMAIN}
 
     @override

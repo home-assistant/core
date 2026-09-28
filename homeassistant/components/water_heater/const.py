@@ -1,8 +1,26 @@
 """Support for water heater devices."""
 
-from enum import StrEnum
+from enum import IntFlag, StrEnum
+from typing import TYPE_CHECKING, Final
 
-DOMAIN = "water_heater"
+from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from . import WaterHeaterEntity
+
+DOMAIN: Final = "water_heater"
+
+ATTR_AWAY_MODE: Final = "away_mode"
+ATTR_OPERATION_MODE: Final = "operation_mode"
+
+SERVICE_SET_AWAY_MODE: Final = "set_away_mode"
+SERVICE_SET_OPERATION_MODE: Final = "set_operation_mode"
+SERVICE_SET_TEMPERATURE: Final = "set_temperature"
+
+DATA_COMPONENT: HassKey[EntityComponent[WaterHeaterEntity]] = HassKey(DOMAIN)
 
 
 class WaterHeaterCapabilityAttribute(StrEnum):
@@ -14,11 +32,18 @@ class WaterHeaterCapabilityAttribute(StrEnum):
     OPERATION_LIST = "operation_list"
 
 
-class WaterHeaterStateAttribute(StrEnum):
+class WaterHeaterStateAttribute(
+    StrEnum,
+    metaclass=EnumWithDeprecatedMembers,
+    deprecated={
+        "TEMPERATURE": ("ClimateEntityStateAttribute.TARGET_TEMPERATURE", "2027.3.0"),
+    },
+):
     """State attributes for water heater entities."""
 
     CURRENT_TEMPERATURE = "current_temperature"
-    TEMPERATURE = "temperature"
+    TARGET_TEMPERATURE = "temperature"
+    TEMPERATURE = "temperature"  # Deprecated, replaced with TARGET_TEMPERATURE
     TARGET_TEMP_HIGH = "target_temp_high"
     TARGET_TEMP_LOW = "target_temp_low"
     OPERATION_MODE = "operation_mode"
@@ -31,3 +56,12 @@ STATE_PERFORMANCE = "performance"
 STATE_HIGH_DEMAND = "high_demand"
 STATE_HEAT_PUMP = "heat_pump"
 STATE_GAS = "gas"
+
+
+class WaterHeaterEntityFeature(IntFlag):
+    """Supported features of the water heater entity."""
+
+    TARGET_TEMPERATURE = 1
+    OPERATION_MODE = 2
+    AWAY_MODE = 4
+    ON_OFF = 8

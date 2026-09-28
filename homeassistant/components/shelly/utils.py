@@ -13,7 +13,6 @@ from aioshelly.const import (
     DEFAULT_COAP_PORT,
     DEFAULT_HTTP_PORT,
     MODEL_1L,
-    MODEL_BLU_GATEWAY_G3,
     MODEL_DIMMER,
     MODEL_DIMMER_2,
     MODEL_EM3,
@@ -72,7 +71,7 @@ from .const import (
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
     SHELLY_EMIT_EVENT_PATTERN,
-    SHELLY_WALL_DISPLAY_MODELS,
+    SHELLY_WALL_DISPLAY_MODEL_PREFIX,
     SHIX3_1_INPUTS_EVENTS_TYPES,
     VIRTUAL_COMPONENTS,
     VIRTUAL_COMPONENTS_MAP,
@@ -565,7 +564,7 @@ def get_release_url(gen: int, model: str, beta: bool) -> str | None:
     ) or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
         return None
 
-    if model in SHELLY_WALL_DISPLAY_MODELS:
+    if model.startswith(SHELLY_WALL_DISPLAY_MODEL_PREFIX):
         return WALL_DISPLAY_RELEASE_URL
 
     if beta:
@@ -785,6 +784,8 @@ def get_irrigation_zone_id(device: RpcDevice, key: str) -> int | None:
 
 
 def get_rpc_device_info(
+    hass: HomeAssistant,
+    config_entry_id: str,
     device: RpcDevice,
     mac: str,
     configuration_url: str,
@@ -809,7 +810,9 @@ def get_rpc_device_info(
             model=model_name,
             model_id=model,
             suggested_area=suggested_area,
-            via_device=(DOMAIN, mac),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, mac), config_entry_id=config_entry_id
+            ),
             configuration_url=configuration_url,
         )
 
@@ -830,20 +833,29 @@ def get_rpc_device_info(
         model=model_name,
         model_id=model,
         suggested_area=suggested_area,
-        via_device=(DOMAIN, mac),
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, mac), config_entry_id=config_entry_id
+        ),
         configuration_url=configuration_url,
     )
 
 
 def get_blu_trv_device_info(
-    config: dict[str, Any], ble_addr: str, parent_mac: str, fw_ver: str | None
+    hass: HomeAssistant,
+    config_entry_id: str,
+    config: dict[str, Any],
+    ble_addr: str,
+    parent_mac: str,
+    fw_ver: str | None,
 ) -> DeviceInfo:
     """Return device info for RPC device."""
     model_id = config.get("local_name")
     return DeviceInfo(
         connections={(CONNECTION_BLUETOOTH, ble_addr)},
         identifiers={(DOMAIN, ble_addr)},
-        via_device=(DOMAIN, parent_mac),
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, parent_mac), config_entry_id=config_entry_id
+        ),
         manufacturer="Shelly",
         model=BLU_TRV_MODEL_NAME.get(model_id) if model_id else None,
         model_id=config.get("local_name"),
@@ -862,6 +874,8 @@ def is_block_single_device(device: BlockDevice, block: Block | None = None) -> b
 
 
 def get_block_device_info(
+    hass: HomeAssistant,
+    config_entry_id: str,
     device: BlockDevice,
     mac: str,
     configuration_url: str,
@@ -886,7 +900,9 @@ def get_block_device_info(
         model=model_name,
         model_id=model,
         suggested_area=suggested_area,
-        via_device=(DOMAIN, mac),
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, mac), config_entry_id=config_entry_id
+        ),
         configuration_url=configuration_url,
     )
 
@@ -896,11 +912,8 @@ def remove_stale_blu_trv_devices(
     hass: HomeAssistant, rpc_device: RpcDevice, entry: ConfigEntry
 ) -> None:
     """Remove stale BLU TRV devices."""
-    if rpc_device.model != MODEL_BLU_GATEWAY_G3:
-        return
-
     dev_reg = dr.async_get(hass)
-    devices = dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
+    devices = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
     config = rpc_device.config
     blutrv_keys = get_rpc_key_ids(config, BLU_TRV_IDENTIFIER)
     trv_addrs = [config[f"{BLU_TRV_IDENTIFIER}:{key}"]["addr"] for key in blutrv_keys]
@@ -908,6 +921,12 @@ def remove_stale_blu_trv_devices(
     for device in devices:
         if not device.via_device_id:
             # Device is not a sub-device, skip
+            continue
+
+        if not any(
+            connection[0] == CONNECTION_BLUETOOTH for connection in device.connections
+        ):
+            # Channel sub-devices have no Bluetooth connection
             continue
 
         if any(
@@ -926,7 +945,7 @@ def remove_empty_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
     dev_reg = dr.async_get(hass)
     entity_reg = er.async_get(hass)
 
-    devices = dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
+    devices = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
 
     for device in devices:
         if not device.via_device_id:

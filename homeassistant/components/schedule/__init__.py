@@ -5,7 +5,7 @@ from datetime import datetime, time, timedelta
 import itertools
 from typing import Any, Literal, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (  # noqa: F401
     ATTR_EDITABLE,
@@ -75,14 +75,14 @@ def valid_schedule(schedule: list[dict[str, str]]) -> list[dict[str, str]]:
     previous_to = None
     for time_range in schedule:
         if time_range[CONF_FROM] >= time_range[CONF_TO]:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"Invalid time range, from {time_range[CONF_FROM]} is after"
                 f" {time_range[CONF_TO]}"
             )
 
         # Check if the from time of the event is after the to time of the previous event
         if previous_to is not None and previous_to > time_range[CONF_FROM]:
-            raise vol.Invalid("Overlapping times found in schedule")
+            raise probatio.Invalid("Overlapping times found in schedule")
 
         previous_to = time_range[CONF_TO]
 
@@ -110,57 +110,57 @@ def serialize_to_time(value: Any) -> Any:
     """Convert time.max to 24:00:00."""
     if value == time.max:
         return "24:00:00"
-    return vol.Coerce(str)(value)
+    return probatio.Coerce(str)(value)
 
 
 BASE_SCHEMA: VolDictType = {
-    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Optional(CONF_ICON): cv.icon,
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Optional(CONF_ICON): cv.icon,
 }
 
 # Extra data that the user can set on each time range
-CUSTOM_DATA_SCHEMA = vol.Schema({str: vol.Any(bool, str, int, float)})
+CUSTOM_DATA_SCHEMA = probatio.Schema({str: probatio.Any(bool, str, int, float)})
 
 TIME_RANGE_SCHEMA: VolDictType = {
-    vol.Required(CONF_FROM): cv.time,
-    vol.Required(CONF_TO): deserialize_to_time,
-    vol.Optional(CONF_DATA): CUSTOM_DATA_SCHEMA,
+    probatio.Required(CONF_FROM): cv.time,
+    probatio.Required(CONF_TO): deserialize_to_time,
+    probatio.Optional(CONF_DATA): CUSTOM_DATA_SCHEMA,
 }
 
 # Serialize time in validated config
-STORAGE_TIME_RANGE_SCHEMA = vol.Schema(
+STORAGE_TIME_RANGE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_FROM): vol.Coerce(str),
-        vol.Required(CONF_TO): serialize_to_time,
-        vol.Optional(CONF_DATA): CUSTOM_DATA_SCHEMA,
+        probatio.Required(CONF_FROM): probatio.Coerce(str),
+        probatio.Required(CONF_TO): serialize_to_time,
+        probatio.Optional(CONF_DATA): CUSTOM_DATA_SCHEMA,
     }
 )
 
 SCHEDULE_SCHEMA: VolDictType = {
-    vol.Optional(day, default=[]): vol.All(
+    probatio.Optional(day, default=[]): probatio.All(
         cv.ensure_list, [TIME_RANGE_SCHEMA], valid_schedule
     )
     for day in CONF_ALL_DAYS
 }
 STORAGE_SCHEDULE_SCHEMA: VolDictType = {
-    vol.Optional(day, default=[]): vol.All(
+    probatio.Optional(day, default=[]): probatio.All(
         cv.ensure_list, [TIME_RANGE_SCHEMA], valid_schedule, [STORAGE_TIME_RANGE_SCHEMA]
     )
     for day in CONF_ALL_DAYS
 }
 
 # Validate YAML config
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: cv.schema_with_slug_keys(vol.All(BASE_SCHEMA | SCHEDULE_SCHEMA))},
-    extra=vol.ALLOW_EXTRA,
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: cv.schema_with_slug_keys(probatio.All(BASE_SCHEMA | SCHEDULE_SCHEMA))},
+    extra=probatio.ALLOW_EXTRA,
 )
 # Validate storage config
-STORAGE_SCHEMA = vol.Schema(
-    {vol.Required(CONF_ID): cv.string} | BASE_SCHEMA | STORAGE_SCHEDULE_SCHEMA
+STORAGE_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_ID): cv.string} | BASE_SCHEMA | STORAGE_SCHEDULE_SCHEMA
 )
 # Validate + transform entity config
-ENTITY_SCHEMA = vol.Schema(
-    {vol.Required(CONF_ID): cv.string} | BASE_SCHEMA | SCHEDULE_SCHEMA
+ENTITY_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_ID): cv.string} | BASE_SCHEMA | SCHEDULE_SCHEMA
 )
 
 
@@ -225,7 +225,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class ScheduleStorageCollection(DictStorageCollection):
     """Schedules stored in storage."""
 
-    SCHEMA = vol.Schema(BASE_SCHEMA | STORAGE_SCHEDULE_SCHEMA)
+    SCHEMA = probatio.Schema(BASE_SCHEMA | STORAGE_SCHEDULE_SCHEMA)
 
     @override
     async def _process_create_data(self, data: dict) -> dict:

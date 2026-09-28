@@ -54,7 +54,7 @@ async def test_select_schedule_thermostats(
         await hass.async_block_till_done()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    select_entity = "select.myhome"
+    select_entity = "select.myhome_schedule"
 
     assert hass.states.get(select_entity).state == "Default"
 
@@ -113,7 +113,7 @@ async def test_select_schedule_unknown_schedule_id(
         await hass.async_block_till_done()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    select_entity = "select.myhome"
+    select_entity = "select.myhome_schedule"
     original_state = hass.states.get(select_entity).state
 
     response = {

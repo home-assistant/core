@@ -5,8 +5,8 @@ import functools as ft
 import math
 from typing import Any, override
 
+import probatio
 from pywemo import DesiredHumidity, FanMode, Humidifier
-import voluptuous as vol
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -38,8 +38,8 @@ ATTR_WATER_LEVEL = "water_level"
 SPEED_RANGE = (FanMode.Minimum, FanMode.Maximum)  # off is not included
 
 SET_HUMIDITY_SCHEMA: VolDictType = {
-    vol.Required(ATTR_TARGET_HUMIDITY): vol.All(
-        vol.Coerce(float), vol.Range(min=0, max=100)
+    probatio.Required(ATTR_TARGET_HUMIDITY): probatio.All(
+        probatio.Coerce(float), probatio.Range(min=0, max=100)
     ),
 }
 

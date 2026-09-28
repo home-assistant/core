@@ -3,7 +3,7 @@
 import asyncio
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
@@ -52,12 +52,18 @@ SERVICE_GOTO = "vacuum_goto"
 
 # Light Services
 ATTR_TIME_PERIOD = "time_period"
-XIAOMI_MIIO_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
+XIAOMI_MIIO_SERVICE_SCHEMA = probatio.Schema(
+    {probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids}
+)
 SERVICE_SCHEMA_SET_SCENE = XIAOMI_MIIO_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_SCENE): vol.All(vol.Coerce(int), vol.Clamp(min=1, max=6))}
+    {
+        probatio.Required(ATTR_SCENE): probatio.All(
+            probatio.Coerce(int), probatio.Clamp(min=1, max=6)
+        )
+    }
 )
 SERVICE_SCHEMA_SET_DELAYED_TURN_OFF = XIAOMI_MIIO_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_TIME_PERIOD): cv.positive_time_period}
+    {probatio.Required(ATTR_TIME_PERIOD): cv.positive_time_period}
 )
 LIGHT_SERVICE_TO_METHOD = {
     SERVICE_SET_DELAYED_TURN_OFF: ServiceMethodDetails(
@@ -82,12 +88,14 @@ LIGHT_SERVICE_TO_METHOD = {
 
 # Switch Services
 ATTR_PRICE = "price"
-SWITCH_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
+SWITCH_SERVICE_SCHEMA = probatio.Schema(
+    {probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids}
+)
 SWITCH_SERVICE_SCHEMA_POWER_MODE = SWITCH_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_MODE): vol.All(vol.In(["green", "normal"]))}
+    {probatio.Required(ATTR_MODE): probatio.All(probatio.In(["green", "normal"]))}
 )
 SWITCH_SERVICE_SCHEMA_POWER_PRICE = SWITCH_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_PRICE): cv.positive_float}
+    {probatio.Required(ATTR_PRICE): cv.positive_float}
 )
 SWITCH_SERVICE_TO_METHOD = {
     SERVICE_SET_WIFI_LED_ON: ServiceMethodDetails(method="async_set_wifi_led_on"),
@@ -104,9 +112,9 @@ SWITCH_SERVICE_TO_METHOD = {
 
 # Fan Services
 ATTR_FEATURES = "features"
-FAN_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
+FAN_SERVICE_SCHEMA = probatio.Schema({probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 FAN_SERVICE_SCHEMA_EXTRA_FEATURES = FAN_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_FEATURES): cv.positive_int}
+    {probatio.Required(ATTR_FEATURES): cv.positive_int}
 )
 FAN_SERVICE_TO_METHOD = {
     SERVICE_RESET_FILTER: ServiceMethodDetails(method="async_reset_filter"),
@@ -150,13 +158,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_MOVE_REMOTE_CONTROL,
         entity_domain=VACUUM_DOMAIN,
         schema={
-            vol.Optional(ATTR_RC_VELOCITY): vol.All(
-                vol.Coerce(float), vol.Clamp(min=-0.29, max=0.29)
+            probatio.Optional(ATTR_RC_VELOCITY): probatio.All(
+                probatio.Coerce(float), probatio.Clamp(min=-0.29, max=0.29)
             ),
-            vol.Optional(ATTR_RC_ROTATION): vol.All(
-                vol.Coerce(int), vol.Clamp(min=-179, max=179)
+            probatio.Optional(ATTR_RC_ROTATION): probatio.All(
+                probatio.Coerce(int), probatio.Clamp(min=-179, max=179)
             ),
-            vol.Optional(ATTR_RC_DURATION): cv.positive_int,
+            probatio.Optional(ATTR_RC_DURATION): cv.positive_int,
         },
         func="async_remote_control_move",
     )
@@ -167,13 +175,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_MOVE_REMOTE_CONTROL_STEP,
         entity_domain=VACUUM_DOMAIN,
         schema={
-            vol.Optional(ATTR_RC_VELOCITY): vol.All(
-                vol.Coerce(float), vol.Clamp(min=-0.29, max=0.29)
+            probatio.Optional(ATTR_RC_VELOCITY): probatio.All(
+                probatio.Coerce(float), probatio.Clamp(min=-0.29, max=0.29)
             ),
-            vol.Optional(ATTR_RC_ROTATION): vol.All(
-                vol.Coerce(int), vol.Clamp(min=-179, max=179)
+            probatio.Optional(ATTR_RC_ROTATION): probatio.All(
+                probatio.Coerce(int), probatio.Clamp(min=-179, max=179)
             ),
-            vol.Optional(ATTR_RC_DURATION): cv.positive_int,
+            probatio.Optional(ATTR_RC_DURATION): cv.positive_int,
         },
         func="async_remote_control_move_step",
     )
@@ -184,21 +192,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_CLEAN_ZONE,
         entity_domain=VACUUM_DOMAIN,
         schema={
-            vol.Required(ATTR_ZONE_ARRAY): vol.All(
+            probatio.Required(ATTR_ZONE_ARRAY): probatio.All(
                 list,
                 [
-                    vol.ExactSequence(
+                    probatio.ExactSequence(
                         [
-                            vol.Coerce(int),
-                            vol.Coerce(int),
-                            vol.Coerce(int),
-                            vol.Coerce(int),
+                            probatio.Coerce(int),
+                            probatio.Coerce(int),
+                            probatio.Coerce(int),
+                            probatio.Coerce(int),
                         ]
                     )
                 ],
             ),
-            vol.Required(ATTR_ZONE_REPEATER): vol.All(
-                vol.Coerce(int), vol.Clamp(min=1, max=3)
+            probatio.Required(ATTR_ZONE_REPEATER): probatio.All(
+                probatio.Coerce(int), probatio.Clamp(min=1, max=3)
             ),
         },
         func="async_clean_zone",
@@ -210,8 +218,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_GOTO,
         entity_domain=VACUUM_DOMAIN,
         schema={
-            vol.Required("x_coord"): vol.Coerce(int),
-            vol.Required("y_coord"): vol.Coerce(int),
+            probatio.Required("x_coord"): probatio.Coerce(int),
+            probatio.Required("y_coord"): probatio.Coerce(int),
         },
         func="async_goto",
     )
@@ -220,7 +228,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_CLEAN_SEGMENT,
         entity_domain=VACUUM_DOMAIN,
-        schema={vol.Required("segments"): vol.Any(vol.Coerce(int), [vol.Coerce(int)])},
+        schema={
+            probatio.Required("segments"): probatio.Any(
+                probatio.Coerce(int), [probatio.Coerce(int)]
+            )
+        },
         func="async_clean_segment",
     )
 

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, override
 
 from homeassistant.components.sensor import (
@@ -44,14 +44,14 @@ class ProxmoxNodeSensorEntityDescription(SensorEntityDescription):
 class ProxmoxVMSensorEntityDescription(SensorEntityDescription):
     """Class to hold Proxmox VM sensor description."""
 
-    value_fn: Callable[[dict[str, Any]], StateType]
+    value_fn: Callable[[dict[str, Any]], StateType | datetime]
 
 
 @dataclass(frozen=True, kw_only=True)
 class ProxmoxContainerSensorEntityDescription(SensorEntityDescription):
     """Class to hold Proxmox container sensor description."""
 
-    value_fn: Callable[[dict[str, Any]], StateType]
+    value_fn: Callable[[dict[str, Any]], StateType | datetime]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -138,12 +138,15 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
     ProxmoxNodeSensorEntityDescription(
         key="node_uptime",
         translation_key="node_uptime",
-        value_fn=lambda data: data.node["uptime"],
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        value_fn=(
+            lambda data: (
+                (dt_util.utcnow() - timedelta(seconds=data.node["uptime"]))
+                if data.node["uptime"] is not None
+                else None
+            )
+        ),
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     ProxmoxNodeSensorEntityDescription(
         key="node_status",
@@ -236,12 +239,15 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
     ProxmoxVMSensorEntityDescription(
         key="vm_uptime",
         translation_key="vm_uptime",
-        value_fn=lambda data: data.get("uptime"),
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        value_fn=(
+            lambda data: (
+                (dt_util.utcnow() - timedelta(seconds=data["uptime"]))
+                if data.get("uptime") is not None
+                else None
+            )
+        ),
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     ProxmoxVMSensorEntityDescription(
         key="vm_disk",
@@ -353,12 +359,15 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
     ProxmoxContainerSensorEntityDescription(
         key="container_uptime",
         translation_key="container_uptime",
-        value_fn=lambda data: data.get("uptime"),
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        value_fn=(
+            lambda data: (
+                (dt_util.utcnow() - timedelta(seconds=data["uptime"]))
+                if data.get("uptime") is not None
+                else None
+            )
+        ),
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     ProxmoxContainerSensorEntityDescription(
         key="container_disk",
@@ -577,7 +586,7 @@ class ProxmoxVMSensor(ProxmoxVMEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self.vm_data)
 
@@ -589,7 +598,7 @@ class ProxmoxContainerSensor(ProxmoxContainerEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self.container_data)
 

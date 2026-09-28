@@ -74,7 +74,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -158,7 +158,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -243,7 +243,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -327,7 +327,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -411,7 +411,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -496,7 +496,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -580,7 +580,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -664,7 +664,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -748,7 +748,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Watermeter',
+    'model': 'Watermeter',
     'model_id': 'HWE-WTR',
     'name': 'Device',
     'name_by_user': None,
@@ -832,7 +832,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -916,7 +916,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,

@@ -6,7 +6,7 @@ from decimal import Decimal
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
@@ -16,6 +16,8 @@ from homeassistant.components.sensor import (
     STATE_CLASSES_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
+    SensorEntityCapabilityAttribute,
+    SensorEntityStateAttribute,
     SensorExtraStoredData,
     SensorStateClass,
 )
@@ -30,7 +32,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt as dt_util
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import TriggerUpdateCoordinator, validators as tcv
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -39,7 +41,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_attributes_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -54,34 +56,36 @@ def validate_last_reset(val):
         val.get(CONF_LAST_RESET) is not None
         and val.get(CONF_STATE_CLASS) != SensorStateClass.TOTAL
     ):
-        raise vol.Invalid(
+        raise probatio.Invalid(
             "last_reset is only valid for template sensors with state_class 'total'"
         )
 
     return val
 
 
-SENSOR_COMMON_SCHEMA = vol.Schema(
+SENSOR_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_STATE): cv.template,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        probatio.Required(CONF_STATE): cv.template,
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 )
 
-SENSOR_YAML_SCHEMA = vol.All(
-    vol.Schema(
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=(SensorEntityCapabilityAttribute, SensorEntityStateAttribute),
+    device_class=True,
+    allowed_attributes=(SensorEntityCapabilityAttribute.OPTIONS,),
+)
+
+SENSOR_YAML_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Optional(CONF_LAST_RESET): cv.template,
+            probatio.Optional(CONF_LAST_RESET): cv.template,
         }
     )
     .extend(SENSOR_COMMON_SCHEMA.schema)
-    .extend(
-        make_template_entity_common_modern_attributes_schema(
-            SENSOR_DOMAIN, DEFAULT_NAME
-        ).schema
-    ),
+    .extend(make_template_entity_common_schema(SENSOR_DOMAIN, DEFAULT_NAME).schema),
     validate_last_reset,
 )
 
@@ -149,13 +153,13 @@ def validate_datetime(
                 return result
 
             if (parsed_timestamp := dt_util.parse_datetime(result)) is None:
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity, attribute, result, "expected a valid timestamp"
                 )
                 return None
 
             if kwargs.get("require_tzinfo", True) and parsed_timestamp.tzinfo is None:
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity,
                     attribute,
                     result,
@@ -168,7 +172,7 @@ def validate_datetime(
         if (parsed_date := dt_util.parse_date(result)) is not None:
             return parsed_date
 
-        template_validators.log_validation_result_error(
+        tcv.log_validation_result_error(
             entity, attribute, result, "expected a valid date"
         )
         return None
@@ -183,6 +187,7 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
     _state_option = CONF_STATE
     _restore_state_extra_data = SensorExtraStoredData
     _restore_state_properties = ("_attr_native_value",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -216,7 +221,7 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
             if not isinstance(result, bool) and isinstance(result, (int, float)):
                 return result
 
-            return template_validators.number(self, CONF_STATE)(result)
+            return tcv.number(self, CONF_STATE)(result)
 
         if result is None or self.device_class not in (
             SensorDeviceClass.DATE,

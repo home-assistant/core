@@ -183,17 +183,18 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MELCloud Home numbers."""
+    coordinator = entry.runtime_data.coordinator
 
     async_setup_unit_entities(
-        entry.runtime_data,
+        coordinator,
         async_add_entities,
         lambda units: (
-            ATANumber(entry.runtime_data, entity_description, unit)
+            ATANumber(coordinator, entity_description, unit)
             for entity_description in ATA_NUMBERS
             for unit in units
         ),
         lambda units: (
-            ATWNumber(entry.runtime_data, entity_description, unit)
+            ATWNumber(coordinator, entity_description, unit)
             for entity_description in ATW_NUMBERS
             for unit in units
         ),

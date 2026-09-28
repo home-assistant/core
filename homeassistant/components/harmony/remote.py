@@ -5,7 +5,7 @@ import json
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
@@ -47,7 +47,7 @@ PARALLEL_UPDATES = 0
 ATTR_CHANNEL = "channel"
 
 HARMONY_CHANGE_CHANNEL_SCHEMA: VolDictType = {
-    vol.Required(ATTR_CHANNEL): cv.positive_int,
+    probatio.Required(ATTR_CHANNEL): cv.positive_int,
 }
 
 

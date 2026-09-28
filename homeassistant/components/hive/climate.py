@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from apyhiveapi import Hive
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import (
     PRESET_BOOST,
@@ -61,19 +61,21 @@ async def async_setup_entry(
     hive = entry.runtime_data
     devices = hive.session.deviceList.get("climate")
     if devices:
-        async_add_entities((HiveClimateEntity(hive, dev) for dev in devices), True)
+        async_add_entities(
+            (HiveClimateEntity(hass, entry, hive, dev) for dev in devices), True
+        )
 
     platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_BOOST_HEATING_ON,
         {
-            vol.Required(ATTR_TIME_PERIOD): vol.All(
+            probatio.Required(ATTR_TIME_PERIOD): probatio.All(
                 cv.time_period,
                 cv.positive_timedelta,
                 lambda td: td.total_seconds() // 60,
             ),
-            vol.Optional(ATTR_TEMPERATURE, default="25.0"): vol.Coerce(float),
+            probatio.Optional(ATTR_TEMPERATURE, default="25.0"): probatio.Coerce(float),
         },
         "async_heating_boost_on",
     )
@@ -97,9 +99,15 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
 
-    def __init__(self, hive: Hive, hive_device: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: HiveConfigEntry,
+        hive: Hive,
+        hive_device: dict[str, Any],
+    ) -> None:
         """Initialize the Climate device."""
-        super().__init__(hive, hive_device)
+        super().__init__(hass, entry, hive, hive_device)
         self.thermostat_node_id = hive_device["device_id"]
         self._attr_temperature_unit = TEMP_UNIT[hive_device["temperatureunit"]]
 

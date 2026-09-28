@@ -7,13 +7,13 @@ from homewizard_energy.models import CombinedModels, Measurement, State, System
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.homewizard.const import UPDATE_INTERVAL
+from homeassistant.components.homewizard.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = [
     pytest.mark.usefixtures("init_integration"),
@@ -391,6 +391,24 @@ async def test_sensors(
         assert entity_entry.device_id
         assert (device_entry := device_registry.async_get(entity_entry.device_id))
         assert snapshot(name=f"{entity_id}:device-registry") == device_entry
+
+
+async def test_external_device_via_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test an external device is linked to the main device via via_device_id."""
+    main_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "5c2fafabcdef"), init_integration.entry_id
+    )
+    assert main_device is not None
+
+    gas_meter_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "gas_meter_G001"), init_integration.entry_id
+    )
+    assert gas_meter_device is not None
+    assert gas_meter_device.via_device_id == main_device.id
 
 
 @pytest.mark.parametrize(

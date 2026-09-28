@@ -12,6 +12,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
 
+DOOR_OPENER_MODELS = {"HmIP-FLC", "HmIP-FDC"}
+
 
 def _door_opener_authorization_channel(
     device: object,
@@ -40,9 +42,9 @@ async def async_setup_entry(
         if isinstance(device, WallMountedGarageDoorController)
     ]
     entities.extend(
-        HomematicipFullFlushLockControllerButton(hap, device, auth_channel)
+        HomematicipDoorOpenerButton(hap, device, auth_channel)
         for device in hap.home.devices
-        if getattr(device, "modelType", None) == "HmIP-FLC"
+        if getattr(device, "modelType", None) in DOOR_OPENER_MODELS
         and (auth_channel := _door_opener_authorization_channel(device)) is not None
     )
     async_add_entities(entities)
@@ -62,8 +64,8 @@ class HomematicipGarageDoorControllerButton(HomematicipGenericEntity, ButtonEnti
         await self._device.send_start_impulse_async()
 
 
-class HomematicipFullFlushLockControllerButton(HomematicipGenericEntity, ButtonEntity):
-    """Representation of the HomematicIP full flush lock controller opener."""
+class HomematicipDoorOpenerButton(HomematicipGenericEntity, ButtonEntity):
+    """Representation of a HomematicIP door opener (HmIP-FLC, HmIP-FDC)."""
 
     def __init__(
         self,
@@ -71,7 +73,7 @@ class HomematicipFullFlushLockControllerButton(HomematicipGenericEntity, ButtonE
         device,
         auth_channel: AccessAuthorizationChannel,
     ) -> None:
-        """Initialize the full flush lock controller opener button."""
+        """Initialize the door opener button."""
         super().__init__(
             hap, device, post="Door opener", feature_id="lock_opener_button"
         )

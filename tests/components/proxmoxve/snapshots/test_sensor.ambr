@@ -600,9 +600,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -620,14 +618,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'proxmoxve',
@@ -636,23 +628,21 @@
     'supported_features': 0,
     'translation_key': 'container_uptime',
     'unique_id': '1234_201_container_uptime',
-    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[sensor.ct_backup_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ct-backup Uptime',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ct_backup_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '12.0',
+    'state': '2026-05-03T00:00:00+00:00',
   })
 # ---
 # name: test_all_entities[sensor.ct_nginx_cpu_usage-entry]
@@ -1256,9 +1246,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1276,14 +1264,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'proxmoxve',
@@ -1292,23 +1274,21 @@
     'supported_features': 0,
     'translation_key': 'container_uptime',
     'unique_id': '1234_200_container_uptime',
-    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[sensor.ct_nginx_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ct-nginx Uptime',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ct_nginx_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '12.0',
+    'state': '2026-05-03T00:00:00+00:00',
   })
 # ---
 # name: test_all_entities[sensor.pve1_backup_duration-entry]
@@ -1900,9 +1880,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1920,14 +1898,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'proxmoxve',
@@ -1936,23 +1908,21 @@
     'supported_features': 0,
     'translation_key': 'node_uptime',
     'unique_id': '1234_node/pve1_node_uptime',
-    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[sensor.pve1_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'pve1 Uptime',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pve1_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '24.0',
+    'state': '2026-05-02T12:00:00+00:00',
   })
 # ---
 # name: test_all_entities[sensor.storage_local_available_storage-entry]
@@ -3030,9 +3000,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -3050,14 +3018,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'proxmoxve',
@@ -3066,23 +3028,21 @@
     'supported_features': 0,
     'translation_key': 'vm_uptime',
     'unique_id': '1234_101_vm_uptime',
-    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[sensor.vm_db_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-db Uptime',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vm_db_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '24.0',
+    'state': '2026-05-02T12:00:00+00:00',
   })
 # ---
 # name: test_all_entities[sensor.vm_web_cpu_usage-entry]
@@ -3686,9 +3646,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -3706,14 +3664,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'proxmoxve',
@@ -3722,22 +3674,20 @@
     'supported_features': 0,
     'translation_key': 'vm_uptime',
     'unique_id': '1234_100_vm_uptime',
-    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[sensor.vm_web_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-web Uptime',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vm_web_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '24.0',
+    'state': '2026-05-02T12:00:00+00:00',
   })
 # ---

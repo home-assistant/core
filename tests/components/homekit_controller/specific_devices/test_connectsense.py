@@ -21,6 +21,7 @@ async def test_connectsense_setup(hass: HomeAssistant) -> None:
 
     await assert_devices_and_entities_created(
         hass,
+        config_entry.entry_id,
         DeviceTestInfo(
             unique_id=HUB_TEST_ACCESSORY_ID,
             name="InWall Outlet-0394DE",
@@ -100,6 +101,7 @@ async def test_connectsense_setup(hass: HomeAssistant) -> None:
 
     await assert_devices_and_entities_created(
         hass,
+        config_entry.entry_id,
         DeviceTestInfo(
             unique_id=HUB_TEST_ACCESSORY_ID,
             name="InWall Outlet-0394DE",

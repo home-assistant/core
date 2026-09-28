@@ -279,6 +279,7 @@
       'model_id': None,
       'name': 'Test Player',
       'name_by_user': None,
+      'parent_device_id': None,
       'serial_number': '**REDACTED**',
       'sw_version': '1.0.0',
       'via_device_id': None,

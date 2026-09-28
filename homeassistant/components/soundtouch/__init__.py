@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 
 from libsoundtouch import soundtouch_device
 from libsoundtouch.device import SoundTouchDevice
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
@@ -30,23 +30,25 @@ type SoundTouchConfigEntry = ConfigEntry[SoundTouchData]
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_PLAY_EVERYWHERE_SCHEMA = vol.Schema({vol.Required("master"): cv.entity_id})
-SERVICE_CREATE_ZONE_SCHEMA = vol.Schema(
+SERVICE_PLAY_EVERYWHERE_SCHEMA = probatio.Schema(
+    {probatio.Required("master"): cv.entity_id}
+)
+SERVICE_CREATE_ZONE_SCHEMA = probatio.Schema(
     {
-        vol.Required("master"): cv.entity_id,
-        vol.Required("slaves"): cv.entity_ids,
+        probatio.Required("master"): cv.entity_id,
+        probatio.Required("slaves"): cv.entity_ids,
     }
 )
-SERVICE_ADD_ZONE_SCHEMA = vol.Schema(
+SERVICE_ADD_ZONE_SCHEMA = probatio.Schema(
     {
-        vol.Required("master"): cv.entity_id,
-        vol.Required("slaves"): cv.entity_ids,
+        probatio.Required("master"): cv.entity_id,
+        probatio.Required("slaves"): cv.entity_ids,
     }
 )
-SERVICE_REMOVE_ZONE_SCHEMA = vol.Schema(
+SERVICE_REMOVE_ZONE_SCHEMA = probatio.Schema(
     {
-        vol.Required("master"): cv.entity_id,
-        vol.Required("slaves"): cv.entity_ids,
+        probatio.Required("master"): cv.entity_id,
+        probatio.Required("slaves"): cv.entity_ids,
     }
 )
 

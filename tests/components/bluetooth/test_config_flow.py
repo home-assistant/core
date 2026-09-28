@@ -625,11 +625,80 @@ async def test_async_step_integration_discovery_remote_adapter(
     assert new_entry is not None
     assert new_entry.state is config_entries.ConfigEntryState.LOADED
 
-    ble_device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_BLUETOOTH, scanner.source)}
+    ble_device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_BLUETOOTH, scanner.source), new_entry.entry_id
     )
     assert ble_device_entry is not None
     assert ble_device_entry.via_device_id == device_entry.id
+    assert ble_device_entry.area_id == area_entry.id
+
+    await hass.config_entries.async_unload(new_entry.entry_id)
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    cancel_scanner()
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_async_step_integration_discovery_remote_adapter_child_source(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Test remote adapter whose source is a child device.
+
+    A child device can't be a via device, so the scanner is linked to the child's
+    parent, while still inheriting the source's (inherited) effective area.
+    """
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    connector = (
+        HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
+    )
+    scanner = FakeRemoteScanner("esp32", "esp32", connector, True)
+    manager = _get_manager()
+    area_entry = area_registry.async_get_or_create("test")
+    cancel_scanner = manager.async_register_scanner(scanner)
+    parent_device_entry = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("test", "BB:BB:BB:BB:BB:BB")},
+        suggested_area=area_entry.id,
+    )
+    child_device_entry = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        identifiers={("test", "BB:BB:BB:BB:BB:BB-child")},
+        parent_device_id=parent_device_entry.id,
+        name="child",
+    )
+    # The child inherits its parent's area rather than owning one.
+    assert child_device_entry.area_id is None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            CONF_SOURCE: scanner.source,
+            CONF_SOURCE_DOMAIN: "test",
+            CONF_SOURCE_MODEL: "test",
+            CONF_SOURCE_CONFIG_ENTRY_ID: entry.entry_id,
+            CONF_SOURCE_DEVICE_ID: child_device_entry.id,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    new_entry_id: str = result["result"].entry_id
+    new_entry = hass.config_entries.async_get_entry(new_entry_id)
+    assert new_entry is not None
+    assert new_entry.state is config_entries.ConfigEntryState.LOADED
+
+    ble_device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_BLUETOOTH, scanner.source), new_entry.entry_id
+    )
+    assert ble_device_entry is not None
+    # A child device can't be a via device, so the parent is used instead.
+    assert ble_device_entry.via_device_id == parent_device_entry.id
+    # The scanner still inherits the source child's effective (parent) area.
     assert ble_device_entry.area_id == area_entry.id
 
     await hass.config_entries.async_unload(new_entry.entry_id)
