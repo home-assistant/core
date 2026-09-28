@@ -148,7 +148,13 @@ async def test_search_media(
         SearchMediaQuery(search_query="my search"),
     )
 
-    source.radios.search.assert_awaited_with(name="my search", hide_broken=True)
+    source.radios.search.assert_awaited_with(
+        name="my search",
+        hide_broken=True,
+        limit=100,
+        order=Order.CLICK_COUNT,
+        reverse=True,
+    )
     assert len(result.result) == 5
 
 
