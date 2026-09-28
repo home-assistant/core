@@ -23,7 +23,7 @@ from .conftest import HOST, SERIAL, SERIAL_ADDRESS
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-VOLTAGE_ENTITY = "sensor.balco260_battery_voltage"
+VOLTAGE_ENTITY = "sensor.balco_260_battery_voltage"
 
 
 async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -63,7 +63,25 @@ async def test_serial_number_is_device_metadata_not_a_sensor(
     assert device_entry is not None
     assert device_entry.serial_number == SERIAL
 
-    assert hass.states.get("sensor.balco260_serial_number") is None
+    assert hass.states.get("sensor.balco_260_serial_number") is None
+
+
+async def test_device_info(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The device shows the display model and the model the device reports."""
+    await _setup(hass, mock_config_entry)
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL), mock_config_entry.entry_id
+    )
+    assert device_entry is not None
+    assert device_entry.manufacturer == "BLUETTI"
+    assert device_entry.model == "Balco 260"
+    assert device_entry.model_id == "Balco260"
+    assert device_entry.name == "Balco 260"
 
 
 async def test_firmware_versions_are_device_metadata_not_a_sensor(
@@ -82,8 +100,8 @@ async def test_firmware_versions_are_device_metadata_not_a_sensor(
         "ARM 50011.01.12, DSP 50014.01.10, IoT 50012.01.19"
     )
 
-    assert hass.states.get("sensor.balco260_arm_firmware_version") is None
-    assert hass.states.get("sensor.balco260_dsp_firmware_version") is None
+    assert hass.states.get("sensor.balco_260_arm_firmware_version") is None
+    assert hass.states.get("sensor.balco_260_dsp_firmware_version") is None
 
 
 async def test_setup_retry_when_device_unresponsive(

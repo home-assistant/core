@@ -32,7 +32,7 @@ from .conftest import (
 
 from tests.common import MockConfigEntry
 
-TITLE = "Balco260"
+TITLE = "Balco 260"
 
 
 def _user_input(host: str = HOST, unit_id: int = UNIT_ID) -> dict[str, Any]:

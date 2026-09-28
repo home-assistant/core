@@ -3,7 +3,7 @@
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MODEL
+from .const import DOMAIN, MODEL, MODEL_ID
 from .coordinator import BluettiModbusConfigEntry, BluettiModbusDataUpdateCoordinator
 
 
@@ -15,6 +15,7 @@ def bluetti_modbus_device_info(
         identifiers={(DOMAIN, serial)},
         manufacturer="BLUETTI",
         model=MODEL,
+        model_id=MODEL_ID,
         name=MODEL,
         serial_number=serial,
         sw_version=sw_version,
