@@ -36,7 +36,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
@@ -793,7 +793,10 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass.async_create_task(
                         self._async_reload_requires_auth_entries(), eager_start=False
                     )
-                    return self.async_abort(reason="reauth_successful")
+                    return self.async_abort(
+                        reason="reauth_successful",
+                        translation_domain=HOMEASSISTANT_DOMAIN,
+                    )
 
         # Old config entries will not have these values.
         alias = entry_data.get(CONF_ALIAS) or "unknown"

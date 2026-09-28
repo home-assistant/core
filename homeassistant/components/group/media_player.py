@@ -259,8 +259,10 @@ class MediaPlayerGroup(MediaPlayerEntity):
         for entity_id in self._entities:
             new_state = self.hass.states.get(entity_id)
             self.async_update_supported_features(entity_id, new_state)
-        async_track_state_change_event(
-            self.hass, self._entities, self.async_on_state_change
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, self._entities, self.async_on_state_change
+            )
         )
         self.async_update_group_state()
         self.async_write_ha_state()

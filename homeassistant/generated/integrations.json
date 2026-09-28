@@ -6629,12 +6629,6 @@
       "integration_type": "virtual",
       "supported_by": "home_connect"
     },
-    "sigfox": {
-      "name": "Sigfox",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "sighthound": {
       "name": "Sighthound",
       "integration_type": "hub",
@@ -6886,12 +6880,6 @@
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "SolarEdge"
-        },
-        "solaredge_local": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "local_polling",
-          "name": "SolarEdge Local"
         },
         "solaredge_modbus": {
           "integration_type": "device",
@@ -7724,12 +7712,6 @@
     },
     "transport_nsw": {
       "name": "Transport NSW",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
-    "travisci": {
-      "name": "Travis-CI",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"

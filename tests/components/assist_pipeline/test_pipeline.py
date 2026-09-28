@@ -1,7 +1,7 @@
 """Websocket tests for Voice Assistant integration."""
 
 from collections.abc import AsyncGenerator, Generator
-from dataclasses import FrozenInstanceError
+from dataclasses import FrozenInstanceError, replace
 from pathlib import Path
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
@@ -68,7 +68,7 @@ from .conftest import (
     make_10ms_chunk,
 )
 
-from tests.common import MockConfigEntry, async_mock_service, flush_store
+from tests.common import MockConfigEntry, MockUser, async_mock_service, flush_store
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -561,7 +561,7 @@ async def test_default_pipeline_unsupported_tts_language(
 
 
 async def test_update_pipeline(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+    hass: HomeAssistant, hass_storage: dict[str, Any], hass_admin_user: MockUser
 ) -> None:
     """Test async_update_pipeline."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -600,6 +600,7 @@ async def test_update_pipeline(
         tts_voice="test_voice",
         wake_word_entity="wake_work.test_1",
         wake_word_id="wake_word_id_1",
+        user_id=hass_admin_user.id,
     )
 
     pipelines = async_get_pipelines(hass)
@@ -619,6 +620,7 @@ async def test_update_pipeline(
             tts_voice="test_voice",
             wake_word_entity="wake_work.test_1",
             wake_word_id="wake_word_id_1",
+            user_id=hass_admin_user.id,
         )
     ]
     assert len(hass_storage[STORAGE_KEY]["data"]["items"]) == 1
@@ -636,6 +638,7 @@ async def test_update_pipeline(
         "wake_word_entity": "wake_work.test_1",
         "wake_word_id": "wake_word_id_1",
         "prefer_local_intents": False,
+        "user_id": hass_admin_user.id,
     }
 
     await async_update_pipeline(
@@ -663,6 +666,7 @@ async def test_update_pipeline(
             tts_voice="test_voice",
             wake_word_entity="wake_work.test_1",
             wake_word_id="wake_word_id_1",
+            user_id=hass_admin_user.id,
         )
     ]
     assert len(hass_storage[STORAGE_KEY]["data"]["items"]) == 1
@@ -680,6 +684,7 @@ async def test_update_pipeline(
         "wake_word_entity": "wake_work.test_1",
         "wake_word_id": "wake_word_id_1",
         "prefer_local_intents": False,
+        "user_id": hass_admin_user.id,
     }
 
 
@@ -2494,3 +2499,155 @@ async def test_pipeline_error_before_tts_does_not_leak_result_stream(
                 )
 
     assert len(hass.data[tts.DATA_TTS_MANAGER].token_to_stream) == 0
+
+
+async def _run_with_pipeline_user(
+    hass: HomeAssistant,
+    pipeline_user_id: str,
+    context: Context,
+    mock_chat_session: chat_session.ChatSession,
+) -> Context:
+    """Run a pipeline that acts as a user and return the context it ran with."""
+    pipeline = replace(
+        assist_pipeline.pipeline.async_get_pipeline(hass), user_id=pipeline_user_id
+    )
+    processor = Mock(
+        response_audio=None,
+        supports_streaming_response=False,
+        async_validate=AsyncMock(),
+        async_execute=AsyncMock(),
+        invalidate=Mock(),
+        cleanup=Mock(),
+    )
+    with patch(
+        "homeassistant.components.assist_pipeline.run._create_pipeline_processor",
+        return_value=processor,
+    ):
+        pipeline_input = assist_pipeline.pipeline.PipelineInput(
+            intent_input="test input",
+            session=mock_chat_session,
+            run=assist_pipeline.pipeline.PipelineRun(
+                hass,
+                context=context,
+                pipeline=pipeline,
+                start_stage=assist_pipeline.PipelineStage.INTENT,
+                end_stage=assist_pipeline.PipelineStage.INTENT,
+                event_callback=lambda event: None,
+            ),
+        )
+
+    await pipeline_input.execute()
+
+    return pipeline_input.run.context
+
+
+async def test_pipeline_user_id_sets_context_user(
+    hass: HomeAssistant,
+    init_components: None,
+    hass_admin_user: MockUser,
+    mock_chat_session: chat_session.ChatSession,
+) -> None:
+    """Test a pipeline lends its user to a run that has none."""
+    context = Context()
+    run_context = await _run_with_pipeline_user(
+        hass, hass_admin_user.id, context, mock_chat_session
+    )
+
+    assert run_context.user_id == hass_admin_user.id
+    assert run_context.id == context.id
+
+
+async def test_pipeline_user_id_keeps_non_admin_caller(
+    hass: HomeAssistant,
+    init_components: None,
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
+    mock_chat_session: chat_session.ChatSession,
+) -> None:
+    """Test a pipeline never hands a caller permissions they do not have."""
+    run_context = await _run_with_pipeline_user(
+        hass,
+        hass_admin_user.id,
+        Context(user_id=hass_read_only_user.id),
+        mock_chat_session,
+    )
+
+    assert run_context.user_id == hass_read_only_user.id
+
+
+async def test_pipeline_user_id_applies_for_admin_caller(
+    hass: HomeAssistant,
+    init_components: None,
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
+    mock_chat_session: chat_session.ChatSession,
+) -> None:
+    """Test an administrator runs as the user the pipeline acts as."""
+    run_context = await _run_with_pipeline_user(
+        hass,
+        hass_read_only_user.id,
+        Context(user_id=hass_admin_user.id),
+        mock_chat_session,
+    )
+
+    assert run_context.user_id == hass_read_only_user.id
+
+
+async def test_pipeline_user_id_deactivated_user(
+    hass: HomeAssistant,
+    init_components: None,
+    hass_read_only_user: MockUser,
+    mock_chat_session: chat_session.ChatSession,
+) -> None:
+    """Test a run does not act as a user that was deactivated after being set."""
+    await hass.auth.async_deactivate_user(hass_read_only_user)
+
+    run_context = await _run_with_pipeline_user(
+        hass, hass_read_only_user.id, Context(), mock_chat_session
+    )
+
+    assert run_context.user_id is None
+
+
+async def test_pipeline_unknown_user_id(
+    hass: HomeAssistant,
+    init_components: None,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test a pipeline cannot be stored with a user that does not exist."""
+    pipeline_store = hass.data[
+        assist_pipeline.pipeline.KEY_ASSIST_PIPELINE
+    ].pipeline_store
+    settings = {
+        "name": "Test",
+        "language": "en-US",
+        "conversation_engine": "test agent",
+        "conversation_language": "en-US",
+        "tts_engine": "test tts",
+        "tts_language": "en-US",
+        "tts_voice": "test voice",
+        "stt_engine": "test stt",
+        "stt_language": "en-US",
+        "wake_word_entity": None,
+        "wake_word_id": None,
+    }
+
+    with pytest.raises(probatio.Invalid):
+        await pipeline_store.async_create_item(settings | {"user_id": "does-not-exist"})
+
+    pipeline = await pipeline_store.async_create_item(
+        settings | {"user_id": hass_admin_user.id}
+    )
+    assert pipeline.user_id == hass_admin_user.id
+
+    with pytest.raises(probatio.Invalid):
+        await pipeline_store.async_update_item(
+            pipeline.id, settings | {"user_id": "does-not-exist"}
+        )
+
+    # a deactivated user is an identity a run must not be given either
+    await hass.auth.async_deactivate_user(hass_admin_user)
+    with pytest.raises(probatio.Invalid):
+        await pipeline_store.async_create_item(
+            settings | {"user_id": hass_admin_user.id}
+        )
