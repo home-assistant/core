@@ -200,15 +200,17 @@ async def test_sync_history_state_error(
         ),
     ],
 )
-async def test_sync_media_state_auth_failed(
+@pytest.mark.parametrize("sync_method", ["sync_media_state", "sync_notifications"])
+async def test_sync_on_first_refresh_errors(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    sync_method: str,
     side_effect: type[Exception],
     expected_state: ConfigEntryState,
 ) -> None:
-    """Test setup fails with ConfigEntryAuthFailed when sync_media_state raises CannotAuthenticate."""
-    mock_amazon_devices_client.sync_media_state.side_effect = side_effect
+    """Test only CannotAuthenticate from a first refresh sync blocks setup."""
+    getattr(mock_amazon_devices_client, sync_method).side_effect = side_effect
 
     await setup_integration(hass, mock_config_entry)
 
@@ -228,19 +230,21 @@ async def test_sync_media_state_auth_failed(
         ),
     ],
 )
-async def test_media_state_sync_failure_logged_on_first_refresh(
+@pytest.mark.parametrize("sync_method", ["sync_media_state", "sync_notifications"])
+async def test_sync_failure_logged_on_first_refresh(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    sync_method: str,
     error: Exception,
 ) -> None:
-    """Test a failing media sync on first refresh is logged but does not block setup."""
-    mock_amazon_devices_client.sync_media_state.side_effect = error
+    """Test a failing sync on first refresh is logged but does not block setup."""
+    getattr(mock_amazon_devices_client, sync_method).side_effect = error
 
     await setup_integration(hass, mock_config_entry)
 
-    assert "Sync failed for sync_media_state:" in caplog.text
+    assert f"Sync failed for {sync_method}:" in caplog.text
     assert str(error) in caplog.text
     assert (
         "Data may be missing or incomplete until updates are pushed by Amazon"
@@ -249,20 +253,23 @@ async def test_media_state_sync_failure_logged_on_first_refresh(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_media_state_sync_on_device_list_change(
+@pytest.mark.parametrize("sync_method", ["sync_media_state", "sync_notifications"])
+async def test_sync_on_device_list_change(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    sync_method: str,
 ) -> None:
-    """Test media state is resynced when a device is added."""
+    """Test per-device state is synced on setup and resynced when a device is added."""
+    sync_mock: AsyncMock = getattr(mock_amazon_devices_client, sync_method)
     mock_amazon_devices_client.get_devices_data.return_value = {
         TEST_DEVICE_1_SN: TEST_DEVICE_1,
     }
 
     await setup_integration(hass, mock_config_entry)
 
-    mock_amazon_devices_client.sync_media_state.assert_awaited_once()
+    sync_mock.assert_awaited_once()
 
     mock_amazon_devices_client.get_devices_data.return_value = {
         TEST_DEVICE_1_SN: TEST_DEVICE_1,
@@ -273,11 +280,11 @@ async def test_media_state_sync_on_device_list_change(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_amazon_devices_client.sync_media_state.call_count == 2
+    assert sync_mock.await_count == 2
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Device list unchanged: no additional resync
-    assert mock_amazon_devices_client.sync_media_state.call_count == 2
+    assert sync_mock.await_count == 2
