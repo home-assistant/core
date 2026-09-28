@@ -1,6 +1,5 @@
 """Provides functionality to interact with image processing services."""
 
-import asyncio
 from datetime import timedelta
 import logging
 from typing import Any, Final, TypedDict, final, override
@@ -15,26 +14,26 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SOURCE,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    DATA_COMPONENT,
     DOMAIN,
+    SERVICE_SCAN,  # noqa: F401
     ImageProcessingDeviceClass,
     ImageProcessingEntityStateAttribute,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
-
-SERVICE_SCAN = "scan"
 
 EVENT_DETECT_FACE = "image_processing.detect_face"
 
@@ -83,27 +82,13 @@ class FaceInformation(TypedDict, total=False):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the image processing."""
-    component = EntityComponent[ImageProcessingEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[ImageProcessingEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
     await component.async_setup(config)
 
-    async def async_scan_service(service: ServiceCall) -> None:
-        """Service handler for scan."""
-        image_entities = await component.async_extract_from_service(service)
-
-        update_tasks = []
-        for entity in image_entities:
-            entity.async_set_context(service.context)
-            update_tasks.append(asyncio.create_task(entity.async_update_ha_state(True)))
-
-        if update_tasks:
-            await asyncio.wait(update_tasks)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SCAN, async_scan_service, schema=make_entity_service_schema({})
-    )
+    async_setup_services(hass)
 
     return True
 
