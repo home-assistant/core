@@ -3311,7 +3311,7 @@ ttls==1.11.1
 ttn_client==1.3.0
 
 # homeassistant.components.tuya
-tuya-device-handlers==0.0.29
+tuya-device-handlers==0.0.31
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.2.15
