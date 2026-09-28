@@ -1,11 +1,9 @@
 """Constants for the BLUETTI Modbus integration."""
 
 from datetime import timedelta
-import logging
 from typing import Final
 
 DOMAIN: Final = "bluetti_modbus"
-LOGGER = logging.getLogger(__package__)
 
 CONF_UNIT_ID: Final = "unit_id"
 

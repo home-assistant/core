@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for the BLUETTI Modbus integration."""
 
 from dataclasses import dataclass
+import logging
 from typing import Any, override
 
 from bluetti_modbus_lib import Balco260
@@ -13,7 +14,9 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import DOMAIN, SCAN_INTERVAL
+
+_LOGGER = logging.getLogger(__name__)
 
 type BluettiModbusConfigEntry = ConfigEntry[BluettiModbusRuntimeData]
 
@@ -33,7 +36,7 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._device = device
         super().__init__(
             hass,
-            LOGGER,
+            _LOGGER,
             config_entry=entry,
             name=f"{entry.title} readings",
             update_interval=SCAN_INTERVAL,
