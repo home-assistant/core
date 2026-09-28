@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from tesla_fleet_api.exceptions import InvalidCommand
+from tesla_fleet_api.exceptions import InvalidCommand, InvalidRequest, TeslaFleetError
 from teslemetry_stream import Signal
 
 from homeassistant.components.switch import (
@@ -149,7 +149,44 @@ async def test_switch_command_errors(hass: HomeAssistant, response: dict) -> Non
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_switch_command_exception(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("side_effect", "message"),
+    [
+        pytest.param(
+            InvalidCommand,
+            "Command returned exception: The data request or command is unknown.",
+            id="no_data",
+        ),
+        pytest.param(
+            InvalidRequest(
+                {"error": "invalid_request", "error_description": "detail from server"}
+            ),
+            "Command returned exception: detail from server",
+            id="error_description",
+        ),
+        pytest.param(
+            InvalidRequest(
+                {
+                    "response": None,
+                    "error": "vehicle rejected the command",
+                    "error_description": "",
+                }
+            ),
+            "Command returned exception: vehicle rejected the command",
+            id="error",
+        ),
+        pytest.param(
+            InvalidRequest({"response": None}),
+            "Command returned exception: The request body is not valid",
+            id="no_error_detail",
+        ),
+    ],
+)
+async def test_switch_command_exception(
+    hass: HomeAssistant,
+    side_effect: type[TeslaFleetError] | TeslaFleetError,
+    message: str,
+) -> None:
     """Tests that an energy command SDK exception raises HomeAssistantError."""
 
     await setup_platform(hass, [Platform.SWITCH])
@@ -157,9 +194,9 @@ async def test_switch_command_exception(hass: HomeAssistant) -> None:
     with (
         patch(
             "tesla_fleet_api.teslemetry.EnergySite.storm_mode",
-            side_effect=InvalidCommand,
+            side_effect=side_effect,
         ),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError, match=f"^{message}$"),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
