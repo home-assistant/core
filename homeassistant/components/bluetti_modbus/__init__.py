@@ -6,13 +6,14 @@ from homeassistant.components.modbus import async_get_unit
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .const import CONF_UNIT_ID, DOMAIN
 from .coordinator import (
     BluettiModbusConfigEntry,
     BluettiModbusDataUpdateCoordinator,
     BluettiModbusRuntimeData,
+    wrong_device_issue_id,
 )
 from .device import restricted_device
 from .entity import bluetti_modbus_device_info
@@ -70,4 +71,13 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: BluettiModbusConfigEntry
 ) -> bool:
     """Unload a BLUETTI Modbus config entry."""
+    ir.async_delete_issue(hass, DOMAIN, wrong_device_issue_id(entry))
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(
+    hass: HomeAssistant, entry: BluettiModbusConfigEntry
+) -> None:
+    """Remove the repair issue of a BLUETTI Modbus config entry."""
+    # An entry removed while its setup is retrying is never unloaded.
+    ir.async_delete_issue(hass, DOMAIN, wrong_device_issue_id(entry))

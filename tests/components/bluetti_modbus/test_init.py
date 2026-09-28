@@ -262,6 +262,43 @@ async def test_identity_mismatch_raises_a_repair_issue_until_resolved(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
+async def test_repair_issue_is_deleted_when_the_entry_is_unloaded(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Unloading an entry, as disabling it does, drops its repair issue."""
+    await _setup(hass, mock_config_entry)
+    mock_modbus_unit.holding[SERIAL_ADDRESS] = 1
+    await _tick(hass, freezer)
+    assert len(issue_registry.issues) == 1
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 0
+
+
+async def test_repair_issue_is_deleted_when_a_retrying_entry_is_removed(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """An entry removed while its setup retries does not leave its issue behind."""
+    mock_modbus_unit.holding[SERIAL_ADDRESS] = 1
+    await _setup(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert len(issue_registry.issues) == 1
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 0
+
+
 async def test_excluded_fields_are_dropped_from_the_read_plan(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
