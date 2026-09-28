@@ -20,7 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
     host = entry.data[CONF_HOST]
     session = async_create_clientsession(hass, verify_ssl=False)
     envoy = Envoy(host, session)
-    coordinator = EnphaseUpdateCoordinator(hass, envoy, entry)
+    coordinator = EnphaseUpdateCoordinator(hass, envoy, entry, session)
 
     await coordinator.async_config_entry_first_refresh()
     if not entry.unique_id:

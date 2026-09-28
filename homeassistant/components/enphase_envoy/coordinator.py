@@ -7,6 +7,7 @@ import logging
 import math
 from typing import Any, override
 
+from aiohttp import ClientSession
 from pyenphase import Envoy, EnvoyClientClosedError, EnvoyError, EnvoyTokenAuth
 from pyenphase.models.home import EnvoyInterfaceInformation
 
@@ -52,7 +53,11 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     token_lifetime: int  # days of token life left
 
     def __init__(
-        self, hass: HomeAssistant, envoy: Envoy, entry: EnphaseConfigEntry
+        self,
+        hass: HomeAssistant,
+        envoy: Envoy,
+        entry: EnphaseConfigEntry,
+        session: ClientSession | None = None,
     ) -> None:
         """Initialize DataUpdateCoordinator for the envoy."""
         self.envoy = envoy
@@ -69,6 +74,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._cancel_mac_verification: CALLBACK_TYPE | None = None
         self.token_lifetime = 0
         self._acb_sleep_soc_band: str | None = None
+        self._client_session: ClientSession | None = session
         super().__init__(
             hass,
             _LOGGER,
@@ -212,8 +218,10 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return
         except RuntimeError as err:
             # We may get session is closed if we still run at unload
-            if "Session is closed" in str(err):
-                _LOGGER.debug("%s: Client is closed when reading firmware", self.name)
+            if self._client_session and self._client_session.closed:
+                _LOGGER.debug(
+                    "%s: Client is closed when reading firmware: %s", self.name, err
+                )
                 return
             raise
         if (current_firmware := self.envoy_firmware) and current_firmware != (
@@ -264,9 +272,11 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return
         except RuntimeError as err:
             # We may get session is closed if we still run at unload
-            if "Session is closed" in str(err):
+            if self._client_session and self._client_session.closed:
                 _LOGGER.debug(
-                    "%s: Client is closed when reading interface information", self.name
+                    "%s: Client is closed when reading interface information: %s",
+                    self.name,
+                    err,
                 )
                 return
             raise

@@ -967,10 +967,14 @@ async def test_coordinator_background_tasks_session_is_closed(
     def raise_error() -> None:
         raise exc
 
-    caplog.clear()  # test_with = getattr(coordinator, test_target)
-    setattr(mock_envoy, envoy_method, raise_error)
-    freezer.tick(time_step)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    with patch(
+        "aiohttp.ClientSession.closed",
+        return_value=True,
+    ):
+        caplog.clear()
+        setattr(mock_envoy, envoy_method, raise_error)
+        freezer.tick(time_step)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert msg in caplog.text
+        assert msg in caplog.text
