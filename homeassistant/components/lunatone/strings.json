@@ -54,6 +54,18 @@
     }
   },
   "exceptions": {
+    "cannot_retrieve_devices_data": {
+      "message": "Unable to retrieve devices data from Lunatone REST API"
+    },
+    "cannot_retrieve_info_data": {
+      "message": "Unable to retrieve info data from Lunatone REST API"
+    },
+    "cannot_retrieve_scan_data": {
+      "message": "Unable to retrieve scan data from Lunatone REST API"
+    },
+    "cannot_retrieve_sensors_data": {
+      "message": "Unable to retrieve sensors data from Lunatone REST API"
+    },
     "cannot_turn_off_light": {
       "message": "Unable to connect to the device and turn off {entity}"
     },
@@ -62,6 +74,9 @@
     },
     "missing_device_info": {
       "message": "Unable to read device information. Please verify the device's network connection."
+    },
+    "missing_info_data": {
+      "message": "Did not receive info data from Lunatone REST API"
     }
   }
 }
