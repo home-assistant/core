@@ -450,6 +450,13 @@ class IcloudDevice:
             self._attrs[ATTR_LOW_POWER_MODE] = self._status[DEVICE_LOW_POWER_MODE]
             if announce:
                 dispatcher_send(self._account.hass, self._account.signal_device_new)
+        else:
+            # Keeping a device whose battery iCloud has stopped reporting -
+            # one that has gone to sleep, say - would otherwise leave the
+            # sensor showing the last level it saw for as long as it lasts.
+            self._battery_level = None
+            self._attrs.pop(ATTR_BATTERY, None)
+            self._attrs.pop(ATTR_LOW_POWER_MODE, None)
 
         # Deliberately not nested under the battery block above: a device
         # iCloud reports no battery for still has a location worth reading.

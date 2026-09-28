@@ -7,6 +7,8 @@ import pytest
 
 from homeassistant.components.icloud.account import IcloudAccount
 from homeassistant.components.icloud.const import (
+    ATTR_BATTERY,
+    ATTR_LOW_POWER_MODE,
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
     CONF_WITH_FAMILY,
@@ -317,3 +319,24 @@ async def test_a_device_gaining_a_battery_gets_its_battery_sensor(
 
     assert device.battery_level == 40
     assert battery_sensors() != []
+
+
+async def test_a_device_losing_its_battery_stops_reporting_a_level(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test that a battery iCloud stops reporting is not remembered.
+
+    Keeping a device whose battery disappears - one that has gone to sleep,
+    say - would otherwise leave the level and the low-power flag at whatever
+    they last were, which is what the sensor reads.
+    """
+    account = await _set_up_with(hass, mock_store, DEVICE)
+    device = account.devices[DEVICE["id"]]
+    assert device.battery_level == 80
+
+    device.update(DEVICE | {"batteryStatus": "Unknown", "batteryLevel": None})
+
+    assert device.battery_level is None
+    assert ATTR_BATTERY not in device.extra_state_attributes
+    assert ATTR_LOW_POWER_MODE not in device.extra_state_attributes
