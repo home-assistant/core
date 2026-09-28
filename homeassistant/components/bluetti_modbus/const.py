@@ -48,6 +48,9 @@ EXCLUDED_FIELDS: Final = frozenset(
         "b_status",
         "b_time_to_full_total",
         "b_time_to_empty_total",
+        # Answer at the device's own unit id, but equal b_v and b_c with one pack.
+        "b_v_total",
+        "b_c_total",
         # Phases 2 and 3 read 0 on the single-phase units verified so far.
         "d_phase_count",
         "g_2_i_p",

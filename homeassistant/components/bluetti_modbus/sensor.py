@@ -346,22 +346,6 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
         suggested_display_precision=1,
     ),
     BluettiModbusSensorEntityDescription(
-        key="b_v_total",
-        translation_key="b_v_total",
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        device_class=SensorDeviceClass.VOLTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
-    ),
-    BluettiModbusSensorEntityDescription(
-        key="b_c_total",
-        translation_key="b_c_total",
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        device_class=SensorDeviceClass.CURRENT,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
-    ),
-    BluettiModbusSensorEntityDescription(
         key="b_type",
         translation_key="b_type",
         entity_category=EntityCategory.DIAGNOSTIC,
