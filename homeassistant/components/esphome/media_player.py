@@ -132,8 +132,8 @@ class EsphomeMediaPlayer(
     ) -> None:
         """Send the play command with media url to the media player."""
         enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE)
-        # The device can only append to its playlist, not insert after the current item
-        if enqueue == MediaPlayerEnqueue.NEXT:
+        # The device can only append to its playlist or replace it
+        if enqueue in (MediaPlayerEnqueue.NEXT, MediaPlayerEnqueue.PLAY):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="enqueue_mode_not_supported",
@@ -259,6 +259,26 @@ class EsphomeMediaPlayer(
         """Set volume level, range 0..1."""
         self._client.media_player_command(
             self._key, volume=volume, device_id=self._static_info.device_id
+        )
+
+    @convert_api_error_ha_error
+    @override
+    async def async_volume_up(self) -> None:
+        """Turn volume up."""
+        self._client.media_player_command(
+            self._key,
+            command=MediaPlayerCommand.VOLUME_UP,
+            device_id=self._static_info.device_id,
+        )
+
+    @convert_api_error_ha_error
+    @override
+    async def async_volume_down(self) -> None:
+        """Turn volume down."""
+        self._client.media_player_command(
+            self._key,
+            command=MediaPlayerCommand.VOLUME_DOWN,
+            device_id=self._static_info.device_id,
         )
 
     @convert_api_error_ha_error

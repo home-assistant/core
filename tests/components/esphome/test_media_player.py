@@ -35,8 +35,10 @@ from homeassistant.components.media_player import (
     SERVICE_REPEAT_SET,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP,
     STATE_PLAYING,
     BrowseMedia,
     MediaClass,
@@ -359,6 +361,18 @@ async def test_media_player_entity_ignores_flags_without_command(
             MediaPlayerCommand.REPEAT_OFF,
             id="repeat_off",
         ),
+        pytest.param(
+            SERVICE_VOLUME_UP,
+            {},
+            MediaPlayerCommand.VOLUME_UP,
+            id="volume_up",
+        ),
+        pytest.param(
+            SERVICE_VOLUME_DOWN,
+            {},
+            MediaPlayerCommand.VOLUME_DOWN,
+            id="volume_down",
+        ),
     ],
 )
 async def test_media_player_playlist_commands(
@@ -369,7 +383,7 @@ async def test_media_player_playlist_commands(
     service_data: dict[str, str],
     command: MediaPlayerCommand,
 ) -> None:
-    """Test the clear playlist and repeat commands."""
+    """Test the clear playlist, repeat and volume step commands."""
     entity_info = [
         MediaPlayerInfo(
             object_id="mymedia_player",
@@ -378,6 +392,7 @@ async def test_media_player_playlist_commands(
             feature_flags=(
                 EspMediaPlayerEntityFeature.CLEAR_PLAYLIST
                 | EspMediaPlayerEntityFeature.REPEAT_SET
+                | EspMediaPlayerEntityFeature.VOLUME_STEP
             ),
         )
     ]
@@ -446,7 +461,6 @@ async def test_media_player_repeat_all_not_supported(
     ("enqueue", "command"),
     [
         pytest.param(MediaPlayerEnqueue.ADD, MediaPlayerCommand.ENQUEUE, id="add"),
-        pytest.param(MediaPlayerEnqueue.PLAY, None, id="play"),
         pytest.param(MediaPlayerEnqueue.REPLACE, None, id="replace"),
     ],
 )
@@ -500,12 +514,20 @@ async def test_media_player_play_media_enqueue(
     )
 
 
-async def test_media_player_play_media_enqueue_next_not_supported(
+@pytest.mark.parametrize(
+    "enqueue",
+    [
+        pytest.param(MediaPlayerEnqueue.NEXT, id="next"),
+        pytest.param(MediaPlayerEnqueue.PLAY, id="play"),
+    ],
+)
+async def test_media_player_play_media_enqueue_not_supported(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_generic_device_entry: MockGenericDeviceEntryType,
+    enqueue: MediaPlayerEnqueue,
 ) -> None:
-    """Test that the next enqueue mode raises an error."""
+    """Test that enqueue modes the device cannot follow raise an error."""
     entity_info = [
         MediaPlayerInfo(
             object_id="mymedia_player",
@@ -536,7 +558,7 @@ async def test_media_player_play_media_enqueue_next_not_supported(
                 ATTR_ENTITY_ID: "media_player.test_my_media_player",
                 ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                 ATTR_MEDIA_CONTENT_ID: "http://www.example.com/xy.mp3",
-                ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.NEXT,
+                ATTR_MEDIA_ENQUEUE: enqueue,
             },
             blocking=True,
         )
