@@ -49,7 +49,7 @@ from homeassistant.components.anthropic.const import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_PROMPT
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 from tests.common import MockConfigEntry
 
@@ -331,6 +331,174 @@ async def test_subentry_options_thinking_budget_more_than_max(
     assert options["reason"] == "reconfigure_successful"
     assert subentry.data["max_tokens"] == 16384
     assert subentry.data["thinking_budget"] == 8192
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        pytest.param("claude-opus-5-5", id="opus_5_5"),
+        pytest.param("claude-fable-5", id="fable_5"),
+        pytest.param("claude-fable-5-1", id="fable_5_1"),
+    ],
+)
+@pytest.mark.parametrize(
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
+@pytest.mark.usefixtures("mock_init_component")
+async def test_creating_subentry_with_required_thinking(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    model: str,
+    subentry_type: str,
+) -> None:
+    """Test always-adaptive models cannot be configured without thinking."""
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, subentry_type),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_NAME: "Adaptive thinking", CONF_RECOMMENDED: False},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CHAT_MODEL: model}
+    )
+    assert result["step_id"] == "model"
+    assert (
+        "none"
+        not in (result["data_schema"].schema[CONF_THINKING_EFFORT].config["options"])
+    )
+    assert CONF_THINKING_BUDGET not in result["data_schema"].schema
+
+    with pytest.raises(InvalidData):
+        await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_THINKING_EFFORT: "none"}
+        )
+
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_THINKING_EFFORT] == "low"
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        pytest.param("claude-opus-4-6", id="opus_4_6"),
+        pytest.param("claude-opus-4-7", id="opus_4_7"),
+        pytest.param("claude-opus-4-8", id="opus_4_8"),
+        pytest.param("claude-opus-5", id="opus_5"),
+        pytest.param("claude-sonnet-4-6", id="sonnet_4_6"),
+        pytest.param("claude-sonnet-5", id="sonnet_5"),
+    ],
+)
+@pytest.mark.usefixtures("mock_init_component")
+async def test_subentry_with_optional_thinking(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    model: str,
+) -> None:
+    """Test thinking can still be disabled on supported adaptive models."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_RECOMMENDED: False}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CHAT_MODEL: model}
+    )
+    assert result["step_id"] == "model"
+    assert (
+        "none" in (result["data_schema"].schema[CONF_THINKING_EFFORT].config["options"])
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_THINKING_EFFORT: "none"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert subentry.data[CONF_THINKING_EFFORT] == "none"
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        pytest.param("claude-opus-5-5", id="opus_5_5"),
+        pytest.param("claude-fable-5", id="fable_5"),
+        pytest.param("claude-fable-5-1", id="fable_5_1"),
+    ],
+)
+@pytest.mark.parametrize(
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("current_effort", "user_input", "expected_effort"),
+    [
+        pytest.param("none", {}, "low", id="enable_thinking"),
+        pytest.param(
+            "high", {CONF_THINKING_EFFORT: "high"}, "high", id="preserve_thinking"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_init_component")
+async def test_reconfigure_subentry_with_required_thinking(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    model: str,
+    subentry_type: str,
+    current_effort: str,
+    user_input: dict[str, str],
+    expected_effort: str,
+) -> None:
+    """Test migrating to an always-adaptive model clears disabled thinking."""
+    subentry = next(
+        subentry
+        for subentry in mock_config_entry.subentries.values()
+        if subentry.subentry_type == subentry_type
+    )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_THINKING_EFFORT: current_effort,
+        },
+    )
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_RECOMMENDED: False}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CHAT_MODEL: model}
+    )
+    assert result["step_id"] == "model"
+    effort_key = next(
+        key for key in result["data_schema"].schema if key == CONF_THINKING_EFFORT
+    )
+    assert (effort_key.description or {}).get(
+        "suggested_value", effort_key.default()
+    ) == expected_effort
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert subentry.data[CONF_CHAT_MODEL] == model
+    assert subentry.data[CONF_THINKING_EFFORT] == expected_effort
 
 
 @pytest.mark.usefixtures("mock_init_component")

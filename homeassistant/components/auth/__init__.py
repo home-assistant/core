@@ -494,7 +494,7 @@ class LinkUserView(HomeAssistantView):
 
         entry = self._retrieve_credentials(data["client_id"], data["code"])
 
-        if entry is None:
+        if entry is None or entry.code_challenge is not None:
             return self.json_message("Invalid code", status_code=HTTPStatus.BAD_REQUEST)
 
         linked_user = await hass.auth.async_get_user_by_credentials(entry.credentials)

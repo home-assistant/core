@@ -11,6 +11,14 @@
       "wrong_location": "No Airly measuring stations in this area."
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::airly::config::step::user::data_description::api_key%]"
+        }
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
@@ -33,6 +41,9 @@
     }
   },
   "exceptions": {
+    "auth_error": {
+      "message": "Authentication failed for {entry}, please update your API key"
+    },
     "no_station": {
       "message": "An error occurred while retrieving data from the Airly API for {entry}: no measuring stations in this area"
     },

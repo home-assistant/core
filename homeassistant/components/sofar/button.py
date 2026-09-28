@@ -59,7 +59,7 @@ async def async_setup_entry(
     async_add_entities(
         SofarButton(runtime_data, description)
         for description in BUTTON_DESCRIPTIONS
-        if inverter_type is not None and matches(inverter_type, description.applies_to)
+        if matches(inverter_type, description.applies_to)
     )
 
 
