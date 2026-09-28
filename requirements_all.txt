@@ -947,7 +947,7 @@ emoji==2.8.0
 emulated-roku==0.3.0
 
 # homeassistant.components.energieleser
-energieleser==0.1.6
+energieleser==0.1.7
 
 # homeassistant.components.huisbaasje
 energyflip-api-client==0.3.0
@@ -3130,9 +3130,6 @@ soco==0.31.2
 
 # homeassistant.components.sofar
 sofar-modbus==0.17.0
-
-# homeassistant.components.solaredge_local
-solaredge-local==0.2.3
 
 # homeassistant.components.solaredge
 solaredge-web==0.4.0
