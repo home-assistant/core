@@ -16,6 +16,7 @@ CONF_TEXT = "text"
 CONF_DISPLAY_URL = "display_url"
 
 CONF_FILTER = "filter"
+CONF_FILTER_LABEL = "filter_label"
 CONF_ENTITY_CONFIG = "entity_config"
 CONF_ENDPOINT = "endpoint"
 CONF_LOCALE = "locale"
