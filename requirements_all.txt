@@ -3131,9 +3131,6 @@ soco==0.31.2
 # homeassistant.components.sofar
 sofar-modbus==0.17.0
 
-# homeassistant.components.solaredge_local
-solaredge-local==0.2.3
-
 # homeassistant.components.solaredge
 solaredge-web==0.4.0
 
