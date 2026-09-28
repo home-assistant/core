@@ -136,6 +136,9 @@ def mock_controller_service_authenticated_no_device():
     ) as service_mock:
         service_mock.return_value.requires_2fa = False
         service_mock.return_value.requires_2sa = False
+        # Pinned: a bare mock attribute is never "unknown", so the challenge
+        # test would pass whatever the delivery-route check did.
+        service_mock.return_value.two_factor_delivery_method = "trusted_device"
         service_mock.return_value.trusted_devices = TRUSTED_DEVICES
         service_mock.return_value.send_verification_code = Mock(return_value=True)
         service_mock.return_value.validate_verification_code = Mock(return_value=True)
@@ -277,6 +280,9 @@ def _service_rejecting_the_device_fetch(error: Exception):
         service_mock.return_value.trusted_devices = TRUSTED_DEVICES
         service_mock.return_value.send_verification_code = Mock(return_value=True)
         service_mock.return_value.validate_verification_code = Mock(return_value=True)
+        # Pinned: a bare mock attribute is never "unknown", so the challenge
+        # test would pass whatever the delivery-route check did.
+        service_mock.return_value.two_factor_delivery_method = "trusted_device"
         type(service_mock.return_value).devices = PropertyMock(side_effect=error)
         yield service_mock
 
