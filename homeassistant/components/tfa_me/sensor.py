@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import CLOCK_SKEW_ALLOWANCE, DOMAIN
 from .coordinator import TFAmeConfigEntry, TFAmeUpdateCoordinator
 from .helper import TFAmeBatteryState, TFAmeWindDirection, battery_state, wind_direction
 
@@ -302,5 +302,6 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
         last_update_ts = int(data["ts"])
         utc_now_ts = int(dt_util.utcnow().timestamp())
         timeout = self.coordinator.get_device_timeout(self.sensor_id)
+        age = utc_now_ts - last_update_ts
 
-        return (utc_now_ts - last_update_ts) <= timeout
+        return -CLOCK_SKEW_ALLOWANCE <= age <= timeout

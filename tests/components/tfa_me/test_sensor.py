@@ -26,7 +26,7 @@ async def test_tfa_me_sensor_entities_snapshot(
     tfa_me_config_entry: MockConfigEntry,
 ) -> None:
     """Snapshot all sensor entities created from a typical TFA.me JSON payload."""
-    freezer.move_to("2025-11-26 09:16:00+00:00")
+    freezer.move_to("2025-11-26 15:12:00+00:00")
     entry = tfa_me_config_entry
 
     with patch(
@@ -92,7 +92,7 @@ async def test_new_measurement_added_once(
     tfa_me_config_entry: MockConfigEntry,
 ) -> None:
     """Test a newly discovered measurement is added only once."""
-    freezer.move_to("2025-11-26 09:16:00+00:00")
+    freezer.move_to("2025-11-26 15:12:00+00:00")
 
     initial_payload = deepcopy(FAKE_JSON)
     updated_payload = deepcopy(FAKE_JSON)

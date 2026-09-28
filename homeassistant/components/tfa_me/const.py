@@ -3,6 +3,7 @@
 DOMAIN = "tfa_me"
 DEFAULT_STATION_NAME = "TFA.me Station"
 LOCAL_POLL_INTERVAL = 60
+CLOCK_SKEW_ALLOWANCE = 60
 
 # List with all valid JSON measurement keys this integration can process.
 VALID_JSON_MEASUREMENT_KEYS = [
