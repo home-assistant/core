@@ -217,10 +217,6 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
         self._attr_unique_id = unique_id
         self.uid: str = unique_id
         self.entity_description = description
-
-        # Do not set self.entity_id: HA will do and user can edit this entity ID later
-        # Name schema created by HA with x... = Sensor ID, y... = Gateway/station ID:
-        # tfa_me_xxx_xxx_xxx_yyyyyyyyy_MeasurementName, e.g. "tfa_me_a0f_fff_f81_05b3e4e44_humidity"
         self.gateway_id = self.coordinator.data.gateway_id
         self.sensor_id = sensor_id
 
