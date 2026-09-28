@@ -40,7 +40,7 @@ requests==2.34.2
 requests-mock==1.12.1
 respx==0.23.1
 syrupy==6.1.1
-tqdm==4.67.1
+tqdm==4.70.1
 types-aiofiles==25.1.0.20260518
 types-atomicwrites==1.4.5.1
 types-croniter==6.2.4.20260711
