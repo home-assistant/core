@@ -136,7 +136,7 @@ async def test_user_flow_rejects_a_zero_serial(
     result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "invalid_serial"}
 
     mock_modbus_unit.holding[SERIAL_ADDRESS] = int(SERIAL)
     result = await hass.config_entries.flow.async_configure(flow_id, _user_input())

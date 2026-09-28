@@ -111,6 +111,5 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
             return {"base": "unsupported_device"}, None
         serial = device.values.get("d_serial")
         if not serial:
-            # 0 isn't a real Balco260 serial.
-            return {"base": "cannot_connect"}, None
+            return {"base": "invalid_serial"}, None
         return {}, str(serial)
