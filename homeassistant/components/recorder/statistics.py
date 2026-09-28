@@ -1487,53 +1487,91 @@ def _generate_statistics_period_stmt(
 ) -> Select:
     """Select reduced statistics for each calendar period."""
     queries = []
-    aggregate_only = types <= {"mean", "min", "max"}
+
+    aggregate_types = types & {"mean", "min", "max"}
+    endpoint_types = types & {"sum", "state", "last_reset"}
+
+    # Aggregate statistics are reduced over all rows in the calendar period.
+    aggregate_columns = {
+        "mean": func.avg(Statistics.mean).label("mean"),
+        "min": func.min(Statistics.min).label("min"),
+        "max": func.max(Statistics.max).label("max"),
+    }
 
     for lower, upper in period_bounds:
-        if aggregate_only:
-            query = select(
-                Statistics.metadata_id,
-                func.min(Statistics.start_ts).label("start_ts"),
+        query = select(Statistics.metadata_id)
+
+        if aggregate_types:
+            # Keep the first row timestamp so the existing reducer can still
+            # determine the correct calendar period for aggregate-only and
+            # mixed requests.
+            query = query.add_columns(
+                func.min(Statistics.start_ts).label("period_start_ts")
             )
-            if "mean" in types:
-                query = query.add_columns(func.avg(Statistics.mean).label("mean"))
-            if "min" in types:
-                query = query.add_columns(func.min(Statistics.min).label("min"))
-            if "max" in types:
-                query = query.add_columns(func.max(Statistics.max).label("max"))
-        else:
-            query = select(
-                Statistics.metadata_id,
-                func.max(Statistics.start_ts).label("start_ts"),
+
+            # Reduce requested aggregate values inside the database.
+            for key, aggregate_column in aggregate_columns.items():
+                if key in aggregate_types:
+                    query = query.add_columns(aggregate_column)
+
+        if endpoint_types:
+            # Endpoint values must come from the last actual Statistics row
+            # in the period, so keep its timestamp for the join below.
+            query = query.add_columns(
+                func.max(Statistics.start_ts).label("endpoint_start_ts")
             )
 
         query = query.where(
             Statistics.start_ts >= lower,
             Statistics.start_ts < upper,
         )
+
         if metadata_ids:
             query = query.where(Statistics.metadata_id.in_(metadata_ids))
 
         queries.append(query.group_by(Statistics.metadata_id))
 
+    # One reduced row per metadata id and calendar period.
     reduced = union_all(*queries).subquery()
 
-    if aggregate_only:
-        return select(reduced)
+    if endpoint_types:
+        # Endpoint-only requests expose the timestamp of the last row.
+        # Mixed requests keep the first timestamp of the reduced period so
+        # the existing reducer sees the same period representative as before.
+        columns = select(
+            Statistics.metadata_id,
+            (
+                reduced.c.period_start_ts if aggregate_types else Statistics.start_ts
+            ).label("start_ts"),
+        )
+    else:
+        # Aggregate-only requests do not need to join back to Statistics.
+        columns = select(
+            reduced.c.metadata_id,
+            reduced.c.period_start_ts.label("start_ts"),
+        )
 
-    columns = select(Statistics.metadata_id, Statistics.start_ts)
+    # Aggregate values already live in the reduced subquery, so add them once
+    # regardless of whether this is aggregate-only or mixed.
+    for key in aggregate_columns:
+        if key in aggregate_types:
+            columns = columns.add_columns(getattr(reduced.c, key))
+
+    if not endpoint_types:
+        return columns
+
+    # Endpoint values must be read from the final actual row in the period.
     for key, type_columns in _type_column_mapping.items():
-        if key in types:
+        if key in endpoint_types:
             columns = columns.add_columns(
                 *(getattr(Statistics, column) for column in type_columns)
             )
 
-    # Keep dynamically constructed bound values local to this request.
     return columns.join(
         reduced,
         and_(
             Statistics.metadata_id == reduced.c.metadata_id,
-            Statistics.start_ts == reduced.c.start_ts,
+            Statistics.start_ts == reduced.c.endpoint_start_ts,
         ),
     )
 
@@ -2310,17 +2348,17 @@ def _statistics_during_period_with_session(
     )
     stats: Sequence[Row]
     # Check if we can reduce the statistics to a single row per period, which is more efficient than fetching all rows.
-    if period in {"day", "week", "month", "year"} and (
-        types <= {"sum", "state", "last_reset"}
-        or (
-            types <= {"mean", "min", "max"}
-            and (
-                "mean" not in types
-                or all(
-                    meta["mean_type"]
-                    in (StatisticMeanType.NONE, StatisticMeanType.ARITHMETIC)
-                    for _, meta in metadata.values()
-                )
+    supported_types = {"mean", "min", "max", "sum", "state", "last_reset"}
+    if (
+        types
+        and period in {"day", "week", "month", "year"}
+        and types <= supported_types
+        and (
+            "mean" not in types
+            or all(
+                meta["mean_type"]
+                in (StatisticMeanType.NONE, StatisticMeanType.ARITHMETIC)
+                for _, meta in metadata.values()
             )
         )
     ):
