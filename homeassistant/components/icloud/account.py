@@ -194,6 +194,15 @@ class IcloudAccount:
             device_id = status[DEVICE_ID]
             device_name = status[DEVICE_NAME]
 
+            if self._devices.get(device_id) is not None:
+                # A device already being tracked is always updated. What
+                # follows decides whether to start tracking one, not whether
+                # to keep it current: skipping the update would leave the
+                # battery and location it has stopped reporting on show.
+                _LOGGER.debug("Updating iCloud device: %s", device_name)
+                self._devices[device_id].update(status)
+                continue
+
             # Being locatable is what makes a device worth tracking, and
             # iCloud reports no battery for one that is asleep or has none to
             # report. Either on its own is worth keeping: the account feeds
@@ -212,20 +221,14 @@ class IcloudAccount:
             if not has_location and not has_battery:
                 continue
 
-            if self._devices.get(device_id) is not None:
-                # Seen device -> updating
-                _LOGGER.debug("Updating iCloud device: %s", device_name)
-                self._devices[device_id].update(status)
-            else:
-                # New device, should be unique
-                _LOGGER.debug(
-                    "Adding iCloud device: %s [model: %s]",
-                    device_name,
-                    status[DEVICE_RAW_DEVICE_MODEL],
-                )
-                self._devices[device_id] = IcloudDevice(self, device, status)
-                self._devices[device_id].update(status)
-                new_device = True
+            _LOGGER.debug(
+                "Adding iCloud device: %s [model: %s]",
+                device_name,
+                status[DEVICE_RAW_DEVICE_MODEL],
+            )
+            self._devices[device_id] = IcloudDevice(self, device, status)
+            self._devices[device_id].update(status)
+            new_device = True
 
         if (
             DEVICE_STATUS_CODES.get(list(api_devices)[0][DEVICE_STATUS]) == "pending"

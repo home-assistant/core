@@ -340,3 +340,41 @@ async def test_a_device_losing_its_battery_stops_reporting_a_level(
     assert device.battery_level is None
     assert ATTR_BATTERY not in device.extra_state_attributes
     assert ATTR_LOW_POWER_MODE not in device.extra_state_attributes
+
+
+async def test_a_tracked_device_is_updated_even_when_it_reports_nothing(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test that a device already tracked is kept current whatever it reports.
+
+    What decides whether to start tracking a device must not decide whether to
+    keep it up to date. Skipping the update would leave the battery and
+    location it has stopped reporting on show for as long as the device lasts,
+    which is the stale state clearing them was meant to prevent.
+    """
+    status = dict(DEVICE)
+
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService"
+    ) as service_mock:
+        service = service_mock.return_value
+        service.requires_2fa = False
+        service.devices = MockDevicesContainer(USER_INFO, [MockAppleDevice(status)])
+
+        account = _build_account(hass, mock_store)
+        with patch.object(account, "_schedule_next_fetch"):
+            await hass.async_add_executor_job(account.setup)
+
+            device = account.devices[DEVICE["id"]]
+            assert device.battery_level == 80
+            assert device.location is not None
+
+            # The same device now reports neither signal.
+            status.update(
+                {"batteryStatus": "Unknown", "batteryLevel": None, "location": None}
+            )
+            await hass.async_add_executor_job(account.update_devices)
+
+    assert device.battery_level is None
+    assert ATTR_BATTERY not in device.extra_state_attributes
