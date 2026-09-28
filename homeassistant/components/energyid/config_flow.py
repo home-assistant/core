@@ -36,7 +36,7 @@ from .const import (
     NAME,
     POLLING_INTERVAL,
 )
-from .coordinator import EnergyIDConfigEntry
+from .coordinator import EnergyIDConfigEntry, async_directives_enabled
 from .energyid_sensor_mapping_flow import EnergyIDSensorMappingFlowHandler
 
 _LOGGER = logging.getLogger(__name__)
@@ -336,7 +336,7 @@ class EnergyIDOptionsFlow(OptionsFlow):
                 }
             )
 
-        directives_enabled = self.config_entry.options.get(CONF_ENABLE_DIRECTIVES, True)
+        directives_enabled = async_directives_enabled(self.config_entry)
 
         return self.async_show_form(
             step_id="init",

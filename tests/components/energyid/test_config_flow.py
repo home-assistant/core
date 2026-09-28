@@ -110,7 +110,7 @@ async def test_options_flow_enables_automatic_directive_discovery(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
-    assert result["data_schema"]({}) == {CONF_ENABLE_DIRECTIVES: True}
+    assert result["data_schema"]({}) == {CONF_ENABLE_DIRECTIVES: False}
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
