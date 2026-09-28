@@ -53,7 +53,9 @@ async def async_setup_entry(
     )  # the config flow always sets it to the confirmed serial
     entry.runtime_data = BluettiModbusRuntimeData(
         coordinator=coordinator,
-        device_info=bluetti_modbus_device_info(entry.unique_id, sw_version),
+        device_info=bluetti_modbus_device_info(
+            entry.unique_id, sw_version, host=entry.data[CONF_HOST]
+        ),
     )
     dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id, **entry.runtime_data.device_info
