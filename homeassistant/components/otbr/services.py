@@ -12,6 +12,7 @@ from homeassistant.components.thread import (
     async_add_dataset,
     async_get_preferred_dataset,
     async_get_store,
+    normalize_dataset,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
@@ -64,6 +65,26 @@ _REQUIRED_DATASET_TLVS = (
     MeshcopTLVType.PANID,
     MeshcopTLVType.PSKC,
     MeshcopTLVType.SECURITYPOLICY,
+)
+
+# The components of an operational dataset, which is all OpenThread keeps
+# of a dataset handed to it.
+_OPERATIONAL_TLVS = frozenset(
+    {
+        MeshcopTLVType.ACTIVETIMESTAMP,
+        MeshcopTLVType.CHANNEL,
+        MeshcopTLVType.CHANNELMASK,
+        MeshcopTLVType.DELAYTIMER,
+        MeshcopTLVType.EXTPANID,
+        MeshcopTLVType.MESHLOCALPREFIX,
+        MeshcopTLVType.NETWORKKEY,
+        MeshcopTLVType.NETWORKNAME,
+        MeshcopTLVType.PANID,
+        MeshcopTLVType.PENDINGTIMESTAMP,
+        MeshcopTLVType.PSKC,
+        MeshcopTLVType.SECURITYPOLICY,
+        MeshcopTLVType.WAKEUP_CHANNEL,
+    }
 )
 
 SERVICE_MIGRATE_NETWORK_SCHEMA = probatio.Schema(
@@ -126,16 +147,19 @@ def _same_network_settings(
 
     The timestamps say when a dataset was made, not what it configures, and
     this one is re-stamped before it is sent, so they are left out of the
-    comparison.
+    comparison. Compared as the Thread dataset store compares them: the
+    router adds a wake-up channel to a dataset without one and cannot keep
+    the legacy Beacons flag, so a target differing only there is what the
+    router already reports.
     """
     ignored = {
         MeshcopTLVType.ACTIVETIMESTAMP,
         MeshcopTLVType.PENDINGTIMESTAMP,
         MeshcopTLVType.DELAYTIMER,
     }
-    return {k: v.data for k, v in active.items() if k not in ignored} == {
-        k: v.data for k, v in target.items() if k not in ignored
-    }
+    return {
+        k: v.data for k, v in normalize_dataset(active).items() if k not in ignored
+    } == {k: v.data for k, v in normalize_dataset(target).items() if k not in ignored}
 
 
 async def _async_repoint_preferred_dataset(
@@ -299,6 +323,10 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
                 translation_key="incomplete_dataset",
                 translation_placeholders={"missing": ", ".join(missing)},
             )
+        # The router drops anything else, so what is sent and stored must
+        # not carry it either: the store would otherwise disagree with the
+        # router's copy at every setup and discard it.
+        target = {tag: item for tag, item in target.items() if tag in _OPERATIONAL_TLVS}
 
         active_tlvs = await data.get_active_dataset_tlvs()
         if active_tlvs is None:

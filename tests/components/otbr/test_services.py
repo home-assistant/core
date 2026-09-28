@@ -39,8 +39,8 @@ from . import BASE_URL, DATASET_CH16
 from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 # A different network from the one under test: ts 1003, channel 15. Carries
-# every network-defining TLV plus a wakeup-channel TLV (0x4a) to prove
-# unrelated fields survive the migration untouched.
+# every network-defining TLV plus a wake-up channel TLV (0x4a), which the
+# router keeps, to prove the PUT body is the target re-stamped and no more.
 TARGET = (
     "0e080000000003eb0000000300000f4a0300001035060004001fffe002081111111122222222"
     "0708fd111111222222220510aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbb030f4f70656e546872"
@@ -1795,3 +1795,78 @@ async def test_the_issued_timestamps_are_loaded_once(hass: HomeAssistant) -> Non
         )
 
     assert first is second
+
+
+async def test_tlvs_the_router_would_drop_are_not_stored(
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """A TLV outside the operational dataset is neither sent nor stored.
+
+    The router keeps only the components; a stored copy carrying more would
+    disagree with the router's at every setup and have it discarded.
+    """
+    mock_pending_endpoint(aioclient_mock)
+    extended = dict(tlv_parser.parse_tlv(TARGET))
+    extended[MeshcopTLVType.THREAD_DOMAIN_NAME] = tlv_parser.MeshcopTLVItem(
+        MeshcopTLVType.THREAD_DOMAIN_NAME, b"DefaultDomain"
+    )
+
+    await call_migrate(hass, dataset=tlv_parser.encode_tlv(extended))
+
+    puts = pending_calls(aioclient_mock)
+    assert tlv_parser.parse_tlv(puts[0][2]) == expected_pending(TARGET, 1004, 300000)
+    store = await async_get_store(hass)
+    stored = next(
+        entry
+        for entry in store.datasets.values()
+        if entry.extended_pan_id.lower() == "1111111122222222"
+    )
+    assert MeshcopTLVType.THREAD_DOMAIN_NAME not in stored.dataset
+
+
+async def test_a_wake_up_channel_the_router_added_is_not_a_change(
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+    get_active_dataset_tlvs: AsyncMock,
+) -> None:
+    """The router adds a wake-up channel to a dataset without one.
+
+    Re-sending that dataset would push a five minute pending dataset with
+    nothing new in it, and block every other write for the delay.
+    """
+    mock_pending_endpoint(aioclient_mock)
+    reported = dict(tlv_parser.parse_tlv(DATASET_CH16.hex()))
+    reported[MeshcopTLVType.WAKEUP_CHANNEL] = tlv_parser.MeshcopTLVItem(
+        MeshcopTLVType.WAKEUP_CHANNEL, bytes.fromhex("000010")
+    )
+    get_active_dataset_tlvs.return_value = bytes.fromhex(
+        tlv_parser.encode_tlv(reported)
+    )
+
+    response = await call_migrate(hass, dataset=DATASET_CH16.hex())
+
+    assert response == {"status": "already_on_network"}
+    assert not pending_calls(aioclient_mock)
+
+
+async def test_the_legacy_beacons_flag_is_not_a_change(
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """OpenThread cannot keep the Beacons flag; a target carrying it is a no-op."""
+    mock_pending_endpoint(aioclient_mock)
+    flagged = dict(tlv_parser.parse_tlv(DATASET_CH16.hex()))
+    policy = bytearray(flagged[MeshcopTLVType.SECURITYPOLICY].data)
+    policy[2] |= dataset_store.SECURITY_POLICY_BEACONS_FLAG
+    flagged[MeshcopTLVType.SECURITYPOLICY] = tlv_parser.MeshcopTLVItem(
+        MeshcopTLVType.SECURITYPOLICY, bytes(policy)
+    )
+
+    response = await call_migrate(hass, dataset=tlv_parser.encode_tlv(flagged))
+
+    assert response == {"status": "already_on_network"}
+    assert not pending_calls(aioclient_mock)
