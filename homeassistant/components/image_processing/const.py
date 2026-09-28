@@ -3,11 +3,10 @@
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from homeassistant.helpers.entity_component import EntityComponent
-
     from . import ImageProcessingEntity
 
 DOMAIN: Final = "image_processing"
