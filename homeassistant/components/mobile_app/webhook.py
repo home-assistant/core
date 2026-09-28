@@ -13,8 +13,8 @@ from typing import Any
 from aiohttp.web import HTTPBadRequest, Request, Response, json_response
 from nacl.exceptions import CryptoError
 from nacl.secret import SecretBox
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant.components import (
     camera,
@@ -55,6 +55,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    instance_id,
     template,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -126,29 +127,31 @@ WEBHOOK_COMMANDS: Registry[
     str, Callable[[HomeAssistant, ConfigEntry, Any], Coroutine[Any, Any, Response]]
 ] = Registry()
 
-WEBHOOK_PAYLOAD_SCHEMA = vol.Any(
-    vol.Schema(
+WEBHOOK_PAYLOAD_SCHEMA = probatio.Any(
+    probatio.Schema(
         {
-            vol.Required(ATTR_WEBHOOK_TYPE): cv.string,
-            vol.Optional(ATTR_WEBHOOK_DATA): vol.Any(dict, list),
+            probatio.Required(ATTR_WEBHOOK_TYPE): cv.string,
+            probatio.Optional(ATTR_WEBHOOK_DATA): probatio.Any(dict, list),
         }
     ),
-    vol.Schema(
+    probatio.Schema(
         {
-            vol.Required(ATTR_WEBHOOK_TYPE): cv.string,
-            vol.Required(ATTR_WEBHOOK_ENCRYPTED): True,
-            vol.Optional(ATTR_WEBHOOK_ENCRYPTED_DATA): cv.string,
+            probatio.Required(ATTR_WEBHOOK_TYPE): cv.string,
+            probatio.Required(ATTR_WEBHOOK_ENCRYPTED): True,
+            probatio.Optional(ATTR_WEBHOOK_ENCRYPTED_DATA): cv.string,
         }
     ),
 )
 
-SENSOR_SCHEMA_FULL = vol.Schema(
+SENSOR_SCHEMA_FULL = probatio.Schema(
     {
-        vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
-        vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): vol.Any(None, cv.icon),
-        vol.Required(ATTR_SENSOR_STATE): vol.Any(None, bool, int, float, str),
-        vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
-        vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
+        probatio.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
+        probatio.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): probatio.Any(
+            None, cv.icon
+        ),
+        probatio.Required(ATTR_SENSOR_STATE): probatio.Any(None, bool, int, float, str),
+        probatio.Required(ATTR_SENSOR_TYPE): probatio.In(SENSOR_TYPES),
+        probatio.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
     }
 )
 
@@ -156,7 +159,7 @@ SENSOR_SCHEMA_FULL = vol.Schema(
 def validate_schema(schema):
     """Decorate a webhook function with a schema."""
     if isinstance(schema, dict):
-        schema = vol.Schema(schema)
+        schema = probatio.Schema(schema)
 
     def wrapper(func):
         """Wrap function so we validate schema."""
@@ -166,7 +169,7 @@ def validate_schema(schema):
             """Validate input and call handler."""
             try:
                 data = schema(data)
-            except vol.Invalid as ex:
+            except probatio.Invalid as ex:
                 err = humanize_error(data, ex)
                 _LOGGER.error("Received invalid webhook payload: %s", err)
                 return empty_okay_response()
@@ -207,7 +210,7 @@ async def handle_webhook(
 
     try:
         req_data = WEBHOOK_PAYLOAD_SCHEMA(req_data)
-    except vol.Invalid as ex:
+    except probatio.Invalid as ex:
         err = humanize_error(req_data, ex)
         _LOGGER.error(
             "Received invalid webhook from %s with payload: %s", device_name, err
@@ -269,9 +272,9 @@ async def handle_webhook(
 @WEBHOOK_COMMANDS.register("call_service")
 @validate_schema(
     {
-        vol.Required(ATTR_DOMAIN): cv.string,
-        vol.Required(ATTR_SERVICE): cv.string,
-        vol.Optional(ATTR_SERVICE_DATA, default={}): dict,
+        probatio.Required(ATTR_DOMAIN): cv.string,
+        probatio.Required(ATTR_SERVICE): cv.string,
+        probatio.Optional(ATTR_SERVICE_DATA, default={}): dict,
     }
 )
 async def webhook_call_service(
@@ -286,7 +289,7 @@ async def webhook_call_service(
             blocking=True,
             context=registration_context(config_entry.data),
         )
-    except (vol.Invalid, ServiceNotFound, Exception) as ex:
+    except (probatio.Invalid, ServiceNotFound, Exception) as ex:
         _LOGGER.error(
             (
                 "Error when calling service during mobile_app "
@@ -303,8 +306,8 @@ async def webhook_call_service(
 @WEBHOOK_COMMANDS.register("fire_event")
 @validate_schema(
     {
-        vol.Required(ATTR_EVENT_TYPE): cv.string,
-        vol.Optional(ATTR_EVENT_DATA, default={}): dict,
+        probatio.Required(ATTR_EVENT_TYPE): cv.string,
+        probatio.Optional(ATTR_EVENT_DATA, default={}): dict,
     }
 )
 async def webhook_fire_event(
@@ -324,9 +327,9 @@ async def webhook_fire_event(
 @WEBHOOK_COMMANDS.register("conversation_process")
 @validate_schema(
     {
-        vol.Required("text"): cv.string,
-        vol.Optional("language"): cv.string,
-        vol.Optional("conversation_id"): cv.string,
+        probatio.Required("text"): cv.string,
+        probatio.Optional("language"): cv.string,
+        probatio.Optional("conversation_id"): cv.string,
     }
 )
 async def webhook_conversation_process(
@@ -344,7 +347,7 @@ async def webhook_conversation_process(
 
 
 @WEBHOOK_COMMANDS.register("stream_camera")
-@validate_schema({vol.Required(ATTR_CAMERA_ENTITY_ID): cv.string})
+@validate_schema({probatio.Required(ATTR_CAMERA_ENTITY_ID): cv.string})
 async def webhook_stream_camera(
     hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, str]
 ) -> Response:
@@ -386,8 +389,8 @@ def _cached_template(template_str: str, hass: HomeAssistant) -> template.Templat
 @validate_schema(
     {
         str: {
-            vol.Required(ATTR_TEMPLATE): cv.string,
-            vol.Optional(ATTR_TEMPLATE_VARIABLES, default={}): dict,
+            probatio.Required(ATTR_TEMPLATE): cv.string,
+            probatio.Optional(ATTR_TEMPLATE_VARIABLES, default={}): dict,
         }
     }
 )
@@ -421,12 +424,12 @@ async def webhook_update_location(
 @WEBHOOK_COMMANDS.register("update_registration")
 @validate_schema(
     {
-        vol.Optional(ATTR_APP_DATA): SCHEMA_APP_DATA,
-        vol.Required(ATTR_APP_VERSION): cv.string,
-        vol.Required(ATTR_DEVICE_NAME): cv.string,
-        vol.Required(ATTR_MANUFACTURER): cv.string,
-        vol.Required(ATTR_MODEL): cv.string,
-        vol.Optional(ATTR_OS_VERSION): cv.string,
+        probatio.Optional(ATTR_APP_DATA): SCHEMA_APP_DATA,
+        probatio.Required(ATTR_APP_VERSION): cv.string,
+        probatio.Required(ATTR_DEVICE_NAME): cv.string,
+        probatio.Required(ATTR_MANUFACTURER): cv.string,
+        probatio.Required(ATTR_MODEL): cv.string,
+        probatio.Optional(ATTR_OS_VERSION): cv.string,
     }
 )
 async def webhook_update_registration(
@@ -489,7 +492,7 @@ def _validate_state_class_sensor(value: dict[str, Any]) -> dict[str, Any]:
         ATTR_SENSOR_STATE_CLASS in value
         and value[ATTR_SENSOR_TYPE] != ATTR_SENSOR_TYPE_SENSOR
     ):
-        raise vol.Invalid("state_class only allowed for sensors")
+        raise probatio.Invalid("state_class only allowed for sensors")
 
     return value
 
@@ -506,31 +509,31 @@ def _extract_sensor_unique_id(webhook_id: str, unique_id: str) -> str:
 
 @WEBHOOK_COMMANDS.register("register_sensor")
 @validate_schema(
-    vol.All(
+    probatio.All(
         {
-            vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
-            vol.Optional(ATTR_SENSOR_DEVICE_CLASS): vol.Any(
+            probatio.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
+            probatio.Optional(ATTR_SENSOR_DEVICE_CLASS): probatio.Any(
                 None,
-                vol.All(vol.Lower, vol.Coerce(BinarySensorDeviceClass)),
-                vol.All(vol.Lower, vol.Coerce(SensorDeviceClass)),
+                probatio.All(probatio.Lower, probatio.Coerce(BinarySensorDeviceClass)),
+                probatio.All(probatio.Lower, probatio.Coerce(SensorDeviceClass)),
             ),
-            vol.Required(ATTR_SENSOR_NAME): cv.string,
-            vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
-            vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
-            vol.Optional(ATTR_SENSOR_UOM): vol.Any(None, cv.string),
-            vol.Optional(ATTR_SENSOR_STATE, default=None): vol.Any(
+            probatio.Required(ATTR_SENSOR_NAME): cv.string,
+            probatio.Required(ATTR_SENSOR_TYPE): probatio.In(SENSOR_TYPES),
+            probatio.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
+            probatio.Optional(ATTR_SENSOR_UOM): probatio.Any(None, cv.string),
+            probatio.Optional(ATTR_SENSOR_STATE, default=None): probatio.Any(
                 None, bool, int, float, str
             ),
-            vol.Optional(ATTR_SENSOR_ENTITY_CATEGORY): vol.Any(
-                None, vol.Coerce(EntityCategory)
+            probatio.Optional(ATTR_SENSOR_ENTITY_CATEGORY): probatio.Any(
+                None, probatio.Coerce(EntityCategory)
             ),
-            vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): vol.Any(
+            probatio.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): probatio.Any(
                 None, cv.icon
             ),
-            vol.Optional(ATTR_SENSOR_STATE_CLASS): vol.Any(
-                None, vol.Coerce(SensorStateClass)
+            probatio.Optional(ATTR_SENSOR_STATE_CLASS): probatio.Any(
+                None, probatio.Coerce(SensorStateClass)
             ),
-            vol.Optional(ATTR_SENSOR_DISABLED): bool,
+            probatio.Optional(ATTR_SENSOR_DISABLED): bool,
         },
         _validate_state_class_sensor,
     )
@@ -608,18 +611,18 @@ async def webhook_register_sensor(
 
 @WEBHOOK_COMMANDS.register("update_sensor_states")
 @validate_schema(
-    vol.All(
+    probatio.All(
         cv.ensure_list,
         [
             # Partial schema, enough to identify schema.
             # We don't validate everything because otherwise 1 invalid sensor
             # will invalidate all sensors.
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
-                    vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
+                    probatio.Required(ATTR_SENSOR_TYPE): probatio.In(SENSOR_TYPES),
+                    probatio.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
                 },
-                extra=vol.ALLOW_EXTRA,
+                extra=probatio.ALLOW_EXTRA,
             )
         ],
     )
@@ -658,7 +661,7 @@ async def webhook_update_sensor_states(
 
         try:
             sensor = SENSOR_SCHEMA_FULL(sensor)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             err_msg = humanize_error(sensor, err)
             _LOGGER.error(
                 "Received invalid sensor payload from %s for %s: %s",
@@ -736,6 +739,7 @@ async def webhook_get_config(
         "longitude": hass_config["longitude"],
         "elevation": hass_config["elevation"],
         "hass_device_id": device.id,
+        "instance_id": await instance_id.async_get(hass),
         "unit_system": hass_config["unit_system"],
         "location_name": hass_config["location_name"],
         "time_zone": hass_config["time_zone"],
@@ -771,7 +775,7 @@ async def webhook_get_config(
 
 
 @WEBHOOK_COMMANDS.register("scan_tag")
-@validate_schema({vol.Required("tag_id"): cv.string})
+@validate_schema({probatio.Required("tag_id"): cv.string})
 async def webhook_scan_tag(
     hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, str]
 ) -> Response:

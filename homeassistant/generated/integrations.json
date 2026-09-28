@@ -669,6 +669,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "axle_energy": {
+      "name": "Axle Energy",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "backblaze_b2": {
       "name": "Backblaze B2",
       "integration_type": "service",
@@ -1306,6 +1312,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "de_dietrich": {
+      "name": "De Dietrich",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "deako": {
       "name": "Deako",
       "integration_type": "hub",
@@ -1444,8 +1456,8 @@
     },
     "discogs": {
       "name": "Discogs",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "discord": {
@@ -1553,12 +1565,6 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
-    },
-    "dublin_bus_transport": {
-      "name": "Dublin Bus",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
     },
     "duckdns": {
       "name": "Duck DNS",
@@ -2775,10 +2781,21 @@
       "iot_class": "local_push"
     },
     "gree": {
-      "name": "Gree Climate",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
+      "name": "Gree",
+      "integrations": {
+        "gree": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Gree Climate"
+        },
+        "gree_infrared": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "name": "Gree Infrared"
+        }
+      }
     },
     "green_planet_energy": {
       "name": "Green Planet Energy",
@@ -3349,6 +3366,12 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "indi_allsky": {
+      "name": "INDI Allsky",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "indianamichiganpower": {
       "name": "Indiana Michigan Power",
@@ -5196,6 +5219,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "onida_infrared": {
+      "name": "Onida Infrared",
+      "integration_type": "virtual",
+      "supported_by": "gree_infrared"
+    },
     "onkyo": {
       "name": "Onkyo",
       "integration_type": "device",
@@ -5351,12 +5379,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "oru": {
-      "name": "Orange and Rockland Utility (ORU)",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "oru_opower": {
       "name": "Orange and Rockland Utilities (ORU) Opower",
       "integration_type": "virtual",
@@ -5373,6 +5395,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "osram_infrared": {
+      "name": "OSRAM Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
     },
     "osramlightify": {
       "name": "Osramlightify",
@@ -6595,12 +6623,6 @@
       "integration_type": "virtual",
       "supported_by": "home_connect"
     },
-    "sigfox": {
-      "name": "Sigfox",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "sighthound": {
       "name": "Sighthound",
       "integration_type": "hub",
@@ -6852,12 +6874,6 @@
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "SolarEdge"
-        },
-        "solaredge_local": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "local_polling",
-          "name": "SolarEdge Local"
         },
         "solaredge_modbus": {
           "integration_type": "device",
@@ -7410,6 +7426,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "theben_conexa": {
+      "name": "Theben Conexa Smart Meter Gateway",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "thermador": {
       "name": "Thermador",
       "integration_type": "virtual",
@@ -7469,6 +7491,12 @@
       "config_flow": true,
       "iot_class": "local_polling",
       "single_config_entry": true
+    },
+    "threema": {
+      "name": "Threema",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "tibber": {
       "name": "Tibber",
@@ -7678,12 +7706,6 @@
     },
     "transport_nsw": {
       "name": "Transport NSW",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
-    "travisci": {
-      "name": "Travis-CI",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -8070,8 +8092,8 @@
     },
     "volkszaehler": {
       "name": "Volkszaehler",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "volumio": {

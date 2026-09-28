@@ -10,11 +10,11 @@ from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 from propcache.api import cached_property
 import pytest
 from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentryData
 from homeassistant.const import (
@@ -979,7 +979,7 @@ async def test_entity_category_property(hass: HomeAssistant) -> None:
 )
 def test_entity_category_schema(value, expected) -> None:
     """Test entity category schema."""
-    schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
+    schema = probatio.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
     result = schema(value)
     assert result == expected
     assert isinstance(result, EntityCategory)
@@ -988,9 +988,9 @@ def test_entity_category_schema(value, expected) -> None:
 @pytest.mark.parametrize("value", [None, "non_existing"])
 def test_entity_category_schema_error(value) -> None:
     """Test entity category schema."""
-    schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
+    schema = probatio.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
     with pytest.raises(
-        vol.Invalid,
+        probatio.Invalid,
         match=r"expected EntityCategory or one of 'config', 'diagnostic'",
     ):
         schema(value)

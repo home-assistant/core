@@ -49,9 +49,11 @@ def _downgrade_device_registry_deprecation_reports(
     """Keep the deprecated device registry APIs from raising in tests.
 
     async_get_device, async_is_composite_device_id, the config entry parameters and
-    merge_connections/merge_identifiers parameters of async_update_device, and via_device
-    on async_get_or_create are deprecated and raise for core and core integration callers,
-    disable them here so we can run tests without triggering deprecation errors.
+    merge_connections/merge_identifiers parameters of async_update_device, via_device
+    on async_get_or_create, and the config_entries, config_entries_subentries and
+    primary_config_entry properties are deprecated and raise for core and core
+    integration callers, disable them here so we can run tests without triggering
+    deprecation errors.
 
     Tests which use `mock_integration_frame` will not be affected by this fixture, so
     they can test the deprecation.
@@ -8621,6 +8623,155 @@ async def test_single_config_entry_and_compat_properties(
     assert device.primary_config_entry == entry.entry_id
 
 
+_DEPRECATED_CONFIG_ENTRIES_PROPERTIES = [
+    "config_entries",
+    "config_entries_subentries",
+    "primary_config_entry",
+]
+
+
+@pytest.mark.parametrize("property_name", _DEPRECATED_CONFIG_ENTRIES_PROPERTIES)
+@pytest.mark.parametrize(
+    ("integration_frame_path", "expectation", "expected_log"),
+    [
+        pytest.param(
+            "homeassistant/test_core", pytest.raises(RuntimeError), 0, id="core"
+        ),
+        pytest.param(
+            "homeassistant/components/test_integration",
+            pytest.raises(RuntimeError),
+            1,
+            id="core integration",
+        ),
+        pytest.param(
+            "custom_components/test_integration",
+            nullcontext(),
+            1,
+            id="custom integration",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_deprecated_config_entries_properties(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    property_name: str,
+    expectation: AbstractContextManager,
+    expected_log: int,
+) -> None:
+    """Test the multi-config-entry compatibility properties are deprecated.
+
+    They log for custom integrations and raise for core and core integrations. Use
+    config_entry_id and config_subentry_id instead.
+    """
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id, identifiers={("test", "1")}
+    )
+
+    what = f"accesses `DeviceEntry.{property_name}`"
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expectation:
+        getattr(device, property_name)
+
+    assert caplog.text.count(what) == expected_log
+
+
+@pytest.mark.parametrize("property_name", _DEPRECATED_CONFIG_ENTRIES_PROPERTIES)
+@pytest.mark.parametrize(
+    "integration_frame_path",
+    [
+        pytest.param("homeassistant/test_core", id="core"),
+        pytest.param(
+            "homeassistant/components/test_integration", id="core integration"
+        ),
+        pytest.param("custom_components/test_integration", id="custom integration"),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_deprecated_config_entries_properties_composite_exempt(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    property_name: str,
+) -> None:
+    """Test a restored composite device is exempt from the deprecation.
+
+    A composite really does span several config entries, so the properties are the
+    correct API for it and reading them must not report, for any caller.
+    """
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "2")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry._devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id
+    )
+    device_registry._devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id
+    )
+    composite = device_registry.async_get(old_id)
+    assert composite.is_composite_device is True
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        getattr(composite, property_name)
+
+    assert f"DeviceEntry.{property_name}" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "property_name", ["config_entries", "config_entries_subentries"]
+)
+@pytest.mark.parametrize(
+    ("integration_frame_path", "expectation", "expected_log"),
+    [
+        pytest.param(
+            "homeassistant/test_core", pytest.raises(RuntimeError), 0, id="core"
+        ),
+        pytest.param(
+            "homeassistant/components/test_integration",
+            pytest.raises(RuntimeError),
+            1,
+            id="core integration",
+        ),
+        pytest.param(
+            "custom_components/test_integration",
+            nullcontext(),
+            1,
+            id="custom integration",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_deprecated_config_entries_properties_deleted_device(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    property_name: str,
+    expectation: AbstractContextManager,
+    expected_log: int,
+) -> None:
+    """Test the compatibility properties are deprecated on a deleted device too."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id, identifiers={("test", "1")}
+    )
+    device_registry.async_remove_device(device.id)
+    deleted_device = device_registry._deleted_devices[device.id]
+
+    what = f"accesses `DeletedDeviceEntry.{property_name}`"
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expectation:
+        getattr(deleted_device, property_name)
+
+    assert caplog.text.count(what) == expected_log
+
+
 async def test_identifiers_unique_per_config_entry(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -12444,6 +12595,48 @@ async def test_child_device_config_entry_compat_shims(
         mock_config_entry.entry_id: {None}
     }
     assert child_device.primary_config_entry == mock_config_entry.entry_id
+
+
+@pytest.mark.parametrize("property_name", _DEPRECATED_CONFIG_ENTRIES_PROPERTIES)
+@pytest.mark.parametrize(
+    ("integration_frame_path", "expectation", "expected_log"),
+    [
+        pytest.param(
+            "homeassistant/test_core", pytest.raises(RuntimeError), 0, id="core"
+        ),
+        pytest.param(
+            "homeassistant/components/test_integration",
+            pytest.raises(RuntimeError),
+            1,
+            id="core integration",
+        ),
+        pytest.param(
+            "custom_components/test_integration",
+            nullcontext(),
+            1,
+            id="custom integration",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_deprecated_config_entries_properties_child_device(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    property_name: str,
+    expectation: AbstractContextManager,
+    expected_log: int,
+) -> None:
+    """Test the compatibility properties are deprecated on a child device too."""
+    _, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    what = f"accesses `ChildDeviceEntry.{property_name}`"
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expectation:
+        getattr(child_device, property_name)
+
+    assert caplog.text.count(what) == expected_log
 
 
 @pytest.mark.usefixtures("hass")

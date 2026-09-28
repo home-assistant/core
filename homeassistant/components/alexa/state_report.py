@@ -592,7 +592,7 @@ async def async_send_doorbell_event_message(
         )
         _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
-    if response.status == HTTPStatus.ACCEPTED:
+    if response.status in (HTTPStatus.ACCEPTED, HTTPStatus.NO_CONTENT):
         return
 
     response_json = json_loads_object(response_text)

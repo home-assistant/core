@@ -2,8 +2,8 @@
 
 from dataclasses import dataclass
 
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant.const import Platform
 from homeassistant.exceptions import HomeAssistantError
@@ -271,7 +271,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "drop_connect",
     "dsmr",
     "dsmr_reader",
-    "dublin_bus_transport",
     "dunehd",
     "duotecno",
     "dwd_weather_warnings",
@@ -587,7 +586,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "moehlenhoff_alpha2",
     "mold_indicator",
     "monoprice",
-    "monzo",
     "moon",
     "mopeka",
     "motion_blinds",
@@ -667,7 +665,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "opnsense",
     "opple",
     "oralb",
-    "oru",
     "orvibo",
     "osoenergy",
     "osramlightify",
@@ -800,7 +797,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "shodan",
     "shopping_list",
     "sia",
-    "sigfox",
     "sighthound",
     "signal_messenger",
     "simplefin",
@@ -828,7 +824,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "snmp",
     "snooz",
     "solaredge",
-    "solaredge_local",
     "solax",
     "soma",
     "somfy_mylink",
@@ -852,7 +847,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "steamist",
     "stream",
     "streamlabswater",
-    "subaru",
     "sun",
     "sunweg",
     "supervisord",
@@ -918,7 +912,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "trafikverket_train",
     "trafikverket_weatherstation",
     "transport_nsw",
-    "travisci",
     "trend",
     "triggercmd",
     "tuya",
@@ -953,7 +946,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "viaggiatreno",
     "vilfo",
     "vivotek",
-    "vizio",
     "vlc_telnet",
     "voicerss",
     "voip",
@@ -1034,7 +1026,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "aemet",
     "aftership",
     "agent_dvr",
-    "airly",
     "airnow",
     "airq",
     "airthings",
@@ -1195,7 +1186,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "drop_connect",
     "dsmr",
     "dsmr_reader",
-    "dublin_bus_transport",
     "dunehd",
     "duotecno",
     "dwd_weather_warnings",
@@ -1527,7 +1517,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "mold_indicator",
     "monarch_money",
     "monoprice",
-    "monzo",
     "moon",
     "mopeka",
     "motion_blinds",
@@ -1611,7 +1600,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "opnsense",
     "opple",
     "oralb",
-    "oru",
     "orvibo",
     "osoenergy",
     "osramlightify",
@@ -1749,7 +1737,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "shodan",
     "shopping_list",
     "sia",
-    "sigfox",
     "sighthound",
     "signal_messenger",
     "simplefin",
@@ -1778,7 +1765,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "snmp",
     "snooz",
     "solaredge",
-    "solaredge_local",
     "solax",
     "soma",
     "somfy_mylink",
@@ -1805,7 +1791,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "stream",
     "streamlabswater",
     "stookwijzer",
-    "subaru",
     "sun",
     "sunweg",
     "supervisord",
@@ -1876,7 +1861,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "trafikverket_train",
     "trafikverket_weatherstation",
     "transport_nsw",
-    "travisci",
     "trend",
     "triggercmd",
     "tuya",
@@ -1912,7 +1896,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "viaggiatreno",
     "vilfo",
     "vivotek",
-    "vizio",
     "vlc_telnet",
     "voicerss",
     "voip",
@@ -2064,22 +2047,22 @@ NO_QUALITY_SCALE = [
     "zone",
 ]
 
-SCHEMA = vol.Schema(
+SCHEMA = probatio.Schema(
     {
-        vol.Required("rules"): vol.Schema(
+        probatio.Required("rules"): probatio.Schema(
             {
-                vol.Required(rule.name): vol.Any(
-                    vol.In(["todo", "done"]),
-                    vol.Schema(
+                probatio.Required(rule.name): probatio.Any(
+                    probatio.In(["todo", "done"]),
+                    probatio.Schema(
                         {
-                            vol.Required("status"): vol.In(["todo", "done"]),
-                            vol.Required("comment"): str,
+                            probatio.Required("status"): probatio.In(["todo", "done"]),
+                            probatio.Required("comment"): str,
                         }
                     ),
-                    vol.Schema(
+                    probatio.Schema(
                         {
-                            vol.Required("status"): "exempt",
-                            vol.Required("comment"): str,
+                            probatio.Required("status"): "exempt",
+                            probatio.Required("comment"): str,
                         }
                     ),
                 )
@@ -2186,7 +2169,7 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
 
     try:
         SCHEMA(data)
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         integration.add_error(
             "quality_scale", f"Invalid {name}: {humanize_error(data, err)}"
         )

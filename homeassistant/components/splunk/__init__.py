@@ -8,7 +8,7 @@ from typing import Any
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from hass_splunk import SplunkPayloadError, hass_splunk
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -52,21 +52,21 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_FILTER: HassKey[EntityFilter] = HassKey(DOMAIN)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_TOKEN): cv.string,
-                vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-                vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
+                probatio.Optional(CONF_TOKEN): cv.string,
+                probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+                probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+                probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+                probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                probatio.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

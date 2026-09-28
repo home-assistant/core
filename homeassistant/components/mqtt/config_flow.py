@@ -21,7 +21,7 @@ from cryptography.hazmat.primitives.serialization import (
     load_pem_private_key,
 )
 from cryptography.x509 import load_der_x509_certificate, load_pem_x509_certificate
-import voluptuous as vol
+import probatio
 import yaml
 
 from homeassistant.components.climate import (
@@ -544,17 +544,17 @@ CERT_KEY_UPLOAD_SELECTOR = FileSelector(
 CERT_UPLOAD_SELECTOR = FileSelector(
     FileSelectorConfig(accept=".pem,.crt,.cer,.der,application/x-x509-user-cert")
 )
-KEEPALIVE_SELECTOR = vol.All(
+KEEPALIVE_SELECTOR = probatio.All(
     NumberSelector(
         NumberSelectorConfig(
             mode=NumberSelectorMode.BOX, min=15, step="any", unit_of_measurement="sec"
         )
     ),
-    vol.Coerce(int),
+    probatio.Coerce(int),
 )
-PORT_SELECTOR = vol.All(
+PORT_SELECTOR = probatio.All(
     NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=65535)),
-    vol.Coerce(int),
+    probatio.Coerce(int),
 )
 PROTOCOL_SELECTOR = SelectSelector(
     SelectSelectorConfig(
@@ -586,14 +586,14 @@ ENTITY_CATEGORY_SELECTOR = SelectSelector(
         sort=True,
     )
 )
-SUBENTRY_AVAILABILITY_SCHEMA = vol.Schema(
+SUBENTRY_AVAILABILITY_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_AVAILABILITY_TOPIC): TEXT_SELECTOR,
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): TEMPLATE_SELECTOR,
-        vol.Optional(
+        probatio.Optional(CONF_AVAILABILITY_TOPIC): TEXT_SELECTOR,
+        probatio.Optional(CONF_AVAILABILITY_TEMPLATE): TEMPLATE_SELECTOR,
+        probatio.Optional(
             CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
         ): TEXT_SELECTOR,
-        vol.Optional(
+        probatio.Optional(
             CONF_PAYLOAD_NOT_AVAILABLE, default=DEFAULT_PAYLOAD_NOT_AVAILABLE
         ): TEXT_SELECTOR,
     }
@@ -642,13 +642,13 @@ CLIMATE_MODE_SELECTOR = SelectSelector(
 COVER_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
     DeviceClassSelectorConfig(domain=Platform.COVER)
 )
-FAN_SPEED_RANGE_MIN_SELECTOR = vol.All(
+FAN_SPEED_RANGE_MIN_SELECTOR = probatio.All(
     NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1)),
-    vol.Coerce(int),
+    probatio.Coerce(int),
 )
-FAN_SPEED_RANGE_MAX_SELECTOR = vol.All(
+FAN_SPEED_RANGE_MAX_SELECTOR = probatio.All(
     NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=2)),
-    vol.Coerce(int),
+    probatio.Coerce(int),
 )
 FLASH_TIME_SELECTOR = NumberSelector(
     NumberSelectorConfig(
@@ -656,11 +656,11 @@ FLASH_TIME_SELECTOR = NumberSelector(
         min=1,
     )
 )
-HUMIDITY_SELECTOR = vol.All(
+HUMIDITY_SELECTOR = probatio.All(
     NumberSelector(
         NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=100, step=1)
     ),
-    vol.Coerce(int),
+    probatio.Coerce(int),
 )
 IMAGE_CONTENT_TYPE_SELECTOR = SelectSelector(
     SelectSelectorConfig(
@@ -868,7 +868,7 @@ def default_precision(config: dict[str, Any]) -> str:
 def no_empty_list(value: list[Any]) -> list[Any]:
     """Validate a selector returns at least one item."""
     if not value:
-        raise vol.Invalid("empty_list_not_allowed")
+        raise probatio.Invalid("empty_list_not_allowed")
     return value
 
 
@@ -984,7 +984,7 @@ def validate_field(
         return
     try:
         user_input[field] = validator(user_input[field])
-    except ValueError, vol.Error, vol.Invalid:
+    except ValueError, probatio.Error, probatio.Invalid:
         errors[field] = error
 
 
@@ -1223,8 +1223,8 @@ class PlatformField:
     required: bool
     validator: Callable[[Any], Any] | None = None
     error: str | None = None
-    default: Any | Callable[[dict[str, Any]], Any] | vol.Undefined | None = (
-        vol.UNDEFINED
+    default: Any | Callable[[dict[str, Any]], Any] | probatio.Undefined | None = (
+        probatio.UNDEFINED
     )
     is_schema_default: bool = False
     include_in_config: bool = False
@@ -3818,7 +3818,7 @@ def data_schema_from_fields(
     component_data: dict[str, Any] | None = None,
     user_input: dict[str, Any] | None = None,
     device_data: MqttDeviceData | None = None,
-) -> vol.Schema:
+) -> probatio.Schema:
     """Generate custom data schema from platform fields or device data."""
 
     def get_default(field_details: PlatformField) -> Any:
@@ -3861,13 +3861,13 @@ def data_schema_from_fields(
         # Getting the default value may update the subentry data,
         # even when and option is filtered out
         data_schema_element = {
-            vol.Required(field_name, default=defaults[field_name])
+            probatio.Required(field_name, default=defaults[field_name])
             if field_details.required
-            else vol.Optional(
+            else probatio.Optional(
                 field_name,
                 default=defaults[field_name]
                 if field_details.default is not None
-                else vol.UNDEFINED,
+                else probatio.UNDEFINED,
             ): field_details.selector(component_data_with_user_input or {})
             if callable(field_details.selector) and field_details.custom_filtering
             else field_details.selector
@@ -3894,7 +3894,8 @@ def data_schema_from_fields(
         # Collapse if no values are changed and no required fields need to be set
         collapsed = (
             not any(
-                (default := data_schema_fields[str(option)].default) is vol.UNDEFINED
+                (default := data_schema_fields[str(option)].default)
+                is probatio.UNDEFINED
                 or (
                     str(option) in component_data_with_user_input
                     and component_data_with_user_input[str(option)] != default
@@ -3909,8 +3910,9 @@ def data_schema_from_fields(
             if component_data_with_user_input is not None
             else True
         )
-        data_schema[vol.Optional(schema_section)] = section(
-            vol.Schema(data_schema_element), SectionConfig({"collapsed": collapsed})
+        data_schema[probatio.Optional(schema_section)] = section(
+            probatio.Schema(data_schema_element),
+            SectionConfig({"collapsed": collapsed}),
         )
 
     # Reset all fields from the component_data not in the schema
@@ -3925,7 +3927,7 @@ def data_schema_from_fields(
                 and not data_schema_fields[field].include_in_config
             ):
                 del component_data[field]
-    return vol.Schema(data_schema)
+    return probatio.Schema(data_schema)
 
 
 @callback
@@ -3952,7 +3954,7 @@ def validate_user_input(
             merged_user_input[field] = (
                 validator(value) if validator is not None else value
             )
-        except ValueError, vol.Error, vol.Invalid:
+        except ValueError, probatio.Error, probatio.Invalid:
             data_schema_field = data_schema_fields[field]
             errors[data_schema_field.section or field] = (
                 data_schema_field.error or "invalid_input"
@@ -3983,7 +3985,7 @@ def subentry_schema_default_data_from_fields(
         if _check_conditions(field, component_data)
         and (
             field.is_schema_default
-            or (field.default is not vol.UNDEFINED and key not in component_data)
+            or (field.default is not probatio.UNDEFINED and key not in component_data)
         )
     }
 
@@ -4009,37 +4011,39 @@ def update_password_from_user_input(
         user_input[CONF_PASSWORD] = password
 
 
-REAUTH_SCHEMA = vol.Schema(
+REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): TEXT_SELECTOR,
-        vol.Required(CONF_PASSWORD): PASSWORD_SELECTOR,
+        probatio.Required(CONF_USERNAME): TEXT_SELECTOR,
+        probatio.Required(CONF_PASSWORD): PASSWORD_SELECTOR,
     }
 )
 
-OTHER_SETTINGS_SCHEMA = vol.Schema(
+OTHER_SETTINGS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_CLIENT_ID): TEXT_SELECTOR,
-        vol.Optional(CONF_KEEPALIVE): KEEPALIVE_SELECTOR,
-        vol.Required(SET_CLIENT_CERT): BOOLEAN_SELECTOR,
-        vol.Optional(CONF_CLIENT_CERT): CERT_UPLOAD_SELECTOR,
-        vol.Optional(CONF_CLIENT_KEY): CERT_KEY_UPLOAD_SELECTOR,
-        vol.Optional(CONF_CLIENT_KEY_PASSWORD): PASSWORD_SELECTOR,
-        vol.Required(SET_CA_CERT): BROKER_VERIFICATION_SELECTOR,
-        vol.Optional(CONF_CERTIFICATE): CA_CERT_UPLOAD_SELECTOR,
-        vol.Optional(CONF_TLS_INSECURE): BOOLEAN_SELECTOR,
-        vol.Required(CONF_TRANSPORT, default=DEFAULT_TRANSPORT): TRANSPORT_SELECTOR,
-        vol.Optional(CONF_WS_PATH): TEXT_SELECTOR,
-        vol.Optional(CONF_WS_HEADERS): WS_HEADERS_SELECTOR,
+        probatio.Optional(CONF_CLIENT_ID): TEXT_SELECTOR,
+        probatio.Optional(CONF_KEEPALIVE): KEEPALIVE_SELECTOR,
+        probatio.Required(SET_CLIENT_CERT): BOOLEAN_SELECTOR,
+        probatio.Optional(CONF_CLIENT_CERT): CERT_UPLOAD_SELECTOR,
+        probatio.Optional(CONF_CLIENT_KEY): CERT_KEY_UPLOAD_SELECTOR,
+        probatio.Optional(CONF_CLIENT_KEY_PASSWORD): PASSWORD_SELECTOR,
+        probatio.Required(SET_CA_CERT): BROKER_VERIFICATION_SELECTOR,
+        probatio.Optional(CONF_CERTIFICATE): CA_CERT_UPLOAD_SELECTOR,
+        probatio.Optional(CONF_TLS_INSECURE): BOOLEAN_SELECTOR,
+        probatio.Required(
+            CONF_TRANSPORT, default=DEFAULT_TRANSPORT
+        ): TRANSPORT_SELECTOR,
+        probatio.Optional(CONF_WS_PATH): TEXT_SELECTOR,
+        probatio.Optional(CONF_WS_HEADERS): WS_HEADERS_SELECTOR,
     }
 )
-CONFIG_DATAFLOW_SCHEMA = vol.Schema(
+CONFIG_DATAFLOW_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_BROKER): TEXT_SELECTOR,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): PORT_SELECTOR,
-        vol.Required(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): PROTOCOL_SELECTOR,
-        vol.Optional(CONF_USERNAME): TEXT_SELECTOR,
-        vol.Optional(CONF_PASSWORD): PASSWORD_SELECTOR,
-        vol.Required(OTHER_SETTINGS): section(
+        probatio.Required(CONF_BROKER): TEXT_SELECTOR,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): PORT_SELECTOR,
+        probatio.Required(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): PROTOCOL_SELECTOR,
+        probatio.Optional(CONF_USERNAME): TEXT_SELECTOR,
+        probatio.Optional(CONF_PASSWORD): PASSWORD_SELECTOR,
+        probatio.Required(OTHER_SETTINGS): section(
             OTHER_SETTINGS_SCHEMA, SectionConfig({"collapsed": True})
         ),
     }
@@ -4484,7 +4488,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
             try:
                 option_values = schema(values)
                 options_config[field] = option_values
-            except vol.Invalid:
+            except probatio.Invalid:
                 errors["base"] = error_code
                 bad_input = True
 
@@ -4534,62 +4538,62 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         discovery_qos = options_config.get(CONF_DISCOVERY_QOS, DEFAULT_QOS)
 
         # build form
-        fields: OrderedDict[vol.Marker, Any] = OrderedDict()
-        fields[vol.Optional(CONF_DISCOVERY, default=discovery)] = BOOLEAN_SELECTOR
-        fields[vol.Optional(CONF_DISCOVERY_PREFIX, default=discovery_prefix)] = (
+        fields: OrderedDict[probatio.Marker, Any] = OrderedDict()
+        fields[probatio.Optional(CONF_DISCOVERY, default=discovery)] = BOOLEAN_SELECTOR
+        fields[probatio.Optional(CONF_DISCOVERY_PREFIX, default=discovery_prefix)] = (
             PUBLISH_TOPIC_SELECTOR
         )
-        fields[vol.Optional("discovery_qos", default=discovery_qos)] = QOS_SELECTOR
+        fields[probatio.Optional("discovery_qos", default=discovery_qos)] = QOS_SELECTOR
 
         # Birth message is disabled if CONF_BIRTH_MESSAGE = {}
         fields[
-            vol.Optional(
+            probatio.Optional(
                 "birth_enable",
                 default=CONF_BIRTH_MESSAGE not in options_config
                 or options_config[CONF_BIRTH_MESSAGE] != {},
             )
         ] = BOOLEAN_SELECTOR
         fields[
-            vol.Optional(
+            probatio.Optional(
                 "birth_topic", description={"suggested_value": birth[ATTR_TOPIC]}
             )
         ] = PUBLISH_TOPIC_SELECTOR
         fields[
-            vol.Optional(
+            probatio.Optional(
                 "birth_payload", description={"suggested_value": birth[CONF_PAYLOAD]}
             )
         ] = TEXT_SELECTOR
-        fields[vol.Optional("birth_qos", default=birth[ATTR_QOS])] = QOS_SELECTOR
-        fields[vol.Optional("birth_retain", default=birth[ATTR_RETAIN])] = (
+        fields[probatio.Optional("birth_qos", default=birth[ATTR_QOS])] = QOS_SELECTOR
+        fields[probatio.Optional("birth_retain", default=birth[ATTR_RETAIN])] = (
             BOOLEAN_SELECTOR
         )
 
         # Will message is disabled if CONF_WILL_MESSAGE = {}
         fields[
-            vol.Optional(
+            probatio.Optional(
                 "will_enable",
                 default=CONF_WILL_MESSAGE not in options_config
                 or options_config[CONF_WILL_MESSAGE] != {},
             )
         ] = BOOLEAN_SELECTOR
         fields[
-            vol.Optional(
+            probatio.Optional(
                 "will_topic", description={"suggested_value": will[ATTR_TOPIC]}
             )
         ] = PUBLISH_TOPIC_SELECTOR
         fields[
-            vol.Optional(
+            probatio.Optional(
                 "will_payload", description={"suggested_value": will[CONF_PAYLOAD]}
             )
         ] = TEXT_SELECTOR
-        fields[vol.Optional("will_qos", default=will[ATTR_QOS])] = QOS_SELECTOR
-        fields[vol.Optional("will_retain", default=will[ATTR_RETAIN])] = (
+        fields[probatio.Optional("will_qos", default=will[ATTR_QOS])] = QOS_SELECTOR
+        fields[probatio.Optional("will_retain", default=will[ATTR_RETAIN])] = (
             BOOLEAN_SELECTOR
         )
 
         return self.async_show_form(
             step_id="options",
-            data_schema=vol.Schema(fields),
+            data_schema=probatio.Schema(fields),
             errors=errors,
             last_step=True,
         )
@@ -4642,7 +4646,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
 
     @callback
     def get_suggested_values_from_component(
-        self, data_schema: vol.Schema
+        self, data_schema: probatio.Schema
     ) -> dict[str, Any]:
         """Get suggestions from component data based on the data schema."""
         if TYPE_CHECKING:
@@ -4657,7 +4661,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
 
     @callback
     def get_suggested_values_from_device_data(
-        self, data_schema: vol.Schema
+        self, data_schema: probatio.Schema
     ) -> dict[str, Any]:
         """Get suggestions from device data based on the data schema."""
         device_data = deepcopy(self._subentry_data["device"])
@@ -4779,9 +4783,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             )
             for key, component_data in self._subentry_data["components"].items()
         ]
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required("component"): SelectSelector(
+                probatio.Required("component"): SelectSelector(
                     SelectSelectorConfig(
                         options=entities,
                         mode=SelectSelectorMode.LIST,
@@ -5119,9 +5123,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             mqtt_yaml_config.append({platform: component_config})
 
         yaml_config = yaml.dump(mqtt_yaml_config_base)
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional("yaml"): TEMPLATE_SELECTOR_READ_ONLY,
+                probatio.Optional("yaml"): TEMPLATE_SELECTOR_READ_ONLY,
             }
         )
         data_schema = self.add_suggested_values_to_schema(
@@ -5169,10 +5173,10 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                     component_config.pop(field)
             discovery_payload["cmps"][component_id] = component_config
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional("discovery_topic"): TEXT_SELECTOR_READ_ONLY,
-                vol.Optional("discovery_payload"): TEMPLATE_SELECTOR_READ_ONLY,
+                probatio.Optional("discovery_topic"): TEXT_SELECTOR_READ_ONLY,
+                probatio.Optional("discovery_payload"): TEMPLATE_SELECTOR_READ_ONLY,
             }
         )
         data_schema = self.add_suggested_values_to_schema(
@@ -5400,9 +5404,9 @@ async def async_validate_broker_settings(
             entry_config_update[CONF_WS_HEADERS] = json_loads(
                 user_input[OTHER_SETTINGS].get(CONF_WS_HEADERS, "{}")
             )
-            schema = vol.Schema({str: str})
+            schema = probatio.Schema({str: str})
             schema(entry_config_update[CONF_WS_HEADERS])
-        except (*JSON_DECODE_EXCEPTIONS, vol.MultipleInvalid):
+        except (*JSON_DECODE_EXCEPTIONS, probatio.MultipleInvalid):
             errors["base"] = "bad_ws_headers"
             return False
 

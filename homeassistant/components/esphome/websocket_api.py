@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -27,8 +27,8 @@ def async_setup(hass: HomeAssistant) -> None:
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "esphome/get_encryption_key",
-        vol.Required(ENTRY_ID): str,
+        probatio.Required(TYPE): "esphome/get_encryption_key",
+        probatio.Required(ENTRY_ID): str,
     }
 )
 def get_encryption_key(

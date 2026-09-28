@@ -7,7 +7,7 @@ import logging
 import re
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import cloud, mqtt, webhook
 from homeassistant.components.device_tracker import TrackerEntityStateAttribute
@@ -42,27 +42,28 @@ PLATFORMS = [Platform.DEVICE_TRACKER]
 
 DEFAULT_OWNTRACKS_TOPIC = "owntracks/#"
 
-CONFIG_SCHEMA = vol.All(
+CONFIG_SCHEMA = probatio.All(
     cv.removed(CONF_WEBHOOK_ID),
-    vol.Schema(
+    probatio.Schema(
         {
-            vol.Optional(DOMAIN, default={}): {
-                vol.Optional(CONF_MAX_GPS_ACCURACY): vol.Coerce(float),
-                vol.Optional(CONF_WAYPOINT_IMPORT, default=True): cv.boolean,
-                vol.Optional(CONF_EVENTS_ONLY, default=False): cv.boolean,
-                vol.Optional(
+            probatio.Optional(DOMAIN, default={}): {
+                probatio.Optional(CONF_MAX_GPS_ACCURACY): probatio.Coerce(float),
+                probatio.Optional(CONF_WAYPOINT_IMPORT, default=True): cv.boolean,
+                probatio.Optional(CONF_EVENTS_ONLY, default=False): cv.boolean,
+                probatio.Optional(
                     CONF_MQTT_TOPIC, default=DEFAULT_OWNTRACKS_TOPIC
                 ): mqtt.valid_subscribe_topic,
-                vol.Optional(CONF_WAYPOINT_WHITELIST): vol.All(
+                probatio.Optional(CONF_WAYPOINT_WHITELIST): probatio.All(
                     cv.ensure_list, [cv.string]
                 ),
-                vol.Optional(CONF_SECRET): vol.Any(
-                    vol.Schema({vol.Optional(cv.string): cv.string}), cv.string
+                probatio.Optional(CONF_SECRET): probatio.Any(
+                    probatio.Schema({probatio.Optional(cv.string): cv.string}),
+                    cv.string,
                 ),
-                vol.Optional(CONF_REGION_MAPPING, default={}): dict,
+                probatio.Optional(CONF_REGION_MAPPING, default={}): dict,
             }
         },
-        extra=vol.ALLOW_EXTRA,
+        extra=probatio.ALLOW_EXTRA,
     ),
 )
 

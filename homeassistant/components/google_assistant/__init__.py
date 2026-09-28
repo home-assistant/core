@@ -1,7 +1,7 @@
 """Support for Actions on Google Assistant Smart Home Control."""
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
@@ -38,56 +38,58 @@ CONF_ALLOW_UNLOCK = "allow_unlock"
 
 PLATFORMS = [Platform.BUTTON]
 
-ENTITY_SCHEMA = vol.Schema(
+ENTITY_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_EXPOSE, default=True): cv.boolean,
-        vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_ROOM_HINT): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_EXPOSE, default=True): cv.boolean,
+        probatio.Optional(CONF_ALIASES): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(CONF_ROOM_HINT): cv.string,
     }
 )
 
-GOOGLE_SERVICE_ACCOUNT = vol.Schema(
+GOOGLE_SERVICE_ACCOUNT = probatio.Schema(
     {
-        vol.Required(CONF_PRIVATE_KEY): cv.string,
-        vol.Required(CONF_CLIENT_EMAIL): cv.string,
+        probatio.Required(CONF_PRIVATE_KEY): cv.string,
+        probatio.Required(CONF_CLIENT_EMAIL): cv.string,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
 def _check_report_state(data):
     if data[CONF_REPORT_STATE] and CONF_SERVICE_ACCOUNT not in data:
-        raise vol.Invalid("If report state is enabled, a service account must exist")
+        raise probatio.Invalid(
+            "If report state is enabled, a service account must exist"
+        )
     return data
 
 
-GOOGLE_ASSISTANT_SCHEMA = vol.All(
-    vol.Schema(
+GOOGLE_ASSISTANT_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Required(CONF_PROJECT_ID): cv.string,
-            vol.Optional(
+            probatio.Required(CONF_PROJECT_ID): cv.string,
+            probatio.Optional(
                 CONF_EXPOSE_BY_DEFAULT, default=DEFAULT_EXPOSE_BY_DEFAULT
             ): cv.boolean,
-            vol.Optional(
+            probatio.Optional(
                 CONF_EXPOSED_DOMAINS, default=DEFAULT_EXPOSED_DOMAINS
             ): cv.ensure_list,
-            vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA},
+            probatio.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA},
             # str on purpose, makes sure it is configured correctly.
-            vol.Optional(CONF_SECURE_DEVICES_PIN): str,
-            vol.Optional(CONF_REPORT_STATE, default=False): cv.boolean,
-            vol.Optional(CONF_SERVICE_ACCOUNT): GOOGLE_SERVICE_ACCOUNT,
+            probatio.Optional(CONF_SECURE_DEVICES_PIN): str,
+            probatio.Optional(CONF_REPORT_STATE, default=False): cv.boolean,
+            probatio.Optional(CONF_SERVICE_ACCOUNT): GOOGLE_SERVICE_ACCOUNT,
             # deprecated configuration options
-            vol.Remove(CONF_ALLOW_UNLOCK): cv.boolean,
-            vol.Remove(CONF_API_KEY): cv.string,
+            probatio.Remove(CONF_ALLOW_UNLOCK): cv.boolean,
+            probatio.Remove(CONF_API_KEY): cv.string,
         },
-        extra=vol.PREVENT_EXTRA,
+        extra=probatio.PREVENT_EXTRA,
     ),
     _check_report_state,
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {vol.Optional(DOMAIN): GOOGLE_ASSISTANT_SCHEMA}, extra=vol.ALLOW_EXTRA
+CONFIG_SCHEMA = probatio.Schema(
+    {probatio.Optional(DOMAIN): GOOGLE_ASSISTANT_SCHEMA}, extra=probatio.ALLOW_EXTRA
 )
 
 type GoogleConfigEntry = ConfigEntry[GoogleConfig]

@@ -3,19 +3,21 @@
 from collections.abc import Mapping
 from typing import Any, override
 
+import probatio
 from pyfireservicerota import FireServiceRota, InvalidAuthError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 
 from .const import DOMAIN, URL_LIST
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL, default="www.brandweerrooster.nl"): vol.In(URL_LIST),
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_URL, default="www.brandweerrooster.nl"): probatio.In(
+            URL_LIST
+        ),
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -101,18 +103,18 @@ class FireServiceRotaFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if step_id == "user":
             schema = {
-                vol.Required(CONF_URL, default="www.brandweerrooster.nl"): vol.In(
-                    URL_LIST
-                ),
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
+                probatio.Required(
+                    CONF_URL, default="www.brandweerrooster.nl"
+                ): probatio.In(URL_LIST),
+                probatio.Required(CONF_USERNAME): str,
+                probatio.Required(CONF_PASSWORD): str,
             }
         else:
-            schema = {vol.Required(CONF_PASSWORD): str}
+            schema = {probatio.Required(CONF_PASSWORD): str}
 
         return self.async_show_form(
             step_id=step_id,
-            data_schema=vol.Schema(schema),
+            data_schema=probatio.Schema(schema),
             errors=errors or {},
             description_placeholders=self._description_placeholders,
         )

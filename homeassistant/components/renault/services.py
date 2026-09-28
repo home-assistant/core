@@ -5,7 +5,7 @@ from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
@@ -30,73 +30,99 @@ class RenaultServiceArgument(StrEnum):
     WHEN = "when"
 
 
-SERVICE_VEHICLE_SCHEMA = vol.Schema(
+SERVICE_VEHICLE_SCHEMA = probatio.Schema(
     {
-        vol.Required(RenaultServiceArgument.VEHICLE.value): cv.string,
+        probatio.Required(RenaultServiceArgument.VEHICLE.value): cv.string,
     }
 )
 SERVICE_AC_START_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
     {
-        vol.Required(RenaultServiceArgument.TEMPERATURE.value): cv.positive_float,
-        vol.Optional(RenaultServiceArgument.WHEN.value): cv.datetime,
+        probatio.Required(RenaultServiceArgument.TEMPERATURE.value): cv.positive_float,
+        probatio.Optional(RenaultServiceArgument.WHEN.value): cv.datetime,
     }
 )
 SERVICE_CHARGE_START_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
     {
-        vol.Optional(RenaultServiceArgument.WHEN.value): cv.datetime,
+        probatio.Optional(RenaultServiceArgument.WHEN.value): cv.datetime,
     }
 )
-SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA = vol.Schema(
+SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA = probatio.Schema(
     {
-        vol.Required("startTime"): cv.string,
-        vol.Required("duration"): cv.positive_int,
+        probatio.Required("startTime"): cv.string,
+        probatio.Required("duration"): cv.positive_int,
     }
 )
-SERVICE_CHARGE_SET_SCHEDULE_SCHEMA = vol.Schema(
+SERVICE_CHARGE_SET_SCHEDULE_SCHEMA = probatio.Schema(
     {
-        vol.Required("id"): cv.positive_int,
-        vol.Optional("activated"): cv.boolean,
-        vol.Optional("monday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("tuesday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("wednesday"): vol.Any(
+        probatio.Required("id"): cv.positive_int,
+        probatio.Optional("activated"): cv.boolean,
+        probatio.Optional("monday"): probatio.Any(
             None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA
         ),
-        vol.Optional("thursday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("friday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("saturday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("sunday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        probatio.Optional("tuesday"): probatio.Any(
+            None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA
+        ),
+        probatio.Optional("wednesday"): probatio.Any(
+            None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA
+        ),
+        probatio.Optional("thursday"): probatio.Any(
+            None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA
+        ),
+        probatio.Optional("friday"): probatio.Any(
+            None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA
+        ),
+        probatio.Optional("saturday"): probatio.Any(
+            None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA
+        ),
+        probatio.Optional("sunday"): probatio.Any(
+            None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA
+        ),
     }
 )
 SERVICE_CHARGE_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
     {
-        vol.Required(RenaultServiceArgument.SCHEDULES.value): vol.All(
+        probatio.Required(RenaultServiceArgument.SCHEDULES.value): probatio.All(
             cv.ensure_list, [SERVICE_CHARGE_SET_SCHEDULE_SCHEMA]
         ),
     }
 )
 
-SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA = vol.Schema(
+SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA = probatio.Schema(
     {
-        vol.Required("readyAtTime"): cv.string,
+        probatio.Required("readyAtTime"): cv.string,
     }
 )
 
-SERVICE_AC_SET_SCHEDULE_SCHEMA = vol.Schema(
+SERVICE_AC_SET_SCHEDULE_SCHEMA = probatio.Schema(
     {
-        vol.Required("id"): cv.positive_int,
-        vol.Optional("activated"): cv.boolean,
-        vol.Optional("monday"): vol.Any(None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("tuesday"): vol.Any(None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("wednesday"): vol.Any(None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("thursday"): vol.Any(None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("friday"): vol.Any(None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("saturday"): vol.Any(None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("sunday"): vol.Any(None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA),
+        probatio.Required("id"): cv.positive_int,
+        probatio.Optional("activated"): cv.boolean,
+        probatio.Optional("monday"): probatio.Any(
+            None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA
+        ),
+        probatio.Optional("tuesday"): probatio.Any(
+            None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA
+        ),
+        probatio.Optional("wednesday"): probatio.Any(
+            None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA
+        ),
+        probatio.Optional("thursday"): probatio.Any(
+            None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA
+        ),
+        probatio.Optional("friday"): probatio.Any(
+            None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA
+        ),
+        probatio.Optional("saturday"): probatio.Any(
+            None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA
+        ),
+        probatio.Optional("sunday"): probatio.Any(
+            None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA
+        ),
     }
 )
 SERVICE_AC_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
     {
-        vol.Required(RenaultServiceArgument.SCHEDULES.value): vol.All(
+        probatio.Required(RenaultServiceArgument.SCHEDULES.value): probatio.All(
             cv.ensure_list, [SERVICE_AC_SET_SCHEDULE_SCHEMA]
         ),
     }

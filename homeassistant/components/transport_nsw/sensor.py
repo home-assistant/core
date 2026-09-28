@@ -3,8 +3,8 @@
 from datetime import timedelta
 from typing import Any, override
 
+import probatio
 from TransportNSW import TransportNSW
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -45,11 +45,11 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_STOP_ID): cv.string,
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_ROUTE, default=""): cv.string,
-        vol.Optional(CONF_DESTINATION, default=""): cv.string,
+        probatio.Required(CONF_STOP_ID): cv.string,
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_ROUTE, default=""): cv.string,
+        probatio.Optional(CONF_DESTINATION, default=""): cv.string,
     }
 )
 

@@ -4,7 +4,7 @@ import logging
 from types import MappingProxyType
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 import wsdot as wsdot_api
 
 from homeassistant.config_entries import (
@@ -57,9 +57,9 @@ class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id=SOURCE_USER,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): str,
+                    probatio.Required(CONF_API_KEY): str,
                 }
             ),
             errors=errors,
@@ -154,6 +154,6 @@ class TravelTimeSubentryFlowHandler(ConfigSubentryFlow):
         )
         return self.async_show_form(
             step_id=SOURCE_USER,
-            data_schema=vol.Schema({vol.Required(CONF_NAME): names}),
+            data_schema=probatio.Schema({probatio.Required(CONF_NAME): names}),
             errors={},
         )

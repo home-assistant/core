@@ -8,8 +8,8 @@ from unittest.mock import patch
 
 import attr
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -4201,13 +4201,13 @@ async def test_resolve_entity_ids(entity_registry: er.EntityRegistry) -> None:
         == expected
     )
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         er.async_validate_entity_ids(entity_registry, ["light.beer", "bad_uuid"])
 
     expected = ["light.unknown"]
     assert er.async_validate_entity_ids(entity_registry, ["light.unknown"]) == expected
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         er.async_validate_entity_ids(entity_registry, ["unknown_uuid"])
 
 

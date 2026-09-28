@@ -8,7 +8,7 @@ import threading
 import time
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_HOST,
@@ -33,20 +33,20 @@ DEFAULT_PROTOCOL = PROTOCOL_TCP
 DEFAULT_PREFIX = "ha"
 DOMAIN = "graphite"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.Any(
-                    PROTOCOL_TCP, PROTOCOL_UDP
-                ),
-                vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
+                probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+                probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                probatio.Optional(
+                    CONF_PROTOCOL, default=DEFAULT_PROTOCOL
+                ): probatio.Any(PROTOCOL_TCP, PROTOCOL_UDP),
+                probatio.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
