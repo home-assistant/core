@@ -4,11 +4,14 @@ from dataclasses import dataclass
 from typing import override
 
 from ouman_eh_800_api import (
+    AccumulatorSensor,
+    BoilerSensor,
     L1BaseEndpoints,
     L1RoomSensor,
     L2BaseEndpoints,
     L2RoomSensor,
     OumanEndpoint,
+    ReturnWaterSensor,
     SystemEndpoints,
 )
 
@@ -74,6 +77,15 @@ SENSOR_DESCRIPTIONS: dict[OumanEndpoint, OumanEh800SensorDescription] = {
     SystemEndpoints.OUTSIDE_TEMPERATURE: _temperature_sensor(
         device=OumanDevice.MAIN, key="outside_temperature"
     ),
+    ReturnWaterSensor.RETURN_WATER_TEMPERATURE: _temperature_sensor(
+        device=OumanDevice.MAIN, key="return_water_temperature"
+    ),
+    AccumulatorSensor.ACCUMULATOR_TEMPERATURE: _temperature_sensor(
+        device=OumanDevice.MAIN, key="accumulator_temperature"
+    ),
+    BoilerSensor.BOILER_TEMPERATURE: _temperature_sensor(
+        device=OumanDevice.MAIN, key="boiler_temperature"
+    ),
     L1BaseEndpoints.SUPPLY_WATER_TEMPERATURE: _temperature_sensor(
         device=OumanDevice.L1, key="supply_water_temperature"
     ),
@@ -94,6 +106,13 @@ SENSOR_DESCRIPTIONS: dict[OumanEndpoint, OumanEh800SensorDescription] = {
     L1BaseEndpoints.FINE_ADJUSTMENT_EFFECT: _temperature_sensor(
         device=OumanDevice.L1,
         key="fine_adjustment_effect",
+        device_class=SensorDeviceClass.TEMPERATURE_DELTA,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        enabled_by_default=False,
+    ),
+    L1BaseEndpoints.AUTUMN_DRYING_EFFECT: _temperature_sensor(
+        device=OumanDevice.L1,
+        key="autumn_drying_effect",
         device_class=SensorDeviceClass.TEMPERATURE_DELTA,
         entity_category=EntityCategory.DIAGNOSTIC,
         enabled_by_default=False,
@@ -139,6 +158,13 @@ SENSOR_DESCRIPTIONS: dict[OumanEndpoint, OumanEh800SensorDescription] = {
     L2BaseEndpoints.DELAYED_OUTDOOR_TEMPERATURE_EFFECT: _temperature_sensor(
         device=OumanDevice.L2,
         key="delayed_outdoor_temperature_effect",
+        device_class=SensorDeviceClass.TEMPERATURE_DELTA,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        enabled_by_default=False,
+    ),
+    L2BaseEndpoints.AUTUMN_DRYING_EFFECT: _temperature_sensor(
+        device=OumanDevice.L2,
+        key="autumn_drying_effect",
         device_class=SensorDeviceClass.TEMPERATURE_DELTA,
         entity_category=EntityCategory.DIAGNOSTIC,
         enabled_by_default=False,
