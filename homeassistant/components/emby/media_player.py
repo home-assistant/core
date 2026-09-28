@@ -3,8 +3,8 @@
 import logging
 from typing import override
 
+import probatio
 from pyemby import EmbyServer
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
@@ -47,10 +47,10 @@ SUPPORT_EMBY = (
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_PORT): cv.port,
+        probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     }
 )
 

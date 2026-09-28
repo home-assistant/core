@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import frontend, websocket_api
 from homeassistant.components.media_player import (
@@ -34,8 +34,8 @@ def async_setup(hass: HomeAssistant) -> None:
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "media_source/browse_media",
-        vol.Optional(ATTR_MEDIA_CONTENT_ID, default=""): str,
+        probatio.Required("type"): "media_source/browse_media",
+        probatio.Optional(ATTR_MEDIA_CONTENT_ID, default=""): str,
     }
 )
 @websocket_api.async_response
@@ -55,10 +55,10 @@ async def websocket_browse_media(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "media_source/search_media",
-        vol.Optional(ATTR_MEDIA_CONTENT_ID, default=""): str,
-        vol.Required(ATTR_MEDIA_SEARCH_QUERY): str,
-        vol.Optional(ATTR_MEDIA_FILTER_CLASSES): [vol.Coerce(MediaClass)],
+        probatio.Required("type"): "media_source/search_media",
+        probatio.Optional(ATTR_MEDIA_CONTENT_ID, default=""): str,
+        probatio.Required(ATTR_MEDIA_SEARCH_QUERY): str,
+        probatio.Optional(ATTR_MEDIA_FILTER_CLASSES): [probatio.Coerce(MediaClass)],
     }
 )
 @websocket_api.async_response
@@ -84,9 +84,9 @@ async def websocket_search_media(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "media_source/resolve_media",
-        vol.Required(ATTR_MEDIA_CONTENT_ID): str,
-        vol.Optional("expires", default=CONTENT_AUTH_EXPIRY_TIME): int,
+        probatio.Required("type"): "media_source/resolve_media",
+        probatio.Required(ATTR_MEDIA_CONTENT_ID): str,
+        probatio.Optional("expires", default=CONTENT_AUTH_EXPIRY_TIME): int,
     }
 )
 @websocket_api.async_response

@@ -209,15 +209,35 @@ class MatterAdapter:
             server_info,
             endpoint,
         )
-        identifiers = {(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
+        node_device_identifier = (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")
+        identifiers = {node_device_identifier}
         serial_number: str | None = None
-        # if available, we also add the serialnumber as identifier
+        # if available, we also add the serial number as identifier
         if (
-            basic_info_serial_number := basic_info.serialNumber
-        ) and "test" not in basic_info_serial_number.lower():
+            (basic_info_serial_number := basic_info.serialNumber)
+            and "test" not in basic_info_serial_number.lower()
+            # some bridges report their own serial number for the devices they bridge,
+            # which would make the identifier resolve to the bridge's device
+            and not (
+                isinstance(basic_info, clusters.BridgedDeviceBasicInformation)
+                and basic_info_serial_number == endpoint.node.device_info.serialNumber
+            )
+        ):
             # prefix identifier with 'serial_' to be able to filter it
             identifiers.add((DOMAIN, f"{ID_TYPE_SERIAL}_{basic_info_serial_number}"))
             serial_number = basic_info_serial_number
+
+        # the bridge's device entry keeps every identifier that was ever merged onto
+        # it, so a bridged device can still resolve to it through one left behind
+        if (
+            via_device_id is not UNDEFINED
+            and (via_device := device_registry.async_get(via_device_id))
+            and (stale_identifiers := via_device.identifiers & identifiers)
+        ):
+            device_registry.async_update_device(
+                via_device.id,
+                new_identifiers=via_device.identifiers - stale_identifiers,
+            )
 
         # Model name is the human readable name of the model/product name
         model_name = (

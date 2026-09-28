@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
+import probatio
 from pyhomeworks import exceptions as hw_exceptions
 from pyhomeworks.pyhomeworks import (
     HW_BUTTON_PRESSED,
@@ -12,7 +13,6 @@ from pyhomeworks.pyhomeworks import (
     HW_LOGIN_INCORRECT,
     Homeworks,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -47,10 +47,10 @@ KEYPAD_LEDSTATE_POLL_COOLDOWN = 1.0
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-SERVICE_SEND_COMMAND_SCHEMA = vol.Schema(
+SERVICE_SEND_COMMAND_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_CONTROLLER_ID): str,
-        vol.Required(CONF_COMMAND): vol.All(cv.ensure_list, [str]),
+        probatio.Required(CONF_CONTROLLER_ID): str,
+        probatio.Required(CONF_COMMAND): probatio.All(cv.ensure_list, [str]),
     }
 )
 

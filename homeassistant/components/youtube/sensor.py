@@ -15,7 +15,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
+    ATTR_LATEST_SHORT,
     ATTR_LATEST_VIDEO,
+    ATTR_LATEST_VIDEO_NON_SHORT,
     ATTR_PUBLISHED_AT,
     ATTR_SUBSCRIBER_COUNT,
     ATTR_THUMBNAIL,
@@ -48,6 +50,30 @@ SENSOR_TYPES = [
         attributes_fn=lambda channel: {
             ATTR_VIDEO_ID: channel[ATTR_LATEST_VIDEO][ATTR_VIDEO_ID],
             ATTR_PUBLISHED_AT: channel[ATTR_LATEST_VIDEO][ATTR_PUBLISHED_AT],
+        },
+    ),
+    YouTubeSensorEntityDescription(
+        key="latest_short",
+        translation_key="latest_short",
+        available_fn=lambda channel: channel[ATTR_LATEST_SHORT] is not None,
+        value_fn=lambda channel: channel[ATTR_LATEST_SHORT][ATTR_TITLE],
+        entity_picture_fn=lambda channel: channel[ATTR_LATEST_SHORT][ATTR_THUMBNAIL],
+        attributes_fn=lambda channel: {
+            ATTR_VIDEO_ID: channel[ATTR_LATEST_SHORT][ATTR_VIDEO_ID],
+            ATTR_PUBLISHED_AT: channel[ATTR_LATEST_SHORT][ATTR_PUBLISHED_AT],
+        },
+    ),
+    YouTubeSensorEntityDescription(
+        key="latest_video",
+        translation_key="latest_video",
+        available_fn=lambda channel: channel[ATTR_LATEST_VIDEO_NON_SHORT] is not None,
+        value_fn=lambda channel: channel[ATTR_LATEST_VIDEO_NON_SHORT][ATTR_TITLE],
+        entity_picture_fn=lambda channel: channel[ATTR_LATEST_VIDEO_NON_SHORT][
+            ATTR_THUMBNAIL
+        ],
+        attributes_fn=lambda channel: {
+            ATTR_VIDEO_ID: channel[ATTR_LATEST_VIDEO_NON_SHORT][ATTR_VIDEO_ID],
+            ATTR_PUBLISHED_AT: channel[ATTR_LATEST_VIDEO_NON_SHORT][ATTR_PUBLISHED_AT],
         },
     ),
     YouTubeSensorEntityDescription(

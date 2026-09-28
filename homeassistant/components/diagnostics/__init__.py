@@ -8,7 +8,7 @@ import logging
 from typing import Any, Protocol
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import http, websocket_api
 from homeassistant.config_entries import ConfigEntry
@@ -120,7 +120,7 @@ def _register_diagnostics_platform(
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "diagnostics/list"})
+@websocket_api.websocket_command({probatio.Required("type"): "diagnostics/list"})
 @callback
 def handle_info(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
@@ -143,8 +143,8 @@ def handle_info(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "diagnostics/get",
-        vol.Required("domain"): str,
+        probatio.Required("type"): "diagnostics/get",
+        probatio.Required("domain"): str,
     }
 )
 @callback
@@ -308,7 +308,16 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
         if sub_id is None:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 
-        if (device := dev_reg.async_get(sub_id)) is None:
+        # Reject unknown and composite device which spans multiple config entries and
+        # has no single owner; not supported.
+        if (
+            device := dev_reg.async_get(sub_id, include_composite_devices=False)
+        ) is None:
+            return web.Response(status=HTTPStatus.NOT_FOUND)
+
+        # Reject a device not owned by this config entry; without this a foreign
+        # (possibly child) device would be handed to the integration's handler.
+        if device.config_entry_id != config_entry.entry_id:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         filename += f"-{device.name}-{device.id}"

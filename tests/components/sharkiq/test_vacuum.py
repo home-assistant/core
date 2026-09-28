@@ -7,9 +7,9 @@ import enum
 from typing import Any
 from unittest.mock import patch
 
+from probatio.error import MultipleInvalid
 import pytest
 from sharkiq import AylaApi, SharkIqAuthError, SharkIqNotAuthedError, SharkIqVacuum
-from voluptuous.error import MultipleInvalid
 
 from homeassistant import exceptions
 from homeassistant.components.homeassistant import (
@@ -45,6 +45,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONFIG,
@@ -111,7 +112,7 @@ class MockAyla(AylaApi):
     @property
     def auth_expiration(self) -> datetime:
         """Sample expiration timestamp that is always 1200 seconds behind now()."""
-        return datetime.now() - timedelta(seconds=1200)  # pylint: disable=home-assistant-enforce-naive-now
+        return dt_util.naive_now() - timedelta(seconds=1200)
 
 
 class MockShark(SharkIqVacuum):

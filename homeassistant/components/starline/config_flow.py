@@ -2,8 +2,8 @@
 
 from typing import TYPE_CHECKING, override
 
+import probatio
 from starline import StarlineAuth
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -107,13 +107,13 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth_app",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
-                        CONF_APP_ID, default=self._app_id or vol.UNDEFINED
+                    probatio.Required(
+                        CONF_APP_ID, default=self._app_id or probatio.UNDEFINED
                     ): str,
-                    vol.Required(
-                        CONF_APP_SECRET, default=self._app_secret or vol.UNDEFINED
+                    probatio.Required(
+                        CONF_APP_SECRET, default=self._app_secret or probatio.UNDEFINED
                     ): str,
                 }
             ),
@@ -132,13 +132,13 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth_user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
-                        CONF_USERNAME, default=self._username or vol.UNDEFINED
+                    probatio.Required(
+                        CONF_USERNAME, default=self._username or probatio.UNDEFINED
                     ): str,
-                    vol.Required(
-                        CONF_PASSWORD, default=self._password or vol.UNDEFINED
+                    probatio.Required(
+                        CONF_PASSWORD, default=self._password or probatio.UNDEFINED
                     ): str,
                 }
             ),
@@ -154,10 +154,10 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth_mfa",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
-                        CONF_MFA_CODE, default=self._mfa_code or vol.UNDEFINED
+                    probatio.Required(
+                        CONF_MFA_CODE, default=self._mfa_code or probatio.UNDEFINED
                     ): str
                 }
             ),
@@ -174,10 +174,11 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth_captcha",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
-                        CONF_CAPTCHA_CODE, default=self._captcha_code or vol.UNDEFINED
+                    probatio.Required(
+                        CONF_CAPTCHA_CODE,
+                        default=self._captcha_code or probatio.UNDEFINED,
                     ): str
                 }
             ),

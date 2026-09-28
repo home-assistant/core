@@ -6,6 +6,7 @@ from aiohttp import ContentTypeError, ServerTimeoutError
 from openevsehttp.exceptions import (
     AuthenticationError,
     ParseJSONError,
+    UnknownError,
     UnsupportedFeature,
 )
 import pytest
@@ -166,6 +167,20 @@ async def test_switch_turn_on_off(
             "communication_error",
             None,
             id="content_type_error",
+        ),
+        pytest.param(
+            UnknownError("unknown error"),
+            HomeAssistantError,
+            "communication_error",
+            None,
+            id="unknown_error",
+        ),
+        pytest.param(
+            RuntimeError("runtime error"),
+            HomeAssistantError,
+            "communication_error",
+            None,
+            id="runtime_error",
         ),
     ],
 )

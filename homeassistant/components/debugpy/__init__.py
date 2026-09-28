@@ -5,7 +5,7 @@ import logging
 from threading import Thread
 
 import debugpy  # noqa: T100
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -18,18 +18,18 @@ CONF_START = "start"
 CONF_WAIT = "wait"
 SERVICE_START = "start"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_HOST, default="0.0.0.0"): cv.string,
-                vol.Optional(CONF_PORT, default=5678): cv.port,
-                vol.Optional(CONF_START, default=True): cv.boolean,
-                vol.Optional(CONF_WAIT, default=False): cv.boolean,
+                probatio.Optional(CONF_HOST, default="0.0.0.0"): cv.string,
+                probatio.Optional(CONF_PORT, default=5678): cv.port,
+                probatio.Optional(CONF_START, default=True): cv.boolean,
+                probatio.Optional(CONF_WAIT, default=False): cv.boolean,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,7 +72,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
     async_register_admin_service(
-        hass, DOMAIN, SERVICE_START, debug_start, schema=vol.Schema({})
+        hass, DOMAIN, SERVICE_START, debug_start, schema=probatio.Schema({})
     )
 
     # If set to start the debugger on startup, do so

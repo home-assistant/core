@@ -1073,10 +1073,19 @@ async def test_matter_error_converted_to_home_assistant_error(
         }
     ],
 )
+@pytest.mark.parametrize(
+    "credential_data",
+    [
+        pytest.param("1234", id="string"),
+        # A template rendering a digit only PIN hands over an int
+        pytest.param(1234, id="int"),
+    ],
+)
 async def test_set_lock_credential_pin(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
+    credential_data: str | int,
 ) -> None:
     """Test set_lock_credential with PIN type."""
     matter_client.send_device_command = AsyncMock(
@@ -1094,7 +1103,7 @@ async def test_set_lock_credential_pin(
         {
             ATTR_ENTITY_ID: "lock.mock_door_lock",
             ATTR_CREDENTIAL_TYPE: "pin",
-            ATTR_CREDENTIAL_DATA: "1234",
+            ATTR_CREDENTIAL_DATA: credential_data,
             ATTR_CREDENTIAL_INDEX: 1,
         },
         blocking=True,

@@ -7,7 +7,7 @@ from typing import Any, override
 
 from gcal_sync.api import GoogleCalendarService
 from gcal_sync.exceptions import ApiException, ApiForbiddenException
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -87,11 +87,21 @@ class OAuth2FlowHandler(
         return logging.getLogger(__name__)
 
     @property
+    def _calendar_access(self) -> FeatureAccess:
+        """Return the access the entry being authorized asks for."""
+        if self.source == SOURCE_REAUTH and (
+            reauth_options := self._get_reauth_entry().options
+        ):
+            return FeatureAccess[reauth_options[CONF_CALENDAR_ACCESS]]
+
+        return DEFAULT_FEATURE_ACCESS
+
+    @property
     @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {
-            "scope": DEFAULT_FEATURE_ACCESS.scope,
+            "scope": self._calendar_access.scope,
             # Add params to ensure we get back a refresh token
             "access_type": "offline",
             "prompt": "consent",
@@ -121,17 +131,12 @@ class OAuth2FlowHandler(
                     self.flow_impl,
                 )
                 return self.async_abort(reason="oauth_error")
-            calendar_access = DEFAULT_FEATURE_ACCESS
-            if self.source == SOURCE_REAUTH and (
-                reauth_options := self._get_reauth_entry().options
-            ):
-                calendar_access = FeatureAccess[reauth_options[CONF_CALENDAR_ACCESS]]
             try:
                 device_flow = await async_create_device_flow(
                     self.hass,
                     self.flow_impl.client_id,
                     self.flow_impl.client_secret,
-                    calendar_access,
+                    self._calendar_access,
                 )
             except TimeoutError as err:
                 _LOGGER.error("Timeout initializing device flow: %s", str(err))
@@ -263,12 +268,12 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_CALENDAR_ACCESS,
                         default=self.config_entry.options.get(CONF_CALENDAR_ACCESS),
-                    ): vol.In(
+                    ): probatio.In(
                         {
                             "read_write": "Read/Write access (can create events)",
                             "read_only": "Read-only access",

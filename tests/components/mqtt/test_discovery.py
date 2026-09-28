@@ -340,7 +340,7 @@ async def test_invalid_config(
         '"qos": "some_invalid_value"}',
     )
     await hass.async_block_till_done()
-    assert "Error 'expected int for dictionary value @ data['qos']'" in caplog.text
+    assert "Error 'expected int at 'qos''" in caplog.text
 
 
 async def test_invalid_device_discovery_config(
@@ -362,7 +362,7 @@ async def test_invalid_device_discovery_config(
     await hass.async_block_till_done()
     assert (
         "Invalid MQTT device discovery payload for bla, "
-        "required key not provided @ data['device']" in caplog.text
+        "required key not provided at 'device'" in caplog.text
     )
 
     caplog.clear()
@@ -376,8 +376,7 @@ async def test_invalid_device_discovery_config(
     await hass.async_block_till_done()
     assert (
         "Invalid MQTT device discovery payload for bla, "
-        "required key not provided @ data['components']['acp1']['platform']"
-        in caplog.text
+        "required key not provided at 'components.acp1.platform'" in caplog.text
     )
 
     caplog.clear()
@@ -389,7 +388,7 @@ async def test_invalid_device_discovery_config(
     await hass.async_block_till_done()
     assert (
         "Invalid MQTT device discovery payload for bla, "
-        "expected a dictionary for dictionary value @ data['components']" in caplog.text
+        "expected a mapping at 'components'" in caplog.text
     )
 
 
@@ -1269,7 +1268,7 @@ async def test_discovery_component_availability_overridden(
             '{"platform":"binary_sensor","name":"Beer","unique_id": "very_unique",'
             '"state_topic":"test-topic"}},"o": "bla2mqtt"}',
             "Invalid MQTT device discovery payload for bla, "
-            "expected a dictionary for dictionary value @ data['origin']",
+            "expected a mapping at 'origin'",
         ),
         (
             "homeassistant/device/bla/config",
@@ -1277,7 +1276,7 @@ async def test_discovery_component_availability_overridden(
             '{"platform":"binary_sensor","name":"Beer","unique_id": "very_unique",'
             '"state_topic":"test-topic"}},"o": 2.0}',
             "Invalid MQTT device discovery payload for bla, "
-            "expected a dictionary for dictionary value @ data['origin']",
+            "expected a mapping at 'origin'",
         ),
         (
             "homeassistant/device/bla/config",
@@ -1285,7 +1284,7 @@ async def test_discovery_component_availability_overridden(
             '{"platform":"binary_sensor","name":"Beer","unique_id": "very_unique",'
             '"state_topic":"test-topic"}},"o": null}',
             "Invalid MQTT device discovery payload for bla, "
-            "expected a dictionary for dictionary value @ data['origin']",
+            "expected a mapping at 'origin'",
         ),
         (
             "homeassistant/device/bla/config",
@@ -1293,7 +1292,7 @@ async def test_discovery_component_availability_overridden(
             '{"platform":"binary_sensor","name":"Beer","unique_id": "very_unique",'
             '"state_topic":"test-topic"}},"o": {"sw": "bla2mqtt"}}',
             "Invalid MQTT device discovery payload for bla, "
-            "required key not provided @ data['origin']['name']",
+            "required key not provided at 'origin.name'",
         ),
     ],
 )
@@ -2109,7 +2108,7 @@ async def test_cleanup_device_multiple_config_entries(
         connections={("mac", "12:34:56:AB:CD:EF")},
     )
     assert mqtt_device_entry is not None
-    assert mqtt_device_entry.config_entries == {mqtt_config_entry.entry_id}
+    assert mqtt_device_entry.config_entry_id == mqtt_config_entry.entry_id
     assert (
         _get_device_for_config_entry(
             device_registry,
@@ -2138,7 +2137,7 @@ async def test_cleanup_device_multiple_config_entries(
     )
     assert device_entry is not None
     entity_entry = entity_registry.async_get("sensor.mqtt_mqtt_sensor")
-    assert device_entry.config_entries == {config_entry.entry_id}
+    assert device_entry.config_entry_id == config_entry.entry_id
     assert entity_entry is None
 
     # Verify state is removed
@@ -2234,7 +2233,7 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
         connections={("mac", "12:34:56:AB:CD:EF")},
     )
     assert mqtt_device_entry is not None
-    assert mqtt_device_entry.config_entries == {mqtt_config_entry.entry_id}
+    assert mqtt_device_entry.config_entry_id == mqtt_config_entry.entry_id
     assert (
         _get_device_for_config_entry(
             device_registry,
@@ -2263,7 +2262,7 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
     )
     assert device_entry is not None
     entity_entry = entity_registry.async_get("sensor.mqtt_mqtt_sensor")
-    assert device_entry.config_entries == {config_entry.entry_id}
+    assert device_entry.config_entry_id == config_entry.entry_id
     assert entity_entry is None
 
     # Verify state is removed
@@ -2410,7 +2409,7 @@ async def test_discovery_expansion_3(
     assert hass.states.get("switch.DiscoveryExpansionTest1") is None
     # Make sure the malformed availability data does not trip up discovery by asserting
     # there are schema valdiation errors in the log
-    assert "expected a dictionary @ data['availability'][0]" in caplog.text
+    assert "expected a mapping at 'availability[0]'" in caplog.text
 
 
 async def test_discovery_expansion_without_encoding_and_value_template_1(

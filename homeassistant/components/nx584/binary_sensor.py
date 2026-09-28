@@ -6,8 +6,8 @@ import time
 from typing import Any, override
 
 from nx584 import client as nx584_client
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -30,16 +30,18 @@ DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 5007
 BYPASS_ZONE_FLAGS = {"Bypass", "Inhibit"}
 
-ZONE_TYPES_SCHEMA = vol.Schema({cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA})
+ZONE_TYPES_SCHEMA = probatio.Schema(
+    {cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA}
+)
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_EXCLUDE_ZONES, default=[]): vol.All(
+        probatio.Optional(CONF_EXCLUDE_ZONES, default=[]): probatio.All(
             cv.ensure_list, [cv.positive_int]
         ),
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_ZONE_TYPES, default={}): ZONE_TYPES_SCHEMA,
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_ZONE_TYPES, default={}): ZONE_TYPES_SCHEMA,
     }
 )
 

@@ -15,7 +15,7 @@ def generate_power_sensor_unique_id(source_type: str, config: PowerConfig) -> st
         from_id = config["stat_rate_from"].replace(".", "_")
         to_id = config["stat_rate_to"].replace(".", "_")
         return f"energy_power_{source_type}_combined_{from_id}_{to_id}"
-    # This case is impossible: schema validation (vol.Inclusive) ensures
+    # This case is impossible: schema validation (probatio.Inclusive) ensures
     # stat_rate_from and stat_rate_to are always present together
     raise RuntimeError("Invalid power config: missing required keys")
 
@@ -35,6 +35,6 @@ def generate_power_sensor_entity_id(source_type: str, config: PowerConfig) -> st
         from_sensor = config["stat_rate_from"].removeprefix("sensor.")
         to_sensor = config["stat_rate_to"].removeprefix("sensor.")
         return f"sensor.energy_{source_type}_{from_sensor}_{to_sensor}_net_power"
-    # This case is impossible: schema validation (vol.Inclusive) ensures
+    # This case is impossible: schema validation (probatio.Inclusive) ensures
     # stat_rate_from and stat_rate_to are always present together
     raise RuntimeError("Invalid power config: missing required keys")

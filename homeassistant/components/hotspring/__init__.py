@@ -6,7 +6,10 @@ from homeassistant.core import HomeAssistant
 from .coordinator import HotSpringConfigEntry, HotSpringDataUpdateCoordinator
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
 ]
 

@@ -4,8 +4,8 @@ from datetime import timedelta
 import logging
 from typing import Any, override
 
+import probatio
 import requests
-import voluptuous as vol
 import xmltodict
 
 from homeassistant.components.sensor import (
@@ -37,9 +37,9 @@ ATTR_VAL_LOW = "valuation_range_low"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_ZPID): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_ZPID): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 

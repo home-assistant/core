@@ -3,7 +3,7 @@
 import asyncio
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -11,13 +11,17 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
-from .const import DEFAULT_WATERING_DURATION, SWITCH_REFRESH_DELAY
+from .const import (
+    DEFAULT_WATERING_DURATION,
+    SWITCH_OFF_REFRESH_DELAY,
+    SWITCH_ON_REFRESH_DELAY,
+)
 from .coordinator import YardianConfigEntry, YardianUpdateCoordinator
 from .entity import YardianZoneEntity
 
 SERVICE_START_IRRIGATION = "start_irrigation"
 SERVICE_SCHEMA_START_IRRIGATION: VolDictType = {
-    vol.Required("duration"): cv.positive_int,
+    probatio.Required("duration"): cv.positive_int,
 }
 
 
@@ -69,16 +73,25 @@ class YardianSwitch(YardianZoneEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.coordinator.controller.start_irrigation(
-            self._zone_id,
-            kwargs.get("duration", DEFAULT_WATERING_DURATION),
-        )
-        await asyncio.sleep(SWITCH_REFRESH_DELAY)
+        # Optimistic UI update
+        self.coordinator.data.active_zones.add(self._zone_id)
+        self.async_write_ha_state()
+
+        duration = kwargs.get("duration", DEFAULT_WATERING_DURATION)
+
+        await self.coordinator.controller.start_irrigation(self._zone_id, duration)
+        await asyncio.sleep(SWITCH_ON_REFRESH_DELAY)
+
         await self.coordinator.async_request_refresh()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
+        # Optimistic UI update
+        self.coordinator.data.active_zones.discard(self._zone_id)
+        self.async_write_ha_state()
+
         await self.coordinator.controller.stop_zone(self._zone_id)
-        await asyncio.sleep(SWITCH_REFRESH_DELAY)
+        await asyncio.sleep(SWITCH_OFF_REFRESH_DELAY)
+
         await self.coordinator.async_request_refresh()

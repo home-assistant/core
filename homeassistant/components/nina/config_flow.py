@@ -2,8 +2,8 @@
 
 from typing import Any, override
 
+import probatio
 from pynina import ApiError, Nina
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -13,7 +13,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import section
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import VolDictType
 
@@ -85,24 +89,24 @@ def prepare_user_input(
     return user_input
 
 
-def create_schema(regions: dict[str, dict[str, Any]]) -> vol.Schema:
+def create_schema(regions: dict[str, dict[str, Any]]) -> probatio.Schema:
     """Create the schema for the flows."""
     schema_dict: VolDictType = {
         **{
-            vol.Optional(region): cv.multi_select(regions[region])
+            probatio.Optional(region): cv.multi_select(regions[region])
             for region in CONST_REGIONS
         },
-        vol.Required(
+        probatio.Required(
             CONF_MESSAGE_SLOTS,
             default=5,
-        ): vol.All(int, vol.Range(min=1, max=20)),
-        vol.Required(CONF_FILTERS): section(
-            vol.Schema(
+        ): probatio.All(int, probatio.Range(min=1, max=20)),
+        probatio.Required(CONF_FILTERS): section(
+            probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_HEADLINE_FILTER,
                     ): cv.string,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_AREA_FILTER,
                     ): cv.string,
                 }
@@ -110,7 +114,7 @@ def create_schema(regions: dict[str, dict[str, Any]]) -> vol.Schema:
         ),
     }
 
-    return vol.Schema(schema_dict)
+    return probatio.Schema(schema_dict)
 
 
 class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -245,6 +249,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                 )
 
                 await self.remove_unused_entities(user_input)
+                await self.remove_unused_devices(user_input)
 
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data=user_input
@@ -263,6 +268,18 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             data_schema=schema_with_suggested,
             errors=errors,
         )
+
+    async def remove_unused_devices(self, user_input: dict[str, Any]) -> None:
+        """Remove devices from regions that are not selected."""
+        device_registry = dr.async_get(self.hass)
+
+        removed_regions = set(self.data[CONF_REGIONS]) - set(user_input[CONF_REGIONS])
+
+        for region in removed_regions:
+            if device := device_registry.async_get_device_by_identifier(
+                (DOMAIN, region), self.config_entry.entry_id
+            ):
+                device_registry.async_remove_device(device.id)
 
     async def remove_unused_entities(self, user_input: dict[str, Any]) -> None:
         """Remove entities which are not used anymore."""

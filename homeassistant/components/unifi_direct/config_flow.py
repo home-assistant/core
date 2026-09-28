@@ -2,8 +2,8 @@
 
 from typing import Any, override
 
+import probatio
 from unifi_ap import UniFiAP, UniFiAPConnectionException, UniFiAPDataException
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -11,12 +11,12 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import DEFAULT_NAME, DEFAULT_SSH_PORT, DOMAIN
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
     }
 )
 

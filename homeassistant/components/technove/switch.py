@@ -68,7 +68,6 @@ SWITCHES = [
     TechnoVESwitchDescription(
         key="session_active",
         translation_key="session_active",
-        entity_category=EntityCategory.CONFIG,
         is_on_fn=lambda station: station.info.is_session_active,
         turn_on_fn=_enable_charging,
         turn_off_fn=_disable_charging,

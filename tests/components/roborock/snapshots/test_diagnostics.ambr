@@ -1515,6 +1515,37 @@
             }),
           ]),
         }),
+        'traits': dict({
+          'map': dict({
+            'rooms': list([
+              dict({
+                'id': '**REDACTED**',
+                'pixelCount': 100,
+                'pixelValue': 36,
+                'rawName': 'rr_bedroom',
+              }),
+              dict({
+                'id': '**REDACTED**',
+                'pixelCount': 200,
+                'pixelValue': 40,
+                'rawName': 'rr_living_room',
+              }),
+            ]),
+          }),
+          'status': dict({
+            'battery': 100,
+            'cleanArea': 15,
+            'cleanCount': 1,
+            'cleanTime': 1800,
+            'fanLevel': 'balanced',
+            'filterLife': 90,
+            'mainBrushLife': 81,
+            'sensorLife': 28,
+            'sideBrushLife': 90,
+            'status': 'charging',
+            'waterLevel': 'medium',
+          }),
+        }),
       }),
     }),
   })

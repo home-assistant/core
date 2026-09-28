@@ -147,6 +147,10 @@ class ProtectProxyView(HomeAssistantView):
             async_get_data_for_nvr_id(self.hass, nvr_id_or_entry_id)
             or async_get_data_for_entry_id(self.hass, nvr_id_or_entry_id)
         ):
+            # Event media is private-API-backed; an API-key-only entry has
+            # neither the bootstrap these views read nor any event media.
+            if data.api.is_public_only:
+                return _404("Invalid NVR ID")
             return data
         return _404("Invalid NVR ID")
 

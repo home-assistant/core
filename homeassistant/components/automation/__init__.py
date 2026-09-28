@@ -7,8 +7,8 @@ from dataclasses import dataclass
 import logging
 from typing import Any, cast, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
@@ -272,8 +272,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_TRIGGER,
         {
-            vol.Optional(ATTR_VARIABLES, default={}): dict,
-            vol.Optional(CONF_SKIP_CONDITION, default=True): bool,
+            probatio.Optional(ATTR_VARIABLES, default={}): dict,
+            probatio.Optional(CONF_SKIP_CONDITION, default=True): bool,
         },
         trigger_service_handler,
     )
@@ -281,7 +281,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(SERVICE_TURN_ON, None, "async_turn_on")
     component.async_register_entity_service(
         SERVICE_TURN_OFF,
-        {vol.Optional(CONF_STOP_ACTIONS, default=DEFAULT_STOP_ACTIONS): cv.boolean},
+        {
+            probatio.Optional(
+                CONF_STOP_ACTIONS, default=DEFAULT_STOP_ACTIONS
+            ): cv.boolean
+        },
         "async_turn_off",
     )
 
@@ -307,7 +311,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_RELOAD,
         reload_helper.execute_service,
-        schema=vol.Schema({vol.Optional(CONF_ID): str}),
+        schema=probatio.Schema({probatio.Optional(CONF_ID): str}),
     )
 
     websocket_api.async_register_command(hass, websocket_config)
@@ -735,7 +739,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             if not skip_condition and self._condition is not None:
                 try:
                     conditions_pass = self._condition.async_check(variables=variables)
-                except (vol.Invalid, HomeAssistantError) as err:
+                except (probatio.Invalid, HomeAssistantError) as err:
                     self._logger.error(
                         "Error while checking conditions of automation %s: %s",
                         self.entity_id,
@@ -802,7 +806,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                     },
                 )
                 automation_trace.set_error(err)
-            except (vol.Invalid, HomeAssistantError) as err:
+            except (probatio.Invalid, HomeAssistantError) as err:
                 self._logger.error(
                     "Error while executing automation %s: %s",
                     self.entity_id,

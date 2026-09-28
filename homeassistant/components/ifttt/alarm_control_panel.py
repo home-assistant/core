@@ -3,7 +3,7 @@
 import logging
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
@@ -52,19 +52,22 @@ CONF_CODE_ARM_REQUIRED = "code_arm_required"
 
 PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_CODE): cv.string,
-        vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
-        vol.Optional(CONF_EVENT_AWAY, default=DEFAULT_EVENT_AWAY): cv.string,
-        vol.Optional(CONF_EVENT_HOME, default=DEFAULT_EVENT_HOME): cv.string,
-        vol.Optional(CONF_EVENT_NIGHT, default=DEFAULT_EVENT_NIGHT): cv.string,
-        vol.Optional(CONF_EVENT_DISARM, default=DEFAULT_EVENT_DISARM): cv.string,
-        vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_CODE): cv.string,
+        probatio.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
+        probatio.Optional(CONF_EVENT_AWAY, default=DEFAULT_EVENT_AWAY): cv.string,
+        probatio.Optional(CONF_EVENT_HOME, default=DEFAULT_EVENT_HOME): cv.string,
+        probatio.Optional(CONF_EVENT_NIGHT, default=DEFAULT_EVENT_NIGHT): cv.string,
+        probatio.Optional(CONF_EVENT_DISARM, default=DEFAULT_EVENT_DISARM): cv.string,
+        probatio.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
     }
 )
 
-PUSH_ALARM_STATE_SERVICE_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_ENTITY_ID): cv.entity_ids, vol.Required(ATTR_STATE): cv.string}
+PUSH_ALARM_STATE_SERVICE_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        probatio.Required(ATTR_STATE): cv.string,
+    }
 )
 
 

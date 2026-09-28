@@ -7,7 +7,7 @@ import logging
 from typing import override
 
 from PIL import Image
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.camera import (
     PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
@@ -46,20 +46,22 @@ DEFAULT_QUALITY = 75
 
 PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_CACHE_IMAGES, default=False): cv.boolean,
-        vol.Optional(CONF_FORCE_RESIZE, default=False): cv.boolean,
-        vol.Optional(CONF_MODE, default=MODE_RESIZE): vol.In([MODE_RESIZE, MODE_CROP]),
-        vol.Optional(CONF_IMAGE_QUALITY): int,
-        vol.Optional(CONF_IMAGE_REFRESH_RATE): float,
-        vol.Optional(CONF_MAX_IMAGE_WIDTH): int,
-        vol.Optional(CONF_MAX_IMAGE_HEIGHT): int,
-        vol.Optional(CONF_MAX_STREAM_WIDTH): int,
-        vol.Optional(CONF_MAX_STREAM_HEIGHT): int,
-        vol.Optional(CONF_IMAGE_LEFT): int,
-        vol.Optional(CONF_IMAGE_TOP): int,
-        vol.Optional(CONF_STREAM_QUALITY): int,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_CACHE_IMAGES, default=False): cv.boolean,
+        probatio.Optional(CONF_FORCE_RESIZE, default=False): cv.boolean,
+        probatio.Optional(CONF_MODE, default=MODE_RESIZE): probatio.In(
+            [MODE_RESIZE, MODE_CROP]
+        ),
+        probatio.Optional(CONF_IMAGE_QUALITY): int,
+        probatio.Optional(CONF_IMAGE_REFRESH_RATE): float,
+        probatio.Optional(CONF_MAX_IMAGE_WIDTH): int,
+        probatio.Optional(CONF_MAX_IMAGE_HEIGHT): int,
+        probatio.Optional(CONF_MAX_STREAM_WIDTH): int,
+        probatio.Optional(CONF_MAX_STREAM_HEIGHT): int,
+        probatio.Optional(CONF_IMAGE_LEFT): int,
+        probatio.Optional(CONF_IMAGE_TOP): int,
+        probatio.Optional(CONF_STREAM_QUALITY): int,
     }
 )
 
