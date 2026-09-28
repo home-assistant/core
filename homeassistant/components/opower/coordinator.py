@@ -136,6 +136,37 @@ def _period_components(cost_read: CostRead) -> list[ReadComponent]:
     return components
 
 
+def _rate_period_statistics(
+    key: str,
+    id_prefix: str,
+    name_prefix: str,
+    consumption_unit_class: str,
+    consumption_unit: str,
+) -> _RatePeriodStatistics:
+    """Return the four statistics of the rate period with the given key."""
+    label = key.replace("_", " ")
+    return _RatePeriodStatistics(
+        metadata={
+            kind: StatisticMetaData(
+                mean_type=StatisticMeanType.NONE,
+                has_sum=True,
+                name=f"{name_prefix} {label} {kind}",
+                source=DOMAIN,
+                statistic_id=f"{DOMAIN}:{id_prefix}_{key}_energy_{kind}",
+                unit_class=(
+                    consumption_unit_class
+                    if kind in ("consumption", "return")
+                    else None
+                ),
+                unit_of_measurement=(
+                    consumption_unit if kind in ("consumption", "return") else None
+                ),
+            )
+            for kind in _RATE_PERIOD_KINDS
+        }
+    )
+
+
 def _rate_periods(
     cost_reads: list[CostRead],
     id_prefix: str,
@@ -156,32 +187,38 @@ def _rate_periods(
         for component in _period_components(cost_read):
             if (key := _rate_period_key(component)) is None or key in rate_periods:
                 continue
-            label = key.replace("_", " ")
-            rate_periods[key] = _RatePeriodStatistics(
-                metadata={
-                    kind: StatisticMetaData(
-                        mean_type=StatisticMeanType.NONE,
-                        has_sum=True,
-                        name=f"{name_prefix} {label} {kind}",
-                        source=DOMAIN,
-                        statistic_id=f"{DOMAIN}:{id_prefix}_{key}_energy_{kind}",
-                        unit_class=(
-                            consumption_unit_class
-                            if kind in ("consumption", "return")
-                            else None
-                        ),
-                        unit_of_measurement=(
-                            consumption_unit
-                            if kind in ("consumption", "return")
-                            else None
-                        ),
-                    )
-                    for kind in _RATE_PERIOD_KINDS
-                }
+            rate_periods[key] = _rate_period_statistics(
+                key, id_prefix, name_prefix, consumption_unit_class, consumption_unit
             )
     if rate_periods:
         _LOGGER.debug("Found rate periods: %s", list(rate_periods))
     return rate_periods
+
+
+def _rejected_rate_period_keys(cost_reads: list[CostRead]) -> set[str]:
+    """Return the rate period keys that only appear in rejected reads.
+
+    These are the periods of reads whose breakdown does not add up. They are
+    never created from such reads, but a period that was stored before, from
+    a version of the read that did add up, must still get its zero point so
+    the corrected read replaces the old one.
+    """
+    accepted: set[str] = set()
+    rejected: set[str] = set()
+    for cost_read in cost_reads:
+        if not cost_read.read_components:
+            continue
+        if components := _period_components(cost_read):
+            accepted.update(
+                key for c in components if (key := _rate_period_key(c)) is not None
+            )
+            continue
+        rejected.update(
+            key
+            for c in cost_read.read_components
+            if (c.consumption or c.cost) and (key := _rate_period_key(c)) is not None
+        )
+    return rejected - accepted
 
 
 def _safe_get_sum(records: list[Any]) -> float:
@@ -457,6 +494,15 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                 consumption_unit_class,
                 consumption_unit,
             )
+            if last_stats_time is not None:
+                await self._async_add_stored_rate_periods(
+                    rate_periods,
+                    cost_reads,
+                    id_prefix,
+                    name_prefix,
+                    consumption_unit_class,
+                    consumption_unit,
+                )
             if rate_periods and last_stats_time is not None:
                 await self._async_init_rate_period_sums(
                     rate_periods, dt_util.utc_from_timestamp(last_stats_time)
@@ -478,6 +524,14 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                         account, self.api.utility.timezone()
                     )
                     rate_periods = _rate_periods(
+                        cost_reads,
+                        id_prefix,
+                        name_prefix,
+                        consumption_unit_class,
+                        consumption_unit,
+                    )
+                    await self._async_add_stored_rate_periods(
+                        rate_periods,
                         cost_reads,
                         id_prefix,
                         name_prefix,
@@ -610,6 +664,33 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                     async_add_external_statistics(self.hass, metadata, statistics)
 
         return last_changed_per_account
+
+    async def _async_add_stored_rate_periods(
+        self,
+        rate_periods: dict[str, _RatePeriodStatistics],
+        cost_reads: list[CostRead],
+        id_prefix: str,
+        name_prefix: str,
+        consumption_unit_class: str,
+        consumption_unit: str,
+    ) -> None:
+        """Add the stored rate periods that only appear in rejected reads.
+
+        A period whose only reads in the window stopped adding up after a
+        correction is not found by _rate_periods, so its old points would never
+        be replaced. Such a period is kept if it has stored statistics, so it
+        gets zero points for those reads. A period that was never stored is not
+        created from reads that do not add up.
+        """
+        for key in _rejected_rate_period_keys(cost_reads) - set(rate_periods):
+            rate_period = _rate_period_statistics(
+                key, id_prefix, name_prefix, consumption_unit_class, consumption_unit
+            )
+            statistic_id = rate_period.metadata["consumption"]["statistic_id"]
+            if await get_instance(self.hass).async_add_executor_job(
+                get_last_statistics, self.hass, 1, statistic_id, True, {"sum"}
+            ):
+                rate_periods[key] = rate_period
 
     async def _async_init_rate_period_sums(
         self, rate_periods: dict[str, _RatePeriodStatistics], start: datetime

@@ -1193,6 +1193,68 @@ async def test_coordinator_rate_periods_skip_reads_that_do_not_add_up(
     ]
 
 
+async def test_coordinator_rate_period_zeroed_when_correction_does_not_add_up(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test a stored period is zeroed when its only read stops adding up.
+
+    The period is only in the corrected read, whose breakdown no longer adds
+    up. It is not found from the reads that do, but it has stored statistics,
+    so its old point must be replaced with a zero one instead of staying.
+    """
+    hour = [dt_util.as_utc(datetime(2023, 1, 1, 8 + i)) for i in range(2)]
+
+    def reads(second_consumption: float) -> list[CostRead]:
+        return [
+            CostRead(
+                start_time=hour[0],
+                end_time=hour[1],
+                consumption=2.0,
+                provided_cost=0.5,
+                read_components=[_read_component("OFF_PEAK", 2.0, 0.5)],
+            ),
+            CostRead(
+                start_time=hour[1],
+                end_time=hour[1] + timedelta(hours=1),
+                consumption=second_consumption,
+                provided_cost=0.5,
+                read_components=[
+                    _read_component("OFF_PEAK", 1.0, 0.25),
+                    _read_component("PART_PEAK", 1.0, 0.25),
+                ],
+            ),
+        ]
+
+    mock_opower_api.async_get_cost_reads.return_value = reads(2.0)
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    # The utility corrects the second read, and its breakdown no longer adds up
+    mock_opower_api.async_get_cost_reads.return_value = reads(3.0)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    part_peak_id = "opower:pge_elec_111111_part_peak_energy_consumption"
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.utc_from_timestamp(0),
+        None,
+        {part_peak_id},
+        "hour",
+        None,
+        {"state", "sum"},
+    )
+    assert [(s["start"], s["state"], s["sum"]) for s in stats[part_peak_id]] == [
+        (hour[0].timestamp(), 0.0, 0.0),
+        (hour[1].timestamp(), 0.0, 0.0),
+    ]
+
+
 async def test_coordinator_rate_periods_skip_reads_with_unkeyed_components(
     recorder_mock: Recorder,
     hass: HomeAssistant,
