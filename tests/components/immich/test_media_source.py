@@ -938,6 +938,27 @@ async def test_browse_media_account_not_loaded(
     assert exc_info.value.translation_key == "account_not_loaded"
 
 
+@pytest.mark.usefixtures("mock_immich")
+async def test_browse_media_only_account_unloaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test browse_media on the only account after it is unloaded."""
+    assert await async_setup_component(hass, "media_source", {})
+
+    with patch("homeassistant.components.immich.PLATFORMS", []):
+        await setup_integration(hass, mock_config_entry)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    source = await async_get_media_source(hass)
+
+    with pytest.raises(BrowseError) as exc_info:
+        await source.async_browse_media(
+            MediaSourceItem(hass, DOMAIN, mock_config_entry.unique_id, None)
+        )
+    assert exc_info.value.translation_key == "account_not_loaded"
+
+
 @pytest.mark.parametrize(
     "unique_id",
     [

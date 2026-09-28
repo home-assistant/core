@@ -146,10 +146,11 @@ class ImmichMediaSource(MediaSource):
         item: MediaSourceItem,
     ) -> BrowseMediaSource:
         """Return media."""
-        if not (entries := self.hass.config_entries.async_loaded_entries(DOMAIN)):
+        if not self.hass.config_entries.async_entries(DOMAIN):
             raise BrowseError(
                 translation_domain=DOMAIN, translation_key="not_configured"
             )
+        entries = self.hass.config_entries.async_loaded_entries(DOMAIN)
 
         can_search = False
         if item.identifier:
