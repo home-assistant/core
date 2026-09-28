@@ -1316,11 +1316,13 @@ class EntityPlatform:
                 self._parallel_updates_semaphore_limit is not None
                 and self.parallel_updates is not None
             ):
-                self.parallel_updates = asyncio.Semaphore(
+                new_semaphore = asyncio.Semaphore(
                     self._parallel_updates_semaphore_limit
                 )
                 for entity in self.entities.values():
-                    entity.parallel_updates = self.parallel_updates
+                    if entity.parallel_updates is not self.parallel_updates:
+                        entity.parallel_updates = new_semaphore
+                self.parallel_updates = new_semaphore
 
         async with self._process_updates:
             if self._update_in_sequence or len(self.entities) <= 1:
