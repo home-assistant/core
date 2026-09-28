@@ -225,11 +225,8 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                 await self._async_remove_device_stale(stale_devices)
             self.previous_devices = current_devices
 
-            # self.data is None only on the first refresh: previous_devices may
-            # already equal current_devices there if the device registry
-            # persisted them from an earlier run, so device_list_changed alone
-            # cannot be relied on to catch a fresh start (in-memory state is
-            # always empty then, regardless of what the registry remembers).
+            # sync data on first refresh and after the device list changes
+            # self.data is None only on the first refresh
             if self.data is None or device_list_changed:
                 await self._async_sync_on_device_list_change()
 

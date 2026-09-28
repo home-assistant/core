@@ -3,7 +3,12 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
-from boschshcpy import BypassService, SilentModeService, ThermostatService
+from boschshcpy import (
+    BypassService,
+    CameraLightService,
+    SilentModeService,
+    ThermostatService,
+)
 import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -17,6 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
+    camera_eyes_device,
     light_switch_bsm_device,
     micromodule_relay_device,
     motion_detector2_device,
@@ -1001,3 +1007,39 @@ async def test_micromodule_relay_no_switch_configuration_support(
 
     assert hass.states.get("switch.relay_swap_inputs") is None
     assert hass.states.get("switch.relay_swap_outputs") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"camera_eyes": [camera_eyes_device(cameralight=CameraLightService.State.OFF)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_camera_eyes_cameralight(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Camera Eyes' camera light is exposed and controllable as a switch."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.camera_eyes[0]
+
+    state = hass.states.get("switch.camera_eyes_camera_light")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.camera_eyes_camera_light"},
+        blocking=True,
+    )
+    assert device.cameralight is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.camera_eyes_camera_light"},
+        blocking=True,
+    )
+    assert device.cameralight is False
