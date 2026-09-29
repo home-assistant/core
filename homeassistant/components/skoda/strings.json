@@ -18,7 +18,7 @@
     "step": {
       "reauth_confirm": {
         "data": {
-          "api_key": "API key"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "api_key": "Your API key from the MyŠkoda app under Profile -> Smart Home."
@@ -28,7 +28,7 @@
       },
       "user": {
         "data": {
-          "api_key": "API key",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
           "vin": "Vehicle VIN (17 characters)"
         },
         "data_description": {
@@ -60,7 +60,7 @@
           "ac": "AC",
           "dc": "DC",
           "not_charging": "Not charging",
-          "off": "Off"
+          "off": "[%key:common::state::off%]"
         }
       },
       "charging_power": {
