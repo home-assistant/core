@@ -17,8 +17,11 @@ WAKE_UP_ONLINE = {"response": {"state": TeslemetryState.ONLINE}, "error": None}
 PRODUCTS = load_json_object_fixture("products.json", DOMAIN)
 PRODUCTS_MODERN = load_json_object_fixture("products.json", DOMAIN)
 PRODUCTS_MODERN["response"][0]["command_signing"] = "required"
+CYBERTRUCK_VIN = "7G2CEHED0RA000000"
+# A streaming vehicle's products entry carries no vehicle_config.
 PRODUCTS_CYBERTRUCK = load_json_object_fixture("products.json", DOMAIN)
-PRODUCTS_CYBERTRUCK["response"][0]["vehicle_config"]["car_type"] = "cybertruck"
+PRODUCTS_CYBERTRUCK["response"][0]["vin"] = CYBERTRUCK_VIN
+del PRODUCTS_CYBERTRUCK["response"][0]["vehicle_config"]
 VEHICLE_DATA = load_json_object_fixture("vehicle_data.json", DOMAIN)
 VEHICLE_DATA_ASLEEP = load_json_object_fixture("vehicle_data.json", DOMAIN)
 VEHICLE_DATA_ASLEEP["response"]["state"] = TeslemetryState.OFFLINE
@@ -33,8 +36,39 @@ SITE_INFO_WEEK_CROSSING = load_json_object_fixture(
     "site_info_week_crossing.json", DOMAIN
 )
 SITE_INFO_MULTI_SEASON = load_json_object_fixture("site_info_multi_season.json", DOMAIN)
-ENERGY_HISTORY = load_json_object_fixture("energy_history.json", DOMAIN)
-ENERGY_HISTORY_EMPTY = load_json_object_fixture("energy_history_empty.json", DOMAIN)
+
+# The site-local day the streamed energy_totals fixtures below belong to. The
+# site timezone site_info.json declares is deliberately not the test machine's.
+ENERGY_TOTALS_DATE = "2024-09-18"
+
+# A valid, non-empty day: the server sums every period itself and sends 0 for a
+# field that never appeared.
+ENERGY_TOTALS = {
+    "solar_energy_exported": 724,
+    "generator_energy_exported": 0,
+    "grid_energy_imported": 0,
+    "grid_services_energy_imported": 0,
+    "grid_services_energy_exported": 0,
+    "grid_energy_exported_from_solar": 2,
+    "grid_energy_exported_from_generator": 0,
+    "grid_energy_exported_from_battery": 0,
+    "battery_energy_exported": 36,
+    "battery_energy_imported_from_grid": 0,
+    "battery_energy_imported_from_solar": 684,
+    "battery_energy_imported_from_generator": 0,
+    "consumer_energy_imported_from_grid": 0,
+    "consumer_energy_imported_from_solar": 38,
+    "consumer_energy_imported_from_battery": 36,
+    "consumer_energy_imported_from_generator": 0,
+    "total_home_usage": 74,
+    "total_battery_charge": 684,
+    "total_battery_discharge": 36,
+    "total_solar_generation": 724,
+    "total_grid_energy_exported": 2,
+}
+
+# An empty or malformed day: every field comes back null.
+ENERGY_TOTALS_NULL = dict.fromkeys(ENERGY_TOTALS)
 
 COMMAND_OK = {"response": {"result": True, "reason": ""}}
 COMMAND_REASON = {"response": {"result": False, "reason": "already closed"}}
@@ -92,6 +126,10 @@ METADATA = {
             "name": "Energy Site",
         }
     },
+}
+METADATA_CYBERTRUCK = {
+    **METADATA,
+    "vehicles": {CYBERTRUCK_VIN: METADATA["vehicles"]["LRW3F7EK4NC700000"]},
 }
 METADATA_LEGACY = {
     "uid": UNIQUE_ID,

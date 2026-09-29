@@ -16,8 +16,14 @@ from homeassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
 from homeassistant.components.bluetooth.manager import HomeAssistantBluetoothManager
 from homeassistant.components.teslemetry.const import DOMAIN, SUBENTRY_TYPE_VEHICLE
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
@@ -30,7 +36,7 @@ from . import (
 )
 from .const import ADDRESS, VEHICLE_DATA_ALT, VIN
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, mock_restore_cache
 from tests.components.bluetooth import (
     generate_advertisement_data,
     generate_ble_device,
@@ -98,14 +104,12 @@ async def test_binary_sensors_streaming(
                 Signal.RD_WINDOW: "WindowStateClosed",
                 Signal.RP_WINDOW: "WindowStatePartiallyOpen",
                 Signal.DOOR_STATE: {
-                    "DoorState": {
-                        "DriverFront": True,
-                        "DriverRear": False,
-                        "PassengerFront": False,
-                        "PassengerRear": False,
-                        "TrunkFront": False,
-                        "TrunkRear": False,
-                    }
+                    "DriverFront": True,
+                    "DriverRear": False,
+                    "PassengerFront": False,
+                    "PassengerRear": False,
+                    "TrunkFront": False,
+                    "TrunkRear": False,
                 },
                 Signal.DRIVER_SEAT_BELT: None,
                 Signal.REAR_DEFROST_ENABLED: True,
@@ -121,13 +125,35 @@ async def test_binary_sensors_streaming(
 
     # Assert the entities restored their values with concrete assertions
     assert hass.states.get("binary_sensor.test_front_driver_window").state == "on"
-    assert hass.states.get("binary_sensor.test_front_passenger_window").state == "off"
+    assert (
+        hass.states.get("binary_sensor.test_front_passenger_window").state
+        == STATE_UNKNOWN
+    )
     assert hass.states.get("binary_sensor.test_rear_driver_window").state == "off"
     assert hass.states.get("binary_sensor.test_rear_passenger_window").state == "on"
-    assert hass.states.get("binary_sensor.test_front_driver_door").state == "off"
+    assert hass.states.get("binary_sensor.test_front_driver_door").state == "on"
     assert hass.states.get("binary_sensor.test_front_passenger_door").state == "off"
-    assert hass.states.get("binary_sensor.test_driver_seat_belt").state == "off"
+    assert hass.states.get("binary_sensor.test_driver_seat_belt").state == STATE_UNKNOWN
     assert hass.states.get("binary_sensor.test_rear_defroster").state == "on"
+
+
+@pytest.mark.parametrize("restored_state", [STATE_UNKNOWN, STATE_UNAVAILABLE])
+@pytest.mark.parametrize(
+    "entity_id",
+    ["binary_sensor.test_front_driver_window", "binary_sensor.test_charge_cable"],
+)
+async def test_binary_sensors_streaming_restore_unknown(
+    hass: HomeAssistant,
+    entity_id: str,
+    restored_state: str,
+) -> None:
+    """Tests that a restored unknown or unavailable state is not restored as off."""
+
+    mock_restore_cache(hass, (State(entity_id, restored_state),))
+
+    await setup_platform(hass, [Platform.BINARY_SENSOR])
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
 async def test_binary_sensors_connectivity(
