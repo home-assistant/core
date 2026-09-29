@@ -67,10 +67,7 @@ from .hub import UnifiHub
 
 PARALLEL_UPDATES = 0
 
-# WAN interfaces a gateway can report uptime stats for. UniFi names the first
-# one "WAN" rather than "WAN1". Gateways report only the interfaces they
-# actually have, and supported_fn filters per device, so listing one that a
-# given gateway lacks creates no entity.
+# UniFi names the first WAN "WAN", not "WAN1".
 type WanName = Literal["WAN", "WAN2", "WAN3"]
 
 

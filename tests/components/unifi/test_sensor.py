@@ -1923,7 +1923,6 @@ async def test_device_uptime(
             STATE_UNKNOWN,
             id="cloudflare_no_response",
         ),
-        # A third WAN reports under its own key with the same monitor set
         pytest.param(
             "WAN3",
             "microsoft_wan3",
