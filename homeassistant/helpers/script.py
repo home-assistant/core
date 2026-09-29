@@ -1096,6 +1096,8 @@ class _ScriptRun:
         except (*CONFIGURATION_ERRORS, exceptions.HomeAssistantError):
             raise
         except Exception as ex:
+            if not self._action.get(CONF_CONTINUE_ON_ERROR, False):
+                raise
             raise exceptions.HomeAssistantError(ex) from ex
         if response_variable:
             self._variables[response_variable] = response_data

@@ -4176,7 +4176,7 @@ async def test_propagate_error_service_exception(hass: HomeAssistant) -> None:
     sequence = cv.SCRIPT_SCHEMA([{"action": "test.script"}, {"event": event}])
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
-    with pytest.raises(exceptions.HomeAssistantError, match="BROKEN"):
+    with pytest.raises(ValueError, match="BROKEN"):
         await script_obj.async_run(context=Context())
 
     assert len(events) == 0
