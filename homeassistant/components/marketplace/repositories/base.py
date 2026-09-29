@@ -5,6 +5,7 @@ from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from functools import partial
 import io
+import os
 from pathlib import Path
 import shutil
 import tempfile
@@ -162,6 +163,17 @@ def _path_below(path: str, directory: str | None) -> str | None:
     if not path.startswith(f"{directory}/"):
         return None
     return path[len(directory) + 1 :]
+
+
+def _remove_written_content(marketplace: MarketplaceManager, path: str) -> None:
+    """Remove what a failed first download wrote, this does I/O."""
+    if not os.path.lexists(path) or not is_safe(marketplace, path):
+        return
+
+    if os.path.isdir(path) and not os.path.islink(path):
+        shutil.rmtree(path)
+    else:
+        os.remove(path)
 
 
 def _check_archive_size(archive: zipfile.ZipFile) -> None:
@@ -1136,17 +1148,27 @@ class Repository:
 
         persistent_directory = await self._async_back_up_persistent_directory()
         backup: Backup | None = None
+        backup_path = self._backup_path()
+        existed = (
+            backup_path is not None
+            and await self.marketplace.hass.async_add_executor_job(
+                os.path.lexists, backup_path
+            )
+        )
 
         def _restore_backups() -> None:
             """Put back what the backups moved away."""
             if backup is not None:
                 backup.restore()
                 backup.cleanup()
+            # A first download has no backup, what it wrote so far goes instead
+            if backup_path is not None and not existed:
+                _remove_written_content(self.marketplace, backup_path)
             if persistent_directory is not None:
                 persistent_directory.restore()
                 persistent_directory.cleanup()
 
-        if (backup_path := self._backup_path()) is not None:
+        if backup_path is not None:
             content_backup = Backup(
                 marketplace=self.marketplace, local_path=backup_path
             )

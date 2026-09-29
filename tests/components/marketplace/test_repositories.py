@@ -2293,7 +2293,7 @@ async def test_download_from_the_catalog_archive_too_large(
         pytest.param(
             "hacs-test-org/theme-basic",
             "theme-basic-1.0.0/themes/../../../escaped.yaml",
-            "themes/escaped/escaped.yaml",
+            "themes/example/example.yaml",
             id="written-file",
         ),
     ],

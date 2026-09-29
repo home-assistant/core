@@ -15,7 +15,7 @@ from homeassistant.components.marketplace.utils.validate import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_START, Platform
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from . import get_marketplace
@@ -214,3 +214,22 @@ async def test_unloaded_before_start_runs_no_startup_tasks(
         await hass.async_block_till_done()
 
     startup_tasks.assert_not_called()
+
+
+async def test_restart_repair_follows_a_new_repository_id(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the repair a reload reads the pending restart from moves along."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    await repository.async_download_repository()
+    old_issue = f"restart_required_{REPOSITORY_INTEGRATION_ID}_{repository.ref}"
+    assert issue_registry.async_get_issue(DOMAIN, old_issue)
+
+    marketplace.async_set_repository_id(repository, "999999")
+
+    assert issue_registry.async_get_issue(DOMAIN, old_issue) is None
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"restart_required_999999_{repository.ref}"
+    )

@@ -600,3 +600,26 @@ async def test_valid_release_updates_the_integration(
     assert integration is not None
     assert integration.version == "2.0.0"
     assert repository.data.installed_version == "2.0.0"
+
+
+async def test_failed_first_download_leaves_nothing_behind(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a first download that fails removes what it wrote so far."""
+    repository = PluginRepository(marketplace, "review/new-card")
+    folder = Path(repository.localpath)
+    assert not folder.exists()
+
+    async def download() -> None:
+        await repository._async_write_file(
+            FileInformation(
+                name="new-card.js", path="new-card.js", url="https://example.org/card"
+            ),
+            b"half of a card",
+        )
+        repository.validate.errors.append("chunk.js failed to download")
+
+    with pytest.raises(MarketplaceError):
+        await repository._async_write_content(download)
+
+    assert not folder.exists()

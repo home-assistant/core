@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
+from aiogithubapi.models.git_tree import GitHubGitTreeEntryModel
 import pytest
 
 from homeassistant.components.marketplace.base import MarketplaceManager
@@ -139,3 +140,56 @@ async def test_renamed_card_stays_downloaded_after_a_reload(
     assert downloaded.is_dir()
     assert repository.data.installed
     assert Path(repository.localpath) == downloaded
+
+
+async def test_template_can_not_take_the_file_of_another_template(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a template version naming the file of another template is refused."""
+    owner = TemplateRepository(marketplace, "owner/new-template")
+    owner.data.id = "8005"
+    owner.data.installed = True
+    owner.data.file_name = "new.jinja"
+    marketplace.repositories.register(owner)
+
+    repository = TemplateRepository(marketplace, "owner/template")
+    repository.data.id = "8006"
+    repository.data.installed = True
+    repository.data.file_name = "old.jinja"
+    repository.repository_manifest.filename = "new.jinja"
+
+    with pytest.raises(MarketplaceError, match="is owned by owner/new-template"):
+        await repository.async_pre_install()
+
+
+@pytest.mark.parametrize(
+    ("content_in_root", "tree", "file_name"),
+    [
+        pytest.param(
+            True, ["theme.yaml", "examples/demo.yaml"], "theme.yaml", id="root"
+        ),
+        pytest.param(
+            False,
+            ["themes/theme.yaml", "themes/examples/demo.yaml", "other/demo.yaml"],
+            "theme.yaml",
+            id="themes_folder",
+        ),
+    ],
+)
+async def test_theme_targets_the_file_in_its_folder(
+    marketplace: MarketplaceManager,
+    content_in_root: bool,
+    tree: list[str],
+    file_name: str,
+) -> None:
+    """Test a theme picks its file from the folder validation checked, not below."""
+    repository = ThemeRepository(marketplace, "owner/theme")
+    repository.repository_manifest.content_in_root = content_in_root
+    repository.content.path.remote = "" if content_in_root else "themes"
+    repository.tree = [
+        GitHubGitTreeEntryModel({"path": path, "type": "blob"}) for path in tree
+    ]
+
+    repository.update_filenames()
+
+    assert repository.data.file_name == file_name

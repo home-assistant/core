@@ -25,7 +25,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -35,6 +39,7 @@ from .const import (
     CONF_WARNING_ACCEPTED,
     DOMAIN,
     LEGACY_HACS_INTEGRATION_REPOSITORY,
+    RESTART_ISSUE_PREFIX,
     TV,
     WARNING_REMINDER_INTERVAL,
     WARNING_VERSION,
@@ -613,6 +618,34 @@ class MarketplaceManager:
         self.repositories.unregister(repository)
         repository.data.id = repo_id
         self.repositories.register(repository, default=was_default)
+
+        if previous_id in self.common.custom_repositories:
+            self.common.custom_repositories.discard(previous_id)
+            self.common.custom_repositories.add(repo_id)
+
+        # The repair is how a reload knows the download still waits for a restart
+        issue_registry = ir.async_get(self.hass)
+        for domain, issue_id in list(issue_registry.issues):
+            if domain != DOMAIN or not issue_id.startswith(
+                f"{RESTART_ISSUE_PREFIX}{previous_id}_"
+            ):
+                continue
+            issue = issue_registry.issues[(domain, issue_id)]
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                issue_id.replace(
+                    f"{RESTART_ISSUE_PREFIX}{previous_id}_",
+                    f"{RESTART_ISSUE_PREFIX}{repo_id}_",
+                    1,
+                ),
+                is_fixable=True,
+                issue_domain=issue.issue_domain,
+                severity=IssueSeverity.WARNING,
+                translation_key="restart_required",
+                translation_placeholders=issue.translation_placeholders,
+            )
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
 
         entity_registry = er.async_get(self.hass)
         for platform in (Platform.SWITCH, Platform.UPDATE):

@@ -167,8 +167,10 @@ class ThemeRepository(Repository):
     @override
     def update_filenames(self) -> None:
         """Get the filename to target."""
+        # Only the folder validation checked, an example below it is not the theme
+        directory = (self.content.path.remote or "").strip("/")
         for entry in self.tree:
-            if entry.path.startswith(self.content.path.remote) and entry.path.endswith(
+            if os.path.dirname(entry.path) == directory and entry.path.endswith(
                 ".yaml"
             ):
                 self.data.file_name = tree_entry_filename(entry)

@@ -52,6 +52,21 @@ class TemplateRepository(Repository):
             self.data.file_name = self._file_name_to_write
 
     @override
+    async def async_pre_install(self) -> None:
+        """Run pre install steps."""
+        # The folder is shared, a template file belongs to one repository
+        for repository in self.marketplace.repositories.list_downloaded:
+            if (
+                repository is not self
+                and repository.data.category == RepositoryCategory.TEMPLATE
+                and repository.data.file_name == self._file_name_to_write
+            ):
+                raise MarketplaceError(
+                    f"The '{self._file_name_to_write}' template is owned by"
+                    f" {repository.data.full_name}"
+                )
+
+    @override
     def _backup_path(self) -> str | None:
         """Return the template file, the folder is shared with other templates."""
         if not self._file_name_to_write:
