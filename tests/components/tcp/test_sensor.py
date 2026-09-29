@@ -1,5 +1,6 @@
 """The tests for the TCP sensor platform."""
 
+from collections.abc import Callable
 from copy import copy
 from unittest.mock import MagicMock, call, patch
 
@@ -257,11 +258,11 @@ async def test_ssl_state_verify_off(
     ("platform", "expected"), [("sensor", "7.123"), ("binary_sensor", STATE_OFF)]
 )
 @pytest.mark.parametrize(
-    ("method", "error", "failure_result"),
+    ("method", "side_effect"),
     [
-        ("connect", OSError("Boom"), None),
-        ("send", OSError("Boom"), None),
-        ("select", None, (False, False, False)),
+        ("connect", OSError("Boom")),
+        ("send", OSError("Boom")),
+        ("select", lambda *args: (False, False, False)),
     ],
 )
 async def test_update_failure_after_success(
@@ -272,8 +273,7 @@ async def test_update_failure_after_success(
     platform: str,
     expected: str,
     method: str,
-    error: OSError | None,
-    failure_result: tuple[bool, bool, bool] | None,
+    side_effect: OSError | Callable[..., tuple[bool, bool, bool]],
 ) -> None:
     """Test connection failures, response timeouts, and recovery after a successful update."""
     assert await async_setup_component(hass, platform, {platform: SENSOR_TEST_CONFIG})
@@ -288,9 +288,7 @@ async def test_update_failure_after_success(
         "send": mock_socket.send,
         "select": mock_select,
     }[method]
-    success_result = failing_method.return_value
-    failing_method.side_effect = error
-    failing_method.return_value = failure_result
+    failing_method.side_effect = side_effect
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -300,7 +298,6 @@ async def test_update_failure_after_success(
     assert state.state == STATE_UNAVAILABLE
 
     failing_method.side_effect = None
-    failing_method.return_value = success_result
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
