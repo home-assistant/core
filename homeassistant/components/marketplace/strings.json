@@ -85,6 +85,9 @@
     "remove_failed": {
       "message": "Could not remove {repository}, see the log for details."
     },
+    "replaces_built_in_not_confirmed": {
+      "message": "{repository} replaces the built-in {domain} integration, confirm that before downloading it."
+    },
     "repository_downloaded": {
       "message": "Remove the download of {repository} first."
     },

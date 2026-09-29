@@ -23,6 +23,9 @@ from homeassistant.components.marketplace.enums import (
 )
 from homeassistant.components.marketplace.exceptions import MarketplaceError
 from homeassistant.components.marketplace.repositories.base import RepositoryManifest
+from homeassistant.components.marketplace.repositories.integration import (
+    IntegrationRepository,
+)
 from homeassistant.components.marketplace.utils.storage import async_save_to_storage
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -853,6 +856,94 @@ async def test_repository_download(
     assert (await client.receive_json())["success"]
 
     assert marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID).data.installed
+
+
+@pytest.mark.parametrize(
+    ("message", "downloaded"),
+    [
+        pytest.param({}, False, id="not_confirmed"),
+        pytest.param({"confirm_replace_built_in": True}, True, id="confirmed"),
+    ],
+)
+async def test_download_replacing_a_built_in_needs_confirmation(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    message: dict[str, Any],
+    downloaded: bool,
+) -> None:
+    """Test a first download over a built-in integration has to be confirmed."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    client = await hass_ws_client(hass)
+
+    with patch.object(repository, "async_replaces_built_in", return_value=True):
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/download",
+                "repository": REPOSITORY_INTEGRATION_ID,
+            }
+            | message
+        )
+        response = await client.receive_json()
+
+    assert response["success"] is downloaded
+    assert repository.data.installed is downloaded
+
+
+async def test_update_replacing_a_built_in_needs_no_new_confirmation(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a repository already downloaded was confirmed when it was."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.installed = True
+    client = await hass_ws_client(hass)
+
+    with (
+        patch.object(repository, "async_replaces_built_in", return_value=True),
+        patch.object(repository, "async_download_repository") as download,
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/download",
+                "repository": REPOSITORY_INTEGRATION_ID,
+            }
+        )
+        assert (await client.receive_json())["success"]
+
+    download.assert_called_once()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_repositories_add_invalid_repository(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test adding a repository that fails validation answers why."""
+    client = await hass_ws_client(hass)
+
+    async def invalid(self: IntegrationRepository) -> bool:
+        self.validate.errors.append("Invalid repository contents")
+        return False
+
+    with patch.object(IntegrationRepository, "validate_repository", invalid):
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repositories/add",
+                "repository": "owner/invalid",
+                "category": "integration",
+            }
+        )
+        response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == translated_error(
+        "add_failed",
+        "add_failed",
+        "Adding owner/invalid failed: Invalid repository contents",
+        repository="owner/invalid",
+        error="Invalid repository contents",
+    )
 
 
 async def test_repository_download_failure(

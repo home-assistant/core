@@ -62,9 +62,16 @@ class CatalogClient:
                 f"Error fetching data from the catalog: {exception}"
             ) from exception
 
-        self._etags[endpoint] = etag
+        try:
+            data = json_loads(content)
+        except ValueError as exception:
+            raise MarketplaceError(
+                f"The catalog sent {endpoint} that is not valid JSON: {exception}"
+            ) from exception
 
-        return json_loads(content)
+        # Only for data that was usable, or a broken answer would stick as not modified
+        self._etags[endpoint] = etag
+        return data
 
     async def get_data(self, section: str | None, *, validate: bool) -> Any:
         """Get data."""
@@ -73,8 +80,14 @@ class CatalogClient:
             return data
 
         if section is not None and section in VALIDATE_FETCHED_V2_REPO_DATA:
+            if not isinstance(data, dict):
+                raise MarketplaceError(f"The catalog of {section} is not an object")
+
             validated_repositories: dict[str, Any] = {}
             for key, repo_data in data.items():
+                if not isinstance(repo_data, dict):
+                    LOGGER.info("Got invalid data for %s (not an object)", key)
+                    continue
                 try:
                     validated_repositories[key] = VALIDATE_FETCHED_V2_REPO_DATA[
                         section
@@ -91,6 +104,9 @@ class CatalogClient:
 
         if not (validator := CRITICAL_REMOVED_VALIDATORS.get(section)):
             raise ValueError(f"Do not know how to validate {section}")
+
+        if not isinstance(data, list):
+            raise MarketplaceError(f"The catalog of {section} is not a list")
 
         validated: list[Any] = []
         for repo_data in data:

@@ -198,7 +198,7 @@ async def marketplace_repositories_add(
         return
 
     try:
-        await marketplace.async_register_repository(
+        errors = await marketplace.async_register_repository(
             repository_full_name=repository,
             category=category,
         )
@@ -223,6 +223,16 @@ async def marketplace_repositories_add(
             "add_failed",
             "add_failed",
             {"repository": repository, "error": str(exception)},
+        )
+        return
+
+    if errors:
+        send_translated_error(
+            connection,
+            msg["id"],
+            "add_failed",
+            "add_failed",
+            {"repository": repository, "error": "; ".join(errors)},
         )
         return
 

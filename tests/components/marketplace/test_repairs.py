@@ -10,6 +10,7 @@ from homeassistant.components.marketplace.const import DOMAIN, STORAGE_VERSION
 from homeassistant.components.marketplace.critical import (
     async_create_critical_repository_issue,
 )
+from homeassistant.components.marketplace.exceptions import MarketplaceError
 from homeassistant.components.marketplace.repairs import async_create_fix_flow
 from homeassistant.components.marketplace.utils.storage import (
     async_load_from_storage,
@@ -210,3 +211,32 @@ async def test_critical_repository_check_keeps_it_unacknowledged(
     assert await async_load_from_storage(hass, "critical") == [
         CRITICAL_REPOSITORY | {"acknowledged": False}
     ]
+
+
+async def test_critical_repository_that_can_not_be_removed_is_tried_again(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a failed removal is not recorded as done, the next check retries it."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.installed = True
+
+    with (
+        patch.object(
+            marketplace.data_client, "get_data", return_value=[CRITICAL_REPOSITORY]
+        ),
+        patch.object(
+            repository, "uninstall", side_effect=MarketplaceError("Disk is gone")
+        ) as uninstall,
+        patch.object(hass, "async_stop") as stop,
+    ):
+        await marketplace.async_handle_critical_repositories()
+        await marketplace.async_handle_critical_repositories()
+        await hass.async_block_till_done()
+
+    assert uninstall.call_count == 2
+    stop.assert_not_called()
+    assert marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    assert issue_registry.async_get_issue(DOMAIN, CRITICAL_ISSUE_ID) is None
+    assert not await async_load_from_storage(hass, "critical")

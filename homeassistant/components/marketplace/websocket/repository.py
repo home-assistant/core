@@ -259,6 +259,7 @@ async def marketplace_repository_beta(
         probatio.Required("type"): "marketplace/repository/download",
         probatio.Required("repository"): cv.string,
         probatio.Optional("version"): cv.string,
+        probatio.Optional("confirm_replace_built_in", default=False): cv.boolean,
     }
 )
 @websocket_api.require_admin
@@ -270,10 +271,28 @@ async def marketplace_repository_download(
     msg: dict[str, Any],
     marketplace: MarketplaceManager,
 ) -> None:
-    """Set the version of a repository."""
+    """Download a repository, or another version of it."""
     repository = marketplace.repositories.get_by_id(msg["repository"])
     if repository is None:
         send_repository_not_found(connection, msg["id"], msg["repository"])
+        return
+
+    # Confirmed with the first download, updates replace the same integration
+    if (
+        not repository.data.installed
+        and not msg["confirm_replace_built_in"]
+        and await repository.async_replaces_built_in()
+    ):
+        send_translated_error(
+            connection,
+            msg["id"],
+            "replaces_built_in",
+            "replaces_built_in_not_confirmed",
+            {
+                "repository": repository.data.full_name,
+                "domain": str(repository.data.domain),
+            },
+        )
         return
 
     try:

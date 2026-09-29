@@ -3,8 +3,8 @@
 from collections.abc import Awaitable, Callable
 from functools import partial
 from pathlib import Path
-import re
 from typing import TYPE_CHECKING, override
+from urllib.parse import quote
 
 from homeassistant.components import lovelace
 from homeassistant.components.frontend import DATA_EXTRA_MODULE_URL
@@ -21,8 +21,6 @@ from ..exceptions import CatalogContentUnresolvedError, MarketplaceError
 from ..utils.decorator import concurrent
 from ..utils.url import github_release_asset, ref_version
 from .base import FileInformation, Repository
-
-VERSION_TAG_REPLACER = re.compile(r"\D+")
 
 if TYPE_CHECKING:
     from ..base import MarketplaceManager
@@ -285,7 +283,9 @@ class PluginRepository(Repository):
             or self.data.selected_tag
             or self.display_available_version
         )
-        return f"{self.data.id}{VERSION_TAG_REPLACER.sub('', version)}"
+        # Encoded whole, digits alone make 1.2.3 and 12.3 or a beta and an rc
+        # share the address browsers cache the card under
+        return f"{self.data.id}-{quote(version, safe='')}"
 
     def generate_dashboard_resource_namespace(self) -> str:
         """Get the dashboard resource namespace."""

@@ -1151,7 +1151,6 @@ class MarketplaceManager:
         self, _: datetime | None = None
     ) -> None:
         """Handle critical repositories."""
-        critical_queue = QueueManager(hass=self.hass)
         critical: list[dict[str, Any]] = []
         was_installed = False
 
@@ -1192,17 +1191,23 @@ class MarketplaceManager:
                     "Removing repository %s, it is marked as critical",
                     repository["repository"],
                 )
+                try:
+                    await repo.uninstall()
+                except MarketplaceError as exception:
+                    # Not recorded, the next check tries to remove it again
+                    LOGGER.error(
+                        "Could not remove critical repository %s: %s",
+                        repository["repository"],
+                        exception,
+                    )
+                    continue
                 was_installed = True
                 stored["acknowledged"] = False
-                critical_queue.add(repo.uninstall())
                 repo.remove()
                 async_create_critical_repository_issue(self.hass, stored)
 
             stored_critical.append(stored)
             removed_repo.update_data(stored)
-
-        # Uninstall
-        await critical_queue.execute()
 
         # Save to FS
         await async_save_to_storage(self.hass, "critical", stored_critical)

@@ -6,7 +6,7 @@ import io
 import json
 from pathlib import Path
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 import zipfile
 
 from aiogithubapi import GitHubAuthenticationException, GitHubReleaseAssetModel
@@ -42,6 +42,7 @@ from homeassistant.components.marketplace.repositories.integration import (
     IntegrationRepository,
 )
 from homeassistant.components.marketplace.repositories.plugin import PluginRepository
+from homeassistant.components.marketplace.repositories.theme import ThemeRepository
 from homeassistant.components.marketplace.utils.validate import Validate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -953,6 +954,8 @@ async def test_validate_repository_with_content_in_root(
     )
     await repository.update_repository(force=True)
     repository.repository_manifest.content_in_root = True
+    # With the content in the root, the theme is there too
+    repository.treefiles = ["hacs.json", "example.yaml", "README.md"]
 
     # The common validation refetches the manifest, which would undo the change
     with patch.object(repository, "common_validate"):
@@ -1830,11 +1833,12 @@ async def test_dashboard_namespace(
 @pytest.mark.parametrize(
     ("downloaded", "selected", "available", "expected"),
     [
-        pytest.param(None, None, None, "", id="nothing-known"),
-        pytest.param("1.0.0", None, None, "100", id="downloaded"),
-        pytest.param(None, "2.0.1", None, "201", id="selected"),
-        pytest.param(None, None, "3.4.2", "342", id="available"),
-        pytest.param("1.7-dev09-r2", None, None, "17092", id="non-numeric"),
+        pytest.param(None, None, None, "-", id="nothing-known"),
+        pytest.param("1.0.0", None, None, "-1.0.0", id="downloaded"),
+        pytest.param(None, "2.0.1", None, "-2.0.1", id="selected"),
+        pytest.param(None, None, "3.4.2", "-3.4.2", id="available"),
+        pytest.param("1.7-dev09-r2", None, None, "-1.7-dev09-r2", id="non-numeric"),
+        pytest.param("v1.0+build/1", None, None, "-v1.0%2Bbuild%2F1", id="encoded"),
     ],
 )
 async def test_dashboard_resource_tag(
@@ -1861,7 +1865,7 @@ async def test_dashboard_url(downloaded_plugin: PluginRepository) -> None:
     """Test the URL a dashboard resource is registered with."""
     assert (
         downloaded_plugin.generate_dashboard_resource_url()
-        == "/local/community/plugin-basic/plugin-basic.js?v=1296267100"
+        == "/local/community/plugin-basic/plugin-basic.js?v=1296267-1.0.0"
     )
 
 
@@ -1873,7 +1877,7 @@ async def test_dashboard_url_with_invalid_file_name(
 
     assert (
         downloaded_plugin.generate_dashboard_resource_url()
-        == "/local/community/plugin-basic/plugin-basic.js?v=1296267100"
+        == "/local/community/plugin-basic/plugin-basic.js?v=1296267-1.0.0"
     )
     assert "have defined an invalid file name dist/plugin-basic.js" in caplog.text
 
@@ -1987,7 +1991,7 @@ async def test_add_dashboard_resource(
     ]
     assert (
         "Adding dashboard resource"
-        " /local/community/plugin-basic/plugin-basic.js?v=1296267100" in caplog.text
+        " /local/community/plugin-basic/plugin-basic.js?v=1296267-1.0.0" in caplog.text
     )
 
 
@@ -2004,8 +2008,8 @@ async def test_update_dashboard_resource(
 
     assert (
         "Updating existing dashboard resource from"
-        " /local/community/plugin-basic/plugin-basic.js?v=1296267100 to"
-        " /local/community/plugin-basic/plugin-basic.js?v=1296267110" in caplog.text
+        " /local/community/plugin-basic/plugin-basic.js?v=1296267-1.0.0 to"
+        " /local/community/plugin-basic/plugin-basic.js?v=1296267-1.1.0" in caplog.text
     )
     assert [resource["url"] for resource in resources.async_items()] == [
         downloaded_plugin.generate_dashboard_resource_url()
@@ -2044,7 +2048,7 @@ async def test_remove_dashboard_resource(
 
     assert (
         "Removing dashboard resource"
-        " /local/community/plugin-basic/plugin-basic.js?v=1296267100" in caplog.text
+        " /local/community/plugin-basic/plugin-basic.js?v=1296267-1.0.0" in caplog.text
     )
     assert resources.async_items() == []
 
@@ -2594,3 +2598,37 @@ async def test_download_from_the_catalog_requires_newer_core(
     )
     assert repository.data.installed is False
     assert _downloaded_files(config_dir) == []
+
+
+async def test_theme_with_content_in_the_root_is_valid(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a theme in the root, as hacs.json says, needs no themes folder."""
+    repository = ThemeRepository(marketplace, "owner/theme")
+    repository.repository_manifest.content_in_root = True
+    repository.treefiles = ["hacs.json", "theme.yaml"]
+
+    with patch.object(repository, "common_validate", AsyncMock()):
+        assert await repository.validate_repository()
+
+
+@pytest.mark.parametrize(
+    ("first", "second"),
+    [
+        pytest.param("v1.0.0-beta.1", "v1.0.0-rc.1", id="beta_and_rc"),
+        pytest.param("1.2.3", "12.3", id="same_digits"),
+    ],
+)
+def test_resource_url_differs_per_version(
+    marketplace: MarketplaceManager, first: str, second: str
+) -> None:
+    """Test two versions never share the address browsers cache a card by."""
+    repository = PluginRepository(marketplace, "owner/card")
+    repository.data.id = "8004"
+    repository.data.file_name = "card.js"
+
+    repository.data.installed_version = first
+    url = repository.generate_dashboard_resource_url()
+    repository.data.installed_version = second
+
+    assert repository.generate_dashboard_resource_url() != url

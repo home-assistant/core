@@ -1,5 +1,6 @@
 """Class for theme repositories."""
 
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING, override
 
@@ -93,12 +94,11 @@ class ThemeRepository(Repository):
     @override
     def resolve_content(self) -> None:
         """Point the content at the theme in the tree."""
-        compliant = False
-        for treefile in self.treefiles:
-            if treefile.startswith("themes/") and treefile.endswith(".yaml"):
-                compliant = True
-                break
-        if not compliant:
+        directory = "" if self.repository_manifest.content_in_root else "themes"
+        if not any(
+            os.path.dirname(treefile) == directory and treefile.endswith(".yaml")
+            for treefile in self.treefiles
+        ):
             raise MarketplaceError(
                 f"{self.string} Repository structure for {ref_version(self.ref)} is not compliant"
             )

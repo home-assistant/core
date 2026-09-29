@@ -254,3 +254,52 @@ async def test_invalid_repository_data_is_not_registered(
         marketplace.repositories.get_by_full_name(category_test_data["repository"])
         is None
     )
+
+
+@pytest.mark.parametrize(
+    ("section", "content"),
+    [
+        pytest.param("integration", b"{not json", id="not_json"),
+        pytest.param("integration", b'["a list"]', id="list_for_repositories"),
+        pytest.param("critical", b'{"an": "object"}', id="object_for_critical"),
+        pytest.param("removed", b"42", id="number_for_removed"),
+    ],
+)
+async def test_malformed_catalog_is_a_catalog_error(
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+    section: str,
+    content: bytes,
+) -> None:
+    """Test a broken catalog answer is refused like any failed request."""
+    url = f"https://data-v2.hacs.xyz/{section}/data.json"
+    response_mocker.add(url, mocked_response(url, content=content))
+
+    with pytest.raises(MarketplaceError):
+        await marketplace.data_client.get_data(section, validate=True)
+
+
+async def test_malformed_catalog_is_fetched_again(
+    marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
+) -> None:
+    """Test the etag of a broken answer is not kept, the next request gets data."""
+    etag = marketplace.data_client._etags.get("integration/data.json")
+    url = "https://data-v2.hacs.xyz/integration/data.json"
+    response_mocker.add(
+        url, mocked_response(url, content=b"{not json", headers={"etag": "broken"})
+    )
+
+    with pytest.raises(MarketplaceError):
+        await marketplace.data_client.get_data("integration", validate=True)
+
+    assert marketplace.data_client._etags.get("integration/data.json") == etag
+
+
+async def test_catalog_entry_that_is_not_an_object_is_skipped(
+    marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
+) -> None:
+    """Test one broken entry does not take the rest of the category down."""
+    url = "https://data-v2.hacs.xyz/integration/data.json"
+    response_mocker.add(url, mocked_response(url, json_content={"1": "broken"}))
+
+    assert await marketplace.data_client.get_data("integration", validate=True) == {}
