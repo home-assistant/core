@@ -98,6 +98,7 @@ PLATFORMS = (
     Platform.COVER,
     Platform.DEVICE_TRACKER,
     Platform.FAN,
+    Platform.INFRARED,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
