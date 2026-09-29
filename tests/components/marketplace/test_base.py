@@ -9,11 +9,21 @@ from homeassistant.components.marketplace.base import (
     MarketplaceManager,
     Repositories,
 )
-from homeassistant.components.marketplace.enums import RepositoryCategory
+from homeassistant.components.marketplace.const import (
+    CONF_WARNING_ACCEPTED,
+    WARNING_VERSION,
+)
+from homeassistant.components.marketplace.enums import (
+    DisabledReason,
+    RepositoryCategory,
+)
 from homeassistant.components.marketplace.exceptions import MarketplaceError
 from homeassistant.components.marketplace.repositories.base import Repository
+from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_CATEGORIES, REPOSITORY_INTEGRATION, REPOSITORY_PLUGIN
+
+from tests.common import MockUser
 
 
 def test_configuration_defaults() -> None:
@@ -211,3 +221,49 @@ async def test_custom_repository_listed_by_the_catalog_is_default(
     assert (
         marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION) is repository
     )
+
+
+@pytest.mark.parametrize(
+    ("reason", "runs"),
+    [
+        pytest.param(DisabledReason.RATE_LIMIT, True, id="rate_limit"),
+        pytest.param(DisabledReason.INVALID_TOKEN, True, id="invalid_token"),
+        pytest.param(DisabledReason.REMOVED, False, id="removed"),
+    ],
+)
+async def test_catalog_work_does_not_need_github(
+    marketplace: MarketplaceManager, reason: DisabledReason, runs: bool
+) -> None:
+    """Test the catalog is still read when only GitHub is out of reach."""
+    marketplace.disable(reason)
+
+    with patch.object(marketplace.data_client, "get_data", return_value={}) as get_data:
+        await marketplace.async_get_all_category_repositories()
+        await marketplace.async_handle_removed_repositories()
+
+    assert get_data.called is runs
+
+
+async def test_removed_user_takes_the_acceptance_along(
+    hass: HomeAssistant, marketplace: MarketplaceManager, hass_admin_user: MockUser
+) -> None:
+    """Test an automation can not install on the word of a user who is gone."""
+    assert marketplace.warning_accepted(hass_admin_user.id)
+
+    await hass.auth.async_remove_user(hass_admin_user)
+    await hass.async_block_till_done()
+
+    assert marketplace.warning_acceptances == {}
+    assert marketplace.configuration.config_entry is not None
+    assert marketplace.configuration.config_entry.data[CONF_WARNING_ACCEPTED] == {}
+
+
+@pytest.mark.parametrize(
+    "warning_accepted",
+    [{"someone": {"version": WARNING_VERSION, "accepted_at": "yesterday"}}],
+)
+async def test_unreadable_acceptance_is_left_out(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test an acceptance with a date that can not be read counts as none."""
+    assert marketplace.warning_acceptances == {}

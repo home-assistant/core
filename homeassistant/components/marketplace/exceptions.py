@@ -39,6 +39,10 @@ class ReplacesBuiltInNotConfirmedError(MarketplaceError):
         self.domain = domain
 
 
+class RepositoryBusyError(MarketplaceError):
+    """For a repository that is being installed, it can not change meanwhile."""
+
+
 class NotModifiedError(MarketplaceError):
     """For responses that are not modified."""
 

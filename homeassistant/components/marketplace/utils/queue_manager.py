@@ -54,7 +54,13 @@ class QueueManager:
             return
 
         self.running = True
+        try:
+            await self._async_execute(number_of_tasks)
+        finally:
+            self.running = False
 
+    async def _async_execute(self, number_of_tasks: int | None) -> None:
+        """Execute a number of the tasks in the queue."""
         _LOGGER.debug("<QueueManager> Checking out tasks to execute")
         local_queue = list(
             self.queue[:number_of_tasks] if number_of_tasks else self.queue
@@ -70,8 +76,10 @@ class QueueManager:
                 _LOGGER.error("<QueueManager> %s", entry)
         end = time.time() - start
 
+        # A clear while they ran already emptied the queue
         for task in local_queue:
-            self.queue.remove(task)
+            if task in self.queue:
+                self.queue.remove(task)
 
         _LOGGER.debug(
             "<QueueManager> Queue execution finished for %s tasks finished in %.2f seconds",
@@ -82,4 +90,3 @@ class QueueManager:
             _LOGGER.debug(
                 "<QueueManager> %s tasks remaining in the queue", len(self.queue)
             )
-        self.running = False

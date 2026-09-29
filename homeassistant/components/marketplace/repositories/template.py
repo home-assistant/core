@@ -107,11 +107,10 @@ class TemplateRepository(Repository):
 
         self.data.file_name = self._file_name_to_write
         if installed and installed != self.data.file_name:
-            await async_remove(
-                self.marketplace.hass,
-                str(resolve_in_directory(self.localpath, installed)),
-                missing_ok=True,
+            replaced = await self.marketplace.hass.async_add_executor_job(
+                resolve_in_directory, self.localpath, installed
             )
+            await async_remove(self.marketplace.hass, str(replaced), missing_ok=True)
 
     @override
     async def async_check_written_content(self) -> None:

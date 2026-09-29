@@ -14,12 +14,13 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPMovedPermanently
 from awesomeversion import AwesomeVersion
 
+from homeassistant.auth import EVENT_USER_REMOVED
 from homeassistant.components.frontend import async_register_built_in_panel
 from homeassistant.components.http import HomeAssistantView, StaticPathConfig
 from homeassistant.components.lovelace import LOVELACE_DATA
 from homeassistant.config_entries import SOURCE_SYSTEM
 from homeassistant.const import Platform, __version__ as HAVERSION
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -287,6 +288,15 @@ async def _async_initialize_integration(
         async_at_start(hass=hass, at_start_cb=_async_start_tasks)
     )
 
+    # Automations install on the word of whoever accepted, not of a removed user
+    @callback
+    def _async_forget_removed_user(event: Event) -> None:
+        marketplace.async_forget_warning_acceptance(event.data["user_id"])
+
+    config_entry.async_on_unload(
+        hass.bus.async_listen(EVENT_USER_REMOVED, _async_forget_removed_user)
+    )
+
     return True
 
 
@@ -319,11 +329,16 @@ async def async_unload_entry(
         with contextlib.suppress(asyncio.CancelledError):
             await startup_task
 
-    # Queued work belongs to this setup, the next one queues its own
-    marketplace.queue.clear()
-
     for task in marketplace.recurring_tasks:
         task()
+
+    # A run in flight would carry on with this manager, next to the new one
+    for run in list(marketplace.recurring_runs):
+        run.cancel()
+    await asyncio.gather(*marketplace.recurring_runs, return_exceptions=True)
+
+    # Queued work belongs to this setup, the next one queues its own
+    marketplace.queue.clear()
 
     await marketplace.data.async_write(force=True)
 

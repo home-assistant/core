@@ -92,11 +92,6 @@ COMMANDS: tuple[dict[str, Any], ...] = (
     },
     {"type": "marketplace/repository/ignore", "repository": REPOSITORY_INTEGRATION_ID},
     {
-        "type": "marketplace/repository/state",
-        "repository": REPOSITORY_INTEGRATION_ID,
-        "state": "other",
-    },
-    {
         "type": "marketplace/repository/version",
         "repository": REPOSITORY_INTEGRATION_ID,
         "version": "1.0.0",
@@ -222,7 +217,6 @@ REPOSITORY_COMMANDS: tuple[tuple[str, str, dict[str, Any]], ...] = (
     ("marketplace/repository/info", "repository_id", {}),
     ("marketplace/repository/install", "repository", {}),
     ("marketplace/repository/ignore", "repository", {}),
-    ("marketplace/repository/state", "repository", {"state": "other"}),
     ("marketplace/repository/version", "repository", {"version": "1.0.0"}),
     ("marketplace/repository/beta", "repository", {"show_beta": True}),
     ("marketplace/repository/refresh", "repository", {}),
@@ -810,28 +804,6 @@ async def test_repository_ignore(
     assert REPOSITORY_INTEGRATION in marketplace.common.ignored_repositories
 
 
-async def test_repository_state(
-    hass: HomeAssistant,
-    marketplace: MarketplaceManager,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test setting the state the frontend shows for a repository."""
-    client = await hass_ws_client(hass)
-
-    await client.send_json_auto_id(
-        {
-            "type": "marketplace/repository/state",
-            "repository": REPOSITORY_INTEGRATION_ID,
-            "state": "other",
-        }
-    )
-    assert (await client.receive_json())["success"]
-
-    assert (
-        marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID).state == "other"
-    )
-
-
 async def test_repository_version(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
@@ -852,7 +824,6 @@ async def test_repository_version(
         assert (await client.receive_json())["success"]
 
     assert repository.data.selected_tag == "1.5.0"
-    assert repository.state is None
 
 
 async def test_repository_version_default_branch(

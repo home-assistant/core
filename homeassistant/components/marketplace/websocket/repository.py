@@ -13,6 +13,7 @@ from ..exceptions import (
     GitHubRateLimitError,
     MarketplaceError,
     ReplacesBuiltInNotConfirmedError,
+    RepositoryBusyError,
 )
 from ..utils.logger import LOGGER
 from ..utils.validate import valid_ref
@@ -38,6 +39,19 @@ def _send_rate_limited(
 ) -> None:
     """Answer that GitHub refused the request, the rate limit ran out."""
     send_translated_error(connection, msg_id, ERR_GITHUB_RATE_LIMITED, "rate_limited")
+
+
+def _send_repository_busy(
+    connection: websocket_api.ActiveConnection, msg_id: int, repository: Repository
+) -> None:
+    """Answer that the repository is being installed, it is not an error to log."""
+    send_translated_error(
+        connection,
+        msg_id,
+        "repository_busy",
+        "repository_busy",
+        {"repository": repository.data.full_name},
+    )
 
 
 def _send_refresh_failed(
@@ -131,7 +145,6 @@ async def marketplace_repository_info(
                 "replaces_built_in": await repository.async_replaces_built_in(),
                 "selected_tag": repository.data.selected_tag,
                 "stars": repository.data.stargazers_count,
-                "state": repository.state,
                 "status": repository.display_status,
                 "topics": repository.data.topics,
                 "version_or_commit": repository.display_version_or_commit,
@@ -167,34 +180,6 @@ async def marketplace_repository_ignore(
 
     await marketplace.data.async_write()
     connection.send_message(websocket_api.result_message(msg["id"]))
-
-
-@websocket_api.websocket_command(
-    {
-        probatio.Required("type"): "marketplace/repository/state",
-        probatio.Required("repository"): cv.string,
-        probatio.Required("state"): cv.string,
-    }
-)
-@websocket_api.require_admin
-@websocket_api.async_response
-@marketplace_command()
-async def marketplace_repository_state(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-    marketplace: MarketplaceManager,
-) -> None:
-    """Set the state of a repository."""
-    repository = marketplace.repositories.get_by_id(msg["repository"])
-    if repository is None:
-        send_repository_not_found(connection, msg["id"], msg["repository"])
-        return
-
-    repository.state = msg["state"]
-
-    await marketplace.data.async_write()
-    connection.send_message(websocket_api.result_message(msg["id"], {}))
 
 
 @websocket_api.websocket_command(
@@ -235,7 +220,6 @@ async def marketplace_repository_version(
         repository.data.selected_tag = selected_tag
         _send_refresh_failed(connection, msg["id"], repository, exception)
         return
-    repository.state = None
 
     await marketplace.data.async_write()
     connection.send_message(websocket_api.result_message(msg["id"], {}))
@@ -276,7 +260,6 @@ async def marketplace_repository_beta(
         repository.data.show_beta = show_beta
         _send_refresh_failed(connection, msg["id"], repository, exception)
         return
-    repository.state = None
 
     await marketplace.data.async_write()
     connection.send_message(websocket_api.result_message(msg["id"], {}))
@@ -307,13 +290,16 @@ async def marketplace_repository_install(
 
     try:
         was_installed = repository.data.installed
-        await repository.async_install_repository(
-            ref=msg.get("version"),
-            confirm_replace_built_in=msg["confirm_replace_built_in"],
-        )
-        if not was_installed:
-            marketplace.async_dispatch(MarketplaceSignal.RELOAD, {"force": True})
-            await marketplace.async_recreate_entities()
+        try:
+            await repository.async_install_repository(
+                ref=msg.get("version"),
+                confirm_replace_built_in=msg["confirm_replace_built_in"],
+            )
+        finally:
+            # Also when a step after writing the files failed, they are installed
+            if not was_installed and repository.data.installed:
+                marketplace.async_dispatch(MarketplaceSignal.RELOAD, {"force": True})
+                await marketplace.async_recreate_entities()
 
         await marketplace.data.async_write()
         connection.send_message(websocket_api.result_message(msg["id"], {}))
@@ -328,6 +314,8 @@ async def marketplace_repository_install(
             "replaces_built_in_not_confirmed",
             {"repository": repository.data.full_name, "domain": exception.domain},
         )
+    except RepositoryBusyError:
+        _send_repository_busy(connection, msg["id"], repository)
     except MarketplaceError as exception:
         repository.logger.error("%s %s", repository.string, exception)
         send_translated_error(
@@ -360,6 +348,10 @@ async def marketplace_repository_uninstall(
         send_repository_not_found(connection, msg["id"], msg["repository"])
         return
 
+    if repository.installing:
+        _send_repository_busy(connection, msg["id"], repository)
+        return
+
     repository.data.new = False
     # What is on disk is enough to uninstall it, GitHub is only asked when it can be,
     # or for a theme that was stored before its file name was
@@ -375,6 +367,9 @@ async def marketplace_repository_uninstall(
 
     try:
         await repository.uninstall()
+    except RepositoryBusyError:
+        _send_repository_busy(connection, msg["id"], repository)
+        return
     except MarketplaceError:
         send_translated_error(
             connection,

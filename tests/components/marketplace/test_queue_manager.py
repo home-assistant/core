@@ -1,5 +1,6 @@
 """Tests for the Marketplace queue manager."""
 
+import asyncio
 from unittest.mock import AsyncMock
 
 import pytest
@@ -44,3 +45,25 @@ async def test_queue_manager_already_running(hass: HomeAssistant) -> None:
 
     with pytest.raises(ExecutionInProgressError):
         await queue_manager.execute()
+
+
+async def test_clear_during_execution(hass: HomeAssistant) -> None:
+    """Test clearing the queue while it runs, like an unload does, finishes cleanly."""
+    queue_manager = QueueManager(hass)
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def slow_task() -> None:
+        started.set()
+        await release.wait()
+
+    queue_manager.add(slow_task())
+    execution = asyncio.create_task(queue_manager.execute())
+    await started.wait()
+
+    queue_manager.clear()
+    release.set()
+    await execution
+
+    assert not queue_manager.running
+    assert not queue_manager.has_pending_tasks

@@ -6,8 +6,9 @@ import probatio
 
 from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
-from .base import async_get_marketplace
+from .const import DOMAIN
 from .critical import CRITICAL_ISSUE_PREFIX, async_acknowledge_critical_repository
 
 
@@ -33,15 +34,16 @@ class RestartRequiredFixFlow(RepairsFlow):
             await self.hass.services.async_call("homeassistant", "restart")
             return self.async_create_entry(title="", data={})
 
-        marketplace = async_get_marketplace(self.hass)
-        integration = marketplace.repositories.get_by_id(self.issue_id.split("_")[2])
+        # The issue carries the name, the Marketplace itself may not be loaded
+        issue = ir.async_get(self.hass).async_get_issue(DOMAIN, self.issue_id)
+        name = ""
+        if issue is not None and issue.translation_placeholders:
+            name = issue.translation_placeholders.get("name", "")
 
         return self.async_show_form(
             step_id="confirm_restart",
             data_schema=probatio.Schema({}),
-            description_placeholders={
-                "name": integration.display_name if integration else ""
-            },
+            description_placeholders={"name": name},
         )
 
 

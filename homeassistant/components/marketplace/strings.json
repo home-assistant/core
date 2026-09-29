@@ -87,6 +87,9 @@
     "replaces_built_in_not_confirmed": {
       "message": "{repository} replaces the built-in {domain} integration, confirm that before installing it."
     },
+    "repository_busy": {
+      "message": "{repository} is being installed, try again once that is done."
+    },
     "repository_exists": {
       "message": "{repository} is already in the Marketplace."
     },

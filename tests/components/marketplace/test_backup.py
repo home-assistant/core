@@ -163,6 +163,28 @@ def test_restore_interrupted_install_with_persistent_directory(
     assert (target / "config" / "settings.yaml").read_text() == "mine"
 
 
+def test_restore_after_the_persistent_directory_moved_in(
+    marketplace: MarketplaceManager, config_dir: Path
+) -> None:
+    """Test a stop after the kept data went into the new content does not lose it."""
+    target = _integration(config_dir)
+    (target / "config").mkdir()
+    (target / "config" / "settings.yaml").write_text("mine")
+    persistent = Backup(marketplace, target / "config")
+    persistent.create()
+    Backup(marketplace, target).create()
+
+    # The new content is written and the kept data moved into it, then it stops
+    target.mkdir()
+    (target / "__init__.py").write_text("new version")
+    persistent.restore()
+
+    restore_interrupted_backups(marketplace)
+
+    assert (target / "__init__.py").read_text() == "installed"
+    assert (target / "config" / "settings.yaml").read_text() == "mine"
+
+
 def test_restore_removes_empty_backups(
     marketplace: MarketplaceManager, config_dir: Path
 ) -> None:

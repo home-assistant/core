@@ -25,7 +25,7 @@ import probatio
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.util import dt as dt_util
 
-from ..const import DOMAIN, MAX_DOWNLOAD_SIZE, RELEASE_LIMIT
+from ..const import DOMAIN, MAX_ARCHIVE_MEMBERS, MAX_DOWNLOAD_SIZE, RELEASE_LIMIT
 from ..enums import (
     DisabledReason,
     MarketplaceSignal,
@@ -40,6 +40,7 @@ from ..exceptions import (
     NotModifiedError,
     ReplacesBuiltInNotConfirmedError,
     RepositoryArchivedError,
+    RepositoryBusyError,
     RepositoryExistsError,
 )
 from ..types import DownloadableContent
@@ -184,7 +185,14 @@ def _remove_written_content(marketplace: MarketplaceManager, path: str) -> None:
 
 def _check_archive_size(archive: zipfile.ZipFile) -> None:
     """Reject an archive that expands to more than we are willing to write."""
-    size = sum(info.file_size for info in archive.infolist())
+    members = archive.infolist()
+    if len(members) > MAX_ARCHIVE_MEMBERS:
+        raise MarketplaceError(
+            f"The archive holds {len(members)} members, "
+            f"the limit is {MAX_ARCHIVE_MEMBERS}"
+        )
+
+    size = sum(info.file_size for info in members)
     if size > MAX_DOWNLOAD_SIZE:
         raise MarketplaceError(
             f"The archive expands to {size} bytes, "
@@ -441,7 +449,6 @@ class Repository:
         self.content.single = self.single_file
         self.repository_object: GitHubRepositoryModel | None = None
         self.updated_info = False
-        self.state: str | None = None
         self.force_branch = False
         self.integration_manifest: dict[str, Any] = {}
         self.repository_manifest = RepositoryManifest.from_dict({})
@@ -919,7 +926,20 @@ class Repository:
             self.logger.info("%s Starting removal", self.string)
             self.marketplace.repositories.unregister(self)
 
+    @property
+    def installing(self) -> bool:
+        """Return True while the repository is being installed."""
+        return self._install_lock.locked()
+
     async def uninstall(self) -> None:
+        """Uninstall, not while an install of the repository is running."""
+        if self.installing:
+            raise RepositoryBusyError(f"{self.data.full_name} is being installed")
+
+        async with self._install_lock:
+            await self._async_uninstall()
+
+    async def _async_uninstall(self) -> None:
         """Run uninstall tasks."""
         self.logger.info("%s Removing", self.string)
         if not await self.remove_local_directory():
@@ -952,22 +972,30 @@ class Repository:
         """Check the local directory."""
 
         local_path = self.content.path.local
+        if self.data.category == "integration" and not self.data.domain:
+            self.logger.error("%s Missing domain", self.string)
+            return False
 
-        try:
+        def _checked_path() -> str:
+            """Return the path to remove, resolving it touches the disk."""
+            checked = local_path
             if self.data.category == "template":
-                local_path = str(entry_in_directory(local_path, self.data.file_name))
-            elif self.data.category == "integration":
-                if not self.data.domain:
-                    self.logger.error("%s Missing domain", self.string)
-                    return False
-                local_path = self.content.path.local
+                checked = str(entry_in_directory(checked, self.data.file_name))
 
             # The folder is named by remote input, removal stays inside its category
             if (directory := self._category_directory()) is not None:
-                local_path = str(entry_in_directory(directory, local_path))
+                checked = str(entry_in_directory(directory, checked))
+            return checked
+
+        try:
+            local_path = await self.marketplace.hass.async_add_executor_job(
+                _checked_path
+            )
 
             if await async_lexists(self.marketplace.hass, local_path):
-                if not is_safe(self.marketplace, local_path):
+                if not await self.marketplace.hass.async_add_executor_job(
+                    is_safe, self.marketplace, local_path
+                ):
                     self.logger.error(
                         "%s Path %s is blocked from removal", self.string, local_path
                     )
@@ -1096,21 +1124,28 @@ class Repository:
     async def _async_post_install(self) -> None:
         """Run post install steps."""
         self.logger.info("%s Running post installation steps", self.string)
-        await self.async_post_installation()
-        self.data.new = False
-        self.marketplace.async_dispatch(
-            MarketplaceSignal.REPOSITORY,
-            {
-                "id": 1337,
-                "action": "install",
-                "repository": self.data.full_name,
-                "repository_id": self.data.id,
-            },
-        )
+        try:
+            await self.async_post_installation()
+        except Exception as exception:
+            # The files are in place, so is what the Marketplace knows of them
+            raise MarketplaceError(
+                f"Installed, but a step after writing the files failed: {exception}"
+            ) from exception
+        finally:
+            self.data.new = False
+            self.marketplace.async_dispatch(
+                MarketplaceSignal.REPOSITORY,
+                {
+                    "id": 1337,
+                    "action": "install",
+                    "repository": self.data.full_name,
+                    "repository_id": self.data.id,
+                },
+            )
 
-        # Installs also come from update entities and automations, not only the
-        # panel, so the new state is stored here for all of them
-        await self.marketplace.data.async_write()
+            # Installs also come from update entities and automations, not only
+            # the panel, so the new state is stored here for all of them
+            await self.marketplace.data.async_write()
         self.logger.info("%s Post installation steps completed", self.string)
 
     async def _async_write_version(
@@ -1261,10 +1296,19 @@ class Repository:
         if not self.repository_manifest.persistent_directory:
             return None
 
-        local_path = Path(self.content.path.local).resolve()
-        persistent_path = resolve_in_directory(
-            local_path, self.repository_manifest.persistent_directory
-        )
+        persistent_directory_name = self.repository_manifest.persistent_directory
+
+        def _resolve() -> tuple[Path, Path]:
+            """Return the content and the persistent directory in it, resolved."""
+            local_path = Path(self.content.path.local).resolve()
+            return local_path, resolve_in_directory(
+                local_path, persistent_directory_name
+            )
+
+        (
+            local_path,
+            persistent_path,
+        ) = await self.marketplace.hass.async_add_executor_job(_resolve)
         # Keeping all of the installed content would put the old version back over the new
         if persistent_path == local_path:
             raise MarketplaceError(
@@ -1840,8 +1884,8 @@ class Repository:
         **_: Any,
     ) -> None:
         """Install a repository."""
-        if self._install_lock.locked():
-            raise MarketplaceError(f"{self.data.full_name} is already installing")
+        if self.installing:
+            raise RepositoryBusyError(f"{self.data.full_name} is already installing")
 
         async with self._install_lock:
             self._replace_built_in_confirmed = confirm_replace_built_in
@@ -1852,7 +1896,7 @@ class Repository:
 
     async def async_wait_for_install(self) -> None:
         """Wait for an install of this repository that is running to finish."""
-        if not self._install_lock.locked():
+        if not self.installing:
             return
 
         async with self._install_lock:

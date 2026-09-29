@@ -1,7 +1,7 @@
 """Base classes for the Marketplace."""
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 import gzip
@@ -187,6 +187,14 @@ class MarketplaceSystem:
     def disabled(self) -> bool:
         """Return if the Marketplace is disabled."""
         return self.disabled_reason is not None
+
+    @property
+    def removed(self) -> bool:
+        """Return if the Marketplace is being removed.
+
+        The catalog is no GitHub API call, only this stops the work on it.
+        """
+        return self.disabled_reason is DisabledReason.REMOVED
 
 
 @dataclass
@@ -389,10 +397,30 @@ class MarketplaceManager:
         self.coordinators: dict[str, MarketplaceUpdateCoordinator] = {}
         self.core = MarketplaceCore()
         self.recurring_tasks: list[Callable[[], None]] = []
+        self.recurring_runs: set[asyncio.Task[None]] = set()
         self.startup_task: asyncio.Task[None] | None = None
         self.repositories = Repositories()
         self.status = MarketplaceStatus()
         self.system = MarketplaceSystem()
+
+    def _async_track_interval(
+        self,
+        action: Callable[[datetime], Coroutine[Any, Any, None]],
+        interval: timedelta,
+    ) -> None:
+        """Run an action on an interval, as a task an unload can stop."""
+
+        @callback
+        def _async_run(now: datetime) -> None:
+            run = self.hass.async_create_background_task(
+                action(now), f"marketplace {action.__name__}"
+            )
+            self.recurring_runs.add(run)
+            run.add_done_callback(self.recurring_runs.discard)
+
+        self.recurring_tasks.append(
+            async_track_time_interval(self.hass, _async_run, interval)
+        )
 
     @property
     def github_connected(self) -> bool:
@@ -406,13 +434,13 @@ class MarketplaceManager:
             return {}
 
         return {
-            user_id: dt_util.parse_datetime(
-                acceptance["accepted_at"], raise_on_error=True
-            )
+            user_id: accepted_at
             for user_id, acceptance in config_entry.data.get(
                 CONF_WARNING_ACCEPTED, {}
             ).items()
             if acceptance["version"] >= WARNING_VERSION
+            # A date that can not be read is no acceptance
+            and (accepted_at := dt_util.parse_datetime(acceptance["accepted_at"]))
         }
 
     def warning_accepted(self, user_id: str) -> bool:
@@ -425,6 +453,28 @@ class MarketplaceManager:
             return False
 
         return dt_util.utcnow() - accepted_at > WARNING_REMINDER_INTERVAL
+
+    @callback
+    def async_forget_warning_acceptance(self, user_id: str) -> None:
+        """Forget the acceptance of a user who was removed."""
+        config_entry = self.configuration.config_entry
+        assert config_entry is not None
+
+        acceptances = config_entry.data.get(CONF_WARNING_ACCEPTED, {})
+        if user_id not in acceptances:
+            return
+
+        self.hass.config_entries.async_update_entry(
+            config_entry,
+            data={
+                **config_entry.data,
+                CONF_WARNING_ACCEPTED: {
+                    accepted_by: acceptance
+                    for accepted_by, acceptance in acceptances.items()
+                    if accepted_by != user_id
+                },
+            },
+        )
 
     @callback
     def async_accept_warning(self, user_id: str) -> None:
@@ -470,7 +520,7 @@ class MarketplaceManager:
             reason == DisabledReason.INVALID_TOKEN
             and (config_entry := self.configuration.config_entry) is not None
         ):
-            self.hass.add_job(config_entry.async_start_reauth, self.hass)
+            config_entry.async_start_reauth(self.hass)
 
     def enable(self) -> None:
         """Enable the Marketplace."""
@@ -776,41 +826,25 @@ class MarketplaceManager:
         # Keeping installed repositories up to date takes a connected account,
         # the catalog comes from the data feed.
         if self.github_connected:
-            self.recurring_tasks.append(
-                async_track_time_interval(
-                    self.hass,
-                    self.async_update_installed_custom_repositories,
-                    timedelta(hours=48),
-                )
+            self._async_track_interval(
+                self.async_update_installed_custom_repositories, timedelta(hours=48)
             )
 
-        self.recurring_tasks.append(
-            async_track_time_interval(
-                self.hass, self.async_get_all_category_repositories, timedelta(hours=6)
-            )
+        self._async_track_interval(
+            self.async_get_all_category_repositories, timedelta(hours=6)
         )
-        self.recurring_tasks.append(
-            async_track_time_interval(
-                self.hass, self.async_handle_removed_repositories, timedelta(hours=6)
-            )
+        self._async_track_interval(
+            self.async_handle_removed_repositories, timedelta(hours=6)
         )
 
         if self.github_connected:
-            self.recurring_tasks.append(
-                async_track_time_interval(
-                    self.hass, self.async_check_rate_limit, timedelta(minutes=5)
-                )
+            self._async_track_interval(
+                self.async_check_rate_limit, timedelta(minutes=5)
             )
-            self.recurring_tasks.append(
-                async_track_time_interval(
-                    self.hass, self.async_process_queue, timedelta(minutes=10)
-                )
-            )
+            self._async_track_interval(self.async_process_queue, timedelta(minutes=10))
 
-        self.recurring_tasks.append(
-            async_track_time_interval(
-                self.hass, self.async_handle_critical_repositories, timedelta(hours=6)
-            )
+        self._async_track_interval(
+            self.async_handle_critical_repositories, timedelta(hours=6)
         )
 
         unsub = self.hass.bus.async_listen_once(
@@ -951,7 +985,7 @@ class MarketplaceManager:
         self, _: datetime | None = None
     ) -> None:
         """Get all category repositories."""
-        if self.system.disabled:
+        if self.system.removed:
             return
         LOGGER.info("Loading known repositories")
         await asyncio.gather(
@@ -1085,7 +1119,7 @@ class MarketplaceManager:
         self, _: datetime | None = None
     ) -> None:
         """Handle removed repositories."""
-        if self.system.disabled:
+        if self.system.removed:
             return
         need_to_save = False
         LOGGER.info("Loading removed repositories")
@@ -1237,6 +1271,7 @@ class MarketplaceManager:
                     "Removing repository %s, it is marked as critical",
                     repository["repository"],
                 )
+                await repo.async_wait_for_install()
                 try:
                     await repo.uninstall()
                 except MarketplaceError as exception:

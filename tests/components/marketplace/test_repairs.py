@@ -1,5 +1,6 @@
 """Tests for the Marketplace repairs."""
 
+import asyncio
 from typing import Any
 from unittest.mock import patch
 
@@ -50,6 +51,7 @@ async def test_restart_required_fix_flow(
         is_fixable=True,
         severity=ir.IssueSeverity.WARNING,
         translation_key="restart_required",
+        translation_placeholders={"name": "Basic integration"},
     )
 
     client = await hass_client()
@@ -88,6 +90,34 @@ async def test_restart_required_fix_flow_for_an_unknown_repository(
 
     assert data["step_id"] == "confirm_restart"
     assert data["description_placeholders"] == {"name": ""}
+
+
+async def test_restart_required_fix_flow_while_unloaded(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test the repair still opens when the Marketplace is not loaded."""
+    assert await async_setup_component(hass, "repairs", {})
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        ISSUE_ID,
+        is_fixable=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="restart_required",
+        translation_placeholders={"name": "Basic integration"},
+    )
+    assert marketplace.configuration.config_entry is not None
+    assert await hass.config_entries.async_unload(
+        marketplace.configuration.config_entry.entry_id
+    )
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, ISSUE_ID)
+
+    assert data["step_id"] == "confirm_restart"
+    assert data["description_placeholders"] == {"name": "Basic integration"}
 
 
 async def test_no_fix_flow_for_other_issues(hass: HomeAssistant) -> None:
@@ -246,3 +276,38 @@ async def test_critical_repository_that_can_not_be_removed_is_tried_again(
     assert marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     assert issue_registry.async_get_issue(DOMAIN, CRITICAL_ISSUE_ID) is None
     assert not await async_load_from_storage(hass, "critical")
+
+
+async def test_critical_repository_waits_for_its_install(
+    hass: HomeAssistant, marketplace: MarketplaceManager
+) -> None:
+    """Test a critical repository being installed is removed once that is done."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.installed = True
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def slow_install(*args: Any, **kwargs: Any) -> None:
+        started.set()
+        await release.wait()
+
+    with (
+        patch.object(repository, "_async_install_catalog_version", slow_install),
+        patch.object(repository, "_async_uninstall") as uninstall,
+        patch.object(
+            marketplace.data_client, "get_data", return_value=[CRITICAL_REPOSITORY]
+        ),
+        patch.object(hass, "async_stop"),
+    ):
+        install = asyncio.create_task(repository.async_install_repository())
+        await started.wait()
+
+        critical = asyncio.create_task(marketplace.async_handle_critical_repositories())
+        await asyncio.sleep(0)
+        uninstall.assert_not_called()
+
+        release.set()
+        await install
+        await critical
+
+    uninstall.assert_called_once()

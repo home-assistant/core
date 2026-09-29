@@ -29,7 +29,6 @@ from .repository import (
     marketplace_repository_refresh,
     marketplace_repository_release_notes,
     marketplace_repository_releases,
-    marketplace_repository_state,
     marketplace_repository_uninstall,
     marketplace_repository_version,
 )
@@ -46,7 +45,6 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, marketplace_repository_info)
     websocket_api.async_register_command(hass, marketplace_repository_install)
     websocket_api.async_register_command(hass, marketplace_repository_ignore)
-    websocket_api.async_register_command(hass, marketplace_repository_state)
     websocket_api.async_register_command(hass, marketplace_repository_version)
     websocket_api.async_register_command(hass, marketplace_repository_beta)
     websocket_api.async_register_command(hass, marketplace_repository_refresh)

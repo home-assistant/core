@@ -145,15 +145,27 @@ class MarketplaceData:
 
     async def _async_load(self, key: str) -> dict[str, Any] | None:
         """Load a storage file, None when it can not be read."""
+        # The storage helper raises NotImplementedError for an unknown version
         try:
-            return await async_load_from_storage(self.marketplace.hass, key) or {}
-        except HomeAssistantError as exception:
-            LOGGER.error(
-                "Could not read %s, restore the file from a backup - %s",
-                self.marketplace.hass.config.path(f".storage/marketplace.{key}"),
-                exception,
-            )
+            data = await async_load_from_storage(self.marketplace.hass, key)
+        except (HomeAssistantError, NotImplementedError) as exception:
+            self._log_unreadable(key, str(exception) or "unknown storage version")
             return None
+
+        if data is None:
+            return {}
+        if not isinstance(data, dict):
+            self._log_unreadable(key, "it does not hold an object")
+            return None
+        return data
+
+    def _log_unreadable(self, key: str, reason: str) -> None:
+        """Log which storage file can not be read."""
+        LOGGER.error(
+            "Could not read %s, restore the file from a backup - %s",
+            self.marketplace.hass.config.path(f".storage/marketplace.{key}"),
+            reason,
+        )
 
     async def restore(self) -> bool:
         """Restore saved data."""
@@ -163,6 +175,12 @@ class MarketplaceData:
             return False
         if (repositories := await self._async_load("repositories")) is None:
             return False
+
+        repositories = {
+            entry: repo_data
+            for entry, repo_data in repositories.items()
+            if self._is_restorable(entry, repo_data)
+        }
 
         config_entry = self.marketplace.configuration.config_entry
         assert config_entry is not None
@@ -224,7 +242,7 @@ class MarketplaceData:
                         repo_data,
                     )
                     continue
-                self.async_restore_repository(entry, repo_data)
+                self._async_restore_or_skip(entry, repo_data)
 
             await self._async_forget_deleted_installs()
             self.logger.info("Restore done")
@@ -232,6 +250,28 @@ class MarketplaceData:
             self.logger.critical("[%s] Restore failed", exception, exc_info=exception)
             return False
         return True
+
+    def _is_restorable(self, entry: str, repo_data: Any) -> bool:
+        """Return if a stored repository has the shape the Marketplace wrote."""
+        if isinstance(repo_data, dict) and isinstance(repo_data.get("full_name"), str):
+            return True
+
+        self.logger.warning("Skipping stored repository %s, it is not valid", entry)
+        return False
+
+    @callback
+    def _async_restore_or_skip(self, entry: str, repo_data: dict[str, Any]) -> None:
+        """Restore a repository, one that can not be restored stops no others."""
+        try:
+            self.async_restore_repository(entry, repo_data)
+        except Exception:
+            self.logger.warning(
+                "Skipping stored repository %s, it can not be restored",
+                entry,
+                exc_info=True,
+            )
+            if repository := self.marketplace.repositories.get_by_id(entry):
+                self.marketplace.repositories.unregister(repository)
 
     def _install_path(self, repository: Repository) -> str | None:
         """Return what an installed repository has on disk, None when not known."""
@@ -259,24 +299,19 @@ class MarketplaceData:
 
     async def _async_forget_deleted_installs(self) -> None:
         """Mark what was deleted by hand as no longer installed."""
-        installs = [
-            (repository, path)
-            for repository in self.marketplace.repositories.list_installed
-            if (path := self._install_path(repository)) is not None
-        ]
-        if not installs:
-            return
+        installed = list(self.marketplace.repositories.list_installed)
 
         # A symlink counts even when what it points at is not there right now,
         # for example a network share that is not mounted yet
-        present = await self.marketplace.hass.async_add_executor_job(
-            lambda: [os.path.lexists(path) for _, path in installs]
-        )
+        def _deleted() -> list[Repository]:
+            return [
+                repository
+                for repository in installed
+                if (path := self._install_path(repository)) is not None
+                and not os.path.lexists(path)
+            ]
 
-        for (repository, _), exists in zip(installs, present, strict=True):
-            if exists:
-                continue
-
+        for repository in await self.marketplace.hass.async_add_executor_job(_deleted):
             self.logger.info(
                 "%s is no longer on disk, it is no longer installed",
                 repository.data.full_name,

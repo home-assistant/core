@@ -68,7 +68,6 @@ async def marketplace_repositories_list(
                     "new": repo.data.new,
                     "pending_upgrade": repo.pending_update,
                     "stars": repo.data.stargazers_count,
-                    "state": repo.state,
                     "status": repo.display_status,
                     "topics": repo.data.topics,
                 }

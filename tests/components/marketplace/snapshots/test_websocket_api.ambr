@@ -40,7 +40,6 @@
     'replaces_built_in': False,
     'selected_tag': None,
     'stars': 80,
-    'state': None,
     'status': 'default',
     'topics': list([
       'octocat',

@@ -158,6 +158,72 @@ async def test_restore_skips_placeholder_repository(
     assert marketplace.repositories.get_by_id("0") is None
 
 
+@pytest.mark.parametrize(
+    "broken",
+    [
+        pytest.param(None, id="null"),
+        pytest.param("an entry", id="string"),
+        pytest.param({"category": "theme"}, id="no_full_name"),
+        pytest.param(
+            {"category": "theme", "full_name": "owner/theme", "last_fetched": 1e20},
+            id="bad_timestamp",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_restore_skips_a_broken_entry(
+    marketplace: MarketplaceManager,
+    config_dir: Path,
+    caplog: pytest.LogCaptureFixture,
+    broken: Any,
+) -> None:
+    """Test one stored repository that can not be restored leaves the rest alone."""
+    create_install_folders(config_dir, RESTORED_REPOSITORIES)
+    data = MarketplaceData(marketplace)
+
+    async def mocked_load(hass: HomeAssistant, key: str) -> Any:
+        """Return the stored repositories with a broken one among them."""
+        if key != "repositories":
+            return {}
+        return RESTORED_REPOSITORIES | {"9999": broken}
+
+    with patch(
+        "homeassistant.components.marketplace.utils.data.async_load_from_storage",
+        side_effect=mocked_load,
+    ):
+        assert await data.restore()
+
+    assert marketplace.repositories.get_by_id("1296269").data.installed is True
+    assert marketplace.repositories.get_by_id("9999") is None
+    assert "Skipping stored repository 9999" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param([["a list"]], id="list"),
+        pytest.param(["a string"], id="string"),
+        pytest.param(NotImplementedError, id="unknown_storage_version"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_restore_unusable_file(
+    marketplace: MarketplaceManager,
+    caplog: pytest.LogCaptureFixture,
+    side_effect: Any,
+) -> None:
+    """Test a file that is not what the Marketplace wrote fails the restore."""
+    data = MarketplaceData(marketplace)
+
+    with patch(
+        "homeassistant.components.marketplace.utils.data.async_load_from_storage",
+        side_effect=side_effect,
+    ):
+        assert not await data.restore()
+
+    assert "marketplace.common, restore the file from a backup" in caplog.text
+
+
 @pytest.mark.parametrize("unreadable", ["common", "repositories"])
 @pytest.mark.usefixtures("init_integration")
 async def test_restore_unreadable_data(

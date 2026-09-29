@@ -6,6 +6,7 @@ import shutil
 from typing import TYPE_CHECKING
 
 from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.util.file import WriteError, write_utf8_file_atomic
 from homeassistant.util.ulid import ulid_now
 
 from ..exceptions import MarketplaceError
@@ -64,12 +65,11 @@ class Backup:
         try:
             self.backup_path.mkdir(parents=True)
             # The target goes first, a restart before the move leaves an empty
-            # backup behind, never content nobody knows the place of.
-            (self.backup_path / TARGET_FILE).write_text(
-                self._target(), encoding="utf-8"
-            )
+            # backup behind, never content nobody knows the place of. Written
+            # whole or not at all, half a path would restore to the wrong place.
+            write_utf8_file_atomic(str(self.backup_path / TARGET_FILE), self._target())
             shutil.move(self.local_path, self.content_path)
-        except OSError as exception:
+        except (OSError, WriteError) as exception:
             shutil.rmtree(self.backup_path, ignore_errors=True)
             raise MarketplaceError(
                 f"Could not back up {self.local_path}: {exception}"
@@ -156,6 +156,27 @@ def restore_interrupted_backups(marketplace: MarketplaceManager) -> bool:
     # A persistent directory is moved out of the content it lives in, so the
     # content has to be back in place before the persistent directory is.
     backups.sort(key=lambda backup: len(backup.local_path.parts))
+
+    # Moved into the new content already, the old content coming back would
+    # remove the only copy of it
+    for persistent in backups:
+        if persistent.has_content or not persistent.local_path.exists():
+            continue
+        if any(
+            content is not persistent
+            and content.has_content
+            and persistent.local_path.is_relative_to(content.local_path)
+            for content in backups
+        ):
+            try:
+                shutil.move(persistent.local_path, persistent.content_path)
+            except OSError as exception:
+                LOGGER.warning(
+                    "Could not move %s back into backup %s: %s",
+                    persistent.local_path,
+                    persistent.backup_path,
+                    exception,
+                )
 
     restored = False
     for backup in backups:

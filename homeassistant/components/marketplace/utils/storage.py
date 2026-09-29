@@ -149,6 +149,8 @@ async def async_remove_storage(hass: HomeAssistant, key: str) -> None:
 
     # The key carries a repository id, so the file it resolves to is checked
     # before anything is unlinked.
-    resolve_in_directory(hass.config.path(STORAGE_DIR), marketplace.path)
+    await hass.async_add_executor_job(
+        resolve_in_directory, hass.config.path(STORAGE_DIR), marketplace.path
+    )
 
     await marketplace.async_remove()

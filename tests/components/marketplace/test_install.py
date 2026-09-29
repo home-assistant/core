@@ -15,7 +15,11 @@ import zipfile
 import pytest
 
 from homeassistant.components.marketplace.base import MarketplaceManager
-from homeassistant.components.marketplace.exceptions import MarketplaceError
+from homeassistant.components.marketplace.const import DOMAIN
+from homeassistant.components.marketplace.exceptions import (
+    MarketplaceError,
+    RepositoryBusyError,
+)
 from homeassistant.components.marketplace.repositories.base import (
     FileInformation,
     Repository,
@@ -33,13 +37,19 @@ from homeassistant.components.marketplace.utils.backup import (
     Backup,
     restore_interrupted_backups,
 )
+from homeassistant.components.marketplace.utils.storage import async_load_from_storage
 from homeassistant.config import async_hass_config_yaml
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.loader import Integration
 
 from . import mocked_response
 from .conftest import MarketplaceResponses
 from .const import REPOSITORY_INTEGRATION_ID, REPOSITORY_PLUGIN_ID
+
+from tests.typing import WebSocketGenerator
 
 THEME_ID = "1296266"
 TEMPLATE_ID = "1296268"
@@ -226,6 +236,18 @@ def test_archive_extracts_only_the_named_directory(tmp_path: Path) -> None:
     assert (tmp_path / "__init__.py").read_text() == "foo code"
     assert (tmp_path / "bar" / "__init__.py").read_text() == "correct submodule"
     assert sorted(path.name for path in tmp_path.iterdir()) == ["__init__.py", "bar"]
+
+
+def test_archive_with_too_many_members_is_refused() -> None:
+    """Test an archive of countless tiny entries is not taken apart."""
+    with (
+        patch(
+            "homeassistant.components.marketplace.repositories.base.MAX_ARCHIVE_MEMBERS",
+            1,
+        ),
+        pytest.raises(MarketplaceError, match="members"),
+    ):
+        _archive({"a.py": "", "b.py": ""})
 
 
 async def test_template_installs_the_file_in_the_root(
@@ -637,6 +659,78 @@ async def test_second_install_of_a_repository_waits_its_turn(
 
         release.set()
         await first
+
+
+async def test_failed_step_after_writing_keeps_the_install(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a step failing after the files were written still records them."""
+    client = await hass_ws_client(hass)
+    with patch.object(
+        PluginRepository,
+        "update_dashboard_resources",
+        side_effect=HomeAssistantError("The resources are read only"),
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/install",
+                "repository": REPOSITORY_PLUGIN_ID,
+            }
+        )
+        response = await client.receive_json()
+    await hass.async_block_till_done()
+
+    assert response["error"]["code"] == "error"
+    assert "The resources are read only" in response["error"]["message"]
+    assert marketplace.repositories.get_by_id(REPOSITORY_PLUGIN_ID).data.installed
+    stored = await async_load_from_storage(hass, "repositories")
+    assert stored[REPOSITORY_PLUGIN_ID]["installed"]
+    assert entity_registry.async_get_entity_id(
+        Platform.UPDATE, DOMAIN, REPOSITORY_PLUGIN_ID
+    )
+
+
+async def test_uninstall_during_an_install_is_refused(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test an uninstall does not pull the files from under a running install."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def slow_install(*args: Any, **kwargs: Any) -> None:
+        started.set()
+        await release.wait()
+
+    client = await hass_ws_client(hass)
+    with (
+        patch.object(repository, "_async_install_catalog_version", slow_install),
+        patch.object(repository, "_async_uninstall") as uninstall,
+    ):
+        install = asyncio.create_task(repository.async_install_repository())
+        await started.wait()
+
+        with pytest.raises(RepositoryBusyError):
+            await repository.uninstall()
+
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/uninstall",
+                "repository": REPOSITORY_INTEGRATION_ID,
+            }
+        )
+        response = await client.receive_json()
+
+        release.set()
+        await install
+
+    assert response["error"]["code"] == "repository_busy"
+    uninstall.assert_not_called()
 
 
 async def test_valid_release_updates_the_integration(

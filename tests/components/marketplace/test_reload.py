@@ -1,5 +1,6 @@
 """Tests that what the Marketplace knows survives a reload or a restart."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -271,3 +272,34 @@ async def test_stored_install_keeps_the_folder_it_is_in(
     )
 
     assert repository.data.directory == directory
+
+
+async def test_unload_stops_a_recurring_run(
+    hass: HomeAssistant, marketplace: MarketplaceManager, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a recurring run in flight does not carry on after an unload."""
+    started = asyncio.Event()
+    cancelled = asyncio.Event()
+    get_data = marketplace.data_client.get_data
+
+    async def catalog(section: str | None, *, validate: bool) -> object:
+        if section == "critical":
+            started.set()
+            try:
+                await asyncio.Event().wait()
+            except asyncio.CancelledError:
+                cancelled.set()
+                raise
+        return await get_data(section, validate=validate)
+
+    assert marketplace.configuration.config_entry is not None
+    with patch.object(marketplace.data_client, "get_data", catalog):
+        freezer.tick(timedelta(hours=6, seconds=1))
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await started.wait()
+
+        assert await hass.config_entries.async_unload(
+            marketplace.configuration.config_entry.entry_id
+        )
+
+    assert cancelled.is_set()

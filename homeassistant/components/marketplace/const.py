@@ -26,6 +26,8 @@ RELEASE_LIMIT = 5
 # Ceiling for anything downloaded from a repository, both for the transferred
 # bytes and for the size a ZIP archive expands to.
 MAX_DOWNLOAD_SIZE = 100 * 1024 * 1024
+# Countless empty entries stay under the size ceiling, but take ages to go through
+MAX_ARCHIVE_MEMBERS = 50_000
 DOWNLOAD_CHUNK_SIZE = 64 * 1024
 
 LEGACY_HACS_REPOSITORY_ID = "172733314"
