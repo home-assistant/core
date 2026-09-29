@@ -77,7 +77,7 @@ SUPPORT_LIMITLESSLED_RGBWW = (
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_BRIDGES): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 {
                     probatio.Required(CONF_HOST): cv.string,
@@ -86,7 +86,7 @@ PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
                     ): cv.positive_int,
                     probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                     probatio.Required(CONF_GROUPS): probatio.All(
-                        cv.ensure_list,
+                        probatio.EnsureList(),
                         [
                             {
                                 probatio.Required(CONF_NAME): cv.string,

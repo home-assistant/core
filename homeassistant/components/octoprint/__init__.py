@@ -71,7 +71,7 @@ BINARY_SENSOR_SCHEMA = probatio.Schema(
     {
         probatio.Optional(
             CONF_MONITORED_CONDITIONS, default=list(BINARY_SENSOR_TYPES)
-        ): probatio.All(cv.ensure_list, [probatio.In(BINARY_SENSOR_TYPES)]),
+        ): probatio.All(probatio.EnsureList(), [probatio.In(BINARY_SENSOR_TYPES)]),
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
@@ -88,7 +88,7 @@ SENSOR_SCHEMA = probatio.Schema(
     {
         probatio.Optional(
             CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
-        ): probatio.All(cv.ensure_list, [probatio.In(SENSOR_TYPES)]),
+        ): probatio.All(probatio.EnsureList(), [probatio.In(SENSOR_TYPES)]),
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
@@ -98,7 +98,7 @@ CONFIG_SCHEMA = probatio.Schema(
         cv.deprecated(DOMAIN),
         {
             DOMAIN: probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [
                     probatio.Schema(
                         {

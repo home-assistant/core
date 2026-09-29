@@ -49,7 +49,7 @@ TEMPERATURE_SENSORS_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
         probatio.Required(CONF_SENSORS): probatio.All(
-            cv.ensure_list, [TEMPERATURE_SENSOR_SCHEMA]
+            probatio.EnsureList(), [TEMPERATURE_SENSOR_SCHEMA]
         ),
     }
 )
@@ -61,7 +61,7 @@ VOLTAGE_SENSOR_SCHEMA = probatio.Schema(
     }
 )
 
-VOLTAGE_SENSORS_SCHEMA = probatio.All(cv.ensure_list, [VOLTAGE_SENSOR_SCHEMA])
+VOLTAGE_SENSORS_SCHEMA = probatio.All(probatio.EnsureList(), [VOLTAGE_SENSOR_SCHEMA])
 
 PULSE_COUNTER_SCHEMA = probatio.Schema(
     {
@@ -77,7 +77,7 @@ PULSE_COUNTER_SCHEMA = probatio.Schema(
     }
 )
 
-PULSE_COUNTERS_SCHEMA = probatio.All(cv.ensure_list, [PULSE_COUNTER_SCHEMA])
+PULSE_COUNTERS_SCHEMA = probatio.All(probatio.EnsureList(), [PULSE_COUNTER_SCHEMA])
 
 CHANNEL_SCHEMA = probatio.Schema(
     {
@@ -87,7 +87,7 @@ CHANNEL_SCHEMA = probatio.Schema(
     }
 )
 
-CHANNELS_SCHEMA = probatio.All(cv.ensure_list, [CHANNEL_SCHEMA])
+CHANNELS_SCHEMA = probatio.All(probatio.EnsureList(), [CHANNEL_SCHEMA])
 
 MONITOR_SCHEMA = probatio.Schema(
     {
@@ -113,7 +113,7 @@ MONITOR_SCHEMA = probatio.Schema(
     }
 )
 
-MONITORS_SCHEMA = probatio.All(cv.ensure_list, [MONITOR_SCHEMA])
+MONITORS_SCHEMA = probatio.All(probatio.EnsureList(), [MONITOR_SCHEMA])
 
 COMPONENT_SCHEMA = probatio.Schema(
     {

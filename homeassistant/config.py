@@ -658,7 +658,7 @@ def _recursive_merge(conf: dict[str, Any], package: dict[str, Any]) -> str | Non
 
         elif isinstance(pack_conf, list):
             conf[key] = cv.remove_falsy(
-                cv.ensure_list(conf.get(key)) + cv.ensure_list(pack_conf)
+                probatio.EnsureList()(conf.get(key)) + probatio.EnsureList()(pack_conf)
             )
 
         else:
@@ -753,7 +753,8 @@ async def merge_packages_config(
 
             if merge_list:
                 config[comp_name] = cv.remove_falsy(
-                    cv.ensure_list(config.get(comp_name)) + cv.ensure_list(comp_conf)
+                    probatio.EnsureList()(config.get(comp_name))
+                    + probatio.EnsureList()(comp_conf)
                 )
                 continue
 

@@ -61,7 +61,7 @@ SERVICE_MESSAGE_SCHEMA = SERVICE_BASE_SCHEMA.extend(
 SERVICE_CHART_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
         probatio.Required(CONF_DATA): probatio.All(
-            cv.ensure_list, [probatio.Coerce(int)]
+            probatio.EnsureList(), [probatio.Coerce(int)]
         ),
     }
 )

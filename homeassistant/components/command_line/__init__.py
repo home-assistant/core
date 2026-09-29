@@ -191,7 +191,7 @@ COMBINED_SCHEMA = probatio.Schema(
 CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Optional(DOMAIN): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [COMBINED_SCHEMA],
         )
     },

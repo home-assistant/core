@@ -34,6 +34,7 @@ from home_assistant_intents import (
     get_language_scores,
     get_languages,
 )
+import probatio
 import yaml
 
 from homeassistant.components.homeassistant.exposed_entities import (
@@ -50,7 +51,6 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import (
     area_registry as ar,
-    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
@@ -1938,14 +1938,14 @@ def _get_debug_targets(
         floor_name = str(entities["floor"].value)
 
     if "domain" in entities:
-        domains = set(cv.ensure_list(entities["domain"].value))
+        domains = set(probatio.EnsureList()(entities["domain"].value))
 
     if "device_class" in entities:
-        device_classes = set(cv.ensure_list(entities["device_class"].value))
+        device_classes = set(probatio.EnsureList()(entities["device_class"].value))
 
     if "state" in entities:
         # HassGetState only
-        state_names = set(cv.ensure_list(entities["state"].value))
+        state_names = set(probatio.EnsureList()(entities["state"].value))
 
     constraints = intent.MatchTargetsConstraints(
         name=name,

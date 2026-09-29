@@ -50,7 +50,7 @@ CONFIG_SCHEMA = probatio.Schema(
                 probatio.Required(CONF_SECRET_KEY): cv.string,
                 probatio.Required(CONF_SECURE): cv.boolean,
                 probatio.Optional(CONF_LISTEN, default=[]): probatio.All(
-                    cv.ensure_list,
+                    probatio.EnsureList(),
                     [
                         probatio.Schema(
                             {

@@ -91,11 +91,11 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Required(CONF_HOSTS): probatio.All(
-                    cv.ensure_list, [HOST_CONFIG_SCHEMA]
+                    probatio.EnsureList(), [HOST_CONFIG_SCHEMA]
                 ),
                 probatio.Optional(
                     CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS
-                ): probatio.All(cv.ensure_list, [probatio.In(SENSOR_KEYS)]),
+                ): probatio.All(probatio.EnsureList(), [probatio.In(SENSOR_KEYS)]),
                 probatio.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL
                 ): probatio.All(cv.time_period, cv.positive_timedelta),

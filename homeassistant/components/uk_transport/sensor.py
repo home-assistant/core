@@ -41,7 +41,7 @@ CONF_DESTINATION = "destination"
 _QUERY_SCHEME = probatio.Schema(
     {
         probatio.Required(CONF_MODE): probatio.All(
-            cv.ensure_list, [probatio.In(["bus", "train"])]
+            probatio.EnsureList(), [probatio.In(["bus", "train"])]
         ),
         probatio.Required(CONF_ORIGIN): cv.string,
         probatio.Required(CONF_DESTINATION): cv.string,

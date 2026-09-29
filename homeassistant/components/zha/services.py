@@ -168,7 +168,7 @@ SERVICE_SCHEMAS: dict[str, VolSchemaType] = {
             probatio.Required(ATTR_CLUSTER_ID): cv.positive_int,
             probatio.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
             probatio.Required(ATTR_COMMAND): cv.positive_int,
-            probatio.Optional(ATTR_ARGS, default=[]): cv.ensure_list,
+            probatio.Optional(ATTR_ARGS, default=[]): probatio.EnsureList(),
             probatio.Optional(ATTR_MANUFACTURER): probatio.All(
                 probatio.Coerce(int), probatio.Range(min=-1)
             ),
