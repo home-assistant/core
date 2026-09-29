@@ -21,6 +21,7 @@ from homeassistant.const import Platform, __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
+    ConfigEntryError,
     ConfigEntryNotReady,
     HomeAssistantError,
 )
@@ -217,8 +218,9 @@ async def _async_initialize_integration(
     )
 
     try:
+        # Trying again reads the same file, it takes the user to fix it
         if not await marketplace.data.restore():
-            raise ConfigEntryNotReady(
+            raise ConfigEntryError(
                 translation_domain=DOMAIN, translation_key="restore_failed"
             )
 

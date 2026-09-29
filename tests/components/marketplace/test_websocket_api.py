@@ -1445,6 +1445,37 @@ async def test_commands_rate_limited_without_github(
     assert repository.data.installed is False
 
 
+@pytest.mark.parametrize(
+    "message",
+    [
+        pytest.param(command, id=command["type"])
+        for command in ANONYMOUS_GITHUB_COMMANDS
+        if command["type"] != "marketplace/repository/download"
+    ],
+)
+async def test_commands_roll_back_when_the_refresh_fails(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    message: dict[str, Any],
+) -> None:
+    """Test a refresh that fails leaves the repository as it was."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    client = await hass_ws_client(hass)
+
+    with patch.object(
+        repository,
+        "update_repository",
+        side_effect=MarketplaceError("Repository structure is not compliant"),
+    ):
+        await client.send_json_auto_id(message)
+        response = await client.receive_json()
+
+    assert response["error"]["translation_key"] == "refresh_failed"
+    assert repository.data.selected_tag is None
+    assert repository.data.show_beta is False
+
+
 @pytest.mark.parametrize("github_token", [None])
 async def test_repository_releases_rate_limited_without_github(
     hass: HomeAssistant,

@@ -1,7 +1,6 @@
 """Data handler for the Marketplace."""
 
 import asyncio
-import contextlib
 from datetime import UTC, datetime
 import os
 from typing import Any
@@ -12,7 +11,7 @@ from homeassistant.helpers import issue_registry as ir
 
 from ..base import MarketplaceManager
 from ..const import DOMAIN, LEGACY_HACS_REPOSITORY_ID, RESTART_ISSUE_PREFIX
-from ..enums import MarketplaceSignal, RepositoryCategory
+from ..enums import DisabledReason, MarketplaceSignal, RepositoryCategory
 from ..migration import async_forget_retired_repositories
 from ..repositories.base import TOPIC_FILTER, Repository, RepositoryManifest
 from .identity import one_stored_entry_per_name
@@ -79,7 +78,12 @@ class MarketplaceData:
 
     async def async_write(self, force: bool = False) -> None:
         """Write content to the storage files."""
-        if not force and self.marketplace.system.disabled:
+        # Only an unloaded Marketplace stops saving, a download works while
+        # GitHub is out of reach and has to be kept.
+        if (
+            not force
+            and self.marketplace.system.disabled_reason is DisabledReason.REMOVED
+        ):
             return
 
         self.logger.debug("Saving data")
@@ -140,27 +144,25 @@ class MarketplaceData:
 
         self.content[str(repository.data.id)] = data
 
-    async def restore(self) -> bool:
-        """Restore saved data."""
-        self.marketplace.status.new = False
-        repositories: dict[str, Any] = {}
-        common: dict[str, Any] = {}
-
-        with contextlib.suppress(HomeAssistantError):
-            common = (
-                await async_load_from_storage(self.marketplace.hass, "common") or {}
-            )
-
+    async def _async_load(self, key: str) -> dict[str, Any] | None:
+        """Load a storage file, None when it can not be read."""
         try:
-            repositories = await async_load_from_storage(
-                self.marketplace.hass, "repositories"
-            )
+            return await async_load_from_storage(self.marketplace.hass, key) or {}
         except HomeAssistantError as exception:
             LOGGER.error(
                 "Could not read %s, restore the file from a backup - %s",
-                self.marketplace.hass.config.path(".storage/marketplace.repositories"),
+                self.marketplace.hass.config.path(f".storage/marketplace.{key}"),
                 exception,
             )
+            return None
+
+    async def restore(self) -> bool:
+        """Restore saved data."""
+        self.marketplace.status.new = False
+        # Taken as empty, the next write would make the loss permanent
+        if (common := await self._async_load("common")) is None:
+            return False
+        if (repositories := await self._async_load("repositories")) is None:
             return False
 
         config_entry = self.marketplace.configuration.config_entry

@@ -334,17 +334,17 @@ async def test_setup_failure(
     assert mock_config_entry.error_reason_translation_key == translation_key
 
 
-async def test_setup_retries_without_restored_data(
+async def test_setup_fails_without_restored_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test data that can not be restored is retried instead of disabling."""
+    """Test data that can not be read is not retried, trying again changes nothing."""
     mock_config_entry.add_to_hass(hass)
 
     with patch.object(MarketplaceData, "restore", return_value=False):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert mock_config_entry.error_reason_translation_key == "restore_failed"
 
 

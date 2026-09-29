@@ -9,8 +9,10 @@ import pytest
 
 from homeassistant.components.marketplace.base import MarketplaceManager, Repositories
 from homeassistant.components.marketplace.const import DOMAIN, STORAGE_VERSION
+from homeassistant.components.marketplace.enums import DisabledReason
 from homeassistant.components.marketplace.repositories.base import Repository
 from homeassistant.components.marketplace.utils.data import MarketplaceData
+from homeassistant.components.marketplace.utils.storage import async_load_from_storage
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -156,21 +158,55 @@ async def test_restore_skips_placeholder_repository(
     assert marketplace.repositories.get_by_id("0") is None
 
 
+@pytest.mark.parametrize("unreadable", ["common", "repositories"])
 @pytest.mark.usefixtures("init_integration")
 async def test_restore_unreadable_data(
     marketplace: MarketplaceManager,
     caplog: pytest.LogCaptureFixture,
+    unreadable: str,
 ) -> None:
-    """Test an unreadable repositories file fails the restore."""
+    """Test an unreadable file fails the restore, it is not taken as empty."""
     data = MarketplaceData(marketplace)
+    load = async_load_from_storage
+
+    async def load_from_storage(hass: HomeAssistant, key: str) -> Any:
+        if key == unreadable:
+            raise HomeAssistantError("Not valid JSON")
+        return await load(hass, key)
 
     with patch(
         "homeassistant.components.marketplace.utils.data.async_load_from_storage",
-        side_effect=HomeAssistantError("Not valid JSON"),
+        load_from_storage,
     ):
         assert not await data.restore()
 
-    assert "restore the file from a backup" in caplog.text
+    assert f"marketplace.{unreadable}, restore the file from a backup" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("reason", "written"),
+    [
+        pytest.param(DisabledReason.RATE_LIMIT, True, id="rate_limit"),
+        pytest.param(DisabledReason.INVALID_TOKEN, True, id="invalid_token"),
+        pytest.param(DisabledReason.REMOVED, False, id="removed"),
+    ],
+)
+@pytest.mark.usefixtures("stored_repositories", "init_integration")
+async def test_write_while_disabled(
+    marketplace: MarketplaceManager,
+    hass_storage: dict[str, Any],
+    reason: DisabledReason,
+    written: bool,
+) -> None:
+    """Test a download while GitHub is out of reach is still saved."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.installed_version = "2.0.0"
+    marketplace.disable(reason)
+
+    await marketplace.data.async_write()
+
+    stored = hass_storage[f"{DOMAIN}.repositories"]["data"][REPOSITORY_INTEGRATION_ID]
+    assert (stored.get("version_installed") == "2.0.0") is written
 
 
 @pytest.mark.usefixtures("stored_repositories")

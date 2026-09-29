@@ -79,6 +79,9 @@
     "rate_limited": {
       "message": "GitHub limits how often the Marketplace can reach it. Try again later."
     },
+    "refresh_failed": {
+      "message": "Could not update the information of {repository}: {error}"
+    },
     "releases_failed": {
       "message": "Could not get the releases of {repository}: {error}"
     },

@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
     from ..base import MarketplaceManager
+    from ..repositories.base import Repository
 
 
 def _send_rate_limited(
@@ -36,6 +37,23 @@ def _send_rate_limited(
 ) -> None:
     """Answer that GitHub refused the request, the rate limit ran out."""
     send_translated_error(connection, msg_id, ERR_GITHUB_RATE_LIMITED, "rate_limited")
+
+
+def _send_refresh_failed(
+    connection: websocket_api.ActiveConnection,
+    msg_id: int,
+    repository: Repository,
+    exception: MarketplaceError,
+) -> None:
+    """Answer that the information of the repository could not be updated."""
+    repository.logger.error("%s %s", repository.string, exception)
+    send_translated_error(
+        connection,
+        msg_id,
+        "error",
+        "refresh_failed",
+        {"repository": repository.data.full_name, "error": str(exception)},
+    )
 
 
 @websocket_api.websocket_command(
@@ -212,6 +230,10 @@ async def marketplace_repository_version(
         repository.data.selected_tag = selected_tag
         _send_rate_limited(connection, msg["id"], exception)
         return
+    except MarketplaceError as exception:
+        repository.data.selected_tag = selected_tag
+        _send_refresh_failed(connection, msg["id"], repository, exception)
+        return
     repository.state = None
 
     await marketplace.data.async_write()
@@ -248,6 +270,10 @@ async def marketplace_repository_beta(
     except GitHubAnonymousRateLimitError as exception:
         repository.data.show_beta = show_beta
         _send_rate_limited(connection, msg["id"], exception)
+        return
+    except MarketplaceError as exception:
+        repository.data.show_beta = show_beta
+        _send_refresh_failed(connection, msg["id"], repository, exception)
         return
     repository.state = None
 
@@ -387,6 +413,9 @@ async def marketplace_repository_refresh(
         await repository.update_repository(ignore_issues=True, force=True)
     except GitHubAnonymousRateLimitError as exception:
         _send_rate_limited(connection, msg["id"], exception)
+        return
+    except MarketplaceError as exception:
+        _send_refresh_failed(connection, msg["id"], repository, exception)
         return
 
     await marketplace.data.async_write()
