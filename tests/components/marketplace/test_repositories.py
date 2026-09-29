@@ -1607,11 +1607,13 @@ async def test_remove_refuses_plugin_name_outside_community(
 
 
 @pytest.mark.parametrize(
-    ("config_flow", "loaded", "restart"),
+    ("config_flow", "loaded", "found", "restart"),
     [
-        pytest.param(True, False, False, id="new"),
-        pytest.param(True, True, True, id="known_to_the_loader"),
-        pytest.param(False, False, True, id="set_up_from_yaml"),
+        pytest.param(True, False, {"example"}, False, id="new"),
+        pytest.param(True, True, {"example"}, True, id="known_to_the_loader"),
+        pytest.param(False, False, {"example"}, True, id="set_up_from_yaml"),
+        # custom_components did not exist at startup, the loader never mounted it
+        pytest.param(True, False, set(), True, id="not_found_by_the_loader"),
     ],
 )
 async def test_integration_restart_required_issue(
@@ -1621,6 +1623,7 @@ async def test_integration_restart_required_issue(
     hass_ws_client: WebSocketGenerator,
     config_flow: bool,
     loaded: bool,
+    found: set[str],
     restart: bool,
 ) -> None:
     """Test a download only asks for a restart when this run can not load it."""
@@ -1637,6 +1640,11 @@ async def test_integration_restart_required_issue(
             "homeassistant.components.marketplace.repositories.integration"
             ".async_get_loaded_integration",
             side_effect=None if loaded else IntegrationNotLoaded("example"),
+        ),
+        patch(
+            "homeassistant.components.marketplace.repositories.integration"
+            ".async_get_custom_components",
+            return_value=dict.fromkeys(found),
         ),
     ):
         await client.send_json_auto_id(

@@ -138,10 +138,14 @@ class IntegrationRepository(Repository):
         """Run post installation steps."""
         self.pending_restart = True
         if self.data.config_flow:
-            await self.reload_custom_components()
+            found = await self.reload_custom_components()
             # Code new to this run is found like any other integration, code
-            # the loader already knows keeps running until a restart.
-            self.pending_restart = self._known_to_the_loader()
+            # the loader already knows keeps running until a restart. The scan
+            # finds nothing when custom_components did not exist at startup,
+            # the loader only mounts it then.
+            self.pending_restart = (
+                self._known_to_the_loader() or self.data.domain not in found
+            )
 
         if self.pending_restart:
             self.logger.debug("%s Creating restart_required issue", self.string)
@@ -327,12 +331,13 @@ class IntegrationRepository(Repository):
         self.content.path.local = self.localpath
         return download
 
-    async def reload_custom_components(self) -> None:
-        """Reload custom_components (and config flows)in HA."""
+    async def reload_custom_components(self) -> set[str]:
+        """Scan custom_components again, return the domains the loader found."""
         self.logger.info("Reloading custom_component cache")
         async_clear_custom_components_cache(self.marketplace.hass)
-        await async_get_custom_components(self.marketplace.hass)
+        found = await async_get_custom_components(self.marketplace.hass)
         self.logger.info("Custom_component cache reloaded")
+        return set(found)
 
     def _integration_manifest_path(self) -> str:
         """Return the path of the manifest.json in the repository."""
