@@ -1,0 +1,7 @@
+{
+  "exceptions": {
+    "activate_failed": {
+      "message": "Failed to activate the LIFX Cloud scene: {error}"
+    }
+  }
+}

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from aioridwell import async_get_client
 from aioridwell.errors import InvalidCredentialsError, RidwellError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -19,22 +19,22 @@ from homeassistant.helpers.schema_config_entry_flow import (
 from .const import CALENDAR_TITLE_OPTIONS, CONF_CALENDAR_TITLE, DOMAIN, LOGGER
 from .coordinator import RidwellConfigEntry
 
-STEP_REAUTH_CONFIRM_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_CONFIRM_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
     }
 )
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_CALENDAR_TITLE): selector.SelectSelector(
+        probatio.Optional(CONF_CALENDAR_TITLE): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=CALENDAR_TITLE_OPTIONS,
                 multiple=False,
@@ -62,7 +62,7 @@ class RidwellConfigFlow(ConfigFlow, domain=DOMAIN):
         self._username: str | None = None
 
     async def _async_validate(
-        self, error_step_id: str, error_schema: vol.Schema
+        self, error_step_id: str, error_schema: probatio.Schema
     ) -> ConfigFlowResult:
         """Validate input credentials and proceed accordingly."""
         errors = {}

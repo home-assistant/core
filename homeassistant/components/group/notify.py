@@ -5,7 +5,7 @@ from collections.abc import Mapping
 from copy import deepcopy
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -46,7 +46,7 @@ def _backward_compat_schema(value: Any | None) -> Any:
     # `service` has been renamed to `action`
     if CONF_SERVICE in value:
         if CONF_ACTION in value:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 "Cannot specify both 'service' and 'action'. Please use 'action' only."
             )
         value[CONF_ACTION] = value.pop(CONF_SERVICE)
@@ -56,14 +56,14 @@ def _backward_compat_schema(value: Any | None) -> Any:
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_SERVICES): vol.All(
+        probatio.Required(CONF_SERVICES): probatio.All(
             cv.ensure_list,
             [
-                vol.All(
+                probatio.All(
                     _backward_compat_schema,
                     {
-                        vol.Required(CONF_ACTION): cv.slug,
-                        vol.Optional(ATTR_DATA): dict,
+                        probatio.Required(CONF_ACTION): cv.slug,
+                        probatio.Optional(ATTR_DATA): dict,
                     },
                 )
             ],

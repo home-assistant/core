@@ -4,12 +4,12 @@ from http import HTTPStatus
 import logging
 from typing import Any, override
 
+import probatio
 from rocketchat_API.APIExceptions.RocketExceptions import (
     RocketAuthenticationException,
     RocketConnectionException,
 )
 from rocketchat_API.rocketchat import RocketChat
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -25,10 +25,10 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_URL): vol.Url(),
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_ROOM): cv.string,
+        probatio.Required(CONF_URL): probatio.Url(),
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_ROOM): cv.string,
     }
 )
 

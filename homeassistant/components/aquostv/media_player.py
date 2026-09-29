@@ -4,8 +4,8 @@ from collections.abc import Callable
 import logging
 from typing import Any, Concatenate, override
 
+import probatio
 import sharp_aquos_rc
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
@@ -37,14 +37,14 @@ DEFAULT_RETRIES = 2
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.string,
-        vol.Optional("retries", default=DEFAULT_RETRIES): cv.string,
-        vol.Optional("power_on_enabled", default=False): cv.boolean,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        probatio.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+        probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.string,
+        probatio.Optional("retries", default=DEFAULT_RETRIES): cv.string,
+        probatio.Optional("power_on_enabled", default=False): cv.boolean,
     }
 )
 

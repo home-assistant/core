@@ -644,3 +644,33 @@ async def test_audio_processing_custom(hass: HomeAssistant, tmp_path: Path) -> N
     assert engine.audio_processing.requires_external_vad is False
     assert engine.audio_processing.prefers_auto_gain_enabled is False
     assert engine.audio_processing.prefers_noise_reduction_enabled is False
+
+
+@pytest.mark.parametrize(
+    "setup", ["mock_setup", "mock_config_entry_setup"], indirect=True
+)
+async def test_stream_audio_large_no_newline_block(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    setup: MockSTTProvider | MockSTTProviderEntity,
+) -> None:
+    """Test a newline-free audio stream larger than aiohttp's line limit."""
+    # 600,000 bytes of silence - larger than the 512KB LineTooLong threshold.
+    # This is the reproduction case from issue #180708.
+    test_data = b"\x00" * 600_000
+    client = await hass_client()
+    response = await client.post(
+        f"/api/stt/{setup.url_path}",
+        headers={
+            "X-Speech-Content": (
+                "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1;"
+                " language=en"
+            )
+        },
+        data=test_data,
+    )
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == {"text": "test_result", "result": "success"}
+
+    received_data = b"".join(setup.received)
+    assert received_data == test_data

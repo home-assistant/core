@@ -11,6 +11,7 @@ import time
 import types
 from typing import TYPE_CHECKING, Any
 
+import probatio
 from RestrictedPython import (
     compile_restricted_exec,
     limited_builtins,
@@ -23,7 +24,6 @@ from RestrictedPython.Guards import (
     guarded_iter_unpack_sequence,
     guarded_unpack_sequence,
 )
-import voluptuous as vol
 
 from homeassistant.const import CONF_DESCRIPTION, CONF_NAME, SERVICE_RELOAD
 from homeassistant.core import (
@@ -44,7 +44,9 @@ DOMAIN = "python_script"
 
 FOLDER = "python_scripts"
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema(dict)}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.Schema(dict)}, extra=probatio.ALLOW_EXTRA
+)
 
 ALLOWED_HASS = {"bus", "services", "states"}
 ALLOWED_EVENTBUS = {"fire"}

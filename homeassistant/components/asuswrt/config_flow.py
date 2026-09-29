@@ -6,7 +6,7 @@ import socket
 from typing import Any, cast, override
 
 from asusrouter import AsusRouterError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
@@ -65,25 +65,25 @@ RESULT_UNKNOWN = "unknown"
 
 _LOGGER = logging.getLogger(__name__)
 
-LEGACY_SCHEMA = vol.Schema(
+LEGACY_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_MODE, default=MODE_ROUTER): vol.In(
+        probatio.Required(CONF_MODE, default=MODE_ROUTER): probatio.In(
             {MODE_ROUTER: "Router", MODE_AP: "Access Point"}
         ),
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(
+        probatio.Optional(
             CONF_CONSIDER_HOME, default=DEFAULT_CONSIDER_HOME.total_seconds()
-        ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900)),
-        vol.Optional(CONF_TRACK_UNKNOWN, default=DEFAULT_TRACK_UNKNOWN): bool,
+        ): probatio.All(probatio.Coerce(int), probatio.Clamp(min=0, max=900)),
+        probatio.Optional(CONF_TRACK_UNKNOWN, default=DEFAULT_TRACK_UNKNOWN): bool,
     }
 )
 
 
-async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def get_options_schema(handler: SchemaCommonFlowHandler) -> probatio.Schema:
     """Get options schema."""
     options_flow: SchemaOptionsFlowHandler
     options_flow = cast(SchemaOptionsFlowHandler, handler.parent_handler)
@@ -91,14 +91,14 @@ async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     if used_protocol in [PROTOCOL_SSH, PROTOCOL_TELNET]:
         data_schema = OPTIONS_SCHEMA.extend(
             {
-                vol.Required(CONF_INTERFACE, default=DEFAULT_INTERFACE): str,
-                vol.Required(CONF_DNSMASQ, default=DEFAULT_DNSMASQ): str,
+                probatio.Required(CONF_INTERFACE, default=DEFAULT_INTERFACE): str,
+                probatio.Required(CONF_DNSMASQ, default=DEFAULT_DNSMASQ): str,
             }
         )
         if options_flow.config_entry.data[CONF_MODE] == MODE_AP:
             return data_schema.extend(
                 {
-                    vol.Optional(CONF_REQUIRE_IP, default=True): bool,
+                    probatio.Optional(CONF_REQUIRE_IP, default=True): bool,
                 }
             )
         return data_schema
@@ -141,10 +141,12 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input = self._config_data
 
         schema = {
-            vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
-            vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")): str,
-            vol.Optional(CONF_PASSWORD): str,
-            vol.Required(
+            probatio.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
+            probatio.Required(
+                CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
+            ): str,
+            probatio.Optional(CONF_PASSWORD): str,
+            probatio.Required(
                 CONF_PROTOCOL,
                 default=user_input.get(CONF_PROTOCOL, PROTOCOL_HTTPS),
             ): SelectSelector(
@@ -152,11 +154,11 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
                     options=ALLOWED_PROTOCOL, translation_key="protocols"
                 )
             ),
-            vol.Required(CONF_MORE_OPTIONS): section(
-                vol.Schema(
+            probatio.Required(CONF_MORE_OPTIONS): section(
+                probatio.Schema(
                     {
-                        vol.Optional(CONF_PORT): cv.port,
-                        vol.Optional(CONF_SSH_KEY): str,
+                        probatio.Optional(CONF_PORT): cv.port,
+                        probatio.Optional(CONF_SSH_KEY): str,
                     }
                 ),
                 SectionConfig(collapsed=True),
@@ -165,7 +167,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(schema),
+            data_schema=probatio.Schema(schema),
             errors={CONF_BASE: error} if error else None,
         )
 

@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 from jaraco.abode.exceptions import Exception as AbodeException
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -20,13 +20,16 @@ ATTR_SETTING = "setting"
 ATTR_VALUE = "value"
 
 
-CHANGE_SETTING_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_SETTING): cv.string, vol.Required(ATTR_VALUE): cv.string}
+CHANGE_SETTING_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(ATTR_SETTING): cv.string,
+        probatio.Required(ATTR_VALUE): cv.string,
+    }
 )
 
-CAPTURE_IMAGE_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
+CAPTURE_IMAGE_SCHEMA = probatio.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
-AUTOMATION_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
+AUTOMATION_SCHEMA = probatio.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
 
 def _get_abode_system(hass: HomeAssistant) -> AbodeSystem:

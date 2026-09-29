@@ -19,7 +19,7 @@ import time
 from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict, override
 
 import attr
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
@@ -32,6 +32,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     Event,
     HomeAssistant,
     callback,
@@ -47,13 +48,25 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
-from . import area_registry as ar, device_registry as dr, floor_registry as fr, storage
+from . import (
+    area_registry as ar,
+    device_registry as dr,
+    floor_registry as fr,
+    issue_registry as ir,
+    storage,
+)
 from .device_registry import (
     EVENT_DEVICE_REGISTRY_UPDATED,
     EventDeviceRegistryUpdatedData,
 )
 from .frame import ReportBehavior, report_usage
-from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
+from .json import (
+    JSON_DUMP,
+    cached_json_bytes,
+    cached_json_fragment,
+    find_paths_unserializable_data,
+    json_fragment,
+)
 from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
 from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
@@ -144,6 +157,7 @@ class EntityNamePart(StrEnum):
     DEVICE = "device"
     ENTITY = "entity"
     FLOOR = "floor"
+    PARENT_DEVICE = "parent_device"
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -319,7 +333,9 @@ class RegistryEntry:
         """
         try:
             dict_repr = self._as_display_dict
-            json_repr: bytes | None = json_bytes(dict_repr) if dict_repr else None
+            json_repr: bytes | None = (
+                cached_json_bytes(dict_repr) if dict_repr else None
+            )
         except ValueError, TypeError:
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
@@ -386,7 +402,7 @@ class RegistryEntry:
         """Return a cached partial JSON representation of the entry."""
         try:
             dict_repr = self.as_partial_dict
-            return json_bytes(dict_repr)
+            return cached_json_bytes(dict_repr)
         except ValueError, TypeError:
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
@@ -400,43 +416,41 @@ class RegistryEntry:
     @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
-        return json_fragment(
-            json_bytes(
-                {
-                    "aliases": self.compat_aliases,
-                    "aliases_v2": _serialize_aliases(self.aliases),
-                    "area_id": self.area_id,
-                    "categories": self.categories,
-                    "capabilities": self.capabilities,
-                    "config_entry_id": self.config_entry_id,
-                    "config_subentry_id": self.config_subentry_id,
-                    "created_at": self.created_at,
-                    "device_class": self.device_class,
-                    "device_id": self.device_id,
-                    "disabled_by": self.disabled_by,
-                    "entity_category": self.entity_category,
-                    "entity_id": self.entity_id,
-                    "hidden_by": self.hidden_by,
-                    "icon": self.icon,
-                    "id": self.id,
-                    "has_entity_name": self.has_entity_name,
-                    "labels": list(self.labels),
-                    "modified_at": self.modified_at,
-                    "name": self.name,
-                    "object_id_base": self.object_id_base,
-                    "options": self.options,
-                    "original_device_class": self.original_device_class,
-                    "original_icon": self.original_icon,
-                    "original_name": self.original_name,
-                    "platform": self.platform,
-                    "suggested_object_id": self.suggested_object_id,
-                    "supported_features": self.supported_features,
-                    "translation_key": self.translation_key,
-                    "unique_id": self.unique_id,
-                    "previous_unique_id": self.previous_unique_id,
-                    "unit_of_measurement": self.unit_of_measurement,
-                }
-            )
+        return cached_json_fragment(
+            {
+                "aliases": self.compat_aliases,
+                "aliases_v2": _serialize_aliases(self.aliases),
+                "area_id": self.area_id,
+                "categories": self.categories,
+                "capabilities": self.capabilities,
+                "config_entry_id": self.config_entry_id,
+                "config_subentry_id": self.config_subentry_id,
+                "created_at": self.created_at,
+                "device_class": self.device_class,
+                "device_id": self.device_id,
+                "disabled_by": self.disabled_by,
+                "entity_category": self.entity_category,
+                "entity_id": self.entity_id,
+                "hidden_by": self.hidden_by,
+                "icon": self.icon,
+                "id": self.id,
+                "has_entity_name": self.has_entity_name,
+                "labels": list(self.labels),
+                "modified_at": self.modified_at,
+                "name": self.name,
+                "object_id_base": self.object_id_base,
+                "options": self.options,
+                "original_device_class": self.original_device_class,
+                "original_icon": self.original_icon,
+                "original_name": self.original_name,
+                "platform": self.platform,
+                "suggested_object_id": self.suggested_object_id,
+                "supported_features": self.supported_features,
+                "translation_key": self.translation_key,
+                "unique_id": self.unique_id,
+                "previous_unique_id": self.previous_unique_id,
+                "unit_of_measurement": self.unit_of_measurement,
+            }
         )
 
     @callback
@@ -515,10 +529,25 @@ def _async_get_full_entity_name(
 
     elif not use_legacy_naming or name is None:
         device_name: str | None = None
+        parent_device_name: str | None = None
         if device_id is not None:
             device_registry = dr.async_get(hass)
             if (device := device_registry.async_get(device_id)) is not None:
                 device_name = device.name_by_user or device.name
+
+                if (
+                    EntityNamePart.PARENT_DEVICE in parts
+                    and isinstance(device, dr.ChildDeviceEntry)
+                    and (
+                        parent_device := device_registry.async_get(
+                            device.parent_device_id, include_child_devices=False
+                        )
+                    )
+                    is not None
+                ):
+                    parent_device_name = (
+                        parent_device.name_by_user or parent_device.name
+                    )
 
                 if area_id is None:
                     area_id = dr.async_get_effective_area_id(hass, device)
@@ -563,6 +592,7 @@ def _async_get_full_entity_name(
             EntityNamePart.DEVICE: device_name,
             EntityNamePart.ENTITY: entity_name,
             EntityNamePart.FLOOR: floor_name,
+            EntityNamePart.PARENT_DEVICE: parent_device_name,
         }
         full_name = " ".join(
             part_name for part in parts if (part_name := part_names[part])
@@ -738,38 +768,36 @@ class DeletedRegistryEntry:
     @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
-        return json_fragment(
-            json_bytes(
-                {
-                    "aliases": self.compat_aliases,
-                    "aliases_v2": _serialize_aliases(self.aliases),
-                    "area_id": self.area_id,
-                    "categories": self.categories,
-                    "config_entry_id": self.config_entry_id,
-                    "config_subentry_id": self.config_subentry_id,
-                    "created_at": self.created_at,
-                    "device_class": self.device_class,
-                    "disabled_by": self.disabled_by
-                    if self.disabled_by is not UNDEFINED
-                    else None,
-                    "disabled_by_undefined": self.disabled_by is UNDEFINED,
-                    "entity_id": self.entity_id,
-                    "hidden_by": self.hidden_by
-                    if self.hidden_by is not UNDEFINED
-                    else None,
-                    "hidden_by_undefined": self.hidden_by is UNDEFINED,
-                    "icon": self.icon,
-                    "id": self.id,
-                    "labels": list(self.labels),
-                    "modified_at": self.modified_at,
-                    "name": self.name,
-                    "options": self.options if self.options is not UNDEFINED else {},
-                    "options_undefined": self.options is UNDEFINED,
-                    "orphaned_timestamp": self.orphaned_timestamp,
-                    "platform": self.platform,
-                    "unique_id": self.unique_id,
-                }
-            )
+        return cached_json_fragment(
+            {
+                "aliases": self.compat_aliases,
+                "aliases_v2": _serialize_aliases(self.aliases),
+                "area_id": self.area_id,
+                "categories": self.categories,
+                "config_entry_id": self.config_entry_id,
+                "config_subentry_id": self.config_subentry_id,
+                "created_at": self.created_at,
+                "device_class": self.device_class,
+                "disabled_by": self.disabled_by
+                if self.disabled_by is not UNDEFINED
+                else None,
+                "disabled_by_undefined": self.disabled_by is UNDEFINED,
+                "entity_id": self.entity_id,
+                "hidden_by": self.hidden_by
+                if self.hidden_by is not UNDEFINED
+                else None,
+                "hidden_by_undefined": self.hidden_by is UNDEFINED,
+                "icon": self.icon,
+                "id": self.id,
+                "labels": list(self.labels),
+                "modified_at": self.modified_at,
+                "name": self.name,
+                "options": self.options if self.options is not UNDEFINED else {},
+                "options_undefined": self.options is UNDEFINED,
+                "orphaned_timestamp": self.orphaned_timestamp,
+                "platform": self.platform,
+                "unique_id": self.unique_id,
+            }
         )
 
 
@@ -1199,6 +1227,16 @@ def _validate_item(
         )
 
 
+@callback
+def _has_own_area_without_own_name(hass: HomeAssistant, entry: RegistryEntry) -> bool:
+    """Return if an entity has an area of its own but no name of its own."""
+    return (
+        entry.area_id is not None
+        and entry.device_id is not None
+        and not async_get_unprefixed_name(hass, entry)
+    )
+
+
 class EntityRegistry(BaseRegistry):
     """Class to hold a registry of entities."""
 
@@ -1366,7 +1404,12 @@ class EntityRegistry(BaseRegistry):
         """
         parts = self.settings.entity_id_parts
         if parts is None:
-            parts = (EntityNamePart.AREA, EntityNamePart.DEVICE, EntityNamePart.ENTITY)
+            parts = (
+                EntityNamePart.AREA,
+                EntityNamePart.PARENT_DEVICE,
+                EntityNamePart.DEVICE,
+                EntityNamePart.ENTITY,
+            )
         object_id = _async_get_full_entity_name(
             self.hass,
             area_id=area_id,
@@ -1660,6 +1703,9 @@ class EntityRegistry(BaseRegistry):
             platform=entity.platform,
             unique_id=entity.unique_id,
         )
+        ir.async_delete_issue(
+            self.hass, HOMEASSISTANT_DOMAIN, _own_area_without_own_name_issue_id(entity)
+        )
         self.hass.bus.async_fire_internal(
             EVENT_ENTITY_REGISTRY_UPDATED,
             _EventEntityRegistryUpdatedData_CreateRemove(
@@ -1952,7 +1998,6 @@ class EntityRegistry(BaseRegistry):
             if split_entity_id(new_entity_id)[0] != split_entity_id(entity_id)[0]:
                 raise ValueError("New entity ID should be same domain")
 
-            self.entities.pop(entity_id)
             entity_id = new_values["entity_id"] = new_entity_id
             old_values["entity_id"] = old.entity_id
 
@@ -1996,7 +2041,20 @@ class EntityRegistry(BaseRegistry):
             )
             new_values["original_name_unprefixed"] = original_name_unprefixed
 
-        new = self.entities[entity_id] = attr.evolve(old, **new_values)
+        new = attr.evolve(old, **new_values)
+
+        # Only user edits are rejected, integration updates surface as a repair issue
+        if (
+            "area_id" in new_values or "name" in new_values
+        ) and _has_own_area_without_own_name(self.hass, new):
+            raise ValueError(
+                "An entity without a name of its own cannot have an area of its own, "
+                "set the area on its device instead"
+            )
+
+        if entity_id != old.entity_id:
+            self.entities.pop(old.entity_id)
+        self.entities[entity_id] = new
 
         self.async_schedule_save()
 
@@ -2164,6 +2222,7 @@ class EntityRegistry(BaseRegistry):
 
         _async_setup_cleanup(self.hass, self)
         _async_setup_entity_restore(self.hass, self)
+        _async_setup_own_area_without_own_name_issues(self.hass, self)
 
         data = await self._store.async_load()
         entities = EntityRegistryItems(self.hass)
@@ -2718,6 +2777,89 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
     hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _write_unavailable_states)
 
 
+_OWN_AREA_WITHOUT_OWN_NAME_ISSUE = "entity_own_area_without_own_name"
+_OWN_AREA_WITHOUT_OWN_NAME_ISSUE_FIELDS = {
+    "area_id",
+    "device_id",
+    "entity_id",
+    "has_entity_name",
+    "name",
+    "original_name",
+}
+
+
+def _own_area_without_own_name_issue_id(entry: RegistryEntry) -> str:
+    """Return the issue ID of an entry, keyed on its stable ID."""
+    return f"{_OWN_AREA_WITHOUT_OWN_NAME_ISSUE}_{entry.id}"
+
+
+@callback
+def _async_setup_own_area_without_own_name_issues(
+    hass: HomeAssistant, registry: EntityRegistry
+) -> None:
+    """Report entities with an area of their own but no name of their own.
+
+    Removals are handled directly by the registry, since the remove event lacks
+    the entry ID.
+    """
+
+    @callback
+    def _async_create_issue(entry: RegistryEntry) -> None:
+        ir.async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            _own_area_without_own_name_issue_id(entry),
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=_OWN_AREA_WITHOUT_OWN_NAME_ISSUE,
+            translation_placeholders={
+                "entity_id": entry.entity_id,
+                "entity_settings_url": (
+                    f"/config/devices/device/{entry.device_id}"
+                    f"?more-info-entity-id={entry.entity_id}&more-info-view=settings"
+                ),
+            },
+        )
+
+    @callback
+    def _relevant_changes_filter(event_data: Mapping[str, Any]) -> bool:
+        if event_data["action"] == "create":
+            return True
+        if event_data["action"] != "update":
+            return False
+        return not _OWN_AREA_WITHOUT_OWN_NAME_ISSUE_FIELDS.isdisjoint(
+            event_data["changes"]
+        )
+
+    @callback
+    def _handle_registry_update(event: Event[EventEntityRegistryUpdatedData]) -> None:
+        if (entry := registry.async_get(event.data["entity_id"])) is None:
+            return
+        if _has_own_area_without_own_name(hass, entry):
+            _async_create_issue(entry)
+        else:
+            ir.async_delete_issue(
+                hass, HOMEASSISTANT_DOMAIN, _own_area_without_own_name_issue_id(entry)
+            )
+
+    hass.bus.async_listen(
+        EVENT_ENTITY_REGISTRY_UPDATED,
+        _handle_registry_update,
+        event_filter=_relevant_changes_filter,
+    )
+
+    if hass.is_running:
+        return
+
+    @callback
+    def _async_create_issues(_: Event) -> None:
+        for entry in registry.entities.values():
+            if _has_own_area_without_own_name(hass, entry):
+                _async_create_issue(entry)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_create_issues)
+
+
 async def async_migrate_entries(
     hass: HomeAssistant,
     config_entry_id: str,
@@ -2742,13 +2884,13 @@ async def async_migrate_entries(
 def async_validate_entity_id(registry: EntityRegistry, entity_id_or_uuid: str) -> str:
     """Validate and resolve an entity id or UUID to an entity id.
 
-    Raises vol.Invalid if the entity or UUID is invalid, or if the UUID is not
+    Raises probatio.Invalid if the entity or UUID is invalid, or if the UUID is not
     associated with an entity registry item.
     """
     if valid_entity_id(entity_id_or_uuid):
         return entity_id_or_uuid
     if (entry := registry.entities.get_entry(entity_id_or_uuid)) is None:
-        raise vol.Invalid(f"Unknown entity registry entry {entity_id_or_uuid}")
+        raise probatio.Invalid(f"Unknown entity registry entry {entity_id_or_uuid}")
     return entry.entity_id
 
 
@@ -2775,7 +2917,7 @@ def async_validate_entity_ids(
     """Validate and resolve a list of entity ids or UUIDs to a list of entity ids.
 
     Returns a list with UUID resolved to entity_ids.
-    Raises vol.Invalid if any item is invalid, or if any a UUID is not associated with
+    Raises probatio.Invalid if any item is invalid, or if any a UUID is not associated with
     an entity registry item.
     """
 

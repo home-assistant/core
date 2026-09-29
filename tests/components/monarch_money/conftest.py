@@ -1,7 +1,6 @@
 """Common fixtures for the Monarch Money tests."""
 
 from collections.abc import Generator
-import json
 from typing import Any
 from unittest.mock import AsyncMock, PropertyMock, patch
 
@@ -15,7 +14,7 @@ from typedmonarchmoney.models import (
 from homeassistant.components.monarch_money.const import DOMAIN
 from homeassistant.const import CONF_TOKEN
 
-from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -48,12 +47,12 @@ def mock_config_api() -> Generator[AsyncMock]:
         acc["id"]: MonarchAccount(acc) for acc in account_json["accounts"]
     }
 
-    cashflow_json: dict[str, Any] = json.loads(
-        load_fixture("get_cashflow_summary.json", DOMAIN)
+    cashflow_json: dict[str, Any] = load_json_object_fixture(
+        "get_cashflow_summary.json", DOMAIN
     )
     cashflow_summary = MonarchCashflowSummary(cashflow_json)
     subscription_details = MonarchSubscription(
-        json.loads(load_fixture("get_subscription_details.json", DOMAIN))
+        load_json_object_fixture("get_subscription_details.json", DOMAIN)
     )
 
     with (

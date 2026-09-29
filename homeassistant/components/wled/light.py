@@ -299,7 +299,6 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
 
             if ATTR_TRANSITION in data:
                 main_data[ATTR_TRANSITION] = data[ATTR_TRANSITION]
-                del data[ATTR_TRANSITION]
 
             await self.coordinator.wled.segment(**data)
             await self.coordinator.wled.master(**main_data)
