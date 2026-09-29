@@ -56,6 +56,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "container_out_of_memory": {
+        "name": "Out of memory"
+      },
       "status": {
         "name": "Status"
       }
