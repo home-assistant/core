@@ -398,7 +398,7 @@ async def test_sensor_availability_on_component_failure(
 async def test_total_sensor_reads_its_own_corrected_total(
     init_integration: MockConfigEntry, component: str, key: str
 ) -> None:
-    """Test each total reads and seeds the corrected total its key names."""
+    """Test each total reads the corrected total its key names."""
     runtime_data = init_integration.runtime_data
     device = runtime_data.readings.device
     description = next(d for d in SENSOR_DESCRIPTIONS if d.key == key)

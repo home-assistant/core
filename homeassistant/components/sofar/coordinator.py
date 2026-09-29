@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from modbus_connection import ModbusError, ModbusTimeoutError
+from modbus_connection import ModbusConnectionError, ModbusError, ModbusTimeoutError
 from propcache.api import cached_property
 from sofar_modbus.model import UpdateReport
 from sofar_modbus.modern.device import SofarInverter
@@ -107,9 +107,18 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     async def _retry_failed(self, report: UpdateReport) -> UpdateReport:
         """Retry failures once; skip if none answered, to avoid doubling timeout."""
         if report.failed and report.updated:
-            report = await self.device.async_poll(
-                report.failed, UpdateReport(set(report.updated))
-            )
+            updated: set[str] = set()
+            failed: dict[str, ModbusError] = {}
+            for name in report.failed:
+                try:
+                    await getattr(self.device, name).async_update()
+                except ModbusConnectionError:
+                    raise
+                except ModbusError as err:
+                    failed[name] = err
+                else:
+                    updated.add(name)
+            report = UpdateReport(report.updated | updated, failed)
 
         for name, cause in report.failed.items():
             prev = self._consecutive_failures.get(name, 0)

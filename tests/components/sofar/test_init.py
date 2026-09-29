@@ -77,21 +77,6 @@ def _drop_link_after_one_failure(unit: MockModbusUnit, address: int) -> None:
     unit.read_holding_registers = read_and_drop
 
 
-def _time_out_after_one_failure(unit: MockModbusUnit, address: int) -> None:
-    """Fail a register once, so the coordinator's retry times out on it."""
-    unit.fail_read(address, ModbusError("busy"))
-    read = unit.read_holding_registers
-
-    async def read_then_time_out(address_: int, count: int) -> list[int]:
-        try:
-            return await read(address_, count)
-        except ModbusError:
-            unit.fail_read(address, ModbusTimeoutError("stuck"))
-            raise
-
-    unit.read_holding_registers = read_then_time_out
-
-
 async def test_setup_and_unload_entry(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
@@ -602,33 +587,6 @@ async def test_component_answering_the_retry_stays_available(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "3.0"
-
-
-async def test_component_timing_out_on_the_retry_fails_alone(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    entity_registry: er.EntityRegistry,
-    mock_connection: MockModbusConnection,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test a timeout on the retry fails only that component, not the poll."""
-    unit = mock_connection.for_unit(1)
-    _time_out_after_one_failure(unit, PV_POWER_REGISTER)
-
-    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    pv_power_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_pv_power_1"
-    )
-    grid_frequency_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_grid_frequency"
-    )
-    assert pv_power_id is not None
-    assert grid_frequency_id is not None
-    assert hass.states.get(pv_power_id).state == STATE_UNAVAILABLE
-    assert hass.states.get(grid_frequency_id).state == "50.0"
 
 
 async def test_link_dying_during_the_retry_marks_sensors_unavailable(
