@@ -812,12 +812,7 @@ def setup_public_camera(ufp: MockUFPFixture) -> None:
     ufp.api.public_bootstrap = pb
 
 
-def make_public_viewer(
-    viewer: Viewer,
-    *,
-    state: DeviceState | None = None,
-    liveview_id: str | None = None,
-) -> Mock:
+def make_public_viewer(viewer: Viewer) -> Mock:
     """Build a public-API viewer mirroring the private fixture's liveview."""
     public = Mock(spec=PublicViewer)
     public.id = viewer.id
@@ -826,12 +821,12 @@ def make_public_viewer(
     public.display_name = viewer.display_name
     public.type = viewer.type
     public.model = ModelType.VIEWPORT
-    public.state = DeviceState[viewer.state.name] if state is None else state
-    public.liveview_id = viewer.liveview_id if liveview_id is None else liveview_id
+    public.state = DeviceState[viewer.state.name]
+    public.liveview_id = viewer.liveview_id
     public.api = public._api = viewer.api
-    # Resolve through the library property instead of a mocked attribute.
+    # Each Mock instance has its own class, so this resolves liveview through
+    # the library property without leaking into other mocks.
     type(public).liveview = PublicViewer.liveview
-    public.set_liveview = AsyncMock()
     return public
 
 

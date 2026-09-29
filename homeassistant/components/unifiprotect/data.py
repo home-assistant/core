@@ -748,7 +748,7 @@ class ProtectData:
                 self._async_signal_device_update(sensor)
             return
 
-        if model_type is ModelType.LIVEVIEW and len(self.api.bootstrap.viewers) > 0:
+        if model_type is ModelType.LIVEVIEW and self.api.public_bootstrap.viewers:
             # alert user viewport needs restart so voice clients can get new options
             _LOGGER.warning(
                 "Liveviews updated. Restart Home Assistant to update Viewport select"

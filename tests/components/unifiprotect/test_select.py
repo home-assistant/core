@@ -19,6 +19,7 @@ from uiprotect.data import (
     Liveview,
     NvrArmMode,
     NvrArmModeStatus,
+    Permission,
     PTZPatrol,
     PublicHdrMode,
     RecordingMode,
@@ -58,6 +59,7 @@ from .utils import (
     make_public_bootstrap,
     make_public_camera,
     make_public_light,
+    make_public_liveview,
     public_device_ws_message,
     remove_entities,
     setup_public_camera,
@@ -168,8 +170,23 @@ async def test_select_setup_viewer(
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
+@pytest.mark.parametrize(
+    ("liveview_id", "expected"),
+    [
+        pytest.param("other_liveview", "Other", id="listed"),
+        # The public API lists only global liveviews and the API key user's
+        # own ones, so another user's personal liveview is never an option.
+        pytest.param("personal_liveview", STATE_UNKNOWN, id="personal"),
+        pytest.param(None, STATE_UNKNOWN, id="unset"),
+    ],
+)
 async def test_select_viewer_public_update(
-    hass: HomeAssistant, ufp: MockUFPFixture, viewer: Viewer, liveview: Liveview
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    viewer: Viewer,
+    liveview: Liveview,
+    liveview_id: str | None,
+    expected: str,
 ) -> None:
     """The liveview select follows the public viewer's liveview."""
 
@@ -185,35 +202,27 @@ async def test_select_viewer_public_update(
     assert hass.states.get(entity_id).state == liveview.name
 
     public = ufp.api.public_bootstrap.viewers[viewer.id]
-    public.liveview_id = other.id
-    ufp.devices_ws_subscription(public_device_ws_message(public))
-    await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == "Other"
-
-
-async def test_select_viewer_private_liveview(
-    hass: HomeAssistant, ufp: MockUFPFixture, viewer: Viewer, liveview: Liveview
-) -> None:
-    """A liveview the API key cannot read leaves the select without a state."""
-
-    # Sharing a liveview with a viewport from the Protect UI creates a private
-    # liveview that is missing from /v1/liveviews, so it is never an option.
-    setup_public_viewer(ufp, [liveview])
-    await init_entry(hass, ufp, [viewer])
-
-    _, entity_id = await ids_from_device_description(
-        hass, Platform.SELECT, viewer, VIEWER_SELECTS[0]
-    )
-
-    public = ufp.api.public_bootstrap.viewers[viewer.id]
-    public.liveview_id = "private_liveview"
+    public.liveview_id = liveview_id
     ufp.devices_ws_subscription(public_device_ws_message(public))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_OPTIONS] == [liveview.name]
+    assert state.state == expected
+    assert state.attributes[ATTR_OPTIONS] == [liveview.name, "Other"]
+
+
+async def test_select_viewer_no_write_permission(
+    hass: HomeAssistant, ufp: MockUFPFixture, viewer: Viewer, liveview: Liveview
+) -> None:
+    """A viewer the auth user cannot write to gets no liveview select."""
+
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "viewer:read:*"})
+    ]
+    setup_public_viewer(ufp, [liveview])
+    await init_entry(hass, ufp, [viewer])
+
+    assert_entity_counts(hass, Platform.SELECT, 0, 0)
 
 
 async def test_select_viewer_unavailable_without_public(
@@ -367,40 +376,35 @@ async def test_select_setup_camera_none(
 
 
 async def test_select_update_liveview(
-    hass: HomeAssistant, ufp: MockUFPFixture, viewer: Viewer, liveview: Liveview
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    viewer: Viewer,
+    liveview: Liveview,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test select entity update (new Liveview)."""
+    """New liveviews do not reach the select options until a restart."""
 
-    ufp.api.bootstrap.liveviews = {liveview.id: liveview}
     setup_public_viewer(ufp, [liveview])
     await init_entry(hass, ufp, [viewer])
-    assert_entity_counts(hass, Platform.SELECT, 1, 1)
 
     _, entity_id = await ids_from_device_description(
         hass, Platform.SELECT, viewer, VIEWER_SELECTS[0]
     )
 
-    state = hass.states.get(entity_id)
-    assert state
-    expected_options = state.attributes[ATTR_OPTIONS]
-
     new_liveview = copy(liveview)
-    new_liveview.id = "test_id"
-
+    new_liveview.id = "new_liveview"
+    new_liveview.name = "New"
+    ufp.api.public_bootstrap.liveviews[new_liveview.id] = make_public_liveview(
+        new_liveview
+    )
     mock_msg = Mock()
     mock_msg.changed_data = {}
     mock_msg.new_obj = new_liveview
-
-    ufp.api.bootstrap.liveviews = {
-        **ufp.api.bootstrap.liveviews,
-        new_liveview.id: new_liveview,
-    }
     ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.attributes[ATTR_OPTIONS] == expected_options
+    assert hass.states.get(entity_id).attributes[ATTR_OPTIONS] == [liveview.name]
+    assert "Restart Home Assistant to update Viewport select" in caplog.text
 
 
 async def test_select_update_doorbell_settings(
@@ -826,25 +830,31 @@ async def test_select_set_option_camera_hdr_mode(
 async def test_select_set_option_viewer(
     hass: HomeAssistant, ufp: MockUFPFixture, viewer: Viewer, liveview: Liveview
 ) -> None:
-    """Test Liveview select writes through the public viewer."""
+    """Test Liveview select writes the chosen liveview through the public viewer."""
 
-    setup_public_viewer(ufp, [liveview])
+    other = copy(liveview)
+    other.id = "other_liveview"
+    other.name = "Other"
+    setup_public_viewer(ufp, [liveview, other])
     await init_entry(hass, ufp, [viewer])
-    assert_entity_counts(hass, Platform.SELECT, 1, 1)
 
     _, entity_id = await ids_from_device_description(
         hass, Platform.SELECT, viewer, VIEWER_SELECTS[0]
     )
+    public = ufp.api.public_bootstrap.viewers[viewer.id]
+    public.liveview_id = "personal_liveview"
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     await hass.services.async_call(
         "select",
         "select_option",
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: liveview.name},
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Other"},
         blocking=True,
     )
 
-    public = ufp.api.public_bootstrap.viewers[viewer.id]
-    public.set_liveview.assert_called_once_with(liveview.id)
+    public.set_liveview.assert_awaited_once_with(other.id)
 
 
 # --- PTZ Patrol Test Helpers ---
