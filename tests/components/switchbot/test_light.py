@@ -734,7 +734,7 @@ async def test_air_purifier_light_restore_state(
     [
         (SERVICE_TURN_ON, {}, "turn_on_light", {"low": False}),
         (SERVICE_TURN_ON, {ATTR_BRIGHTNESS: 255}, "turn_on_light", {"low": False}),
-        (SERVICE_TURN_ON, {ATTR_BRIGHTNESS: 128}, "turn_on_light", {"low": False}),
+        (SERVICE_TURN_ON, {ATTR_BRIGHTNESS: 128}, "turn_on_light", {"low": True}),
         (SERVICE_TURN_ON, {ATTR_BRIGHTNESS: 100}, "turn_on_light", {"low": True}),
         (SERVICE_TURN_OFF, {}, "turn_off_light", {}),
     ],
@@ -813,3 +813,5 @@ async def test_circulator_fan_pro_light_state(
         assert state is not None
         assert state.state == expected_state
         assert state.attributes.get(ATTR_BRIGHTNESS) == expected_brightness
+        assert hass.states.get("sensor.test_name_battery") is not None
+        assert hass.states.get("sensor.test_name_bluetooth_signal") is not None

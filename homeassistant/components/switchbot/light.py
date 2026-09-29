@@ -234,13 +234,18 @@ class SwitchbotCirculatorFanProLightEntity(SwitchbotEntity, LightEntity):
     """Two-level night light of a Circulator Fan Pro.
 
     The night light has two brightness levels (high / low), mapped onto HA
-    brightness: > 50% selects the high level, otherwise low.
+    brightness: values up to 128 select the low level.
     """
 
     _device: switchbot.SwitchbotCirculatorFanPro
     _attr_translation_key = "circulator_fan_pro_light"
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_color_mode = ColorMode.BRIGHTNESS
+
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
+        """Initialize the Circulator Fan Pro night light."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.base_unique_id}_light"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
     @override
@@ -268,7 +273,7 @@ class SwitchbotCirculatorFanProLightEntity(SwitchbotEntity, LightEntity):
         _LOGGER.debug("Turning on night light %s, address %s", kwargs, self._address)
         low = (
             requested := kwargs.get(ATTR_BRIGHTNESS)
-        ) is not None and requested <= 127
+        ) is not None and requested <= 128
         await self._device.turn_on_light(low=low)
 
     @exception_handler
