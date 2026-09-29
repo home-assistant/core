@@ -10,7 +10,10 @@ import pytest
 
 from homeassistant import setup
 from homeassistant.components.command_line import DOMAIN
-from homeassistant.components.command_line.sensor import CommandSensor
+from homeassistant.components.command_line.sensor import (
+    CommandSensor,
+    CommandSensorData,
+)
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
@@ -1029,3 +1032,107 @@ async def test_availability_blocks_value_template(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert error in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("value_template", "log_count"),
+    [
+        pytest.param("{{ none }}", 0, id="none"),
+        pytest.param("{{ 'not_a_number' }}", 1, id="text"),
+    ],
+)
+async def test_non_numeric_value_for_numeric_sensor(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    value_template: str,
+    log_count: int,
+) -> None:
+    """Test a numeric sensor whose template renders a non-numeric value.
+
+    The state becomes unknown instead of an exception being raised on every
+    update, and a real non-numeric value is logged once, not on every update.
+    """
+    await setup.async_setup_component(hass, HA_DOMAIN, {})
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": "echo 5",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                        "value_template": value_template,
+                    }
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == STATE_UNKNOWN
+    assert "has the non-numeric value" not in caplog.text
+    assert caplog.text.count("which is not a number") == log_count
+
+    # A repeated bad value is not logged again
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ["sensor.test"]},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test").state == STATE_UNKNOWN
+    assert caplog.text.count("which is not a number") == log_count
+
+
+async def test_numeric_value_after_non_numeric_value(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the sensor recovers, and a later bad value is logged again."""
+    await setup.async_setup_component(hass, HA_DOMAIN, {})
+    values = iter(["not_a_number", "5", "not_a_number"])
+
+    async def _next_value(data: CommandSensorData) -> None:
+        data.value = next(values)
+
+    with patch.object(CommandSensorData, "async_update", _next_value):
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "command_line": [
+                    {
+                        "sensor": {
+                            "name": "Test",
+                            "command": "echo 5",
+                            "unit_of_measurement": "%",
+                        }
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.test").state == STATE_UNKNOWN
+        assert caplog.text.count("which is not a number") == 1
+
+        await hass.services.async_call(
+            HA_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
+            {ATTR_ENTITY_ID: ["sensor.test"]},
+            blocking=True,
+        )
+        assert hass.states.get("sensor.test").state == "5"
+
+        await hass.services.async_call(
+            HA_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
+            {ATTR_ENTITY_ID: ["sensor.test"]},
+            blocking=True,
+        )
+        assert hass.states.get("sensor.test").state == STATE_UNKNOWN
+        assert caplog.text.count("which is not a number") == 2

@@ -2,6 +2,7 @@
 
 import itertools
 import logging
+from math import isfinite
 from typing import Any, override
 
 import jinja2
@@ -393,6 +394,37 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
         ManualTriggerEntity.__init__(self, hass, config)
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
+        self._non_numeric_value_logged = False
+
+    @callback
+    def _numeric_value_or_none(self, value: Any) -> Any:
+        """Return None instead of a value a numeric sensor cannot hold.
+
+        A template rendering `none` gives the string "None", which means no
+        value. Any other non-numeric value is logged once until the sensor
+        receives a valid value again, instead of raising on every update.
+        """
+        if not isinstance(value, str) or not self._numeric_state_expected:
+            return value
+        if value == "None":
+            return None
+        try:
+            if isfinite(float(value)):
+                self._non_numeric_value_logged = False
+                return value
+        except ValueError:
+            pass
+        if not self._non_numeric_value_logged:
+            self._non_numeric_value_logged = True
+            logging.getLogger(
+                f"{__package__}.{self.entity_id.split('.', maxsplit=1)[0]}"
+            ).warning(
+                "Sensor %s expects a numeric value but received '%s', which is"
+                " not a number; its state is set to unknown",
+                self.entity_id,
+                value,
+            )
+        return None
 
     @callback
     def _set_native_value_with_possible_timestamp(self, value: Any) -> None:
@@ -406,7 +438,7 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
             SensorDeviceClass.TIMESTAMP,
             SensorDeviceClass.UPTIME,
         ):
-            self._attr_native_value = value
+            self._attr_native_value = self._numeric_value_or_none(value)
         elif value is not None:
             self._attr_native_value = async_parse_date_datetime(
                 value, self.entity_id, self.device_class
