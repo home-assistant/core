@@ -14,6 +14,7 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPMovedPermanently
 from awesomeversion import AwesomeVersion
 
+from homeassistant.components.frontend import async_register_built_in_panel
 from homeassistant.components.http import HomeAssistantView, StaticPathConfig
 from homeassistant.components.lovelace import LOVELACE_DATA
 from homeassistant.config_entries import SOURCE_SYSTEM
@@ -95,6 +96,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Registered once per start, the handlers look the loaded entry up themselves
     async_register_websocket_commands(hass)
+
+    # Not tied to the entry, the panel explains a setup that failed. It is
+    # reached from the Settings dashboard, so it never shows in the sidebar.
+    async_register_built_in_panel(
+        hass, DOMAIN, require_admin=True, show_in_sidebar=False
+    )
 
     # The custom integration lived at /hacs, where bookmarks still point
     hass.http.register_redirect("/hacs", "/marketplace")

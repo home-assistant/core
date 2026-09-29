@@ -16,6 +16,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.frontend import DATA_PANELS
 from homeassistant.components.marketplace import async_remove_config_entry_device
 from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.const import DOMAIN, LEGACY_HACS_SYSTEM_ID
@@ -67,6 +68,22 @@ async def test_load_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_panel_registered_when_setup_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the panel is there to explain a setup that failed."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch.object(MarketplaceData, "restore", return_value=False):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    panel = hass.data[DATA_PANELS][DOMAIN]
+    assert panel.component_name == DOMAIN
+    assert panel.require_admin is True
+    assert panel.show_in_sidebar is False
 
 
 async def test_restart_issues_removed_on_start(

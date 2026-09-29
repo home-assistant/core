@@ -630,11 +630,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         show_in_sidebar=False,
     )
 
-    # Reached from the Settings dashboard, so it never shows in the sidebar
-    async_register_built_in_panel(
-        hass, "marketplace", require_admin=True, show_in_sidebar=False
-    )
-
     async_register_built_in_panel(hass, "profile")
     async_register_built_in_panel(hass, "notfound")
 
