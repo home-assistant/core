@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Awaitable
 from typing import Any, cast
 
+from aiohttp import ClientError
 from aiopowerwall import PowerwallAuthenticationError, PowerwallClient
 from tesla_fleet_api.exceptions import TeslaFleetError
 from tesla_fleet_api.tesla import EnergySiteRouter
@@ -102,6 +103,11 @@ async def handle_command(command: Awaitable[dict[str, Any]]) -> dict[str, Any]:
             translation_domain=DOMAIN,
             translation_key="command_exception",
             translation_placeholders={"message": e.message},
+        ) from e
+    except (ClientError, TimeoutError) as e:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_connection_error",
         ) from e
     LOGGER.debug("Command result: %s", result)
     return result
