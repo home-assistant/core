@@ -1,7 +1,7 @@
 """Test the Teslemetry init."""
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from copy import deepcopy
 from datetime import timedelta
@@ -52,6 +52,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.teslemetry import (
     STREAM_TOPICS,
     _async_get_rsa_key_pem,
@@ -87,6 +88,7 @@ from homeassistant.const import (
     CONF_ADDRESS,
     CONF_HOST,
     CONF_PASSWORD,
+    SERVICE_TURN_OFF,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -2884,6 +2886,48 @@ _LOCAL_LIVE_STATES = {
 }
 
 
+def _slim_site_info() -> dict[str, Any]:
+    """Return the site_info stream document for the cloud fixture."""
+    return {
+        key: value
+        for key, value in deepcopy(SITE_INFO["response"]).items()
+        if key != "tariff_content_v2"
+    }
+
+
+async def _setup_energy_site_entry(
+    hass: HomeAssistant, entry: MockConfigEntry, platforms: list[Platform]
+) -> None:
+    """Set up an energy site entry with only the given platforms."""
+    entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", platforms),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def _tick(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, interval: timedelta
+) -> None:
+    """Advance time by one interval and let the timers run."""
+    freezer.tick(interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+
+async def _tick_local_live(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, ticks: int
+) -> None:
+    """Advance time by ``ticks`` local live poll intervals."""
+    for _ in range(ticks):
+        await _tick(hass, freezer, ENERGY_LIVE_INTERVAL)
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_paired_site_live_reads_merge_over_cloud(
     hass: HomeAssistant,
@@ -2891,32 +2935,15 @@ async def test_paired_site_live_reads_merge_over_cloud(
     mock_powerwall_live_status: AsyncMock,
 ) -> None:
     """A paired site overlays the ten local live keys onto the cloud document."""
-    entry = _entry_with_powerwall()
-    entry.add_to_hass(hass)
     mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
+    await _setup_energy_site_entry(
+        hass, _entry_with_powerwall(), [Platform.SENSOR, Platform.BINARY_SENSOR]
+    )
 
-    with (
-        patch(
-            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
-            return_value=_TEST_RSA_KEY_PEM,
-        ),
-        patch(
-            "homeassistant.components.teslemetry.PLATFORMS",
-            [Platform.SENSOR, Platform.BINARY_SENSOR],
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    # Before the first LAN poll the merge base is the cloud cold read.
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
 
-        live_coordinator = entry.runtime_data.energysites[0].live_coordinator
-        # The local poll runs on its own timer, never through update_interval.
-        assert live_coordinator.update_interval is None
-        # Before the first LAN poll the merge base is the cloud cold read.
-        assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
-
-        freezer.tick(ENERGY_LIVE_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    await _tick_local_live(hass, freezer, 1)
 
     # One shared gateway read feeds every locally-owned entity.
     assert mock_powerwall_live_status.await_count == 1
@@ -2940,25 +2967,12 @@ async def test_paired_site_local_gap_keeps_cloud_value(
     mock_powerwall_live_status: AsyncMock,
 ) -> None:
     """A locally-owned key the gateway returns as None keeps its cloud value."""
-    entry = _entry_with_powerwall()
-    entry.add_to_hass(hass)
     local = deepcopy(_LOCAL_LIVE_STATUS)
     local["response"]["solar_power"] = None
     mock_powerwall_live_status.side_effect = lambda: deepcopy(local)
+    await _setup_energy_site_entry(hass, _entry_with_powerwall(), [Platform.SENSOR])
 
-    with (
-        patch(
-            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
-            return_value=_TEST_RSA_KEY_PEM,
-        ),
-        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SENSOR]),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        freezer.tick(ENERGY_LIVE_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    await _tick_local_live(hass, freezer, 1)
 
     assert mock_powerwall_live_status.await_count == 1
     assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
@@ -2971,38 +2985,20 @@ async def test_paired_site_config_reads_merge_over_cloud(
     mock_powerwall_local_config: AsyncMock,
 ) -> None:
     """A paired site overlays the two local config keys onto the cloud site_info."""
-    entry = _entry_with_powerwall()
-    entry.add_to_hass(hass)
     mock_powerwall_local_config.return_value = {
         "backup_reserve_percent": 20.0,
         "default_real_mode": "autonomous",
     }
+    await _setup_energy_site_entry(
+        hass, _entry_with_powerwall(), [Platform.NUMBER, Platform.SELECT]
+    )
 
-    with (
-        patch(
-            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
-            return_value=_TEST_RSA_KEY_PEM,
-        ),
-        patch(
-            "homeassistant.components.teslemetry.PLATFORMS",
-            [Platform.NUMBER, Platform.SELECT],
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    # Before the first LAN poll the config-backed entities read the cloud.
+    assert (
+        hass.states.get("select.energy_site_operation_mode").state == "self_consumption"
+    )
 
-        info_coordinator = entry.runtime_data.energysites[0].info_coordinator
-        # The local poll runs on its own timer, never through update_interval.
-        assert info_coordinator.update_interval is None
-        # Before the first LAN poll the config-backed entities read the cloud.
-        assert (
-            hass.states.get("select.energy_site_operation_mode").state
-            == "self_consumption"
-        )
-
-        freezer.tick(ENERGY_CONFIG_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
 
     assert mock_powerwall_local_config.await_count == 1
     assert hass.states.get("number.energy_site_backup_reserve").state == "20.0"
@@ -3017,62 +3013,33 @@ async def test_local_command_survives_site_info_push_before_next_poll(
     mock_powerwall_local_config: AsyncMock,
     mock_energy_info_stream: MagicMock,
 ) -> None:
-    """A locally-owned command value must survive a site-info push before the next poll.
-
-    Regression test: ``_local_config`` is only refreshed by the LAN poll on its
-    own 30-second cadence, so a site-info (or tariff) push arriving in that
-    window used to re-merge the pre-command value still cached there over the
-    command that just succeeded, visibly reverting it.
-    """
-    entry = _entry_with_powerwall()
-    entry.add_to_hass(hass)
+    """A locally-owned command value survives a cloud site_info push until the next LAN poll."""
     mock_powerwall_local_config.return_value = {
         "backup_reserve_percent": 20.0,
         "default_real_mode": "self_consumption",
     }
+    await _setup_energy_site_entry(
+        hass, _entry_with_powerwall(), [Platform.NUMBER, Platform.SELECT]
+    )
 
-    with (
-        patch(
-            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
-            return_value=_TEST_RSA_KEY_PEM,
-        ),
-        patch(
-            "homeassistant.components.teslemetry.PLATFORMS",
-            [Platform.NUMBER, Platform.SELECT],
-        ),
+    await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
+    assert hass.states.get("number.energy_site_backup_reserve").state == "20.0"
+
+    with patch(
+        "aiopowerwall.energysite.PowerwallEnergySite.backup",
+        return_value=COMMAND_OK,
     ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: "number.energy_site_backup_reserve", ATTR_VALUE: 80},
+            blocking=True,
+        )
+    assert hass.states.get("number.energy_site_backup_reserve").state == "80"
 
-        # Seed `_local_config` with the pre-command value via a real LAN poll.
-        freezer.tick(ENERGY_CONFIG_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-        assert hass.states.get("number.energy_site_backup_reserve").state == "20.0"
+    mock_energy_info_stream.send(_slim_site_info())
+    await hass.async_block_till_done()
 
-        with patch(
-            "aiopowerwall.energysite.PowerwallEnergySite.backup",
-            return_value=COMMAND_OK,
-        ):
-            await hass.services.async_call(
-                NUMBER_DOMAIN,
-                SERVICE_SET_VALUE,
-                {ATTR_ENTITY_ID: "number.energy_site_backup_reserve", ATTR_VALUE: 80},
-                blocking=True,
-            )
-        assert hass.states.get("number.energy_site_backup_reserve").state == "80"
-
-        # A site-info push arrives before the next 30-second LAN poll.
-        slim_site_info = {
-            key: value
-            for key, value in deepcopy(SITE_INFO["response"]).items()
-            if key != "tariff_content_v2"
-        }
-        mock_energy_info_stream.send(slim_site_info)
-        await hass.async_block_till_done()
-
-    # The command's value must survive the push, not revert to the stale
-    # pre-command value still cached in `_local_config`.
     assert hass.states.get("number.energy_site_backup_reserve").state == "80"
 
 
@@ -3081,16 +3048,7 @@ async def test_local_command_survives_poll_started_before_it(
     freezer: FrozenDateTimeFactory,
     mock_powerwall_local_config: AsyncMock,
 ) -> None:
-    """A poll already in flight when a command lands must not revert it.
-
-    Regression test: ``local_config()`` is awaited, so a poll that starts
-    before a command and only returns its pre-command snapshot afterwards used
-    to unconditionally overwrite ``_local_config`` with that stale read,
-    silently reverting the command the user just saw take.
-    """
-    entry = _entry_with_powerwall()
-    entry.add_to_hass(hass)
-
+    """A LAN poll already in flight when a command lands does not revert it."""
     release = asyncio.Event()
 
     async def blocking_local_config() -> dict[str, Any]:
@@ -3098,94 +3056,114 @@ async def test_local_command_survives_poll_started_before_it(
         return {"backup_reserve_percent": 20.0}
 
     mock_powerwall_local_config.side_effect = blocking_local_config
+    await _setup_energy_site_entry(hass, _entry_with_powerwall(), [Platform.NUMBER])
 
-    with (
-        patch(
-            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
-            return_value=_TEST_RSA_KEY_PEM,
-        ),
-        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.NUMBER]),
+    # The poll starts and blocks mid-read, before the command is issued.
+    await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
+    assert mock_powerwall_local_config.call_count == 1
+
+    # A tick while that read is in flight does not start a second one.
+    await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
+    assert mock_powerwall_local_config.call_count == 1
+
+    with patch(
+        "aiopowerwall.energysite.PowerwallEnergySite.backup",
+        return_value=COMMAND_OK,
     ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: "number.energy_site_backup_reserve", ATTR_VALUE: 80},
+            blocking=True,
+        )
+    assert hass.states.get("number.energy_site_backup_reserve").state == "80"
 
-        # The poll starts and blocks mid-read, before the command is issued.
-        freezer.tick(ENERGY_CONFIG_INTERVAL)
-        async_fire_time_changed(hass)
-        await asyncio.sleep(0)
-        assert mock_powerwall_local_config.call_count == 1
+    # Only now does the poll's pre-command snapshot resolve.
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-        # The command lands, and completes, while that read is still in flight.
-        with patch(
-            "aiopowerwall.energysite.PowerwallEnergySite.backup",
-            return_value=COMMAND_OK,
-        ):
-            await hass.services.async_call(
-                NUMBER_DOMAIN,
-                SERVICE_SET_VALUE,
-                {ATTR_ENTITY_ID: "number.energy_site_backup_reserve", ATTR_VALUE: 80},
-                blocking=True,
-            )
-        assert hass.states.get("number.energy_site_backup_reserve").state == "80"
-
-        # Only now does the poll's pre-command snapshot resolve.
-        release.set()
-        await hass.async_block_till_done()
-
-    # The command's value must survive the stale read, not revert to it.
     assert hass.states.get("number.energy_site_backup_reserve").state == "80"
 
 
-async def test_command_on_cloud_owned_key_not_clobbered_by_stale_merge(
+@pytest.mark.parametrize(
+    "entry_factory",
+    [
+        pytest.param(_entry_with_powerwall, id="paired"),
+        pytest.param(mock_config_entry, id="unpaired"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("platform", "command", "service_call", "entity_id", "commanded", "pushed"),
+    [
+        pytest.param(
+            Platform.NUMBER,
+            "off_grid_vehicle_charging_reserve",
+            (
+                NUMBER_DOMAIN,
+                SERVICE_SET_VALUE,
+                {ATTR_ENTITY_ID: "number.energy_site_off_grid_reserve", ATTR_VALUE: 88},
+            ),
+            "number.energy_site_off_grid_reserve",
+            "88",
+            "50",
+            id="off_grid_reserve",
+        ),
+        pytest.param(
+            Platform.SWITCH,
+            "storm_mode",
+            (
+                SWITCH_DOMAIN,
+                SERVICE_TURN_OFF,
+                {ATTR_ENTITY_ID: "switch.energy_site_storm_watch"},
+            ),
+            "switch.energy_site_storm_watch",
+            STATE_OFF,
+            STATE_ON,
+            id="storm_watch",
+        ),
+    ],
+)
+async def test_cloud_owned_command_value_held_until_cloud_site_info(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    mock_site_info: AsyncMock,
+    mock_energy_info_stream: MagicMock,
+    entry_factory: Callable[[], MockConfigEntry],
+    platform: Platform,
+    command: str,
+    service_call: tuple[str, str, dict[str, Any]],
+    entity_id: str,
+    commanded: str,
+    pushed: str,
 ) -> None:
-    """A command on a key ``merge_site_info`` ignores must not be reverted by it.
-
-    Regression test: ``TeslemetryEnergyInfoNumberSensorEntity`` called
-    ``async_set_local_value`` for every key it manages, including
-    ``off_grid_vehicle_charging_reserve_percent`` -- a key ``merge_site_info``
-    never overlays because it is not in ``LOCAL_SITE_INFO_KEYS``. Re-running the
-    merge published the entity's own stale cloud value right back at it,
-    clobbering the optimistic value assigned a moment earlier.
-    """
-    entry = _entry_with_powerwall()
-    entry.add_to_hass(hass)
+    """A cloud-owned command value holds through LAN polls until the next cloud site_info."""
+    site_info = deepcopy(SITE_INFO)
+    site_info["response"]["off_grid_vehicle_charging_reserve_percent"] = 20
+    mock_site_info.side_effect = lambda: deepcopy(site_info)
+    await _setup_energy_site_entry(hass, entry_factory(), [platform])
 
     with (
         patch(
-            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
-            return_value=_TEST_RSA_KEY_PEM,
-        ),
-        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.NUMBER]),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        with patch(
-            "aiopowerwall.energysite.PowerwallEnergySite.off_grid_vehicle_charging_reserve",
+            f"aiopowerwall.energysite.PowerwallEnergySite.{command}",
             return_value=COMMAND_OK,
-        ):
-            await hass.services.async_call(
-                NUMBER_DOMAIN,
-                SERVICE_SET_VALUE,
-                {
-                    ATTR_ENTITY_ID: "number.energy_site_off_grid_reserve",
-                    ATTR_VALUE: 88,
-                },
-                blocking=True,
-            )
+        ),
+        patch(
+            f"tesla_fleet_api.tesla.energysite.EnergySite.{command}",
+            return_value=COMMAND_OK,
+        ),
+    ):
+        await hass.services.async_call(*service_call, blocking=True)
+    assert hass.states.get(entity_id).state == commanded
 
-    # The cloud side never carries this key, so a clobber shows up as the
-    # optimistic value reverting to unknown, not to some other stale number.
-    assert hass.states.get("number.energy_site_off_grid_reserve").state == "88"
+    await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
+    assert hass.states.get(entity_id).state == commanded
 
-    # The next LAN poll recomposes the coordinator view; the optimistic value
-    # must survive it until real cloud data arrives.
-    freezer.tick(ENERGY_CONFIG_INTERVAL)
-    async_fire_time_changed(hass)
+    slim_site_info = _slim_site_info()
+    slim_site_info["off_grid_vehicle_charging_reserve_percent"] = 50
+    mock_energy_info_stream.send(slim_site_info)
     await hass.async_block_till_done()
-    assert hass.states.get("number.energy_site_off_grid_reserve").state == "88"
+
+    assert hass.states.get(entity_id).state == pushed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -3195,50 +3173,23 @@ async def test_cloud_push_between_local_ticks_keeps_owned_key(
     mock_powerwall_live_status: AsyncMock,
     mock_energy_live_stream: MagicMock,
 ) -> None:
-    """A cloud stream push must not revert a locally-owned key while local is healthy."""
-    entry = _entry_with_powerwall()
-    entry.add_to_hass(hass)
+    """A cloud stream push does not revert a locally-owned key while local is healthy."""
     mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
+    await _setup_energy_site_entry(hass, _entry_with_powerwall(), [Platform.SENSOR])
 
-    with (
-        patch(
-            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
-            return_value=_TEST_RSA_KEY_PEM,
-        ),
-        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SENSOR]),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        # A healthy local poll makes solar_power a locally-owned value.
-        freezer.tick(ENERGY_LIVE_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-        assert hass.states.get("sensor.energy_site_solar_power").state == "2.0"
-
-        # A cloud push arriving before the next local tick carries its own
-        # solar_power (owned) and grid_services_power (cloud-only).
-        push = deepcopy(LIVE_STATUS["response"])
-        push["solar_power"] = 9999
-        push["grid_services_power"] = 7000
-        mock_energy_live_stream.send(push)
-        await hass.async_block_till_done()
-
-    # The owned key still reflects the last local poll, not the cloud push...
+    await _tick_local_live(hass, freezer, 1)
     assert hass.states.get("sensor.energy_site_solar_power").state == "2.0"
-    # ...while a cloud-only key does take the pushed value, proving the push was
-    # merged against the cached local snapshot rather than dropped or stored raw.
+
+    push = deepcopy(LIVE_STATUS["response"])
+    push["solar_power"] = 9999
+    push["grid_services_power"] = 7000
+    mock_energy_live_stream.send(push)
+    await hass.async_block_till_done()
+
+    # The owned key keeps the local reading while the cloud-only key takes the
+    # push, so the push was merged rather than dropped or published raw.
+    assert hass.states.get("sensor.energy_site_solar_power").state == "2.0"
     assert hass.states.get("sensor.energy_site_grid_services_power").state == "7.0"
-
-
-async def _tick_local_live(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, ticks: int
-) -> None:
-    """Advance time by ``ticks`` local live poll intervals."""
-    for _ in range(ticks):
-        freezer.tick(ENERGY_LIVE_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -3249,45 +3200,54 @@ async def test_paired_site_manual_refresh_merges_and_keeps_cloud_read(
     mock_powerwall_live_status: AsyncMock,
 ) -> None:
     """A manual refresh on a paired site publishes merged data and keeps its cloud read."""
-    entry = _entry_with_powerwall()
-    entry.add_to_hass(hass)
     mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
     assert await async_setup_component(hass, HA_DOMAIN, {})
+    await _setup_energy_site_entry(hass, _entry_with_powerwall(), [Platform.SENSOR])
 
-    with (
-        patch(
-            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
-            return_value=_TEST_RSA_KEY_PEM,
-        ),
-        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SENSOR]),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await _tick_local_live(hass, freezer, 1)
+    assert hass.states.get("sensor.energy_site_solar_power").state == "2.0"
 
-        await _tick_local_live(hass, freezer, 1)
-        assert hass.states.get("sensor.energy_site_solar_power").state == "2.0"
+    refreshed = deepcopy(LIVE_STATUS)
+    refreshed["response"]["solar_power"] = 9999
+    refreshed["response"]["grid_services_power"] = 7000
+    mock_live_status.side_effect = lambda: deepcopy(refreshed)
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "sensor.energy_site_grid_services_power"},
+        blocking=True,
+    )
 
-        refreshed = deepcopy(LIVE_STATUS)
-        refreshed["response"]["solar_power"] = 9999
-        refreshed["response"]["grid_services_power"] = 7000
-        mock_live_status.side_effect = lambda: deepcopy(refreshed)
-        await hass.services.async_call(
-            HA_DOMAIN,
-            SERVICE_UPDATE_ENTITY,
-            {ATTR_ENTITY_ID: "sensor.energy_site_grid_services_power"},
-            blocking=True,
-        )
+    assert hass.states.get("sensor.energy_site_solar_power").state == "2.0"
+    assert hass.states.get("sensor.energy_site_grid_services_power").state == "7.0"
 
-        # The owned key keeps the local reading while the cloud-only key takes
-        # the refreshed value, so the refresh published the merged view.
-        assert hass.states.get("sensor.energy_site_solar_power").state == "2.0"
-        assert hass.states.get("sensor.energy_site_grid_services_power").state == "7.0"
-
-        # The next local poll re-merges against the refreshed cloud read, not
-        # the snapshot from before the refresh.
-        await _tick_local_live(hass, freezer, 1)
+    # The next local poll re-merges against the refreshed cloud read, not the
+    # snapshot from before the refresh.
+    await _tick_local_live(hass, freezer, 1)
 
     assert hass.states.get("sensor.energy_site_grid_services_power").state == "7.0"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_unpaired_site_manual_refresh_publishes_cloud_read(
+    hass: HomeAssistant,
+    mock_live_status: AsyncMock,
+) -> None:
+    """A manual refresh on an unpaired site publishes the refreshed cloud read."""
+    assert await async_setup_component(hass, HA_DOMAIN, {})
+    await setup_platform(hass, [Platform.SENSOR])
+
+    refreshed = deepcopy(LIVE_STATUS)
+    refreshed["response"]["solar_power"] = 9999
+    mock_live_status.side_effect = lambda: deepcopy(refreshed)
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "sensor.energy_site_solar_power"},
+        blocking=True,
+    )
+
+    assert hass.states.get("sensor.energy_site_solar_power").state == "9.999"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -3297,32 +3257,17 @@ async def test_paired_site_live_read_failure_falls_back_and_recovers(
     mock_powerwall_live_status: AsyncMock,
 ) -> None:
     """A failed local live poll shows cloud values (never unavailable) and recovers."""
-    entry = _entry_with_powerwall()
-    entry.add_to_hass(hass)
     mock_powerwall_live_status.side_effect = PowerwallError("gateway unreachable")
+    entry = _entry_with_powerwall()
+    await _setup_energy_site_entry(hass, entry, [Platform.SENSOR])
+    assert entry.state is ConfigEntryState.LOADED
 
-    with (
-        patch(
-            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
-            return_value=_TEST_RSA_KEY_PEM,
-        ),
-        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SENSOR]),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        assert entry.state is ConfigEntryState.LOADED
+    await _tick_local_live(hass, freezer, 1)
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
 
-        # The first poll fails: the owned key falls back to the cloud value
-        # rather than going unavailable, and setup is unaffected.
-        freezer.tick(ENERGY_LIVE_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-        assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
-
-        # The next poll, backed off to two intervals, succeeds and the owned key
-        # follows the local reading.
-        mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
-        await _tick_local_live(hass, freezer, 2)
+    # The next poll, backed off to two intervals, succeeds.
+    mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
+    await _tick_local_live(hass, freezer, 2)
 
     assert hass.states.get("sensor.energy_site_solar_power").state == "2.0"
 
@@ -3334,32 +3279,21 @@ async def test_paired_site_live_read_failures_back_off_and_reset(
     mock_powerwall_live_status: AsyncMock,
 ) -> None:
     """Repeated local live read failures double the poll gap to a cap, then reset."""
-    entry = _entry_with_powerwall()
-    entry.add_to_hass(hass)
     mock_powerwall_live_status.side_effect = PowerwallError("gateway unreachable")
+    await _setup_energy_site_entry(hass, _entry_with_powerwall(), [Platform.SENSOR])
 
-    with (
-        patch(
-            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
-            return_value=_TEST_RSA_KEY_PEM,
-        ),
-        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SENSOR]),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    # Reads land 5, 10, 20, 40 and then a capped 60 seconds apart.
+    for reads, gap in enumerate((1, 2, 4, 8, 12, 12), start=1):
+        await _tick_local_live(hass, freezer, gap - 1)
+        assert mock_powerwall_live_status.await_count == reads - 1
+        await _tick_local_live(hass, freezer, 1)
+        assert mock_powerwall_live_status.await_count == reads
 
-        # Reads land 5, 10, 20, 40 and then a capped 60 seconds apart.
-        for reads, gap in enumerate((1, 2, 4, 8, 12, 12), start=1):
-            await _tick_local_live(hass, freezer, gap - 1)
-            assert mock_powerwall_live_status.await_count == reads - 1
-            await _tick_local_live(hass, freezer, 1)
-            assert mock_powerwall_live_status.await_count == reads
-
-        # The next read, still at the cap, succeeds and restores the 5s cadence.
-        mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
-        await _tick_local_live(hass, freezer, 12)
-        assert mock_powerwall_live_status.await_count == 7
-        await _tick_local_live(hass, freezer, 2)
+    # The next read, still at the cap, succeeds and restores the 5s cadence.
+    mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
+    await _tick_local_live(hass, freezer, 12)
+    assert mock_powerwall_live_status.await_count == 7
+    await _tick_local_live(hass, freezer, 2)
 
     assert mock_powerwall_live_status.await_count == 9
     assert hass.states.get("sensor.energy_site_solar_power").state == "2.0"
@@ -3373,8 +3307,6 @@ async def test_paired_site_live_read_failure_logging(
     mock_powerwall_live_status: AsyncMock,
 ) -> None:
     """The first failed local live read warns, repeats log at debug, recovery at info."""
-    entry = _entry_with_powerwall()
-    entry.add_to_hass(hass)
     mock_powerwall_live_status.side_effect = PowerwallError("gateway unreachable")
 
     def poll_log_levels() -> list[int]:
@@ -3384,32 +3316,24 @@ async def test_paired_site_live_read_failure_logging(
             if record.getMessage().startswith("Local live poll")
         ]
 
-    with (
-        patch(
-            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
-            return_value=_TEST_RSA_KEY_PEM,
-        ),
-        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SENSOR]),
-        caplog.at_level(logging.DEBUG),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    caplog.set_level(logging.DEBUG)
+    await _setup_energy_site_entry(hass, _entry_with_powerwall(), [Platform.SENSOR])
 
-        await _tick_local_live(hass, freezer, 1)
-        assert poll_log_levels() == [logging.WARNING]
+    await _tick_local_live(hass, freezer, 1)
+    assert poll_log_levels() == [logging.WARNING]
 
-        await _tick_local_live(hass, freezer, 2)
-        assert poll_log_levels() == [logging.WARNING, logging.DEBUG]
+    await _tick_local_live(hass, freezer, 2)
+    assert poll_log_levels() == [logging.WARNING, logging.DEBUG]
 
-        mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
-        await _tick_local_live(hass, freezer, 4)
-        assert poll_log_levels() == [logging.WARNING, logging.DEBUG, logging.INFO]
-        assert "Local live poll for 123456 recovered" in caplog.text
+    mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
+    await _tick_local_live(hass, freezer, 4)
+    assert poll_log_levels() == [logging.WARNING, logging.DEBUG, logging.INFO]
+    assert "Local live poll for 123456 recovered" in caplog.text
 
-        # A healthy read logs nothing, and a later outage warns afresh.
-        await _tick_local_live(hass, freezer, 1)
-        mock_powerwall_live_status.side_effect = PowerwallError("gateway unreachable")
-        await _tick_local_live(hass, freezer, 1)
+    # A healthy read logs nothing, and a later outage warns afresh.
+    await _tick_local_live(hass, freezer, 1)
+    mock_powerwall_live_status.side_effect = PowerwallError("gateway unreachable")
+    await _tick_local_live(hass, freezer, 1)
 
     assert poll_log_levels() == [
         logging.WARNING,
@@ -3425,37 +3349,19 @@ async def test_paired_site_config_read_failure_falls_back_and_recovers(
     mock_powerwall_local_config: AsyncMock,
 ) -> None:
     """A failed local config poll shows cloud values (never unavailable) and recovers."""
-    entry = _entry_with_powerwall()
-    entry.add_to_hass(hass)
     mock_powerwall_local_config.side_effect = PowerwallError("gateway unreachable")
+    entry = _entry_with_powerwall()
+    await _setup_energy_site_entry(hass, entry, [Platform.SELECT])
+    assert entry.state is ConfigEntryState.LOADED
 
-    with (
-        patch(
-            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
-            return_value=_TEST_RSA_KEY_PEM,
-        ),
-        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SELECT]),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        assert entry.state is ConfigEntryState.LOADED
+    await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
+    assert (
+        hass.states.get("select.energy_site_operation_mode").state == "self_consumption"
+    )
 
-        # The first poll fails: the owned key falls back to the cloud value
-        # rather than going unavailable.
-        freezer.tick(ENERGY_CONFIG_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-        assert (
-            hass.states.get("select.energy_site_operation_mode").state
-            == "self_consumption"
-        )
-
-        # The next poll succeeds and the owned key follows the local reading.
-        mock_powerwall_local_config.side_effect = None
-        mock_powerwall_local_config.return_value = {"default_real_mode": "autonomous"}
-        freezer.tick(ENERGY_CONFIG_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    mock_powerwall_local_config.side_effect = None
+    mock_powerwall_local_config.return_value = {"default_real_mode": "autonomous"}
+    await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
 
     assert hass.states.get("select.energy_site_operation_mode").state == "autonomous"
 
@@ -3467,19 +3373,10 @@ async def test_unpaired_site_reads_cloud_only(
     mock_powerwall_live_status: AsyncMock,
     mock_powerwall_local_config: AsyncMock,
 ) -> None:
-    """An unpaired site never polls a gateway; its coordinators stay stream-only."""
-    entry = await setup_platform(hass, [Platform.SENSOR, Platform.SELECT])
+    """An unpaired site never polls a gateway."""
+    await setup_platform(hass, [Platform.SENSOR, Platform.SELECT])
 
-    energysite = entry.runtime_data.energysites[0]
-    assert not isinstance(energysite.api, EnergySiteRouter)
-    # No local polling is scheduled on either coordinator.
-    assert energysite.live_coordinator.update_interval is None
-    assert energysite.info_coordinator.update_interval is None
-
-    # Advancing past both local intervals reads no gateway and changes nothing.
-    freezer.tick(ENERGY_CONFIG_INTERVAL * 2)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL * 2)
 
     assert mock_powerwall_live_status.await_count == 0
     assert mock_powerwall_local_config.await_count == 0
@@ -3496,39 +3393,19 @@ async def test_local_live_poll_survives_stream_push_storm(
     mock_powerwall_live_status: AsyncMock,
     mock_energy_live_stream: MagicMock,
 ) -> None:
-    """The local live poll keeps its 5s cadence under a storm of stream pushes.
-
-    A stream push must never reset the local poll timer. Against a poll driven by
-    ``update_interval`` each push restarts the timer, so a push every second
-    perpetually postpones the poll and it never fires; on its own timer the poll
-    fires on every 5-second boundary regardless of the push rate.
-    """
-    entry = _entry_with_powerwall()
-    entry.add_to_hass(hass)
+    """The local live poll keeps its 5s cadence under a push every second."""
     mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
+    await _setup_energy_site_entry(hass, _entry_with_powerwall(), [Platform.SENSOR])
+    assert mock_powerwall_live_status.await_count == 0
 
-    with (
-        patch(
-            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
-            return_value=_TEST_RSA_KEY_PEM,
-        ),
-        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SENSOR]),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        assert mock_powerwall_live_status.await_count == 0
+    for second in range(1, 21):
+        push = deepcopy(LIVE_STATUS["response"])
+        push["solar_power"] = 1000 * second
+        mock_energy_live_stream.send(push)
+        await _tick(hass, freezer, timedelta(seconds=1))
 
-        # A stream push arrives every second for 20 seconds.
-        for second in range(1, 21):
-            push = deepcopy(LIVE_STATUS["response"])
-            push["solar_power"] = 1000 * second
-            mock_energy_live_stream.send(push)
-            freezer.tick(timedelta(seconds=1))
-            async_fire_time_changed(hass)
-            await hass.async_block_till_done()
-
-    # The 5-second poll fired on each of its four boundaries despite a push every
-    # second, and the owned key reflects the local reading, not the last push.
+    # The poll fired on each of its four boundaries, and the owned key reflects
+    # the local reading, not the last push.
     assert mock_powerwall_live_status.await_count == 4
     assert hass.states.get("sensor.energy_site_solar_power").state == "2.0"
 
@@ -3539,15 +3416,7 @@ async def test_overlapping_local_live_poll_skips_second_tick(
     freezer: FrozenDateTimeFactory,
     mock_powerwall_live_status: AsyncMock,
 ) -> None:
-    """An overlapping local live tick is skipped while a poll is in flight.
-
-    ``live_status`` is several sequential reads and can outrun the 5s interval; a
-    tick that fires while the previous poll is still running must be skipped so a
-    slow poll cannot replace a newer snapshot with stale data.
-    """
-    entry = _entry_with_powerwall()
-    entry.add_to_hass(hass)
-
+    """A local live tick is skipped while the previous poll is still in flight."""
     release = asyncio.Event()
 
     async def blocking_live_status() -> dict[str, Any]:
@@ -3555,34 +3424,19 @@ async def test_overlapping_local_live_poll_skips_second_tick(
         return deepcopy(_LOCAL_LIVE_STATUS)
 
     mock_powerwall_live_status.side_effect = blocking_live_status
+    await _setup_energy_site_entry(hass, _entry_with_powerwall(), [Platform.SENSOR])
 
-    with (
-        patch(
-            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
-            return_value=_TEST_RSA_KEY_PEM,
-        ),
-        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SENSOR]),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await _tick_local_live(hass, freezer, 1)
+    assert mock_powerwall_live_status.call_count == 1
 
-        # First tick: the poll starts and blocks mid-read.
-        freezer.tick(ENERGY_LIVE_INTERVAL)
-        async_fire_time_changed(hass)
-        await asyncio.sleep(0)
-        assert mock_powerwall_live_status.call_count == 1
+    await _tick_local_live(hass, freezer, 1)
+    assert mock_powerwall_live_status.call_count == 1
 
-        # Second tick fires while the first poll is still in flight.
-        freezer.tick(ENERGY_LIVE_INTERVAL)
-        async_fire_time_changed(hass)
-        await asyncio.sleep(0)
-        # The overlapping tick was skipped rather than starting a second read.
-        assert mock_powerwall_live_status.call_count == 1
-
-        release.set()
-        await hass.async_block_till_done()
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_powerwall_live_status.await_count == 1
+    assert hass.states.get("sensor.energy_site_solar_power").state == "2.0"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -3592,48 +3446,20 @@ async def test_paired_stream_push_restores_availability_after_disconnect(
     mock_energy_live_stream: MagicMock,
     mock_powerwall_live_status: AsyncMock,
 ) -> None:
-    """A paired site's stream push restores coordinator success after a drop.
-
-    The stream owns the live coordinator's success state, so a push through
-    ``handle_stream_update`` must restore ``last_update_success`` and bring the
-    paired live entities back once the stream resumes.
-    """
-    entry = _entry_with_powerwall()
-    entry.add_to_hass(hass)
+    """A paired site's live entities come back with the next stream push after a drop."""
     mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
+    await _setup_energy_site_entry(hass, _entry_with_powerwall(), [Platform.SENSOR])
+    assert hass.states.get("sensor.energy_site_solar_power").state != STATE_UNAVAILABLE
 
-    with (
-        patch(
-            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
-            return_value=_TEST_RSA_KEY_PEM,
-        ),
-        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SENSOR]),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    mock_add_connection_listener.send(False)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.energy_site_solar_power").state == STATE_UNAVAILABLE
 
-        live_coordinator = entry.runtime_data.energysites[0].live_coordinator
-        assert (
-            hass.states.get("sensor.energy_site_solar_power").state != STATE_UNAVAILABLE
-        )
+    push = deepcopy(LIVE_STATUS["response"])
+    push["solar_power"] = 456
+    mock_energy_live_stream.send(push)
+    await hass.async_block_till_done()
 
-        # The stream drops, failing the stream-owned live coordinator.
-        mock_add_connection_listener.send(False)
-        await hass.async_block_till_done()
-        assert live_coordinator.last_update_success is False
-        assert (
-            hass.states.get("sensor.energy_site_solar_power").state == STATE_UNAVAILABLE
-        )
-
-        # A streamed live_status document arrives once the stream resumes.
-        push = deepcopy(LIVE_STATUS["response"])
-        push["solar_power"] = 456
-        mock_energy_live_stream.send(push)
-        await hass.async_block_till_done()
-
-    # The push restored the coordinator's success state, so the paired live
-    # entities are available again.
-    assert live_coordinator.last_update_success is True
     assert hass.states.get("sensor.energy_site_solar_power").state == "0.456"
 
 
@@ -3644,73 +3470,27 @@ async def test_local_config_poll_does_not_clear_stream_error(
     mock_energy_info_stream: MagicMock,
     mock_powerwall_local_config: AsyncMock,
 ) -> None:
-    """A local config poll never clears the info coordinator's stream error.
-
-    Cloud-only site-info entities have no local source, so their availability is
-    stream-owned. A successful local poll refreshes the locally-owned keys in the
-    coordinator data without clearing the stream error or making the cloud-only
-    entities available with stale values. Only a stream document, which owns the
-    success state, restores those entities once the stream resumes.
-    """
-    entry = _entry_with_powerwall()
-    entry.add_to_hass(hass)
+    """A local config poll leaves cloud-only entities unavailable while the stream is down."""
     mock_powerwall_local_config.return_value = {"default_real_mode": "autonomous"}
+    await _setup_energy_site_entry(hass, _entry_with_powerwall(), [Platform.SELECT])
 
-    with (
-        patch(
-            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
-            return_value=_TEST_RSA_KEY_PEM,
-        ),
-        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SELECT]),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    mock_add_connection_listener.send(False)
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get("select.energy_site_operation_mode").state == STATE_UNAVAILABLE
+    )
+    assert hass.states.get("select.energy_site_allow_export").state == STATE_UNAVAILABLE
 
-        info_coordinator = entry.runtime_data.energysites[0].info_coordinator
+    await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
+    assert mock_powerwall_local_config.await_count == 1
+    assert hass.states.get("select.energy_site_allow_export").state == STATE_UNAVAILABLE
 
-        # The stream drops, failing the stream-owned info coordinator.
-        mock_add_connection_listener.send(False)
-        await hass.async_block_till_done()
-        assert info_coordinator.last_update_success is False
-        assert (
-            hass.states.get("select.energy_site_operation_mode").state
-            == STATE_UNAVAILABLE
-        )
-        assert (
-            hass.states.get("select.energy_site_allow_export").state
-            == STATE_UNAVAILABLE
-        )
+    mock_energy_info_stream.send(_slim_site_info())
+    await hass.async_block_till_done()
 
-        # A successful local config poll fires while the stream is still down.
-        freezer.tick(ENERGY_CONFIG_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-
-        assert mock_powerwall_local_config.await_count == 1
-        # The locally-owned key is refreshed in the coordinator data...
-        assert info_coordinator.data["default_real_mode"] == "autonomous"
-        # ...but the poll left the stream error untouched, so the cloud-only
-        # entity stays unavailable rather than surfacing a stale cloud value.
-        assert info_coordinator.last_update_success is False
-        assert (
-            hass.states.get("select.energy_site_allow_export").state
-            == STATE_UNAVAILABLE
-        )
-
-        # A streamed site_info document, which owns the success state, is what
-        # restores the cloud-only entities once the stream resumes.
-        slim_site_info = {
-            key: value
-            for key, value in deepcopy(SITE_INFO["response"]).items()
-            if key != "tariff_content_v2"
-        }
-        mock_energy_info_stream.send(slim_site_info)
-        await hass.async_block_till_done()
-
-    assert info_coordinator.last_update_success is True
-    assert hass.states.get("select.energy_site_allow_export").state != STATE_UNAVAILABLE
-    # The locally-owned key stays overlaid across the stream recovery.
-    assert info_coordinator.data["default_real_mode"] == "autonomous"
+    assert hass.states.get("select.energy_site_allow_export").state == "pv_only"
+    # The cloud document says self_consumption; the local overlay still wins.
+    assert hass.states.get("select.energy_site_operation_mode").state == "autonomous"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -3719,31 +3499,17 @@ async def test_local_poll_timer_cancelled_on_unload(
     freezer: FrozenDateTimeFactory,
     mock_powerwall_live_status: AsyncMock,
 ) -> None:
-    """Unloading the entry cancels the local poll timer; no timer is leaked."""
-    entry = _entry_with_powerwall()
-    entry.add_to_hass(hass)
+    """Unloading the entry stops the local poll."""
     mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
+    entry = _entry_with_powerwall()
+    await _setup_energy_site_entry(hass, entry, [Platform.SENSOR])
 
-    with (
-        patch(
-            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
-            return_value=_TEST_RSA_KEY_PEM,
-        ),
-        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SENSOR]),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await _tick_local_live(hass, freezer, 1)
+    assert mock_powerwall_live_status.await_count == 1
 
-        freezer.tick(ENERGY_LIVE_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-        assert mock_powerwall_live_status.await_count == 1
-
+    with patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SENSOR]):
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 
-    # Advancing past the interval after unload polls the gateway no further.
-    freezer.tick(ENERGY_LIVE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await _tick_local_live(hass, freezer, 1)
     assert mock_powerwall_live_status.await_count == 1
