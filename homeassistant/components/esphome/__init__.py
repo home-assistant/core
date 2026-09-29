@@ -47,19 +47,18 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 def _identity_port_info(identity: SerialProxyIdentity) -> SerialPortInfo:
     """Describe the device behind a serial proxy port."""
-    is_usb = identity.source is SerialProxyIdentitySource.USB
-
     return SerialPortInfo(
         device="",
         resolved_device="",
-        vid=identity.usb.vendor_id if is_usb else None,
-        pid=identity.usb.product_id if is_usb else None,
+        # A zero ID is never valid USB, so it means the ID was not given
+        vid=identity.usb.vendor_id or None,
+        pid=identity.usb.product_id or None,
         serial_number=identity.serial_number or None,
         manufacturer=identity.manufacturer or None,
         product=identity.product or None,
-        bcd_device=identity.usb.bcd_device if is_usb else None,
+        bcd_device=identity.usb.bcd_device,
         interface_description=None,
-        interface_num=identity.usb.interface_number if is_usb else None,
+        interface_num=identity.usb.interface_number,
     )
 
 
