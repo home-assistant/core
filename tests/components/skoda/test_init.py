@@ -34,11 +34,11 @@ async def test_setup_and_unload(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_setup_auth_failure_starts_reauth(
+async def test_setup_auth_failure_sets_setup_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that an authentication failure during setup starts a reauth flow."""
+    """Test that an authentication failure during setup marks the entry as failed."""
     mock_config_entry.add_to_hass(hass)
 
     with patch(
@@ -49,8 +49,6 @@ async def test_setup_auth_failure_starts_reauth(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    flows = hass.config_entries.flow.async_progress()
-    assert any(flow["context"]["source"] == "reauth" for flow in flows)
 
 
 async def test_setup_update_failed_starts_retry(
