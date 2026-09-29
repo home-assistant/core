@@ -17,6 +17,7 @@ from uiprotect.data import (
     Event,
     EventType,
     Light,
+    Liveview,
     ModelType,
     ProtectAdoptableDeviceModel,
     PTZPatrol,
@@ -750,6 +751,9 @@ class ProtectData:
 
         if (
             model_type is ModelType.LIVEVIEW
+            and isinstance(new_obj, Liveview)
+            # personal liveviews never reach the public options
+            and new_obj.is_global
             and self.api.has_public_bootstrap
             and self.api.public_bootstrap.viewers
         ):
