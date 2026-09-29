@@ -198,6 +198,25 @@ async def test_restore_skips_a_broken_entry(
     assert "Skipping stored repository 9999" in caplog.text
 
 
+@pytest.mark.usefixtures("init_integration")
+async def test_restore_names_the_legacy_file_it_could_not_read(
+    marketplace: MarketplaceManager, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the file to restore is the one that could not be read, not ours."""
+    data = MarketplaceData(marketplace)
+
+    with patch(
+        "homeassistant.components.marketplace.utils.data.async_load_from_storage",
+        side_effect=HomeAssistantError(
+            "Error while loading /config/.storage/hacs.hacs: unexpected character"
+        ),
+    ):
+        assert not await data.restore()
+
+    assert "/config/.storage/hacs.hacs" in caplog.text
+    assert ".storage/marketplace.common" not in caplog.text
+
+
 @pytest.mark.parametrize(
     "side_effect",
     [
@@ -221,7 +240,7 @@ async def test_restore_unusable_file(
     ):
         assert not await data.restore()
 
-    assert "marketplace.common, restore the file from a backup" in caplog.text
+    assert ".storage/marketplace.common" in caplog.text
 
 
 @pytest.mark.parametrize("unreadable", ["common", "repositories"])
@@ -246,7 +265,7 @@ async def test_restore_unreadable_data(
     ):
         assert not await data.restore()
 
-    assert f"marketplace.{unreadable}, restore the file from a backup" in caplog.text
+    assert "Not valid JSON" in caplog.text
 
 
 @pytest.mark.parametrize(

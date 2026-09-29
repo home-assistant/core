@@ -8,11 +8,9 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.marketplace.const import DOMAIN, STORAGE_VERSION
-from homeassistant.components.marketplace.exceptions import MarketplaceError
 from homeassistant.components.marketplace.utils.storage import (
     STORAGE_CACHE_KEY,
     async_load_from_storage,
-    async_remove_storage,
     async_save_to_storage,
     get_storage_for_key,
 )
@@ -92,33 +90,6 @@ async def test_load(hass: HomeAssistant, hass_storage: dict[str, Any]) -> None:
 async def test_load_missing(hass: HomeAssistant) -> None:
     """Test loading a store without a file of its own."""
     assert await async_load_from_storage(hass, "test") == {}
-
-
-async def test_remove(hass: HomeAssistant) -> None:
-    """Test only the per repository stores can be removed."""
-    with patch(
-        "homeassistant.helpers.storage.Store.async_remove",
-        return_value=AsyncMock(),
-    ) as async_remove_mock:
-        await async_remove_storage(hass, "test")
-        assert not async_remove_mock.called
-
-        await async_remove_storage(hass, "test/test")
-        assert async_remove_mock.called
-
-
-async def test_remove_refuses_a_key_outside_the_storage(hass: HomeAssistant) -> None:
-    """Test that a repository id can not point the removal out of the storage."""
-    with (
-        patch(
-            "homeassistant.helpers.storage.Store.async_remove",
-            return_value=AsyncMock(),
-        ) as async_remove_mock,
-        pytest.raises(MarketplaceError, match="is not inside"),
-    ):
-        await async_remove_storage(hass, "hacs/../../secrets.yaml")
-
-    assert not async_remove_mock.called
 
 
 async def test_save_skips_unchanged_content(

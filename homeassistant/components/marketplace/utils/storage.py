@@ -3,6 +3,7 @@
 from typing import Any
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import STORAGE_DIR, Store
 from homeassistant.util import json as json_util
@@ -10,7 +11,6 @@ from homeassistant.util.hass_dict import HassKey
 
 from ..const import LEGACY_HACS_STORAGE_VERSION, STORAGE_VERSION
 from .logger import LOGGER
-from .path import resolve_in_directory
 
 _LOGGER = LOGGER
 
@@ -28,8 +28,8 @@ LEGACY_STORAGE_KEYS: dict[str, str] = {
 # custom integration still falls back to it when its repositories file is empty.
 LEGACY_DATA_KEY = "hacs.data"
 
-# Older releases kept a file per installed repository, removed on uninstall.
-LEGACY_HACS_REPOSITORY_STORAGE_KEY = "hacs/{repository_id}.hacs"
+# Older releases kept a file per installed repository in this folder
+LEGACY_REPOSITORY_STORAGE_DIRECTORY = "hacs"
 
 
 STORAGE_CACHE_KEY: HassKey[dict[str, Store[Any]]] = HassKey("marketplace_storage_cache")
@@ -69,6 +69,14 @@ def _load_legacy_file(path: str) -> Any:
     if not isinstance(data, dict) or data.get("version") != LEGACY_HACS_STORAGE_VERSION:
         return None
     return data.get("data")
+
+
+def is_adoptable_legacy_file(path: str) -> bool:
+    """Return if a storage file of the custom integration is one we take data from."""
+    try:
+        return _load_legacy_file(path) is not None
+    except HomeAssistantError:
+        return False
 
 
 def _load_legacy_repositories_from_data(path: str) -> dict[str, Any] | None:
@@ -138,19 +146,3 @@ async def async_save_to_storage(hass: HomeAssistant, key: str, data: Any) -> Non
         "Did not store data for '%s', the content did not change",
         get_storage_key(key),
     )
-
-
-async def async_remove_storage(hass: HomeAssistant, key: str) -> None:
-    """Remove a store element that should no longer be used."""
-    if "/" not in key:
-        return
-
-    marketplace = get_storage_for_key(hass, key)
-
-    # The key carries a repository id, so the file it resolves to is checked
-    # before anything is unlinked.
-    await hass.async_add_executor_job(
-        resolve_in_directory, hass.config.path(STORAGE_DIR), marketplace.path
-    )
-
-    await marketplace.async_remove()

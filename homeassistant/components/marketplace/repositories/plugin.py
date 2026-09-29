@@ -370,6 +370,7 @@ class PluginRepository(Repository):
 
         if not resources.loaded:
             await resources.async_load()
+            resources.loaded = True
 
         # The trailing slash matters, without it the namespace of
         # for example 'button' would also match 'button-card'.
@@ -399,6 +400,7 @@ class PluginRepository(Repository):
 
         if not resources.loaded:
             await resources.async_load()
+            resources.loaded = True
 
         # The trailing slash matters, without it the namespace of
         # for example 'button' would also match 'button-card'.

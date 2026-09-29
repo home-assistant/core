@@ -51,6 +51,7 @@ from .data_client import CatalogClient
 from .enums import DisabledReason, LovelaceMode, MarketplaceStage
 from .exceptions import MarketplaceError
 from .migration import (
+    LEGACY_HACS_DOMAIN,
     async_adopt_legacy_install,
     async_migrate_dashboard_resources,
     async_remove_duplicate_entries,
@@ -108,8 +109,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_redirect("/hacs", "/marketplace")
     hass.http.register_view(LegacyPanelRedirectView)
 
-    # A disabled entry counts, turning the Marketplace off is the user's call
-    if not hass.config_entries.async_entries(DOMAIN):
+    # A disabled entry counts, turning the Marketplace off is the user's call.
+    # An entry of the custom integration is only left in safe and recovery
+    # mode, it is taken over at the next normal start.
+    entries = hass.config_entries.async_entries
+    if not entries(DOMAIN) and not entries(LEGACY_HACS_DOMAIN):
         discovery_flow.async_create_flow(
             hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
         )

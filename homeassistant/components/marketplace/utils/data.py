@@ -145,25 +145,30 @@ class MarketplaceData:
 
     async def _async_load(self, key: str) -> dict[str, Any] | None:
         """Load a storage file, None when it can not be read."""
-        # The storage helper raises NotImplementedError for an unknown version
+        path = self.marketplace.hass.config.path(f".storage/marketplace.{key}")
         try:
             data = await async_load_from_storage(self.marketplace.hass, key)
-        except (HomeAssistantError, NotImplementedError) as exception:
-            self._log_unreadable(key, str(exception) or "unknown storage version")
+        # The error names the file, it can be one of the custom integration too
+        except HomeAssistantError as exception:
+            self._log_unreadable(str(exception))
+            return None
+        # What the storage helper raises for a version it does not know
+        except NotImplementedError:
+            self._log_unreadable(f"{path} has a storage version it does not know")
             return None
 
         if data is None:
             return {}
         if not isinstance(data, dict):
-            self._log_unreadable(key, "it does not hold an object")
+            self._log_unreadable(f"{path} does not hold an object")
             return None
         return data
 
-    def _log_unreadable(self, key: str, reason: str) -> None:
-        """Log which storage file can not be read."""
+    def _log_unreadable(self, reason: str) -> None:
+        """Log that stored data can not be read, the reason names the file."""
         LOGGER.error(
-            "Could not read %s, restore the file from a backup - %s",
-            self.marketplace.hass.config.path(f".storage/marketplace.{key}"),
+            "Could not read the stored data of the Marketplace, restore the file"
+            " from a backup - %s",
             reason,
         )
 

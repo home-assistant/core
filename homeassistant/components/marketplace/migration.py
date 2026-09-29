@@ -34,12 +34,15 @@ from .const import (
     LEGACY_HACS_SYSTEM_ID,
 )
 from .utils.logger import LOGGER
-from .utils.storage import LEGACY_STORAGE_KEYS, get_storage_key
+from .utils.storage import (
+    LEGACY_DATA_KEY,
+    LEGACY_REPOSITORY_STORAGE_DIRECTORY,
+    LEGACY_STORAGE_KEYS,
+    get_storage_key,
+    is_adoptable_legacy_file,
+)
 
 LEGACY_HACS_DOMAIN = "hacs"
-
-# Older releases of the custom integration wrote this file, nothing reads it.
-LEGACY_HACS_DATA_FILE = "hacs.data"
 
 YAML_RESOURCES_ISSUE_ID = "legacy_dashboard_resources"
 
@@ -403,6 +406,7 @@ async def async_migrate_dashboard_resources(hass: HomeAssistant) -> None:
 
     if not resources.loaded:
         await resources.async_load()
+        resources.loaded = True
 
     migrated = 0
     for item in list(resources.async_items()):
@@ -465,6 +469,28 @@ def _is_legacy_integration(directory: Path) -> bool:
     return manifest.get("domain") == LEGACY_HACS_DOMAIN
 
 
+def _remove_legacy_integration(integration_path: Path) -> bool:
+    """Remove the custom integration this replaces, return if it was removed."""
+    if not _is_legacy_integration(integration_path):
+        return False
+
+    # A checkout, or a link to one, can hold work of a developer
+    if integration_path.is_symlink() or (integration_path / ".git").exists():
+        LOGGER.info(
+            "Leaving %s in place, it is a development checkout of the custom"
+            " integration the Marketplace replaces, remove it yourself",
+            integration_path,
+        )
+        return False
+
+    try:
+        shutil.rmtree(integration_path)
+    except OSError as exception:
+        LOGGER.warning("Could not remove %s: %s", integration_path, exception)
+        return False
+    return True
+
+
 def _remove_legacy_files(config_path: str) -> list[str]:
     """Remove what the previous install left on disk, return what was removed.
 
@@ -478,23 +504,31 @@ def _remove_legacy_files(config_path: str) -> list[str]:
     removed: list[str] = []
 
     integration_path = Path(config_path, "custom_components", LEGACY_HACS_DOMAIN)
-    if _is_legacy_integration(integration_path):
+    if _remove_legacy_integration(integration_path):
+        removed.append(str(integration_path))
+
+    # Nothing reads these, the repositories file holds all of it
+    repository_files = storage_path / LEGACY_REPOSITORY_STORAGE_DIRECTORY
+    if repository_files.is_dir() and not repository_files.is_symlink():
         try:
-            shutil.rmtree(integration_path)
+            shutil.rmtree(repository_files)
         except OSError as exception:
-            LOGGER.warning("Could not remove %s: %s", integration_path, exception)
+            LOGGER.warning("Could not remove %s: %s", repository_files, exception)
         else:
-            removed.append(str(integration_path))
+            removed.append(str(repository_files))
 
     legacy_files = {
         legacy_key: get_storage_key(key)
         for key, legacy_key in LEGACY_STORAGE_KEYS.items()
     }
-    legacy_files[LEGACY_HACS_DATA_FILE] = get_storage_key("repositories")
+    legacy_files[LEGACY_DATA_KEY] = get_storage_key("repositories")
 
     for legacy_key, storage_key in legacy_files.items():
         legacy_path = storage_path / legacy_key
         if not legacy_path.is_file() or not (storage_path / storage_key).is_file():
+            continue
+        # Not a file the data could have come from, so it was never taken over
+        if not is_adoptable_legacy_file(str(legacy_path)):
             continue
 
         try:

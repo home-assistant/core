@@ -57,7 +57,6 @@ from ..utils.json import json_loads_object
 from ..utils.logger import LOGGER
 from ..utils.path import entry_in_directory, is_safe, resolve_in_directory
 from ..utils.queue_manager import QueueManager
-from ..utils.storage import LEGACY_HACS_REPOSITORY_STORAGE_KEY, async_remove_storage
 from ..utils.tree import (
     tree_entry_directory,
     tree_entry_filename,
@@ -948,10 +947,6 @@ class Repository:
             )
         self.data.installed = False
         await self._async_post_uninstall()
-        await async_remove_storage(
-            self.marketplace.hass,
-            LEGACY_HACS_REPOSITORY_STORAGE_KEY.format(repository_id=self.data.id),
-        )
 
         self.data.installed_version = None
         self.data.installed_commit = None

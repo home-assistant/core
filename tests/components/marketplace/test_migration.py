@@ -1,5 +1,6 @@
 """Tests for taking over an existing HACS installation."""
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 import json
 from pathlib import Path
@@ -14,6 +15,7 @@ from homeassistant.components.marketplace.const import (
     CONF_WARNING_ACCEPTED,
     DOMAIN,
     LEGACY_HACS_REPOSITORY_ID,
+    LEGACY_HACS_STORAGE_VERSION,
     LEGACY_HACS_SYSTEM_ID,
     STORAGE_VERSION,
     WARNING_VERSION,
@@ -562,6 +564,22 @@ async def test_dashboard_resource_migration(
 
 
 @pytest.mark.usefixtures("lovelace_resources")
+async def test_dashboard_resources_are_loaded_once(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test moving the resources does not read their file a second time."""
+    assert await async_setup_component(hass, "lovelace", {})
+    resources = hass.data[LOVELACE_DATA].resources
+    mock_config_entry.add_to_hass(hass)
+
+    with patch.object(resources, "async_load", wraps=resources.async_load) as load:
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert load.call_count == 1
+
+
+@pytest.mark.usefixtures("lovelace_resources")
 async def test_dashboard_resource_migration_is_idempotent(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -620,11 +638,14 @@ REMOVED_LOG = "Removed what the previous installation left behind"
 
 
 def _seed_storage(config_dir: Path, *keys: str) -> None:
-    """Write storage files, only their presence on disk matters."""
+    """Write empty storage files, each with the version its writer used."""
     storage = config_dir / ".storage"
     storage.mkdir(exist_ok=True)
     for key in keys:
-        (storage / key).write_text('{"version": 1, "data": {}}', encoding="utf-8")
+        version = LEGACY_HACS_STORAGE_VERSION if key in LEGACY_STORAGE_FILES else 1
+        (storage / key).write_text(
+            json.dumps({"version": version, "data": {}}), encoding="utf-8"
+        )
 
 
 def _seed_integration(config_dir: Path, manifest: str) -> Path:
@@ -669,10 +690,17 @@ async def test_legacy_files_removed(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the files of the HACS install are removed once adopted."""
+    repository_files = config_dir / ".storage" / "hacs"
+    await hass.async_add_executor_job(repository_files.mkdir)
+    await hass.async_add_executor_job(
+        (repository_files / "1296269.hacs").write_text, "{}", "utf-8"
+    )
+
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert not legacy_integration.exists()
+    assert not repository_files.exists()
     assert _remaining_storage(config_dir) == set()
     assert REMOVED_LOG in caplog.text
     assert str(legacy_integration) in caplog.text
@@ -695,6 +723,18 @@ async def test_legacy_files_kept_in_safe_mode(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert legacy_integration.is_dir()
     assert _remaining_storage(config_dir) == set(LEGACY_STORAGE_FILES)
+
+
+@pytest.mark.parametrize("mode", ["safe_mode", "recovery_mode"])
+async def test_no_entry_of_its_own_in_safe_mode(hass: HomeAssistant, mode: str) -> None:
+    """Test safe and recovery mode leave the entry of HACS to take over later."""
+    setattr(hass.config, mode, True)
+    MockConfigEntry(domain=LEGACY_HACS_DOMAIN, source=SOURCE_USER).add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.async_entries(DOMAIN) == []
 
 
 @pytest.mark.parametrize(
@@ -721,6 +761,53 @@ async def test_foreign_integration_kept(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert integration.is_dir()
     assert _remaining_storage(config_dir) == set()
+
+
+def _seed_git_checkout(config_dir: Path) -> Path:
+    """Put a development checkout of HACS in custom_components/hacs."""
+    checkout = _seed_integration(config_dir, json.dumps({"domain": LEGACY_HACS_DOMAIN}))
+    (checkout / ".git").mkdir()
+    (checkout / "uncommitted.py").write_text("work in progress", encoding="utf-8")
+    return checkout
+
+
+def _seed_linked_checkout(config_dir: Path) -> Path:
+    """Link custom_components/hacs to a checkout of HACS elsewhere."""
+    checkout = config_dir / "development" / "hacs"
+    checkout.mkdir(parents=True)
+    (checkout / "manifest.json").write_text(
+        json.dumps({"domain": LEGACY_HACS_DOMAIN}), encoding="utf-8"
+    )
+    link = config_dir / "custom_components" / "hacs"
+    link.parent.mkdir(parents=True, exist_ok=True)
+    link.symlink_to(checkout, target_is_directory=True)
+    return link
+
+
+@pytest.mark.parametrize(
+    "seed",
+    [
+        pytest.param(_seed_git_checkout, id="git_checkout"),
+        pytest.param(_seed_linked_checkout, id="symlink"),
+    ],
+)
+@pytest.mark.usefixtures("adopted_storage", "stored_repositories")
+async def test_development_checkout_kept(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    config_dir: Path,
+    caplog: pytest.LogCaptureFixture,
+    seed: Callable[[Path], Path],
+) -> None:
+    """Test a checkout of HACS someone works on is left for them to remove."""
+    integration = await hass.async_add_executor_job(seed, config_dir)
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (integration / "manifest.json").is_file()
+    assert "Could not remove" not in caplog.text
+    assert "remove it yourself" in caplog.text
 
 
 @pytest.mark.usefixtures("adopted_storage", "stored_repositories")
@@ -775,6 +862,22 @@ async def test_legacy_storage_needs_counterpart(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert _remaining_storage(config_dir) == remaining
+
+
+@pytest.mark.usefixtures("adopted_storage", "stored_repositories")
+async def test_legacy_storage_of_another_version_kept(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, config_dir: Path
+) -> None:
+    """Test a legacy file the Marketplace could not take the data from stays."""
+    legacy = config_dir / ".storage" / "hacs.repositories"
+    await hass.async_add_executor_job(
+        legacy.write_text, '{"version": "5", "data": {}}', "utf-8"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert _remaining_storage(config_dir) == {"hacs.repositories"}
 
 
 @pytest.mark.usefixtures("stored_repositories")
