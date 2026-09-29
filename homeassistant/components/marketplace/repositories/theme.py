@@ -36,6 +36,21 @@ class ThemeRepository(Repository):
         return f"{self.marketplace.core.config_path}/themes/{self.data.file_name.replace('.yaml', '')}"
 
     @override
+    async def async_pre_install(self) -> None:
+        """Run pre install steps."""
+        # The folder is named after the theme file, other themes can use that name
+        for repository in self.marketplace.repositories.list_downloaded:
+            if (
+                repository is not self
+                and repository.data.category == RepositoryCategory.THEME
+                and repository.localpath == self.localpath
+            ):
+                raise MarketplaceError(
+                    f"The '{Path(self.localpath).name}' theme folder is owned by"
+                    f" {repository.data.full_name}"
+                )
+
+    @override
     async def async_post_installation(self) -> None:
         """Run post installation steps."""
         await self._reload_frontend_themes()

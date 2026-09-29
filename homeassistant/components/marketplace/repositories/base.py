@@ -264,6 +264,8 @@ class RepositoryData:
     default_branch: str | None = None
     description: str = ""
     domain: str | None = None
+    # The folder a card was downloaded to, a rename on GitHub does not move it
+    directory: str | None = None
     downloads: int = 0
     etag_repository: str | None = None
     etag_releases: str | None = None
@@ -748,11 +750,7 @@ class Repository:
     async def download_content(self, version: str | None = None) -> None:
         """Download the content of a directory."""
         contents: list[FileInformation] | None = None
-        if (
-            not self.repository_manifest.zip_release
-            and not self.data.file_name
-            and self.content.path.remote is not None
-        ):
+        if not self.repository_manifest.zip_release and self._downloads_a_directory():
             self.logger.info("%s Downloading repository archive", self.string)
             try:
                 await self.download_repository_zip()
@@ -934,13 +932,6 @@ class Repository:
         try:
             if self.data.category == "template":
                 local_path = str(resolve_in_directory(local_path, self.data.file_name))
-            elif self.data.category == "theme":
-                path = resolve_in_directory(
-                    f"{self.marketplace.core.config_path}/"
-                    f"{self.marketplace.configuration.theme_path}",
-                    f"{self.data.name}.yaml",
-                )
-                await async_remove(self.marketplace.hass, str(path), missing_ok=True)
             elif self.data.category == "integration":
                 if not self.data.domain:
                     self.logger.error("%s Missing domain", self.string)
@@ -1251,6 +1242,10 @@ class Repository:
     def _backup_path(self) -> str | None:
         """Return what the download replaces, and has to be backed up first."""
         return self.content.path.local
+
+    def _downloads_a_directory(self) -> bool:
+        """Return if the content is a directory, instead of the named file."""
+        return not self.data.file_name and self.content.path.remote is not None
 
     async def async_check_written_content(self) -> None:
         """Refuse content that would not work, before it replaces the old."""
@@ -1989,7 +1984,7 @@ class Repository:
 
     async def _async_write_archive_content(self, archive: RepositoryArchive) -> None:
         """Write the content of a catalog version from its archive."""
-        if not self.data.file_name and self.content.path.remote is not None:
+        if self._downloads_a_directory():
             await self._async_extract_archive(archive)
             return
 

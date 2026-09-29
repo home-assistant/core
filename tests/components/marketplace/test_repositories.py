@@ -1811,21 +1811,18 @@ async def downloaded_plugin(marketplace: MarketplaceManager) -> PluginRepository
 
 
 @pytest.mark.parametrize(
-    ("repository_name", "namespace"),
+    ("directory", "namespace"),
     [
-        pytest.param(REPOSITORY_PLUGIN, "/local/community/plugin-basic", id="basic"),
-        pytest.param(
-            "hacs-test-org/plugin-advanced",
-            "/local/community/plugin-advanced",
-            id="advanced",
-        ),
+        pytest.param("plugin-basic", "/local/community/plugin-basic", id="downloaded"),
+        pytest.param(None, "/local/community/plugin-advanced", id="no_folder_yet"),
     ],
 )
 async def test_dashboard_namespace(
-    downloaded_plugin: PluginRepository, repository_name: str, namespace: str
+    downloaded_plugin: PluginRepository, directory: str | None, namespace: str
 ) -> None:
-    """Test the namespace a plugin serves its files under."""
-    downloaded_plugin.data.full_name = repository_name
+    """Test a card serves its files from its folder, even after a rename."""
+    downloaded_plugin.data.full_name = "hacs-test-org/plugin-advanced"
+    downloaded_plugin.data.directory = directory
 
     assert downloaded_plugin.generate_dashboard_resource_namespace() == namespace
 

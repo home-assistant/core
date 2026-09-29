@@ -387,6 +387,37 @@ async def test_install_update_of_a_custom_repository(
     assert_api_usage(aioclient_mock, snapshot)
 
 
+@pytest.mark.parametrize("github_token", [None])
+@pytest.mark.parametrize(
+    "category_test_data",
+    category_test_data_parametrized(categories=[RepositoryCategory.TEMPLATE]),
+)
+async def test_template_update_writes_only_the_template(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    downloaded_repository: Repository,
+    category_test_data: CategoryTestData,
+) -> None:
+    """Test a template update writes its file, not the rest of the repository."""
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.UPDATE, DOMAIN, category_test_data["id"]
+    )
+    downloaded_repository.data.last_version = category_test_data["version_update"]
+    # Stored before template file names were
+    downloaded_repository.data.file_name = ""
+
+    with patch.object(
+        get_marketplace(hass).repositories, "is_default", return_value=False
+    ):
+        await hass.services.async_call(
+            UPDATE_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+    assert sorted(
+        path.name for path in Path(downloaded_repository.localpath).iterdir()
+    ) == ["example.jinja"]
+
+
 async def test_install_already_downloaded_version(
     hass: HomeAssistant, integration_update_entity: str
 ) -> None:

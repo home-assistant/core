@@ -44,6 +44,7 @@ EXPORTED_DOWNLOADED_REPOSITORY_DATA: tuple[tuple[str, Any], ...] = (
     ("archived", False),
     ("config_flow", False),
     ("default_branch", None),
+    ("directory", None),
     ("file_name", ""),
     ("first_install", False),
     ("installed_commit", None),
@@ -344,6 +345,15 @@ class MarketplaceData:
         repository.data.file_name = repository_data.get(
             "file_name", repository.data.file_name
         )
+        repository.data.directory = repository_data.get("directory")
+        # Stored before cards kept their folder, the stored name is where it is
+        if (
+            repository.data.category == RepositoryCategory.PLUGIN
+            and repository.data.installed
+            and not repository.data.directory
+            and full_name
+        ):
+            repository.data.directory = full_name.rsplit("/", maxsplit=1)[-1]
 
         if last_fetched := repository_data.get("last_fetched"):
             repository.data.last_fetched = datetime.fromtimestamp(last_fetched, UTC)

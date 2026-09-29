@@ -1,5 +1,6 @@
 """Class for template repositories."""
 
+from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, override
 
 from homeassistant.exceptions import HomeAssistantError
@@ -7,6 +8,8 @@ from homeassistant.exceptions import HomeAssistantError
 from ..enums import MarketplaceSignal, RepositoryCategory
 from ..exceptions import MarketplaceError
 from ..utils.decorator import concurrent
+from ..utils.file_system import async_remove
+from ..utils.path import resolve_in_directory
 from ..utils.url import ref_version
 from .base import FileInformation, Repository
 
@@ -15,7 +18,12 @@ if TYPE_CHECKING:
 
 
 class TemplateRepository(Repository):
-    """Template repository."""
+    """Template repository.
+
+    The file name of the data is the downloaded file, removal deletes that one.
+    The file a version names comes from its hacs.json, and only replaces the
+    downloaded one when that version is written.
+    """
 
     remote_path = ""
     single_file = True
@@ -33,12 +41,27 @@ class TemplateRepository(Repository):
         """Return localpath."""
         return f"{self.marketplace.core.config_path}/custom_templates"
 
+    @property
+    def _file_name_to_write(self) -> str:
+        """Return the template file the version being handled names."""
+        return self.repository_manifest.filename or self.data.file_name
+
+    def _use_file_name(self) -> None:
+        """Take the file name of the version, unless another one is downloaded."""
+        if not self.data.installed:
+            self.data.file_name = self._file_name_to_write
+
     @override
     def _backup_path(self) -> str | None:
         """Return the template file, the folder is shared with other templates."""
-        if not self.data.file_name:
+        if not self._file_name_to_write:
             return None
-        return f"{self.localpath}/{self.data.file_name}"
+        return f"{self.localpath}/{self._file_name_to_write}"
+
+    @override
+    def _downloads_a_directory(self) -> bool:
+        """Return False, a template is always the one file hacs.json names."""
+        return False
 
     @override
     def gather_tree_files_to_download(self) -> list[FileInformation]:
@@ -46,8 +69,24 @@ class TemplateRepository(Repository):
         return [
             self._tree_file_information(entry)
             for entry in self.tree
-            if entry.path == self.data.file_name
+            if entry.path == self._file_name_to_write
         ]
+
+    @override
+    async def _async_write_content(
+        self, download: Callable[[], Awaitable[None]]
+    ) -> None:
+        """Write the template, and remove the one it replaces under another name."""
+        downloaded = self.data.file_name if self.data.installed else None
+        await super()._async_write_content(download)
+
+        self.data.file_name = self._file_name_to_write
+        if downloaded and downloaded != self.data.file_name:
+            await async_remove(
+                self.marketplace.hass,
+                str(resolve_in_directory(self.localpath, downloaded)),
+                missing_ok=True,
+            )
 
     @override
     async def async_post_installation(self) -> None:
@@ -73,23 +112,22 @@ class TemplateRepository(Repository):
     @override
     def resolve_content(self) -> None:
         """Point the content at the template hacs.json names."""
-        self.data.file_name = self.repository_manifest.filename or ""
-
+        file_name = self.repository_manifest.filename or ""
         if (
-            not self.data.file_name
-            or "/" in self.data.file_name
-            or not self.data.file_name.endswith(".jinja")
-            or self.data.file_name not in self.treefiles
+            not file_name
+            or "/" in file_name
+            or not file_name.endswith(".jinja")
+            or file_name not in self.treefiles
         ):
             raise MarketplaceError(
                 f"{self.string} Repository structure for {ref_version(self.ref)} is not compliant"
             )
+        self._use_file_name()
 
     @override
     async def async_post_registration(self) -> None:
         """Registration."""
-        # Set filenames
-        self.data.file_name = self.repository_manifest.filename or ""
+        self._use_file_name()
         self.content.path.local = self.localpath
 
     @override
@@ -116,8 +154,7 @@ class TemplateRepository(Repository):
         if not await self.common_update(ignore_issues, force) and not force:
             return
 
-        # Update filenames
-        self.data.file_name = self.repository_manifest.filename or ""
+        self._use_file_name()
         self.content.path.local = self.localpath
 
         # Signal frontend to refresh

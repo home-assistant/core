@@ -38,7 +38,12 @@ class PluginRepository(Repository):
     @override
     def localpath(self) -> str:
         """Return localpath."""
-        return f"{self.marketplace.core.config_path}/www/community/{self.data.full_name.rsplit('/', maxsplit=1)[-1]}"
+        return f"{self.marketplace.core.config_path}/www/community/{self.directory}"
+
+    @property
+    def directory(self) -> str:
+        """Return the folder of the card, the one it was downloaded to."""
+        return self.data.directory or self.data.full_name.rsplit("/", maxsplit=1)[-1]
 
     @override
     async def async_pre_install(self) -> None:
@@ -84,6 +89,7 @@ class PluginRepository(Repository):
     @override
     async def async_post_installation(self) -> None:
         """Run post installation steps."""
+        self.data.directory = self.directory
         await self.update_dashboard_resources()
 
         # The frontend only registers /local when www/ existed at startup, so a
@@ -104,6 +110,8 @@ class PluginRepository(Repository):
     async def async_post_uninstall(self) -> None:
         """Run post uninstall steps."""
         await self.remove_dashboard_resources()
+        # Downloaded again, the card goes to the folder of its current name
+        self.data.directory = None
 
     @override
     @concurrent(concurrenttasks=10)
@@ -276,7 +284,7 @@ class PluginRepository(Repository):
 
     def generate_dashboard_resource_namespace(self) -> str:
         """Get the dashboard resource namespace."""
-        return f"{DASHBOARD_RESOURCE_BASE}/{self.data.full_name.split('/')[1]}"
+        return f"{DASHBOARD_RESOURCE_BASE}/{self.directory}"
 
     def _loaded_as_extra_module(self) -> bool:
         """Return if the frontend configuration loads this plugin already.
@@ -289,10 +297,9 @@ class PluginRepository(Repository):
         ) is None:
             return False
 
-        directory = self.data.full_name.split("/")[1]
         namespaces = (
-            f"{DASHBOARD_RESOURCE_BASE}/{directory}/",
-            f"{LEGACY_DASHBOARD_RESOURCE_BASE}/{directory}/",
+            f"{DASHBOARD_RESOURCE_BASE}/{self.directory}/",
+            f"{LEGACY_DASHBOARD_RESOURCE_BASE}/{self.directory}/",
         )
         return any(url.startswith(namespaces) for url in extra_modules.urls)
 
