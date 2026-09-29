@@ -546,6 +546,9 @@
           "smart": "Smart"
         }
       },
+      "pump_mode": {
+        "name": "Mode"
+      },
       "quick_heat_temperature": {
         "name": "Quick heat temperature",
         "state": {
