@@ -257,10 +257,6 @@ def _with_climate_panel_keystate(
 ) -> BluetoothServiceInfoBleak:
     """Return a BLE service info with the Climate Panel keystate bytes set."""
     mfr_data = bytearray(info.manufacturer_data[2409])
-    # Byte 13 = ON keystate, byte 14 = OFF keystate: bits[7:5] are the press
-    # mode and bits[4:0] the counter. Default to single-click mode (1) whenever
-    # a press counter is set so the bytes resemble a real button press; an
-    # explicit mode can be supplied to model a mode change (e.g. single→double).
     if on_mode is None:
         on_mode = 1 if on_counter else 0
     if off_mode is None:

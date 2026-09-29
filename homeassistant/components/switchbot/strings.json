@@ -186,14 +186,22 @@
     "event": {
       "off_button": {
         "name": "OFF button",
-        "state": {
-          "press": "Press"
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press": "Press"
+            }
+          }
         }
       },
       "on_button": {
         "name": "ON button",
-        "state": {
-          "press": "Press"
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press": "Press"
+            }
+          }
         }
       }
     },
