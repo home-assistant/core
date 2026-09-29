@@ -12,7 +12,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import STATE_ON, EntityCategory
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -26,6 +26,7 @@ from .entity import (
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
+from .helpers import async_remove_stale_vehicle_entities
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
@@ -566,7 +567,8 @@ async def async_setup_entry(
                 entities.append(
                     TeslemetryVehicleStreamingBinarySensorEntity(vehicle, description)
                 )
-            elif description.polling:
+            elif description.polling and vehicle.poll is not False:
+                # poll may be None (unknown); only an explicit False is stream-only
                 entities.append(
                     TeslemetryVehiclePollingBinarySensorEntity(vehicle, description)
                 )
@@ -585,6 +587,13 @@ async def async_setup_entry(
         if description.key in energysite.info_coordinator.data
     )
 
+    async_remove_stale_vehicle_entities(
+        hass,
+        entry.entry_id,
+        Platform.BINARY_SENSOR,
+        {vehicle.vin for vehicle in entry.runtime_data.vehicles},
+        {entity.unique_id for entity in entities if entity.unique_id},
+    )
     async_add_entities(entities)
 
 
@@ -635,7 +644,10 @@ class TeslemetryVehicleStreamingBinarySensorEntity(
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         if (state := await self.async_get_last_state()) is not None:
-            self._attr_is_on = state.state == STATE_ON
+            if state.state == STATE_ON:
+                self._attr_is_on = True
+            elif state.state == STATE_OFF:
+                self._attr_is_on = False
 
         assert self.entity_description.streaming_listener
         self.async_on_remove(

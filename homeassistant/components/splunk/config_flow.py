@@ -6,7 +6,7 @@ import logging
 from typing import Any, override
 
 from hass_splunk import hass_splunk
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -51,14 +51,14 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_TOKEN): str,
-                    vol.Required(CONF_HOST): str,
-                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-                    vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
-                    vol.Optional(CONF_VERIFY_SSL, default=True): bool,
-                    vol.Optional(CONF_NAME): str,
+                    probatio.Required(CONF_TOKEN): str,
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                    probatio.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
+                    probatio.Optional(CONF_VERIFY_SSL, default=True): bool,
+                    probatio.Optional(CONF_NAME): str,
                 }
             ),
             errors=errors,
@@ -104,14 +104,14 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_TOKEN): str,
-                        vol.Required(CONF_HOST): str,
-                        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-                        vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
-                        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
-                        vol.Optional(CONF_NAME): str,
+                        probatio.Required(CONF_TOKEN): str,
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                        probatio.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
+                        probatio.Optional(CONF_VERIFY_SSL, default=True): bool,
+                        probatio.Optional(CONF_NAME): str,
                     }
                 ),
                 self._get_reconfigure_entry().data,
@@ -146,7 +146,7 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_TOKEN): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_TOKEN): str}),
             errors=errors,
         )
 

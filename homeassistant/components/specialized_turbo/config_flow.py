@@ -7,6 +7,7 @@ from bleak import BleakClient
 from bleak.backends.device import BLEDevice
 from bleak.exc import BleakError
 from bleak_retry_connector import establish_connection
+import probatio
 from specialized_turbo import (
     BikeAdvertisement,
     BikeInfo,
@@ -24,7 +25,6 @@ from specialized_turbo import (
     unwrap_keystore_key,
 )
 from specialized_turbo.cloud import CloudAuthenticationError, SpecializedCloudClient
-import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
@@ -257,10 +257,10 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="account",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_EMAIL): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_EMAIL): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
@@ -299,7 +299,7 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="manual_key",
-            data_schema=vol.Schema({vol.Required(CONF_WRAPPED_KEY): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_WRAPPED_KEY): str}),
             errors=errors,
         )
 
@@ -381,16 +381,16 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
             and self._advertisement.encryption == ProtocolEncryptionMethod.AES_CTR
         )
 
-    def _device_schema(self, *, include_address: bool) -> vol.Schema:
-        fields: dict[vol.Marker, Any] = {}
+    def _device_schema(self, *, include_address: bool) -> probatio.Schema:
+        fields: dict[probatio.Marker, Any] = {}
         if include_address:
-            fields[vol.Required(CONF_ADDRESS)] = vol.In(
+            fields[probatio.Required(CONF_ADDRESS)] = probatio.In(
                 {
                     address: f"{info.name or 'Specialized Turbo'} ({address})"
                     for address, info in self._discovered_devices.items()
                 }
             )
-        return vol.Schema(fields)
+        return probatio.Schema(fields)
 
     def _create_or_update_entry(
         self,

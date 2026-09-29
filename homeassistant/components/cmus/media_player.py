@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pycmus import exceptions, remote
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
@@ -26,10 +26,10 @@ DEFAULT_PORT = 3000
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Inclusive(CONF_HOST, "remote"): cv.string,
-        vol.Inclusive(CONF_PASSWORD, "remote"): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Inclusive(CONF_HOST, "remote"): cv.string,
+        probatio.Inclusive(CONF_PASSWORD, "remote"): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 

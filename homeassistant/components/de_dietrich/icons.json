@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "fan_speed": {
+        "default": "mdi:fan"
+      }
+    }
+  }
+}

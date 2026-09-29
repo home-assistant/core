@@ -7,7 +7,7 @@ from typing import Any, override
 import botocore.exceptions
 from homelink.auth.srp_auth import SRPAuth
 import jwt
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID
@@ -70,8 +70,11 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_EMAIL): str,
+                    probatio.Required(CONF_PASSWORD): str,
+                }
             ),
             errors=errors,
         )
@@ -89,8 +92,11 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
+                data_schema=probatio.Schema(
+                    {
+                        probatio.Required(CONF_EMAIL): str,
+                        probatio.Required(CONF_PASSWORD): str,
+                    }
                 ),
             )
         return await self.async_step_user(user_input)

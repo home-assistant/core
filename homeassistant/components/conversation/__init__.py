@@ -2,10 +2,10 @@
 
 from collections.abc import Callable
 import logging
-from typing import Any, Literal
+from typing import Literal
 
 from hassil.recognize import RecognizeResult
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL, SERVICE_RELOAD
@@ -50,8 +50,6 @@ from .const import (
     DATA_COMPONENT,
     DOMAIN,
     HOME_ASSISTANT_AGENT,
-    METADATA_CUSTOM_FILE,
-    METADATA_CUSTOM_SENTENCE,
     SERVICE_PROCESS,
     ConversationEntityFeature,
 )
@@ -60,7 +58,7 @@ from .entity import ConversationEntity
 from .http import async_setup as async_setup_conversation_http
 from .models import AbstractConversationAgent, ConversationInput, ConversationResult
 from .trace import ConversationTraceEventType, async_conversation_trace_append
-from .util import async_get_result_from_chat_log
+from .util import async_get_result_from_chat_log, get_config_intents
 
 __all__ = [
     "DOMAIN",
@@ -91,34 +89,34 @@ __all__ = [
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_PROCESS_SCHEMA = vol.Schema(
+SERVICE_PROCESS_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_TEXT): cv.string,
-        vol.Optional(ATTR_LANGUAGE): cv.string,
-        vol.Optional(ATTR_AGENT_ID): agent_id_validator,
-        vol.Optional(ATTR_CONVERSATION_ID): cv.string,
+        probatio.Required(ATTR_TEXT): cv.string,
+        probatio.Optional(ATTR_LANGUAGE): cv.string,
+        probatio.Optional(ATTR_AGENT_ID): agent_id_validator,
+        probatio.Optional(ATTR_CONVERSATION_ID): cv.string,
     }
 )
 
 
-SERVICE_RELOAD_SCHEMA = vol.Schema(
+SERVICE_RELOAD_SCHEMA = probatio.Schema(
     {
-        vol.Optional(ATTR_LANGUAGE): cv.string,
-        vol.Optional(ATTR_AGENT_ID): agent_id_validator,
+        probatio.Optional(ATTR_LANGUAGE): cv.string,
+        probatio.Optional(ATTR_AGENT_ID): agent_id_validator,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(DOMAIN): vol.Schema(
+        probatio.Optional(DOMAIN): probatio.Schema(
             {
-                vol.Optional("intents"): vol.Schema(
-                    {cv.string: vol.All(cv.ensure_list, [cv.string])}
+                probatio.Optional("intents"): probatio.Schema(
+                    {cv.string: probatio.All(cv.ensure_list, [cv.string])}
                 )
             }
         ),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -271,7 +269,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     manager = get_agent_manager(hass)
 
     hass_config_path = hass.config.path()
-    config_intents = _get_config_intents(config, hass_config_path)
+    config_intents = get_config_intents(config, hass_config_path)
     manager.update_config_intents(config_intents)
 
     await async_setup_default_agent(hass, entity_component)
@@ -303,7 +301,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if language is None:
             conf = await async_integration_yaml_config(hass, DOMAIN)
             if conf is not None:
-                config_intents = _get_config_intents(conf, hass_config_path)
+                config_intents = get_config_intents(conf, hass_config_path)
                 manager.update_config_intents(config_intents)
 
         agent = manager.default_agent
@@ -323,25 +321,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_conversation_http(hass)
 
     return True
-
-
-def _get_config_intents(config: ConfigType, hass_config_path: str) -> dict[str, Any]:
-    """Return config intents."""
-    intents = config.get(DOMAIN, {}).get("intents", {})
-    return {
-        intent_name: {
-            "data": [
-                {
-                    "sentences": sentences,
-                    "metadata": {
-                        METADATA_CUSTOM_SENTENCE: True,
-                        METADATA_CUSTOM_FILE: hass_config_path,
-                    },
-                }
-            ]
-        }
-        for intent_name, sentences in intents.items()
-    }
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

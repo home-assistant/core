@@ -20,7 +20,7 @@ from go2rtc_client.ws import (
     WebRTCOffer,
     WsError,
 )
-import voluptuous as vol
+import probatio
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
@@ -80,10 +80,12 @@ def _validate_auth(config: dict) -> dict:
     debug_ui_enabled = config.get(CONF_DEBUG_UI, False)
 
     if debug_ui_enabled and not auth_exists:
-        raise vol.Invalid("Username and password must be set when debug_ui is true")
+        raise probatio.Invalid(
+            "Username and password must be set when debug_ui is true"
+        )
 
     if auth_exists and CONF_URL not in config and not debug_ui_enabled:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             "Username and password can only be set when a URL is"
             " configured or debug_ui is true"
         )
@@ -91,27 +93,27 @@ def _validate_auth(config: dict) -> dict:
     return config
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
-            vol.Schema(
+        DOMAIN: probatio.All(
+            probatio.Schema(
                 {
-                    vol.Exclusive(CONF_URL, DOMAIN, DEBUG_UI_URL_MESSAGE): cv.url,
-                    vol.Exclusive(
+                    probatio.Exclusive(CONF_URL, DOMAIN, DEBUG_UI_URL_MESSAGE): cv.url,
+                    probatio.Exclusive(
                         CONF_DEBUG_UI, DOMAIN, DEBUG_UI_URL_MESSAGE
                     ): cv.boolean,
-                    vol.Inclusive(CONF_USERNAME, _AUTH): vol.All(
-                        cv.string, vol.Length(min=1)
+                    probatio.Inclusive(CONF_USERNAME, _AUTH): probatio.All(
+                        cv.string, probatio.Length(min=1)
                     ),
-                    vol.Inclusive(CONF_PASSWORD, _AUTH): vol.All(
-                        cv.string, vol.Length(min=1)
+                    probatio.Inclusive(CONF_PASSWORD, _AUTH): probatio.All(
+                        cv.string, probatio.Length(min=1)
                     ),
                 }
             ),
             _validate_auth,
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 _DATA_GO2RTC: HassKey[Go2RtcConfig] = HassKey(DOMAIN)
@@ -236,12 +238,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bo
         _LOGGER.warning("Could not connect to go2rtc instance on %s (%s)", url, err)
         return False
     except Go2RtcVersionError as err:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "unsupported_version",
+            is_fixable=False,
+            is_persistent=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="unsupported_version",
+            translation_placeholders={"error": str(err)},
+        )
         raise ConfigEntryNotReady(
             f"The go2rtc server version is not supported, {err}"
         ) from err
     except Exception as err:  # noqa: BLE001
         _LOGGER.warning("Could not connect to go2rtc instance on %s (%s)", url, err)
         return False
+
+    ir.async_delete_issue(hass, DOMAIN, "unsupported_version")
 
     provider = entry.runtime_data = WebRTCProvider(hass, url, session, client)
     await provider.initialize()

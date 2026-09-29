@@ -23,7 +23,7 @@ from habiticalib import (
     TaskType,
     TooManyRequestsError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.todo import ATTR_RENAME
 from homeassistant.const import ATTR_DATE, ATTR_NAME
@@ -99,32 +99,40 @@ from .coordinator import HabiticaConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 
-SERVICE_CAST_SKILL_SCHEMA = vol.Schema(
+SERVICE_CAST_SKILL_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Required(ATTR_SKILL): cv.string,
-        vol.Optional(ATTR_TASK): cv.string,
+        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
+        probatio.Required(ATTR_SKILL): cv.string,
+        probatio.Optional(ATTR_TASK): cv.string,
     }
 )
 
-SERVICE_MANAGE_QUEST_SCHEMA = vol.Schema(
+SERVICE_MANAGE_QUEST_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
+        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
     }
 )
-SERVICE_SCORE_TASK_SCHEMA = vol.Schema(
+SERVICE_SCORE_TASK_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Required(ATTR_TASK): cv.string,
-        vol.Optional(ATTR_DIRECTION): cv.string,
+        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
+        probatio.Required(ATTR_TASK): cv.string,
+        probatio.Optional(ATTR_DIRECTION): cv.string,
     }
 )
 
-SERVICE_TRANSFORMATION_SCHEMA = vol.Schema(
+SERVICE_TRANSFORMATION_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Required(ATTR_ITEM): cv.string,
-        vol.Required(ATTR_TARGET): cv.string,
+        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
+        probatio.Required(ATTR_ITEM): cv.string,
+        probatio.Required(ATTR_TARGET): cv.string,
     }
 )
 
@@ -133,78 +141,92 @@ COLLAPSE_CHECKLIST_MAP = {
     "expanded": False,
 }
 
-BASE_TASK_SCHEMA = vol.Schema(
+BASE_TASK_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
-        vol.Optional(ATTR_RENAME): cv.string,
-        vol.Optional(ATTR_NOTES): cv.string,
-        vol.Optional(ATTR_TAG): vol.All(cv.ensure_list, [str]),
-        vol.Optional(ATTR_ALIAS): vol.All(
+        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
+        probatio.Optional(ATTR_RENAME): cv.string,
+        probatio.Optional(ATTR_NOTES): cv.string,
+        probatio.Optional(ATTR_TAG): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional(ATTR_ALIAS): probatio.All(
             cv.string, cv.matches_regex("^[a-zA-Z0-9-_]*$")
         ),
-        vol.Optional(ATTR_COST): vol.All(vol.Coerce(float), vol.Range(0)),
-        vol.Optional(ATTR_PRIORITY): vol.All(
-            vol.Upper, vol.In(TaskPriority._member_names_)
+        probatio.Optional(ATTR_COST): probatio.All(
+            probatio.Coerce(float), probatio.Range(0)
         ),
-        vol.Optional(ATTR_UP_DOWN): vol.All(cv.ensure_list, [str]),
-        vol.Optional(ATTR_COUNTER_UP): vol.All(int, vol.Range(0)),
-        vol.Optional(ATTR_COUNTER_DOWN): vol.All(int, vol.Range(0)),
-        vol.Optional(ATTR_FREQUENCY): vol.Coerce(Frequency),
-        vol.Optional(ATTR_DATE): cv.date,
-        vol.Optional(ATTR_CLEAR_DATE): cv.boolean,
-        vol.Optional(ATTR_REMINDER): vol.All(
-            cv.ensure_list, [vol.Any(cv.datetime, cv.time)]
+        probatio.Optional(ATTR_PRIORITY): probatio.All(
+            probatio.Upper, probatio.In(TaskPriority._member_names_)
         ),
-        vol.Optional(ATTR_REMOVE_REMINDER): vol.All(
-            cv.ensure_list, [vol.Any(cv.datetime, cv.time)]
+        probatio.Optional(ATTR_UP_DOWN): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional(ATTR_COUNTER_UP): probatio.All(int, probatio.Range(0)),
+        probatio.Optional(ATTR_COUNTER_DOWN): probatio.All(int, probatio.Range(0)),
+        probatio.Optional(ATTR_FREQUENCY): probatio.Coerce(Frequency),
+        probatio.Optional(ATTR_DATE): cv.date,
+        probatio.Optional(ATTR_CLEAR_DATE): cv.boolean,
+        probatio.Optional(ATTR_REMINDER): probatio.All(
+            cv.ensure_list, [probatio.Any(cv.datetime, cv.time)]
         ),
-        vol.Optional(ATTR_CLEAR_REMINDER): cv.boolean,
-        vol.Optional(ATTR_ADD_CHECKLIST_ITEM): vol.All(cv.ensure_list, [str]),
-        vol.Optional(ATTR_REMOVE_CHECKLIST_ITEM): vol.All(cv.ensure_list, [str]),
-        vol.Optional(ATTR_SCORE_CHECKLIST_ITEM): vol.All(cv.ensure_list, [str]),
-        vol.Optional(ATTR_UNSCORE_CHECKLIST_ITEM): vol.All(cv.ensure_list, [str]),
-        vol.Optional(ATTR_COLLAPSE_CHECKLIST): vol.In(COLLAPSE_CHECKLIST_MAP),
-        vol.Optional(ATTR_START_DATE): cv.date,
-        vol.Optional(ATTR_INTERVAL): vol.All(int, vol.Range(0)),
-        vol.Optional(ATTR_REPEAT): vol.All(cv.ensure_list, [vol.In(WEEK_DAYS)]),
-        vol.Optional(ATTR_REPEAT_MONTHLY): vol.All(
-            cv.string, vol.In({"day_of_month", "day_of_week"})
+        probatio.Optional(ATTR_REMOVE_REMINDER): probatio.All(
+            cv.ensure_list, [probatio.Any(cv.datetime, cv.time)]
         ),
-        vol.Optional(ATTR_STREAK): vol.All(int, vol.Range(0)),
+        probatio.Optional(ATTR_CLEAR_REMINDER): cv.boolean,
+        probatio.Optional(ATTR_ADD_CHECKLIST_ITEM): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional(ATTR_REMOVE_CHECKLIST_ITEM): probatio.All(
+            cv.ensure_list, [str]
+        ),
+        probatio.Optional(ATTR_SCORE_CHECKLIST_ITEM): probatio.All(
+            cv.ensure_list, [str]
+        ),
+        probatio.Optional(ATTR_UNSCORE_CHECKLIST_ITEM): probatio.All(
+            cv.ensure_list, [str]
+        ),
+        probatio.Optional(ATTR_COLLAPSE_CHECKLIST): probatio.In(COLLAPSE_CHECKLIST_MAP),
+        probatio.Optional(ATTR_START_DATE): cv.date,
+        probatio.Optional(ATTR_INTERVAL): probatio.All(int, probatio.Range(0)),
+        probatio.Optional(ATTR_REPEAT): probatio.All(
+            cv.ensure_list, [probatio.In(WEEK_DAYS)]
+        ),
+        probatio.Optional(ATTR_REPEAT_MONTHLY): probatio.All(
+            cv.string, probatio.In({"day_of_month", "day_of_week"})
+        ),
+        probatio.Optional(ATTR_STREAK): probatio.All(int, probatio.Range(0)),
     }
 )
 
 SERVICE_UPDATE_TASK_SCHEMA = BASE_TASK_SCHEMA.extend(
     {
-        vol.Required(ATTR_TASK): cv.string,
-        vol.Optional(ATTR_REMOVE_TAG): vol.All(cv.ensure_list, [str]),
+        probatio.Required(ATTR_TASK): cv.string,
+        probatio.Optional(ATTR_REMOVE_TAG): probatio.All(cv.ensure_list, [str]),
     }
 )
 
 SERVICE_CREATE_TASK_SCHEMA = BASE_TASK_SCHEMA.extend(
     {
-        vol.Required(ATTR_NAME): cv.string,
+        probatio.Required(ATTR_NAME): cv.string,
     }
 )
 
 SERVICE_DAILY_SCHEMA = {
-    vol.Optional(ATTR_REMINDER): vol.All(cv.ensure_list, [cv.time]),
-    vol.Optional(ATTR_REMOVE_REMINDER): vol.All(cv.ensure_list, [cv.time]),
+    probatio.Optional(ATTR_REMINDER): probatio.All(cv.ensure_list, [cv.time]),
+    probatio.Optional(ATTR_REMOVE_REMINDER): probatio.All(cv.ensure_list, [cv.time]),
 }
 
 
-SERVICE_GET_TASKS_SCHEMA = vol.Schema(
+SERVICE_GET_TASKS_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Optional(ATTR_TYPE): vol.All(
-            cv.ensure_list, [vol.All(vol.Upper, vol.In({x.name for x in TaskType}))]
+        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(
+            {"integration": DOMAIN}
         ),
-        vol.Optional(ATTR_PRIORITY): vol.All(
-            cv.ensure_list, [vol.All(vol.Upper, vol.In({x.name for x in TaskPriority}))]
+        probatio.Optional(ATTR_TYPE): probatio.All(
+            cv.ensure_list,
+            [probatio.All(probatio.Upper, probatio.In({x.name for x in TaskType}))],
         ),
-        vol.Optional(ATTR_TASK): vol.All(cv.ensure_list, [str]),
-        vol.Optional(ATTR_TAG): vol.All(cv.ensure_list, [str]),
-        vol.Optional(ATTR_KEYWORD): cv.string,
+        probatio.Optional(ATTR_PRIORITY): probatio.All(
+            cv.ensure_list,
+            [probatio.All(probatio.Upper, probatio.In({x.name for x in TaskPriority}))],
+        ),
+        probatio.Optional(ATTR_TASK): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional(ATTR_TAG): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional(ATTR_KEYWORD): cv.string,
     }
 )
 

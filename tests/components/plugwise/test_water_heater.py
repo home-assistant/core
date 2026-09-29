@@ -27,11 +27,11 @@ HA_PLUGWISE_SMILE_ASYNC_UPDATE = (
 )
 
 
+@pytest.mark.usefixtures("mock_smile_adam_jip")
 @pytest.mark.parametrize("platforms", [(WATER_HEATER_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_adam_water_heater_snapshot(
     hass: HomeAssistant,
-    mock_smile_adam_jip: MagicMock,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     setup_platform: MockConfigEntry,
@@ -87,13 +87,13 @@ async def test_adam_water_heater_setpoint_change(
     assert mock_smile_adam_jip.set_number.call_count == 1
 
 
+@pytest.mark.usefixtures("mock_smile_anna")
 @pytest.mark.parametrize("chosen_env", ["anna_loria_cooling_active"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [False], indirect=True)
 @pytest.mark.parametrize("platforms", [(WATER_HEATER_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_anna_water_heater_snapshot(
     hass: HomeAssistant,
-    mock_smile_anna: MagicMock,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     setup_platform: MockConfigEntry,
@@ -164,9 +164,9 @@ async def test_adam_water_heater_active_state(
         assert state.state == STATE_GAS
 
 
+@pytest.mark.usefixtures("mock_smile_adam_jip")
 async def test_adam_water_heater_setpoint_error_uses_configured_unit(
     hass: HomeAssistant,
-    mock_smile_adam_jip: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test out-of-range setpoint errors use the configured temperature unit."""

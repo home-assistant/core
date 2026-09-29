@@ -7,8 +7,8 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiortm import AioRTMError, AuthError
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.remember_the_milk.config_flow import TOKEN_TIMEOUT_SEC
@@ -47,7 +47,7 @@ def ignore_missing_translations(request: pytest.FixtureRequest) -> list[str]:
     return []
 
 
-def get_suggested_value(data_schema: vol.Schema, key: str) -> Any:
+def get_suggested_value(data_schema: probatio.Schema, key: str) -> Any:
     """Return the suggested value for a key in a data schema."""
     for schema_key in data_schema.schema:
         if schema_key == key:

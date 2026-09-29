@@ -3,7 +3,7 @@
 from dataclasses import asdict
 from typing import Any, Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HassJob, HomeAssistant, callback
@@ -29,7 +29,7 @@ def async_setup(hass: HomeAssistant) -> None:
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "ssdp/subscribe_discovery",
+        probatio.Required("type"): "ssdp/subscribe_discovery",
     }
 )
 @websocket_api.async_response

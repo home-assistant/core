@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 import httpx
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import (
     DEVICE_CLASSES_SCHEMA,
@@ -68,24 +68,24 @@ SUPPORT_REST_METHODS = ["post", "put", "patch"]
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         **TEMPLATE_ENTITY_BASE_SCHEMA.schema,
-        vol.Required(CONF_RESOURCE): cv.url,
-        vol.Optional(CONF_STATE_RESOURCE): cv.url,
-        vol.Optional(CONF_HEADERS): {cv.string: cv.template},
-        vol.Optional(CONF_PARAMS): {cv.string: cv.template},
-        vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.template,
-        vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.template,
-        vol.Optional(CONF_IS_ON_TEMPLATE): vol.All(
+        probatio.Required(CONF_RESOURCE): cv.url,
+        probatio.Optional(CONF_STATE_RESOURCE): cv.url,
+        probatio.Optional(CONF_HEADERS): {cv.string: cv.template},
+        probatio.Optional(CONF_PARAMS): {cv.string: cv.template},
+        probatio.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.template,
+        probatio.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.template,
+        probatio.Optional(CONF_IS_ON_TEMPLATE): probatio.All(
             cv.template, ValueTemplate.from_template
         ),
-        vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.All(
-            vol.Lower, vol.In(SUPPORT_REST_METHODS)
+        probatio.Optional(CONF_METHOD, default=DEFAULT_METHOD): probatio.All(
+            probatio.Lower, probatio.In(SUPPORT_REST_METHODS)
         ),
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
-        vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-        vol.Optional(CONF_AVAILABILITY): cv.template,
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        probatio.Inclusive(CONF_USERNAME, "authentication"): cv.string,
+        probatio.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
+        probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        probatio.Optional(CONF_AVAILABILITY): cv.template,
     }
 )
 

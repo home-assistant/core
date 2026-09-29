@@ -13,7 +13,7 @@ from aiohasupervisor.models import (
     PartialBackupOptions,
     PartialRestoreOptions,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_LOCATION, ATTR_NAME
 from homeassistant.core import (
@@ -26,11 +26,13 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
-    device_registry as dr,
     issue_registry as ir,
     selector,
 )
-from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.service import (
+    async_get_device_and_config_entry,
+    async_register_admin_service,
+)
 from homeassistant.util.dt import now
 
 from .const import (
@@ -47,10 +49,8 @@ from .const import (
     ATTR_SLUG,
     DOMAIN,
     ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER,
-    MAIN_COORDINATOR,
     SupervisorEntityModel,
 )
-from .coordinator import HassioMainDataUpdateCoordinator
 from .handler import get_supervisor_client
 
 SERVICE_ADDON_START = "addon_start"
@@ -70,7 +70,7 @@ SERVICE_RESTORE_PARTIAL = "restore_partial"
 SERVICE_MOUNT_RELOAD = "mount_reload"
 
 
-VALID_ADDON_SLUG = vol.Match(re.compile(r"^[-_.A-Za-z0-9]+$"))
+VALID_ADDON_SLUG = probatio.Match(re.compile(r"^[-_.A-Za-z0-9]+$"))
 
 # Legacy alias used by the Supervisor API for the homeassistant flag, kept
 # for backwards compatibility with existing automations.
@@ -110,82 +110,82 @@ def _normalize_partial_options_data(
     return data
 
 
-SCHEMA_NO_DATA = vol.Schema({})
+SCHEMA_NO_DATA = probatio.Schema({})
 
-SCHEMA_ADDON = vol.Schema({vol.Required(ATTR_ADDON): VALID_ADDON_SLUG})
+SCHEMA_ADDON = probatio.Schema({probatio.Required(ATTR_ADDON): VALID_ADDON_SLUG})
 
 SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend(
-    {vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)}
+    {probatio.Required(ATTR_INPUT): probatio.Any(dict, cv.string)}
 )
 
-SCHEMA_APP = vol.Schema({vol.Required(ATTR_APP): VALID_ADDON_SLUG})
+SCHEMA_APP = probatio.Schema({probatio.Required(ATTR_APP): VALID_ADDON_SLUG})
 
 SCHEMA_APP_STDIN = SCHEMA_APP.extend(
-    {vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)}
+    {probatio.Required(ATTR_INPUT): probatio.Any(dict, cv.string)}
 )
 
-SCHEMA_BACKUP_FULL = vol.Schema(
+SCHEMA_BACKUP_FULL = probatio.Schema(
     {
-        vol.Optional(
+        probatio.Optional(
             ATTR_NAME, default=lambda: now().strftime("%Y-%m-%d %H:%M:%S")
         ): cv.string,
-        vol.Optional(ATTR_PASSWORD): cv.string,
-        vol.Optional(ATTR_COMPRESSED): cv.boolean,
-        vol.Optional(ATTR_LOCATION): vol.All(
+        probatio.Optional(ATTR_PASSWORD): cv.string,
+        probatio.Optional(ATTR_COMPRESSED): cv.boolean,
+        probatio.Optional(ATTR_LOCATION): probatio.All(
             cv.string, lambda v: None if v == "/backup" else v
         ),
-        vol.Optional(ATTR_HOMEASSISTANT_EXCLUDE_DATABASE): cv.boolean,
+        probatio.Optional(ATTR_HOMEASSISTANT_EXCLUDE_DATABASE): cv.boolean,
     }
 )
 
 SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
     {
-        vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
-        vol.Optional(ATTR_FOLDERS): vol.All(
+        probatio.Optional(ATTR_HOMEASSISTANT): cv.boolean,
+        probatio.Optional(ATTR_FOLDERS): probatio.All(
             cv.ensure_list,
-            [vol.Any(LEGACY_FOLDER_HOMEASSISTANT, vol.Coerce(Folder))],
-            vol.Unique(),
-            vol.Coerce(set),
+            [probatio.Any(LEGACY_FOLDER_HOMEASSISTANT, probatio.Coerce(Folder))],
+            probatio.Unique(),
+            probatio.Coerce(set),
         ),
-        vol.Exclusive(ATTR_APPS, "apps_or_addons"): vol.All(
-            cv.ensure_list, [VALID_ADDON_SLUG], vol.Unique(), vol.Coerce(set)
+        probatio.Exclusive(ATTR_APPS, "apps_or_addons"): probatio.All(
+            cv.ensure_list, [VALID_ADDON_SLUG], probatio.Unique(), probatio.Coerce(set)
         ),
         # Legacy "addons", "apps" is preferred
-        vol.Exclusive(ATTR_ADDONS, "apps_or_addons"): vol.All(
-            cv.ensure_list, [VALID_ADDON_SLUG], vol.Unique(), vol.Coerce(set)
+        probatio.Exclusive(ATTR_ADDONS, "apps_or_addons"): probatio.All(
+            cv.ensure_list, [VALID_ADDON_SLUG], probatio.Unique(), probatio.Coerce(set)
         ),
     }
 )
 
-SCHEMA_RESTORE_FULL = vol.Schema(
+SCHEMA_RESTORE_FULL = probatio.Schema(
     {
-        vol.Required(ATTR_SLUG): cv.slug,
-        vol.Optional(ATTR_PASSWORD): cv.string,
+        probatio.Required(ATTR_SLUG): cv.slug,
+        probatio.Optional(ATTR_PASSWORD): cv.string,
     }
 )
 
 SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
     {
-        vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
-        vol.Optional(ATTR_FOLDERS): vol.All(
+        probatio.Optional(ATTR_HOMEASSISTANT): cv.boolean,
+        probatio.Optional(ATTR_FOLDERS): probatio.All(
             cv.ensure_list,
-            [vol.Any(LEGACY_FOLDER_HOMEASSISTANT, vol.Coerce(Folder))],
-            vol.Unique(),
-            vol.Coerce(set),
+            [probatio.Any(LEGACY_FOLDER_HOMEASSISTANT, probatio.Coerce(Folder))],
+            probatio.Unique(),
+            probatio.Coerce(set),
         ),
-        vol.Exclusive(ATTR_APPS, "apps_or_addons"): vol.All(
-            cv.ensure_list, [VALID_ADDON_SLUG], vol.Unique(), vol.Coerce(set)
+        probatio.Exclusive(ATTR_APPS, "apps_or_addons"): probatio.All(
+            cv.ensure_list, [VALID_ADDON_SLUG], probatio.Unique(), probatio.Coerce(set)
         ),
         # Legacy "addons", "apps" is preferred
-        vol.Exclusive(ATTR_ADDONS, "apps_or_addons"): vol.All(
-            cv.ensure_list, [VALID_ADDON_SLUG], vol.Unique(), vol.Coerce(set)
+        probatio.Exclusive(ATTR_ADDONS, "apps_or_addons"): probatio.All(
+            cv.ensure_list, [VALID_ADDON_SLUG], probatio.Unique(), probatio.Coerce(set)
         ),
     }
 )
 
-SCHEMA_MOUNT_RELOAD = vol.Schema(
+SCHEMA_MOUNT_RELOAD = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): selector.DeviceSelector(
+        probatio.Required(ATTR_DEVICE_ID): selector.DeviceSelector(
             selector.DeviceSelectorConfig(
                 filter=selector.DeviceFilterSelectorConfig(
                     integration=DOMAIN,
@@ -449,28 +449,15 @@ def async_register_network_storage_services(
     hass: HomeAssistant, supervisor_client: SupervisorClient
 ) -> None:
     """Register network storage (or mount) services."""
-    dev_reg = dr.async_get(hass)
 
     async def async_mount_reload(service: ServiceCall) -> None:
         """Handle service calls for Hass.io."""
-        coordinator: HassioMainDataUpdateCoordinator | None = None
+        # A mount is always a main device, and the check below reads its model
+        device, _ = async_get_device_and_config_entry(
+            hass, DOMAIN, service.data[ATTR_DEVICE_ID], include_child_devices=False
+        )
 
-        if (
-            device := dev_reg.async_get(
-                service.data[ATTR_DEVICE_ID], include_child_devices=False
-            )
-        ) is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="mount_reload_unknown_device_id",
-            )
-
-        if (
-            device.name is None
-            or device.model != SupervisorEntityModel.MOUNT
-            or (coordinator := hass.data.get(MAIN_COORDINATOR)) is None
-            or coordinator.entry_id not in device.config_entries
-        ):
+        if device.name is None or device.model != SupervisorEntityModel.MOUNT:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="mount_reload_invalid_device",

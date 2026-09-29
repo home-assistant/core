@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -21,10 +21,10 @@ from .helpers import MOON_PHASES, moon_phase
 
 PHASE_ANY = "any"
 
-_PHASE_CHANGED_TRIGGER_SCHEMA = vol.Schema(
+_PHASE_CHANGED_TRIGGER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS, default=dict): {
-            vol.Optional(CONF_PHASE, default=PHASE_ANY): vol.In(
+        probatio.Required(CONF_OPTIONS, default=dict): {
+            probatio.Optional(CONF_PHASE, default=PHASE_ANY): probatio.In(
                 [PHASE_ANY, *MOON_PHASES]
             ),
         }
