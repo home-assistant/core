@@ -5,6 +5,7 @@ from collections.abc import AsyncGenerator, AsyncIterator, Callable, Mapping, Se
 from dataclasses import dataclass, field
 import datetime
 import json
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, cast
 
 from google.genai import interactions
@@ -25,6 +26,7 @@ if TYPE_CHECKING:
 else:
     Interaction = interactions.Interaction
 from homeassistant.components import conversation
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 
@@ -376,23 +378,106 @@ def _validate_tool_results(value: Any) -> Any:
     return value
 
 
+def _read_attachment_file(path: Path) -> bytes:
+    """Read attachment bytes from disk, failing fast if not found or on I/O error."""
+    if not path.exists():
+        raise HomeAssistantError(f"Attachment file not found: {path}")
+    try:
+        return path.read_bytes()
+    except OSError as err:
+        raise HomeAssistantError(
+            f"Error reading attachment file {path}: {err}"
+        ) from err
+
+
+def _format_attachment_content(
+    raw_data: bytes,
+    mime_type: str,
+) -> interactions.Content:
+    """Format raw attachment data into the appropriate Interactions Content part."""
+    b64_data = base64.b64encode(raw_data).decode("ascii")
+
+    if mime_type.startswith("image/"):
+        return format_image_content(data=raw_data, mime_type=mime_type)
+
+    if mime_type.startswith("audio/"):
+        return interactions.AudioContent(data=b64_data, mime_type=cast(Any, mime_type))
+
+    if mime_type.startswith("video/"):
+        return interactions.VideoContent(data=b64_data, mime_type=cast(Any, mime_type))
+
+    if mime_type in ("application/pdf", "text/csv"):
+        return interactions.DocumentContent(
+            data=b64_data, mime_type=cast(Any, mime_type)
+        )
+
+    if mime_type.startswith("text/"):
+        return interactions.TextContent(text=raw_data.decode("utf-8", errors="replace"))
+
+    raise HomeAssistantError(f"Unsupported attachment type: {mime_type}")
+
+
+async def async_prepare_attachment_for_interactions(
+    hass: HomeAssistant,
+    attachment: conversation.Attachment,
+) -> interactions.Content:
+    """Prepare a single conversation attachment asynchronously for Interactions API."""
+    if not attachment.path:
+        raise HomeAssistantError(
+            f"Attachment missing file path: {attachment.media_content_id}"
+        )
+    raw_data = await hass.async_add_executor_job(_read_attachment_file, attachment.path)
+    return _format_attachment_content(raw_data, attachment.mime_type)
+
+
+async def async_prepare_chat_log_attachments(
+    hass: HomeAssistant,
+    chat_log: conversation.ChatLog,
+) -> dict[str, interactions.Content]:
+    """Prepare all attachments in a chat log asynchronously for Interactions API."""
+    prepared: dict[str, interactions.Content] = {}
+    for content in chat_log.content:
+        if isinstance(content, conversation.UserContent) and content.attachments:
+            for attachment in content.attachments:
+                if attachment.media_content_id not in prepared:
+                    prepared[
+                        attachment.media_content_id
+                    ] = await async_prepare_attachment_for_interactions(
+                        hass, attachment
+                    )
+    return prepared
+
+
 def _convert_user_content_step(
     content: conversation.UserContent,
+    attachment_cache: dict[str | Path, interactions.Content] | None = None,
 ) -> interactions.UserInputStep:
-    """Convert UserContent into a UserInputStep, including any image attachments."""
+    """Convert UserContent into a UserInputStep, including any attachments."""
     step_content: list[interactions.Content] = []
 
     if content.attachments:
         for attachment in content.attachments:
-            if attachment.mime_type and attachment.mime_type.startswith("image/"):
-                if attachment.path and attachment.path.exists():
-                    raw_data = attachment.path.read_bytes()
-                    step_content.append(
-                        format_image_content(
-                            data=raw_data,
-                            mime_type=attachment.mime_type,
-                        )
-                    )
+            cached_part: interactions.Content | None = None
+            if attachment_cache is not None:
+                cached_part = attachment_cache.get(attachment.media_content_id) or (
+                    attachment_cache.get(attachment.path) if attachment.path else None
+                )
+
+            if cached_part is not None:
+                step_content.append(cached_part)
+                continue
+
+            if not attachment.path:
+                raise HomeAssistantError(
+                    f"Attachment missing file path: {attachment.media_content_id}"
+                )
+
+            raw_data = _read_attachment_file(attachment.path)
+            part = _format_attachment_content(raw_data, attachment.mime_type)
+            if attachment_cache is not None:
+                attachment_cache[attachment.media_content_id] = part
+                attachment_cache[attachment.path] = part
+            step_content.append(part)
 
     if content.content:
         step_content.append(interactions.TextContent(text=content.content))
@@ -400,6 +485,113 @@ def _convert_user_content_step(
         step_content.append(interactions.TextContent(text=" "))
 
     return interactions.UserInputStep(content=step_content)
+
+
+def _create_thought_step(
+    detail: PartDetails,
+    thinking_content: str | None,
+    single_thought: bool,
+) -> interactions.ThoughtStep:
+    """Create a ThoughtStep from PartDetails and thinking content."""
+    thought_text = ""
+    if thinking_content:
+        if detail.length > 0:
+            thought_text = thinking_content[detail.index : detail.index + detail.length]
+        elif single_thought:
+            thought_text = thinking_content
+        else:
+            thought_text = thinking_content[detail.index :]
+
+    summary: list[interactions.ThoughtSummaryContent] | None = (
+        [interactions.TextContent(text=thought_text)] if thought_text else None
+    )
+    return interactions.ThoughtStep(
+        signature=detail.thought_signature,
+        summary=summary,
+    )
+
+
+def _create_google_search_step(
+    tool_call: llm.ToolInput,
+    signature: str | None,
+) -> interactions.GoogleSearchCallStep:
+    """Create a GoogleSearchCallStep from ToolInput."""
+    queries = (
+        list(tool_call.tool_args["queries"])
+        if isinstance(tool_call.tool_args, dict)
+        and "queries" in tool_call.tool_args
+        and tool_call.tool_args["queries"] is not None
+        else None
+    )
+    return interactions.GoogleSearchCallStep(
+        id=tool_call.id,
+        arguments=interactions.GoogleSearchCallArguments(queries=queries),
+        signature=signature,
+        search_type="web_search",
+    )
+
+
+def _create_function_call_step(
+    tool_call: llm.ToolInput,
+) -> interactions.FunctionCallStep:
+    """Create a FunctionCallStep from ToolInput."""
+    args = tool_call.tool_args if isinstance(tool_call.tool_args, dict) else {}
+    return interactions.FunctionCallStep(
+        id=tool_call.id,
+        name=tool_call.tool_name,
+        arguments=args,
+    )
+
+
+def _find_tool_call(
+    tool_calls: list[llm.ToolInput] | None,
+    index: int,
+    is_search: bool,
+    handled_indices: set[int],
+) -> tuple[int, llm.ToolInput] | tuple[None, None]:
+    """Find matching tool call by index or next available."""
+    if not tool_calls:
+        return None, None
+
+    if 0 <= index < len(tool_calls):
+        cand = tool_calls[index]
+        if (cand.tool_name == "google_search") == is_search:
+            handled_indices.add(index)
+            return index, cand
+
+    for idx, cand in enumerate(tool_calls):
+        if (
+            idx not in handled_indices
+            and (cand.tool_name == "google_search") == is_search
+        ):
+            handled_indices.add(idx)
+            return idx, cand
+
+    return None, None
+
+
+def _create_google_search_result_step(
+    detail: PartDetails,
+    tool_call_id: str,
+) -> interactions.GoogleSearchResultStep:
+    """Create a GoogleSearchResultStep from PartDetails."""
+    search_results: list[interactions.GoogleSearchResult] = []
+    raw_results = detail.search_result
+    if isinstance(raw_results, list):
+        for r in raw_results:
+            if isinstance(r, interactions.GoogleSearchResult):
+                search_results.append(r)
+            elif isinstance(r, dict):
+                val = r.get("search_suggestions")
+                suggestions = val if isinstance(val, str) else None
+                search_results.append(
+                    interactions.GoogleSearchResult(search_suggestions=suggestions)
+                )
+    return interactions.GoogleSearchResultStep(
+        call_id=tool_call_id,
+        result=search_results,
+        signature=detail.thought_signature,
+    )
 
 
 def _convert_assistant_content_steps(
@@ -412,92 +604,56 @@ def _convert_assistant_content_steps(
         if isinstance(content.native, ContentDetails)
         else []
     )
+    handled_tool_indices: set[int] = set()
+    single_thought = len([d for d in part_details if d.part_type == "thought"]) == 1
 
-    search_tool = next(
-        (tc for tc in (content.tool_calls or []) if tc.tool_name == "google_search"),
-        None,
-    )
-    if search_tool:
-        search_sig = next(
-            (
-                d.thought_signature
-                for d in part_details
-                if d.part_type == "google_search_call"
-            ),
-            None,
-        )
-        queries = (
-            list(search_tool.tool_args["queries"])
-            if isinstance(search_tool.tool_args, dict)
-            and "queries" in search_tool.tool_args
-            and search_tool.tool_args["queries"] is not None
-            else None
-        )
-        steps.append(
-            interactions.GoogleSearchCallStep(
-                id=search_tool.id,
-                arguments=interactions.GoogleSearchCallArguments(queries=queries),
-                signature=search_sig,
-                search_type="web_search",
-            )
-        )
-        search_res_detail = next(
-            (d for d in part_details if d.part_type == "google_search_result"),
-            None,
-        )
-        if search_res_detail and search_res_detail.search_result is not None:
-            search_results: list[interactions.GoogleSearchResult] = []
-            raw_results = search_res_detail.search_result
-            if isinstance(raw_results, list):
-                for r in raw_results:
-                    if isinstance(r, interactions.GoogleSearchResult):
-                        search_results.append(r)
-                    elif isinstance(r, dict):
-                        val = r.get("search_suggestions")
-                        suggestions = val if isinstance(val, str) else None
-                        search_results.append(
-                            interactions.GoogleSearchResult(
-                                search_suggestions=suggestions
-                            )
+    for detail in part_details:
+        match detail.part_type:
+            case "thought":
+                steps.append(
+                    _create_thought_step(
+                        detail, content.thinking_content, single_thought
+                    )
+                )
+            case "google_search_call":
+                _, search_tool = _find_tool_call(
+                    content.tool_calls, detail.index, True, handled_tool_indices
+                )
+                if search_tool:
+                    steps.append(
+                        _create_google_search_step(
+                            search_tool, detail.thought_signature
                         )
-            steps.append(
-                interactions.GoogleSearchResultStep(
-                    call_id=search_tool.id,
-                    result=search_results,
-                    signature=search_res_detail.thought_signature,
+                    )
+            case "google_search_result":
+                tool_call_id = ""
+                if content.tool_calls and 0 <= detail.index < len(content.tool_calls):
+                    tool_call_id = content.tool_calls[detail.index].id
+                steps.append(_create_google_search_result_step(detail, tool_call_id))
+            case "function_call":
+                _, func_tool = _find_tool_call(
+                    content.tool_calls, detail.index, False, handled_tool_indices
                 )
-            )
+                if func_tool:
+                    steps.append(_create_function_call_step(func_tool))
 
-    thought_sig = next(
-        (d.thought_signature for d in part_details if d.part_type == "thought"),
-        None,
-    )
-    if thought_sig:
-        steps.append(
-            interactions.ThoughtStep(
-                signature=thought_sig,
-                summary=[interactions.TextContent(text=content.thinking_content)]
-                if content.thinking_content
-                else None,
-            )
-        )
-    elif content.thinking_content:
-        steps.append(
-            interactions.ThoughtStep(
-                summary=[interactions.TextContent(text=content.thinking_content)]
-            )
-        )
+    if content.thinking_content and not any(
+        isinstance(s, interactions.ThoughtStep) for s in steps
+    ):
+        fallback_summary: list[interactions.ThoughtSummaryContent] = [
+            interactions.TextContent(text=content.thinking_content)
+        ]
+        steps.append(interactions.ThoughtStep(summary=fallback_summary))
 
-    for tool_call in content.tool_calls or []:
-        if tool_call.tool_name != "google_search":
-            args = tool_call.tool_args if isinstance(tool_call.tool_args, dict) else {}
-            steps.append(
-                interactions.FunctionCallStep(
-                    id=tool_call.id,
-                    name=tool_call.tool_name,
-                    arguments=args,
-                )
-            )
+    if content.tool_calls:
+        for idx, tool_call in enumerate(content.tool_calls):
+            if idx in handled_tool_indices:
+                continue
+            if tool_call.tool_name == "google_search":
+                steps.append(_create_google_search_step(tool_call, None))
+            else:
+                steps.append(_create_function_call_step(tool_call))
+            handled_tool_indices.add(idx)
 
     if content.content:
         steps.append(
@@ -528,14 +684,18 @@ def _convert_tool_result_step(
 
 def convert_chat_log_to_interactions_steps(
     chat_log: conversation.ChatLog,
+    prepared_attachments: Mapping[str | Path, interactions.Content] | None = None,
 ) -> list[interactions.Step]:
     """Convert Home Assistant ChatLog history into a sequence of interaction steps."""
     steps: list[interactions.Step] = []
+    cache: dict[str | Path, interactions.Content] = (
+        dict(prepared_attachments) if prepared_attachments is not None else {}
+    )
 
     for content in chat_log.content:
         match content:
             case conversation.UserContent():
-                steps.append(_convert_user_content_step(content))
+                steps.append(_convert_user_content_step(content, cache))
             case conversation.AssistantContent():
                 steps.extend(_convert_assistant_content_steps(content))
             case conversation.ToolResultContent():
@@ -636,9 +796,33 @@ class _StreamState:
     current_search_result_signature: str | None = None
     current_search_result_is_error: bool | None = None
 
+    in_thought: bool = False
+    current_thought_start: int = 0
+    current_thought_length: int = 0
+    current_thought_signature: str | None = None
+
+
+def _flush_active_thought(state: _StreamState) -> None:
+    """Flush active thought part to part_details if any."""
+    if state.in_thought:
+        if state.current_thought_signature:
+            state.part_details.append(
+                PartDetails(
+                    part_type="thought",
+                    index=state.current_thought_start,
+                    length=state.current_thought_length,
+                    thought_signature=state.current_thought_signature,
+                )
+            )
+        state.in_thought = False
+        state.current_thought_signature = None
+        state.current_thought_length = 0
+
 
 def _handle_step_start(step: interactions.Step, state: _StreamState) -> None:
     """Handle step start events."""
+    _flush_active_thought(state)
+
     match step:
         case interactions.FunctionCallStep(id=call_id, name=name, arguments=args):
             state.current_tool_id = call_id
@@ -662,6 +846,11 @@ def _handle_step_start(step: interactions.Step, state: _StreamState) -> None:
             state.current_search_result_data = list(res) if res else []
             state.current_search_result_signature = sig or None
             state.current_search_result_is_error = is_err or None
+        case interactions.ThoughtStep(signature=sig):
+            state.in_thought = True
+            state.current_thought_start = state.thinking_content_index
+            state.current_thought_length = 0
+            state.current_thought_signature = sig or None
 
 
 def _handle_step_delta(
@@ -671,6 +860,7 @@ def _handle_step_delta(
     match delta:
         case interactions.TextDelta(text=text):
             if text:
+                _flush_active_thought(state)
                 state.content_index += len(text)
                 return {"content": text}
 
@@ -678,19 +868,22 @@ def _handle_step_delta(
             content=interactions.TextContent(text=text)
         ):
             if text:
+                if not state.in_thought:
+                    state.in_thought = True
+                    state.current_thought_start = state.thinking_content_index
+                    state.current_thought_length = 0
+                    state.current_thought_signature = None
+                state.current_thought_length += len(text)
                 state.thinking_content_index += len(text)
                 return {"thinking_content": text}
 
         case interactions.ThoughtSignatureDelta(signature=sig):
             if sig:
-                state.part_details.append(
-                    PartDetails(
-                        part_type="thought",
-                        index=state.thinking_content_index,
-                        length=0,
-                        thought_signature=sig,
-                    )
-                )
+                if not state.in_thought:
+                    state.in_thought = True
+                    state.current_thought_start = state.thinking_content_index
+                    state.current_thought_length = 0
+                state.current_thought_signature = sig
 
         case interactions.GoogleSearchCallDelta(signature=sig, arguments=args):
             if sig:
@@ -721,6 +914,7 @@ def _handle_step_stop(
     conversation.AssistantContentDeltaDict | conversation.ToolResultContentDeltaDict
 ]:
     """Handle step stop events."""
+    _flush_active_thought(state)
     deltas: list[
         conversation.AssistantContentDeltaDict | conversation.ToolResultContentDeltaDict
     ] = []
@@ -834,6 +1028,7 @@ async def transform_interactions_stream(
                     for stop_delta in _handle_step_stop(state):
                         yield stop_delta
 
+        _flush_active_thought(state)
         if state.part_details:
             yield {"native": ContentDetails(part_details=state.part_details)}
 
