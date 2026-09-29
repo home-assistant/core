@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Awaitable
 from typing import TYPE_CHECKING, Any, cast
 
+from aiohttp import ClientError
 from aiopowerwall import PowerwallAuthenticationError, PowerwallClient
 from tesla_fleet_api.exceptions import InsufficientCredits, TeslaFleetError
 from tesla_fleet_api.tesla import EnergySiteRouter
@@ -177,6 +178,11 @@ async def handle_command(
             translation_domain=DOMAIN,
             translation_key="command_exception",
             translation_placeholders={"message": e.message},
+        ) from e
+    except (ClientError, TimeoutError) as e:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_connection_error",
         ) from e
     # The repair is cleared by the credits stream (async_handle_credits), not
     # here: handle_command also wraps energy-site commands, which do not consume

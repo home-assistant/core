@@ -137,10 +137,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
         ),
         # Heated third row only on Model X (value 3) that actually has a third
         # row; some 5-seat Model X also report 3 but have no third row.
-        # third_row_seats is a string ("None" when absent), not a bool.
         supported_fn=lambda data: (
-            data.get("rear_seat_heaters") == 3
-            and data.get("third_row_seats", "None") != "None"
+            data.get("rear_seat_heaters") == 3 and bool(data.get("third_row_seats"))
         ),
         entity_registry_enabled_default=False,
         options=[
@@ -157,10 +155,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
         ),
         # Heated third row only on Model X (value 3) that actually has a third
         # row; some 5-seat Model X also report 3 but have no third row.
-        # third_row_seats is a string ("None" when absent), not a bool.
         supported_fn=lambda data: (
-            data.get("rear_seat_heaters") == 3
-            and data.get("third_row_seats", "None") != "None"
+            data.get("rear_seat_heaters") == 3 and bool(data.get("third_row_seats"))
         ),
         entity_registry_enabled_default=False,
         options=[

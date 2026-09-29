@@ -97,8 +97,7 @@ async def async_setup_entry(
                 for vehicle in entry.runtime_data.vehicles
                 if not vehicle.poll
                 and firmware_at_least(vehicle.firmware, "2024.44.25")
-                and vehicle.coordinator.data.get("vehicle_config_car_type")
-                == "cybertruck"
+                and vehicle.api.model == "Cybertruck"
             ),
         )
     )

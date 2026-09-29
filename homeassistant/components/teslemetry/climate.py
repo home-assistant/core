@@ -62,6 +62,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry Climate platform from a config entry."""
 
+    # Streaming vehicles are never polled, so their vehicle_config comes from metadata
+    vehicles_metadata = entry.runtime_data.metadata_coordinator.data["vehicles"]
     async_add_entities(
         chain(
             (
@@ -70,7 +72,10 @@ async def async_setup_entry(
                 )
                 if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.44.25")
                 else TeslemetryStreamingClimateEntity(
-                    vehicle, TeslemetryClimateSide.DRIVER, entry.runtime_data.scopes
+                    vehicle,
+                    TeslemetryClimateSide.DRIVER,
+                    entry.runtime_data.scopes,
+                    vehicles_metadata[vehicle.vin].get("config", {}).get("rhd", False),
                 )
                 for vehicle in entry.runtime_data.vehicles
             ),
@@ -80,7 +85,13 @@ async def async_setup_entry(
                 )
                 if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.44.25")
                 else TeslemetryStreamingCabinOverheatProtectionEntity(
-                    vehicle, entry.runtime_data.scopes
+                    vehicle,
+                    entry.runtime_data.scopes,
+                    bool(
+                        vehicles_metadata[vehicle.vin]
+                        .get("config", {})
+                        .get("cop_user_set_temp_supported")
+                    ),
                 )
                 for vehicle in entry.runtime_data.vehicles
             ),
@@ -262,6 +273,7 @@ class TeslemetryStreamingClimateEntity(
         data: TeslemetryVehicleData,
         side: TeslemetryClimateSide,
         scopes: list[Scope],
+        rhd: bool,
     ) -> None:
         """Initialize the climate."""
 
@@ -289,7 +301,7 @@ class TeslemetryStreamingClimateEntity(
             float,
             data.coordinator.data.get("climate_state_max_avail_temp", DEFAULT_MAX_TEMP),
         )
-        self.rhd: bool = data.coordinator.data.get("vehicle_config_rhd", False)
+        self.rhd = rhd
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -321,9 +333,6 @@ class TeslemetryStreamingClimateEntity(
             self.vehicle.stream_vehicle.listen_ClimateKeeperMode(
                 self._async_handle_climate_keeper_mode
             )
-        )
-        self.async_on_remove(
-            self.vehicle.stream_vehicle.listen_RightHandDrive(self._async_handle_rhd)
         )
 
         if self.side == TeslemetryClimateSide.DRIVER:
@@ -374,10 +383,6 @@ class TeslemetryStreamingClimateEntity(
     def _async_handle_hvac_temperature_request(self, data: float | None) -> None:
         self._attr_target_temperature = data
         self.async_write_ha_state()
-
-    def _async_handle_rhd(self, data: bool | None) -> None:
-        if data is not None:
-            self.rhd = data
 
 
 COP_MODES = {
@@ -525,6 +530,7 @@ class TeslemetryStreamingCabinOverheatProtectionEntity(
         self,
         data: TeslemetryVehicleData,
         scopes: list[Scope],
+        cop_temp_supported: bool,
     ) -> None:
         """Initialize the climate."""
 
@@ -541,7 +547,7 @@ class TeslemetryStreamingCabinOverheatProtectionEntity(
         self._attr_supported_features = (
             ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
         )
-        if data.coordinator.data.get("vehicle_config_cop_user_set_temp_supported"):
+        if cop_temp_supported:
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
         # Scopes

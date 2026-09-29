@@ -165,3 +165,30 @@ async def test_state(
     state = hass.states.get(entity_id)
     assert state is not None, f"{entity_id} does not exist"
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize("mock_device_code", ["hwsb_ircs2n82vgrozoew"])
+async def test_hwsb_switch_with_quirk(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Test HWSB outdoor equipment switch with quirk applied."""
+    mock_device.status["switch"] = True
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    entity_id = "switch.inverflow"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id, [{"code": "switch", "value": False}]
+    )
