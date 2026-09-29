@@ -301,6 +301,33 @@
           "upper_express": "Upper express"
         }
       },
+      "dry_level": {
+        "name": "Dry level",
+        "state": {
+          "0": "Level 0",
+          "1": "Level 1",
+          "2": "Level 2",
+          "3": "Level 3",
+          "4": "Level 4",
+          "5": "Level 5",
+          "cupboard": "Cupboard dry",
+          "damp": "Damp dry",
+          "delicate": "Delicate",
+          "extra": "Extra dry",
+          "less": "Less dry",
+          "more": "More dry",
+          "none": "None",
+          "normal": "[%key:common::state::normal%]",
+          "shirt": "Shirt",
+          "very": "Very dry"
+        }
+      },
+      "drying_time": {
+        "name": "Drying time",
+        "state": {
+          "none": "None"
+        }
+      },
       "dust_filter_alarm": {
         "name": "Dust filter alarm threshold",
         "unit_of_measurement": "hours"
