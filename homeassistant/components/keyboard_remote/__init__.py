@@ -881,7 +881,12 @@ class DeviceHandler:
         except OSError as err:
             await self._async_cancel_repeats(repeat_tasks)
             _LOGGER.debug("Stopped reading %s: %s", dev.name, err)
-            if self._on_monitor_failure is not None:
+            # A teardown already running may have let a new device bind to
+            # this handler, and the failure callback would release that one.
+            if (
+                self._on_monitor_failure is not None
+                and self._monitor_task is asyncio.current_task()
+            ):
                 await self._on_monitor_failure(self)
 
     async def _async_cancel_repeats(

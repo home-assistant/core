@@ -241,6 +241,45 @@ async def test_user_step_hides_device_configured_by_raw_path(
     assert result["reason"] == "all_devices_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_step_offers_device_on_reused_yaml_descriptor(
+    hass: HomeAssistant,
+) -> None:
+    """Test a device on an eventN named by an old YAML descriptor is offered.
+
+    The imported entry has its own by-id path, and runtime matching ignores the
+    descriptor, so the device now on that node is unrelated.
+    """
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FAKE_BY_ID_BASENAME,
+        data={
+            CONF_DEVICE_PATH: FAKE_DEVICE_PATH,
+            CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
+            CONF_DEVICE_DESCRIPTOR: FAKE_DEVICE_REAL_PATH,
+        },
+    ).add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow._scan_input_devices_sync",
+            return_value=[MOCK_SCAN_RESULT[1]],
+        ),
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
+            side_effect=lambda p: {FAKE_DEVICE_PATH_2: FAKE_DEVICE_REAL_PATH}.get(p, p),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["data_schema"].schema[CONF_DEVICE_PATH].config["options"] == [
+        MOCK_SCAN_RESULT[1]
+    ]
+
+
 # --- Import step tests ---
 
 

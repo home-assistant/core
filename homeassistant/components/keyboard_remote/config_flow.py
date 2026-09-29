@@ -224,11 +224,10 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
 
         entries = self._async_current_entries()
         configured_ids = {entry.unique_id for entry in entries}
+        # Not the YAML descriptor: runtime matching ignores it, and its eventN
+        # may since belong to an unrelated device.
         configured_paths = [
-            path
-            for entry in entries
-            for key in (CONF_DEVICE_PATH, CONF_DEVICE_DESCRIPTOR)
-            if (path := entry.data.get(key))
+            path for entry in entries if (path := entry.data.get(CONF_DEVICE_PATH))
         ]
         available_devices = await self.hass.async_add_executor_job(
             _exclude_configured_devices,

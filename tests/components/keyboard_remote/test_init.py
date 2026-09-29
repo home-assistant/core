@@ -694,6 +694,66 @@ async def test_device_stop_monitoring_runs_once_when_callers_overlap(
     assert handler.dev is None
 
 
+async def test_late_read_failure_does_not_release_new_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_input_device: MagicMock,
+) -> None:
+    """Test the old monitor's read failure leaves a newly bound device alone.
+
+    A teardown clears the monitor task before awaiting ungrab, so a new device
+    can bind to the handler before the old monitor reports its read failure.
+    """
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    manager: KeyboardRemoteManager = hass.data[DOMAIN]
+    handler = manager._handlers[mock_config_entry.entry_id]
+
+    class _Reader:
+        """Read loop that fails with ENODEV once released."""
+
+        def __init__(self) -> None:
+            self.fail = asyncio.Event()
+
+        def __aiter__(self) -> _Reader:
+            return self
+
+        async def __anext__(self) -> None:
+            await self.fail.wait()
+            raise OSError(19, "No such device")
+
+    async def _yield_to_monitors() -> None:
+        # The fake read loops block, so async_block_till_done would never return
+        for _ in range(5):
+            await asyncio.sleep(0)
+
+    old_reader = _Reader()
+    mock_input_device.async_read_loop.return_value = old_reader
+    await handler.async_device_start_monitoring(mock_input_device)
+    await _yield_to_monitors()
+
+    # What a teardown does before its first await
+    handler._monitor_task = None
+    new_device = MagicMock()
+    new_device.name = FAKE_DEVICE_NAME
+    new_device.path = "/dev/input/event9"
+    new_device.async_read_loop.return_value = _Reader()
+    manager._active_handlers_by_descriptor["/dev/input/event9"] = handler
+    await handler.async_device_start_monitoring(new_device)
+    await _yield_to_monitors()
+
+    old_reader.fail.set()
+    await _yield_to_monitors()
+
+    assert handler.dev is new_device
+    assert handler.is_monitoring
+    assert manager._active_handlers_by_descriptor["/dev/input/event9"] is handler
+    new_device.close.assert_not_called()
+
+    await handler.async_device_stop_monitoring()
+
+
 # --- DeviceHandler input monitoring tests ---
 
 
