@@ -190,13 +190,22 @@ def _charging_state_value(entity: SkodaEntity) -> str | None:
     return _CHARGING_STATE_MAP.get(charging.status.state)
 
 
-def _remaining_time_to_full_charge_value(entity: SkodaEntity) -> float | None:
+def _remaining_time_to_full_charge_value(entity: SkodaEntity) -> datetime | None:
     charging = entity.open_api_charging
     if not charging or not charging.status:
         return None
     if charging.status.state != ChargingState.CHARGING:
         return None
-    return charging.status.remaining_time_to_fully_charged_in_minutes
+
+    target_timestamp = charging.status.fully_charged_at
+    if target_timestamp is None:
+        return None
+
+    if isinstance(target_timestamp, datetime):
+        return dt_util.as_utc(target_timestamp)
+
+    parsed_dt = dt_util.parse_datetime(str(target_timestamp))
+    return dt_util.as_utc(parsed_dt) if parsed_dt else None
 
 
 def _charge_type_value(entity: SkodaEntity) -> str | None:
@@ -339,8 +348,7 @@ SENSOR_TYPES: tuple[SkodaSensorEntityDescription, ...] = (
     SkodaSensorEntityDescription(
         key="remaining_time_to_full_battery",
         translation_key="remaining_time_to_full_battery",
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        device_class=SensorDeviceClass.DURATION,
+        device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:battery-charging-medium",
         required_capabilities=frozenset({VehicleCapability.CHARGING}),
         value_fn=_remaining_time_to_full_charge_value,
