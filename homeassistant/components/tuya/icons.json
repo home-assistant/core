@@ -228,6 +228,9 @@
       "smoke_amount": {
         "default": "mdi:smoke-detector"
       },
+      "speed": {
+        "default": "mdi:speedometer"
+      },
       "total_absorption_particles": {
         "default": "mdi:texture-box"
       },
