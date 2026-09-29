@@ -3622,3 +3622,68 @@ async def test_intent_tool_call_with_error_response(hass: HomeAssistant) -> None
 
     # No tool call should be stored since the entity could not be matched
     assert not tool_call_found
+
+
+@pytest.mark.parametrize(
+    ("first", "second"),
+    [("office", "bedroom"), ("bedroom", "office")],
+    ids=["office_first", "bedroom_first"],
+)
+@pytest.mark.usefixtures("init_components")
+async def test_intent_cache_is_per_device(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    first: str,
+    second: str,
+) -> None:
+    """Test that a cached recognition is not reused for a device in another area."""
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    satellites: dict[str, str] = {}
+    thermostats: dict[str, str] = {}
+    for area_name, temperature in (("office", 70), ("bedroom", 60)):
+        area = area_registry.async_get_or_create(area_name)
+
+        satellite = device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={("test", f"satellite_{area_name}")},
+        )
+        device_registry.async_update_device(satellite.id, area_id=area.id)
+        satellites[area_name] = satellite.id
+
+        thermostat = entity_registry.async_get_or_create(
+            "climate", "test", f"thermostat_{area_name}"
+        )
+        entity_registry.async_update_entity(thermostat.entity_id, area_id=area.id)
+        hass.states.async_set(
+            thermostat.entity_id,
+            "cool",
+            {
+                "friendly_name": f"{area_name} thermostat",
+                "current_temperature": temperature,
+            },
+        )
+        expose_entity(hass, thermostat.entity_id, True)
+        thermostats[area_name] = thermostat.entity_id
+
+    await hass.async_block_till_done()
+
+    # The sentence carries no area of its own, so it is resolved from the
+    # device the request came from.
+    for area_name in (first, second):
+        result = await conversation.async_converse(
+            hass,
+            "what is the temperature",
+            None,
+            Context(),
+            None,
+            device_id=satellites[area_name],
+        )
+
+        assert result.response.response_type is intent.IntentResponseType.QUERY_ANSWER
+        assert [state.entity_id for state in result.response.matched_states] == [
+            thermostats[area_name]
+        ]
