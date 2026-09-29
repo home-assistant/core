@@ -13967,7 +13967,7 @@
     'state': '0.12',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_apparent_power-entry]
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_apparent_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13983,7 +13983,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_apparent_power',
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_apparent_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -14012,23 +14012,23 @@
     'unit_of_measurement': 'kVA',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_apparent_power-state]
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_apparent_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Apparent power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '多路计量有线demo26082501 Apparent power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kVA',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_apparent_power',
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_apparent_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_current-entry]
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -14044,7 +14044,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_current',
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -14073,23 +14073,23 @@
     'unit_of_measurement': 'A',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_current-state]
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '多路计量有线demo26082501 Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_current',
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '53.86',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_power-entry]
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -14105,7 +14105,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_power',
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -14134,23 +14134,23 @@
     'unit_of_measurement': 'kW',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_power-state]
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '多路计量有线demo26082501 Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_power',
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '9.548',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_power_factor-entry]
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_power_factor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -14166,7 +14166,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_power_factor',
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_power_factor',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -14189,22 +14189,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_power_factor-state]
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_power_factor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Power factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '多路计量有线demo26082501 Power factor',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_power_factor',
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_power_factor',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.77',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_reactive_power-entry]
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_reactive_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -14220,7 +14220,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_reactive_power',
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_reactive_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -14249,78 +14249,20 @@
     'unit_of_measurement': 'kvar',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_reactive_power-state]
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_reactive_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Reactive power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '多路计量有线demo26082501 Reactive power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kvar',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_reactive_power',
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_reactive_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_voltage-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_voltage',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Voltage',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Voltage',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'voltage',
-    'unique_id': 'tuya.m2gpwqz5xb4chzqubdnzphase_s1voltage',
-    'unit_of_measurement': 'V',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_voltage-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Voltage',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_voltage',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '230.1',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_supply_frequency-entry]
@@ -14379,6 +14321,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Voltage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.m2gpwqz5xb4chzqubdnzphase_s1voltage',
+    'unit_of_measurement': 'V',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '多路计量有线demo26082501 Voltage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '230.1',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.eau_chaude_current-entry]

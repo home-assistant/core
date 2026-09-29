@@ -159,6 +159,7 @@ def _indexed_electricity_data(
             state_class=SensorStateClass.MEASUREMENT,
             wrapper_class=(ElectricityCurrentHexStringWrapper,),
             channel_index=index,
+            channel_condition=lambda device: DPCode.PHASE_S2 in device.status_range,
         ),
         TuyaSensorEntityDescription(
             key=f"{dpcode}power",
@@ -168,6 +169,7 @@ def _indexed_electricity_data(
             state_class=SensorStateClass.MEASUREMENT,
             wrapper_class=(ElectricityPowerHexStringWrapper,),
             channel_index=index,
+            channel_condition=lambda device: DPCode.PHASE_S2 in device.status_range,
         ),
         TuyaSensorEntityDescription(
             key=f"{dpcode}voltage",
@@ -177,6 +179,7 @@ def _indexed_electricity_data(
             state_class=SensorStateClass.MEASUREMENT,
             wrapper_class=(ElectricityVoltageHexStringWrapper,),
             channel_index=index,
+            channel_condition=lambda device: DPCode.PHASE_S2 in device.status_range,
         ),
         TuyaSensorEntityDescription(
             key=f"{dpcode}reactivepower",
@@ -186,6 +189,7 @@ def _indexed_electricity_data(
             state_class=SensorStateClass.MEASUREMENT,
             wrapper_class=(ElectricityReactivePowerHexStringWrapper,),
             channel_index=index,
+            channel_condition=lambda device: DPCode.PHASE_S2 in device.status_range,
         ),
         TuyaSensorEntityDescription(
             key=f"{dpcode}apparentpower",
@@ -195,6 +199,7 @@ def _indexed_electricity_data(
             state_class=SensorStateClass.MEASUREMENT,
             wrapper_class=(ElectricityApparentPowerHexStringWrapper,),
             channel_index=index,
+            channel_condition=lambda device: DPCode.PHASE_S2 in device.status_range,
         ),
         TuyaSensorEntityDescription(
             key=f"{dpcode}powerfactor",
@@ -204,6 +209,7 @@ def _indexed_electricity_data(
             state_class=SensorStateClass.MEASUREMENT,
             wrapper_class=(ElectricityPowerFactorHexStringWrapper,),
             channel_index=index,
+            channel_condition=lambda device: DPCode.PHASE_S2 in device.status_range,
         ),
     )
 
@@ -1919,7 +1925,6 @@ async def async_setup_entry(
                     (DOMAIN, device.id),
                     config_entry_id=entry.entry_id,
                 )
-                assert parent_device_id is not None
                 entities.extend(
                     TuyaSensorEntity(
                         device,

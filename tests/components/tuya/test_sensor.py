@@ -123,6 +123,35 @@ async def test_indexed_phase_child_devices(
     )
 
 
+@pytest.mark.parametrize("mock_device_code", ["zndb_uqzhc4bx5zqwpg2m"])
+async def test_single_indexed_phase_stays_on_parent(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Keep a single reported channel on the physical meter."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    parent = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_device.id), mock_config_entry.entry_id
+    )
+    assert parent is not None
+    assert not dr.async_entries_for_parent_device(device_registry, parent.id)
+    assert (
+        len(
+            [
+                entry
+                for entry in er.async_entries_for_device(entity_registry, parent.id)
+                if "phase_s1" in entry.unique_id
+            ]
+        )
+        == 6
+    )
+
+
 @pytest.mark.parametrize(
     "mock_device_code",
     ["mcs_8yhypbo7"],
