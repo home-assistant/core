@@ -34,6 +34,8 @@ async def async_setup_entry(
     known_devices: set[DeviceId] = set()
 
     def _check_device() -> None:
+        # Forget devices the coordinator removed so they are re-added if they return.
+        known_devices.intersection_update(lhm_coordinator.tracked_device_ids)
         current_devices = set(lhm_coordinator.data.main_device_ids_and_names)
         new_devices = current_devices - known_devices
         if new_devices:
