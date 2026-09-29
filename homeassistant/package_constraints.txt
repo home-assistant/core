@@ -122,6 +122,12 @@ uuid==1000000000.0.0
 anyio==4.14.2
 h11==0.16.0
 
+# Many libraries still depend on httpx/httpcore. Those imports are aliased to
+# httpx2/httpcore2 at runtime, but pin the installed packages so a dependency
+# cannot pull in an untested httpx version alongside httpx2.
+httpcore==1.0.9
+httpx==0.28.1
+
 # Ensure we run compatible with musllinux build env
 numpy==2.3.2
 pandas==2.3.3
