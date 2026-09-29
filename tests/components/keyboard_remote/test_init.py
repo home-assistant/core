@@ -516,6 +516,40 @@ async def test_device_stop_monitoring_ungrab_oserror(
     assert handler.dev is None
 
 
+async def test_device_stop_monitoring_runs_once_when_callers_overlap(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_input_device: MagicMock,
+) -> None:
+    """Test a read failure during the DELETE teardown does not tear down twice.
+
+    On unplug the DELETE event awaits ungrab while the monitor task hits
+    ENODEV. A second teardown would pass remove_reader the closed fd of -1,
+    which raises and kills the inotify loop that called it.
+    """
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
+    events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
+
+    await handler.async_device_start_monitoring(mock_input_device)
+    await hass.async_block_till_done()
+
+    async def _read_fails_during_ungrab(*args: object) -> None:
+        await handler.async_device_stop_monitoring(from_monitor_task=True)
+
+    with patch.object(
+        hass, "async_add_executor_job", side_effect=_read_fails_during_ungrab
+    ):
+        await handler.async_device_stop_monitoring()
+        await hass.async_block_till_done()
+
+    mock_input_device.close.assert_called_once()
+    assert len(events) == 1
+    assert handler.dev is None
+
+
 # --- DeviceHandler input monitoring tests ---
 
 

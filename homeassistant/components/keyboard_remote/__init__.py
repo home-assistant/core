@@ -657,11 +657,17 @@ class DeviceHandler:
         down after a read failure. It cannot wait for its own completion, and
         ungrabbing a device that just errored would only raise again.
         """
-        if self._monitor_task is None:
+        if (task := self._monitor_task) is None:
             return
 
         dev = self.dev
         assert dev is not None
+        descriptor = self._descriptor
+
+        # Claim the teardown before the first await. On unplug the DELETE event
+        # and the monitor task's read failure both land here, and a second pass
+        # would call remove_reader on the fd the first one already closed.
+        self._monitor_task = None
 
         if not from_monitor_task:
             with suppress(OSError):
@@ -670,8 +676,6 @@ class DeviceHandler:
         # triggering unhandled exceptions inside evdev coroutines
         self.hass.loop.remove_reader(dev.fileno())
         dev.close()
-        task = self._monitor_task
-        self._monitor_task = None
         if not from_monitor_task:
             if not task.done():
                 task.cancel()
@@ -680,12 +684,15 @@ class DeviceHandler:
         self.hass.bus.async_fire(
             EVENT_KEYBOARD_REMOTE_DISCONNECTED,
             {
-                CONF_DEVICE_DESCRIPTOR: self._descriptor,
+                CONF_DEVICE_DESCRIPTOR: descriptor,
                 CONF_DEVICE_NAME: dev.name,
             },
         )
         _LOGGER.debug("Keyboard disconnected, %s", dev.name)
-        self.dev = None
+        # The handler may already have been given a new device while this
+        # teardown waited on ungrab.
+        if self.dev is dev:
+            self.dev = None
 
     async def _async_keyrepeat(
         self, dev: InputDevice, code: int, delay: float, repeat: float
