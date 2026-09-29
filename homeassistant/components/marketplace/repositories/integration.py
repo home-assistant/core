@@ -75,23 +75,23 @@ def _check_loadable_manifest(directory: Path, domain: str | None) -> None:
     """Refuse an installed manifest.json the loader would not load."""
     try:
         manifest = json_loads_object(
-            (directory / RepositoryFile.MAINIFEST_JSON).read_text(encoding="utf-8")
+            (directory / RepositoryFile.MANIFEST_JSON).read_text(encoding="utf-8")
         )
     except (OSError, ValueError) as exception:
         raise MarketplaceError(
-            f"The installed content has no usable {RepositoryFile.MAINIFEST_JSON}"
+            f"The installed content has no usable {RepositoryFile.MANIFEST_JSON}"
             f" where Home Assistant looks for it: {exception}"
         ) from exception
 
     if manifest.get("domain") != domain:
         raise MarketplaceError(
-            f"The {RepositoryFile.MAINIFEST_JSON} of the installed content is for"
+            f"The {RepositoryFile.MANIFEST_JSON} of the installed content is for"
             f" '{manifest.get('domain')}', not '{domain}'"
         )
 
     if not _is_loadable_version(manifest.get("version")):
         raise MarketplaceError(
-            f"The {RepositoryFile.MAINIFEST_JSON} of the installed content has no valid"
+            f"The {RepositoryFile.MANIFEST_JSON} of the installed content has no valid"
             " version, Home Assistant would not load it"
         )
 
@@ -292,12 +292,12 @@ class IntegrationRepository(Repository):
 
         except KeyError as exception:
             self.validate.errors.append(
-                f"Missing expected key '{exception}' in {RepositoryFile.MAINIFEST_JSON}"
+                f"Missing expected key '{exception}' in {RepositoryFile.MANIFEST_JSON}"
             )
             LOGGER.error(
                 "Missing expected key '%s' in '%s'",
                 exception,
-                RepositoryFile.MAINIFEST_JSON,
+                RepositoryFile.MANIFEST_JSON,
             )
 
     @override
@@ -342,8 +342,8 @@ class IntegrationRepository(Repository):
     def _integration_manifest_path(self) -> str:
         """Return the path of the manifest.json in the repository."""
         if self.repository_manifest.content_in_root:
-            return RepositoryFile.MAINIFEST_JSON
-        return f"{self.content.path.remote}/{RepositoryFile.MAINIFEST_JSON}"
+            return RepositoryFile.MANIFEST_JSON
+        return f"{self.content.path.remote}/{RepositoryFile.MANIFEST_JSON}"
 
     async def async_get_integration_manifest(
         self, ref: str | None = None
@@ -353,7 +353,7 @@ class IntegrationRepository(Repository):
 
         if manifest_path not in (entry.path for entry in self.tree):
             raise MarketplaceError(
-                f"No {RepositoryFile.MAINIFEST_JSON} file found '{manifest_path}'"
+                f"No {RepositoryFile.MANIFEST_JSON} file found '{manifest_path}'"
             )
 
         target_ref = ref or self.version_to_install()
@@ -379,7 +379,7 @@ class IntegrationRepository(Repository):
 
         if manifest_path not in (entry.path for entry in self.tree):
             raise MarketplaceError(
-                f"No {RepositoryFile.MAINIFEST_JSON} file found '{manifest_path}'"
+                f"No {RepositoryFile.MANIFEST_JSON} file found '{manifest_path}'"
             )
 
         return await self._async_download_integration_manifest(version, manifest_path)

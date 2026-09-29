@@ -33,7 +33,7 @@ class RepositoryFile(StrEnum):
     """Repository file names."""
 
     REPOSITORY_MANIFEST = "hacs.json"
-    MAINIFEST_JSON = "manifest.json"
+    MANIFEST_JSON = "manifest.json"
 
 
 class LovelaceMode(StrEnum):

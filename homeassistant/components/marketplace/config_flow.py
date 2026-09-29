@@ -71,7 +71,7 @@ class MarketplaceConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.flow_id,
                 )
             except GitHubException as exception:
-                LOGGER.exception(exception)
+                LOGGER.error("Could not register with GitHub: %s", exception)
                 return self.async_abort(reason="could_not_register")
 
         device = self.device

@@ -1,4 +1,4 @@
-"""Register info websocket commands."""
+"""WebSocket commands for the repositories the catalog marks as critical."""
 
 from typing import TYPE_CHECKING, Any
 

@@ -2,7 +2,7 @@
 
 
 class MarketplaceError(Exception):
-    """Super basic."""
+    """The base of every error the Marketplace raises."""
 
 
 class RepositoryArchivedError(MarketplaceError):
@@ -48,7 +48,7 @@ class NotModifiedError(MarketplaceError):
 
 
 class ExpectedError(MarketplaceError):
-    """For stuff that are expected."""
+    """For a repository the Marketplace skips on purpose."""
 
 
 class RepositoryExistsError(MarketplaceError):
@@ -56,11 +56,11 @@ class RepositoryExistsError(MarketplaceError):
 
 
 class ExecutionInProgressError(MarketplaceError):
-    """Exception to raise if execution is still in progress."""
+    """For a queue that is already running."""
 
 
 class AppRepositoryError(MarketplaceError):
-    """Exception to raise when user tries to add an app repository."""
+    """For a repository of apps, the Marketplace does not manage those."""
 
     exception_message = (
         "The repository does not seem to be an integration, "
@@ -73,7 +73,7 @@ class AppRepositoryError(MarketplaceError):
 
 
 class CoreRepositoryError(MarketplaceError):
-    """Exception to raise when user tries to add the home-assistant/core repository."""
+    """For the repository of Home Assistant itself."""
 
     exception_message = (
         "You can not add homeassistant/core, to use core integrations "

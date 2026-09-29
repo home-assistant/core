@@ -1,4 +1,4 @@
-"""Register info websocket commands."""
+"""WebSocket commands for the list of repositories."""
 
 from typing import TYPE_CHECKING, Any
 
@@ -253,7 +253,7 @@ async def marketplace_repositories_remove(
     msg: dict[str, Any],
     marketplace: MarketplaceManager,
 ) -> None:
-    """Remove custom repositoriy."""
+    """Remove a custom repository from the list."""
     repository = marketplace.repositories.get_by_id(msg["repository"])
     if repository is None:
         send_repository_not_found(connection, msg["id"], msg["repository"])

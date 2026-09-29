@@ -1,4 +1,4 @@
-"""Register info websocket commands."""
+"""WebSocket commands for a single repository."""
 
 from typing import TYPE_CHECKING, Any
 

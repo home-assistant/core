@@ -534,7 +534,7 @@ class Repository:
 
     @property
     def display_version_or_commit(self) -> str:
-        """Does the repositoriy use releases or commits?"""
+        """Return if the repository is installed by version or by commit."""
         if self.data.releases:
             version_or_commit = "version"
         else:
