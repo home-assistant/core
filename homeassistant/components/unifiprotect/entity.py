@@ -129,14 +129,14 @@ def _async_public_only_entities(
 ) -> list[BaseProtectEntity]:
     """Build the entities a public device supports without a private fill.
 
-    Only descriptions reading a public value qualify; the required field and
-    the capability are checked against the public object. The public API has
-    no permission model, so ``ufp_perm`` does not apply.
+    ``NO_WRITE`` mirrors are skipped: an API key can always write, so the
+    writable entity already exposes the setting.
     """
     entities: list[BaseProtectEntity] = []
     for description in descs:
         if (
             not description.is_public_value
+            or description.ufp_perm is PermRequired.NO_WRITE
             or not description.has_required_public(public)
             or not _async_capability_supported(public, None, description)
         ):
