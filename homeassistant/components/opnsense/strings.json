@@ -42,6 +42,13 @@
       }
     }
   },
+  "entity": {
+    "update": {
+      "firmware": {
+        "name": "Firmware"
+      }
+    }
+  },
   "exceptions": {
     "cannot_connect": {
       "message": "Connection failure while connecting to OPNsense API endpoint at {url}"

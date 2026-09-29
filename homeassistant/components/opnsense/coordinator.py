@@ -1,7 +1,8 @@
 """Coordinator for OPNsense device tracker updates."""
 
+from datetime import timedelta
 import logging
-from typing import override
+from typing import Any, override
 
 from aiopnsense import (
     OPNsenseBelowMinFirmware,
@@ -80,3 +81,30 @@ class OPNsenseDeviceTrackerCoordinator(DataUpdateCoordinator[DeviceDetailsByMAC]
             ) from err
 
         return self._get_mac_addrs(devices)
+
+
+class OPNsenseFirmwareCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Poll OPNsense for router firmware updates."""
+
+    def __init__(
+        self, hass: HomeAssistant, entry: OPNsenseConfigEntry, client: OPNsenseClient
+    ) -> None:
+        """Initialize the firmware coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name="OPNsense firmware",
+            update_interval=timedelta(hours=1),
+            config_entry=entry,
+        )
+        self.client = client
+
+    @override
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Fetch firmware status."""
+        try:
+            return dict(await self.client.get_firmware_update_info())
+        except (OPNsenseConnectionError, OPNsenseTimeoutError) as err:
+            raise UpdateFailed(
+                f"Error communicating with OPNsense router: {err}"
+            ) from err

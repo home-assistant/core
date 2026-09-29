@@ -41,7 +41,7 @@ CONFIG_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
-PLATFORMS = [Platform.DEVICE_TRACKER]
+PLATFORMS = [Platform.DEVICE_TRACKER, Platform.UPDATE]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
