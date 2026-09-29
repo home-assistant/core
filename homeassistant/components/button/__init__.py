@@ -15,18 +15,18 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
+    DATA_COMPONENT,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     SERVICE_PRESS,
     ButtonDeviceClass,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[ButtonEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -45,11 +45,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await component.async_setup(config)
 
-    component.async_register_entity_service(
-        SERVICE_PRESS,
-        None,
-        "_async_press_action",
-    )
+    async_setup_services(hass)
 
     return True
 

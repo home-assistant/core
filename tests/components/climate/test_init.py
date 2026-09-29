@@ -7,12 +7,7 @@ from unittest.mock import MagicMock, Mock
 import probatio
 import pytest
 
-from homeassistant.components.climate import (
-    DOMAIN,
-    SET_TEMPERATURE_SCHEMA,
-    ClimateEntity,
-    HVACMode,
-)
+from homeassistant.components.climate import DOMAIN, ClimateEntity, HVACMode
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -36,6 +31,7 @@ from homeassistant.components.climate.const import (
     SWING_HORIZONTAL_ON,
     ClimateEntityFeature,
 )
+from homeassistant.components.climate.services import SET_TEMPERATURE_SCHEMA
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError

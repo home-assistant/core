@@ -52,7 +52,11 @@ from .alarm_control_panel import (
     TemplateCodeFormat,
     async_create_preview_alarm_control_panel,
 )
-from .binary_sensor import async_create_preview_binary_sensor
+from .binary_sensor import (
+    CONF_DELAY_OFF,
+    CONF_DELAY_ON,
+    async_create_preview_binary_sensor,
+)
 from .climate import (
     CONF_CURRENT_TEMPERATURE,
     CONF_HVAC_ACTION,
@@ -196,6 +200,14 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
         schema |= _SCHEMA_STATE | {
             probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
                 selector.DeviceClassSelectorConfig(domain=Platform.BINARY_SENSOR),
+            ),
+        }
+        additional_options |= {
+            probatio.Optional(CONF_DELAY_ON): selector.DurationSelector(
+                selector.DurationSelectorConfig(allow_negative=False)
+            ),
+            probatio.Optional(CONF_DELAY_OFF): selector.DurationSelector(
+                selector.DurationSelectorConfig(allow_negative=False)
             ),
         }
 

@@ -5,11 +5,13 @@ import functools as ft
 import logging
 from typing import Any, Literal, final, override
 
-import probatio
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
+
+# ATTR_TEMPERATURE and the SERVICE_* constants are re-exported for integrations
+# importing them from the climate component root.
+from homeassistant.const import (  # noqa: F401
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
@@ -18,14 +20,13 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (  # noqa: F401
@@ -51,6 +52,7 @@ from .const import (  # noqa: F401
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_STEP,
+    DATA_COMPONENT,
     DOMAIN,
     FAN_AUTO,
     FAN_DIFFUSE,
@@ -91,10 +93,10 @@ from .const import (  # noqa: F401
     HVACAction,
     HVACMode,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[ClimateEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -105,25 +107,6 @@ DEFAULT_MAX_TEMP = 35
 DEFAULT_MIN_HUMIDITY = 30
 DEFAULT_MAX_HUMIDITY = 99
 
-CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE, ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH]
-
-SET_TEMPERATURE_SCHEMA = probatio.All(
-    cv.has_at_least_one_key(
-        ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW
-    ),
-    cv.make_entity_service_schema(
-        {
-            probatio.Exclusive(ATTR_TEMPERATURE, "temperature"): probatio.Coerce(float),
-            probatio.Inclusive(ATTR_TARGET_TEMP_HIGH, "temperature"): probatio.Coerce(
-                float
-            ),
-            probatio.Inclusive(ATTR_TARGET_TEMP_LOW, "temperature"): probatio.Coerce(
-                float
-            ),
-            probatio.Optional(ATTR_HVAC_MODE): probatio.Coerce(HVACMode),
-        }
-    ),
-)
 
 # mypy: disallow-any-generics
 
@@ -135,68 +118,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await component.async_setup(config)
 
-    component.async_register_entity_service(
-        SERVICE_TURN_ON,
-        None,
-        "async_turn_on",
-        [ClimateEntityFeature.TURN_ON],
-    )
-    component.async_register_entity_service(
-        SERVICE_TURN_OFF,
-        None,
-        "async_turn_off",
-        [ClimateEntityFeature.TURN_OFF],
-    )
-    component.async_register_entity_service(
-        SERVICE_TOGGLE,
-        None,
-        "async_toggle",
-        [ClimateEntityFeature.TURN_OFF, ClimateEntityFeature.TURN_ON],
-    )
-    component.async_register_entity_service(
-        SERVICE_SET_HVAC_MODE,
-        {probatio.Required(ATTR_HVAC_MODE): probatio.Coerce(HVACMode)},
-        "async_handle_set_hvac_mode_service",
-    )
-    component.async_register_entity_service(
-        SERVICE_SET_PRESET_MODE,
-        {probatio.Required(ATTR_PRESET_MODE): cv.string},
-        "async_handle_set_preset_mode_service",
-        [ClimateEntityFeature.PRESET_MODE],
-    )
-    component.async_register_entity_service(
-        SERVICE_SET_TEMPERATURE,
-        SET_TEMPERATURE_SCHEMA,
-        async_service_temperature_set,
-        [
-            ClimateEntityFeature.TARGET_TEMPERATURE,
-            ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
-        ],
-    )
-    component.async_register_entity_service(
-        SERVICE_SET_HUMIDITY,
-        {probatio.Required(ATTR_HUMIDITY): probatio.Coerce(int)},
-        async_service_humidity_set,
-        [ClimateEntityFeature.TARGET_HUMIDITY],
-    )
-    component.async_register_entity_service(
-        SERVICE_SET_FAN_MODE,
-        {probatio.Required(ATTR_FAN_MODE): cv.string},
-        "async_handle_set_fan_mode_service",
-        [ClimateEntityFeature.FAN_MODE],
-    )
-    component.async_register_entity_service(
-        SERVICE_SET_SWING_MODE,
-        {probatio.Required(ATTR_SWING_MODE): cv.string},
-        "async_handle_set_swing_mode_service",
-        [ClimateEntityFeature.SWING_MODE],
-    )
-    component.async_register_entity_service(
-        SERVICE_SET_SWING_HORIZONTAL_MODE,
-        {probatio.Required(ATTR_SWING_HORIZONTAL_MODE): cv.string},
-        "async_handle_set_swing_horizontal_mode_service",
-        [ClimateEntityFeature.SWING_HORIZONTAL_MODE],
-    )
+    async_setup_services(hass)
 
     return True
 
@@ -760,102 +682,3 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def target_humidity_step(self) -> int | None:
         """Return the supported step of humidity."""
         return self._attr_target_humidity_step
-
-
-async def async_service_humidity_set(
-    entity: ClimateEntity, service_call: ServiceCall
-) -> None:
-    """Handle set humidity service."""
-    humidity = service_call.data[ATTR_HUMIDITY]
-    min_humidity = entity.min_humidity
-    max_humidity = entity.max_humidity
-    _LOGGER.debug(
-        "Check valid humidity %d in range %d - %d",
-        humidity,
-        min_humidity,
-        max_humidity,
-    )
-    if humidity < min_humidity or humidity > max_humidity:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="humidity_out_of_range",
-            translation_placeholders={
-                "humidity": str(humidity),
-                "min_humidity": str(min_humidity),
-                "max_humidity": str(max_humidity),
-            },
-        )
-
-    await entity.async_set_humidity(humidity)
-
-
-async def async_service_temperature_set(
-    entity: ClimateEntity, service_call: ServiceCall
-) -> None:
-    """Handle set temperature service."""
-    if (
-        ATTR_TEMPERATURE in service_call.data
-        and not entity.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE
-    ):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="missing_target_temperature_entity_feature",
-        )
-    if (
-        ATTR_TARGET_TEMP_LOW in service_call.data
-        and not entity.supported_features
-        & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-    ):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="missing_target_temperature_range_entity_feature",
-        )
-
-    hass = entity.hass
-    kwargs: dict[str, Any] = {}
-    min_temp = entity.min_temp
-    max_temp = entity.max_temp
-    temp_unit = entity.temperature_unit
-
-    if (
-        (target_low_temp := service_call.data.get(ATTR_TARGET_TEMP_LOW))
-        and (target_high_temp := service_call.data.get(ATTR_TARGET_TEMP_HIGH))
-        and target_low_temp > target_high_temp
-    ):
-        # Ensure target_low_temp is not higher than target_high_temp.
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="low_temp_higher_than_high_temp",
-        )
-
-    for value, temp in service_call.data.items():
-        if value in CONVERTIBLE_ATTRIBUTE:
-            kwargs[value] = check_temp = TemperatureConverter.convert(
-                temp, hass.config.units.temperature_unit, temp_unit
-            )
-
-            _LOGGER.debug(
-                "Check valid temperature %d %s (%d %s) in range %d %s - %d %s",
-                check_temp,
-                entity.temperature_unit,
-                temp,
-                hass.config.units.temperature_unit,
-                min_temp,
-                temp_unit,
-                max_temp,
-                temp_unit,
-            )
-            if check_temp < min_temp or check_temp > max_temp:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="temp_out_of_range",
-                    translation_placeholders={
-                        "check_temp": str(check_temp),
-                        "min_temp": str(min_temp),
-                        "max_temp": str(max_temp),
-                    },
-                )
-        else:
-            kwargs[value] = temp
-
-    await entity.async_set_temperature(**kwargs)
