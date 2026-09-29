@@ -416,13 +416,14 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
 
     @callback
     def _parse_float_payload(
-        self, msg: ReceiveMessage, template_name: str
+        self, msg: ReceiveMessage, template_name: str, attribute: str
     ) -> float | UndefinedType | None:
         """Render and parse a numeric payload, UNDEFINED means ignore the update."""
         payload = self.render_template(msg, template_name)
         if not payload:
             _LOGGER.debug(
-                "Invalid empty payload for %s, ignoring update", template_name
+                "Invalid empty payload for attribute %s, ignoring update",
+                attribute,
             )
             return UNDEFINED
         if payload == PAYLOAD_NONE:
@@ -437,7 +438,9 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
     def _handle_current_temperature_received(self, msg: ReceiveMessage) -> None:
         """Handle receiving the current temperature via MQTT."""
         if (
-            value := self._parse_float_payload(msg, CONF_CURRENT_TEMP_TEMPLATE)
+            value := self._parse_float_payload(
+                msg, CONF_CURRENT_TEMP_TEMPLATE, "_attr_current_temperature"
+            )
         ) is not UNDEFINED:
             self._attr_current_temperature = value
 
@@ -660,7 +663,9 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     def _handle_target_temperature_received(self, msg: ReceiveMessage) -> None:
         """Handle receiving the target temperature via MQTT."""
         if (
-            value := self._parse_float_payload(msg, CONF_TEMP_STATE_TEMPLATE)
+            value := self._parse_float_payload(
+                msg, CONF_TEMP_STATE_TEMPLATE, "_attr_target_temperature"
+            )
         ) is not UNDEFINED:
             self._attr_target_temperature = value
 
@@ -668,7 +673,9 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     def _handle_target_temperature_low_received(self, msg: ReceiveMessage) -> None:
         """Handle receiving the target temperature low via MQTT."""
         if (
-            value := self._parse_float_payload(msg, CONF_TEMP_LOW_STATE_TEMPLATE)
+            value := self._parse_float_payload(
+                msg, CONF_TEMP_LOW_STATE_TEMPLATE, "_attr_target_temperature_low"
+            )
         ) is not UNDEFINED:
             self._attr_target_temperature_low = value
 
@@ -676,7 +683,9 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     def _handle_target_temperature_high_received(self, msg: ReceiveMessage) -> None:
         """Handle receiving the target temperature high via MQTT."""
         if (
-            value := self._parse_float_payload(msg, CONF_TEMP_HIGH_STATE_TEMPLATE)
+            value := self._parse_float_payload(
+                msg, CONF_TEMP_HIGH_STATE_TEMPLATE, "_attr_target_temperature_high"
+            )
         ) is not UNDEFINED:
             self._attr_target_temperature_high = value
 
@@ -684,7 +693,9 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     def _handle_current_humidity_received(self, msg: ReceiveMessage) -> None:
         """Handle receiving the current humidity via MQTT."""
         if (
-            value := self._parse_float_payload(msg, CONF_CURRENT_HUMIDITY_TEMPLATE)
+            value := self._parse_float_payload(
+                msg, CONF_CURRENT_HUMIDITY_TEMPLATE, "_attr_current_humidity"
+            )
         ) is not UNDEFINED:
             self._attr_current_humidity = value
 
@@ -692,7 +703,9 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     def _handle_target_humidity_received(self, msg: ReceiveMessage) -> None:
         """Handle receiving the target humidity via MQTT."""
         if (
-            value := self._parse_float_payload(msg, CONF_HUMIDITY_STATE_TEMPLATE)
+            value := self._parse_float_payload(
+                msg, CONF_HUMIDITY_STATE_TEMPLATE, "_attr_target_humidity"
+            )
         ) is not UNDEFINED:
             self._attr_target_humidity = value
 

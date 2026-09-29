@@ -291,7 +291,9 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
     def _handle_target_temperature_received(self, msg: ReceiveMessage) -> None:
         """Handle receiving the target temperature via MQTT."""
         if (
-            value := self._parse_float_payload(msg, CONF_TEMP_STATE_TEMPLATE)
+            value := self._parse_float_payload(
+                msg, CONF_TEMP_STATE_TEMPLATE, "_attr_target_temperature"
+            )
         ) is not UNDEFINED:
             self._attr_target_temperature = value
 
