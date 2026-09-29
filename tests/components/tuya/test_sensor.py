@@ -362,3 +362,52 @@ async def test_temp_unit_convert_sensor_invalid(
         "Device class temperature ignored for incompatible unit  in "
         "sensor entity tuya.zuqudhznfzttizpgbrnztemp_current"
     ) in caplog.text
+
+
+@pytest.mark.parametrize("mock_device_code", ["hwsb_ircs2n82vgrozoew"])
+async def test_hwsb_sensors_with_quirk(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    notification_helper: TuyaNotificationHelper,
+) -> None:
+    """Test HWSB outdoor equipment sensors with quirk applied."""
+    mock_device.status["speed_current"] = 80
+    mock_device.status["flow_rate"] = 45
+    mock_device.status["add_ele"] = 0
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state_power = hass.states.get("sensor.inverflow_power")
+    assert state_power is not None
+    assert state_power.state == "405.0"
+    assert state_power.attributes["unit_of_measurement"] == "W"
+    assert state_power.attributes["device_class"] == "power"
+
+    state_speed = hass.states.get("sensor.inverflow_speed")
+    assert state_speed is not None
+    assert state_speed.state == "80.0"
+    assert state_speed.attributes["unit_of_measurement"] == "%"
+
+    state_flow = hass.states.get("sensor.inverflow_volume_flow_rate")
+    assert state_flow is not None
+    assert state_flow.state == "45.0"
+    assert state_flow.attributes["unit_of_measurement"] == "gal/min"
+    assert state_flow.attributes["device_class"] == "volume_flow_rate"
+
+    state_energy = hass.states.get("sensor.inverflow_total_energy")
+    assert state_energy is not None
+    assert state_energy.state == "0"
+    assert state_energy.attributes["unit_of_measurement"] == "kWh"
+    assert state_energy.attributes["device_class"] == "energy"
+    assert state_energy.attributes["state_class"] == SensorStateClass.TOTAL_INCREASING
+
+    # Send energy delta update (1250 with scale 2 -> 12.5 kWh)
+    await notification_helper.async_send_device_update(
+        mock_device,
+        {"add_ele": 1250},
+        {"add_ele": 1000},
+    )
+    state_energy = hass.states.get("sensor.inverflow_total_energy")
+    assert state_energy is not None
+    assert float(state_energy.state) == pytest.approx(12.5)
