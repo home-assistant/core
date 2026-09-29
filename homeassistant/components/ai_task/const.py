@@ -20,9 +20,11 @@ DATA_MEDIA_SOURCE: HassKey[local_source.LocalSource] = HassKey(f"{DOMAIN}_media_
 IMAGE_DIR: Final = "image"
 IMAGE_EXPIRY_TIME = 60 * 60  # 1 hour
 
+SERVICE_CLEAR_IMAGES = "clear_images"
 SERVICE_GENERATE_DATA = "generate_data"
 SERVICE_GENERATE_IMAGE = "generate_image"
 
+ATTR_DAYS: Final = "days"
 ATTR_INSTRUCTIONS: Final = "instructions"
 ATTR_TASK_NAME: Final = "task_name"
 ATTR_STRUCTURE: Final = "structure"
