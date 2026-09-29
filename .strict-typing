@@ -370,6 +370,7 @@ homeassistant.components.litterrobot.*
 homeassistant.components.llama_cpp.*
 homeassistant.components.llm.*
 homeassistant.components.local_ip.*
+homeassistant.components.local_timer_list.*
 homeassistant.components.local_todo.*
 homeassistant.components.lock.*
 homeassistant.components.logbook.*
@@ -612,6 +613,7 @@ homeassistant.components.tilt_ble.*
 homeassistant.components.time.*
 homeassistant.components.time_date.*
 homeassistant.components.timer.*
+homeassistant.components.timer_list.*
 homeassistant.components.tod.*
 homeassistant.components.todo.*
 homeassistant.components.tolo.*
