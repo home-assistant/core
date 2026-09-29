@@ -295,7 +295,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 self._clear_announcement_state()
                 self._announce_lock.release()
             raise
-        except (HeosError, ValueError):
+        except HeosError, ValueError:
             if self._announce_restore_state:
                 await self._restore_state()
             else:
@@ -379,7 +379,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
         try:
             volume = float(extra["volume"])
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return HeosMediaPlayer._raise_invalid_announcement_volume()
         if not math.isfinite(volume) or not 0 <= volume <= 1:
             raise ValueError("Announcement volume must be between 0 and 1")
@@ -431,9 +431,8 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         try:
             # Remove TTS from queue if it was added.
             if state["tts_url"] and state.get("announcement_started", False):
-                if (
-                    self._player.state == PlayState.PLAY
-                    and (is_external_source or not state["was_playing"])
+                if self._player.state == PlayState.PLAY and (
+                    is_external_source or not state["was_playing"]
                 ):
                     # Stop before removing the current URL so HEOS cannot
                     # automatically advance into its queue. This also keeps a
@@ -508,18 +507,23 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Restore state and cancel announcement tasks when removed."""
-        tasks = (
-            self._announce_completion_task,
-            self._announce_watchdog_task,
-        )
-        for task in tasks:
-            if task and not task.done():
-                task.cancel()
+        completion_task = self._announce_completion_task
+        if (
+            completion_task
+            and completion_task is not asyncio.current_task()
+            and not completion_task.done()
+        ):
+            try:
+                # The completion task may already be restoring the player.
+                await asyncio.shield(completion_task)
+            except asyncio.CancelledError:
+                pass
 
-        await asyncio.gather(
-            *(task for task in tasks if task and task is not asyncio.current_task()),
-            return_exceptions=True,
-        )
+        watchdog_task = self._announce_watchdog_task
+        if watchdog_task and not watchdog_task.done():
+            watchdog_task.cancel()
+            await asyncio.gather(watchdog_task, return_exceptions=True)
+
         self._announce_completion_task = None
         self._announce_watchdog_task = None
 
@@ -951,6 +955,14 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
         player_ids: list[int] = [self._player.player_id]
+        # Keep the members of the group this player already leads. HEOS replaces
+        # the group with the players provided, so members that are not sent
+        # again are removed when another player is added to the group.
+        for group in self.coordinator.heos.groups.values():
+            if group.lead_player_id == self._player.player_id:
+                player_ids.extend(group.member_player_ids)
+                break
+
         # Resolve entity_ids to player_ids
         entity_registry = er.async_get(self.hass)
         for entity_id in group_members:
