@@ -2687,7 +2687,7 @@ pythinkingcleaner==0.0.3
 python-MotionMount==2.3.0
 
 # homeassistant.components.aidot
-python-aidot==0.3.56
+python-aidot==0.3.58
 
 # homeassistant.components.awair
 python-awair==0.2.5
@@ -2715,9 +2715,6 @@ python-duco-connectivity==0.18.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.4.1
-
-# homeassistant.components.etherscan
-python-etherscan-api==0.0.3
 
 # homeassistant.components.familyhub
 python-family-hub-local==0.0.2
