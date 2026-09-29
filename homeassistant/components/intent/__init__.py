@@ -351,9 +351,7 @@ class GetStateIntentHandler(intent.IntentHandler):
                 )
             )
         ):
-            # Don't try to answer questions for certain errors.
-            # Other match failure reasons are OK, except a named entity that
-            # exists but is not exposed.
+            # Don't try to answer questions for certain errors or for named entities that are not exposed.
             raise intent.MatchFailedError(
                 result=match_result, constraints=match_constraints
             )
