@@ -7,6 +7,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "rate_limited": "Too many requests to the Zonneplan API. Wait a minute and try again.",
       "timeout_connect": "Timeout while communicating with the Zonneplan API",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -106,11 +107,17 @@
     }
   },
   "exceptions": {
+    "api_error": {
+      "message": "Unexpected response from the Zonneplan API: {error}"
+    },
     "cannot_connect": {
       "message": "Error communicating with the Zonneplan API"
     },
     "invalid_auth": {
       "message": "An error occurred while trying to authenticate"
+    },
+    "rate_limited": {
+      "message": "The Zonneplan API rate limit was reached"
     },
     "timeout_connect": {
       "message": "Timeout while communicating with the Zonneplan API"
