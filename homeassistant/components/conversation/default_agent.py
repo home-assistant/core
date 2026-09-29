@@ -161,6 +161,9 @@ class IntentCacheKey:
     satellite_id: str | None
     """Satellite id from user input."""
 
+    device_id: str | None
+    """Device id from user input."""
+
 
 @dataclass(frozen=True)
 class IntentCacheValue:
@@ -827,6 +830,7 @@ class DefaultAgent(ConversationEntity):
             text=user_input.text,
             language=language,
             satellite_id=user_input.satellite_id,
+            device_id=user_input.device_id,
         )
         cache_value = self._intent_cache.get(cache_key)
         if cache_value is not None:
