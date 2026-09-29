@@ -53,11 +53,10 @@ class OPNsenseFirmwareUpdate(
     @override
     def available(self) -> bool:
         """Return whether firmware versions are available."""
-        product = self.coordinator.data.get("product", {})
         return (
             super().available
-            and bool(product.get("product_version"))
-            and bool(product.get("product_latest"))
+            and bool(self.installed_version)
+            and bool(self.latest_version)
         )
 
     @property
@@ -72,6 +71,17 @@ class OPNsenseFirmwareUpdate(
     @override
     def latest_version(self) -> str | None:
         """Return the latest available firmware version."""
-        return cast(
-            str | None, self.coordinator.data.get("product", {}).get("product_latest")
-        )
+        if self.coordinator.data.get("status") == "upgrade" and (
+            major_version := self.coordinator.data.get("upgrade_major_version")
+        ):
+            return cast(str, major_version)
+
+        product = self.coordinator.data.get("product", {})
+        latest_version = product.get("product_latest")
+        if (
+            self.coordinator.data.get("status") == "update"
+            and latest_version == product.get("product_version")
+            and latest_version
+        ):
+            return f"{latest_version} (package updates available)"
+        return cast(str | None, latest_version)

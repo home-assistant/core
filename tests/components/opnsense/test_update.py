@@ -40,6 +40,37 @@ async def test_firmware_update(
     mock_opnsense_client.get_firmware_update_info.assert_awaited_once()
 
 
+@pytest.mark.parametrize(
+    ("status", "expected_latest"),
+    [
+        pytest.param("upgrade", "26.1", id="major-upgrade"),
+        pytest.param(
+            "update", "25.7.8 (package updates available)", id="package-updates"
+        ),
+    ],
+)
+async def test_firmware_update_status(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+    status: str,
+    expected_latest: str,
+) -> None:
+    """Test major and package-only updates reported by OPNsense."""
+    mock_opnsense_client.get_firmware_update_info.return_value.update(
+        {"status": status, "upgrade_major_version": "26.1"}
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.mock_title_firmware")
+    assert state is not None
+    assert state.state == "on"
+    assert state.attributes["installed_version"] == "25.7.8"
+    assert state.attributes["latest_version"] == expected_latest
+
+
 async def test_firmware_update_unavailable(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
