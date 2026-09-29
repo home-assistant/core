@@ -874,6 +874,7 @@ class SMAsensor(CoordinatorEntity[SMADataUpdateCoordinator], SensorEntity):
 
         self._sensor = pysma_sensor
         self._serial = coordinator.data.sma_device_info.serial
+        self._device_name = coordinator.data.sma_device_info.name
         assert entry.unique_id
 
         self._attr_device_info = DeviceInfo(
@@ -881,7 +882,7 @@ class SMAsensor(CoordinatorEntity[SMADataUpdateCoordinator], SensorEntity):
             identifiers={(DOMAIN, entry.unique_id)},
             manufacturer=coordinator.data.sma_device_info.manufacturer,
             model=coordinator.data.sma_device_info.type,
-            name=coordinator.data.sma_device_info.name,
+            name=self._device_name,
             sw_version=coordinator.data.sma_device_info.sw_version,
             serial_number=coordinator.data.sma_device_info.serial,
         )
@@ -897,12 +898,7 @@ class SMAsensor(CoordinatorEntity[SMADataUpdateCoordinator], SensorEntity):
     @override
     def name(self) -> str:
         """Return the name of the sensor prefixed with the device name."""
-        if self._attr_device_info is None or not (
-            name_prefix := self._attr_device_info.get("name")
-        ):
-            name_prefix = "SMA"
-
-        return f"{name_prefix} {super().name}"
+        return f"{self._device_name or 'SMA'} {super().name}"
 
     @property
     @override
