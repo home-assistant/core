@@ -13,11 +13,8 @@ from energieleser import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.energieleser.const import (
-    CONF_SW_VERSION,
-    DOMAIN,
-    FIRMWARE_COORDINATOR,
-)
+from homeassistant.components.energieleser import FIRMWARE_COORDINATOR
+from homeassistant.components.energieleser.const import CONF_SW_VERSION, DOMAIN
 from homeassistant.components.energieleser.coordinator import (
     FIRMWARE_SCAN_INTERVAL,
     SCAN_INTERVAL,
@@ -191,7 +188,7 @@ async def test_firmware_coordinator_shared_across_entries(
 
 
 @pytest.mark.usefixtures("mock_energieleser_client")
-async def test_firmware_coordinator_outlives_unloaded_entries(
+async def test_firmware_coordinator_survives_until_last_entry_unloads(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
@@ -199,7 +196,7 @@ async def test_firmware_coordinator_outlives_unloaded_entries(
     mock_stromleser_config_entry: MockConfigEntry,
     mock_gasleser_config_entry: MockConfigEntry,
 ) -> None:
-    """Test remaining entities keep polling and the coordinator is never torn down."""
+    """Test remaining entities keep updating and the last unload tears the coordinator down."""
     mock_stromleser_config_entry.add_to_hass(hass)
     mock_gasleser_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_stromleser_config_entry.entry_id)
@@ -227,7 +224,7 @@ async def test_firmware_coordinator_outlives_unloaded_entries(
 
     await hass.config_entries.async_unload(mock_gasleser_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert FIRMWARE_COORDINATOR in hass.data
+    assert FIRMWARE_COORDINATOR not in hass.data
 
 
 @pytest.mark.usefixtures("mock_energieleser_client")

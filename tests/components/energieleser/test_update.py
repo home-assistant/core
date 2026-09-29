@@ -13,7 +13,6 @@ from homeassistant.components.energieleser.coordinator import FIRMWARE_SCAN_INTE
 from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
-    ATTR_RELEASE_SUMMARY,
     ATTR_TITLE,
 )
 from homeassistant.const import (
@@ -91,10 +90,6 @@ async def test_update_available(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     assert state.attributes[ATTR_INSTALLED_VERSION] == STROMLESER_SW_VERSION
     assert state.attributes[ATTR_LATEST_VERSION] == "v1.4.30"
-    assert (
-        state.attributes[ATTR_RELEASE_SUMMARY]
-        == "Please update using the energieleser app."
-    )
     assert state.attributes[ATTR_TITLE] == "stromleser.one"
 
 

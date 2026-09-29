@@ -1,5 +1,6 @@
 """Coordinator for the energieleser integration."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import override
 
@@ -26,7 +27,7 @@ from .const import DOMAIN, LOGGER
 SCAN_INTERVAL = timedelta(seconds=10)
 FIRMWARE_SCAN_INTERVAL = timedelta(hours=6)
 
-type EnergieleserConfigEntry = ConfigEntry[EnergieleserCoordinator]
+type EnergieleserConfigEntry = ConfigEntry[EnergieleserData]
 
 
 class EnergieleserCoordinator(DataUpdateCoordinator[EnergieleserDevice]):
@@ -126,3 +127,11 @@ class EnergieleserFirmwareCoordinator(DataUpdateCoordinator[dict[DeviceType, str
                 translation_domain=DOMAIN,
                 translation_key="firmware_check_failed",
             ) from err
+
+
+@dataclass
+class EnergieleserData:
+    """Runtime data for an energieleser config entry."""
+
+    device_coordinator: EnergieleserCoordinator
+    firmware_coordinator: EnergieleserFirmwareCoordinator

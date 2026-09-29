@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_SW_VERSION, FIRMWARE_COORDINATOR, device_model_name
+from .const import CONF_SW_VERSION, device_model_name
 from .coordinator import (
     EnergieleserConfigEntry,
     EnergieleserCoordinator,
@@ -19,8 +19,6 @@ from .entity import build_device_info
 
 PARALLEL_UPDATES = 0
 
-RELEASE_SUMMARY = "Please update using the energieleser app."
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -28,8 +26,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the energieleser firmware update entity."""
+    data = entry.runtime_data
     async_add_entities(
-        [EnergieleserUpdateEntity(hass.data[FIRMWARE_COORDINATOR], entry.runtime_data)]
+        [EnergieleserUpdateEntity(data.firmware_coordinator, data.device_coordinator)]
     )
 
 
@@ -40,7 +39,6 @@ class EnergieleserUpdateEntity(
 
     _attr_has_entity_name = True
     _attr_device_class = UpdateDeviceClass.FIRMWARE
-    _attr_release_summary = RELEASE_SUMMARY
 
     def __init__(
         self,

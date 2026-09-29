@@ -341,7 +341,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up energieleser sensors from a config entry."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.device_coordinator
     device = coordinator.data
 
     if isinstance(device, StromleserOneDevice):
