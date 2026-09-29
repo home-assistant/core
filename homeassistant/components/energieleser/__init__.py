@@ -56,6 +56,6 @@ async def async_unload_entry(
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok and not hass.config_entries.async_loaded_entries(DOMAIN):
-        await hass.data[FIRMWARE_COORDINATOR].async_shutdown()
-        hass.data.pop(FIRMWARE_COORDINATOR)
+        if firmware_coordinator := hass.data.pop(FIRMWARE_COORDINATOR, None):
+            await firmware_coordinator.async_shutdown()
     return unload_ok
