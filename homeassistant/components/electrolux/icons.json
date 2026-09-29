@@ -40,6 +40,11 @@
       "remote_control": {
         "default": "mdi:remote"
       }
+    },
+    "switch": {
+      "child_lock": {
+        "default": "mdi:lock"
+      }
     }
   }
 }

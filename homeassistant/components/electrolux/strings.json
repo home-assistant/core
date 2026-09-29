@@ -222,11 +222,31 @@
           "temporary_locked": "Temporarily locked"
         }
       }
+    },
+    "switch": {
+      "child_lock": {
+        "name": "Child lock"
+      }
     }
   },
   "exceptions": {
+    "authorization_failed": {
+      "message": "The request failed authorization. Please retry the action, and if the problem persists, reconfigure the integration."
+    },
+    "command_validation_failed": {
+      "message": "The requested command could not be executed because it failed validation. Please check the command parameters and try again."
+    },
+    "generic_error": {
+      "message": "An unexpected error occurred. Please try again later."
+    },
+    "multiple_map_ids": {
+      "message": "Can't perform cleaning command: segments from multiple maps selected. Please select segments from a single map."
+    },
     "remote_control_disabled": {
       "message": "Remote control is disabled for this appliance. Please enable it on the appliance and try again."
+    },
+    "unsupported_operation": {
+      "message": "The requested operation is not supported by this appliance."
     },
     "unsupported_state_for_command": {
       "message": "The appliance is in a state that prevents executing the request command."
