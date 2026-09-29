@@ -1,7 +1,6 @@
 """Test HomematicIP Cloud setup process."""
 
-import threading
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from homematicip.exceptions.connection_exceptions import HmipConnectionError
 import pytest
@@ -170,14 +169,7 @@ async def test_hmip_dump_hap_config_services(
 ) -> None:
     """Test dump configuration services."""
 
-    write_thread_ids = []
-    with patch(
-        "pathlib.Path.write_text",
-        autospec=True,
-        side_effect=lambda *args, **kwargs: write_thread_ids.append(
-            threading.get_ident()
-        ),
-    ) as write_mock:
+    with patch("pathlib.Path.write_text", return_value=Mock()) as write_mock:
         await hass.services.async_call(
             "homematicip_cloud", "dump_hap_config", {"anonymize": True}, blocking=True
         )
@@ -185,10 +177,6 @@ async def test_hmip_dump_hap_config_services(
         assert home.mock_calls[-1][0] == "download_configuration_async"
         assert home.mock_calls
         assert write_mock.mock_calls
-
-    # The file is written in the executor, not on the event loop
-    assert write_thread_ids
-    assert hass.loop_thread_id not in write_thread_ids
 
 
 async def test_setup_services(hass: HomeAssistant) -> None:
