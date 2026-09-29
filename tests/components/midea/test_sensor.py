@@ -58,7 +58,6 @@ from tests.common import MockConfigEntry, snapshot_platform
                 DeviceType.B1,
                 attributes={
                     B1Attributes.status: "working",
-                    B1Attributes.mode: 83,
                     B1Attributes.time_remaining: 45,
                     B1Attributes.current_temperature: 175,
                     B1Attributes.target_temperature: 180,

@@ -276,11 +276,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
     ),
     MideaSensorEntityDescription(
         key="mode",
-        translation_key="program",
-        models=[DeviceType.B1],
-    ),
-    MideaSensorEntityDescription(
-        key="mode",
         translation_key="mode",
         models=[DeviceType.DB],
         device_class=SensorDeviceClass.ENUM,

@@ -112,56 +112,6 @@
     'state': '21.0',
   })
 # ---
-# name: test_all_entities[b1][sensor.electric_oven_program-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.electric_oven_program',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Program',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Program',
-    'platform': 'midea',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'program',
-    'unique_id': '12345678_mode',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[b1][sensor.electric_oven_program-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electric Oven Program',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.electric_oven_program',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '83',
-  })
-# ---
 # name: test_all_entities[b1][sensor.electric_oven_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

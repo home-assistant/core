@@ -575,9 +575,6 @@
       "pmv": {
         "name": "Predicted mean vote"
       },
-      "program": {
-        "name": "Program"
-      },
       "realtime_power": {
         "name": "Real-time power"
       },
