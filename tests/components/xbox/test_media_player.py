@@ -1,7 +1,6 @@
 """Test the Xbox media_player platform."""
 
 from collections.abc import Generator
-from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
 
@@ -9,6 +8,7 @@ from httpx import HTTPStatusError, RequestError, TimeoutException
 import pytest
 from pythonxbox.api.provider.catalog.models import CatalogResponse
 from pythonxbox.api.provider.smartglass.models import (
+    CommandResponse,
     SmartglassConsoleStatus,
     VolumeDirection,
 )
@@ -64,7 +64,9 @@ def media_player_only() -> Generator[None]:
 @pytest.fixture(autouse=True)
 def mock_token() -> Generator[MagicMock]:
     """Mock token generator."""
-    with patch("secrets.token_hex", return_value="mock_token") as token:
+    with patch(
+        "secrets.token_hex", return_value="mock_token_0123456789abcdef01234"
+    ) as token:
         yield token
 
 
@@ -318,10 +320,10 @@ async def test_media_player_turn_on_failed(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    xbox_live_client.smartglass.wake_up.side_effect = (
-        HTTPStatusError(
-            "", request=Mock(), response=Mock(status_code=HTTPStatus.NOT_FOUND)
-        ),
+    xbox_live_client.smartglass.wake_up.return_value = CommandResponse(
+        **await async_load_json_object_fixture(
+            hass, "smartglass_command_response_error.json", DOMAIN
+        )  # type: ignore[reportArgumentType]
     )
 
     with pytest.raises(HomeAssistantError) as e:

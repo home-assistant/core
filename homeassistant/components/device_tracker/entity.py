@@ -114,10 +114,12 @@ def _async_register_mac(
             return
 
         dev_reg = dr.async_get(hass)
-        device_entry = dev_reg.async_get(ev.data["device_id"])
+        device_entry = dev_reg.async_get(
+            ev.data["device_id"], include_child_devices=False
+        )
 
         if device_entry is None:
-            # This should not happen, since the device was just created.
+            # A child device resolves to None here; it has no MAC to match.
             return
 
         # Check if device has a mac
@@ -716,7 +718,7 @@ class ScannerEntity(
             config_entry_id=self.platform.config_entry.entry_id,
             config_subentry_id=self.registry_entry.config_subentry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
-            default_name=self.hostname or self.mac_address,
+            name=self.hostname or self.mac_address,
         )
 
         # Link the entity's registry entry to the device

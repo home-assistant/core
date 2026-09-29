@@ -1,9 +1,13 @@
 {
   "domain": "flexit",
   "name": "Flexit",
-  "codeowners": [],
-  "dependencies": ["modbus"],
+  "codeowners": ["@troelde"],
+  "config_flow": true,
+  "dependencies": ["modbus", "usb"],
   "documentation": "https://www.home-assistant.io/integrations/flexit",
+  "integration_type": "device",
   "iot_class": "local_polling",
-  "quality_scale": "legacy"
+  "loggers": ["modbus_connection", "flexit_modbus"],
+  "quality_scale": "legacy",
+  "requirements": ["flexit-modbus==0.1.0"]
 }

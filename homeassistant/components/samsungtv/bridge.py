@@ -98,6 +98,18 @@ def model_requires_encryption(model: str | None) -> bool:
     return model is not None and len(model) > 4 and model[4] in ("H", "J")
 
 
+def model_may_require_encryption(model: str | None) -> bool:
+    """Return True for models that might need encrypted pairing.
+
+    Some 2016 K-series models advertise the plain websocket method in their REST
+    device info but only pair via the encrypted PIN flow. Unlike H/J models (see
+    model_requires_encryption), other sets in the same series work with the
+    websocket method, so the encrypted method is only tried as a fallback once
+    websocket pairing has failed to connect.
+    """
+    return model is not None and len(model) > 4 and model[4] == "K"
+
+
 async def async_get_device_info(
     hass: HomeAssistant,
     host: str,

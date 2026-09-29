@@ -8,9 +8,9 @@ import string
 from typing import Any, cast
 
 from aiohttp import web
+import probatio
 import prometheus_client
 from prometheus_client.metrics import MetricWrapperBase
-import voluptuous as vol
 
 from homeassistant import core as hacore
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
@@ -101,35 +101,37 @@ CONF_COMPONENT_CONFIG_GLOB = "component_config_glob"
 CONF_COMPONENT_CONFIG_DOMAIN = "component_config_domain"
 CONF_DEFAULT_METRIC = "default_metric"
 CONF_OVERRIDE_METRIC = "override_metric"
-COMPONENT_CONFIG_SCHEMA_ENTRY = vol.Schema(
-    {vol.Optional(CONF_OVERRIDE_METRIC): cv.string}
+COMPONENT_CONFIG_SCHEMA_ENTRY = probatio.Schema(
+    {probatio.Optional(CONF_OVERRIDE_METRIC): cv.string}
 )
 ALLOWED_METRIC_CHARS = set(string.ascii_letters + string.digits + "_:")
 
 DEFAULT_NAMESPACE = "homeassistant"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             {
-                vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
-                vol.Optional(CONF_PROM_NAMESPACE, default=DEFAULT_NAMESPACE): cv.string,
-                vol.Optional(CONF_REQUIRES_AUTH, default=True): cv.boolean,
-                vol.Optional(CONF_DEFAULT_METRIC): cv.string,
-                vol.Optional(CONF_OVERRIDE_METRIC): cv.string,
-                vol.Optional(CONF_COMPONENT_CONFIG, default={}): vol.Schema(
+                probatio.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
+                probatio.Optional(
+                    CONF_PROM_NAMESPACE, default=DEFAULT_NAMESPACE
+                ): cv.string,
+                probatio.Optional(CONF_REQUIRES_AUTH, default=True): cv.boolean,
+                probatio.Optional(CONF_DEFAULT_METRIC): cv.string,
+                probatio.Optional(CONF_OVERRIDE_METRIC): cv.string,
+                probatio.Optional(CONF_COMPONENT_CONFIG, default={}): probatio.Schema(
                     {cv.entity_id: COMPONENT_CONFIG_SCHEMA_ENTRY}
                 ),
-                vol.Optional(CONF_COMPONENT_CONFIG_GLOB, default={}): vol.Schema(
-                    {cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}
-                ),
-                vol.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}): vol.Schema(
-                    {cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}
-                ),
+                probatio.Optional(
+                    CONF_COMPONENT_CONFIG_GLOB, default={}
+                ): probatio.Schema({cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}),
+                probatio.Optional(
+                    CONF_COMPONENT_CONFIG_DOMAIN, default={}
+                ): probatio.Schema({cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -369,11 +371,23 @@ class PrometheusMetrics:
         device_id = event.data["device_id"]
         _LOGGER.debug("Handling device update for %s", device_id)
 
+        self._refresh_device_entities_area(device_id)
+
+        # Child devices without an area of their own inherit the parent's area,
+        # so a parent area change must refresh their entities too.
+        for child in dr.async_entries_for_parent_device(
+            self.device_registry, device_id
+        ):
+            if child.area_id is None:
+                self._refresh_device_entities_area(child.id)
+
+    def _refresh_device_entities_area(self, device_id: str) -> None:
+        """Recompute the area label of a device's area-inheriting entities."""
         device = self.device_registry.async_get(device_id)
         if device is None:
             return
 
-        area_id = device.area_id
+        area_id = dr.async_get_effective_area_id(self.device_registry.hass, device)
 
         for entity_id in (
             entity.entity_id
@@ -612,7 +626,9 @@ class PrometheusMetrics:
         if area_id is None and entity.device_id is not None:
             device = self.device_registry.async_get(entity.device_id)
             if device is not None:
-                area_id = device.area_id
+                area_id = dr.async_get_effective_area_id(
+                    self.device_registry.hass, device
+                )
 
         return area_id
 
@@ -913,7 +929,7 @@ class PrometheusMetrics:
         # Temperatures
         self._temperature_metric(
             state,
-            WaterHeaterStateAttribute.TEMPERATURE,
+            WaterHeaterStateAttribute.TARGET_TEMPERATURE,
             "water_heater_temperature_celsius",
             "Target temperature in degrees Celsius",
         )

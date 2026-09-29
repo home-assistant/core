@@ -3,9 +3,7 @@ rules:
   action-setup: done
   appropriate-polling: done
   brands: done
-  common-modules:
-    status: exempt
-    comment: The integration does not use common patterns.
+  common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done

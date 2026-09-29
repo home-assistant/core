@@ -13,7 +13,7 @@ from limitlessled.group.rgbww import RgbwwGroup
 from limitlessled.group.white import WhiteGroup
 from limitlessled.pipeline import Pipeline
 from limitlessled.presets import COLORLOOP
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -76,25 +76,25 @@ SUPPORT_LIMITLESSLED_RGBWW = (
 
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_BRIDGES): vol.All(
+        probatio.Required(CONF_BRIDGES): probatio.All(
             cv.ensure_list,
             [
                 {
-                    vol.Required(CONF_HOST): cv.string,
-                    vol.Optional(
+                    probatio.Required(CONF_HOST): cv.string,
+                    probatio.Optional(
                         CONF_VERSION, default=DEFAULT_VERSION
                     ): cv.positive_int,
-                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                    vol.Required(CONF_GROUPS): vol.All(
+                    probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                    probatio.Required(CONF_GROUPS): probatio.All(
                         cv.ensure_list,
                         [
                             {
-                                vol.Required(CONF_NAME): cv.string,
-                                vol.Optional(
+                                probatio.Required(CONF_NAME): cv.string,
+                                probatio.Optional(
                                     CONF_TYPE, default=DEFAULT_LED_TYPE
-                                ): vol.In(LED_TYPE),
-                                vol.Required(CONF_NUMBER): cv.positive_int,
-                                vol.Optional(
+                                ): probatio.In(LED_TYPE),
+                                probatio.Required(CONF_NUMBER): cv.positive_int,
+                                probatio.Optional(
                                     CONF_FADE, default=DEFAULT_FADE
                                 ): cv.boolean,
                             }

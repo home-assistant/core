@@ -2,7 +2,7 @@
 
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import HomeAssistant, State
@@ -22,9 +22,9 @@ CONF_EVENT_TYPE = "event_type"
 
 EVENT_RECEIVED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_OPTIONS): {
-            vol.Required(CONF_EVENT_TYPE): vol.All(
-                cv.ensure_list, vol.Length(min=1), [cv.string]
+        probatio.Required(CONF_OPTIONS): {
+            probatio.Required(CONF_EVENT_TYPE): probatio.All(
+                cv.ensure_list, probatio.Length(min=1), [cv.string]
             ),
         },
     }

@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -43,6 +42,9 @@
       },
       "client_supports_upnp": {
         "name": "Supports UPnP"
+      },
+      "connected_to_control": {
+        "name": "Connected to control"
       },
       "key_expiry_disabled": {
         "name": "Key expiry disabled"

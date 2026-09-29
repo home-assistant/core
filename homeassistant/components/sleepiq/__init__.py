@@ -6,10 +6,11 @@ from typing import Any
 from asyncsleepiq import (
     AsyncSleepIQ,
     SleepIQAPIException,
+    SleepIQConnectionException,
     SleepIQLoginException,
     SleepIQTimeoutException,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, PRESSURE, Platform
@@ -40,14 +41,14 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: {
-            vol.Required(CONF_USERNAME): cv.string,
-            vol.Required(CONF_PASSWORD): cv.string,
+            probatio.Required(CONF_USERNAME): cv.string,
+            probatio.Required(CONF_PASSWORD): cv.string,
         }
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -75,6 +76,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> b
 
     try:
         await gateway.login(email, password)
+    except SleepIQConnectionException as err:
+        raise ConfigEntryNotReady(
+            str(err) or "Transient connection failure during authentication"
+        ) from err
     except SleepIQLoginException as err:
         _LOGGER.error("Could not authenticate with SleepIQ server")
         raise ConfigEntryAuthFailed(err) from err
@@ -92,6 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> b
     except SleepIQAPIException as err:
         raise ConfigEntryNotReady(str(err) or "Error reading from SleepIQ API") from err
 
+    _filter_duplicate_beds(gateway)
     await _async_migrate_unique_ids(hass, entry, gateway)
 
     coordinator = SleepIQDataUpdateCoordinator(hass, entry, gateway)
@@ -118,6 +124,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> b
 async def async_unload_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> bool:
     """Unload the config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+_FIRMNESS_CONTROL = "firmness control"
+
+
+def _filter_duplicate_beds(gateway: AsyncSleepIQ) -> None:
+    """Remove "Firmness Control" controller objects that duplicate a real bed.
+
+    The SleepIQ API can return a controller object alongside the real bed,
+    both carrying the same sleeper IDs. The controller is identified by
+    "Firmness Control" in its model string.
+    """
+    to_remove: list[str] = []
+    for bed_id, bed in gateway.beds.items():
+        if _FIRMNESS_CONTROL in (bed.model or "").lower():
+            to_remove.append(bed_id)
+    for bed_id in to_remove:
+        _LOGGER.debug(
+            "Removing controller duplicate '%s' (id=%s, model=%s)",
+            gateway.beds[bed_id].name,
+            bed_id,
+            gateway.beds[bed_id].model,
+        )
+        del gateway.beds[bed_id]
 
 
 async def _async_migrate_unique_ids(

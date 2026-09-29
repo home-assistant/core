@@ -4,6 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from pyportainer import (
     Portainer,
     PortainerAuthenticationError,
@@ -11,7 +12,6 @@ from pyportainer import (
     PortainerTimeoutError,
 )
 from pyportainer.models.portainer import PortainerSystemStatus
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_URL, CONF_VERIFY_SSL
@@ -27,15 +27,15 @@ from homeassistant.helpers.selector import (
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): TextSelector(
+        probatio.Required(CONF_URL): TextSelector(
             TextSelectorConfig(type=TextSelectorType.URL)
         ),
-        vol.Required(CONF_API_TOKEN): TextSelector(
+        probatio.Required(CONF_API_TOKEN): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
-        vol.Optional(CONF_VERIFY_SSL, default=True): BooleanSelector(),
+        probatio.Optional(CONF_VERIFY_SSL, default=True): BooleanSelector(),
     }
 )
 
@@ -135,9 +135,9 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_TOKEN): TextSelector(
+                    probatio.Required(CONF_API_TOKEN): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     )
                 }

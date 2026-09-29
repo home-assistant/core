@@ -1,6 +1,6 @@
 """Schema definitions for LCN configuration and websockets api."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
 from homeassistant.const import (
@@ -42,79 +42,92 @@ from .const import (
     VARIABLES,
 )
 
-ADDRESS_SCHEMA = vol.Coerce(tuple)
+ADDRESS_SCHEMA = probatio.Coerce(tuple)
 
 #
 # Domain data
 #
 
 DOMAIN_DATA_BINARY_SENSOR: VolDictType = {
-    vol.Required(CONF_SOURCE): vol.All(
-        vol.Upper, vol.In(SETPOINTS + KEYS + BINSENSOR_PORTS)
+    probatio.Required(CONF_SOURCE): probatio.All(
+        probatio.Upper, probatio.In(SETPOINTS + KEYS + BINSENSOR_PORTS)
     ),
 }
 
 
 DOMAIN_DATA_CLIMATE: VolDictType = {
-    vol.Required(CONF_SOURCE): vol.All(vol.Upper, vol.In(VARIABLES)),
-    vol.Required(CONF_SETPOINT): vol.All(vol.Upper, vol.In(VARIABLES + SETPOINTS)),
-    vol.Optional(CONF_MAX_TEMP, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
-    vol.Optional(CONF_MIN_TEMP, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
-    vol.Optional(CONF_LOCKABLE, default=False): vol.Coerce(bool),
-    vol.Optional(CONF_TARGET_VALUE_LOCKED, default=-1): vol.Coerce(float),
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=UnitOfTemperature.CELSIUS): vol.In(
-        UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
+    probatio.Required(CONF_SOURCE): probatio.All(
+        probatio.Upper, probatio.In(VARIABLES)
     ),
+    probatio.Required(CONF_SETPOINT): probatio.All(
+        probatio.Upper, probatio.In(VARIABLES + SETPOINTS)
+    ),
+    probatio.Optional(CONF_MAX_TEMP, default=DEFAULT_MAX_TEMP): probatio.Coerce(float),
+    probatio.Optional(CONF_MIN_TEMP, default=DEFAULT_MIN_TEMP): probatio.Coerce(float),
+    probatio.Optional(CONF_LOCKABLE, default=False): probatio.Coerce(bool),
+    probatio.Optional(CONF_TARGET_VALUE_LOCKED, default=-1): probatio.Coerce(float),
+    probatio.Optional(
+        CONF_UNIT_OF_MEASUREMENT, default=UnitOfTemperature.CELSIUS
+    ): probatio.In(UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT),
 }
 
 
 DOMAIN_DATA_COVER: VolDictType = {
-    vol.Required(CONF_MOTOR): vol.All(vol.Upper, vol.In(MOTOR_PORTS)),
-    vol.Optional(CONF_POSITIONING_MODE, default="none"): vol.All(
-        vol.Upper, vol.In(MOTOR_POSITIONING_MODES)
+    probatio.Required(CONF_MOTOR): probatio.All(
+        probatio.Upper, probatio.In(MOTOR_PORTS)
     ),
-    vol.Optional(CONF_REVERSE_TIME, default="rt1200"): vol.All(
-        vol.Upper, vol.In(MOTOR_REVERSE_TIMES)
+    probatio.Optional(CONF_POSITIONING_MODE, default="none"): probatio.All(
+        probatio.Upper, probatio.In(MOTOR_POSITIONING_MODES)
+    ),
+    probatio.Optional(CONF_REVERSE_TIME, default="rt1200"): probatio.All(
+        probatio.Upper, probatio.In(MOTOR_REVERSE_TIMES)
     ),
 }
 
 
 DOMAIN_DATA_LIGHT: VolDictType = {
-    vol.Required(CONF_OUTPUT): vol.All(vol.Upper, vol.In(OUTPUT_PORTS + RELAY_PORTS)),
-    vol.Optional(CONF_DIMMABLE, default=False): vol.Coerce(bool),
-    vol.Optional(CONF_TRANSITION, default=0): vol.All(
-        vol.Coerce(float), vol.Range(min=0.0, max=486.0)
+    probatio.Required(CONF_OUTPUT): probatio.All(
+        probatio.Upper, probatio.In(OUTPUT_PORTS + RELAY_PORTS)
+    ),
+    probatio.Optional(CONF_DIMMABLE, default=False): probatio.Coerce(bool),
+    probatio.Optional(CONF_TRANSITION, default=0): probatio.All(
+        probatio.Coerce(float), probatio.Range(min=0.0, max=486.0)
     ),
 }
 
 
 DOMAIN_DATA_SCENE: VolDictType = {
-    vol.Required(CONF_REGISTER): vol.All(vol.Coerce(int), vol.Range(0, 9)),
-    vol.Required(CONF_SCENE): vol.All(vol.Coerce(int), vol.Range(0, 9)),
-    vol.Optional(CONF_OUTPUTS, default=[]): vol.All(
-        cv.ensure_list, [vol.All(vol.Upper, vol.In(OUTPUT_PORTS + RELAY_PORTS))]
+    probatio.Required(CONF_REGISTER): probatio.All(
+        probatio.Coerce(int), probatio.Range(0, 9)
     ),
-    vol.Optional(CONF_TRANSITION, default=0): vol.Any(
-        vol.All(vol.Coerce(int), vol.Range(min=0.0, max=486.0))
+    probatio.Required(CONF_SCENE): probatio.All(
+        probatio.Coerce(int), probatio.Range(0, 9)
+    ),
+    probatio.Optional(CONF_OUTPUTS, default=[]): probatio.All(
+        cv.ensure_list,
+        [probatio.All(probatio.Upper, probatio.In(OUTPUT_PORTS + RELAY_PORTS))],
+    ),
+    probatio.Optional(CONF_TRANSITION, default=0): probatio.Any(
+        probatio.All(probatio.Coerce(int), probatio.Range(min=0.0, max=486.0))
     ),
 }
 
 DOMAIN_DATA_SENSOR: VolDictType = {
-    vol.Required(CONF_SOURCE): vol.All(
-        vol.Upper,
-        vol.In(
+    probatio.Required(CONF_SOURCE): probatio.All(
+        probatio.Upper,
+        probatio.In(
             VARIABLES + SETPOINTS + THRESHOLDS + S0_INPUTS + LED_PORTS + LOGICOP_PORTS
         ),
     ),
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT, default="native"): vol.All(
-        vol.Upper, vol.In(VAR_UNITS)
+    probatio.Optional(CONF_UNIT_OF_MEASUREMENT, default="native"): probatio.All(
+        probatio.Upper, probatio.In(VAR_UNITS)
     ),
 }
 
 
 DOMAIN_DATA_SWITCH: VolDictType = {
-    vol.Required(CONF_OUTPUT): vol.All(
-        vol.Upper,
-        vol.In(OUTPUT_PORTS + RELAY_PORTS + SETPOINTS + KEYS),
+    probatio.Required(CONF_OUTPUT): probatio.All(
+        probatio.Upper,
+        probatio.In(OUTPUT_PORTS + RELAY_PORTS + SETPOINTS + KEYS),
     ),
 }

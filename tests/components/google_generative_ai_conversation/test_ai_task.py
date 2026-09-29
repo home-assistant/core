@@ -4,8 +4,8 @@ from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 
 from google.genai.types import File, FileState, GenerateContentResponse
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import ai_task, media_source
 from homeassistant.components.google_generative_ai_conversation.const import (
@@ -174,9 +174,9 @@ async def test_generate_data(
         task_name="Test Task",
         entity_id=entity_id,
         instructions="Give me 2 mario characters",
-        structure=vol.Schema(
+        structure=probatio.Schema(
             {
-                vol.Required("characters"): selector.selector(
+                probatio.Required("characters"): selector.selector(
                     {
                         "text": {
                             "multiple": True,
@@ -217,7 +217,7 @@ async def test_generate_data(
             task_name="Test Task",
             entity_id=entity_id,
             instructions="Test prompt",
-            structure=vol.Schema({vol.Required("bla"): str}),
+            structure=probatio.Schema({probatio.Required("bla"): str}),
         )
 
 
@@ -259,7 +259,7 @@ async def test_generate_image(
     with patch.object(
         media_source.local_source.LocalSource,
         "async_upload_media",
-        return_value="media-source://ai_task/image/2025-06-14_225900_test_task.png",
+        return_value="media-source://ai_task/image/2025-06-14_155900_test_task.png",
     ) as mock_upload_media:
         result = await ai_task.async_generate_image(
             hass,
@@ -278,7 +278,7 @@ async def test_generate_image(
     image_data = mock_upload_media.call_args[0][1]
     assert image_data.file.getvalue() == mock_image_data
     assert image_data.content_type == "image/png"
-    assert image_data.filename == "2025-06-14_225900_test_task.png"
+    assert image_data.filename == "2025-06-14_155900_test_task.png"
 
     # Verify that generate_content was called with correct parameters
     assert mock_generate_content.called

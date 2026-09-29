@@ -14,7 +14,7 @@ from aiopnsense import (
     OPNsenseTimeoutError,
     OPNsenseUnknownFirmware,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
@@ -35,23 +35,23 @@ from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): str,
-        vol.Required(CONF_API_KEY): str,
-        vol.Required(CONF_API_SECRET): str,
-        vol.Required(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Required(CONF_URL): str,
+        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_API_SECRET): str,
+        probatio.Required(CONF_VERIFY_SSL, default=True): bool,
     }
 )
 
 
 def tracker_interfaces_schema(
     interfaces: list[str], selected: list[str] | None = None
-) -> vol.Schema:
+) -> probatio.Schema:
     """Schema to display available interfaces for device tracking selection."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(
+            probatio.Optional(
                 CONF_TRACKER_INTERFACES,
                 default=selected or [],
             ): SelectSelector(

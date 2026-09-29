@@ -105,6 +105,9 @@ class HomematicipAuth:
             _LOGGER.debug("Connection request result: %s", result)
         except HmipConnectionError:
             return None
+        # a rejected SGTIN or PIN comes back as a failed result, not an exception
+        if not result.success:
+            return None
         return auth
 
 

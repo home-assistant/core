@@ -3,6 +3,7 @@
   dict({
     'coordinators': dict({
       '0': dict({
+        'push_enabled': True,
         'status': dict({
           'ac_system': dict({
             'master_serial': '**REDACTED**',
@@ -22,7 +23,7 @@
             'system_name': 'Test System',
           }),
           'alerts': dict({
-            'clean_filter': False,
+            'clean_filter': True,
             'defrosting': False,
           }),
           'is_online': True,

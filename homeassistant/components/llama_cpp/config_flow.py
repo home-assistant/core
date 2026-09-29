@@ -4,7 +4,7 @@ import logging
 from typing import Any, cast, override
 
 import openai
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -53,10 +53,10 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_BASE_URL, default=DEFAULT_BASE_URL): str,
-        vol.Optional(CONF_API_KEY): str,
+        probatio.Required(CONF_BASE_URL, default=DEFAULT_BASE_URL): str,
+        probatio.Optional(CONF_API_KEY): str,
     }
 )
 
@@ -153,9 +153,9 @@ class LlamaCppConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="model",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_CHAT_MODEL,
                         ): SelectSelector(
                             SelectSelectorConfig(
@@ -267,7 +267,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 return self.async_show_form(
                     step_id="init",
                     data_schema=self.add_suggested_values_to_schema(
-                        vol.Schema(
+                        probatio.Schema(
                             llama_cpp_config_option_schema(self.hass, options, models)
                         ),
                         user_input,
@@ -301,7 +301,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(schema), options
+                probatio.Schema(schema), options
             ),
         )
 
@@ -321,11 +321,11 @@ def llama_cpp_config_option_schema(
     ]
     LOGGER.debug("Available LLM APIs: %s", hass_apis)
 
-    schema: dict[vol.Required | vol.Optional, Any] = {}
+    schema: dict[probatio.Required | probatio.Optional, Any] = {}
 
     schema.update(
         {
-            vol.Optional(
+            probatio.Optional(
                 CONF_PROMPT,
                 description={
                     "suggested_value": options.get(
@@ -333,14 +333,14 @@ def llama_cpp_config_option_schema(
                     )
                 },
             ): TemplateSelector(),
-            vol.Optional(
+            probatio.Optional(
                 CONF_LLM_HASS_API,
             ): SelectSelector(SelectSelectorConfig(options=hass_apis, multiple=True)),
         }
     )
     schema.update(
         {
-            vol.Optional(
+            probatio.Optional(
                 CONF_CHAT_MODEL,
                 description={"suggested_value": options.get(CONF_CHAT_MODEL)},
                 default=options.get(CONF_CHAT_MODEL, recommended_model(models)),
@@ -352,7 +352,7 @@ def llama_cpp_config_option_schema(
                     custom_value=True,
                 ),
             ),
-            vol.Required(
+            probatio.Required(
                 CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
             ): bool,
         }
@@ -363,17 +363,17 @@ def llama_cpp_config_option_schema(
 
     schema.update(
         {
-            vol.Optional(
+            probatio.Optional(
                 CONF_MAX_TOKENS,
                 description={"suggested_value": options.get(CONF_MAX_TOKENS)},
                 default=RECOMMENDED_MAX_TOKENS,
             ): int,
-            vol.Optional(
+            probatio.Optional(
                 CONF_TOP_P,
                 description={"suggested_value": options.get(CONF_TOP_P)},
                 default=RECOMMENDED_TOP_P,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Optional(
+            probatio.Optional(
                 CONF_TEMPERATURE,
                 description={"suggested_value": options.get(CONF_TEMPERATURE)},
                 default=RECOMMENDED_TEMPERATURE,

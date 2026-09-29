@@ -14,7 +14,7 @@ from opendisplay import (
     OpenDisplayError,
     parse_advertisement,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
@@ -29,7 +29,9 @@ from .const import CONF_ENCRYPTION_KEY, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-_ENCRYPTION_KEY_VALIDATOR = vol.All(str.strip, str.lower, vol.Match(r"^[0-9a-f]{32}$"))
+_ENCRYPTION_KEY_VALIDATOR = probatio.All(
+    str.strip, str.lower, probatio.Match(r"^[0-9a-f]{32}$")
+)
 
 CONNECT_TIMEOUT = 45
 
@@ -170,9 +172,9 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(
+                    probatio.Required(CONF_ADDRESS): probatio.In(
                         {
                             addr: f"{info.name} ({addr})"
                             for addr, info in self._discovered_devices.items()
@@ -213,7 +215,7 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 key: str = _ENCRYPTION_KEY_VALIDATOR(user_input[CONF_ENCRYPTION_KEY])
-            except vol.Invalid:
+            except probatio.Invalid:
                 errors[CONF_ENCRYPTION_KEY] = "invalid_key_format"
             else:
                 if TYPE_CHECKING:
@@ -228,7 +230,7 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="encryption_key",
-            data_schema=vol.Schema({vol.Required(CONF_ENCRYPTION_KEY): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_ENCRYPTION_KEY): str}),
             description_placeholders={"name": name},
             errors=errors,
         )
@@ -251,7 +253,7 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
             if user_input[CONF_ENCRYPTION_KEY].strip():
                 try:
                     key = _ENCRYPTION_KEY_VALIDATOR(user_input[CONF_ENCRYPTION_KEY])
-                except vol.Invalid:
+                except probatio.Invalid:
                     errors[CONF_ENCRYPTION_KEY] = "invalid_key_format"
 
             if not errors:
@@ -273,8 +275,8 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {vol.Optional(CONF_ENCRYPTION_KEY, default=""): str}
+            data_schema=probatio.Schema(
+                {probatio.Optional(CONF_ENCRYPTION_KEY, default=""): str}
             ),
             description_placeholders={"name": reauth_entry.title},
             errors=errors,

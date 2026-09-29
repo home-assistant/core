@@ -12,6 +12,7 @@ from tests.common import MockConfigEntry
 
 async def test_async_setup_and_unload_entry(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_cielo_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -24,10 +25,9 @@ async def test_async_setup_and_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.runtime_data is not None
 
-    entity_reg = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     entities = [
         e
-        for e in entity_reg.entities.values()
+        for e in entity_registry.entities.values()
         if e.platform == DOMAIN and e.domain == "climate"
     ]
     assert len(entities) == 1

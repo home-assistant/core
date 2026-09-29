@@ -3,7 +3,7 @@
 import logging
 from typing import Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.text import TextEntity
 from homeassistant.const import (  # noqa: F401
@@ -51,55 +51,57 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 STORAGE_FIELDS: VolDictType = {
-    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Optional(CONF_MIN, default=CONF_MIN_VALUE): vol.All(
-        vol.Coerce(int), vol.Range(0, MAX_LENGTH_STATE_STATE)
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Optional(CONF_MIN, default=CONF_MIN_VALUE): probatio.All(
+        probatio.Coerce(int), probatio.Range(0, MAX_LENGTH_STATE_STATE)
     ),
-    vol.Optional(CONF_MAX, default=CONF_MAX_VALUE): vol.All(
-        vol.Coerce(int), vol.Range(1, MAX_LENGTH_STATE_STATE)
+    probatio.Optional(CONF_MAX, default=CONF_MAX_VALUE): probatio.All(
+        probatio.Coerce(int), probatio.Range(1, MAX_LENGTH_STATE_STATE)
     ),
-    vol.Optional(CONF_INITIAL, ""): cv.string,
-    vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_PATTERN): cv.string,
-    vol.Optional(CONF_MODE, default=MODE_TEXT): vol.In([MODE_TEXT, MODE_PASSWORD]),
+    probatio.Optional(CONF_INITIAL, ""): cv.string,
+    probatio.Optional(CONF_ICON): cv.icon,
+    probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    probatio.Optional(CONF_PATTERN): cv.string,
+    probatio.Optional(CONF_MODE, default=MODE_TEXT): probatio.In(
+        [MODE_TEXT, MODE_PASSWORD]
+    ),
 }
 
 
 def _cv_input_text(config: dict[str, Any]) -> dict[str, Any]:
-    """Configure validation helper for input box (voluptuous)."""
+    """Configure validation helper for input box (probatio)."""
     minimum: int = config[CONF_MIN]
     maximum: int = config[CONF_MAX]
     if minimum > maximum:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"Max len ({minimum}) is not greater than min len ({maximum})"
         )
     state: str | None = config.get(CONF_INITIAL)
     if state is not None and (len(state) < minimum or len(state) > maximum):
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"Initial value {state} length not in range {minimum}-{maximum}"
         )
     return config
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: cv.schema_with_slug_keys(
-            vol.All(
+            probatio.All(
                 lambda value: value or {},
                 {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_MIN, default=CONF_MIN_VALUE): vol.All(
-                        vol.Coerce(int), vol.Range(0, MAX_LENGTH_STATE_STATE)
+                    probatio.Optional(CONF_NAME): cv.string,
+                    probatio.Optional(CONF_MIN, default=CONF_MIN_VALUE): probatio.All(
+                        probatio.Coerce(int), probatio.Range(0, MAX_LENGTH_STATE_STATE)
                     ),
-                    vol.Optional(CONF_MAX, default=CONF_MAX_VALUE): vol.All(
-                        vol.Coerce(int), vol.Range(1, MAX_LENGTH_STATE_STATE)
+                    probatio.Optional(CONF_MAX, default=CONF_MAX_VALUE): probatio.All(
+                        probatio.Coerce(int), probatio.Range(1, MAX_LENGTH_STATE_STATE)
                     ),
-                    vol.Optional(CONF_INITIAL): cv.string,
-                    vol.Optional(CONF_ICON): cv.icon,
-                    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-                    vol.Optional(CONF_PATTERN): cv.string,
-                    vol.Optional(CONF_MODE, default=MODE_TEXT): vol.In(
+                    probatio.Optional(CONF_INITIAL): cv.string,
+                    probatio.Optional(CONF_ICON): cv.icon,
+                    probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                    probatio.Optional(CONF_PATTERN): cv.string,
+                    probatio.Optional(CONF_MODE, default=MODE_TEXT): probatio.In(
                         [MODE_TEXT, MODE_PASSWORD]
                     ),
                 },
@@ -107,9 +109,9 @@ CONFIG_SCHEMA = vol.Schema(
             ),
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
-RELOAD_SERVICE_SCHEMA = vol.Schema({})
+RELOAD_SERVICE_SCHEMA = probatio.Schema({})
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -158,7 +160,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     component.async_register_entity_service(
-        SERVICE_SET_VALUE, {vol.Required(ATTR_VALUE): cv.string}, "async_set_value"
+        SERVICE_SET_VALUE, {probatio.Required(ATTR_VALUE): cv.string}, "async_set_value"
     )
 
     return True
@@ -167,7 +169,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class InputTextStorageCollection(collection.DictStorageCollection):
     """Input storage based collection."""
 
-    CREATE_UPDATE_SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, _cv_input_text))
+    CREATE_UPDATE_SCHEMA = probatio.Schema(probatio.All(STORAGE_FIELDS, _cv_input_text))
 
     @override
     async def _process_create_data(self, data: dict[str, Any]) -> dict[str, Any]:
