@@ -89,7 +89,9 @@ PUBLIC_ONLY_PLATFORMS = [
     Platform.CAMERA,
     Platform.EVENT,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SENSOR,
+    Platform.SIREN,
     Platform.SWITCH,
 ]
 
@@ -101,6 +103,7 @@ CONNECTION_MODE_API_KEY_ONLY = "api_key_only"
 DISPATCH_ADD = "add_device"
 DISPATCH_ADOPT = "adopt_device"
 DISPATCH_CHANNELS = "new_camera_channels"
+DISPATCH_RELAYS = "new_relay_channels"
 DISPATCH_PUBLIC_ADD = "public_add_device"
 
 EVENT_TYPE_FINGERPRINT_IDENTIFIED: Final = "identified"

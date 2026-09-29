@@ -1,5 +1,6 @@
 """Support for Tuya Alarm."""
 
+from dataclasses import dataclass
 from typing import override
 
 from tuya_device_handlers.definition.alarm_control_panel import (
@@ -24,14 +25,22 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 
-ALARM: dict[DeviceCategory, AlarmControlPanelEntityDescription] = {
-    DeviceCategory.MAL: AlarmControlPanelEntityDescription(
+
+@dataclass(frozen=True)
+class TuyaAlarmControlPanelEntityDescription(
+    TuyaEntityDescription, AlarmControlPanelEntityDescription
+):
+    """Describes a Tuya alarm control panel entity."""
+
+
+ALARM: dict[DeviceCategory, TuyaAlarmControlPanelEntityDescription] = {
+    DeviceCategory.MAL: TuyaAlarmControlPanelEntityDescription(
         key=DPCode.MASTER_MODE,
         name="Alarm",
     ),
-    DeviceCategory.WG2: AlarmControlPanelEntityDescription(
+    DeviceCategory.WG2: TuyaAlarmControlPanelEntityDescription(
         key=DPCode.MASTER_MODE,
         name="Alarm",
     ),
@@ -92,7 +101,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: AlarmControlPanelEntityDescription,
+        description: TuyaAlarmControlPanelEntityDescription,
         definition: AlarmControlPanelDefinition,
     ) -> None:
         """Init Tuya Alarm."""
