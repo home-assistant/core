@@ -1,5 +1,6 @@
 """General Starlink patchers."""
 
+from collections.abc import Callable
 from unittest.mock import patch
 
 import grpc
@@ -13,7 +14,7 @@ SETUP_ENTRY_PATCHER = patch(
 
 
 class _FakeRpcError(grpc.RpcError, grpc.Call):
-    """A minimal grpc.Call double carrying a specific status code."""
+    """A concrete grpc.Call double carrying a specific status code."""
 
     def __init__(self, code: grpc.StatusCode) -> None:
         """Set up the fake error with the given status code."""
@@ -26,6 +27,30 @@ class _FakeRpcError(grpc.RpcError, grpc.Call):
     def details(self) -> str:
         """Return fake details."""
         return "fake grpc error for tests"
+
+    def cancel(self) -> bool:
+        """Return that cancellation is a no-op for this fake."""
+        return False
+
+    def is_active(self) -> bool:
+        """Return that this fake call is not active."""
+        return False
+
+    def time_remaining(self) -> float | None:
+        """Return that this fake call has no deadline."""
+        return None
+
+    def add_callback(self, callback: Callable[[], None]) -> bool:
+        """Return that callback registration is a no-op for this fake."""
+        return False
+
+    def initial_metadata(self) -> tuple:
+        """Return empty initial metadata."""
+        return ()
+
+    def trailing_metadata(self) -> tuple:
+        """Return empty trailing metadata."""
+        return ()
 
 
 def _raise_grpc_error(code: grpc.StatusCode):
