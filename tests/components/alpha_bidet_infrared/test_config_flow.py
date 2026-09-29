@@ -1,11 +1,11 @@
 """Tests for the Alpha Bidet Infrared config flow."""
 
-from infrared_protocols.codes.alpha_bidet.models import AlphaBidetModel
 import pytest
 
 from homeassistant.components.alpha_bidet_infrared.const import (
     CONF_INFRARED_EMITTER_ENTITY_ID,
     DOMAIN,
+    AlphaBidetModel,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_MODEL

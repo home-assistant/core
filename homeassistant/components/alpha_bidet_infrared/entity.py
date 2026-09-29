@@ -1,13 +1,11 @@
 """Common entity for the Alpha Bidet Infrared integration."""
 
-from infrared_protocols.codes.alpha_bidet.models import AlphaBidetModel
-
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import CONF_INFRARED_EMITTER_ENTITY_ID, DOMAIN
+from .const import CONF_INFRARED_EMITTER_ENTITY_ID, DOMAIN, AlphaBidetModel
 
 
 class AlphaBidetIrEntity(InfraredEmitterConsumerEntity):

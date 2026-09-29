@@ -4,11 +4,6 @@ from dataclasses import dataclass
 from typing import override
 
 from infrared_protocols.codes.alpha_bidet.jx2 import AlphaBidetJX2Code
-from infrared_protocols.codes.alpha_bidet.models import (
-    MODEL_TO_COMMAND_SET,
-    AlphaBidetCommandSet,
-    AlphaBidetModel,
-)
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -16,6 +11,7 @@ from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import AlphaBidetModel
 from .entity import AlphaBidetIrEntity
 
 PARALLEL_UPDATES = 1
@@ -28,10 +24,10 @@ class AlphaBidetIrButtonEntityDescription(ButtonEntityDescription):
     command_code: AlphaBidetJX2Code
 
 
-COMMAND_SET_BUTTONS: dict[
-    AlphaBidetCommandSet, tuple[AlphaBidetIrButtonEntityDescription, ...]
+MODEL_BUTTONS: dict[
+    AlphaBidetModel, tuple[AlphaBidetIrButtonEntityDescription, ...]
 ] = {
-    AlphaBidetCommandSet.JX2: tuple(
+    AlphaBidetModel.JX2: tuple(
         AlphaBidetIrButtonEntityDescription(
             key=code.name.lower(),
             translation_key=code.name.lower(),
@@ -48,10 +44,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Alpha Bidet IR buttons from a config entry."""
-    command_set = MODEL_TO_COMMAND_SET[AlphaBidetModel(entry.data[CONF_MODEL])]
     async_add_entities(
         AlphaBidetIrButton(entry, description)
-        for description in COMMAND_SET_BUTTONS[command_set]
+        for description in MODEL_BUTTONS[AlphaBidetModel(entry.data[CONF_MODEL])]
     )
 
 

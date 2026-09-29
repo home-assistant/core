@@ -2,7 +2,6 @@
 
 from typing import Any, override
 
-from infrared_protocols.codes.alpha_bidet.models import AlphaBidetModel
 import probatio
 
 from homeassistant.components.infrared import (
@@ -19,7 +18,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_INFRARED_EMITTER_ENTITY_ID, DOMAIN
+from .const import CONF_INFRARED_EMITTER_ENTITY_ID, DOMAIN, AlphaBidetModel
 
 
 class AlphaBidetIrConfigFlow(ConfigFlow, domain=DOMAIN):

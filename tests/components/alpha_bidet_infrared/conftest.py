@@ -2,13 +2,13 @@
 
 from unittest.mock import patch
 
-from infrared_protocols.codes.alpha_bidet.models import AlphaBidetModel
 import pytest
 
 from homeassistant.components.alpha_bidet_infrared import PLATFORMS
 from homeassistant.components.alpha_bidet_infrared.const import (
     CONF_INFRARED_EMITTER_ENTITY_ID,
     DOMAIN,
+    AlphaBidetModel,
 )
 from homeassistant.const import CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
