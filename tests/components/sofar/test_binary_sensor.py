@@ -8,6 +8,7 @@ from sofar_modbus.modern.faults import FaultCategory
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.sofar.binary_sensor import FAULT_SENSOR_DESCRIPTIONS
 from homeassistant.components.sofar.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
@@ -83,14 +84,16 @@ async def test_one_bit_only_lights_its_own_category(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     on_categories = {"grid", "shutdown", "fan", "battery"}
-    for category in FaultCategory:
+    for description in FAULT_SENSOR_DESCRIPTIONS:
         entity_id = entity_registry.async_get_entity_id(
-            BINARY_SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_fault_{category.value}"
+            BINARY_SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_{description.key}"
         )
         assert entity_id is not None
         assert (state := hass.states.get(entity_id)) is not None
-        expected = STATE_ON if category.value in on_categories else STATE_OFF
-        assert state.state == expected, category
+        expected = (
+            STATE_ON if description.category.value in on_categories else STATE_OFF
+        )
+        assert state.state == expected, description.category
 
 
 async def test_enabled_by_default_excludes_commercial_hardware(

@@ -5,11 +5,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from modbus_connection import ModbusError, ModbusTcpParams
-from sofar_modbus.modern.device import (
-    BATTERY_STRING_COMPONENTS,
-    SofarInverter,
-    identify,
-)
+from sofar_modbus.modern.device import SofarInverter, identify
 from sofar_modbus.tuning import LinkTuner, TimedUnit
 
 from homeassistant.components.modbus import async_get_unit
@@ -30,6 +26,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    BATTERY_COMPONENTS,
     CONF_UNIT_ID,
     DOMAIN,
     METER_ENERGY,
@@ -199,7 +196,7 @@ def _battery_pack_number(serial: str, identifier: str) -> int | None:
         return None
     suffix = identifier.removeprefix(prefix)
     number = int(suffix) if suffix.isdecimal() else None
-    return number if number in BATTERY_STRING_COMPONENTS else None
+    return number if number in BATTERY_COMPONENTS else None
 
 
 async def async_remove_config_entry_device(

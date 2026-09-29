@@ -2,18 +2,13 @@
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from datetime import date, datetime
-from decimal import Decimal
+from datetime import date
 from enum import IntEnum
-from typing import override
+from typing import cast, override
 
 from sofar_modbus.model import CorrectedTotal
 from sofar_modbus.modern.battery import BatteryString
-from sofar_modbus.modern.device import (
-    BATTERY_STRING_COMPONENTS,
-    PV_STRING_COMPONENTS,
-    SofarInverter,
-)
+from sofar_modbus.modern.device import SofarInverter
 from sofar_modbus.modern.enums import FeedinLimitationMode, PassiveModeTimeoutAction
 from sofar_modbus.modern.pv import PvString
 
@@ -41,7 +36,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import METER_ENERGY
+from .const import BATTERY_COMPONENTS, METER_ENERGY
 from .coordinator import SofarConfigEntry, SofarRuntimeData
 from .entity import SofarEntity, SofarEntityDescription
 
@@ -69,7 +64,7 @@ async def async_setup_entry(
         wired = runtime_data.wired_packs
         new = {
             number
-            for number in BATTERY_STRING_COMPONENTS
+            for number in BATTERY_COMPONENTS
             if number not in wired and runtime_data.pack_is_wired(number)
         }
         if not new:
@@ -113,8 +108,12 @@ class SofarSensor(SofarEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
-        return self.entity_description.value_fn(self.coordinator.device)
+    def native_value(self) -> str | int | float | date | None:
+        value = self.entity_description.value_fn(self.coordinator.device)
+        # IntEnum stringifies as the raw int; use the option slug.
+        if isinstance(value, IntEnum):
+            return value.name.lower()
+        return value
 
 
 class SofarTotalSensor(SofarEntity, RestoreSensor):
@@ -138,11 +137,11 @@ class SofarTotalSensor(SofarEntity, RestoreSensor):
 
     @property
     @override
-    def native_value(self) -> StateType | date | datetime | Decimal:
-        total = self.entity_description.total_fn(self.coordinator.device)
-        if (value := total.value) is not None:
+    def native_value(self) -> int | float | None:
+        value = self.entity_description.total_fn(self.coordinator.device).value
+        if isinstance(value, (int, float)):
             self._attr_native_value = value
-        return self._attr_native_value
+        return cast(int | float | None, self._attr_native_value)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -159,14 +158,9 @@ class SofarTotalSensorDescription(SensorEntityDescription, SofarEntityDescriptio
     total_fn: Callable[[SofarInverter], CorrectedTotal]
 
 
-def _option(value: IntEnum | None) -> str | None:
-    """Report an enum reading as its option, not its raw int."""
-    return value.name.lower() if value is not None else None
-
-
 @dataclass(frozen=True, kw_only=True)
 class _PartMeasurement[V]:
-    """Describe a measurement every PV string or battery pack repeats."""
+    """One measurement every string or pack repeats, before it gets a number."""
 
     key: str
     translation_key: str
@@ -178,6 +172,20 @@ class _PartMeasurement[V]:
     entity_registry_enabled_default: bool = True
     value_fn: Callable[[V], StateType]
 
+
+# Which register block each string or pack is read from.
+_PV_STRING_COMPONENTS = {
+    1: "pv_1_2",
+    2: "pv_1_2",
+    3: "pv_3",
+    4: "pv_4",
+    5: "pv_5_6",
+    6: "pv_5_6",
+    7: "pv_7_8",
+    8: "pv_7_8",
+    9: "pv_9_10",
+    10: "pv_9_10",
+}
 
 _PV_STRING_MEASUREMENTS: tuple[_PartMeasurement[PvString], ...] = (
     _PartMeasurement(
@@ -341,7 +349,7 @@ SENSOR_DESCRIPTIONS: tuple[
             "upgrading",
             "self_charging",
         ],
-        value_fn=lambda device: _option(device.state.system_state),
+        value_fn=lambda device: device.state.system_state,
     ),
     SofarSensorDescription(
         key="inverter_temperature_1",
@@ -1439,7 +1447,7 @@ SENSOR_DESCRIPTIONS: tuple[
         ],
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda device: _option(device.battery_config_id.bat_config_protocol),
+        value_fn=lambda device: device.battery_config_id.bat_config_protocol,
     ),
     SofarSensorDescription(
         key="bat_config_overvoltage_protection",
@@ -1566,7 +1574,7 @@ SENSOR_DESCRIPTIONS: tuple[
         ],
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda device: _option(device.battery_config.bat_config_cell_type),
+        value_fn=lambda device: device.battery_config.bat_config_cell_type,
     ),
     SofarSensorDescription(
         key="bat_config_eps_buffer",
@@ -1613,7 +1621,7 @@ SENSOR_DESCRIPTIONS: tuple[
             "operation_failed_input_parameters_incorrect",
         ],
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda device: _option(device.rtc_sync.sync_rtc_result),
+        value_fn=lambda device: device.rtc_sync.sync_rtc_result,
     ),
     SofarSensorDescription(
         key="feedin_limitation_mode",
@@ -1623,7 +1631,7 @@ SENSOR_DESCRIPTIONS: tuple[
         options=[mode.name.lower() for mode in FeedinLimitationMode],
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda device: _option(device.feed_in.feedin_limitation_mode),
+        value_fn=lambda device: device.feed_in.feedin_limitation_mode,
     ),
     SofarSensorDescription(
         key="feedin_max_power",
@@ -1662,7 +1670,7 @@ SENSOR_DESCRIPTIONS: tuple[
         options=[action.name.lower() for action in PassiveModeTimeoutAction],
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda device: _option(device.passive.passive_mode_timeout_action),
+        value_fn=lambda device: device.passive.passive_mode_timeout_action,
     ),
     SofarSensorDescription(
         key="passive_mode_grid_power",
@@ -1698,12 +1706,12 @@ SENSOR_DESCRIPTIONS: tuple[
 
 SENSOR_DESCRIPTIONS += _part_sensors(
     "pv_string",
-    PV_STRING_COMPONENTS,
+    _PV_STRING_COMPONENTS,
     SofarInverter.pv_string,
     _PV_STRING_MEASUREMENTS,
 ) + _part_sensors(
     "battery",
-    BATTERY_STRING_COMPONENTS,
+    BATTERY_COMPONENTS,
     SofarInverter.battery_string,
     _BATTERY_MEASUREMENTS,
 )

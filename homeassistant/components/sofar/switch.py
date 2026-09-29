@@ -33,10 +33,11 @@ SWITCH_DESCRIPTIONS: tuple[SofarSwitchEntityDescription, ...] = (
         is_on_fn=lambda device: (
             None
             if (value := device.remote.remote_switch_on_off) is None
-            else value is RemoteSwitchOnOff.ON
+            else bool(value)
         ),
-        write_fn=lambda device, value: device.remote.async_write_switch(
-            RemoteSwitchOnOff.ON if value else RemoteSwitchOnOff.OFF
+        write_fn=lambda device, value: device.remote.write(
+            "remote_switch_on_off",
+            RemoteSwitchOnOff.ON if value else RemoteSwitchOnOff.OFF,
         ),
     ),
 )

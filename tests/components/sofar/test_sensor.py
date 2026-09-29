@@ -77,12 +77,16 @@ async def test_all_entities(
 
 
 def test_sensor_description_components_are_real() -> None:
-    """Guards SENSOR_DESCRIPTIONS against a component transcription slip."""
+    """Guards SENSOR_DESCRIPTIONS against a component/key transcription slip."""
     inverter = SofarInverter(
         MockModbusConnection().for_unit(1), serial_number="SP1ES12345678"
     )
     for description in SENSOR_DESCRIPTIONS:
-        assert hasattr(inverter, description.component), description.component
+        component = getattr(inverter, description.component, None)
+        assert component is not None, f"unknown component {description.component!r}"
+        assert hasattr(component, description.key), (
+            f"{description.component}.{description.key} does not exist"
+        )
 
 
 async def test_sensor_entities_created_and_state(

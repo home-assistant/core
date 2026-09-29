@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ATTR_MANUFACTURER, DOMAIN
+from .const import ATTR_MANUFACTURER, BATTERY_COMPONENTS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -167,10 +167,10 @@ class SofarRuntimeData:
 
     def pack_is_wired(self, number: int) -> bool:
         """Whether a pack has answered, so it physically exists."""
-        string = self.readings.device.battery_string(number)
-        if string.component_name not in self.served_components:
+        component_name = BATTERY_COMPONENTS[number]
+        if component_name not in self.served_components:
             return False
-        return bool(string.voltage)
+        return bool(self.readings.device.battery_string(number).voltage)
 
     def coordinator_for(self, component: str) -> SofarDataUpdateCoordinator:
         """Which coordinator owns a given component's data."""
