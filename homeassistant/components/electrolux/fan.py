@@ -157,7 +157,8 @@ class AirPurifierFanEntity(ElectroluxBaseEntity[APAppliance], FanEntity):
             # if preset_mode is one of the reported modes, then it is also present in _modes_mapping
             assert mode is not None
         command = self._appliance_data.get_mode_command(mode)
-        await self._send_command(command)
+        await self.coordinator.client.send_command(self._appliance_id, command)
+        await self.coordinator.async_refresh()
 
     @override
     async def async_set_percentage(self, percentage: int) -> None:
@@ -171,13 +172,15 @@ class AirPurifierFanEntity(ElectroluxBaseEntity[APAppliance], FanEntity):
             await self.async_turn_off()
         else:
             command = self._appliance_data.get_fan_speed_command(fan_speed)
-            await self._send_command(command)
+            await self.coordinator.client.send_command(self._appliance_id, command)
+            await self.coordinator.async_refresh()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send turn off command."""
         command = self._appliance_data.get_turn_off_command()
-        await self._send_command(command)
+        await self.coordinator.client.send_command(self._appliance_id, command)
+        await self.coordinator.async_refresh()
 
     @override
     async def async_turn_on(
@@ -188,8 +191,5 @@ class AirPurifierFanEntity(ElectroluxBaseEntity[APAppliance], FanEntity):
     ) -> None:
         """Send turn on command."""
         command = self._appliance_data.get_turn_on_command()
-        await self._send_command(command)
-
-    async def _send_command(self, command: dict[str, Any]) -> None:
-        await self.coordinator.send_command(command)
+        await self.coordinator.client.send_command(self._appliance_id, command)
         await self.coordinator.async_refresh()
