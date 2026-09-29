@@ -10,6 +10,7 @@ from boschshcpy import (
     BatteryLevelService,
     BypassService,
     CameraAmbientLightService,
+    CameraFrontLightService,
     CameraLightService,
     PowerSwitchService,
     PrivacyModeService,
@@ -197,6 +198,7 @@ def camera_outdoor_gen2_device(
     name: str = "Outdoor Camera",
     privacymode: PrivacyModeService.State = PrivacyModeService.State.ENABLED,
     cameraambientlight: CameraAmbientLightService.State = CameraAmbientLightService.State.OFF,
+    camerafrontlight: CameraFrontLightService.State = CameraFrontLightService.State.OFF,
 ) -> SHCCameraOutdoorGen2:
     """Build a minimal device double for the camera_outdoor_gen2 bucket."""
     device = create_autospec(SHCCameraOutdoorGen2, instance=True, spec_set=True)
@@ -211,6 +213,7 @@ def camera_outdoor_gen2_device(
     device.status = "AVAILABLE"
     device.privacymode = privacymode
     device.cameraambientlight = cameraambientlight
+    device.camerafrontlight = camerafrontlight
     return device
 
 

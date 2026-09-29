@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, override
 from boschshcpy import (
     BypassService,
     CameraAmbientLightService,
+    CameraFrontLightService,
     CameraLightService,
     PowerSwitchService,
     PrivacyModeService,
@@ -101,6 +102,15 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         entity_category=EntityCategory.CONFIG,
         on_key="cameraambientlight",
         on_value=CameraAmbientLightService.State.ON,
+        should_poll=True,
+    ),
+    "cameraoutdoorgen2_camerafrontlight": SHCSwitchEntityDescription(
+        key="cameraoutdoorgen2_camerafrontlight",
+        translation_key="camera_frontlight",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="camerafrontlight",
+        on_value=CameraFrontLightService.State.ON,
         should_poll=True,
     ),
     "child_lock": SHCSwitchEntityDescription(
@@ -345,6 +355,18 @@ async def async_setup_entry(
             entry_id=config_entry.entry_id,
             description=SWITCH_TYPES["cameraoutdoorgen2_cameraambientlight"],
             unique_id_suffix="cameraoutdoorgen2_cameraambientlight",
+        )
+        for switch in session.device_helper.camera_outdoor_gen2
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["cameraoutdoorgen2_camerafrontlight"],
+            unique_id_suffix="cameraoutdoorgen2_camerafrontlight",
         )
         for switch in session.device_helper.camera_outdoor_gen2
     )
