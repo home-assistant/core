@@ -5,6 +5,7 @@ from collections.abc import AsyncGenerator, AsyncIterator, Callable, Mapping, Se
 from dataclasses import dataclass, field
 import datetime
 import json
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, cast
 
 from google.genai import interactions
@@ -25,6 +26,7 @@ if TYPE_CHECKING:
 else:
     Interaction = interactions.Interaction
 from homeassistant.components import conversation
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 
@@ -317,23 +319,106 @@ def _validate_tool_results(value: Any) -> Any:
     return value
 
 
+def _read_attachment_file(path: Path) -> bytes:
+    """Read attachment bytes from disk, failing fast if not found or on I/O error."""
+    if not path.exists():
+        raise HomeAssistantError(f"Attachment file not found: {path}")
+    try:
+        return path.read_bytes()
+    except OSError as err:
+        raise HomeAssistantError(
+            f"Error reading attachment file {path}: {err}"
+        ) from err
+
+
+def _format_attachment_content(
+    raw_data: bytes,
+    mime_type: str,
+) -> interactions.Content:
+    """Format raw attachment data into the appropriate Interactions Content part."""
+    b64_data = base64.b64encode(raw_data).decode("ascii")
+
+    if mime_type.startswith("image/"):
+        return format_image_content(data=raw_data, mime_type=mime_type)
+
+    if mime_type.startswith("audio/"):
+        return interactions.AudioContent(data=b64_data, mime_type=cast(Any, mime_type))
+
+    if mime_type.startswith("video/"):
+        return interactions.VideoContent(data=b64_data, mime_type=cast(Any, mime_type))
+
+    if mime_type in ("application/pdf", "text/csv"):
+        return interactions.DocumentContent(
+            data=b64_data, mime_type=cast(Any, mime_type)
+        )
+
+    if mime_type.startswith("text/"):
+        return interactions.TextContent(text=raw_data.decode("utf-8", errors="replace"))
+
+    raise HomeAssistantError(f"Unsupported attachment type: {mime_type}")
+
+
+async def async_prepare_attachment_for_interactions(
+    hass: HomeAssistant,
+    attachment: conversation.Attachment,
+) -> interactions.Content:
+    """Prepare a single conversation attachment asynchronously for Interactions API."""
+    if not attachment.path:
+        raise HomeAssistantError(
+            f"Attachment missing file path: {attachment.media_content_id}"
+        )
+    raw_data = await hass.async_add_executor_job(_read_attachment_file, attachment.path)
+    return _format_attachment_content(raw_data, attachment.mime_type)
+
+
+async def async_prepare_chat_log_attachments(
+    hass: HomeAssistant,
+    chat_log: conversation.ChatLog,
+) -> dict[str, interactions.Content]:
+    """Prepare all attachments in a chat log asynchronously for Interactions API."""
+    prepared: dict[str, interactions.Content] = {}
+    for content in chat_log.content:
+        if isinstance(content, conversation.UserContent) and content.attachments:
+            for attachment in content.attachments:
+                if attachment.media_content_id not in prepared:
+                    prepared[
+                        attachment.media_content_id
+                    ] = await async_prepare_attachment_for_interactions(
+                        hass, attachment
+                    )
+    return prepared
+
+
 def _convert_user_content_step(
     content: conversation.UserContent,
+    attachment_cache: dict[str | Path, interactions.Content] | None = None,
 ) -> interactions.UserInputStep:
-    """Convert UserContent into a UserInputStep, including any image attachments."""
+    """Convert UserContent into a UserInputStep, including any attachments."""
     step_content: list[interactions.Content] = []
 
     if content.attachments:
         for attachment in content.attachments:
-            if attachment.mime_type and attachment.mime_type.startswith("image/"):
-                if attachment.path and attachment.path.exists():
-                    raw_data = attachment.path.read_bytes()
-                    step_content.append(
-                        format_image_content(
-                            data=raw_data,
-                            mime_type=attachment.mime_type,
-                        )
-                    )
+            cached_part: interactions.Content | None = None
+            if attachment_cache is not None:
+                cached_part = attachment_cache.get(attachment.media_content_id) or (
+                    attachment_cache.get(attachment.path) if attachment.path else None
+                )
+
+            if cached_part is not None:
+                step_content.append(cached_part)
+                continue
+
+            if not attachment.path:
+                raise HomeAssistantError(
+                    f"Attachment missing file path: {attachment.media_content_id}"
+                )
+
+            raw_data = _read_attachment_file(attachment.path)
+            part = _format_attachment_content(raw_data, attachment.mime_type)
+            if attachment_cache is not None:
+                attachment_cache[attachment.media_content_id] = part
+                attachment_cache[attachment.path] = part
+            step_content.append(part)
 
     if content.content:
         step_content.append(interactions.TextContent(text=content.content))
@@ -511,14 +596,18 @@ def _convert_tool_result_step(
 
 def convert_chat_log_to_interactions_steps(
     chat_log: conversation.ChatLog,
+    prepared_attachments: Mapping[str | Path, interactions.Content] | None = None,
 ) -> list[interactions.Step]:
     """Convert Home Assistant ChatLog history into a sequence of interaction steps."""
     steps: list[interactions.Step] = []
+    cache: dict[str | Path, interactions.Content] = (
+        dict(prepared_attachments) if prepared_attachments is not None else {}
+    )
 
     for content in chat_log.content:
         match content:
             case conversation.UserContent():
-                steps.append(_convert_user_content_step(content))
+                steps.append(_convert_user_content_step(content, cache))
             case conversation.AssistantContent():
                 steps.extend(_convert_assistant_content_steps(content))
             case conversation.ToolResultContent():

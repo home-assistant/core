@@ -25,6 +25,8 @@ from homeassistant.components.google_generative_ai_conversation.entity import (
     PartDetails,
 )
 from homeassistant.components.google_generative_ai_conversation.interactions import (
+    async_prepare_attachment_for_interactions,
+    async_prepare_chat_log_attachments,
     build_interaction_request,
     convert_chat_log_to_interactions_steps,
     extract_output_audio,
@@ -1596,3 +1598,181 @@ async def test_convert_chat_log_to_interactions_steps_with_image_attachment(
             interactions.TextContent(text="Describe this image"),
         ]
     )
+
+
+async def test_convert_chat_log_to_interactions_steps_with_various_attachments(
+    hass: HomeAssistant,
+    tmp_path: Path,
+) -> None:
+    """Test converting chat log with audio, video, PDF, and text attachments."""
+    audio_file = tmp_path / "sound.wav"
+    audio_file.write_bytes(b"audio_bytes_123")
+    audio_b64 = base64.b64encode(b"audio_bytes_123").decode("ascii")
+
+    video_file = tmp_path / "clip.mp4"
+    video_file.write_bytes(b"video_bytes_456")
+    video_b64 = base64.b64encode(b"video_bytes_456").decode("ascii")
+
+    pdf_file = tmp_path / "doc.pdf"
+    pdf_file.write_bytes(b"pdf_bytes_789")
+    pdf_b64 = base64.b64encode(b"pdf_bytes_789").decode("ascii")
+
+    txt_file = tmp_path / "notes.txt"
+    txt_file.write_text(
+        "Meeting notes: discussion about home automation.", encoding="utf-8"
+    )
+
+    chat_log = conversation.ChatLog(hass, "test_conversation")
+    chat_log.async_add_user_content(
+        conversation.UserContent(
+            content="Process these attachments",
+            attachments=[
+                conversation.Attachment(
+                    media_content_id="audio_1",
+                    mime_type="audio/wav",
+                    path=audio_file,
+                ),
+                conversation.Attachment(
+                    media_content_id="video_1",
+                    mime_type="video/mp4",
+                    path=video_file,
+                ),
+                conversation.Attachment(
+                    media_content_id="pdf_1",
+                    mime_type="application/pdf",
+                    path=pdf_file,
+                ),
+                conversation.Attachment(
+                    media_content_id="txt_1",
+                    mime_type="text/plain",
+                    path=txt_file,
+                ),
+            ],
+        )
+    )
+
+    steps = convert_chat_log_to_interactions_steps(chat_log)
+    assert len(steps) == 1
+    assert steps[0] == interactions.UserInputStep(
+        content=[
+            interactions.AudioContent(data=audio_b64, mime_type="audio/wav"),
+            interactions.VideoContent(data=video_b64, mime_type="video/mp4"),
+            interactions.DocumentContent(data=pdf_b64, mime_type="application/pdf"),
+            interactions.TextContent(
+                text="Meeting notes: discussion about home automation."
+            ),
+            interactions.TextContent(text="Process these attachments"),
+        ]
+    )
+
+
+async def test_convert_chat_log_to_interactions_steps_unsupported_attachment(
+    hass: HomeAssistant,
+    tmp_path: Path,
+) -> None:
+    """Test converting chat log with unsupported attachment raises HomeAssistantError."""
+    zip_file = tmp_path / "archive.zip"
+    zip_file.write_bytes(b"PK000fakezip")
+
+    chat_log = conversation.ChatLog(hass, "test_conversation")
+    chat_log.async_add_user_content(
+        conversation.UserContent(
+            content="Unzip this",
+            attachments=[
+                conversation.Attachment(
+                    media_content_id="zip_1",
+                    mime_type="application/zip",
+                    path=zip_file,
+                )
+            ],
+        )
+    )
+
+    with pytest.raises(
+        HomeAssistantError, match="Unsupported attachment type: application/zip"
+    ):
+        convert_chat_log_to_interactions_steps(chat_log)
+
+
+async def test_convert_chat_log_to_interactions_steps_missing_attachment_file(
+    hass: HomeAssistant,
+    tmp_path: Path,
+) -> None:
+    """Test converting chat log with missing attachment file raises HomeAssistantError."""
+    non_existent_file = tmp_path / "does_not_exist.jpg"
+
+    chat_log = conversation.ChatLog(hass, "test_conversation")
+    chat_log.async_add_user_content(
+        conversation.UserContent(
+            content="Look at this missing picture",
+            attachments=[
+                conversation.Attachment(
+                    media_content_id="missing_img",
+                    mime_type="image/jpeg",
+                    path=non_existent_file,
+                )
+            ],
+        )
+    )
+
+    with pytest.raises(HomeAssistantError, match="Attachment file not found"):
+        convert_chat_log_to_interactions_steps(chat_log)
+
+
+async def test_convert_chat_log_to_interactions_steps_attachment_caching(
+    hass: HomeAssistant,
+    tmp_path: Path,
+) -> None:
+    """Test that prepared attachments are cached and disk I/O is not repeated."""
+    img_file = tmp_path / "photo.jpg"
+    img_file.write_bytes(b"initial_bytes")
+
+    chat_log = conversation.ChatLog(hass, "test_conversation")
+    chat_log.async_add_user_content(
+        conversation.UserContent(
+            content="Photo query",
+            attachments=[
+                conversation.Attachment(
+                    media_content_id="photo_1",
+                    mime_type="image/jpeg",
+                    path=img_file,
+                )
+            ],
+        )
+    )
+
+    # Prepare attachments asynchronously via executor
+    prepared = await async_prepare_chat_log_attachments(hass, chat_log)
+    assert "photo_1" in prepared
+    assert isinstance(prepared["photo_1"], interactions.ImageContent)
+
+    # Now remove the file from disk to verify convert_chat_log_to_interactions_steps uses the cache
+    img_file.unlink()
+
+    steps = convert_chat_log_to_interactions_steps(
+        chat_log, prepared_attachments=prepared
+    )
+    assert len(steps) == 1
+    assert steps[0] == interactions.UserInputStep(
+        content=[
+            prepared["photo_1"],
+            interactions.TextContent(text="Photo query"),
+        ]
+    )
+
+
+async def test_async_prepare_attachment_for_interactions(
+    hass: HomeAssistant,
+    tmp_path: Path,
+) -> None:
+    """Test preparing a single attachment asynchronously."""
+    img_file = tmp_path / "single.jpg"
+    img_file.write_bytes(b"single_image_data")
+    attachment = conversation.Attachment(
+        media_content_id="single_1",
+        mime_type="image/jpeg",
+        path=img_file,
+    )
+    content = await async_prepare_attachment_for_interactions(hass, attachment)
+    assert isinstance(content, interactions.ImageContent)
+    assert content.data == base64.b64encode(b"single_image_data").decode("ascii")
