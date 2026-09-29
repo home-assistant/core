@@ -117,6 +117,9 @@
           "stop": "mdi:stop"
         }
       },
+      "picture_mode": {
+        "default": "mdi:television"
+      },
       "robot_cleaner_cleaning_type": {
         "default": "mdi:vacuum"
       },
@@ -145,6 +148,9 @@
       },
       "spin_level": {
         "default": "mdi:rotate-right"
+      },
+      "tv_sound_mode": {
+        "default": "mdi:surround-sound"
       },
       "water_temperature": {
         "default": "mdi:water-thermometer"

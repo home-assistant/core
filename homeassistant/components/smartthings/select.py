@@ -43,6 +43,22 @@ CLEANING_TYPE_TO_HA = {
     "mopAfterVacuum": "mop_after_vacuum",
 }
 
+TV_PICTURE_MODE_TO_HA = {
+    "Dynamic": "dynamic",
+    "Standard": "standard",
+    "Natural": "natural",
+    "Movie": "movie",
+    "FILMMAKER MODE": "filmmaker_mode",
+    "Eco": "eco",
+}
+
+TV_SOUND_MODE_TO_HA = {
+    "Standard": "standard",
+    "Optimized": "optimized",
+    "Amplify": "amplify",
+    "Adaptive Sound": "adaptive_sound",
+}
+
 WASHER_SOIL_LEVEL_TO_HA = {
     "none": "none",
     "heavy": "heavy",
@@ -298,6 +314,24 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         command=Command.SET_ALARM_THRESHOLD,
         entity_category=EntityCategory.CONFIG,
         value_is_integer=True,
+    ),
+    Capability.CUSTOM_PICTURE_MODE: SmartThingsSelectDescription(
+        key=Capability.CUSTOM_PICTURE_MODE,
+        translation_key="picture_mode",
+        options_attribute=Attribute.SUPPORTED_PICTURE_MODES,
+        status_attribute=Attribute.PICTURE_MODE,
+        command=Command.SET_PICTURE_MODE,
+        options_map=TV_PICTURE_MODE_TO_HA,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    Capability.CUSTOM_SOUND_MODE: SmartThingsSelectDescription(
+        key=Capability.CUSTOM_SOUND_MODE,
+        translation_key="tv_sound_mode",
+        options_attribute=Attribute.SUPPORTED_SOUND_MODES,
+        status_attribute=Attribute.SOUND_MODE,
+        command=Command.SET_SOUND_MODE,
+        options_map=TV_SOUND_MODE_TO_HA,
+        entity_category=EntityCategory.CONFIG,
     ),
     Capability.SAMSUNG_CE_ROBOT_CLEANER_SYSTEM_SOUND_MODE: SmartThingsSelectDescription(
         key=Capability.SAMSUNG_CE_ROBOT_CLEANER_SYSTEM_SOUND_MODE,
