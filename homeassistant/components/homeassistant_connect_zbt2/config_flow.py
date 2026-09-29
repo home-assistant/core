@@ -7,7 +7,6 @@ from homeassistant.components import usb
 from homeassistant.components.homeassistant_hardware import firmware_config_flow
 from homeassistant.components.homeassistant_hardware.helpers import (
     HardwareFirmwareDiscoveryInfo,
-    async_follow_moved_adapter,
 )
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
@@ -131,12 +130,6 @@ class HomeAssistantConnectZBT2ConfigFlow(
         """Handle usb discovery."""
         discovery_info.device = await self.hass.async_add_executor_job(
             usb.get_serial_by_id, discovery_info.device
-        )
-
-        # The integrations using a moved adapter through us follow it first, then our
-        # own entry below
-        await async_follow_moved_adapter(
-            self.hass, DOMAIN, discovery_info.serial_number, discovery_info.device
         )
 
         try:

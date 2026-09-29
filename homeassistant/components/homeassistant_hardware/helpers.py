@@ -173,53 +173,27 @@ class HardwareInfoDispatcher:
             ),
         )
 
-    async def _async_get_firmware_info(
-        self, fw_info_module: HardwareFirmwareInfoModule, config_entry: ConfigEntry
-    ) -> FirmwareInfo | None:
-        """Get firmware info for a config entry from its provider."""
-        try:
-            if hasattr(fw_info_module, "get_firmware_info"):
-                return fw_info_module.get_firmware_info(self.hass, config_entry)
-            return await fw_info_module.async_get_firmware_info(self.hass, config_entry)
-        except Exception:
-            _LOGGER.exception(
-                "Error while getting firmware info from %r", fw_info_module
-            )
-            return None
-
     async def iter_firmware_info(self) -> AsyncIterator[FirmwareInfo]:
         """Iterate over all firmware information for all hardware."""
         for domain, fw_info_module in self._providers.items():
             for config_entry in self.hass.config_entries.async_entries(domain):
-                fw_info = await self._async_get_firmware_info(
-                    fw_info_module, config_entry
-                )
-                if fw_info is not None:
-                    yield fw_info
-
-    async def notify_device_path_changed(self, old_path: str, new_path: str) -> None:
-        """Move every config entry using a device from its old path to its new one."""
-        for domain, fw_info_module in self._providers.items():
-            if not hasattr(fw_info_module, "async_update_device_path"):
-                continue
-
-            for config_entry in self.hass.config_entries.async_entries(domain):
-                fw_info = await self._async_get_firmware_info(
-                    fw_info_module, config_entry
-                )
-                if fw_info is None or fw_info.device != old_path:
+                try:
+                    if hasattr(fw_info_module, "get_firmware_info"):
+                        fw_info = fw_info_module.get_firmware_info(
+                            self.hass, config_entry
+                        )
+                    else:
+                        fw_info = await fw_info_module.async_get_firmware_info(
+                            self.hass, config_entry
+                        )
+                except Exception:
+                    _LOGGER.exception(
+                        "Error while getting firmware info from %r", fw_info_module
+                    )
                     continue
 
-                _LOGGER.debug(
-                    "Moving %s entry %s from %s to %s",
-                    domain,
-                    config_entry.entry_id,
-                    old_path,
-                    new_path,
-                )
-                await fw_info_module.async_update_device_path(
-                    self.hass, config_entry, new_path
-                )
+                if fw_info is not None:
+                    yield fw_info
 
     def register_firmware_update_in_progress(
         self, device: str, source_domain: str
@@ -275,28 +249,6 @@ def async_notify_firmware_info(
 ) -> Awaitable[None]:
     """Notify the dispatcher of new firmware information."""
     return hass.data[DATA_COMPONENT].notify_firmware_info(domain, firmware_info)
-
-
-@hass_callback
-def async_notify_device_path_changed(
-    hass: HomeAssistant, old_path: str, new_path: str
-) -> Awaitable[None]:
-    """Notify the dispatcher that an adapter moved to a new serial port path."""
-    return hass.data[DATA_COMPONENT].notify_device_path_changed(old_path, new_path)
-
-
-async def async_follow_moved_adapter(
-    hass: HomeAssistant, domain: str, serial_number: str | None, new_path: str
-) -> None:
-    """Move the users of a known adapter to the path it was just discovered at."""
-    if serial_number is None:
-        return
-
-    entry = hass.config_entries.async_entry_for_domain_unique_id(domain, serial_number)
-    if entry is None or "device" not in entry.data or entry.data["device"] == new_path:
-        return
-
-    await async_notify_device_path_changed(hass, entry.data["device"], new_path)
 
 
 @hass_callback

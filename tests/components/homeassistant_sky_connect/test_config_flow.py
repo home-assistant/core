@@ -15,7 +15,6 @@ from homeassistant.components.homeassistant_hardware.firmware_config_flow import
 )
 from homeassistant.components.homeassistant_hardware.helpers import (
     async_notify_firmware_info,
-    async_register_firmware_info_provider,
 )
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     CONF_DISABLE_MULTI_PAN,
@@ -24,7 +23,6 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
-    OwningIntegration,
 )
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
 from homeassistant.components.usb import DOMAIN as USB_DOMAIN, USBDevice
@@ -520,7 +518,7 @@ async def test_firmware_callback_auto_creates_entry(
 async def test_duplicate_usb_discovery_aborts_early(
     usb_data: UsbServiceInfo, model: str, hass: HomeAssistant
 ) -> None:
-    """Test USB discovery of a known adapter at a new path moves its users there."""
+    """Test USB discovery aborts early when unique_id already exists."""
     # Create existing config entry
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -538,41 +536,14 @@ async def test_duplicate_usb_discovery_aborts_early(
     )
     config_entry.add_to_hass(hass)
 
-    # An integration using the radio through the old path follows it to the new one
-    assert await async_setup_component(hass, "homeassistant_hardware", {})
-    zha_entry = MockConfigEntry(domain="zha", unique_id="zha", data={})
-    zha_entry.add_to_hass(hass)
-    zha = Mock(spec=["get_firmware_info", "async_update_device_path"])
-    zha.get_firmware_info = Mock(
-        return_value=FirmwareInfo(
-            device="/dev/oldpath",
-            firmware_type=ApplicationType.EZSP,
-            firmware_version=None,
-            source="zha",
-            owners=[OwningIntegration(config_entry_id=zha_entry.entry_id)],
-        )
-    )
-    zha.async_update_device_path = AsyncMock()
-    async_register_firmware_info_provider(hass, "zha", zha)
-
     # Try to discover the same device with a different path
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "usb"}, data=usb_data
     )
 
+    # Should abort before get_serial_by_id is called
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert config_entry.data["device"] == usb_data.device
-    assert zha.async_update_device_path.mock_calls == [
-        call(hass, zha_entry, usb_data.device)
-    ]
-
-    # Seeing it again where it already is moves nothing
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "usb"}, data=usb_data
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert len(zha.async_update_device_path.mock_calls) == 1
 
 
 @pytest.mark.parametrize(

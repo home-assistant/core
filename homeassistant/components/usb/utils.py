@@ -3,8 +3,6 @@
 from collections.abc import Sequence
 import fnmatch
 import os
-import re
-from urllib.parse import parse_qs, urlsplit
 
 from serialx import SerialPortInfo, list_serial_ports
 
@@ -56,26 +54,6 @@ def usb_serial_device_from_port(port: SerialPortInfo) -> USBDevice | SerialDevic
 def scan_serial_ports() -> Sequence[USBDevice | SerialDevice]:
     """Scan serial ports and return USB and other serial devices."""
     return [usb_serial_device_from_port(port) for port in list_serial_ports()]
-
-
-SERIAL_BY_ID_DIR = "/dev/serial/by-id/"
-# udev only adds this for `usb-serial` drivers, not for CDC ACM
-_SERIAL_BY_ID_PORT_SUFFIX = re.compile(r"-port\d+$")
-
-
-def serial_path_udev_id(path: str) -> str | None:
-    """Return the by-id link name of a serial port path's device, without `-portN`."""
-
-    # A by-id link names the device directly, a serial proxy URL carries the same name
-    # as `port_udev_id`, so a device is recognized when it moves between the two
-    if path.startswith(SERIAL_BY_ID_DIR):
-        return _SERIAL_BY_ID_PORT_SUFFIX.sub("", path.removeprefix(SERIAL_BY_ID_DIR))
-
-    query = parse_qs(urlsplit(path).query)
-    if "port_udev_id" in query:
-        return query["port_udev_id"][0]
-
-    return None
 
 
 def usb_device_from_path(device_path: str) -> USBDevice | None:

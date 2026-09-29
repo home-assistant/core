@@ -52,7 +52,6 @@ from .const import (
     LEGACY_ZEROCONF_PORT,
 )
 from .helpers import get_config_entry_unique_id, get_zha_gateway
-from .homeassistant_hardware import async_update_device_path
 from .radio_manager import (
     DEVICE_SCHEMA,
     HARDWARE_DISCOVERY_SCHEMA,
@@ -816,30 +815,6 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
                     reason="cannot_resolve_path",
                     description_placeholders={"path": self._radio_mgr.device_path},
                 ) from error
-
-            # A configured radio turning up at another path has moved: to another port
-            # on the host, or behind an ESPHome serial proxy. Its old path must be gone,
-            # so that an identical radio without a serial number does not take its place.
-            udev_id = usb.serial_path_udev_id(self._radio_mgr.device_path)
-
-            if udev_id is not None:
-                for entry in zha_config_entries:
-                    old_path = entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
-
-                    if (
-                        old_path != self._radio_mgr.device_path
-                        and usb.serial_path_udev_id(old_path) == udev_id
-                        and not await usb.async_is_serial_port_present(
-                            self.hass, old_path
-                        )
-                    ):
-                        await async_update_device_path(
-                            self.hass, entry, self._radio_mgr.device_path
-                        )
-                        return self.async_abort(
-                            reason="single_instance_allowed",
-                            translation_domain=HOMEASSISTANT_DOMAIN,
-                        )
 
             # mDNS discovery can advertise the same adapter on multiple IPs or via a
             # hostname, which should be considered a duplicate

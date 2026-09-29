@@ -10,7 +10,6 @@ from homeassistant.components.homeassistant_hardware.const import DATA_COMPONENT
 from homeassistant.components.homeassistant_hardware.helpers import (
     async_firmware_update_context,
     async_is_firmware_update_in_progress,
-    async_notify_device_path_changed,
     async_notify_firmware_info,
     async_register_firmware_info_callback,
     async_register_firmware_info_provider,
@@ -117,35 +116,6 @@ async def test_dispatcher_registration(hass: HomeAssistant) -> None:
         call(FIRMWARE_INFO_SPINEL),
         call(FIRMWARE_INFO_SPINEL),
     ]
-
-
-async def test_notify_device_path_changed(hass: HomeAssistant) -> None:
-    """A moved adapter drags along the entries of providers that can follow it."""
-    await async_setup_component(hass, DOMAIN, {})
-
-    following_entry = MockConfigEntry(domain="zha", unique_id="zha", data={})
-    following_entry.add_to_hass(hass)
-    following = MagicMock(spec=["get_firmware_info", "async_update_device_path"])
-    following.get_firmware_info = MagicMock(return_value=FIRMWARE_INFO_EZSP)
-    following.async_update_device_path = AsyncMock()
-    async_register_firmware_info_provider(hass, "zha", following)
-
-    # Same device, but this provider has no way to move its entries
-    static_entry = MockConfigEntry(domain="other", unique_id="other", data={})
-    static_entry.add_to_hass(hass)
-    static = MagicMock(spec=["async_get_firmware_info"])
-    static.async_get_firmware_info = AsyncMock(return_value=FIRMWARE_INFO_EZSP)
-    async_register_firmware_info_provider(hass, "other", static)
-
-    new_path = "esphome-hass://esphome/entry?port_name=USB&usb_serial=1234"
-    await async_notify_device_path_changed(hass, "/dev/serial/by-id/device1", new_path)
-    assert following.async_update_device_path.mock_calls == [
-        call(hass, following_entry, new_path)
-    ]
-
-    # A path nobody uses moves nothing
-    await async_notify_device_path_changed(hass, "/dev/serial/by-id/device2", new_path)
-    assert len(following.async_update_device_path.mock_calls) == 1
 
 
 async def test_dispatcher_iter_error_handling(
