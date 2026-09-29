@@ -51,6 +51,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "electricity_price_low": {
+        "name": "Electricity price low"
+      }
+    },
     "sensor": {
       "current_electricity_price": {
         "name": "Current electricity price"
