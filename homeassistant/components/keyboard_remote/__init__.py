@@ -22,6 +22,7 @@ from homeassistant.core import (
     HomeAssistant,
 )
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType
@@ -160,6 +161,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Get or create the shared manager
     if (manager := hass.data.get(DATA_MANAGER)) is None:
         manager = KeyboardRemoteManager(hass)
+        # Open the watcher now rather than at start, so a failure fails setup
+        # and Home Assistant retries it instead of leaving the entry inactive.
+        try:
+            manager.open_watcher()
+        except OSError as err:
+            raise ConfigEntryNotReady(
+                f"Unable to watch {DEVINPUT} for input devices: {err}"
+            ) from err
         hass.data[DATA_MANAGER] = manager
 
     # Create the device handler for this entry and register it
@@ -213,27 +222,32 @@ class KeyboardRemoteManager:
         # still in flight cannot claim a device after the handlers were stopped.
         self._accepting_devices = False
 
+    def open_watcher(self) -> None:
+        """Create the inotify watches, closing everything again on failure.
+
+        Raises OSError when /dev/input cannot be watched, for example in a
+        container without it mapped, or once the inotify instance limit is hit.
+        """
+        try:
+            self._inotify = Inotify()
+            self._watcher = self._inotify.add_watch(
+                DEVINPUT, Mask.CREATE | Mask.ATTRIB | Mask.DELETE
+            )
+        except OSError:
+            if self._inotify is not None:
+                self._inotify.close()
+                self._inotify = None
+            raise
+        self._watch_by_id()
+
     async def async_start(self) -> None:
-        """Start the inotify watcher (idempotent, lock-protected)."""
+        """Scan for devices and start monitoring (idempotent, lock-protected)."""
         async with self._lock:
-            if self._started:
+            # A stopped manager has closed its watcher and is not restarted
+            if self._started or self._inotify is None:
                 return
 
             _LOGGER.debug("Start monitoring")
-
-            try:
-                self._inotify = Inotify()
-                self._watcher = self._inotify.add_watch(
-                    DEVINPUT, Mask.CREATE | Mask.ATTRIB | Mask.DELETE
-                )
-            except OSError as err:
-                # Leave nothing behind, so the next entry load can retry
-                if self._inotify is not None:
-                    self._inotify.close()
-                    self._inotify = None
-                _LOGGER.error("Unable to watch %s for input devices: %s", DEVINPUT, err)
-                return
-            self._watch_by_id()
             self._accepting_devices = True
 
             # Config entries are not unloaded when Home Assistant stops, so
@@ -281,7 +295,9 @@ class KeyboardRemoteManager:
     async def async_stop(self) -> None:
         """Stop the inotify watcher and all device handlers."""
         async with self._lock:
-            if not self._started:
+            # The watcher opens at setup, so an entry unloaded before Home
+            # Assistant started still has one to close.
+            if not self._started and self._inotify is None:
                 return
 
             _LOGGER.debug("Cleanup on shutdown")

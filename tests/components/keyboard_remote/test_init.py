@@ -3,6 +3,7 @@
 import asyncio
 from contextlib import suppress
 import threading
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from asyncinotify import Mask
@@ -35,7 +36,7 @@ from homeassistant.components.keyboard_remote.const import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, CoreState, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -202,49 +203,71 @@ async def test_yaml_import_unexpected_abort_uses_unknown_issue(
     )
 
 
-async def test_start_fails_when_input_directory_cannot_be_watched(
+@pytest.mark.parametrize(
+    ("inotify_patch", "expected_closes"),
+    [
+        pytest.param(
+            {"side_effect": OSError(24, "Too many open files")},
+            0,
+            id="inotify_instances_exhausted",
+        ),
+        pytest.param(
+            {
+                "return_value": MagicMock(
+                    add_watch=MagicMock(
+                        side_effect=FileNotFoundError(2, "No such file")
+                    )
+                )
+            },
+            1,
+            id="input_directory_missing",
+        ),
+    ],
+)
+async def test_setup_retries_when_input_directory_cannot_be_watched(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_inotify: MagicMock,
-    caplog: pytest.LogCaptureFixture,
+    inotify_patch: dict[str, Any],
+    expected_closes: int,
 ) -> None:
-    """Test a failed start releases inotify and registers no stop listener.
+    """Test setup is retried, instead of loading an entry that cannot work.
 
-    A container without /dev/input mapped cannot be watched, and leaving the
-    manager half started would stop a later load from retrying.
+    A container without /dev/input mapped, or a host out of inotify instances,
+    cannot be watched. Nothing is left behind for the next attempt.
     """
-    mock_inotify.add_watch.side_effect = FileNotFoundError(2, "No such file")
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    assert not manager._started
-    assert manager._inotify is None
-    assert manager._stop_listener is None
-    mock_inotify.close.assert_called_once()
-    assert "Unable to watch /dev/input for input devices" in caplog.text
-
-
-async def test_start_fails_when_inotify_cannot_be_created(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test running out of inotify instances is logged, not raised."""
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.keyboard_remote.Inotify",
-        side_effect=OSError(24, "Too many open files"),
-    ):
+        "homeassistant.components.keyboard_remote.Inotify", **inotify_patch
+    ) as mock_cls:
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    assert not manager._started
-    assert manager._inotify is None
-    assert manager._stop_listener is None
-    assert "Unable to watch /dev/input for input devices" in caplog.text
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert DOMAIN not in hass.data
+    assert mock_cls.return_value.close.call_count == expected_closes
+
+
+async def test_unload_before_start_closes_watcher(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_inotify: MagicMock,
+) -> None:
+    """Test an entry unloaded before Home Assistant started closes the watcher.
+
+    The watcher opens at setup, but the manager only starts once Home
+    Assistant is running.
+    """
+    hass.set_state(CoreState.not_running)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not hass.data[DOMAIN]._started
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_inotify.close.assert_called_once()
+    assert DOMAIN not in hass.data
 
 
 async def test_async_setup_no_yaml_config(hass: HomeAssistant) -> None:
@@ -1574,6 +1597,7 @@ async def test_start_checks_handler_registered_during_scan(
     scan took its handler snapshot before this entry existed.
     """
     manager = KeyboardRemoteManager(hass)
+    manager.open_watcher()
     first = DeviceHandler(hass, mock_config_entry)
     manager.register_handler(mock_config_entry.entry_id, first)
     late_entry = MockConfigEntry(domain=DOMAIN, data={CONF_DEVICE_PATH: "late"})
