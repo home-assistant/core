@@ -280,6 +280,7 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                         **imported_options[CONF_LINES],
                     },
                 },
+                reason="import_updated",
             )
 
         await self.async_set_unique_id(stop_id)
