@@ -341,27 +341,27 @@ async def marketplace_repository_install(
 
 @websocket_api.websocket_command(
     {
-        probatio.Required("type"): "marketplace/repository/remove",
+        probatio.Required("type"): "marketplace/repository/uninstall",
         probatio.Required("repository"): cv.string,
     }
 )
 @websocket_api.require_admin
 @websocket_api.async_response
 @marketplace_command()
-async def marketplace_repository_remove(
+async def marketplace_repository_uninstall(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
     marketplace: MarketplaceManager,
 ) -> None:
-    """Remove a repository."""
+    """Uninstall a repository."""
     repository = marketplace.repositories.get_by_id(msg["repository"])
     if repository is None:
         send_repository_not_found(connection, msg["id"], msg["repository"])
         return
 
     repository.data.new = False
-    # What is on disk is enough to remove it, GitHub is only asked when it can be,
+    # What is on disk is enough to uninstall it, GitHub is only asked when it can be,
     # or for a theme that was stored before its file name was
     theme_without_file_name = (
         repository.data.category == RepositoryCategory.THEME
@@ -379,8 +379,8 @@ async def marketplace_repository_remove(
         send_translated_error(
             connection,
             msg["id"],
-            "remove_failed",
-            "remove_failed",
+            "uninstall_failed",
+            "uninstall_failed",
             {"repository": repository.data.full_name},
         )
         return

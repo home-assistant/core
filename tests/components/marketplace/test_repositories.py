@@ -1040,14 +1040,14 @@ async def test_update_repository(
 
 
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
-async def test_remove_repository(
+async def test_uninstall_repository(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
     config_dir: Path,
     category_test_data: CategoryTestData,
 ) -> None:
-    """Test removing an installed repository of every category."""
+    """Test uninstalling a repository of every category."""
     repository = marketplace.repositories.get_by_full_name(
         category_test_data["repository"]
     )
@@ -1066,7 +1066,7 @@ async def test_remove_repository(
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
-        {"type": "marketplace/repository/remove", "repository": repository.data.id}
+        {"type": "marketplace/repository/uninstall", "repository": repository.data.id}
     )
     assert (await client.receive_json())["success"]
 
@@ -1082,7 +1082,7 @@ async def test_remove_repository(
         categories=[RepositoryCategory.TEMPLATE, RepositoryCategory.THEME]
     ),
 )
-async def test_remove_repository_after_a_restart(
+async def test_uninstall_repository_after_a_restart(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     mock_config_entry: MockConfigEntry,
@@ -1104,7 +1104,7 @@ async def test_remove_repository_after_a_restart(
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
-        {"type": "marketplace/repository/remove", "repository": repository.data.id}
+        {"type": "marketplace/repository/uninstall", "repository": repository.data.id}
     )
     assert (await client.receive_json())["success"]
 
@@ -1114,14 +1114,14 @@ async def test_remove_repository_after_a_restart(
 
 
 @pytest.mark.parametrize("github_token", [None])
-async def test_remove_theme_stored_without_its_file_name(
+async def test_uninstall_theme_stored_without_its_file_name(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     mock_config_entry: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
     config_dir: Path,
 ) -> None:
-    """Test a theme taken over from HACS learns its file name before removal."""
+    """Test a theme taken over from HACS learns its file name before uninstalling."""
     repository = marketplace.repositories.get_by_full_name("hacs-test-org/theme-basic")
     assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
 
@@ -1133,33 +1133,36 @@ async def test_remove_theme_stored_without_its_file_name(
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
-        {"type": "marketplace/repository/remove", "repository": repository.data.id}
+        {"type": "marketplace/repository/uninstall", "repository": repository.data.id}
     )
     assert (await client.receive_json())["success"]
     assert _installed_files(config_dir) == []
 
 
-async def test_remove_repository_failure_is_answered(
+async def test_uninstall_repository_failure_is_answered(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test a removal that can not go ahead answers with why."""
+    """Test an uninstall that can not go ahead answers with why."""
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.data.installed = True
 
     client = await hass_ws_client(hass)
     with patch.object(repository, "remove_local_directory", return_value=False):
         await client.send_json_auto_id(
-            {"type": "marketplace/repository/remove", "repository": repository.data.id}
+            {
+                "type": "marketplace/repository/uninstall",
+                "repository": repository.data.id,
+            }
         )
         response = await client.receive_json()
 
     assert not response["success"]
     assert response["error"] == {
-        "code": "remove_failed",
-        "message": f"Could not remove {REPOSITORY_INTEGRATION}, see the log for details",
-        "translation_key": "remove_failed",
+        "code": "uninstall_failed",
+        "message": f"Could not uninstall {REPOSITORY_INTEGRATION}, see the log for details",
+        "translation_key": "uninstall_failed",
         "translation_domain": DOMAIN,
         "translation_placeholders": {"repository": REPOSITORY_INTEGRATION},
     }
@@ -1834,7 +1837,7 @@ async def test_template_reloads_custom_templates(
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
-        {"type": "marketplace/repository/remove", "repository": repository.data.id}
+        {"type": "marketplace/repository/uninstall", "repository": repository.data.id}
     )
     assert (await client.receive_json())["success"]
 

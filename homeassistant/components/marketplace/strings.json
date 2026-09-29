@@ -84,9 +84,6 @@
     "releases_failed": {
       "message": "Could not get the releases of {repository}: {error}"
     },
-    "remove_failed": {
-      "message": "Could not remove {repository}, see the log for details."
-    },
     "replaces_built_in_not_confirmed": {
       "message": "{repository} replaces the built-in {domain} integration, confirm that before installing it."
     },
@@ -108,11 +105,14 @@
     "setup_failed": {
       "message": "Could not set up the Marketplace: {error}"
     },
+    "uninstall_failed": {
+      "message": "Could not uninstall {repository}, see the log for details."
+    },
     "version_already_installed": {
       "message": "Version {version} of {repository} is already installed."
     },
     "warning_not_accepted": {
-      "message": "Open the Marketplace and read the warning first, installs and updates start working once it is accepted."
+      "message": "Open the Marketplace and read the warning first, installing and updating work once it is accepted."
     }
   },
   "issues": {
@@ -124,7 +124,7 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "The Marketplace removed {repository} from this system and restarted Home Assistant, because the Marketplace catalog marks it as critical.\n\nThe reason given: {reason}\n\nCheck whether anything that depended on {repository} needs your attention. Select **Submit** once you have read this.",
+            "description": "The Marketplace uninstalled {repository} and restarted Home Assistant, because the Marketplace catalog marks it as critical.\n\nThe reason given: {reason}\n\nCheck whether anything that depended on {repository} needs your attention. Select **Submit** once you have read this.",
             "title": "{repository} was removed"
           }
         }
@@ -140,7 +140,7 @@
       "title": "Python scripts are no longer managed by the Marketplace"
     },
     "removed": {
-      "description": "Because {reason}, `{name}` has been removed from the Marketplace. Please visit the [Marketplace panel](/marketplace/repository/{repository_id}) to remove it.",
+      "description": "Because {reason}, `{name}` has been removed from the Marketplace. Please visit the [Marketplace panel](/marketplace/repository/{repository_id}) to uninstall it.",
       "title": "Repository removed from the Marketplace"
     },
     "restart_required": {

@@ -111,7 +111,10 @@ COMMANDS: tuple[dict[str, Any], ...] = (
         "type": "marketplace/repository/release_notes",
         "repository": REPOSITORY_INTEGRATION_ID,
     },
-    {"type": "marketplace/repository/remove", "repository": REPOSITORY_INTEGRATION_ID},
+    {
+        "type": "marketplace/repository/uninstall",
+        "repository": REPOSITORY_INTEGRATION_ID,
+    },
     {
         "type": "marketplace/repository/releases",
         "repository_id": REPOSITORY_INTEGRATION_ID,
@@ -191,7 +194,10 @@ COMMANDS_WITHOUT_WARNING: tuple[dict[str, Any], ...] = (
         "type": "marketplace/repository/releases",
         "repository_id": REPOSITORY_INTEGRATION_ID,
     },
-    {"type": "marketplace/repository/remove", "repository": REPOSITORY_INTEGRATION_ID},
+    {
+        "type": "marketplace/repository/uninstall",
+        "repository": REPOSITORY_INTEGRATION_ID,
+    },
     {"type": "marketplace/github/connect"},
 )
 
@@ -221,7 +227,7 @@ REPOSITORY_COMMANDS: tuple[tuple[str, str, dict[str, Any]], ...] = (
     ("marketplace/repository/beta", "repository", {"show_beta": True}),
     ("marketplace/repository/refresh", "repository", {}),
     ("marketplace/repository/release_notes", "repository", {}),
-    ("marketplace/repository/remove", "repository", {}),
+    ("marketplace/repository/uninstall", "repository", {}),
     ("marketplace/repository/releases", "repository_id", {}),
     ("marketplace/repositories/remove", "repository", {}),
     ("marketplace/repositories/clear_new", "repository", {}),
@@ -1084,12 +1090,12 @@ async def test_repository_install_failure(
     )
 
 
-async def test_repository_remove(
+async def test_repository_uninstall(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test removing an installed repository."""
+    """Test uninstalling a repository."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
 
     client = await hass_ws_client(hass)
@@ -1103,7 +1109,7 @@ async def test_repository_remove(
 
     await client.send_json_auto_id(
         {
-            "type": "marketplace/repository/remove",
+            "type": "marketplace/repository/uninstall",
             "repository": REPOSITORY_INTEGRATION_ID,
         }
     )
@@ -1615,20 +1621,20 @@ async def test_repository_info_rate_limited_without_github(
 
 @pytest.mark.parametrize("github_token", [None])
 @pytest.mark.usefixtures("stored_repositories")
-async def test_repository_remove_without_github(
+async def test_repository_uninstall_without_github(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test removing an installed repository leaves GitHub alone."""
+    """Test uninstalling a repository leaves GitHub alone."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     assert repository.data.installed
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
         {
-            "type": "marketplace/repository/remove",
+            "type": "marketplace/repository/uninstall",
             "repository": REPOSITORY_INTEGRATION_ID,
         }
     )
@@ -1662,8 +1668,8 @@ async def test_commands_need_accepted_warning(
     assert response["error"] == translated_error(
         "warning_not_accepted",
         "warning_not_accepted",
-        "Open the Marketplace and read the warning first, installs and updates"
-        " start working once it is accepted",
+        "Open the Marketplace and read the warning first, installing and updating"
+        " work once it is accepted",
     )
     assert len(github_api_calls(aioclient_mock)) == calls_before
 
