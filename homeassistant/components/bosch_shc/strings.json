@@ -43,6 +43,22 @@
     }
   },
   "entity": {
+    "event": {
+      "smoke_detector_alarm": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "idle_off": "Idle",
+              "intrusion_alarm": "Intrusion alarm",
+              "intrusion_alarm_off_requested": "Intrusion alarm off requested",
+              "intrusion_alarm_on_requested": "Intrusion alarm on requested",
+              "primary_alarm": "Primary alarm",
+              "secondary_alarm": "Secondary alarm"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "air_quality": {
         "name": "Air quality"
