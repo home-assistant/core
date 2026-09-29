@@ -237,8 +237,10 @@ async def test_climate_state_unknown(
 @pytest.mark.parametrize(
     ("keeper_mode", "preset_mode"),
     [
-        pytest.param("on", "keep", id="keep"),
+        pytest.param("on", "keep", id="on"),
         pytest.param("dog", "dog", id="dog"),
+        pytest.param("camp", "camp", id="camp"),
+        pytest.param("keep", None, id="unmapped"),
         pytest.param(None, None, id="unknown"),
     ],
 )
