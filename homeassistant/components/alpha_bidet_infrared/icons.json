@@ -34,14 +34,6 @@
       "water_dry_up": {
         "default": "mdi:chevron-up"
       }
-    },
-    "select": {
-      "seat_temperature": {
-        "default": "mdi:thermometer"
-      },
-      "water_temperature": {
-        "default": "mdi:thermometer-water"
-      }
     }
   }
 }

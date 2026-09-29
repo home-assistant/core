@@ -54,26 +54,6 @@
       "water_dry_up": {
         "name": "Water/dry up"
       }
-    },
-    "select": {
-      "seat_temperature": {
-        "name": "Seat temperature",
-        "state": {
-          "high": "[%key:common::state::high%]",
-          "low": "[%key:common::state::low%]",
-          "medium": "[%key:common::state::medium%]",
-          "off": "[%key:common::state::off%]"
-        }
-      },
-      "water_temperature": {
-        "name": "Water temperature",
-        "state": {
-          "high": "[%key:common::state::high%]",
-          "low": "[%key:common::state::low%]",
-          "medium": "[%key:common::state::medium%]",
-          "off": "[%key:common::state::off%]"
-        }
-      }
     }
   }
 }

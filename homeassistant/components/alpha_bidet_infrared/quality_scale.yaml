@@ -89,11 +89,11 @@ rules:
   entity-category:
     status: exempt
     comment: |
-      The buttons and selects are the bidet's primary controls and do not need a category.
+      The buttons are the bidet's primary controls and do not need a category.
   entity-device-class:
     status: exempt
     comment: |
-      No button or select device class fits the bidet's controls.
+      No button device class fits the bidet's controls.
   entity-disabled-by-default:
     status: exempt
     comment: |
