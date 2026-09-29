@@ -513,11 +513,9 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             and completion_task is not asyncio.current_task()
             and not completion_task.done()
         ):
-            try:
+            with suppress(asyncio.CancelledError):
                 # The completion task may already be restoring the player.
                 await asyncio.shield(completion_task)
-            except asyncio.CancelledError:
-                pass
 
         watchdog_task = self._announce_watchdog_task
         if watchdog_task and not watchdog_task.done():
