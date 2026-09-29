@@ -643,8 +643,6 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
                 self._missing_state_covers_entity
                 and cast("_StateWithMissingFlag", self._state).missing_state
             ):
-                # The device has no value for any part of this entity yet, which
-                # is the same thing as not having received a state at all.
                 has_state = False
         self._has_state = has_state
 
