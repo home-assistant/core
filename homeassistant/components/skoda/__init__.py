@@ -7,8 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_VIN
-from .coordinator import SkodaUpdateCoordinator
-from .models import SkodaConfigEntry, SkodaData
+from .coordinator import SkodaConfigEntry, SkodaData, SkodaUpdateCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 

@@ -1,8 +1,9 @@
 """DataUpdateCoordinator for the Škoda integration."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from skoda_public_api.api_layer.exceptions import (
     OpenApiAuthenticationError,
@@ -10,16 +11,27 @@ from skoda_public_api.api_layer.exceptions import (
 )
 from skoda_public_api.api_layer.open_api_client import OpenAPIClient
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
-from .models import SkodaConfigEntry, SkodaState
+
+if TYPE_CHECKING:
+    from skoda_public_api.models.vehicle import VehicleResponse
 
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(minutes=5)
+
+
+@dataclass
+class SkodaState:
+    """Vehicle state model reflecting OpenAPI status."""
+
+    vin: str
+    vehicle_response: VehicleResponse
 
 
 class SkodaUpdateCoordinator(DataUpdateCoordinator[SkodaState]):
@@ -64,3 +76,15 @@ class SkodaUpdateCoordinator(DataUpdateCoordinator[SkodaState]):
             raise UpdateFailed(
                 f"Error communicating with Škoda API for VIN {self.vin}: {err}"
             ) from err
+
+
+@dataclass
+class SkodaData:
+    """Runtime data stored in ConfigEntry."""
+
+    openapi: OpenAPIClient
+    coordinator: SkodaUpdateCoordinator
+    vin: str
+
+
+type SkodaConfigEntry = ConfigEntry[SkodaData]

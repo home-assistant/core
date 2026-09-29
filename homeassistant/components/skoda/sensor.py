@@ -35,9 +35,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .coordinator import SkodaUpdateCoordinator
+from .coordinator import SkodaConfigEntry, SkodaUpdateCoordinator
 from .entity import SkodaEntity
-from .models import SkodaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
