@@ -69,7 +69,7 @@ jobs:
           annotations: true
           config: .github/zizmor.yml
           min-severity: medium
-          version: 1.29.0
+          version: 1.30.1
 
       - name: Skip scan for unrelated pull request
         if: steps.changes.outputs.relevant == 'false'
@@ -98,4 +98,4 @@ jobs:
           persona: pedantic
           advanced-security: true
           config: .github/zizmor.yml
-          version: 1.29.0
+          version: 1.30.1
