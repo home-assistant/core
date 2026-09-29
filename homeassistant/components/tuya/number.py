@@ -153,6 +153,13 @@ NUMBERS: dict[DeviceCategory, tuple[TuyaNumberEntityDescription, ...]] = {
             device_class=NumberDeviceClass.DISTANCE,
         ),
     ),
+    DeviceCategory.HWSB: (
+        TuyaNumberEntityDescription(
+            key=DPCode.SPEED_SET,
+            translation_key="speed",
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        ),
+    ),
     DeviceCategory.JSQ: (
         TuyaNumberEntityDescription(
             key=DPCode.TEMP_SET,
