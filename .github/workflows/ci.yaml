@@ -943,7 +943,7 @@ jobs:
             --timeout=9 \
             --durations=0 \
             --durations-min=1 \
-            --numprocesses auto \
+            --numprocesses logical \
             --snapshot-details \
             --dist=loadfile \
             ${cov_params[@]} \
@@ -1359,7 +1359,7 @@ jobs:
           python3 -b -X dev -m pytest \
             -qq \
             --timeout=20 \
-            --numprocesses auto \
+            --numprocesses logical \
             --dist=loadfile \
             --snapshot-details \
             -o console_output_style=count \
@@ -1498,7 +1498,7 @@ jobs:
           python3 -b -X dev -m pytest \
             -qq \
             --timeout=9 \
-            --numprocesses auto \
+            --numprocesses logical \
             --snapshot-details \
             ${cov_params[@]} \
             -o console_output_style=count \
