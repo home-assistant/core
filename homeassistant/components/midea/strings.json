@@ -575,6 +575,9 @@
       "pmv": {
         "name": "Predicted mean vote"
       },
+      "program": {
+        "name": "Program"
+      },
       "realtime_power": {
         "name": "Real-time power"
       },
@@ -604,6 +607,17 @@
       },
       "softwater_available": {
         "name": "Soft water available"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "delay": "Delayed",
+          "finished": "Finished",
+          "idle": "Idle",
+          "paused": "Paused",
+          "standby": "Standby",
+          "working": "Working"
+        }
       },
       "tank_actual_temperature": {
         "name": "Tank temperature"

@@ -6,6 +6,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
+from midealocal.devices.b1 import DeviceAttributes as B1Attributes
 from midealocal.devices.c3 import DeviceAttributes as C3Attributes
 from midealocal.devices.ca import MideaCADevice
 from midealocal.devices.db import DeviceAttributes as DBAttributes, MideaDBDevice
@@ -51,6 +52,19 @@ from tests.common import MockConfigEntry, snapshot_platform
                 },
             ),
             id="ac",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.B1,
+                attributes={
+                    B1Attributes.status: "working",
+                    B1Attributes.mode: 83,
+                    B1Attributes.time_remaining: 45,
+                    B1Attributes.current_temperature: 175,
+                    B1Attributes.target_temperature: 180,
+                },
+            ),
+            id="b1",
         ),
         pytest.param(
             DummyDevice(
