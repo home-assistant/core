@@ -56,6 +56,9 @@
     "firmware_too_old": {
       "message": "OPNsense firmware at {url} is below the minimum supported version"
     },
+    "firmware_update_failed": {
+      "message": "Could not start the OPNsense firmware update"
+    },
     "invalid_auth": {
       "message": "Authentication failure while connecting to OPNsense API endpoint at {url}"
     },

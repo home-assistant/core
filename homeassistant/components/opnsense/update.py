@@ -1,10 +1,15 @@
 """Firmware update information for OPNsense routers."""
 
-from typing import cast, override
+from typing import Any, cast, override
 
-from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
-from homeassistant.const import CONF_URL, EntityCategory
+from homeassistant.components.update import (
+    UpdateDeviceClass,
+    UpdateEntity,
+    UpdateEntityFeature,
+)
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -31,8 +36,8 @@ class OPNsenseFirmwareUpdate(
     """Represent the router firmware update."""
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True
+    _attr_supported_features = UpdateEntityFeature.INSTALL
     _attr_translation_key = "firmware"
 
     def __init__(
@@ -85,3 +90,18 @@ class OPNsenseFirmwareUpdate(
         ):
             return f"{latest_version} (package updates available)"
         return cast(str | None, latest_version)
+
+    @override
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
+    ) -> None:
+        """Start the firmware update available on OPNsense."""
+        update_type = self.coordinator.data.get("status")
+        if update_type in ("update", "upgrade"):
+            response = await self.coordinator.client.upgrade_firmware(type=update_type)
+            if response and response.get("status") == "ok":
+                return
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="firmware_update_failed",
+        )

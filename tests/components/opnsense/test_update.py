@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -69,6 +70,76 @@ async def test_firmware_update_status(
     assert state.state == "on"
     assert state.attributes["installed_version"] == "25.7.8"
     assert state.attributes["latest_version"] == expected_latest
+
+
+@pytest.mark.parametrize("status", ["update", "upgrade"])
+async def test_firmware_install(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+    status: str,
+) -> None:
+    """Test starting a current-series or major firmware upgrade."""
+    mock_opnsense_client.get_firmware_update_info.return_value.update(
+        {"status": status, "upgrade_major_version": "26.1"}
+    )
+    mock_opnsense_client.upgrade_firmware.return_value = {"status": "ok"}
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "update",
+        "install",
+        {"entity_id": "update.mock_title_firmware"},
+        blocking=True,
+    )
+
+    mock_opnsense_client.upgrade_firmware.assert_awaited_once_with(type=status)
+
+
+@pytest.mark.parametrize("response", [{"status": "failure"}, None])
+async def test_firmware_install_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+    response: dict[str, str] | None,
+) -> None:
+    """Test failed firmware start is reported to the caller."""
+    mock_opnsense_client.get_firmware_update_info.return_value["status"] = "update"
+    mock_opnsense_client.upgrade_firmware.return_value = response
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.mock_title_firmware"},
+            blocking=True,
+        )
+
+
+async def test_firmware_install_without_update_status(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+) -> None:
+    """Test ambiguous firmware status cannot start an upgrade."""
+    mock_opnsense_client.get_firmware_update_info.return_value["product"][
+        "product_latest"
+    ] = "25.7.9"
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.mock_title_firmware"},
+            blocking=True,
+        )
+
+    mock_opnsense_client.upgrade_firmware.assert_not_awaited()
 
 
 async def test_firmware_update_unavailable(
