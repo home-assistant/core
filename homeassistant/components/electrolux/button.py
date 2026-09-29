@@ -246,7 +246,6 @@ class ElectroluxBaseButton[T: SupportedAppliance](
         self._is_command_executable()
         command = self._get_command()
         await self.coordinator.send_command(command)
-        await self.coordinator.async_refresh()
 
     @abstractmethod
     def _get_command(self) -> dict[str, Any]:
