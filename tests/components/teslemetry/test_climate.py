@@ -42,6 +42,8 @@ from .const import (
     VEHICLE_DATA_ALT,
 )
 
+VIN = "LRW3F7EK4NC700000"
+
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_climate(
@@ -449,3 +451,41 @@ async def test_cabin_overheat_protection_streaming_set_temperature(
         )
     mock_set_cop_temp.assert_called_once_with(CabinOverheatProtectionTemp.MEDIUM)
     assert hass.states.get(entity_id).attributes[ATTR_TEMPERATURE] == 35
+
+
+@pytest.mark.parametrize(
+    ("rhd", "target_temperature"),
+    [
+        pytest.param(True, 21, id="rhd"),
+        pytest.param(False, 22, id="lhd"),
+    ],
+)
+async def test_climate_streaming_drive_side(
+    hass: HomeAssistant,
+    mock_metadata: AsyncMock,
+    mock_add_listener: AsyncMock,
+    rhd: bool,
+    target_temperature: float,
+) -> None:
+    """Test the streaming target temperature follows the driver side from metadata."""
+
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][VIN]["config"] = {"rhd": rhd}
+    mock_metadata.return_value = metadata
+
+    await setup_platform(hass, [Platform.CLIMATE])
+
+    mock_add_listener.send(
+        {
+            "vin": VIN,
+            "data": {
+                Signal.HVAC_LEFT_TEMPERATURE_REQUEST: 22,
+                Signal.HVAC_RIGHT_TEMPERATURE_REQUEST: 21,
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.test_climate")
+    assert state.attributes[ATTR_TEMPERATURE] == target_temperature
