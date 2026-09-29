@@ -221,6 +221,8 @@ class DeviceCategory(StrEnum):
 
     https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
     """
+    HWSB = "hwsb"
+    """Outdoor equipment"""
     JS = "js"
     """Water purifier"""
     JSQ = "jsq"
