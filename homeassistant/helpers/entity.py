@@ -1168,7 +1168,7 @@ class Entity(
                     self.hass,
                     entry,
                     original_name=original_name,
-                    use_next_name_part=False,
+                    legacy=True,
                 )
             self._cached_friendly_name = (original_name, name)
 

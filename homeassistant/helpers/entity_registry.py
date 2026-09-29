@@ -488,7 +488,7 @@ class RegistryEntry:
         if icon is not None:
             attrs[EntityStateAttribute.ICON] = icon
 
-        name = async_get_full_entity_name(hass, self, use_next_name_part=False)
+        name = async_get_full_entity_name(hass, self, legacy=True)
         if name:
             attrs[EntityStateAttribute.FRIENDLY_NAME] = name
 
@@ -645,7 +645,7 @@ def async_get_full_entity_name(
     entry: RegistryEntry,
     original_name: str | UndefinedType | None = UNDEFINED,
     *,
-    use_next_name_part: bool = True,
+    legacy: bool = False,
 ) -> str:
     """Get full entity name for an entry."""
     original_name_unprefixed: str | UndefinedType | None = UNDEFINED
@@ -653,6 +653,15 @@ def async_get_full_entity_name(
         original_name = entry.original_name
         original_name_unprefixed = entry.original_name_unprefixed
 
+    parts = (
+        (EntityNamePart.DEVICE, EntityNamePart.ENTITY)
+        if legacy
+        else (
+            EntityNamePart.PARENT_DEVICE,
+            EntityNamePart.DEVICE,
+            EntityNamePart.ENTITY,
+        )
+    )
     return _async_get_full_entity_name(
         hass,
         area_id=entry.area_id,
@@ -663,9 +672,9 @@ def async_get_full_entity_name(
         next_name_part=entry.next_name_part,
         original_name=original_name,
         original_name_unprefixed=original_name_unprefixed,
-        parts=(EntityNamePart.DEVICE, EntityNamePart.ENTITY),
+        parts=parts,
         use_legacy_naming=True,
-        use_next_name_part=use_next_name_part,
+        use_next_name_part=not legacy,
     )
 
 
