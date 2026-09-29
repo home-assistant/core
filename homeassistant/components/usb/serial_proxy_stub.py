@@ -21,10 +21,6 @@ class HassESPHomeSerialStub(BaseSerial):
         raise ConfigEntryNotReady(_NOT_READY)
 
     @override
-    def _configure_port(self) -> None:
-        """Configure the serial port settings."""
-
-    @override
     def _reconfigure_port(self, update: PortSettingsUpdate) -> None:
         """Apply a settings update to the open port."""
 
