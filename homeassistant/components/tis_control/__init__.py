@@ -62,7 +62,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
                     async for event in tis_api.consume_events():
                         try:
                             hass.bus.async_fire(f"{DOMAIN}_event", event)
-                            async_dispatcher_send(hass, f"{DOMAIN}_event", event)
+                            async_dispatcher_send(
+                                hass, f"{DOMAIN}_{entry.entry_id}_event", event
+                            )
                         except Exception:
                             _LOGGER.exception(
                                 "Unexpected error while processing TIS event"

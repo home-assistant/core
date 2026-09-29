@@ -136,6 +136,7 @@ class TISSwitch(SwitchEntity):
 
     def __init__(self, entry_id: str, device_api: TISAPISwitch) -> None:
         """Initialize the switch entity."""
+        self._entry_id = entry_id
         self.device_api = device_api
 
         dev_id_str = "_".join(str(i) for i in self.device_api.device_id)
@@ -175,7 +176,9 @@ class TISSwitch(SwitchEntity):
 
         # Listen for events from the TIS API via the dispatcher
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, f"{DOMAIN}_event", self._handle_event)
+            async_dispatcher_connect(
+                self.hass, f"{DOMAIN}_{self._entry_id}_event", self._handle_event
+            )
         )
 
     @callback
