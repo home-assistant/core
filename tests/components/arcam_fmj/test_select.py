@@ -47,6 +47,25 @@ async def test_room_eq_options(
 
 
 @pytest.mark.usefixtures("player_setup")
+async def test_room_eq_default_options(
+    hass: HomeAssistant,
+    state_1: State,
+    client: Mock,
+) -> None:
+    """Test default Room EQ profile options."""
+    state_1.get_room_eq_names.return_value = []
+    state_1.get_room_equalization.return_value = RoomEqMode.EQ1
+
+    client.notify_data_updated()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ROOM_EQ_ENTITY_ID)
+    assert state is not None
+    assert state.state == "EQ1"
+    assert state.attributes["options"] == ["Off", "EQ1", "EQ2", "EQ3"]
+
+
+@pytest.mark.usefixtures("player_setup")
 async def test_room_eq_not_calculated(
     hass: HomeAssistant,
     state_1: State,
