@@ -12,6 +12,12 @@
       },
       "ptz_up": {
         "default": "mdi:arrow-up-bold"
+      },
+      "siren_start": {
+        "default": "mdi:alarm-light"
+      },
+      "siren_stop": {
+        "default": "mdi:alarm-light-off"
       }
     },
     "select": {

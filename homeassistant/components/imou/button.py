@@ -2,7 +2,7 @@
 
 from typing import override
 
-from pyimouapi.const import PARAM_RESTART_DEVICE
+from pyimouapi.const import PARAM_RESTART_DEVICE, PARAM_SIREN_START, PARAM_SIREN_STOP
 from pyimouapi.ha_device import ImouHaDevice
 
 from homeassistant.components.button import (
@@ -34,6 +34,14 @@ PTZ_BUTTON_TYPES = (
 )
 
 BUTTON_TYPES: tuple[ButtonEntityDescription, ...] = (
+    ButtonEntityDescription(
+        key=PARAM_SIREN_START,
+        translation_key=PARAM_SIREN_START,
+    ),
+    ButtonEntityDescription(
+        key=PARAM_SIREN_STOP,
+        translation_key=PARAM_SIREN_STOP,
+    ),
     ButtonEntityDescription(
         key=PARAM_RESTART_DEVICE,
         device_class=ButtonDeviceClass.RESTART,

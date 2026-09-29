@@ -51,6 +51,12 @@
       },
       "ptz_up": {
         "name": "PTZ up"
+      },
+      "siren_start": {
+        "name": "Start siren"
+      },
+      "siren_stop": {
+        "name": "Stop siren"
       }
     },
     "camera": {
