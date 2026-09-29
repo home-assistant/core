@@ -53,7 +53,9 @@ class StarlinkSwitchEntity(StarlinkEntity, SwitchEntity):
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.entity_description.available_fn(self.coordinator.data)
+        return super().available and self.entity_description.available_fn(
+            self.coordinator.data
+        )
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

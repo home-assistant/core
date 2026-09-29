@@ -24,6 +24,7 @@ from .patchers import (
     STATUS_DATA_FIXTURE,
     STATUS_DATA_SUCCESS_PATCHER,
     STATUS_DATA_TARGET,
+    STATUS_DATA_UNAVAILABLE_PATCHER,
 )
 
 from tests.common import (
@@ -31,6 +32,13 @@ from tests.common import (
     async_fire_time_changed,
     mock_restore_cache_with_extra_data,
 )
+
+
+def _entity_state(hass: HomeAssistant, entity_id: str) -> str:
+    """Return an entity's state, asserting it's registered."""
+    state = hass.states.get(entity_id)
+    assert state is not None
+    return state.state
 
 
 async def test_successful_entry(hass: HomeAssistant) -> None:
@@ -126,11 +134,11 @@ async def test_sleep_entities_unavailable_when_sleep_unimplemented(
 
         assert entry.state is ConfigEntryState.LOADED
         assert entry.runtime_data.data.sleep is None
-        assert hass.states.get("switch.starlink_sleep_schedule").state == "unavailable"
-        assert hass.states.get("time.starlink_sleep_start").state == "unavailable"
-        assert hass.states.get("time.starlink_sleep_end").state == "unavailable"
+        assert _entity_state(hass, "switch.starlink_sleep_schedule") == "unavailable"
+        assert _entity_state(hass, "time.starlink_sleep_start") == "unavailable"
+        assert _entity_state(hass, "time.starlink_sleep_end") == "unavailable"
         # A switch unrelated to sleep config must stay unaffected.
-        assert hass.states.get("switch.starlink_stowed").state == "off"
+        assert _entity_state(hass, "switch.starlink_stowed") == "off"
 
 
 async def test_sleep_switch_reports_real_off_when_supported(
@@ -160,6 +168,41 @@ async def test_sleep_switch_reports_real_off_when_supported(
         state = hass.states.get("switch.starlink_sleep_schedule")
         assert state is not None
         assert state.state in ("on", "off")
+
+
+async def test_switches_unavailable_when_coordinator_refresh_fails(
+    hass: HomeAssistant,
+) -> None:
+    """Test switches go unavailable when the coordinator itself fails to refresh.
+
+    Regression guard: the per-switch available_fn must not bypass
+    CoordinatorEntity's own availability (coordinator.last_update_success).
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "1.2.3.4:0000"},
+    )
+
+    with (
+        LOCATION_DATA_SUCCESS_PATCHER,
+        SLEEP_DATA_SUCCESS_PATCHER,
+        STATUS_DATA_SUCCESS_PATCHER,
+        HISTORY_STATS_SUCCESS_PATCHER,
+    ):
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert _entity_state(hass, "switch.starlink_stowed") == "off"
+        assert _entity_state(hass, "switch.starlink_sleep_schedule") in ("on", "off")
+
+        with STATUS_DATA_UNAVAILABLE_PATCHER:
+            await entry.runtime_data.async_refresh()
+
+        assert entry.runtime_data.last_update_success is False
+        assert _entity_state(hass, "switch.starlink_stowed") == "unavailable"
+        assert _entity_state(hass, "switch.starlink_sleep_schedule") == "unavailable"
 
 
 @pytest.mark.parametrize(

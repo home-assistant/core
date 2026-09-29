@@ -103,6 +103,11 @@ STATUS_DATA_SUCCESS_PATCHER = patch(
     STATUS_DATA_TARGET, return_value=STATUS_DATA_FIXTURE
 )
 
+STATUS_DATA_UNAVAILABLE_PATCHER = patch(
+    STATUS_DATA_TARGET,
+    side_effect=_raise_grpc_error(grpc.StatusCode.UNAVAILABLE),
+)
+
 HISTORY_STATS_SUCCESS_PATCHER = patch(
     "homeassistant.components.starlink.coordinator.history_stats",
     return_value=load_json_array_fixture("history_stats_success.json", "starlink"),
