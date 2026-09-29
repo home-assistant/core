@@ -1,7 +1,7 @@
 """Test taking over a real HACS install, from the first boot to the second.
 
 The fixtures in hacs_install are what the HACS custom integration wrote after
-downloading an integration, a plugin and a theme: its storage files, its config
+installing an integration, a plugin and a theme: its storage files, its config
 entry and the registries, in the storage versions of that Home Assistant.
 """
 
@@ -225,11 +225,11 @@ async def test_takeover_of_a_hacs_install(
     # Entities and devices keep what the user did to them, HACS itself is gone
     assert _registries(hass, entry_id, known_entity_ids) == snapshot(name="registries")
 
-    # The downloaded repositories carry over, what the Marketplace does not
+    # The installed repositories carry over, what the Marketplace does not
     # manage does not
     marketplace = entry.runtime_data
     assert {
-        repository.data.id for repository in marketplace.repositories.list_downloaded
+        repository.data.id for repository in marketplace.repositories.list_installed
     } == {INTEGRATION_ID, PLUGIN_ID, THEME_ID}
     assert marketplace.repositories.get_by_id(APPDAEMON_ID) is None
     assert marketplace.repositories.get_by_id(HACS_ID) is None
@@ -239,7 +239,7 @@ async def test_takeover_of_a_hacs_install(
         resource["url"] for resource in hass.data[LOVELACE_DATA].resources.async_items()
     ] == ["/local/community/plugin-basic/plugin-basic.js?v=1296267100"]
 
-    # What HACS left on disk is gone, the downloads are not
+    # What HACS left on disk is gone, the installed repositories are not
     for name in HACS_FILES:
         assert not (config_dir / storage.STORAGE_DIR / name).exists()
     assert not (config_dir / "custom_components" / "hacs").exists()

@@ -1,4 +1,4 @@
-"""Tests that a download or update leaves a working install behind."""
+"""Tests that an install or update leaves a working install behind."""
 
 import asyncio
 import gzip
@@ -71,9 +71,9 @@ def _manifest(**changes: Any) -> dict[str, Any]:
 
 
 async def _working_integration(marketplace: MarketplaceManager) -> Repository:
-    """Download the example integration and make it one the loader accepts."""
+    """Install the example integration and make it one the loader accepts."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
-    await repository.async_download_repository()
+    await repository.async_install_repository()
 
     local = Path(repository.localpath)
     (local / "__init__.py").write_text("# working old integration\n")
@@ -135,7 +135,7 @@ def _custom_components(hass: HomeAssistant) -> ModuleType:
 async def test_failed_card_update_restores_previous_files(
     marketplace: MarketplaceManager,
 ) -> None:
-    """Test a card of release assets is backed up like any other download."""
+    """Test a card of release assets is backed up like any other install."""
     repository = PluginRepository(marketplace, "review/test-card")
     repository.data.installed = True
     repository.content.single = True
@@ -158,7 +158,7 @@ async def test_failed_card_update_restores_previous_files(
     assert (folder / "test-card.js").read_bytes() == b"old working version"
 
 
-async def test_failed_backup_stops_the_download(
+async def test_failed_backup_stops_the_install(
     marketplace: MarketplaceManager,
 ) -> None:
     """Test nothing is written when the backup of the install fails."""
@@ -182,10 +182,10 @@ async def test_failed_backup_stops_the_download(
     assert (folder / "test-card.js").read_bytes() == b"old working version"
 
 
-async def test_failed_first_download_keeps_a_manual_install(
+async def test_failed_first_install_keeps_a_manual_install(
     marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
-    """Test files already in place before the first download are backed up too."""
+    """Test files already in place before the first install are backed up too."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     assert not repository.data.installed
     local = Path(repository.localpath)
@@ -204,7 +204,7 @@ async def test_failed_first_download_keeps_a_manual_install(
     response_mocker.add(url, mocked_response(url, content=broken_archive), keep=True)
 
     with pytest.raises(MarketplaceError):
-        await repository.async_download_repository()
+        await repository.async_install_repository()
 
     assert original.read_text() == "# manually installed working version\n"
 
@@ -291,7 +291,7 @@ async def test_older_version_checks_the_domain_it_writes_to(
         patch.object(candidate, "async_post_installation", AsyncMock()),
         pytest.raises(MarketplaceError, match="is owned by owner/existing"),
     ):
-        await candidate.async_download_repository(ref="1.0.0")
+        await candidate.async_install_repository(ref="1.0.0")
 
     assert original.read_bytes() == b"existing integration"
 
@@ -389,7 +389,7 @@ async def test_card_release_without_the_named_file_keeps_the_card(
         ),
         pytest.raises(MarketplaceError),
     ):
-        await repository.async_download_repository(ref="2.0.0")
+        await repository.async_install_repository(ref="2.0.0")
 
     assert repository.data.installed_version == "1.0.0"
     assert (local / "card.js").read_text() == "working card"
@@ -409,7 +409,7 @@ async def test_release_with_an_extra_directory_keeps_the_integration(
     )
 
     with pytest.raises(MarketplaceError, match="manifest.json"):
-        await repository.async_download_repository()
+        await repository.async_install_repository()
 
     assert repository.data.installed_version == "1.0.0"
     assert (local / "manifest.json").read_text() == original
@@ -443,7 +443,7 @@ async def test_release_the_loader_refuses_keeps_the_integration(
     )
 
     with pytest.raises(MarketplaceError, match="manifest.json"):
-        await repository.async_download_repository()
+        await repository.async_install_repository()
 
     assert await hass.async_add_executor_job(
         Integration.resolve_from_root, hass, root, "example"
@@ -468,7 +468,7 @@ async def test_persistent_directory_has_to_be_a_directory_inside(
     )
 
     with pytest.raises(MarketplaceError, match="persistent_directory"):
-        await repository.async_download_repository()
+        await repository.async_install_repository()
 
     assert repository.data.installed_version == "1.0.0"
     assert (local / "__init__.py").read_text() == "# working old integration\n"
@@ -496,7 +496,7 @@ async def test_invalid_theme_keeps_the_configuration_loadable(
         "frontend:\n  themes: !include_dir_merge_named themes\n"
     )
     repository = marketplace.repositories.get_by_id(THEME_ID)
-    await repository.async_download_repository()
+    await repository.async_install_repository()
     await hass.async_block_till_done()
     assert await async_hass_config_yaml(hass)
 
@@ -506,7 +506,7 @@ async def test_invalid_theme_keeps_the_configuration_loadable(
     response_mocker.add(url, mocked_response(url, content=archive), keep=True)
 
     with pytest.raises(MarketplaceError, match=error):
-        await repository.async_download_repository()
+        await repository.async_install_repository()
     await hass.async_block_till_done()
 
     assert await async_hass_config_yaml(hass)
@@ -567,29 +567,29 @@ async def test_failed_release_leaves_no_temporary_archive(
         ),
         pytest.raises(MarketplaceError),
     ):
-        await repository.async_download_repository()
+        await repository.async_install_repository()
 
     assert not scratch.exists()
 
 
-async def test_second_download_of_a_repository_waits_its_turn(
+async def test_second_install_of_a_repository_waits_its_turn(
     marketplace: MarketplaceManager,
 ) -> None:
-    """Test a download of a repository that is already downloading is refused."""
+    """Test an install of a repository that is already installing is refused."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     started = asyncio.Event()
     release = asyncio.Event()
 
-    async def slow_download(*args: Any, **kwargs: Any) -> None:
+    async def slow_install(*args: Any, **kwargs: Any) -> None:
         started.set()
         await release.wait()
 
-    with patch.object(repository, "_async_download_catalog_version", slow_download):
-        first = asyncio.create_task(repository.async_download_repository())
+    with patch.object(repository, "_async_install_catalog_version", slow_install):
+        first = asyncio.create_task(repository.async_install_repository())
         await started.wait()
 
-        with pytest.raises(MarketplaceError, match="already downloading"):
-            await repository.async_download_repository()
+        with pytest.raises(MarketplaceError, match="already installing"):
+            await repository.async_install_repository()
 
         release.set()
         await first
@@ -611,7 +611,7 @@ async def test_valid_release_updates_the_integration(
         },
     )
 
-    await repository.async_download_repository()
+    await repository.async_install_repository()
 
     integration = await hass.async_add_executor_job(
         Integration.resolve_from_root, hass, _custom_components(hass), "example"
@@ -621,10 +621,10 @@ async def test_valid_release_updates_the_integration(
     assert repository.data.installed_version == "2.0.0"
 
 
-async def test_failed_first_download_leaves_nothing_behind(
+async def test_failed_first_install_leaves_nothing_behind(
     marketplace: MarketplaceManager,
 ) -> None:
-    """Test a first download that fails removes what it wrote so far."""
+    """Test a first install that fails removes what it wrote so far."""
     repository = PluginRepository(marketplace, "review/new-card")
     folder = Path(repository.localpath)
     assert not folder.exists()
@@ -704,7 +704,7 @@ async def test_failed_persistent_directory_restore_keeps_the_old_install(
         patch.object(Backup, "restore", failing_restore),
         pytest.raises(MarketplaceError),
     ):
-        await repository.async_download_repository()
+        await repository.async_install_repository()
 
     assert repository.data.installed_version == "1.0.0"
     assert (local / "__init__.py").read_text() == "# working old integration\n"

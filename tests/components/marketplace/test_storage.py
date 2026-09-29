@@ -18,7 +18,7 @@ from homeassistant.components.marketplace.utils.storage import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import create_download_folders, get_marketplace, setup_integration
+from . import create_install_folders, get_marketplace, setup_integration
 from .const import REPOSITORY_INTEGRATION, REPOSITORY_PLUGIN
 
 from tests.common import (
@@ -71,7 +71,7 @@ def hacs_storage(
 ) -> dict[str, Any]:
     """Leave the files HACS wrote on disk, with the string version it used."""
     _write_hacs_file(config_dir, "hacs.repositories", hacs_repositories)
-    create_download_folders(config_dir, hacs_repositories)
+    create_install_folders(config_dir, hacs_repositories)
     _write_hacs_file(config_dir, "hacs.hacs", HACS_COMMON)
     _write_hacs_file(config_dir, "hacs.critical", HACS_CRITICAL)
     return hass_storage
@@ -179,7 +179,7 @@ async def test_hacs_data_is_adopted(
 
     marketplace = get_marketplace(hass)
     assert {
-        repo.data.full_name for repo in marketplace.repositories.list_downloaded
+        repo.data.full_name for repo in marketplace.repositories.list_installed
     } == {
         REPOSITORY_INTEGRATION,
         REPOSITORY_PLUGIN,
@@ -211,7 +211,7 @@ async def test_hacs_data_is_adopted_as_fallback(
         hass, "hacs_install/hacs.data.json", DOMAIN
     )
     _write_hacs_file(config_dir, "hacs.data", hacs_data["data"])
-    create_download_folders(
+    create_install_folders(
         config_dir,
         {
             entry["id"]: {"category": category, **entry}
@@ -235,7 +235,7 @@ async def test_hacs_data_is_adopted_as_fallback(
     marketplace = get_marketplace(hass)
     assert {
         repository.data.full_name
-        for repository in marketplace.repositories.list_downloaded
+        for repository in marketplace.repositories.list_installed
     } == {
         "hacs-test-org/integration-basic",
         "hacs-test-org/plugin-basic",
@@ -284,7 +284,7 @@ async def test_own_data_wins(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert not get_marketplace(hass).repositories.list_downloaded
+    assert not get_marketplace(hass).repositories.list_installed
     assert not get_marketplace(hass).common.archived_repositories
 
 
@@ -298,4 +298,4 @@ async def test_fresh_install(
 
     marketplace = get_marketplace(hass)
     assert marketplace.status.new is True
-    assert not marketplace.repositories.list_downloaded
+    assert not marketplace.repositories.list_installed

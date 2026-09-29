@@ -9,7 +9,7 @@ DOMAIN = "marketplace"
 CLIENT_ID = "395a8e669c5de9f7c6e8"
 CLIENT_NAME = f"HomeAssistantMarketplace/{HAVERSION}"
 
-# Downloaded dashboard resources live in www/community, which the frontend
+# Installed dashboard resources live in www/community, which the frontend
 # serves as /local.
 DASHBOARD_RESOURCE_BASE = "/local/community"
 LEGACY_DASHBOARD_RESOURCE_BASE = "/hacsfiles"
@@ -20,7 +20,7 @@ PACKAGE_NAME = "homeassistant.components.marketplace"
 
 DEFAULT_CONCURRENT_TASKS = 15
 
-# How many releases are fetched to offer as versions to download
+# How many releases are fetched to offer as versions to install
 RELEASE_LIMIT = 5
 
 # Ceiling for anything downloaded from a repository, both for the transferred
@@ -49,9 +49,9 @@ LEGACY_HACS_SYSTEM_ID = (
 WARNING_VERSION = 1
 CONF_WARNING_ACCEPTED = "warning_accepted"
 
-# The panel shows the warning again once an acceptance is this old, downloads
+# The panel shows the warning again once an acceptance is this old, installs
 # and updates keep working in the meantime.
 WARNING_REMINDER_INTERVAL = timedelta(days=90)
 
-# Downloads that need a restart get an issue per repository and version
+# Installs that need a restart get an issue per repository and version
 RESTART_ISSUE_PREFIX = "restart_required_"

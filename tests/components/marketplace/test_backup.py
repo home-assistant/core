@@ -27,7 +27,7 @@ def _backup_root(config_dir: Path) -> Path:
 
 
 def _integration(config_dir: Path, name: str = "example") -> Path:
-    """Create a downloaded integration and return its directory."""
+    """Create an installed integration and return its directory."""
     directory = config_dir / "custom_components" / name
     directory.mkdir(parents=True)
     (directory / "__init__.py").write_text("installed")
@@ -68,10 +68,10 @@ def test_backup_file(marketplace: MarketplaceManager, config_dir: Path) -> None:
     assert target.read_text() == "installed"
 
 
-def test_restore_replaces_a_partial_download(
+def test_restore_replaces_a_partial_install(
     marketplace: MarketplaceManager, config_dir: Path
 ) -> None:
-    """Test restoring removes what a failed download left behind."""
+    """Test restoring removes what a failed install left behind."""
     target = _integration(config_dir)
     backup = Backup(marketplace, target)
     backup.create()
@@ -86,7 +86,7 @@ def test_restore_replaces_a_partial_download(
 def test_backups_do_not_share_a_directory(
     marketplace: MarketplaceManager, config_dir: Path
 ) -> None:
-    """Test two downloads at the same time keep their own backups."""
+    """Test two installs at the same time keep their own backups."""
     first = Backup(marketplace, _integration(config_dir, "first"))
     second = Backup(marketplace, _integration(config_dir, "second"))
 
@@ -127,7 +127,7 @@ def test_protected_path_is_refused(
     assert (config_dir / "custom_components").exists()
 
 
-def test_restore_interrupted_download(
+def test_restore_interrupted_install(
     marketplace: MarketplaceManager,
     config_dir: Path,
     caplog: pytest.LogCaptureFixture,
@@ -142,10 +142,10 @@ def test_restore_interrupted_download(
 
     assert sorted(path.name for path in target.iterdir()) == ["__init__.py"]
     assert list(_backup_root(config_dir).iterdir()) == []
-    assert "a download replacing it did not finish" in caplog.text
+    assert "an install replacing it did not finish" in caplog.text
 
 
-def test_restore_interrupted_download_with_persistent_directory(
+def test_restore_interrupted_install_with_persistent_directory(
     marketplace: MarketplaceManager, config_dir: Path
 ) -> None:
     """Test the persistent directory goes back into the restored content."""
@@ -194,10 +194,10 @@ def test_restore_leaves_unknown_targets_alone(
     assert "Leaving backup" in caplog.text
 
 
-async def test_setup_restores_interrupted_download(
+async def test_setup_restores_interrupted_install(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, config_dir: Path
 ) -> None:
-    """Test setting up puts back what an interrupted download moved aside."""
+    """Test setting up puts back what an interrupted install moved aside."""
     backup = _backup_root(config_dir) / "interrupted"
     (backup / "content").mkdir(parents=True)
     (backup / "content" / "__init__.py").write_text("installed")

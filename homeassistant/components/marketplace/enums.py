@@ -24,7 +24,7 @@ class MarketplaceSignal(StrEnum):
     CONFIG = "marketplace_config"
     RELOAD = "marketplace_reload"
     REPOSITORY = "marketplace_repository"
-    REPOSITORY_DOWNLOAD_PROGRESS = "marketplace_repository_download_progress"
+    REPOSITORY_INSTALL_PROGRESS = "marketplace_repository_install_progress"
     STAGE = "marketplace_stage"
     STATUS = "marketplace_status"
 

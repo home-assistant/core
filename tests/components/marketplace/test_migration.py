@@ -34,7 +34,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from . import create_download_folders, setup_integration
+from . import create_install_folders, setup_integration
 from .const import REPOSITORY_INTEGRATION_ID, TOKEN, WARNING_ACCEPTANCE
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -74,7 +74,7 @@ def mock_config_entry() -> MockConfigEntry:
 def _seed_repository_device(
     entry: MockConfigEntry, device_registry: dr.DeviceRegistry
 ) -> dr.DeviceEntry:
-    """Create the device HACS made for a downloaded repository."""
+    """Create the device HACS made for an installed repository."""
     return device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(LEGACY_HACS_DOMAIN, REPOSITORY_INTEGRATION_ID)},
@@ -117,7 +117,7 @@ def _seed_repository_entities(
     entity_registry: er.EntityRegistry,
     device: dr.DeviceEntry,
 ) -> None:
-    """Create the entities HACS made for a downloaded repository."""
+    """Create the entities HACS made for an installed repository."""
     for domain, object_id in (
         (UPDATE_DOMAIN, "hacs_basic_integration"),
         (SWITCH_DOMAIN, "hacs_basic_integration_pre_release"),
@@ -851,12 +851,12 @@ async def test_legacy_files_removal_runs_once(
     assert REMOVED_LOG not in caplog.text
 
 
-APPDAEMON_DOWNLOADED_ID = "990001"
+APPDAEMON_INSTALLED_ID = "990001"
 APPDAEMON_UNNAMED_ID = "990002"
-APPDAEMON_NOT_DOWNLOADED_ID = "990003"
+APPDAEMON_NOT_INSTALLED_ID = "990003"
 
 APPDAEMON_REPOSITORIES: dict[str, dict[str, Any]] = {
-    APPDAEMON_DOWNLOADED_ID: {
+    APPDAEMON_INSTALLED_ID: {
         "category": "appdaemon",
         "full_name": "hacs-test-org/appdaemon-basic",
         "installed": True,
@@ -868,7 +868,7 @@ APPDAEMON_REPOSITORIES: dict[str, dict[str, Any]] = {
         "full_name": "hacs-test-org/motion_lights-app",
         "installed": True,
     },
-    APPDAEMON_NOT_DOWNLOADED_ID: {
+    APPDAEMON_NOT_INSTALLED_ID: {
         "category": "appdaemon",
         "full_name": "hacs-test-org/appdaemon-other",
     },
@@ -886,7 +886,7 @@ def _seed_stored_repositories(
         "version": STORAGE_VERSION,
         "data": {**repositories, **appdaemon_repositories},
     }
-    create_download_folders(Path(hass.config.config_dir), repositories)
+    create_install_folders(Path(hass.config.config_dir), repositories)
 
 
 def _seed_appdaemon_registry_entries(
@@ -895,7 +895,7 @@ def _seed_appdaemon_registry_entries(
     entity_registry: er.EntityRegistry,
     repository_id: str,
 ) -> dr.DeviceEntry:
-    """Create the device and entities of a downloaded AppDaemon app."""
+    """Create the device and entities of an installed AppDaemon app."""
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, repository_id)},
@@ -932,7 +932,7 @@ async def test_appdaemon_repositories_forgotten(
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_TOKEN: TOKEN})
     entry.add_to_hass(hass)
     device = _seed_appdaemon_registry_entries(
-        entry, device_registry, entity_registry, APPDAEMON_DOWNLOADED_ID
+        entry, device_registry, entity_registry, APPDAEMON_INSTALLED_ID
     )
 
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -947,11 +947,11 @@ async def test_appdaemon_repositories_forgotten(
     assert device_registry.async_get(device.id) is None
     for domain in (UPDATE_DOMAIN, SWITCH_DOMAIN):
         assert (
-            entity_registry.async_get_entity_id(domain, DOMAIN, APPDAEMON_DOWNLOADED_ID)
+            entity_registry.async_get_entity_id(domain, DOMAIN, APPDAEMON_INSTALLED_ID)
             is None
         )
 
-    # Only the downloaded apps are listed, the files are left alone
+    # Only the installed apps are listed, the files are left alone
     issue = issue_registry.async_get_issue(DOMAIN, "appdaemon_not_supported")
     assert issue is not None
     assert issue.is_fixable is False
@@ -978,18 +978,18 @@ async def test_appdaemon_repositories_forgotten(
     assert app_file.exists()
 
 
-async def test_appdaemon_repositories_not_downloaded(
+async def test_appdaemon_repositories_not_installed(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test AppDaemon apps that were never downloaded are dropped quietly."""
+    """Test AppDaemon apps that were never installed are dropped quietly."""
     _seed_stored_repositories(
         hass,
         hass_storage,
         {
-            APPDAEMON_NOT_DOWNLOADED_ID: APPDAEMON_REPOSITORIES[
-                APPDAEMON_NOT_DOWNLOADED_ID
+            APPDAEMON_NOT_INSTALLED_ID: APPDAEMON_REPOSITORIES[
+                APPDAEMON_NOT_INSTALLED_ID
             ]
         },
     )
@@ -997,24 +997,22 @@ async def test_appdaemon_repositories_not_downloaded(
     await setup_integration(hass, entry)
 
     assert entry.state is ConfigEntryState.LOADED
-    assert (
-        entry.runtime_data.repositories.get_by_id(APPDAEMON_NOT_DOWNLOADED_ID) is None
-    )
+    assert entry.runtime_data.repositories.get_by_id(APPDAEMON_NOT_INSTALLED_ID) is None
     assert issue_registry.async_get_issue(DOMAIN, "appdaemon_not_supported") is None
 
 
-PYTHON_SCRIPT_DOWNLOADED_ID = "990011"
-PYTHON_SCRIPT_NOT_DOWNLOADED_ID = "990012"
+PYTHON_SCRIPT_INSTALLED_ID = "990011"
+PYTHON_SCRIPT_NOT_INSTALLED_ID = "990012"
 
 PYTHON_SCRIPT_REPOSITORIES: dict[str, dict[str, Any]] = {
-    PYTHON_SCRIPT_DOWNLOADED_ID: {
+    PYTHON_SCRIPT_INSTALLED_ID: {
         "category": "python_script",
         "full_name": "hacs-test-org/python_script-basic",
         "installed": True,
         "repository_manifest": {"name": "Basic script"},
         "version_installed": "1.0.0",
     },
-    PYTHON_SCRIPT_NOT_DOWNLOADED_ID: {
+    PYTHON_SCRIPT_NOT_INSTALLED_ID: {
         "category": "python_script",
         "full_name": "hacs-test-org/python_script-other",
     },
@@ -1040,7 +1038,7 @@ async def test_python_scripts_forgotten_next_to_appdaemon(
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_TOKEN: TOKEN})
     entry.add_to_hass(hass)
     device = _seed_appdaemon_registry_entries(
-        entry, device_registry, entity_registry, PYTHON_SCRIPT_DOWNLOADED_ID
+        entry, device_registry, entity_registry, PYTHON_SCRIPT_INSTALLED_ID
     )
 
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -1057,7 +1055,7 @@ async def test_python_scripts_forgotten_next_to_appdaemon(
     assert issue.translation_placeholders == {"scripts": "Basic script"}
     assert issue_registry.async_get_issue(DOMAIN, "appdaemon_not_supported")
 
-    # The python_script integration keeps running what was downloaded
+    # The python_script integration keeps running what was installed
     assert script_file.read_text(encoding="utf-8") == "logger.info('hello')"
 
 

@@ -28,7 +28,7 @@ LEGACY_STORAGE_KEYS: dict[str, str] = {
 # custom integration still falls back to it when its repositories file is empty.
 LEGACY_DATA_KEY = "hacs.data"
 
-# Older releases kept a file per downloaded repository, removed on uninstall.
+# Older releases kept a file per installed repository, removed on uninstall.
 LEGACY_HACS_REPOSITORY_STORAGE_KEY = "hacs/{repository_id}.hacs"
 
 

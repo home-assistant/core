@@ -212,13 +212,13 @@ class Repositories:
         return list(self._removed_repositories_by_full_name.values())
 
     @property
-    def list_downloaded(self) -> list[Repository]:
-        """Return a list of downloaded repositories."""
+    def list_installed(self) -> list[Repository]:
+        """Return a list of installed repositories."""
         return [repo for repo in self._repositories if repo.data.installed]
 
-    def category_downloaded(self, category: RepositoryCategory) -> bool:
-        """Check if a given category has been downloaded."""
-        for repository in self.list_downloaded:
+    def category_installed(self, category: RepositoryCategory) -> bool:
+        """Check if a given category has been installed."""
+        for repository in self.list_installed:
             if repository.data.category == category:
                 return True
         return False
@@ -329,7 +329,7 @@ class Repositories:
             return repository_full_name in self._repositories_by_full_name
         return False
 
-    def is_downloaded(
+    def is_installed(
         self,
         repository_id: str | None = None,
         repository_full_name: str | None = None,
@@ -612,7 +612,7 @@ class MarketplaceManager:
         """Give a repository the id it is known by now.
 
         GitHub gives a repository that was deleted and created again a new id,
-        its name is what stays. What was downloaded, its entities and its device
+        its name is what stays. What was installed, its entities and its device
         move along to the new id.
         """
         previous_id = str(repository.data.id)
@@ -629,7 +629,7 @@ class MarketplaceManager:
             self.common.custom_repositories.discard(previous_id)
             self.common.custom_repositories.add(repo_id)
 
-        # The repair is how a reload knows the download still waits for a restart
+        # The repair is how a reload knows the install still waits for a restart
         issue_registry = ir.async_get(self.hass)
         for domain, issue_id in list(issue_registry.issues):
             if domain != DOMAIN or not issue_id.startswith(
@@ -773,13 +773,13 @@ class MarketplaceManager:
             if not critical["acknowledged"]:
                 async_create_critical_repository_issue(self.hass, critical)
 
-        # Keeping downloaded repositories up to date takes a connected account,
+        # Keeping installed repositories up to date takes a connected account,
         # the catalog comes from the data feed.
         if self.github_connected:
             self.recurring_tasks.append(
                 async_track_time_interval(
                     self.hass,
-                    self.async_update_downloaded_custom_repositories,
+                    self.async_update_installed_custom_repositories,
                     timedelta(hours=48),
                 )
             )
@@ -905,10 +905,10 @@ class MarketplaceManager:
             return None
         return None
 
-    async def async_wait_for_downloads(self) -> None:
-        """Wait for the downloads that are running to finish."""
+    async def async_wait_for_installs(self) -> None:
+        """Wait for the installs that are running to finish."""
         for repository in self.repositories.list_all:
-            await repository.async_wait_for_download()
+            await repository.async_wait_for_install()
 
     async def async_recreate_entities(self) -> None:
         """Recreate entities."""
@@ -944,7 +944,7 @@ class MarketplaceManager:
 
         if self.hass.services.has_service(
             "frontend", "reload_themes"
-        ) or self.repositories.category_downloaded(RepositoryCategory.THEME):
+        ) or self.repositories.category_installed(RepositoryCategory.THEME):
             self.enable_category(RepositoryCategory.THEME)
 
     async def async_get_all_category_repositories(
@@ -1000,7 +1000,7 @@ class MarketplaceManager:
                     repository.data.last_fetched.timestamp() < repo_data["last_fetched"]
                 ):
                     update = {**dict(REPOSITORY_KEYS_TO_EXPORT), **repo_data}
-                    # The files on disk are where the download put them, removal
+                    # The files on disk are where the install put them, removal
                     # goes by this domain
                     if repository.data.installed:
                         update.pop("domain", None)
@@ -1124,7 +1124,7 @@ class MarketplaceManager:
                         },
                     )
                     LOGGER.warning(
-                        "You have '%s' downloaded with the Marketplace, "
+                        "You have '%s' installed with the Marketplace, "
                         "this repository has been removed, please consider removing it. "
                         "Removal reason (%s)",
                         repository.data.full_name,
@@ -1137,14 +1137,14 @@ class MarketplaceManager:
         if need_to_save:
             await self.data.async_write()
 
-    async def async_update_downloaded_custom_repositories(
+    async def async_update_installed_custom_repositories(
         self, _: datetime | None = None
     ) -> None:
         """Execute the task."""
         if self.system.disabled or not self.github_connected:
             return
         LOGGER.info(
-            "Starting recurring background task for downloaded custom repositories"
+            "Starting recurring background task for installed custom repositories"
         )
 
         repositories_to_update = 0
@@ -1161,7 +1161,7 @@ class MarketplaceManager:
                 if not repositories_to_update:
                     repositories_updated.set()
 
-        for repository in self.repositories.list_downloaded:
+        for repository in self.repositories.list_installed:
             if (
                 repository.data.category in self.common.categories
                 and not self.repositories.is_default(str(repository.data.id))
@@ -1187,9 +1187,7 @@ class MarketplaceManager:
                 update_coordinators(), "update_coordinators"
             )
 
-        LOGGER.debug(
-            "Recurring background task for downloaded custom repositories done"
-        )
+        LOGGER.debug("Recurring background task for installed custom repositories done")
 
     async def async_handle_critical_repositories(
         self, _: datetime | None = None

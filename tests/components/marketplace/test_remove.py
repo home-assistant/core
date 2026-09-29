@@ -1,4 +1,4 @@
-"""Tests that removing a download only touches the files of that download."""
+"""Tests that uninstalling only touches the files of that repository."""
 
 from copy import deepcopy
 from pathlib import Path
@@ -26,7 +26,7 @@ THEME_ID = "1296266"
 async def test_theme_can_not_take_the_folder_of_another_theme(
     marketplace: MarketplaceManager,
 ) -> None:
-    """Test a theme is refused when another downloaded theme has its folder."""
+    """Test a theme is refused when another installed theme has its folder."""
     first = ThemeRepository(marketplace, "owner-one/theme-one")
     first.data.id = "111"
     first.data.file_name = "theme.yaml"
@@ -45,9 +45,9 @@ async def test_theme_can_not_take_the_folder_of_another_theme(
 async def test_removing_a_theme_keeps_a_handwritten_theme(
     marketplace: MarketplaceManager, config_dir: Path
 ) -> None:
-    """Test removal leaves a theme file the download never wrote alone."""
+    """Test removal leaves a theme file the install never wrote alone."""
     repository = marketplace.repositories.get_by_id(THEME_ID)
-    await repository.async_download_repository()
+    await repository.async_install_repository()
     handwritten = config_dir / "themes/theme-basic.yaml"
     handwritten.write_text("Handwritten Theme:\n  primary-color: red\n")
     assert handwritten.parent != Path(repository.localpath)
@@ -58,7 +58,7 @@ async def test_removing_a_theme_keeps_a_handwritten_theme(
     assert handwritten.exists()
 
 
-async def test_template_refresh_keeps_the_downloaded_file_name(
+async def test_template_refresh_keeps_the_installed_file_name(
     marketplace: MarketplaceManager,
 ) -> None:
     """Test a newer manifest naming another file does not change what is removed."""
@@ -87,7 +87,7 @@ async def test_template_refresh_keeps_the_downloaded_file_name(
 async def test_template_update_to_a_new_file_name_removes_the_old_file(
     marketplace: MarketplaceManager,
 ) -> None:
-    """Test a version with another file name replaces the downloaded file."""
+    """Test a version with another file name replaces the installed file."""
     repository = TemplateRepository(marketplace, "owner/template")
     repository.data.id = "8004"
     repository.data.installed = True
@@ -110,14 +110,14 @@ async def test_template_update_to_a_new_file_name_removes_the_old_file(
     assert not (folder / "old.jinja").exists()
 
 
-async def test_renamed_card_stays_downloaded_after_a_reload(
+async def test_renamed_card_stays_installed_after_a_reload(
     hass: HomeAssistant, marketplace: MarketplaceManager
 ) -> None:
     """Test a card renamed on GitHub keeps pointing at the folder it is in."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_PLUGIN_ID)
-    await repository.async_download_repository()
-    downloaded = Path(repository.localpath)
-    assert downloaded.is_dir()
+    await repository.async_install_repository()
+    installed = Path(repository.localpath)
+    assert installed.is_dir()
     marketplace.repositories.rename(repository, "hacs-test-org/renamed-card")
     get_data = CatalogClient.get_data
 
@@ -137,9 +137,9 @@ async def test_renamed_card_stays_downloaded_after_a_reload(
         await hass.async_block_till_done()
 
     repository = get_marketplace(hass).repositories.get_by_id(REPOSITORY_PLUGIN_ID)
-    assert downloaded.is_dir()
+    assert installed.is_dir()
     assert repository.data.installed
-    assert Path(repository.localpath) == downloaded
+    assert Path(repository.localpath) == installed
 
 
 async def test_template_can_not_take_the_file_of_another_template(
@@ -195,7 +195,7 @@ async def test_theme_targets_the_file_in_its_folder(
     assert repository.data.file_name == file_name
 
 
-async def test_theme_refresh_keeps_the_downloaded_folder(
+async def test_theme_refresh_keeps_the_installed_folder(
     marketplace: MarketplaceManager,
 ) -> None:
     """Test a theme renamed upstream is removed from the folder it is in."""
@@ -214,9 +214,9 @@ async def test_theme_refresh_keeps_the_downloaded_folder(
     repository.data.installed = True
     repository.data.file_name = "old.yaml"
     repository.data.directory = "old"
-    downloaded = Path(repository.localpath)
-    downloaded.mkdir(parents=True)
-    (downloaded / "old.yaml").write_text("Old Theme:\n  primary-color: red\n")
+    installed = Path(repository.localpath)
+    installed.mkdir(parents=True)
+    (installed / "old.yaml").write_text("Old Theme:\n  primary-color: red\n")
 
     async def refresh(*args: object, **kwargs: object) -> bool:
         repository.tree = [
@@ -228,11 +228,11 @@ async def test_theme_refresh_keeps_the_downloaded_folder(
         await repository.update_repository(force=True)
     await repository.uninstall()
 
-    assert not downloaded.exists()
+    assert not installed.exists()
     assert (owned / "new.yaml").exists()
 
 
-async def test_removing_a_symlinked_download_keeps_its_source(
+async def test_removing_a_symlinked_install_keeps_its_source(
     marketplace: MarketplaceManager, config_dir: Path
 ) -> None:
     """Test removal takes the symlink away, not what it points at."""

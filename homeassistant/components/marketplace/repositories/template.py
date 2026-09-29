@@ -20,9 +20,9 @@ if TYPE_CHECKING:
 class TemplateRepository(Repository):
     """Template repository.
 
-    The file name of the data is the downloaded file, removal deletes that one.
+    The file name of the data is the installed file, removal deletes that one.
     The file a version names comes from its hacs.json, and only replaces the
-    downloaded one when that version is written.
+    installed one when that version is written.
     """
 
     remote_path = ""
@@ -47,7 +47,7 @@ class TemplateRepository(Repository):
         return self.repository_manifest.filename or self.data.file_name
 
     def _use_file_name(self) -> None:
-        """Take the file name of the version, unless another one is downloaded."""
+        """Take the file name of the version, unless another one is installed."""
         if not self.data.installed:
             self.data.file_name = self._file_name_to_write
 
@@ -65,7 +65,7 @@ class TemplateRepository(Repository):
         self._check_file_name(self._file_name_to_write)
 
         # The folder is shared, a template file belongs to one repository
-        for repository in self.marketplace.repositories.list_downloaded:
+        for repository in self.marketplace.repositories.list_installed:
             if (
                 repository is not self
                 and repository.data.category == RepositoryCategory.TEMPLATE
@@ -84,7 +84,7 @@ class TemplateRepository(Repository):
         return f"{self.localpath}/{self._file_name_to_write}"
 
     @override
-    def _downloads_a_directory(self) -> bool:
+    def _installs_a_directory(self) -> bool:
         """Return False, a template is always the one file hacs.json names."""
         return False
 
@@ -102,14 +102,14 @@ class TemplateRepository(Repository):
         self, download: Callable[[], Awaitable[None]]
     ) -> None:
         """Write the template, and remove the one it replaces under another name."""
-        downloaded = self.data.file_name if self.data.installed else None
+        installed = self.data.file_name if self.data.installed else None
         await super()._async_write_content(download)
 
         self.data.file_name = self._file_name_to_write
-        if downloaded and downloaded != self.data.file_name:
+        if installed and installed != self.data.file_name:
             await async_remove(
                 self.marketplace.hass,
-                str(resolve_in_directory(self.localpath, downloaded)),
+                str(resolve_in_directory(self.localpath, installed)),
                 missing_ok=True,
             )
 

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities_for_downloaded_repositories[entities]
+# name: test_entities_for_installed_repositories[entities]
   list([
     EntityRegistryEntrySnapshot({
       'aliases': list([
@@ -143,7 +143,7 @@
     }),
   ])
 # ---
-# name: test_entities_for_downloaded_repositories[update_state]
+# name: test_entities_for_installed_repositories[update_state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,

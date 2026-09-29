@@ -50,7 +50,7 @@ def test_configuration_ignores_option(option: str) -> None:
     ],
 )
 def test_configuration_keeps_its_paths(option: str, default: str) -> None:
-    """Test the paths downloads go to can not be changed from entry data."""
+    """Test the paths installs go to can not be changed from entry data."""
     configuration = MarketplaceConfiguration()
 
     configuration.update_from_dict({option: "somewhere/else/"})
@@ -83,22 +83,22 @@ async def test_repository_lookups(
     assert marketplace.repositories.get_by_id("1337").data.full_name == "test/test"
     assert marketplace.repositories.get_by_full_name("test/test").data.id == "1337"
     assert marketplace.repositories.is_registered(repository_id="1337")
-    assert marketplace.repositories.is_downloaded(repository_id="1337")
+    assert marketplace.repositories.is_installed(repository_id="1337")
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_category_downloaded(
+async def test_category_installed(
     marketplace: MarketplaceManager, mock_repository: Repository
 ) -> None:
-    """Test only the category of a downloaded repository counts as downloaded."""
+    """Test only the category of an installed repository counts as installed."""
     marketplace.repositories = Repositories()
     mock_repository.data.id = "1337"
     mock_repository.data.category = RepositoryCategory.INTEGRATION
     mock_repository.data.installed = True
     marketplace.repositories.register(mock_repository)
 
-    assert marketplace.repositories.category_downloaded(RepositoryCategory.INTEGRATION)
-    assert not marketplace.repositories.category_downloaded(RepositoryCategory.THEME)
+    assert marketplace.repositories.category_installed(RepositoryCategory.INTEGRATION)
+    assert not marketplace.repositories.category_installed(RepositoryCategory.THEME)
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -166,10 +166,10 @@ async def test_catalog_restores_versions_of_repositories_not_installed(
     assert repository.data.last_commit == last_commit
 
 
-async def test_catalog_keeps_the_domain_of_a_downloaded_integration(
+async def test_catalog_keeps_the_domain_of_an_installed_integration(
     marketplace: MarketplaceManager,
 ) -> None:
-    """Test the feed can not point a downloaded integration at another directory."""
+    """Test the feed can not point an installed integration at another directory."""
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.data.installed = True
     repository.data.domain = "example"

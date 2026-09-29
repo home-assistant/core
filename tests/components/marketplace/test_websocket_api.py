@@ -87,7 +87,7 @@ COMMANDS: tuple[dict[str, Any], ...] = (
     },
     {"type": "marketplace/repository/info", "repository_id": REPOSITORY_INTEGRATION_ID},
     {
-        "type": "marketplace/repository/download",
+        "type": "marketplace/repository/install",
         "repository": REPOSITORY_INTEGRATION_ID,
     },
     {"type": "marketplace/repository/ignore", "repository": REPOSITORY_INTEGRATION_ID},
@@ -134,11 +134,11 @@ GITHUB_COMMANDS: tuple[dict[str, Any], ...] = (
     },
 )
 
-# The commands that reach GitHub anonymously without a connection. Downloading
-# the version the catalog names skips the API, so the download picks another.
+# The commands that reach GitHub anonymously without a connection. Installing
+# the version the catalog names skips the API, so the install picks another.
 ANONYMOUS_GITHUB_COMMANDS: tuple[dict[str, Any], ...] = (
     {
-        "type": "marketplace/repository/download",
+        "type": "marketplace/repository/install",
         "repository": REPOSITORY_INTEGRATION_ID,
         "version": "2.0.0",
     },
@@ -155,13 +155,13 @@ ANONYMOUS_GITHUB_COMMANDS: tuple[dict[str, Any], ...] = (
     {"type": "marketplace/repository/refresh", "repository": REPOSITORY_INTEGRATION_ID},
 )
 
-# Dot segments collapse in the URL, this downloads another repository
+# Dot segments collapse in the URL, this installs another repository
 VERSION_ESCAPE = "../../other/repo/archive/refs/heads/main"
 
 # The commands that need the first-run warning accepted, with a valid message.
 WARNING_COMMANDS: tuple[dict[str, Any], ...] = (
     {
-        "type": "marketplace/repository/download",
+        "type": "marketplace/repository/install",
         "repository": REPOSITORY_INTEGRATION_ID,
     },
     {
@@ -214,7 +214,7 @@ def translated_error(
 # Every command that resolves a repository by id, with the field it uses.
 REPOSITORY_COMMANDS: tuple[tuple[str, str, dict[str, Any]], ...] = (
     ("marketplace/repository/info", "repository_id", {}),
-    ("marketplace/repository/download", "repository", {}),
+    ("marketplace/repository/install", "repository", {}),
     ("marketplace/repository/ignore", "repository", {}),
     ("marketplace/repository/state", "repository", {"state": "other"}),
     ("marketplace/repository/version", "repository", {"version": "1.0.0"}),
@@ -374,8 +374,8 @@ async def test_subscribe_to_another_signal(
     "message",
     [
         pytest.param(
-            {"type": "marketplace/repository/download", "version": VERSION_ESCAPE},
-            id="download",
+            {"type": "marketplace/repository/install", "version": VERSION_ESCAPE},
+            id="install",
         ),
         pytest.param(
             {"type": "marketplace/repository/version", "version": VERSION_ESCAPE},
@@ -389,7 +389,7 @@ async def test_commands_refuse_a_version_that_is_a_path(
     hass_ws_client: WebSocketGenerator,
     message: dict[str, Any],
 ) -> None:
-    """Test a version can not point the download at another repository."""
+    """Test a version can not point the install at another repository."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     client = await hass_ws_client(hass)
 
@@ -762,12 +762,12 @@ async def test_repositories_remove(
     assert marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID) is None
 
 
-async def test_repositories_remove_refuses_downloaded(
+async def test_repositories_remove_refuses_installed(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test a downloaded repository is not forgotten while its files stay."""
+    """Test an installed repository is not forgotten while its files stay."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     repository.data.installed = True
     client = await hass_ws_client(hass)
@@ -781,7 +781,7 @@ async def test_repositories_remove_refuses_downloaded(
     response = await client.receive_json()
 
     assert not response["success"]
-    assert response["error"]["code"] == "repository_downloaded"
+    assert response["error"]["code"] == "repository_installed"
     assert marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID) is repository
 
 
@@ -915,17 +915,17 @@ async def test_repository_refresh(
     assert update.call_args.kwargs == {"ignore_issues": True, "force": True}
 
 
-async def test_repository_download(
+async def test_repository_install(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test downloading a repository."""
+    """Test installing a repository."""
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(
         {
-            "type": "marketplace/repository/download",
+            "type": "marketplace/repository/install",
             "repository": REPOSITORY_INTEGRATION_ID,
         }
     )
@@ -935,38 +935,38 @@ async def test_repository_download(
 
 
 @pytest.mark.parametrize(
-    ("message", "downloaded"),
+    ("message", "installed"),
     [
         pytest.param({}, False, id="not_confirmed"),
         pytest.param({"confirm_replace_built_in": True}, True, id="confirmed"),
     ],
 )
-async def test_download_replacing_a_built_in_needs_confirmation(
+async def test_install_replacing_a_built_in_needs_confirmation(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
     message: dict[str, Any],
-    downloaded: bool,
+    installed: bool,
 ) -> None:
-    """Test a first download over a built-in integration has to be confirmed."""
+    """Test a first install over a built-in integration has to be confirmed."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     client = await hass_ws_client(hass)
 
     with patch.object(repository, "async_replaces_built_in", return_value=True):
         await client.send_json_auto_id(
             {
-                "type": "marketplace/repository/download",
+                "type": "marketplace/repository/install",
                 "repository": REPOSITORY_INTEGRATION_ID,
             }
             | message
         )
         response = await client.receive_json()
 
-    assert response["success"] is downloaded
-    assert repository.data.installed is downloaded
+    assert response["success"] is installed
+    assert repository.data.installed is installed
 
 
-async def test_download_confirms_the_domain_of_the_version_it_writes(
+async def test_install_confirms_the_domain_of_the_version_it_writes(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
@@ -985,7 +985,7 @@ async def test_download_confirms_the_domain_of_the_version_it_writes(
     ):
         await client.send_json_auto_id(
             {
-                "type": "marketplace/repository/download",
+                "type": "marketplace/repository/install",
                 "repository": REPOSITORY_INTEGRATION_ID,
             }
         )
@@ -1001,24 +1001,24 @@ async def test_update_replacing_a_built_in_needs_no_new_confirmation(
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test a repository already downloaded was confirmed when it was."""
+    """Test a repository already installed was confirmed when it was."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     repository.data.installed = True
     client = await hass_ws_client(hass)
 
     with (
         patch.object(repository, "async_replaces_built_in", return_value=True),
-        patch.object(repository, "async_download_repository") as download,
+        patch.object(repository, "async_install_repository") as install,
     ):
         await client.send_json_auto_id(
             {
-                "type": "marketplace/repository/download",
+                "type": "marketplace/repository/install",
                 "repository": REPOSITORY_INTEGRATION_ID,
             }
         )
         assert (await client.receive_json())["success"]
 
-    download.assert_called_once()
+    install.assert_called_once()
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -1052,23 +1052,23 @@ async def test_repositories_add_invalid_repository(
     )
 
 
-async def test_repository_download_failure(
+async def test_repository_install_failure(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test a download that can not be completed."""
+    """Test an install that can not be completed."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
 
     client = await hass_ws_client(hass)
     with patch.object(
         repository,
-        "async_download_repository",
-        side_effect=MarketplaceError("Could not download"),
+        "async_install_repository",
+        side_effect=MarketplaceError("Could not install"),
     ):
         await client.send_json_auto_id(
             {
-                "type": "marketplace/repository/download",
+                "type": "marketplace/repository/install",
                 "repository": REPOSITORY_INTEGRATION_ID,
             }
         )
@@ -1077,10 +1077,10 @@ async def test_repository_download_failure(
     assert not response["success"]
     assert response["error"] == translated_error(
         "error",
-        "download_failed",
-        f"Downloading {REPOSITORY_INTEGRATION} failed: Could not download",
+        "install_failed",
+        f"Installing {REPOSITORY_INTEGRATION} failed: Could not install",
         repository=REPOSITORY_INTEGRATION,
-        error="Could not download",
+        error="Could not install",
     )
 
 
@@ -1089,13 +1089,13 @@ async def test_repository_remove(
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test removing a downloaded repository."""
+    """Test removing an installed repository."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
         {
-            "type": "marketplace/repository/download",
+            "type": "marketplace/repository/install",
             "repository": REPOSITORY_INTEGRATION_ID,
         }
     )
@@ -1117,7 +1117,7 @@ async def test_repository_release_notes(
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test the release notes of the versions newer than the downloaded one."""
+    """Test the release notes of the versions newer than the installed one."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     await repository.update_repository(force=True)
     repository.data.installed_version = "0.9.0"
@@ -1135,12 +1135,12 @@ async def test_repository_release_notes(
     assert [entry["tag"] for entry in response["result"]] == ["1.0.0"]
 
 
-async def test_repository_release_notes_without_a_download(
+async def test_repository_release_notes_when_not_installed(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test that a repository that is not downloaded lists every release."""
+    """Test that a repository that is not installed lists every release."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     await repository.update_repository(force=True)
 
@@ -1449,7 +1449,7 @@ async def test_commands_without_github(
     hass_ws_client: WebSocketGenerator,
     message: dict[str, Any],
 ) -> None:
-    """Test downloading and updating work without a GitHub connection."""
+    """Test installing and updating work without a GitHub connection."""
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(message)
@@ -1525,7 +1525,7 @@ async def test_commands_rate_limited_without_github(
     [
         pytest.param(command, id=command["type"])
         for command in ANONYMOUS_GITHUB_COMMANDS
-        if command["type"] != "marketplace/repository/download"
+        if command["type"] != "marketplace/repository/install"
     ],
 )
 async def test_commands_roll_back_when_the_refresh_fails(
@@ -1621,7 +1621,7 @@ async def test_repository_remove_without_github(
     hass_ws_client: WebSocketGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test removing a downloaded repository leaves GitHub alone."""
+    """Test removing an installed repository leaves GitHub alone."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     assert repository.data.installed
 
@@ -1651,7 +1651,7 @@ async def test_commands_need_accepted_warning(
     aioclient_mock: AiohttpClientMocker,
     message: dict[str, Any],
 ) -> None:
-    """Test the commands that download are refused until the warning is accepted."""
+    """Test the commands that install are refused until the warning is accepted."""
     client = await hass_ws_client(hass)
     calls_before = len(github_api_calls(aioclient_mock))
 
@@ -1662,7 +1662,7 @@ async def test_commands_need_accepted_warning(
     assert response["error"] == translated_error(
         "warning_not_accepted",
         "warning_not_accepted",
-        "Open the Marketplace and read the warning first, downloads and updates"
+        "Open the Marketplace and read the warning first, installs and updates"
         " start working once it is accepted",
     )
     assert len(github_api_calls(aioclient_mock)) == calls_before

@@ -23,7 +23,7 @@ def _get_safe_paths(
         Path(config_path).resolve().as_posix(),
         Path(f"{config_path}/{STORAGE_DIR}").resolve().as_posix(),
         Path(f"{config_path}/{plugin_path}").resolve().as_posix(),
-        # Python scripts are no longer downloaded, their folder stays off limits
+        # Python scripts are no longer installed, their folder stays off limits
         Path(f"{config_path}/python_scripts/").resolve().as_posix(),
         Path(f"{config_path}/{theme_path}").resolve().as_posix(),
         Path(f"{config_path}/custom_components/").resolve().as_posix(),
@@ -60,7 +60,7 @@ def resolve_in_directory(directory: str | Path, path: str | Path) -> Path:
 def entry_in_directory(directory: str | Path, path: str | Path) -> Path:
     """Require the path to be an entry of directory, without following it.
 
-    A download can be a symlink, the link is what belongs to the directory
+    An install can be a symlink, the link is what belongs to the directory
     and not what it points at.
     """
     path = Path(path)

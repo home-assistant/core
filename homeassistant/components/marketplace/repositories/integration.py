@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 def _validated_domain(domain: Any) -> str:
     """Return the domain of a remote manifest, rejecting anything but a slug.
 
-    The domain names the directory below custom_components/ the download is
+    The domain names the directory below custom_components/ the install is
     written to, so anything else would let a repository pick its own target.
     """
     if not isinstance(domain, str) or not VALID_DOMAIN.match(domain):
@@ -72,26 +72,26 @@ def _is_loadable_version(version: Any) -> bool:
 
 
 def _check_loadable_manifest(directory: Path, domain: str | None) -> None:
-    """Refuse a downloaded manifest.json the loader would not load."""
+    """Refuse an installed manifest.json the loader would not load."""
     try:
         manifest = json_loads_object(
             (directory / RepositoryFile.MAINIFEST_JSON).read_text(encoding="utf-8")
         )
     except (OSError, ValueError) as exception:
         raise MarketplaceError(
-            f"The download has no usable {RepositoryFile.MAINIFEST_JSON}"
+            f"The installed content has no usable {RepositoryFile.MAINIFEST_JSON}"
             f" where Home Assistant looks for it: {exception}"
         ) from exception
 
     if manifest.get("domain") != domain:
         raise MarketplaceError(
-            f"The {RepositoryFile.MAINIFEST_JSON} of the download is for"
+            f"The {RepositoryFile.MAINIFEST_JSON} of the installed content is for"
             f" '{manifest.get('domain')}', not '{domain}'"
         )
 
     if not _is_loadable_version(manifest.get("version")):
         raise MarketplaceError(
-            f"The {RepositoryFile.MAINIFEST_JSON} of the download has no valid"
+            f"The {RepositoryFile.MAINIFEST_JSON} of the installed content has no valid"
             " version, Home Assistant would not load it"
         )
 
@@ -122,7 +122,7 @@ class IntegrationRepository(Repository):
         if not self.data.domain:
             return
 
-        for repository in self.marketplace.repositories.list_downloaded:
+        for repository in self.marketplace.repositories.list_installed:
             if (
                 repository is not self
                 and repository.data.category == RepositoryCategory.INTEGRATION
@@ -276,11 +276,11 @@ class IntegrationRepository(Repository):
         """Take the details of the integration from its manifest.json."""
         try:
             domain = _validated_domain(manifest["domain"])
-            # The files of a download stay where they are, removal needs to find them
+            # The files of an install stay where they are, removal needs to find them
             if self.data.installed and self.data.domain not in (None, domain):
                 raise MarketplaceError(
                     f"{self.data.full_name} changed its domain from "
-                    f"'{self.data.domain}' to '{domain}', remove it and download "
+                    f"'{self.data.domain}' to '{domain}', remove it and install "
                     "it again"
                 )
 
@@ -356,7 +356,7 @@ class IntegrationRepository(Repository):
                 f"No {RepositoryFile.MAINIFEST_JSON} file found '{manifest_path}'"
             )
 
-        target_ref = ref or self.version_to_download()
+        target_ref = ref or self.version_to_install()
         self.logger.debug(
             "%s Getting %s for ref=%s", self.string, manifest_path, target_ref
         )

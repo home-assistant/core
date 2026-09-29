@@ -45,14 +45,14 @@ class ThemeRepository(Repository):
 
     @property
     def directory(self) -> str:
-        """Return the folder of the theme, the one it was downloaded to."""
+        """Return the folder of the theme, the one it was installed to."""
         return self.data.directory or self.data.file_name.replace(".yaml", "")
 
     @override
     async def async_pre_install(self) -> None:
         """Run pre install steps."""
         # The folder is named after the theme file, other themes can use that name
-        for repository in self.marketplace.repositories.list_downloaded:
+        for repository in self.marketplace.repositories.list_installed:
             if (
                 repository is not self
                 and repository.data.category == RepositoryCategory.THEME
@@ -157,7 +157,7 @@ class ThemeRepository(Repository):
     @override
     async def async_post_uninstall(self) -> None:
         """Run post uninstall steps."""
-        # Downloaded again, the theme goes to the folder of its current file
+        # Installed again, the theme goes to the folder of its current file
         self.data.directory = None
         await self._reload_frontend_themes()
 

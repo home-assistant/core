@@ -54,7 +54,7 @@ class RetiredCategory:
 
 
 # These were once categories, the stored data can still hold them. What was
-# downloaded stays in place and keeps running, only the Marketplace lets go.
+# installed stays in place and keeps running, only the Marketplace lets go.
 RETIRED_CATEGORIES: dict[str, RetiredCategory] = {
     "appdaemon": RetiredCategory("AppDaemon", "appdaemon_not_supported", "apps"),
     "python_script": RetiredCategory(
@@ -279,7 +279,7 @@ def _async_forget_category(
     )
 
     LOGGER.info(
-        "Forgot %s %s repositories, %s of them downloaded",
+        "Forgot %s %s repositories, %s of them installed",
         len(forgotten),
         retired.name,
         len(installed),

@@ -28,12 +28,12 @@ async def async_setup_entry(
     marketplace = entry.runtime_data
     async_add_entities(
         RepositoryUpdateEntity(marketplace=marketplace, repository=repository)
-        for repository in marketplace.repositories.list_downloaded
+        for repository in marketplace.repositories.list_installed
     )
 
 
 class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
-    """Update entity for a downloaded repository."""
+    """Update entity for an installed repository."""
 
     # Updating is what the device of a repository is for, it carries the name
     _attr_has_entity_name = True
@@ -62,7 +62,7 @@ class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
     @property
     @override
     def installed_version(self) -> str:
-        """Return downloaded version of the entity."""
+        """Return installed version of the entity."""
         return self.repository.display_installed_version
 
     @property
@@ -107,11 +107,11 @@ class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
                 translation_key="warning_not_accepted",
             )
 
-        to_download = version or self.latest_version
-        if to_download == self.installed_version:
+        to_install = version or self.latest_version
+        if to_install == self.installed_version:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="version_already_downloaded",
+                translation_key="version_already_installed",
                 translation_placeholders={
                     "repository": self.repository.data.full_name,
                     "version": self.installed_version,
@@ -119,7 +119,7 @@ class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
             )
 
         try:
-            await self.repository.async_download_repository(ref=to_download)
+            await self.repository.async_install_repository(ref=to_install)
         except GitHubAnonymousRateLimitError as exception:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -128,7 +128,7 @@ class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
         except MarketplaceError as exception:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="download_failed",
+                translation_key="install_failed",
                 translation_placeholders={
                     "error": str(exception),
                     "repository": self.repository.data.full_name,
@@ -192,21 +192,21 @@ class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
-                self._update_download_progress,
+                MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
+                self._update_install_progress,
             )
         )
 
     @callback
-    def _update_download_progress(self, data: dict[str, Any]) -> None:
-        """Update the download progress."""
+    def _update_install_progress(self, data: dict[str, Any]) -> None:
+        """Update the install progress."""
         if data["repository"] != self.repository.data.full_name:
             return
         self._update_in_progress(progress=data["progress"])
 
     @callback
     def _update_in_progress(self, progress: int | bool) -> None:
-        """Update the download progress."""
+        """Update the install progress."""
         self._attr_in_progress = progress is not False
         self._attr_update_percentage = progress if progress is not False else None
         self.async_write_ha_state()

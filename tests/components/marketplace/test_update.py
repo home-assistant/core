@@ -47,18 +47,18 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
-async def downloaded_repository(
+async def installed_repository(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     category_test_data: CategoryTestData,
 ) -> Repository:
-    """Return a downloaded repository with its entities loaded."""
+    """Return an installed repository with its entities loaded."""
     repository = marketplace.repositories.get_by_full_name(
         category_test_data["repository"]
     )
     repository.data.installed = True
     repository.data.installed_version = category_test_data["version_base"]
-    # A downloaded repository has its files on disk
+    # An installed repository has its files on disk
     Path(repository.localpath).mkdir(parents=True, exist_ok=True)
 
     await hass.config_entries.async_reload(
@@ -77,11 +77,11 @@ async def integration_update_entity(
     marketplace: MarketplaceManager,
     entity_registry: er.EntityRegistry,
 ) -> str:
-    """Return the update entity of a downloaded integration repository."""
+    """Return the update entity of an installed integration repository."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     repository.data.installed = True
     repository.data.installed_version = "1.0.0"
-    # A downloaded repository has its files on disk
+    # An installed repository has its files on disk
     Path(repository.localpath).mkdir(parents=True, exist_ok=True)
 
     await hass.config_entries.async_reload(
@@ -98,7 +98,7 @@ async def integration_update_entity(
 async def test_update_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    downloaded_repository: Repository,
+    installed_repository: Repository,
     category_test_data: CategoryTestData,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -120,7 +120,7 @@ async def test_update_device_info(
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the device a downloaded repository is represented by."""
+    """Test the device an installed repository is represented by."""
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -162,7 +162,7 @@ async def test_update_entity_picture(
     "category_test_data",
     category_test_data_parametrized(categories=["plugin"]),
 )
-@pytest.mark.usefixtures("downloaded_repository")
+@pytest.mark.usefixtures("installed_repository")
 async def test_update_entity_picture_for_other_categories(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -193,15 +193,15 @@ async def test_update_entity_release_summary(
     )
 
 
-async def test_update_entity_download_progress(
+async def test_update_entity_install_progress(
     hass: HomeAssistant, integration_update_entity: str
 ) -> None:
-    """Test that a download reports its progress on the update entity."""
+    """Test that an install reports its progress on the update entity."""
     assert hass.states.get(integration_update_entity).attributes["in_progress"] is False
 
     async_dispatcher_send(
         hass,
-        MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+        MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
         {"repository": REPOSITORY_INTEGRATION, "progress": 40},
     )
     await hass.async_block_till_done()
@@ -212,7 +212,7 @@ async def test_update_entity_download_progress(
 
     async_dispatcher_send(
         hass,
-        MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+        MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
         {"repository": REPOSITORY_INTEGRATION, "progress": False},
     )
     await hass.async_block_till_done()
@@ -225,10 +225,10 @@ async def test_update_entity_download_progress(
 async def test_update_entity_ignores_other_repositories(
     hass: HomeAssistant, integration_update_entity: str
 ) -> None:
-    """Test that the progress of another download is ignored."""
+    """Test that the progress of another install is ignored."""
     async_dispatcher_send(
         hass,
-        MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+        MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
         {"repository": "other/repository", "progress": 40},
     )
     await hass.async_block_till_done()
@@ -241,7 +241,7 @@ async def test_install(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     entity_registry: er.EntityRegistry,
-    downloaded_repository: Repository,
+    installed_repository: Repository,
     category_test_data: CategoryTestData,
 ) -> None:
     """Test installing a specific version through the update entity."""
@@ -260,7 +260,7 @@ async def test_install(
     )
 
     assert (
-        downloaded_repository.data.installed_version
+        installed_repository.data.installed_version
         == category_test_data["version_update"]
     )
 
@@ -274,7 +274,7 @@ async def test_install(
 async def test_install_update_from_the_catalog(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    downloaded_repository: Repository,
+    installed_repository: Repository,
     aioclient_mock: AiohttpClientMocker,
     category_test_data: CategoryTestData,
     snapshot: SnapshotAssertion,
@@ -283,7 +283,7 @@ async def test_install_update_from_the_catalog(
     entity_id = entity_registry.async_get_entity_id(
         Platform.UPDATE, DOMAIN, category_test_data["id"]
     )
-    downloaded_repository.data.last_version = category_test_data["version_update"]
+    installed_repository.data.last_version = category_test_data["version_update"]
     aioclient_mock.mock_calls.clear()
 
     await hass.services.async_call(
@@ -291,7 +291,7 @@ async def test_install_update_from_the_catalog(
     )
 
     assert (
-        downloaded_repository.data.installed_version
+        installed_repository.data.installed_version
         == category_test_data["version_update"]
     )
     assert not github_api_calls(aioclient_mock)
@@ -309,7 +309,7 @@ async def test_install_update_from_the_catalog(
 async def test_install_newest_commit_of_a_custom_repository(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    downloaded_repository: Repository,
+    installed_repository: Repository,
     aioclient_mock: AiohttpClientMocker,
     response_mocker: MarketplaceResponses,
     config_dir: Path,
@@ -330,7 +330,7 @@ async def test_install_newest_commit_of_a_custom_repository(
         Platform.UPDATE, DOMAIN, category_test_data["id"]
     )
     marketplace = get_marketplace(hass)
-    data = downloaded_repository.data
+    data = installed_repository.data
     data.releases = False
     data.last_version = None
     data.installed_version = None
@@ -338,12 +338,12 @@ async def test_install_newest_commit_of_a_custom_repository(
     data.last_commit = "7fd1a60"
     data.default_branch = "main"
     # What the patched update_repository resolves the content to
-    downloaded_repository.content.path.remote = "custom_components/example"
+    installed_repository.content.path.remote = "custom_components/example"
     aioclient_mock.mock_calls.clear()
 
     with (
         patch.object(marketplace.repositories, "is_default", return_value=False),
-        patch.object(downloaded_repository, "update_repository"),
+        patch.object(installed_repository, "update_repository"),
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -361,7 +361,7 @@ async def test_install_newest_commit_of_a_custom_repository(
 async def test_install_update_of_a_custom_repository(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    downloaded_repository: Repository,
+    installed_repository: Repository,
     aioclient_mock: AiohttpClientMocker,
     category_test_data: CategoryTestData,
     snapshot: SnapshotAssertion,
@@ -371,7 +371,7 @@ async def test_install_update_of_a_custom_repository(
         Platform.UPDATE, DOMAIN, category_test_data["id"]
     )
     marketplace = get_marketplace(hass)
-    downloaded_repository.data.last_version = category_test_data["version_update"]
+    installed_repository.data.last_version = category_test_data["version_update"]
     aioclient_mock.mock_calls.clear()
 
     with patch.object(marketplace.repositories, "is_default", return_value=False):
@@ -380,7 +380,7 @@ async def test_install_update_of_a_custom_repository(
         )
 
     assert (
-        downloaded_repository.data.installed_version
+        installed_repository.data.installed_version
         == category_test_data["version_update"]
     )
     assert github_api_calls(aioclient_mock)
@@ -395,16 +395,16 @@ async def test_install_update_of_a_custom_repository(
 async def test_template_update_writes_only_the_template(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    downloaded_repository: Repository,
+    installed_repository: Repository,
     category_test_data: CategoryTestData,
 ) -> None:
     """Test a template update writes its file, not the rest of the repository."""
     entity_id = entity_registry.async_get_entity_id(
         Platform.UPDATE, DOMAIN, category_test_data["id"]
     )
-    downloaded_repository.data.last_version = category_test_data["version_update"]
+    installed_repository.data.last_version = category_test_data["version_update"]
     # Stored before template file names were
-    downloaded_repository.data.file_name = ""
+    installed_repository.data.file_name = ""
 
     with patch.object(
         get_marketplace(hass).repositories, "is_default", return_value=False
@@ -414,18 +414,18 @@ async def test_template_update_writes_only_the_template(
         )
 
     assert sorted(
-        path.name for path in Path(downloaded_repository.localpath).iterdir()
+        path.name for path in Path(installed_repository.localpath).iterdir()
     ) == ["example.jinja"]
 
 
-async def test_install_already_downloaded_version(
+async def test_install_already_installed_version(
     hass: HomeAssistant, integration_update_entity: str
 ) -> None:
     """Test installing the version that is already there."""
     with pytest.raises(
         HomeAssistantError,
         match=re.escape(
-            f"Version 1.0.0 of {REPOSITORY_INTEGRATION} is already downloaded"
+            f"Version 1.0.0 of {REPOSITORY_INTEGRATION} is already installed"
         ),
     ):
         await hass.services.async_call(
@@ -455,7 +455,7 @@ async def test_install_refuses_a_version_that_is_a_path(
 async def test_install_without_an_update(
     hass: HomeAssistant, integration_update_entity: str
 ) -> None:
-    """Test installing when the downloaded version is the latest one."""
+    """Test installing when the installed version is the latest one."""
     with pytest.raises(
         HomeAssistantError,
         match=f"No update available for {integration_update_entity}",
@@ -482,8 +482,8 @@ async def test_install_version_without_a_manifest(
     with pytest.raises(
         HomeAssistantError,
         match=re.escape(
-            f"Downloading {REPOSITORY_INTEGRATION} failed: Version 3.0.0 of "
-            f"{REPOSITORY_INTEGRATION} has no hacs.json, which downloading needs"
+            f"Installing {REPOSITORY_INTEGRATION} failed: Version 3.0.0 of "
+            f"{REPOSITORY_INTEGRATION} has no hacs.json, which installing needs"
         ),
     ):
         await hass.services.async_call(
@@ -512,7 +512,7 @@ async def test_install_version_requiring_a_newer_core(
     with pytest.raises(
         HomeAssistantError,
         match=re.escape(
-            f"Downloading {REPOSITORY_INTEGRATION} failed: This version requires "
+            f"Installing {REPOSITORY_INTEGRATION} failed: This version requires "
             "Home Assistant 9999.99.99 or newer."
         ),
     ):
@@ -546,9 +546,9 @@ async def test_install_download_failure(
     with pytest.raises(
         HomeAssistantError,
         match=re.escape(
-            f"Downloading {REPOSITORY_INTEGRATION} failed: Downloading "
+            f"Installing {REPOSITORY_INTEGRATION} failed: Installing "
             f"{REPOSITORY_INTEGRATION} with version 2.0.0 failed with "
-            "(Could not download, see log for details)"
+            "(Could not install, see log for details)"
         ),
     ):
         await hass.services.async_call(

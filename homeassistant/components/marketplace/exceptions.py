@@ -21,15 +21,15 @@ class GitHubAnonymousRateLimitError(GitHubRateLimitError):
 
 
 class CatalogContentUnresolvedError(MarketplaceError):
-    """For a catalog download the repository archive can not resolve.
+    """For a catalog install the repository archive can not resolve.
 
-    Nothing is written yet when it is raised, the download goes through the
+    Nothing is written yet when it is raised, the install goes through the
     GitHub API instead.
     """
 
 
 class ReplacesBuiltInNotConfirmedError(MarketplaceError):
-    """For a first download over a built-in integration that was not confirmed."""
+    """For a first install over a built-in integration that was not confirmed."""
 
     def __init__(self, domain: str) -> None:
         """Initialize the exception."""

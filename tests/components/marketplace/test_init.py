@@ -91,7 +91,7 @@ async def test_restart_issues_removed_on_start(
     mock_config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test the restart issues of earlier downloads go once Home Assistant started."""
+    """Test the restart issues of earlier installs go once Home Assistant started."""
     ir.async_create_issue(
         hass,
         DOMAIN,
@@ -130,7 +130,7 @@ async def test_legacy_plugin_path(
     mock_config_entry: MockConfigEntry,
     config_dir: Path,
 ) -> None:
-    """Test downloaded plugins still load from the path HACS served them on."""
+    """Test installed plugins still load from the path HACS served them on."""
     plugin = config_dir / "www" / "community" / "plugin-basic" / "plugin-basic.js"
     plugin.parent.mkdir(parents=True)
     plugin.write_text("customElements.define()", encoding="utf-8")
@@ -202,22 +202,22 @@ async def test_unload_with_pending_queue_tasks(
     queued.assert_not_awaited()
 
 
-async def test_unload_waits_for_a_running_download(
+async def test_unload_waits_for_a_running_install(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test unloading lets a download finish, a new setup would restore under it."""
+    """Test unloading lets an install finish, a new setup would restore under it."""
     await setup_integration(hass, mock_config_entry)
     repository = get_marketplace(hass).repositories.get_by_id(REPOSITORY_PLUGIN_ID)
     release = asyncio.Event()
     finished: list[str] = []
 
-    async def download(ref: str | None) -> None:
+    async def install(ref: str | None) -> None:
         await release.wait()
-        finished.append("download")
+        finished.append("install")
 
-    with patch.object(repository, "_async_download_repository", download):
-        downloading = hass.async_create_task(repository.async_download_repository())
+    with patch.object(repository, "_async_install_repository", install):
+        installing = hass.async_create_task(repository.async_install_repository())
         await asyncio.sleep(0)
         unloading = hass.async_create_task(
             hass.config_entries.async_unload(mock_config_entry.entry_id)
@@ -226,10 +226,10 @@ async def test_unload_waits_for_a_running_download(
         assert not unloading.done()
 
         release.set()
-        await downloading
+        await installing
         assert await unloading
 
-    assert finished == ["download"]
+    assert finished == ["install"]
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
@@ -278,7 +278,7 @@ async def test_custom_repository_updates_without_custom_repositories(
     with patch.object(
         mock_config_entry, "async_create_background_task"
     ) as create_background_task:
-        await marketplace.async_update_downloaded_custom_repositories()
+        await marketplace.async_update_installed_custom_repositories()
 
     create_background_task.assert_not_called()
 
@@ -303,7 +303,7 @@ async def test_custom_repository_update_failure_still_updates_entities(
             "async_update_listeners",
         ) as update_listeners,
     ):
-        await marketplace.async_update_downloaded_custom_repositories()
+        await marketplace.async_update_installed_custom_repositories()
         await marketplace.queue.execute()
         async with asyncio.timeout(5):
             await hass.async_block_till_done(wait_background_tasks=True)
@@ -431,18 +431,18 @@ async def test_setup_asks_to_reauthenticate_for_an_invalid_token(
 
 
 @pytest.mark.usefixtures("stored_repositories")
-async def test_entities_for_downloaded_repositories(
+async def test_entities_for_installed_repositories(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test each downloaded repository gets an update and a switch entity."""
+    """Test each installed repository gets an update and a switch entity."""
     await setup_integration(hass, mock_config_entry)
 
     marketplace = get_marketplace(hass)
     assert {
-        repo.data.full_name for repo in marketplace.repositories.list_downloaded
+        repo.data.full_name for repo in marketplace.repositories.list_installed
     } == {
         REPOSITORY_INTEGRATION,
         REPOSITORY_PLUGIN,
@@ -553,7 +553,7 @@ async def test_remove_device(
     mock_config_entry: MockConfigEntry,
     identifiers: set[Any],
 ) -> None:
-    """Test removing a device for a repository that is not downloaded."""
+    """Test removing a device for a repository that is not installed."""
     device_entry = MagicMock(spec=dr.DeviceEntry)
     device_entry.id = "test_device_id"
     device_entry.identifiers = identifiers
@@ -562,11 +562,11 @@ async def test_remove_device(
 
 
 @pytest.mark.usefixtures("stored_repositories", "init_integration")
-async def test_remove_device_still_downloaded(
+async def test_remove_device_still_installed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test removing a device for a downloaded repository is refused."""
+    """Test removing a device for an installed repository is refused."""
     device_entry = MagicMock(spec=dr.DeviceEntry)
     device_entry.id = "test_device_id"
     device_entry.identifiers = {(DOMAIN, REPOSITORY_INTEGRATION_ID)}
@@ -575,7 +575,7 @@ async def test_remove_device_still_downloaded(
         HomeAssistantError,
         match=(
             f"Cannot remove the service for {REPOSITORY_INTEGRATION}, "
-            "it is still downloaded"
+            "it is still installed"
         ),
     ):
         await async_remove_config_entry_device(hass, mock_config_entry, device_entry)
@@ -723,7 +723,7 @@ async def test_setup_without_github(
     # The background work that talks to GitHub is not scheduled, the catalog,
     # its removals and its critical repositories are
     assert len(marketplace.recurring_tasks) == 3
-    await marketplace.async_update_downloaded_custom_repositories()
+    await marketplace.async_update_installed_custom_repositories()
     assert not marketplace.queue.has_pending_tasks
     assert await marketplace.async_can_update() == 0
 

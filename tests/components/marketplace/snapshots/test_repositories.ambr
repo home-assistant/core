@@ -1,98 +1,4 @@
 # serializer version: 1
-# name: test_download_custom_repository[hacs-test-org/integration-basic-None][api_usage]
-  dict({
-    'https://api.github.com/repos/hacs-test-org/integration-basic': 1,
-    'https://api.github.com/repos/hacs-test-org/integration-basic/branches/main': 1,
-    'https://api.github.com/repos/hacs-test-org/integration-basic/contents/custom_components/example/manifest.json?ref=1.0.0': 1,
-    'https://api.github.com/repos/hacs-test-org/integration-basic/contents/hacs.json?ref=1.0.0': 1,
-    'https://api.github.com/repos/hacs-test-org/integration-basic/git/trees/1.0.0?recursive=true': 1,
-    'https://api.github.com/repos/hacs-test-org/integration-basic/releases': 1,
-    'https://github.com/hacs-test-org/integration-basic/archive/refs/tags/1.0.0.zip': 1,
-    'https://raw.githubusercontent.com/hacs-test-org/integration-basic/1.0.0/README.md': 1,
-  })
-# ---
-# name: test_download_custom_repository[hacs-test-org/plugin-basic-None][api_usage]
-  dict({
-    'https://api.github.com/repos/hacs-test-org/plugin-basic': 1,
-    'https://api.github.com/repos/hacs-test-org/plugin-basic/branches/main': 1,
-    'https://api.github.com/repos/hacs-test-org/plugin-basic/contents/hacs.json?ref=1.0.0': 1,
-    'https://api.github.com/repos/hacs-test-org/plugin-basic/git/trees/1.0.0?recursive=true': 1,
-    'https://api.github.com/repos/hacs-test-org/plugin-basic/releases': 1,
-    'https://raw.githubusercontent.com/hacs-test-org/plugin-basic/1.0.0/README.md': 1,
-    'https://raw.githubusercontent.com/hacs-test-org/plugin-basic/1.0.0/plugin-basic.js': 1,
-  })
-# ---
-# name: test_download_custom_repository[hacs-test-org/template-basic-None][api_usage]
-  dict({
-    'https://api.github.com/repos/hacs-test-org/template-basic': 1,
-    'https://api.github.com/repos/hacs-test-org/template-basic/branches/main': 1,
-    'https://api.github.com/repos/hacs-test-org/template-basic/contents/hacs.json?ref=1.0.0': 1,
-    'https://api.github.com/repos/hacs-test-org/template-basic/git/trees/1.0.0?recursive=true': 1,
-    'https://api.github.com/repos/hacs-test-org/template-basic/releases': 1,
-    'https://raw.githubusercontent.com/hacs-test-org/template-basic/1.0.0/README.md': 1,
-    'https://raw.githubusercontent.com/hacs-test-org/template-basic/1.0.0/example.jinja': 1,
-  })
-# ---
-# name: test_download_custom_repository[hacs-test-org/theme-basic-None][api_usage]
-  dict({
-    'https://api.github.com/repos/hacs-test-org/theme-basic': 1,
-    'https://api.github.com/repos/hacs-test-org/theme-basic/branches/main': 1,
-    'https://api.github.com/repos/hacs-test-org/theme-basic/contents/hacs.json?ref=1.0.0': 1,
-    'https://api.github.com/repos/hacs-test-org/theme-basic/git/trees/1.0.0?recursive=true': 1,
-    'https://api.github.com/repos/hacs-test-org/theme-basic/releases': 1,
-    'https://raw.githubusercontent.com/hacs-test-org/theme-basic/1.0.0/README.md': 1,
-    'https://raw.githubusercontent.com/hacs-test-org/theme-basic/1.0.0/themes/example.yaml': 1,
-  })
-# ---
-# name: test_download_from_the_catalog[hacs-test-org/integration-basic-None][api_usage]
-  dict({
-    'https://github.com/hacs-test-org/integration-basic/archive/refs/tags/1.0.0.zip': 1,
-    'https://raw.githubusercontent.com/hacs-test-org/integration-basic/1.0.0/custom_components/example/manifest.json': 1,
-    'https://raw.githubusercontent.com/hacs-test-org/integration-basic/1.0.0/hacs.json': 1,
-  })
-# ---
-# name: test_download_from_the_catalog[hacs-test-org/plugin-basic-None][api_usage]
-  dict({
-    'https://github.com/hacs-test-org/plugin-basic/archive/refs/tags/1.0.0.zip': 1,
-    'https://github.com/hacs-test-org/plugin-basic/releases/download/1.0.0/plugin-basic-bundle.js': 1,
-    'https://github.com/hacs-test-org/plugin-basic/releases/download/1.0.0/plugin-basic.js': 1,
-    'https://github.com/hacs-test-org/plugin-basic/releases/download/1.0.0/plugin-basic.umd.js': 1,
-    'https://raw.githubusercontent.com/hacs-test-org/plugin-basic/1.0.0/hacs.json': 1,
-  })
-# ---
-# name: test_download_from_the_catalog[hacs-test-org/template-basic-None][api_usage]
-  dict({
-    'https://github.com/hacs-test-org/template-basic/archive/refs/tags/1.0.0.zip': 1,
-    'https://raw.githubusercontent.com/hacs-test-org/template-basic/1.0.0/hacs.json': 1,
-  })
-# ---
-# name: test_download_from_the_catalog[hacs-test-org/theme-basic-None][api_usage]
-  dict({
-    'https://github.com/hacs-test-org/theme-basic/archive/refs/tags/1.0.0.zip': 1,
-    'https://raw.githubusercontent.com/hacs-test-org/theme-basic/1.0.0/hacs.json': 1,
-  })
-# ---
-# name: test_download_repository[hacs-test-org/integration-basic]
-  list([
-    'custom_components/example/manifest.json',
-  ])
-# ---
-# name: test_download_repository[hacs-test-org/plugin-basic]
-  list([
-    'www/community/plugin-basic/plugin-basic.js',
-    'www/community/plugin-basic/plugin-basic.js.gz',
-  ])
-# ---
-# name: test_download_repository[hacs-test-org/template-basic]
-  list([
-    'custom_templates/example.jinja',
-  ])
-# ---
-# name: test_download_repository[hacs-test-org/theme-basic]
-  list([
-    'themes/example/example.yaml',
-  ])
-# ---
 # name: test_get_documentation[available]
   '## Example readme file (2.0.0)'
 # ---
@@ -119,6 +25,100 @@
 # name: test_get_documentation[unknown-version]
   None
 # ---
+# name: test_install_custom_repository[hacs-test-org/integration-basic-None][api_usage]
+  dict({
+    'https://api.github.com/repos/hacs-test-org/integration-basic': 1,
+    'https://api.github.com/repos/hacs-test-org/integration-basic/branches/main': 1,
+    'https://api.github.com/repos/hacs-test-org/integration-basic/contents/custom_components/example/manifest.json?ref=1.0.0': 1,
+    'https://api.github.com/repos/hacs-test-org/integration-basic/contents/hacs.json?ref=1.0.0': 1,
+    'https://api.github.com/repos/hacs-test-org/integration-basic/git/trees/1.0.0?recursive=true': 1,
+    'https://api.github.com/repos/hacs-test-org/integration-basic/releases': 1,
+    'https://github.com/hacs-test-org/integration-basic/archive/refs/tags/1.0.0.zip': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/integration-basic/1.0.0/README.md': 1,
+  })
+# ---
+# name: test_install_custom_repository[hacs-test-org/plugin-basic-None][api_usage]
+  dict({
+    'https://api.github.com/repos/hacs-test-org/plugin-basic': 1,
+    'https://api.github.com/repos/hacs-test-org/plugin-basic/branches/main': 1,
+    'https://api.github.com/repos/hacs-test-org/plugin-basic/contents/hacs.json?ref=1.0.0': 1,
+    'https://api.github.com/repos/hacs-test-org/plugin-basic/git/trees/1.0.0?recursive=true': 1,
+    'https://api.github.com/repos/hacs-test-org/plugin-basic/releases': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/plugin-basic/1.0.0/README.md': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/plugin-basic/1.0.0/plugin-basic.js': 1,
+  })
+# ---
+# name: test_install_custom_repository[hacs-test-org/template-basic-None][api_usage]
+  dict({
+    'https://api.github.com/repos/hacs-test-org/template-basic': 1,
+    'https://api.github.com/repos/hacs-test-org/template-basic/branches/main': 1,
+    'https://api.github.com/repos/hacs-test-org/template-basic/contents/hacs.json?ref=1.0.0': 1,
+    'https://api.github.com/repos/hacs-test-org/template-basic/git/trees/1.0.0?recursive=true': 1,
+    'https://api.github.com/repos/hacs-test-org/template-basic/releases': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/template-basic/1.0.0/README.md': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/template-basic/1.0.0/example.jinja': 1,
+  })
+# ---
+# name: test_install_custom_repository[hacs-test-org/theme-basic-None][api_usage]
+  dict({
+    'https://api.github.com/repos/hacs-test-org/theme-basic': 1,
+    'https://api.github.com/repos/hacs-test-org/theme-basic/branches/main': 1,
+    'https://api.github.com/repos/hacs-test-org/theme-basic/contents/hacs.json?ref=1.0.0': 1,
+    'https://api.github.com/repos/hacs-test-org/theme-basic/git/trees/1.0.0?recursive=true': 1,
+    'https://api.github.com/repos/hacs-test-org/theme-basic/releases': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/theme-basic/1.0.0/README.md': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/theme-basic/1.0.0/themes/example.yaml': 1,
+  })
+# ---
+# name: test_install_from_the_catalog[hacs-test-org/integration-basic-None][api_usage]
+  dict({
+    'https://github.com/hacs-test-org/integration-basic/archive/refs/tags/1.0.0.zip': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/integration-basic/1.0.0/custom_components/example/manifest.json': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/integration-basic/1.0.0/hacs.json': 1,
+  })
+# ---
+# name: test_install_from_the_catalog[hacs-test-org/plugin-basic-None][api_usage]
+  dict({
+    'https://github.com/hacs-test-org/plugin-basic/archive/refs/tags/1.0.0.zip': 1,
+    'https://github.com/hacs-test-org/plugin-basic/releases/download/1.0.0/plugin-basic-bundle.js': 1,
+    'https://github.com/hacs-test-org/plugin-basic/releases/download/1.0.0/plugin-basic.js': 1,
+    'https://github.com/hacs-test-org/plugin-basic/releases/download/1.0.0/plugin-basic.umd.js': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/plugin-basic/1.0.0/hacs.json': 1,
+  })
+# ---
+# name: test_install_from_the_catalog[hacs-test-org/template-basic-None][api_usage]
+  dict({
+    'https://github.com/hacs-test-org/template-basic/archive/refs/tags/1.0.0.zip': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/template-basic/1.0.0/hacs.json': 1,
+  })
+# ---
+# name: test_install_from_the_catalog[hacs-test-org/theme-basic-None][api_usage]
+  dict({
+    'https://github.com/hacs-test-org/theme-basic/archive/refs/tags/1.0.0.zip': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/theme-basic/1.0.0/hacs.json': 1,
+  })
+# ---
+# name: test_install_repository[hacs-test-org/integration-basic]
+  list([
+    'custom_components/example/manifest.json',
+  ])
+# ---
+# name: test_install_repository[hacs-test-org/plugin-basic]
+  list([
+    'www/community/plugin-basic/plugin-basic.js',
+    'www/community/plugin-basic/plugin-basic.js.gz',
+  ])
+# ---
+# name: test_install_repository[hacs-test-org/template-basic]
+  list([
+    'custom_templates/example.jinja',
+  ])
+# ---
+# name: test_install_repository[hacs-test-org/theme-basic]
+  list([
+    'themes/example/example.yaml',
+  ])
+# ---
 # name: test_register_repository[integration]
   dict({
     'additional_info': '',
@@ -126,7 +126,7 @@
     ]),
     'available_version': '1.0.0',
     'beta': False,
-    'can_download': True,
+    'can_install': True,
     'category': 'integration',
     'config_flow': False,
     'custom': True,
@@ -171,7 +171,7 @@
     ]),
     'available_version': '1.0.0',
     'beta': False,
-    'can_download': True,
+    'can_install': True,
     'category': 'plugin',
     'config_flow': False,
     'custom': True,

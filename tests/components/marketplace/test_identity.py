@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import (
-    create_download_folders,
+    create_install_folders,
     get_marketplace,
     mocked_response,
     setup_integration,
@@ -50,14 +50,14 @@ def _serve_feed(response_mocker: MarketplaceResponses, feed: dict[str, Any]) -> 
 
 
 @pytest.mark.usefixtures("stored_repositories")
-async def test_downloaded_repository_takes_the_new_id(
+async def test_installed_repository_takes_the_new_id(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     response_mocker: MarketplaceResponses,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test a downloaded repository created again on GitHub keeps what it had."""
+    """Test an installed repository created again on GitHub keeps what it had."""
     _serve_feed(response_mocker, {NEW_ID: _feed_entry()})
 
     await setup_integration(hass, mock_config_entry)
@@ -108,7 +108,7 @@ async def test_stored_under_two_ids(
     hass_storage: dict[str, Any],
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the downloaded entry wins when stored data holds a name twice."""
+    """Test the installed entry wins when stored data holds a name twice."""
     stored = await async_load_json_object_fixture(
         hass, "stored_repositories.json", DOMAIN
     )
@@ -122,7 +122,7 @@ async def test_stored_under_two_ids(
         # The leftover comes last, so the order does not pick the right one
         "data": {**stored, NEW_ID: leftover},
     }
-    create_download_folders(Path(hass.config.config_dir), stored)
+    create_install_folders(Path(hass.config.config_dir), stored)
 
     await setup_integration(hass, mock_config_entry)
     marketplace = get_marketplace(hass)

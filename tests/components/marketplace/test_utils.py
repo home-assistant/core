@@ -193,39 +193,39 @@ def test_version_left_higher_or_equal_then_right(
         pytest.param("main", None, "9", "main", id="unpublished-tag-falls-back"),
     ],
 )
-def test_version_to_download(
+def test_version_to_install(
     mock_repository: Repository,
     default_branch: str | None,
     last_version: str | None,
     selected_tag: str | None,
     expected: str,
 ) -> None:
-    """Test which version the Marketplace picks to download."""
+    """Test which version the Marketplace picks to install."""
     mock_repository.data.default_branch = default_branch
     mock_repository.data.last_version = last_version
     mock_repository.data.selected_tag = selected_tag
 
-    assert mock_repository.version_to_download() == expected
+    assert mock_repository.version_to_install() == expected
 
 
-def test_version_to_download_clears_redundant_selected_tag(
+def test_version_to_install_clears_redundant_selected_tag(
     mock_repository: Repository,
 ) -> None:
     """Test that selecting the latest version stops pinning the repository."""
     mock_repository.data.last_version = "3"
     mock_repository.data.selected_tag = "3"
 
-    assert mock_repository.version_to_download() == "3"
+    assert mock_repository.version_to_install() == "3"
     assert mock_repository.data.selected_tag is None
 
 
-def test_version_to_download_forced_branch(mock_repository: Repository) -> None:
+def test_version_to_install_forced_branch(mock_repository: Repository) -> None:
     """Test that a forced branch overrules everything else."""
     mock_repository.ref = "my-ref"
-    assert mock_repository.version_to_download() == "3"
+    assert mock_repository.version_to_install() == "3"
 
     mock_repository.force_branch = True
-    assert mock_repository.version_to_download() == "my-ref"
+    assert mock_repository.version_to_install() == "my-ref"
 
 
 def test_filter_content_return_one_of_type_objects() -> None:

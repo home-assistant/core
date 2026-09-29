@@ -48,7 +48,7 @@ async def marketplace_repositories_list(
                     "available_version": repo.display_available_version,
                     "installed_version": repo.display_installed_version,
                     "config_flow": repo.data.config_flow,
-                    "can_download": repo.can_download,
+                    "can_install": repo.can_install,
                     "category": repo.data.category,
                     "custom": not marketplace.repositories.is_default(
                         str(repo.data.id)
@@ -265,8 +265,8 @@ async def marketplace_repositories_remove(
         send_translated_error(
             connection,
             msg["id"],
-            "repository_downloaded",
-            "repository_downloaded",
+            "repository_installed",
+            "repository_installed",
             {"repository": repository.data.full_name},
         )
         return

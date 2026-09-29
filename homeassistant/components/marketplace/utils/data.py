@@ -39,7 +39,7 @@ EXPORTED_REPOSITORY_DATA: tuple[tuple[str, Any], ...] = (
     ("topics", []),
 )
 
-EXPORTED_DOWNLOADED_REPOSITORY_DATA: tuple[tuple[str, Any], ...] = (
+EXPORTED_INSTALLED_REPOSITORY_DATA: tuple[tuple[str, Any], ...] = (
     *EXPORTED_REPOSITORY_DATA,
     ("archived", False),
     ("config_flow", False),
@@ -68,7 +68,7 @@ class MarketplaceData:
         self.logger = LOGGER
         self.marketplace = marketplace
         self.content: dict[str, Any] = {}
-        # The ids of downloads that wait for a restart, known while restoring
+        # The ids of installs that wait for a restart, known while restoring
         self._waiting_for_restart: set[str] = set()
 
     async def async_force_write(self, _: Event | None = None) -> None:
@@ -77,7 +77,7 @@ class MarketplaceData:
 
     async def async_write(self, force: bool = False) -> None:
         """Write content to the storage files."""
-        # Only an unloaded Marketplace stops saving, a download works while
+        # Only an unloaded Marketplace stops saving, an install works while
         # GitHub is out of reach and has to be kept.
         if (
             not force
@@ -129,7 +129,7 @@ class MarketplaceData:
         }
 
         for key, default in (
-            EXPORTED_DOWNLOADED_REPOSITORY_DATA
+            EXPORTED_INSTALLED_REPOSITORY_DATA
             if repository.data.installed
             else EXPORTED_REPOSITORY_DATA
         ):
@@ -204,7 +204,7 @@ class MarketplaceData:
 
         repositories = one_stored_entry_per_name(repositories)
 
-        # A reload does not load the downloaded code, only a restart does, and
+        # A reload does not load the installed code, only a restart does, and
         # a restart removes these repairs
         self._waiting_for_restart = {
             issue_id.removeprefix(RESTART_ISSUE_PREFIX).split("_", maxsplit=1)[0]
@@ -226,15 +226,15 @@ class MarketplaceData:
                     continue
                 self.async_restore_repository(entry, repo_data)
 
-            await self._async_forget_deleted_downloads()
+            await self._async_forget_deleted_installs()
             self.logger.info("Restore done")
         except Exception as exception:
             self.logger.critical("[%s] Restore failed", exception, exc_info=exception)
             return False
         return True
 
-    def _download_path(self, repository: Repository) -> str | None:
-        """Return what a downloaded repository has on disk, None when not known."""
+    def _install_path(self, repository: Repository) -> str | None:
+        """Return what an installed repository has on disk, None when not known."""
         if not (local := repository.content.path.local):
             return None
 
@@ -257,28 +257,28 @@ class MarketplaceData:
 
         return local
 
-    async def _async_forget_deleted_downloads(self) -> None:
-        """Mark what was deleted by hand as no longer downloaded."""
-        downloads = [
+    async def _async_forget_deleted_installs(self) -> None:
+        """Mark what was deleted by hand as no longer installed."""
+        installs = [
             (repository, path)
-            for repository in self.marketplace.repositories.list_downloaded
-            if (path := self._download_path(repository)) is not None
+            for repository in self.marketplace.repositories.list_installed
+            if (path := self._install_path(repository)) is not None
         ]
-        if not downloads:
+        if not installs:
             return
 
         # A symlink counts even when what it points at is not there right now,
         # for example a network share that is not mounted yet
         present = await self.marketplace.hass.async_add_executor_job(
-            lambda: [os.path.lexists(path) for _, path in downloads]
+            lambda: [os.path.lexists(path) for _, path in installs]
         )
 
-        for (repository, _), exists in zip(downloads, present, strict=True):
+        for (repository, _), exists in zip(installs, present, strict=True):
             if exists:
                 continue
 
             self.logger.info(
-                "%s is no longer on disk, it is no longer downloaded",
+                "%s is no longer on disk, it is no longer installed",
                 repository.data.full_name,
             )
             repository.data.installed = False
@@ -365,7 +365,7 @@ class MarketplaceData:
             "file_name", repository.data.file_name
         )
         repository.data.directory = repository_data.get("directory")
-        # Stored before downloads kept their folder, the stored name is where it is
+        # Stored before installs kept their folder, the stored name is where it is
         if repository.data.installed and not repository.data.directory:
             if repository.data.category == RepositoryCategory.PLUGIN and full_name:
                 repository.data.directory = full_name.rsplit("/", maxsplit=1)[-1]

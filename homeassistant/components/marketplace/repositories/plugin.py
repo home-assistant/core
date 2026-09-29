@@ -45,14 +45,14 @@ class PluginRepository(Repository):
 
     @property
     def directory(self) -> str:
-        """Return the folder of the card, the one it was downloaded to."""
+        """Return the folder of the card, the one it was installed to."""
         return self.data.directory or self.data.full_name.rsplit("/", maxsplit=1)[-1]
 
     @override
     async def async_pre_install(self) -> None:
         """Run pre install steps."""
         # The directory leaves out the owner, so two owners can share a name
-        for repository in self.marketplace.repositories.list_downloaded:
+        for repository in self.marketplace.repositories.list_installed:
             if (
                 repository is not self
                 and repository.data.category == RepositoryCategory.PLUGIN
@@ -65,13 +65,15 @@ class PluginRepository(Repository):
 
     @override
     async def async_check_written_content(self) -> None:
-        """Refuse a download without the dashboard resource it is used by."""
+        """Refuse an install without the dashboard resource it is used by."""
         if not self.data.file_name:
             return
 
         resource = Path(self.content.path.local, self.data.file_name)
         if not await self.marketplace.hass.async_add_executor_job(resource.is_file):
-            raise MarketplaceError(f"The download has no {self.data.file_name}")
+            raise MarketplaceError(
+                f"The installed content has no {self.data.file_name}"
+            )
 
     @override
     async def validate_repository(self) -> bool:
@@ -96,7 +98,7 @@ class PluginRepository(Repository):
         await self.update_dashboard_resources()
 
         # The frontend only registers /local when www/ existed at startup, so a
-        # resource downloaded into a www/ this session created is served after
+        # resource installed into a www/ this session created is served after
         # a restart, not before.
         if self.marketplace.status.created_www_directory:
             async_create_issue(
@@ -113,7 +115,7 @@ class PluginRepository(Repository):
     async def async_post_uninstall(self) -> None:
         """Run post uninstall steps."""
         await self.remove_dashboard_resources()
-        # Downloaded again, the card goes to the folder of its current name
+        # Installed again, the card goes to the folder of its current name
         self.data.directory = None
 
     @override

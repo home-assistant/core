@@ -47,7 +47,7 @@ async def _async_reload(hass: HomeAssistant, marketplace: MarketplaceManager) ->
 async def test_added_custom_repository_survives_a_reload(
     hass: HomeAssistant, marketplace: MarketplaceManager
 ) -> None:
-    """Test a custom repository added by hand is kept, even when not downloaded."""
+    """Test a custom repository added by hand is kept, even when not installed."""
     await marketplace.async_register_repository(
         CUSTOM_REPOSITORY, RepositoryCategory.INTEGRATION
     )
@@ -87,9 +87,9 @@ async def test_forgotten_custom_repository_is_gone_after_a_reload(
 async def test_config_flow_flag_survives_a_reload(
     hass: HomeAssistant, marketplace: MarketplaceManager
 ) -> None:
-    """Test a downloaded integration keeps knowing it is set up from the UI."""
+    """Test an installed integration keeps knowing it is set up from the UI."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
-    await repository.async_download_repository()
+    await repository.async_install_repository()
     assert repository.data.config_flow
 
     await _async_reload(hass, marketplace)
@@ -102,10 +102,10 @@ async def test_config_flow_flag_survives_a_reload(
 async def test_pending_restart_survives_a_reload(
     hass: HomeAssistant, marketplace: MarketplaceManager
 ) -> None:
-    """Test a reload does not pretend the downloaded code is loaded."""
+    """Test a reload does not pretend the installed code is loaded."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     with patch(KNOWN_TO_THE_LOADER):
-        await repository.async_download_repository()
+        await repository.async_install_repository()
     assert repository.pending_restart
 
     await _async_reload(hass, marketplace)
@@ -114,16 +114,16 @@ async def test_pending_restart_survives_a_reload(
     assert repository.pending_restart
 
 
-async def test_new_download_gets_its_pre_release_switch(
+async def test_new_install_gets_its_pre_release_switch(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test a first download creates all of its entities right away."""
+    """Test a first install creates all of its entities right away."""
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
-        {"type": "marketplace/repository/download", "repository": REPOSITORY_PLUGIN_ID}
+        {"type": "marketplace/repository/install", "repository": REPOSITORY_PLUGIN_ID}
     )
     assert (await client.receive_json())["success"]
     await hass.async_block_till_done()
@@ -185,7 +185,7 @@ async def test_catalog_removal_is_noticed_while_running(
 ) -> None:
     """Test a repository the catalog removes is noticed without a restart."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
-    await repository.async_download_repository()
+    await repository.async_install_repository()
     get_data = marketplace.data_client.get_data
 
     async def catalog(section: str | None, *, validate: bool) -> object:
@@ -233,7 +233,7 @@ async def test_restart_repair_follows_a_new_repository_id(
     """Test the repair a reload reads the pending restart from moves along."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     with patch(KNOWN_TO_THE_LOADER):
-        await repository.async_download_repository()
+        await repository.async_install_repository()
     old_issue = f"restart_required_{REPOSITORY_INTEGRATION_ID}_{repository.ref}"
     assert issue_registry.async_get_issue(DOMAIN, old_issue)
 
@@ -254,14 +254,14 @@ async def test_restart_repair_follows_a_new_repository_id(
         pytest.param(ThemeRepository, "owner/theme", "old.yaml", "old", id="theme"),
     ],
 )
-async def test_stored_download_keeps_the_folder_it_is_in(
+async def test_stored_install_keeps_the_folder_it_is_in(
     marketplace: MarketplaceManager,
     repository_class: type[Repository],
     full_name: str,
     file_name: str,
     directory: str,
 ) -> None:
-    """Test a download stored before folders were kept is pinned to its folder."""
+    """Test an install stored before folders were kept is pinned to its folder."""
     repository = repository_class(marketplace, full_name)
     repository.data.id = "9100"
     marketplace.repositories.register(repository)

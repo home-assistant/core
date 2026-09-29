@@ -49,7 +49,7 @@ class RepositoryEntity(
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.marketplace.repositories.is_downloaded(
+        return self.marketplace.repositories.is_installed(
             repository_id=str(self.repository.data.id)
         )
 

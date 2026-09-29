@@ -25,8 +25,8 @@ async def _reload(
     hass: HomeAssistant, marketplace: MarketplaceManager
 ) -> MarketplaceManager:
     """Reload the config entry and return the Marketplace object that replaced it."""
-    # A downloaded repository has its files on disk
-    for repository in marketplace.repositories.list_downloaded:
+    # An installed repository has its files on disk
+    for repository in marketplace.repositories.list_installed:
         Path(repository.localpath).mkdir(parents=True, exist_ok=True)
 
     await hass.config_entries.async_reload(
@@ -42,7 +42,7 @@ async def switch_entity(
     marketplace: MarketplaceManager,
     entity_registry: er.EntityRegistry,
 ) -> str:
-    """Return the enabled pre-release switch of a downloaded integration."""
+    """Return the enabled pre-release switch of an installed integration."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     repository.data.installed = True
     repository.data.installed_version = "1.0.0"

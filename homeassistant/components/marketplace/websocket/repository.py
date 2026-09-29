@@ -103,7 +103,7 @@ async def marketplace_repository_info(
                 "authors": repository.data.authors,
                 "available_version": repository.display_available_version,
                 "beta": repository.data.show_beta,
-                "can_download": repository.can_download,
+                "can_install": repository.can_install,
                 "category": repository.data.category,
                 "config_flow": repository.data.config_flow,
                 "custom": not marketplace.repositories.is_default(
@@ -284,7 +284,7 @@ async def marketplace_repository_beta(
 
 @websocket_api.websocket_command(
     {
-        probatio.Required("type"): "marketplace/repository/download",
+        probatio.Required("type"): "marketplace/repository/install",
         probatio.Required("repository"): cv.string,
         probatio.Optional("version"): valid_ref,
         probatio.Optional("confirm_replace_built_in", default=False): cv.boolean,
@@ -293,13 +293,13 @@ async def marketplace_repository_beta(
 @websocket_api.require_admin
 @websocket_api.async_response
 @marketplace_command(requires_accepted_warning=True)
-async def marketplace_repository_download(
+async def marketplace_repository_install(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
     marketplace: MarketplaceManager,
 ) -> None:
-    """Download a repository, or another version of it."""
+    """Install a repository, or another version of it."""
     repository = marketplace.repositories.get_by_id(msg["repository"])
     if repository is None:
         send_repository_not_found(connection, msg["id"], msg["repository"])
@@ -307,7 +307,7 @@ async def marketplace_repository_download(
 
     try:
         was_installed = repository.data.installed
-        await repository.async_download_repository(
+        await repository.async_install_repository(
             ref=msg.get("version"),
             confirm_replace_built_in=msg["confirm_replace_built_in"],
         )
@@ -320,7 +320,7 @@ async def marketplace_repository_download(
     except GitHubAnonymousRateLimitError as exception:
         _send_rate_limited(connection, msg["id"], exception)
     except ReplacesBuiltInNotConfirmedError as exception:
-        # Confirmed with the first download, updates replace the same integration
+        # Confirmed with the first install, updates replace the same integration
         send_translated_error(
             connection,
             msg["id"],
@@ -334,7 +334,7 @@ async def marketplace_repository_download(
             connection,
             msg["id"],
             "error",
-            "download_failed",
+            "install_failed",
             {"repository": repository.data.full_name, "error": str(exception)},
         )
 

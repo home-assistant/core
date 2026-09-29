@@ -1,6 +1,6 @@
 """The Marketplace integration.
 
-Handles downloads of custom integrations, dashboard resources, themes,
+Handles installs of custom integrations, dashboard resources, themes,
 templates and python scripts from GitHub.
 """
 
@@ -118,7 +118,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 @callback
 def _async_remove_restart_issues(hass: HomeAssistant) -> None:
-    """Remove the restart issues of downloads from before this start.
+    """Remove the restart issues of installs from before this start.
 
     Home Assistant just started, so every one of them has been dealt with.
     """
@@ -130,7 +130,7 @@ def _async_remove_restart_issues(hass: HomeAssistant) -> None:
 async def _async_serve_legacy_plugin_path(
     hass: HomeAssistant, lovelace_mode: LovelaceMode
 ) -> None:
-    """Keep serving downloaded plugins on the path the custom integration used.
+    """Keep serving installed plugins on the path the custom integration used.
 
     Dashboards in YAML, and cards that name a URL themselves, still load from it.
     """
@@ -158,7 +158,7 @@ async def _async_ensure_www_directory(hass: HomeAssistant) -> bool:
     """Create the www directory when it is missing, return if it was created.
 
     The frontend only registers /local when www/ exists at startup, so creating
-    it here makes the next start serve what the Marketplace downloads into it.
+    it here makes the next start serve what the Marketplace installs into it.
     """
     www_directory = hass.config.path("www")
     if await async_exists(hass, www_directory):
@@ -211,7 +211,7 @@ async def _async_initialize_integration(
     marketplace.status.created_www_directory = await _async_ensure_www_directory(hass)
     await _async_serve_legacy_plugin_path(hass, marketplace.core.lovelace_mode)
 
-    # Before anything looks at what is downloaded, a restart during a download
+    # Before anything looks at what is installed, a restart during an install
     # can have left the previous content in a backup.
     if await hass.async_add_executor_job(restore_interrupted_backups, marketplace):
         async_clear_custom_components_cache(hass)
@@ -306,8 +306,8 @@ async def async_unload_entry(
     """Handle removal of an entry."""
     marketplace = config_entry.runtime_data
 
-    # A download writes on its own, a new setup would restore its backup under it
-    await marketplace.async_wait_for_downloads()
+    # An install writes on its own, a new setup would restore its backup under it
+    await marketplace.async_wait_for_installs()
 
     # Nothing stops before this, a failed unload leaves the Marketplace running
     if not await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS):
@@ -365,12 +365,12 @@ async def async_remove_config_entry_device(
             translation_key="device_of_the_marketplace",
         )
 
-    if marketplace.repositories.is_downloaded(repository_id) and (
+    if marketplace.repositories.is_installed(repository_id) and (
         repository := marketplace.repositories.get_by_id(repository_id)
     ):
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="repository_still_downloaded",
+            translation_key="repository_still_installed",
             translation_placeholders={"repository": repository.data.full_name},
         )
 

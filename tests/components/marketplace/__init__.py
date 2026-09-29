@@ -140,7 +140,7 @@ def dummy_repository_base(
     repository.data.domain = "test"
     repository.data.last_version = "3"
     repository.data.selected_tag = "3"
-    repository.ref = repository.version_to_download()
+    repository.ref = repository.version_to_install()
     repository.integration_manifest = {"config_flow": False, "domain": "test"}
     repository.data.published_tags = ["1", "2", "3"]
     repository.data.update_data(
@@ -182,10 +182,10 @@ def assert_api_usage(
     assert api_usage(aioclient_mock) == snapshot(name="api_usage")
 
 
-def create_download_folders(config_dir: Path, repositories: dict[str, Any]) -> None:
-    """Create the folders of what stored data says is downloaded.
+def create_install_folders(config_dir: Path, repositories: dict[str, Any]) -> None:
+    """Create the folders of what stored data says is installed.
 
-    A downloaded repository has its files on disk, the Marketplace forgets the
+    An installed repository has its files on disk, the Marketplace forgets the
     ones that were deleted by hand.
     """
     for repository in repositories.values():

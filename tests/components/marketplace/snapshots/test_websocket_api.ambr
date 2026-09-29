@@ -13,7 +13,7 @@
     ]),
     'available_version': '1.0.0',
     'beta': False,
-    'can_download': True,
+    'can_install': True,
     'category': 'integration',
     'config_flow': True,
     'custom': False,

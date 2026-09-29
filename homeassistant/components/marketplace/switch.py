@@ -21,12 +21,12 @@ async def async_setup_entry(
     marketplace = entry.runtime_data
     async_add_entities(
         RepositoryPreReleaseSwitchEntity(marketplace=marketplace, repository=repository)
-        for repository in marketplace.repositories.list_downloaded
+        for repository in marketplace.repositories.list_installed
     )
 
 
 class RepositoryPreReleaseSwitchEntity(RepositoryEntity, SwitchEntity):
-    """Pre-release switch entity for a downloaded repository."""
+    """Pre-release switch entity for an installed repository."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True

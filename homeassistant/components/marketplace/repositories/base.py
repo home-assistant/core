@@ -172,7 +172,7 @@ def _path_below(path: str, directory: str | None) -> str | None:
 
 
 def _remove_written_content(marketplace: MarketplaceManager, path: str) -> None:
-    """Remove what a failed first download wrote, this does I/O."""
+    """Remove what a failed first install wrote, this does I/O."""
     if not os.path.lexists(path) or not is_safe(marketplace, path):
         return
 
@@ -282,7 +282,7 @@ class RepositoryData:
     default_branch: str | None = None
     description: str = ""
     domain: str | None = None
-    # The folder a card was downloaded to, a rename on GitHub does not move it
+    # The folder a card was installed to, a rename on GitHub does not move it
     directory: str | None = None
     downloads: int = 0
     etag_repository: str | None = None
@@ -448,8 +448,8 @@ class Repository:
         self.treefiles: list[str] = []
         self.ref: str | None = None
         self.logger = LOGGER
-        # Two downloads of one repository would write over each other's files
-        self._download_lock = Lock()
+        # Two installs of one repository would write over each other's files
+        self._install_lock = Lock()
         self._replace_built_in_confirmed = False
 
     @override
@@ -556,8 +556,8 @@ class Repository:
         return False
 
     @property
-    def can_download(self) -> bool:
-        """Return True if we can download."""
+    def can_install(self) -> bool:
+        """Return True if we can install."""
         if self.repository_manifest.homeassistant is not None:
             if self.data.releases:
                 if not version_left_higher_or_equal_then_right(
@@ -614,10 +614,10 @@ class Repository:
                 self.repository_manifest = RepositoryManifest.from_dict(manifest)
                 self.data.update_data(self.repository_manifest.to_dict())
         else:
-            # Every download reads it, a repository without one can not be updated
+            # Every install reads it, a repository without one can not be updated
             self.validate.errors.append(
                 f"{self.data.full_name} has no {RepositoryFile.REPOSITORY_MANIFEST} "
-                "in its root, the Marketplace needs one to download it"
+                "in its root, the Marketplace needs one to install it"
             )
 
     async def common_registration(self) -> None:
@@ -768,7 +768,7 @@ class Repository:
     async def download_content(self, version: str | None = None) -> None:
         """Download the content of a directory."""
         contents: list[FileInformation] | None = None
-        if not self.repository_manifest.zip_release and self._downloads_a_directory():
+        if not self.repository_manifest.zip_release and self._installs_a_directory():
             self.logger.info("%s Downloading repository archive", self.string)
             try:
                 await self.download_repository_zip()
@@ -885,7 +885,7 @@ class Repository:
                 raise_exception=False,
                 repository=self.data.full_name,
                 path=RepositoryFile.REPOSITORY_MANIFEST,
-                params={"ref": ref or self.version_to_download()},
+                params={"ref": ref or self.version_to_install()},
             )
             if response:
                 return json_loads_object(decode_content(response.data.content))
@@ -990,7 +990,7 @@ class Repository:
         return True
 
     def _category_directory(self) -> str | None:
-        """Return the folder the downloads of this category are written to."""
+        """Return the folder the installs of this category are written to."""
         configuration = self.marketplace.configuration
         directories: dict[str, str] = {
             RepositoryCategory.INTEGRATION: "custom_components",
@@ -1049,7 +1049,7 @@ class Repository:
     async def async_install(self, *, version: str | None = None, **_: Any) -> None:
         """Run install steps."""
         await self._async_run_install(
-            partial(self.async_install_repository, version=version)
+            partial(self._async_write_version, version=version)
         )
 
     async def _async_run_install(
@@ -1057,19 +1057,19 @@ class Repository:
     ) -> None:
         """Run the install steps around writing the content."""
         self.marketplace.async_dispatch(
-            MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+            MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
             {"repository": self.data.full_name, "progress": 30},
         )
         self.logger.info("%s Running installation steps", self.string)
         await install_repository()
         self.marketplace.async_dispatch(
-            MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+            MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
             {"repository": self.data.full_name, "progress": 90},
         )
         self.logger.info("%s Installation steps completed", self.string)
         await self._async_post_install()
         self.marketplace.async_dispatch(
-            MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+            MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
             {"repository": self.data.full_name, "progress": False},
         )
 
@@ -1080,7 +1080,7 @@ class Repository:
         """Run post uninstall steps."""
 
     async def async_replaces_built_in(self) -> bool:
-        """Return if the download takes the place of a built-in integration."""
+        """Return if the install takes the place of a built-in integration."""
         return False
 
     async def _async_post_uninstall(self) -> None:
@@ -1107,7 +1107,7 @@ class Repository:
         await self.marketplace.data.async_write()
         self.logger.info("%s Post installation steps completed", self.string)
 
-    async def async_install_repository(
+    async def _async_write_version(
         self, *, version: str | None = None, **_: Any
     ) -> None:
         """Common installation steps of the repository."""
@@ -1120,7 +1120,7 @@ class Repository:
         self.validate.errors.clear()
 
         version_to_install = self._branch_for_newest_commit(
-            version or self.version_to_download()
+            version or self.version_to_install()
         )
         if version_to_install == self.data.default_branch:
             self.ref = version_to_install
@@ -1155,7 +1155,7 @@ class Repository:
         # Checked here, the version being written decides where it goes
         await self._async_pre_install()
         self.marketplace.async_dispatch(
-            MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+            MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
             {"repository": self.data.full_name, "progress": 40},
         )
 
@@ -1174,7 +1174,7 @@ class Repository:
             if backup is not None:
                 backup.restore()
                 backup.cleanup()
-            # A first download has no backup, what it wrote so far goes instead
+            # A first install has no backup, what it wrote so far goes instead
             if backup_path is not None and not existed:
                 _remove_written_content(self.marketplace, backup_path)
             if persistent_directory is not None:
@@ -1201,17 +1201,17 @@ class Repository:
         )
 
         self.marketplace.async_dispatch(
-            MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+            MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
             {"repository": self.data.full_name, "progress": 50},
         )
 
         try:
             await download()
             self.marketplace.async_dispatch(
-                MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+                MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
                 {"repository": self.data.full_name, "progress": 70},
             )
-            self._raise_for_download_errors()
+            self._raise_for_install_errors()
             await self.async_check_written_content()
 
             # Into the new content, while the old one can still come back
@@ -1220,7 +1220,7 @@ class Repository:
                     persistent_directory.restore
                 )
         except Exception as exception:
-            # Whatever broke the download, the content that was there goes back
+            # Whatever broke the install, the content that was there goes back
             await self.marketplace.hass.async_add_executor_job(_restore_backups)
             if isinstance(exception, OSError):
                 raise MarketplaceError(
@@ -1229,7 +1229,7 @@ class Repository:
             raise
 
         self.marketplace.async_dispatch(
-            MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+            MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
             {"repository": self.data.full_name, "progress": 80},
         )
 
@@ -1241,14 +1241,14 @@ class Repository:
                 persistent_directory.cleanup
             )
 
-    def _raise_for_download_errors(self) -> None:
-        """Raise for the errors the download ran into, after logging them."""
+    def _raise_for_install_errors(self) -> None:
+        """Raise for the errors the install ran into, after logging them."""
         if not self.validate.errors:
             return
 
         for error in self.validate.errors:
             self.logger.error("%s %s", self.string, error)
-        raise MarketplaceError("Could not download, see log for details")
+        raise MarketplaceError("Could not install, see log for details")
 
     async def _async_back_up_persistent_directory(self) -> Backup | None:
         """Move the directory hacs.json keeps across updates out of the way."""
@@ -1259,11 +1259,11 @@ class Repository:
         persistent_path = resolve_in_directory(
             local_path, self.repository_manifest.persistent_directory
         )
-        # Keeping the whole download would put the old version back over the new
+        # Keeping all of the installed content would put the old version back over the new
         if persistent_path == local_path:
             raise MarketplaceError(
                 "The persistent_directory of hacs.json has to be a directory"
-                " inside the download"
+                " inside the installed content"
             )
 
         if not await async_exists(self.marketplace.hass, persistent_path):
@@ -1276,10 +1276,10 @@ class Repository:
         return persistent_directory
 
     def _backup_path(self) -> str | None:
-        """Return what the download replaces, and has to be backed up first."""
+        """Return what the install replaces, and has to be backed up first."""
         return self.content.path.local
 
-    def _downloads_a_directory(self) -> bool:
+    def _installs_a_directory(self) -> bool:
         """Return if the content is a directory, instead of the named file."""
         return not self.data.file_name and self.content.path.remote is not None
 
@@ -1439,7 +1439,7 @@ class Repository:
                 self.data.releases = False
 
         if not self.force_branch:
-            self.ref = self.version_to_download()
+            self.ref = self.version_to_install()
         if self.data.releases:
             for release in self.releases.objects or []:
                 if release.tag_name == self.ref:
@@ -1470,7 +1470,7 @@ class Repository:
             ):
                 # Handle tags/branches being deleted.
                 self.data.selected_tag = None
-                self.ref = self.version_to_download()
+                self.ref = self.version_to_install()
                 self.logger.warning(
                     "%s Selected version/branch %s has been removed, falling back to default",
                     self.string,
@@ -1651,8 +1651,8 @@ class Repository:
                 device_registry.async_remove_device(device_id=device.id)
                 return
 
-    def version_to_download(self) -> str:
-        """Determine which version to download."""
+    def version_to_install(self) -> str:
+        """Determine which version to install."""
         if self.force_branch and self.ref is not None:
             return self.ref
 
@@ -1784,15 +1784,15 @@ class Repository:
             return self.data.default_branch
         return version
 
-    async def _ensure_download_capabilities(
+    async def _ensure_install_capabilities(
         self, ref: str | None, **kwargs: Any
     ) -> None:
-        """Ensure that the download can be handled."""
+        """Ensure that the install can be handled."""
         target_manifest: RepositoryManifest | None = None
         if ref is None:
-            if not self.can_download:
+            if not self.can_install:
                 raise MarketplaceError(
-                    f"This {self.data.category} is not available for download."
+                    f"This {self.data.category} is not available to install."
                 )
             return
 
@@ -1806,7 +1806,7 @@ class Repository:
         if target_manifest is None:
             raise MarketplaceError(
                 f"Version {ref} of {self.data.full_name} has no "
-                f"{RepositoryFile.REPOSITORY_MANIFEST}, which downloading needs"
+                f"{RepositoryFile.REPOSITORY_MANIFEST}, which installing needs"
             )
 
         self._check_minimum_version(target_manifest)
@@ -1823,51 +1823,51 @@ class Repository:
                 f"This version requires Home Assistant {manifest.homeassistant} or newer."
             )
 
-    async def async_download_repository(
+    async def async_install_repository(
         self,
         *,
         ref: str | None = None,
         confirm_replace_built_in: bool = False,
         **_: Any,
     ) -> None:
-        """Download the content of a repository."""
-        if self._download_lock.locked():
-            raise MarketplaceError(f"{self.data.full_name} is already downloading")
+        """Install a repository."""
+        if self._install_lock.locked():
+            raise MarketplaceError(f"{self.data.full_name} is already installing")
 
-        async with self._download_lock:
+        async with self._install_lock:
             self._replace_built_in_confirmed = confirm_replace_built_in
             try:
-                await self._async_download_repository(ref)
+                await self._async_install_repository(ref)
             finally:
                 self._replace_built_in_confirmed = False
 
-    async def async_wait_for_download(self) -> None:
-        """Wait for a download of this repository that is running to finish."""
-        if not self._download_lock.locked():
+    async def async_wait_for_install(self) -> None:
+        """Wait for an install of this repository that is running to finish."""
+        if not self._install_lock.locked():
             return
 
-        async with self._download_lock:
+        async with self._install_lock:
             return
 
-    async def _async_download_repository(self, ref: str | None) -> None:
-        """Download the content of a repository, one download at a time."""
+    async def _async_install_repository(self, ref: str | None) -> None:
+        """Install a repository, one install at a time."""
         if (catalog_version := self._catalog_version(ref)) is not None:
             try:
-                await self._async_download_catalog_version(
+                await self._async_install_catalog_version(
                     catalog_version, requested=ref
                 )
             except CatalogContentUnresolvedError as exception:
                 self.logger.info(
-                    "%s %s, downloading through the GitHub API", self.string, exception
+                    "%s %s, installing through the GitHub API", self.string, exception
                 )
             else:
                 return
 
-        await self._ensure_download_capabilities(ref)
-        self.logger.info("Starting download, %s", ref)
+        await self._ensure_install_capabilities(ref)
+        self.logger.info("Starting install, %s", ref)
         if self.display_version_or_commit == "version":
             self.marketplace.async_dispatch(
-                MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+                MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
                 {"repository": self.data.full_name, "progress": 10},
             )
             if not ref:
@@ -1877,7 +1877,7 @@ class Repository:
             self.data.selected_tag = ref
             self.force_branch = ref is not None
             self.marketplace.async_dispatch(
-                MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+                MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
                 {"repository": self.data.full_name, "progress": 20},
             )
 
@@ -1887,20 +1887,20 @@ class Repository:
             raise
         except MarketplaceError as exception:
             raise MarketplaceError(
-                f"Downloading {self.data.full_name} with version {ref or self.data.last_version or self.data.last_commit} failed with ({exception})"
+                f"Installing {self.data.full_name} with version {ref or self.data.last_version or self.data.last_commit} failed with ({exception})"
             ) from exception
         finally:
             self.data.selected_tag = None
             self.force_branch = False
             self.marketplace.async_dispatch(
-                MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+                MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
                 {"repository": self.data.full_name, "progress": False},
             )
 
     def _catalog_version(self, ref: str | None) -> str | None:
-        """Return the catalog version to download without the GitHub API.
+        """Return the catalog version to install without the GitHub API.
 
-        Anonymous access to the API runs out after a handful of downloads. The
+        Anonymous access to the API runs out after a handful of installs. The
         catalog already names the version, and the files come from hosts
         without that limit. A version the user picked keeps using the API.
         """
@@ -1914,36 +1914,34 @@ class Repository:
 
         return catalog_version
 
-    async def _async_download_catalog_version(
+    async def _async_install_catalog_version(
         self, version: str, *, requested: str | None
     ) -> None:
-        """Download a version the catalog names, without the GitHub API."""
-        if requested is None and not self.can_download:
+        """Install a version the catalog names, without the GitHub API."""
+        if requested is None and not self.can_install:
             raise MarketplaceError(
-                f"This {self.data.category} is not available for download."
+                f"This {self.data.category} is not available to install."
             )
 
         # Without releases the catalog names the last commit instead
         commit = self.data.last_version is None
-        self.logger.info("Starting download, %s", version)
+        self.logger.info("Starting install, %s", version)
         self.marketplace.async_dispatch(
-            MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+            MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
             {"repository": self.data.full_name, "progress": 10},
         )
 
         try:
-            download = await self._async_prepare_catalog_download(
-                version, commit=commit
-            )
+            download = await self._async_prepare_catalog_install(version, commit=commit)
             self.marketplace.async_dispatch(
-                MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+                MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
                 {"repository": self.data.full_name, "progress": 20},
             )
 
             try:
                 await self._async_run_install(
                     partial(
-                        self._async_install_catalog_version,
+                        self._async_write_catalog_version,
                         version,
                         download,
                         commit=commit,
@@ -1953,17 +1951,17 @@ class Repository:
                 raise
             except MarketplaceError as exception:
                 raise MarketplaceError(
-                    f"Downloading {self.data.full_name} with version {version} failed with ({exception})"
+                    f"Installing {self.data.full_name} with version {version} failed with ({exception})"
                 ) from exception
         finally:
             self.data.selected_tag = None
             self.force_branch = False
             self.marketplace.async_dispatch(
-                MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+                MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
                 {"repository": self.data.full_name, "progress": False},
             )
 
-    async def _async_prepare_catalog_download(
+    async def _async_prepare_catalog_install(
         self, version: str, *, commit: bool
     ) -> Callable[[], Awaitable[None]]:
         """Work out what a catalog version writes, and return what writes it.
@@ -2028,7 +2026,7 @@ class Repository:
     def resolve_content(self) -> None:
         """Point the content at what the repository tree holds.
 
-        Raises MarketplaceError when the tree holds nothing to download.
+        Raises MarketplaceError when the tree holds nothing to install.
         """
 
     def resolve_archive_content(self) -> None:
@@ -2037,7 +2035,7 @@ class Repository:
 
     async def _async_write_archive_content(self, archive: RepositoryArchive) -> None:
         """Write the content of a catalog version from its archive."""
-        if self._downloads_a_directory():
+        if self._installs_a_directory():
             await self._async_extract_archive(archive)
             return
 
@@ -2047,14 +2045,14 @@ class Repository:
             )
             await self._async_write_file(content, filecontent)
 
-    async def _async_install_catalog_version(
+    async def _async_write_catalog_version(
         self,
         version: str,
         download: Callable[[], Awaitable[None]],
         *,
         commit: bool,
     ) -> None:
-        """Write the content of a catalog version and mark it downloaded."""
+        """Write the content of a catalog version and mark it installed."""
         await self._async_write_content(download)
 
         self.data.installed = True

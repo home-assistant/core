@@ -90,7 +90,7 @@ def _zip_bytes(files: dict[str, str]) -> bytes:
     return buffer.getvalue()
 
 
-def _downloaded_files(config_dir: Path) -> list[str]:
+def _installed_files(config_dir: Path) -> list[str]:
     """Return every file below the configuration directory, sorted."""
     return sorted(
         path.relative_to(config_dir).as_posix()
@@ -179,26 +179,26 @@ def test_removed_repository(data: dict[str, Any]) -> None:
         pytest.param("1.0.0", "1.0.0", True, id="exact"),
     ],
 )
-async def test_can_download(
+async def test_can_install(
     marketplace: MarketplaceManager,
     ha_version: str,
     required_version: str,
     expected: bool,
 ) -> None:
-    """Test whether a repository can be downloaded on this Home Assistant."""
+    """Test whether a repository can be installed on this Home Assistant."""
     repository = Repository(marketplace)
     repository.data.releases = True
     repository.repository_manifest.homeassistant = required_version
     marketplace.version = AwesomeVersion(ha_version)
 
-    assert repository.can_download is expected
+    assert repository.can_install is expected
 
 
-async def test_can_download_without_requirement(
+async def test_can_install_without_requirement(
     marketplace: MarketplaceManager,
 ) -> None:
-    """Test that a repository without a requirement can always be downloaded."""
-    assert Repository(marketplace).can_download
+    """Test that a repository without a requirement can always be installed."""
+    assert Repository(marketplace).can_install
 
 
 async def test_display_status(marketplace: MarketplaceManager) -> None:
@@ -747,7 +747,7 @@ async def test_register_repository(
 
 
 APP_REPOSITORY_MESSAGE = (
-    "{repository} holds apps, the Marketplace does not download apps"
+    "{repository} holds apps, the Marketplace does not install apps"
 )
 
 
@@ -881,7 +881,7 @@ async def test_validate_repository_without_content(
 async def test_first_release_after_a_commit(
     marketplace: MarketplaceManager, installed_commit: str
 ) -> None:
-    """Test a repository downloaded as a commit sees its first release."""
+    """Test a repository installed as a commit sees its first release."""
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.data.installed = True
     repository.data.installed_version = None
@@ -904,7 +904,7 @@ async def test_validate_repository_without_manifest(
 
     assert repository.validate.errors == [
         f"{REPOSITORY_INTEGRATION} has no hacs.json in its root, the Marketplace "
-        "needs one to download it"
+        "needs one to install it"
     ]
 
 
@@ -982,7 +982,7 @@ async def test_update_repository_without_a_tree(
 
 
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
-async def test_download_repository(
+async def test_install_repository(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
@@ -990,24 +990,24 @@ async def test_download_repository(
     category_test_data: CategoryTestData,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test downloading a repository of every category."""
+    """Test installing a repository of every category."""
     repository = marketplace.repositories.get_by_full_name(
         category_test_data["repository"]
     )
     assert repository is not None
     assert repository.data.installed is False
-    assert marketplace.repositories.list_downloaded == []
+    assert marketplace.repositories.list_installed == []
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
-        {"type": "marketplace/repository/download", "repository": repository.data.id}
+        {"type": "marketplace/repository/install", "repository": repository.data.id}
     )
     assert (await client.receive_json())["success"]
 
     assert repository.data.installed is True
     assert repository.data.installed_version == category_test_data["version_base"]
-    assert marketplace.repositories.list_downloaded == [repository]
-    assert _downloaded_files(config_dir) == snapshot
+    assert marketplace.repositories.list_installed == [repository]
+    assert _installed_files(config_dir) == snapshot
 
 
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
@@ -1017,7 +1017,7 @@ async def test_update_repository(
     hass_ws_client: WebSocketGenerator,
     category_test_data: CategoryTestData,
 ) -> None:
-    """Test downloading a specific newer version of a repository."""
+    """Test installing a specific newer version of a repository."""
     repository = marketplace.repositories.get_by_full_name(
         category_test_data["repository"]
     )
@@ -1029,7 +1029,7 @@ async def test_update_repository(
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
         {
-            "type": "marketplace/repository/download",
+            "type": "marketplace/repository/install",
             "repository": repository.data.id,
             "version": category_test_data["version_update"],
         }
@@ -1047,7 +1047,7 @@ async def test_remove_repository(
     config_dir: Path,
     category_test_data: CategoryTestData,
 ) -> None:
-    """Test removing a downloaded repository of every category."""
+    """Test removing an installed repository of every category."""
     repository = marketplace.repositories.get_by_full_name(
         category_test_data["repository"]
     )
@@ -1062,7 +1062,7 @@ async def test_remove_repository(
         file.parent.mkdir(parents=True, exist_ok=True)
         file.touch()
 
-    assert _downloaded_files(config_dir)
+    assert _installed_files(config_dir)
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -1071,8 +1071,8 @@ async def test_remove_repository(
     assert (await client.receive_json())["success"]
 
     assert repository.data.installed is False
-    assert marketplace.repositories.list_downloaded == []
-    assert _downloaded_files(config_dir) == []
+    assert marketplace.repositories.list_installed == []
+    assert _installed_files(config_dir) == []
 
 
 @pytest.mark.parametrize("github_token", [None])
@@ -1095,8 +1095,8 @@ async def test_remove_repository_after_a_restart(
     repository = marketplace.repositories.get_by_full_name(
         category_test_data["repository"]
     )
-    assert (await _download(hass, hass_ws_client, repository.data.id))["success"]
-    assert _downloaded_files(config_dir)
+    assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
+    assert _installed_files(config_dir)
 
     assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -1108,7 +1108,7 @@ async def test_remove_repository_after_a_restart(
     )
     assert (await client.receive_json())["success"]
 
-    assert _downloaded_files(config_dir) == []
+    assert _installed_files(config_dir) == []
     # The stored file name is enough, GitHub is not asked
     assert not github_api_calls(aioclient_mock)
 
@@ -1123,7 +1123,7 @@ async def test_remove_theme_stored_without_its_file_name(
 ) -> None:
     """Test a theme taken over from HACS learns its file name before removal."""
     repository = marketplace.repositories.get_by_full_name("hacs-test-org/theme-basic")
-    assert (await _download(hass, hass_ws_client, repository.data.id))["success"]
+    assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
 
     # What HACS stored does not know the file name
     repository.data.file_name = ""
@@ -1136,7 +1136,7 @@ async def test_remove_theme_stored_without_its_file_name(
         {"type": "marketplace/repository/remove", "repository": repository.data.id}
     )
     assert (await client.receive_json())["success"]
-    assert _downloaded_files(config_dir) == []
+    assert _installed_files(config_dir) == []
 
 
 async def test_remove_repository_failure_is_answered(
@@ -1230,7 +1230,7 @@ async def test_download_zip_release(
     await repository.download_zip_files(validate)
 
     assert validate.success
-    assert _downloaded_files(config_dir) == [
+    assert _installed_files(config_dir) == [
         "custom_components/example/example/__init__.py",
         "custom_components/example/example/const.py",
     ]
@@ -1289,7 +1289,7 @@ async def test_download_zip_release_escaping_member(
     await repository.download_zip_files(validate)
 
     assert not validate.success
-    assert _downloaded_files(config_dir) == []
+    assert _installed_files(config_dir) == []
 
 
 async def test_download_zip_release_too_large(
@@ -1317,7 +1317,7 @@ async def test_download_zip_release_too_large(
         await repository.download_zip_files(validate)
 
     assert not validate.success
-    assert _downloaded_files(config_dir) == []
+    assert _installed_files(config_dir) == []
 
 
 async def test_download_repository_zip_escaping_member(
@@ -1345,7 +1345,7 @@ async def test_download_repository_zip_escaping_member(
     with pytest.raises(MarketplaceError, match="is not inside"):
         await repository.download_repository_zip()
 
-    assert _downloaded_files(config_dir) == []
+    assert _installed_files(config_dir) == []
 
 
 async def test_download_content_outside_the_repository(
@@ -1366,7 +1366,7 @@ async def test_download_content_outside_the_repository(
     )
 
     assert "is not inside" in repository.validate.errors[0]
-    assert _downloaded_files(config_dir) == []
+    assert _installed_files(config_dir) == []
 
 
 async def test_install_rejects_escaping_persistent_directory(
@@ -1381,9 +1381,9 @@ async def test_install_rejects_escaping_persistent_directory(
         patch.object(repository, "update_repository"),
         pytest.raises(MarketplaceError, match="is not inside"),
     ):
-        await repository.async_install_repository()
+        await repository._async_write_version()
 
-    assert _downloaded_files(config_dir) == []
+    assert _installed_files(config_dir) == []
 
 
 @pytest.mark.parametrize(
@@ -1435,12 +1435,12 @@ async def test_repository_object_with_a_bad_token(
         ),
     ],
 )
-async def test_install_failure_restores_the_downloaded_files(
+async def test_install_failure_restores_the_installed_files(
     marketplace: MarketplaceManager,
     download_error: Exception,
     raised: type[Exception],
 ) -> None:
-    """Test a failed download puts the repository and its user files back."""
+    """Test a failed install puts the repository and its user files back."""
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.data.installed = True
     repository.content.path.local = repository.localpath
@@ -1456,7 +1456,7 @@ async def test_install_failure_restores_the_downloaded_files(
         patch.object(repository, "download_content", side_effect=download_error),
         pytest.raises(raised),
     ):
-        await repository.async_install_repository(version="2.0.0")
+        await repository._async_write_version(version="2.0.0")
 
     assert (local_path / "__init__.py").read_text() == "installed"
     assert (local_path / "userfiles" / "settings.yaml").read_text() == "mine"
@@ -1626,7 +1626,7 @@ async def test_integration_restart_required_issue(
     found: set[str],
     restart: bool,
 ) -> None:
-    """Test a download only asks for a restart when this run can not load it."""
+    """Test an install only asks for a restart when this run can not load it."""
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     use_manifest = IntegrationRepository._use_integration_manifest
 
@@ -1649,7 +1649,7 @@ async def test_integration_restart_required_issue(
     ):
         await client.send_json_auto_id(
             {
-                "type": "marketplace/repository/download",
+                "type": "marketplace/repository/install",
                 "repository": repository.data.id,
             }
         )
@@ -1721,10 +1721,10 @@ async def test_integration_manifest_hyphenated_domain(
     assert repository.data.domain == "meteo-swiss"
 
 
-async def test_integration_manifest_domain_changed_after_download(
+async def test_integration_manifest_domain_changed_after_install(
     marketplace: MarketplaceManager,
 ) -> None:
-    """Test a downloaded integration keeps the directory its files are in."""
+    """Test an installed integration keeps the directory its files are in."""
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.data.installed = True
     repository.data.domain = "example"
@@ -1745,7 +1745,7 @@ async def test_integration_manifest_domain_changed_after_download(
 async def test_integration_domain_owned_by_another_repository(
     marketplace: MarketplaceManager,
 ) -> None:
-    """Test that a download can not take over the directory of another one."""
+    """Test that an install can not take over the directory of another one."""
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.data.domain = "example"
 
@@ -1842,8 +1842,8 @@ async def test_template_reloads_custom_templates(
 
 
 @pytest.fixture
-async def downloaded_plugin(marketplace: MarketplaceManager) -> PluginRepository:
-    """Return a downloaded dashboard plugin repository."""
+async def installed_plugin(marketplace: MarketplaceManager) -> PluginRepository:
+    """Return an installed dashboard plugin repository."""
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
     await repository.async_install()
     return repository
@@ -1852,25 +1852,25 @@ async def downloaded_plugin(marketplace: MarketplaceManager) -> PluginRepository
 @pytest.mark.parametrize(
     ("directory", "namespace"),
     [
-        pytest.param("plugin-basic", "/local/community/plugin-basic", id="downloaded"),
+        pytest.param("plugin-basic", "/local/community/plugin-basic", id="installed"),
         pytest.param(None, "/local/community/plugin-advanced", id="no_folder_yet"),
     ],
 )
 async def test_dashboard_namespace(
-    downloaded_plugin: PluginRepository, directory: str | None, namespace: str
+    installed_plugin: PluginRepository, directory: str | None, namespace: str
 ) -> None:
     """Test a card serves its files from its folder, even after a rename."""
-    downloaded_plugin.data.full_name = "hacs-test-org/plugin-advanced"
-    downloaded_plugin.data.directory = directory
+    installed_plugin.data.full_name = "hacs-test-org/plugin-advanced"
+    installed_plugin.data.directory = directory
 
-    assert downloaded_plugin.generate_dashboard_resource_namespace() == namespace
+    assert installed_plugin.generate_dashboard_resource_namespace() == namespace
 
 
 @pytest.mark.parametrize(
-    ("downloaded", "selected", "available", "expected"),
+    ("installed", "selected", "available", "expected"),
     [
         pytest.param(None, None, None, "-", id="nothing-known"),
-        pytest.param("1.0.0", None, None, "-1.0.0", id="downloaded"),
+        pytest.param("1.0.0", None, None, "-1.0.0", id="installed"),
         pytest.param(None, "2.0.1", None, "-2.0.1", id="selected"),
         pytest.param(None, None, "3.4.2", "-3.4.2", id="available"),
         pytest.param("1.7-dev09-r2", None, None, "-1.7-dev09-r2", id="non-numeric"),
@@ -1878,41 +1878,41 @@ async def test_dashboard_namespace(
     ],
 )
 async def test_dashboard_resource_tag(
-    downloaded_plugin: PluginRepository,
-    downloaded: str | None,
+    installed_plugin: PluginRepository,
+    installed: str | None,
     selected: str | None,
     available: str | None,
     expected: str,
 ) -> None:
     """Test the cache busting tag of a dashboard resource."""
-    downloaded_plugin.data.installed_commit = None
-    downloaded_plugin.data.last_commit = None
-    downloaded_plugin.data.installed_version = downloaded
-    downloaded_plugin.data.last_version = available
-    downloaded_plugin.data.selected_tag = selected
+    installed_plugin.data.installed_commit = None
+    installed_plugin.data.last_commit = None
+    installed_plugin.data.installed_version = installed
+    installed_plugin.data.last_version = available
+    installed_plugin.data.selected_tag = selected
 
     assert (
-        downloaded_plugin.generate_dashboard_resource_tag()
-        == f"{downloaded_plugin.data.id}{expected}"
+        installed_plugin.generate_dashboard_resource_tag()
+        == f"{installed_plugin.data.id}{expected}"
     )
 
 
-async def test_dashboard_url(downloaded_plugin: PluginRepository) -> None:
+async def test_dashboard_url(installed_plugin: PluginRepository) -> None:
     """Test the URL a dashboard resource is registered with."""
     assert (
-        downloaded_plugin.generate_dashboard_resource_url()
+        installed_plugin.generate_dashboard_resource_url()
         == "/local/community/plugin-basic/plugin-basic.js?v=1296267-1.0.0"
     )
 
 
 async def test_dashboard_url_with_invalid_file_name(
-    downloaded_plugin: PluginRepository, caplog: pytest.LogCaptureFixture
+    installed_plugin: PluginRepository, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that a plugin pointing at a subdirectory is flattened and logged."""
-    downloaded_plugin.data.file_name = "dist/plugin-basic.js"
+    installed_plugin.data.file_name = "dist/plugin-basic.js"
 
     assert (
-        downloaded_plugin.generate_dashboard_resource_url()
+        installed_plugin.generate_dashboard_resource_url()
         == "/local/community/plugin-basic/plugin-basic.js?v=1296267-1.0.0"
     )
     assert "have defined an invalid file name dist/plugin-basic.js" in caplog.text
@@ -1943,9 +1943,9 @@ async def test_dashboard_resource_restart_issue(
     assert (issue is not None) is expect_issue
 
 
-async def test_resource_handler(downloaded_plugin: PluginRepository) -> None:
+async def test_resource_handler(installed_plugin: PluginRepository) -> None:
     """Test that the dashboard resources are reachable in storage mode."""
-    assert downloaded_plugin._get_resource_handler() is not None
+    assert installed_plugin._get_resource_handler() is not None
 
 
 @pytest.mark.parametrize(
@@ -1964,7 +1964,7 @@ async def test_resource_handler(downloaded_plugin: PluginRepository) -> None:
 )
 async def test_resource_handler_wrong_store(
     hass: HomeAssistant,
-    downloaded_plugin: PluginRepository,
+    installed_plugin: PluginRepository,
     caplog: pytest.LogCaptureFixture,
     attribute: str,
     value: Any,
@@ -1973,45 +1973,45 @@ async def test_resource_handler_wrong_store(
     """Test a dashboard resource store the Marketplace does not recognise."""
     setattr(hass.data["lovelace"].resources.store, attribute, value)
 
-    assert downloaded_plugin._get_resource_handler() is None
+    assert installed_plugin._get_resource_handler() is None
     assert message in caplog.text
 
 
 async def test_resource_handler_yaml_mode(
     hass: HomeAssistant,
-    downloaded_plugin: PluginRepository,
+    installed_plugin: PluginRepository,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that YAML mode dashboards have no resources to update."""
     hass.data["lovelace"].resources.store = None
 
-    assert downloaded_plugin._get_resource_handler() is None
+    assert installed_plugin._get_resource_handler() is None
     assert "YAML mode detected, can not update resources" in caplog.text
 
 
 async def test_resource_handler_without_lovelace(
     hass: HomeAssistant,
-    downloaded_plugin: PluginRepository,
+    installed_plugin: PluginRepository,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the dashboard integration not being loaded at all."""
     del hass.data["lovelace"]
 
-    assert downloaded_plugin._get_resource_handler() is None
+    assert installed_plugin._get_resource_handler() is None
     assert "Can not access the lovelace integration data" in caplog.text
 
 
 async def test_add_dashboard_resource(
-    downloaded_plugin: PluginRepository, caplog: pytest.LogCaptureFixture
+    installed_plugin: PluginRepository, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test registering the dashboard resource of a plugin."""
-    resources = downloaded_plugin._get_resource_handler()
+    resources = installed_plugin._get_resource_handler()
     resources.data.clear()
 
-    await downloaded_plugin.update_dashboard_resources()
+    await installed_plugin.update_dashboard_resources()
 
     assert [resource["url"] for resource in resources.async_items()] == [
-        downloaded_plugin.generate_dashboard_resource_url()
+        installed_plugin.generate_dashboard_resource_url()
     ]
     assert (
         "Adding dashboard resource"
@@ -2020,15 +2020,15 @@ async def test_add_dashboard_resource(
 
 
 async def test_update_dashboard_resource(
-    downloaded_plugin: PluginRepository, caplog: pytest.LogCaptureFixture
+    installed_plugin: PluginRepository, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that a new version replaces the registered dashboard resource."""
-    resources = downloaded_plugin._get_resource_handler()
-    previous_url = downloaded_plugin.generate_dashboard_resource_url()
+    resources = installed_plugin._get_resource_handler()
+    previous_url = installed_plugin.generate_dashboard_resource_url()
     assert [resource["url"] for resource in resources.async_items()] == [previous_url]
 
-    downloaded_plugin.data.installed_version = "1.1.0"
-    await downloaded_plugin.update_dashboard_resources()
+    installed_plugin.data.installed_version = "1.1.0"
+    await installed_plugin.update_dashboard_resources()
 
     assert (
         "Updating existing dashboard resource from"
@@ -2036,7 +2036,7 @@ async def test_update_dashboard_resource(
         " /local/community/plugin-basic/plugin-basic.js?v=1296267-1.1.0" in caplog.text
     )
     assert [resource["url"] for resource in resources.async_items()] == [
-        downloaded_plugin.generate_dashboard_resource_url()
+        installed_plugin.generate_dashboard_resource_url()
     ]
 
 
@@ -2048,27 +2048,27 @@ async def test_update_dashboard_resource(
     ],
 )
 async def test_no_dashboard_resource_for_extra_modules(
-    hass: HomeAssistant, downloaded_plugin: PluginRepository, module_url: str
+    hass: HomeAssistant, installed_plugin: PluginRepository, module_url: str
 ) -> None:
     """Test a plugin the frontend loads as an extra module gets no resource."""
-    resources = downloaded_plugin._get_resource_handler()
+    resources = installed_plugin._get_resource_handler()
     resources.data.clear()
     extra_modules = UrlManager(lambda *_: None, [module_url])
 
     with patch.dict(hass.data, {DATA_EXTRA_MODULE_URL: extra_modules}):
-        await downloaded_plugin.update_dashboard_resources()
+        await installed_plugin.update_dashboard_resources()
 
     assert resources.async_items() == []
 
 
 async def test_remove_dashboard_resource(
-    downloaded_plugin: PluginRepository, caplog: pytest.LogCaptureFixture
+    installed_plugin: PluginRepository, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that removing a plugin unregisters its dashboard resource."""
-    resources = downloaded_plugin._get_resource_handler()
+    resources = installed_plugin._get_resource_handler()
     assert len(resources.async_items()) == 1
 
-    await downloaded_plugin.remove_dashboard_resources()
+    await installed_plugin.remove_dashboard_resources()
 
     assert (
         "Removing dashboard resource"
@@ -2078,21 +2078,21 @@ async def test_remove_dashboard_resource(
 
 
 async def test_dashboard_resources_ignore_prefix_matches(
-    downloaded_plugin: PluginRepository,
+    installed_plugin: PluginRepository,
 ) -> None:
     """Test that a plugin whose name is a prefix of another is left alone."""
-    resources = downloaded_plugin._get_resource_handler()
+    resources = installed_plugin._get_resource_handler()
     resources.data.clear()
 
     other_url = "/local/community/plugin-basic-extra/plugin-basic-extra.js?v=42100"
     await resources.async_create_item({"res_type": "module", "url": other_url})
 
-    await downloaded_plugin.update_dashboard_resources()
+    await installed_plugin.update_dashboard_resources()
     assert sorted(resource["url"] for resource in resources.async_items()) == sorted(
-        [other_url, downloaded_plugin.generate_dashboard_resource_url()]
+        [other_url, installed_plugin.generate_dashboard_resource_url()]
     )
 
-    await downloaded_plugin.remove_dashboard_resources()
+    await installed_plugin.remove_dashboard_resources()
     assert [resource["url"] for resource in resources.async_items()] == [other_url]
 
 
@@ -2132,7 +2132,7 @@ async def test_repository_manifest_of_a_removed_version(
     assert await repository.get_repository_manifest(version="3.0.0") is None
 
 
-async def test_ensure_download_capabilities_rejects_new_core_requirement(
+async def test_ensure_install_capabilities_rejects_new_core_requirement(
     marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
     """Test refusing a version that needs a newer Home Assistant."""
@@ -2149,23 +2149,23 @@ async def test_ensure_download_capabilities_rejects_new_core_requirement(
         MarketplaceError,
         match="This version requires Home Assistant 9999.99.99 or newer",
     ):
-        await repository.async_download_repository(ref="3.0.0")
+        await repository.async_install_repository(ref="3.0.0")
 
 
-async def _download(
+async def _install(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, repository_id: str
 ) -> dict[str, Any]:
-    """Download a repository the way the panel does, return the answer."""
+    """Install a repository the way the panel does, return the answer."""
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
-        {"type": "marketplace/repository/download", "repository": repository_id}
+        {"type": "marketplace/repository/install", "repository": repository_id}
     )
     return await client.receive_json()
 
 
 @pytest.mark.parametrize("github_token", [None])
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
-async def test_download_from_the_catalog(
+async def test_install_from_the_catalog(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
@@ -2173,13 +2173,13 @@ async def test_download_from_the_catalog(
     category_test_data: CategoryTestData,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test downloading the version the catalog names skips the GitHub API."""
+    """Test installing the version the catalog names skips the GitHub API."""
     repository = marketplace.repositories.get_by_full_name(
         category_test_data["repository"]
     )
     aioclient_mock.mock_calls.clear()
 
-    assert (await _download(hass, hass_ws_client, repository.data.id))["success"]
+    assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
 
     assert repository.data.installed_version == category_test_data["version_base"]
     assert not github_api_calls(aioclient_mock)
@@ -2188,7 +2188,7 @@ async def test_download_from_the_catalog(
 
 @pytest.mark.parametrize("github_token", [None])
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
-async def test_download_custom_repository(
+async def test_install_custom_repository(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
@@ -2196,14 +2196,14 @@ async def test_download_custom_repository(
     category_test_data: CategoryTestData,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test a repository outside the catalog downloads through the GitHub API."""
+    """Test a repository outside the catalog installs through the GitHub API."""
     repository = marketplace.repositories.get_by_full_name(
         category_test_data["repository"]
     )
     aioclient_mock.mock_calls.clear()
 
     with patch.object(marketplace.repositories, "is_default", return_value=False):
-        assert (await _download(hass, hass_ws_client, repository.data.id))["success"]
+        assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
 
     assert repository.data.installed_version == category_test_data["version_base"]
     assert github_api_calls(aioclient_mock)
@@ -2257,7 +2257,7 @@ def _archive_without_content(repository: str) -> bytes:
         ),
     ],
 )
-async def test_download_from_the_catalog_falls_back(
+async def test_install_from_the_catalog_falls_back(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
@@ -2275,15 +2275,15 @@ async def test_download_from_the_catalog_falls_back(
     response_mocker.add(url, mocked_response(url, **response))
     aioclient_mock.mock_calls.clear()
 
-    assert (await _download(hass, hass_ws_client, repository.data.id))["success"]
+    assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
 
     assert repository.data.installed_version == "1.0.0"
     assert github_api_calls(aioclient_mock)
-    assert _downloaded_files(config_dir) == expected_files
+    assert _installed_files(config_dir) == expected_files
 
 
 @pytest.mark.parametrize("github_token", [None])
-async def test_download_from_the_catalog_archive_too_large(
+async def test_install_from_the_catalog_archive_too_large(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
@@ -2297,11 +2297,11 @@ async def test_download_from_the_catalog_archive_too_large(
     with patch(
         "homeassistant.components.marketplace.repositories.base.MAX_DOWNLOAD_SIZE", 1
     ):
-        assert (await _download(hass, hass_ws_client, repository.data.id))["success"]
+        assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
 
     # The file by file download of the API path is all that is left
     assert github_api_calls(aioclient_mock)
-    assert _downloaded_files(config_dir) == ["custom_components/example/manifest.json"]
+    assert _installed_files(config_dir) == ["custom_components/example/manifest.json"]
 
 
 @pytest.mark.parametrize("github_token", [None])
@@ -2322,7 +2322,7 @@ async def test_download_from_the_catalog_archive_too_large(
         ),
     ],
 )
-async def test_download_from_the_catalog_escaping_member(
+async def test_install_from_the_catalog_escaping_member(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
@@ -2337,7 +2337,7 @@ async def test_download_from_the_catalog_escaping_member(
     repository = marketplace.repositories.get_by_full_name(repository_name)
     repository.data.installed = True
 
-    # What is downloaded already has to survive the failed download
+    # What is installed already has to survive the failed install
     installed = config_dir / installed_file
     installed.parent.mkdir(parents=True)
     installed.write_text("installed")
@@ -2356,22 +2356,22 @@ async def test_download_from_the_catalog_escaping_member(
         ),
     )
 
-    response = await _download(hass, hass_ws_client, repository.data.id)
+    response = await _install(hass, hass_ws_client, repository.data.id)
 
     assert not response["success"]
     assert "is not inside" in caplog.text
-    assert _downloaded_files(config_dir) == [installed_file]
+    assert _installed_files(config_dir) == [installed_file]
     assert installed.read_text() == "installed"
 
 
 @pytest.mark.parametrize("github_token", [None])
-async def test_download_from_the_catalog_while_rate_limited(
+async def test_install_from_the_catalog_while_rate_limited(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
     response_mocker: MarketplaceResponses,
 ) -> None:
-    """Test running out of anonymous API requests does not stop a catalog download."""
+    """Test running out of anonymous API requests does not stop a catalog install."""
     for url in (
         f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}",
         f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}/releases",
@@ -2385,14 +2385,14 @@ async def test_download_from_the_catalog_while_rate_limited(
         )
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
 
-    assert (await _download(hass, hass_ws_client, repository.data.id))["success"]
+    assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
 
     assert repository.data.installed_version == "1.0.0"
     assert not marketplace.system.disabled
 
 
 @pytest.mark.parametrize("github_token", [None])
-async def test_download_from_the_catalog_commit(
+async def test_install_from_the_catalog_commit(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
@@ -2400,7 +2400,7 @@ async def test_download_from_the_catalog_commit(
     aioclient_mock: AiohttpClientMocker,
     config_dir: Path,
 ) -> None:
-    """Test a repository without releases downloads the commit the catalog names."""
+    """Test a repository without releases installs the commit the catalog names."""
     repository = marketplace.repositories.get_by_full_name("hacs-test-org/theme-basic")
     repository.data.last_version = None
     repository.data.last_commit = "abc1234"
@@ -2418,17 +2418,17 @@ async def test_download_from_the_catalog_commit(
         response_mocker.add(url, mocked_response(url, content=content))
     aioclient_mock.mock_calls.clear()
 
-    assert (await _download(hass, hass_ws_client, repository.data.id))["success"]
+    assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
 
     assert repository.data.installed_commit == "abc1234"
     assert repository.data.installed_version is None
     assert repository.display_installed_version == "abc1234"
     assert not github_api_calls(aioclient_mock)
-    assert _downloaded_files(config_dir) == ["themes/example/example.yaml"]
+    assert _installed_files(config_dir) == ["themes/example/example.yaml"]
 
 
 @pytest.mark.parametrize("github_token", [None])
-async def test_download_from_the_catalog_zip_release(
+async def test_install_from_the_catalog_zip_release(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
@@ -2436,7 +2436,7 @@ async def test_download_from_the_catalog_zip_release(
     aioclient_mock: AiohttpClientMocker,
     config_dir: Path,
 ) -> None:
-    """Test an integration shipping a ZIP release downloads the release asset."""
+    """Test an integration shipping a ZIP release installs the release asset."""
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
 
     for url, content in (
@@ -2458,17 +2458,17 @@ async def test_download_from_the_catalog_zip_release(
         response_mocker.add(url, mocked_response(url, content=content))
     aioclient_mock.mock_calls.clear()
 
-    assert (await _download(hass, hass_ws_client, repository.data.id))["success"]
+    assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
 
     assert not github_api_calls(aioclient_mock)
-    assert _downloaded_files(config_dir) == [
+    assert _installed_files(config_dir) == [
         "custom_components/example/__init__.py",
         "custom_components/example/manifest.json",
     ]
 
 
 @pytest.mark.parametrize("github_token", [None])
-async def test_download_from_the_catalog_release_assets(
+async def test_install_from_the_catalog_release_assets(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
@@ -2499,7 +2499,7 @@ async def test_download_from_the_catalog_release_assets(
     )
     aioclient_mock.mock_calls.clear()
 
-    assert (await _download(hass, hass_ws_client, repository.data.id))["success"]
+    assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
 
     # Only the API lists every asset of a release
     assert github_api_calls(aioclient_mock) == [URL(release_url)]
@@ -2507,7 +2507,7 @@ async def test_download_from_the_catalog_release_assets(
     requested = [call[1] for call in aioclient_mock.mock_calls]
     assert requested.count(URL(asset_url)) == 1
     assert repository.content.path.remote == "release"
-    assert _downloaded_files(config_dir) == [
+    assert _installed_files(config_dir) == [
         "www/community/plugin-basic/plugin-basic.js",
         "www/community/plugin-basic/plugin-basic.js.gz",
         "www/community/plugin-basic/plugin-basic.js.map",
@@ -2515,7 +2515,7 @@ async def test_download_from_the_catalog_release_assets(
 
 
 @pytest.mark.parametrize("github_token", [None])
-async def test_download_from_the_catalog_release_assets_over_the_limit(
+async def test_install_from_the_catalog_release_assets_over_the_limit(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
@@ -2523,7 +2523,7 @@ async def test_download_from_the_catalog_release_assets_over_the_limit(
     aioclient_mock: AiohttpClientMocker,
     config_dir: Path,
 ) -> None:
-    """Test a release whose assets are too large together is not downloaded."""
+    """Test a release whose assets are too large together is not installed."""
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
     asset_url = f"https://github.com/{REPOSITORY_PLUGIN}/releases/download/1.0.0/plugin-basic.js"
     other_url = f"{asset_url}.map"
@@ -2557,24 +2557,24 @@ async def test_download_from_the_catalog_release_assets_over_the_limit(
         "homeassistant.components.marketplace.repositories.base.MAX_DOWNLOAD_SIZE",
         1000,
     ):
-        response = await _download(hass, hass_ws_client, repository.data.id)
+        response = await _install(hass, hass_ws_client, repository.data.id)
 
     assert not response["success"]
     assert "larger than the 1000 byte limit" in response["error"]["message"]
     assert URL(other_url) not in [call[1] for call in aioclient_mock.mock_calls]
     assert repository.data.installed is False
-    assert _downloaded_files(config_dir) == []
+    assert _installed_files(config_dir) == []
 
 
 @pytest.mark.parametrize("github_token", [None])
-async def test_download_from_the_catalog_release_assets_rate_limited(
+async def test_install_from_the_catalog_release_assets_rate_limited(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
     response_mocker: MarketplaceResponses,
     config_dir: Path,
 ) -> None:
-    """Test running out of anonymous requests fails only the download."""
+    """Test running out of anonymous requests fails only the install."""
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
     asset_url = f"https://github.com/{REPOSITORY_PLUGIN}/releases/download/1.0.0/plugin-basic.js"
     release_url = (
@@ -2588,17 +2588,17 @@ async def test_download_from_the_catalog_release_assets_rate_limited(
         ),
     )
 
-    response = await _download(hass, hass_ws_client, repository.data.id)
+    response = await _install(hass, hass_ws_client, repository.data.id)
 
     assert not response["success"]
     assert response["error"]["code"] == "github_rate_limited"
     assert not marketplace.system.disabled
     assert repository.data.installed is False
-    assert _downloaded_files(config_dir) == []
+    assert _installed_files(config_dir) == []
 
 
 @pytest.mark.parametrize("github_token", [None])
-async def test_download_from_the_catalog_requires_newer_core(
+async def test_install_from_the_catalog_requires_newer_core(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
@@ -2613,15 +2613,15 @@ async def test_download_from_the_catalog_requires_newer_core(
         mocked_response(url, content=b'{"name": "New", "homeassistant": "9999.1.0"}'),
     )
 
-    response = await _download(hass, hass_ws_client, repository.data.id)
+    response = await _install(hass, hass_ws_client, repository.data.id)
 
     assert not response["success"]
     assert response["error"]["message"] == (
-        f"Downloading {REPOSITORY_INTEGRATION} failed: This version requires"
+        f"Installing {REPOSITORY_INTEGRATION} failed: This version requires"
         " Home Assistant 9999.1.0 or newer."
     )
     assert repository.data.installed is False
-    assert _downloaded_files(config_dir) == []
+    assert _installed_files(config_dir) == []
 
 
 async def test_theme_with_content_in_the_root_is_valid(

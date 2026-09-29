@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import create_download_folders, setup_integration
+from . import create_install_folders, setup_integration
 from .const import (
     REPOSITORY_INTEGRATION,
     REPOSITORY_INTEGRATION_ID,
@@ -48,12 +48,12 @@ async def _mocked_repositories(hass: HomeAssistant, key: str) -> Any:
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_write_downloaded_repository(
+async def test_write_installed_repository(
     marketplace: MarketplaceManager,
     mock_repository: Repository,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test a downloaded repository ends up in the stored data."""
+    """Test an installed repository ends up in the stored data."""
     mock_repository.data.category = "integration"
     mock_repository.data.installed = True
     mock_repository.data.installed_version = "1"
@@ -114,7 +114,7 @@ async def test_restore(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test restoring registers the repositories and their attributes."""
-    create_download_folders(config_dir, RESTORED_REPOSITORIES)
+    create_install_folders(config_dir, RESTORED_REPOSITORIES)
     data = MarketplaceData(marketplace)
 
     with patch(
@@ -198,7 +198,7 @@ async def test_write_while_disabled(
     reason: DisabledReason,
     written: bool,
 ) -> None:
-    """Test a download while GitHub is out of reach is still saved."""
+    """Test an install while GitHub is out of reach is still saved."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     repository.data.installed_version = "2.0.0"
     marketplace.disable(reason)
@@ -227,13 +227,13 @@ async def test_write_on_unload(
 
 
 @pytest.mark.usefixtures("stored_repositories")
-async def test_downloads_deleted_by_hand_are_forgotten(
+async def test_installs_deleted_by_hand_are_forgotten(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     config_dir: Path,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test what was deleted from disk no longer counts as downloaded."""
+    """Test what was deleted from disk no longer counts as installed."""
     shutil.rmtree(config_dir / "www" / "community" / "plugin-basic")
 
     await setup_integration(hass, mock_config_entry)
@@ -246,13 +246,13 @@ async def test_downloads_deleted_by_hand_are_forgotten(
         Platform.UPDATE, DOMAIN, REPOSITORY_PLUGIN_ID
     )
 
-    # What is still on disk stays downloaded
+    # What is still on disk stays installed
     integration = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     assert integration.data.installed is True
 
 
 @pytest.mark.usefixtures("stored_repositories")
-async def test_broken_symlink_stays_downloaded(
+async def test_broken_symlink_stays_installed(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, config_dir: Path
 ) -> None:
     """Test a folder that is a symlink to something not there right now stays."""

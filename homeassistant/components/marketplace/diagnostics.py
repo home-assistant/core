@@ -58,7 +58,7 @@ async def async_get_config_entry_diagnostics(
             marketplace.configuration, key, None
         )
 
-    for repository in marketplace.repositories.list_downloaded:
+    for repository in marketplace.repositories.list_installed:
         data["repositories"].append(
             {
                 "data": repository.data.to_json(),

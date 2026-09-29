@@ -30,7 +30,7 @@ def one_stored_entry_per_name(
     """Keep one stored entry per repository name.
 
     Stored data can hold a repository under an old and a new id. The entry that
-    was downloaded is the one that matters, otherwise the newest id.
+    was installed is the one that matters, otherwise the newest id.
     """
     kept: dict[str, tuple[str, dict[str, Any]]] = {}
     for repository_id, repository_data in repositories.items():

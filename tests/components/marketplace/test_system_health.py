@@ -41,7 +41,7 @@ async def test_system_health(hass: HomeAssistant) -> None:
         "GitHub Web": "ok",
         "Catalog Data": "ok",
         "Available Repositories": 4,
-        "Downloaded Repositories": 0,
+        "Installed Repositories": 0,
         "Installed Version": info["Installed Version"],
         "Stage": "running",
     }

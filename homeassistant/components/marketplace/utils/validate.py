@@ -32,7 +32,7 @@ INVALID_REF = re.compile(r"(^|/)\.|[?#%\\\s]")
 
 
 def valid_ref(value: Any) -> str:
-    """Validate a tag, branch or commit the catalog wants downloaded."""
+    """Validate a tag, branch or commit the catalog wants installed."""
     if not isinstance(value, str) or not value or INVALID_REF.search(value):
         raise probatio.Invalid(f"'{value}' is not a usable version")
     return value

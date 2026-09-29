@@ -34,7 +34,7 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from . import (
-    create_download_folders,
+    create_install_folders,
     dummy_repository_base,
     get_marketplace,
     setup_integration,
@@ -142,7 +142,7 @@ async def response_mocker(
 def config_dir(hass: HomeAssistant, tmp_path: Path) -> Path:
     """Point the configuration directory at a temporary one.
 
-    The Marketplace writes downloads straight into the configuration directory, so
+    The Marketplace installs straight into the configuration directory, so
     it has to be a throwaway one rather than the shared test configuration.
     """
     hass.config.config_dir = str(tmp_path)
@@ -251,13 +251,13 @@ def mock_config_entry(
 
 @pytest.fixture
 def stored_repositories(hass_storage: dict[str, Any], config_dir: Path) -> None:
-    """Seed the stored repositories with two downloaded repositories."""
+    """Seed the stored repositories with two installed repositories."""
     repositories = load_json_object_fixture("stored_repositories.json", DOMAIN)
     hass_storage[f"{DOMAIN}.repositories"] = {
         "version": STORAGE_VERSION,
         "data": repositories,
     }
-    create_download_folders(config_dir, repositories)
+    create_install_folders(config_dir, repositories)
 
 
 @pytest.fixture

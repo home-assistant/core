@@ -49,7 +49,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         "Installed Version": marketplace.version,
         "Stage": marketplace.stage,
         "Available Repositories": len(marketplace.repositories.list_all),
-        "Downloaded Repositories": len(marketplace.repositories.list_downloaded),
+        "Installed Repositories": len(marketplace.repositories.list_installed),
     }
 
     # The anonymous rate limit is shared by every client on the address, it

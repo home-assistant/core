@@ -32,7 +32,7 @@ PROXY_HEADERS = {
     "X-RateLimit-Reset": "999",
 }
 
-# The categories that are always active, regardless of what is downloaded.
+# The categories that are always active, regardless of what is installed.
 DEFAULT_CATEGORIES = {
     RepositoryCategory.INTEGRATION,
     RepositoryCategory.PLUGIN,

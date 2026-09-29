@@ -1,4 +1,4 @@
-"""Backups of downloaded content, kept while a download replaces it."""
+"""Backups of installed content, kept while an install replaces it."""
 
 import os
 from pathlib import Path
@@ -15,8 +15,8 @@ from .path import is_safe, resolve_in_directory
 if TYPE_CHECKING:
     from ..base import MarketplaceManager
 
-# Next to the downloaded content on the same file system, so a backup is a
-# move instead of a copy, and it survives a restart in the middle of a download.
+# Next to the installed content on the same file system, so a backup is a
+# move instead of a copy, and it survives a restart in the middle of an install.
 BACKUP_DIRECTORY = "marketplace_backups"
 
 # Holds the path the backed up content belongs to, for restoring after a restart.
@@ -30,7 +30,7 @@ def _backup_root(marketplace: MarketplaceManager) -> Path:
 
 
 class Backup:
-    """Move content aside while a download replaces it."""
+    """Move content aside while an install replaces it."""
 
     def __init__(
         self,
@@ -117,7 +117,7 @@ class Backup:
 
 
 def restore_interrupted_backups(marketplace: MarketplaceManager) -> bool:
-    """Put back what a download that never finished moved aside.
+    """Put back what an install that never finished moved aside.
 
     Returns whether anything was put back.
     """
@@ -164,7 +164,7 @@ def restore_interrupted_backups(marketplace: MarketplaceManager) -> bool:
                 backup.restore()
                 restored = True
                 LOGGER.warning(
-                    "Restored %s, a download replacing it did not finish",
+                    "Restored %s, an install replacing it did not finish",
                     backup.local_path,
                 )
             backup.cleanup()
