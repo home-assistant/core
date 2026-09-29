@@ -24,7 +24,7 @@ from google.maps.routing_v2 import (
 )
 from google.protobuf import timestamp_pb2
 from google.type import latlng_pb2
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -79,8 +79,8 @@ def convert_to_waypoint(hass: HomeAssistant, location: str) -> Waypoint | None:
         return None
     try:
         formatted_coordinates = coordinates.split(",")
-        vol.Schema(cv.gps(formatted_coordinates))
-    except AttributeError, vol.Invalid:
+        probatio.Schema(cv.gps(formatted_coordinates))
+    except AttributeError, probatio.Invalid:
         return Waypoint(address=location)
     return Waypoint(
         location=Location(

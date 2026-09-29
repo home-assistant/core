@@ -217,7 +217,7 @@ async def test_remove_todo_item(
     assert state
     assert state.state == "2"
 
-    ourgroceries.remove_item_from_list = AsyncMock()
+    ourgroceries.edit_items = AsyncMock()
     # Fake API response when state is refreshed after remove
     _mock_version_id(ourgroceries, 2)
     ourgroceries.get_list_items.return_value = items_to_shopping_list([])
@@ -229,10 +229,13 @@ async def test_remove_todo_item(
         target={ATTR_ENTITY_ID: "todo.test_list"},
         blocking=True,
     )
-    assert ourgroceries.remove_item_from_list.call_count == 2
-    args = ourgroceries.remove_item_from_list.call_args_list
-    assert args[0].args == ("test_list", "12345")
-    assert args[1].args == ("test_list", "54321")
+    ourgroceries.edit_items.assert_called_once_with(
+        "test_list",
+        [
+            {"editType": "delete", "itemId": "12345"},
+            {"editType": "delete", "itemId": "54321"},
+        ],
+    )
 
     await async_update_entity(hass, "todo.test_list")
     state = hass.states.get("todo.test_list")

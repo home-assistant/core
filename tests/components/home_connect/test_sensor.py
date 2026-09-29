@@ -831,7 +831,7 @@ async def test_sensor_unit_fetching_error(
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    assert hass.states.get(entity_id)
+    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
 
 
 @pytest.mark.parametrize(
@@ -853,6 +853,7 @@ async def test_sensor_unit_fetching_error(
 )
 async def test_sensor_unit_fetching_after_rate_limit_error(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
@@ -879,7 +880,7 @@ async def test_sensor_unit_fetching_after_rate_limit_error(
     client.get_status = AsyncMock(side_effect=get_status_mock)
     client.get_status_value = AsyncMock(
         side_effect=[
-            TooManyRequestsError("error.key", retry_after=0),
+            TooManyRequestsError("error.key", retry_after=1),
             Status(
                 key=status_key,
                 raw_key=status_key.value,
@@ -890,6 +891,8 @@ async def test_sensor_unit_fetching_after_rate_limit_error(
     )
 
     assert await integration_setup(client)
+    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+    freezer.tick(1)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
@@ -898,6 +901,7 @@ async def test_sensor_unit_fetching_after_rate_limit_error(
 
     entity_state = hass.states.get(entity_id)
     assert entity_state
+    assert entity_state.state == "0"
     assert entity_state.attributes["unit_of_measurement"] == unit
 
 

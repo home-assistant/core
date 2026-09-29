@@ -65,6 +65,11 @@
         "name": "Dismiss current notification"
       }
     },
+    "notify": {
+      "message": {
+        "name": "Message"
+      }
+    },
     "number": {
       "brightness": {
         "name": "Brightness"
@@ -91,6 +96,14 @@
       "bluetooth": {
         "name": "Bluetooth"
       }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "Error communicating with the LaMetric device"
+    },
+    "invalid_response": {
+      "message": "Invalid response from the LaMetric device"
     }
   },
   "selector": {

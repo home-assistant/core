@@ -5,7 +5,7 @@ import dataclasses
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from xiaomi_ble import (
     XiaomiBluetoothDeviceData as DeviceData,
     XiaomiCloudException,
@@ -23,6 +23,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -146,7 +147,9 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="get_encryption_key_legacy",
             description_placeholders=self.context["title_placeholders"],
-            data_schema=vol.Schema({vol.Required("bindkey"): vol.All(str, vol.Strip)}),
+            data_schema=probatio.Schema(
+                {probatio.Required("bindkey"): probatio.All(str, probatio.Strip)}
+            ),
             errors=errors,
         )
 
@@ -180,7 +183,9 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="get_encryption_key_4_5",
             description_placeholders=self.context["title_placeholders"],
-            data_schema=vol.Schema({vol.Required("bindkey"): vol.All(str, vol.Strip)}),
+            data_schema=probatio.Schema(
+                {probatio.Required("bindkey"): probatio.All(str, probatio.Strip)}
+            ),
             errors=errors,
         )
 
@@ -221,12 +226,12 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="cloud_auth",
             errors=errors,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME)
                     ): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             description_placeholders={
@@ -329,7 +334,9 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_ADDRESS): vol.In(titles)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_ADDRESS): probatio.In(titles)}
+            ),
         )
 
     async def async_step_reauth(
@@ -348,7 +355,9 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_get_encryption_key_4_5_choose_method()
 
         # Otherwise there wasn't actually encryption so abort
-        return self.async_abort(reason="reauth_successful")
+        return self.async_abort(
+            reason="reauth_successful", translation_domain=HOMEASSISTANT_DOMAIN
+        )
 
     def _async_get_or_create_entry(
         self, bindkey: str | None = None

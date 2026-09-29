@@ -6,8 +6,8 @@ from typing import Any, override
 
 from aiohttp.client_exceptions import ClientConnectorError
 from nextdns import ApiError, InvalidApiKeyError, NextDns
+import probatio
 from tenacity import RetryError
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -29,7 +29,7 @@ from homeassistant.helpers.selector import (
 
 from .const import CONF_PROFILE_ID, DOMAIN, SUBENTRY_TYPE_PROFILE
 
-AUTH_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+AUTH_SCHEMA = probatio.Schema({probatio.Required(CONF_API_KEY): str})
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -129,9 +129,9 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="profiles",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PROFILE_ID): SelectSelector(
+                    probatio.Required(CONF_PROFILE_ID): SelectSelector(
                         SelectSelectorConfig(
                             options=[
                                 SelectOptionDict(
@@ -275,9 +275,9 @@ class ProfileSubentryFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PROFILE_ID): SelectSelector(
+                    probatio.Required(CONF_PROFILE_ID): SelectSelector(
                         SelectSelectorConfig(
                             options=[
                                 SelectOptionDict(

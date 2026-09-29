@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -102,7 +102,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_START_WATERING,
         {
-            vol.Optional(ATTR_DURATION): cv.positive_int,
+            probatio.Optional(ATTR_DURATION): cv.positive_int,
         },
         "turn_on",
     )
@@ -111,7 +111,7 @@ async def async_setup_entry(
         platform = entity_platform.async_get_current_platform()
         platform.async_register_entity_service(
             SERVICE_SET_ZONE_MOISTURE,
-            {vol.Required(ATTR_PERCENT): cv.positive_int},
+            {probatio.Required(ATTR_PERCENT): cv.positive_int},
             "set_moisture_percent",
         )
 

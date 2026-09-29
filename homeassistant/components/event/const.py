@@ -4,6 +4,7 @@ from enum import StrEnum
 from typing import Final
 
 DOMAIN: Final = "event"
+
 ATTR_EVENT_TYPE = "event_type"
 ATTR_EVENT_TYPES = "event_types"
 ATTR_MULTI_PRESS_COUNT = "multi_press_count"
@@ -40,3 +41,11 @@ class ButtonEventType(StrEnum):
     LONG_PRESS_END = "long_press_end"
     MULTI_PRESS_ONGOING = "multi_press_ongoing"
     MULTI_PRESS_END = "multi_press_end"
+
+
+class EventDeviceClass(StrEnum):
+    """Device class for events."""
+
+    DOORBELL = "doorbell"
+    BUTTON = "button"
+    MOTION = "motion"

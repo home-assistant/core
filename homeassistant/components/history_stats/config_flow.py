@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from datetime import timedelta
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
@@ -69,11 +69,11 @@ async def validate_options(
     return user_input
 
 
-DATA_SCHEMA_SETUP = vol.Schema(
+DATA_SCHEMA_SETUP = probatio.Schema(
     {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
-        vol.Required(CONF_ENTITY_ID): EntitySelector(),
-        vol.Required(CONF_TYPE, default=CONF_TYPE_TIME): SelectSelector(
+        probatio.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
+        probatio.Required(CONF_ENTITY_ID): EntitySelector(),
+        probatio.Required(CONF_TYPE, default=CONF_TYPE_TIME): SelectSelector(
             SelectSelectorConfig(
                 options=CONF_TYPE_KEYS,
                 mode=SelectSelectorMode.DROPDOWN,
@@ -84,16 +84,16 @@ DATA_SCHEMA_SETUP = vol.Schema(
 )
 
 
-async def get_state_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def get_state_schema(handler: SchemaCommonFlowHandler) -> probatio.Schema:
     """Return schema for state step."""
     entity_id = handler.options[CONF_ENTITY_ID]
 
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(CONF_ENTITY_ID): EntitySelector(
+            probatio.Optional(CONF_ENTITY_ID): EntitySelector(
                 EntitySelectorConfig(read_only=True)
             ),
-            vol.Required(CONF_STATE): StateSelector(
+            probatio.Required(CONF_STATE): StateSelector(
                 StateSelectorConfig(
                     multiple=True,
                     entity_id=entity_id,
@@ -103,14 +103,14 @@ async def get_state_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     )
 
 
-async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def get_options_schema(handler: SchemaCommonFlowHandler) -> probatio.Schema:
     """Return schema for options step."""
     entity_id = handler.options[CONF_ENTITY_ID]
     conf_type = handler.options[CONF_TYPE]
     return _get_options_schema_with_entity_id(entity_id, conf_type)
 
 
-def _get_options_schema_with_entity_id(entity_id: str, type: str) -> vol.Schema:
+def _get_options_schema_with_entity_id(entity_id: str, type: str) -> probatio.Schema:
     state_class_options = (
         [SensorStateClass.MEASUREMENT]
         if type == CONF_TYPE_RATIO
@@ -119,19 +119,19 @@ def _get_options_schema_with_entity_id(entity_id: str, type: str) -> vol.Schema:
             SensorStateClass.TOTAL_INCREASING,
         ]
     )
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(CONF_ENTITY_ID): EntitySelector(
+            probatio.Optional(CONF_ENTITY_ID): EntitySelector(
                 EntitySelectorConfig(read_only=True)
             ),
-            vol.Optional(CONF_STATE): StateSelector(
+            probatio.Optional(CONF_STATE): StateSelector(
                 StateSelectorConfig(
                     multiple=True,
                     entity_id=entity_id,
                     read_only=True,
                 )
             ),
-            vol.Optional(CONF_TYPE): SelectSelector(
+            probatio.Optional(CONF_TYPE): SelectSelector(
                 SelectSelectorConfig(
                     options=CONF_TYPE_KEYS,
                     mode=SelectSelectorMode.DROPDOWN,
@@ -139,18 +139,18 @@ def _get_options_schema_with_entity_id(entity_id: str, type: str) -> vol.Schema:
                     read_only=True,
                 )
             ),
-            vol.Optional(CONF_START): TemplateSelector(),
-            vol.Optional(CONF_END): TemplateSelector(),
-            vol.Optional(CONF_DURATION): DurationSelector(
+            probatio.Optional(CONF_START): TemplateSelector(),
+            probatio.Optional(CONF_END): TemplateSelector(),
+            probatio.Optional(CONF_DURATION): DurationSelector(
                 DurationSelectorConfig(enable_day=True, allow_negative=False),
             ),
-            vol.Optional(CONF_STATE_CLASS): StateClassSelector(
+            probatio.Optional(CONF_STATE_CLASS): StateClassSelector(
                 StateClassSelectorConfig(state_classes=state_class_options),
             ),
-            vol.Optional(SECTION_ADDITIONAL_SETTINGS): section(
-                vol.Schema(
+            probatio.Optional(SECTION_ADDITIONAL_SETTINGS): section(
+                probatio.Schema(
                     {
-                        vol.Optional(CONF_MIN_STATE_DURATION): DurationSelector(
+                        probatio.Optional(CONF_MIN_STATE_DURATION): DurationSelector(
                             DurationSelectorConfig(
                                 enable_day=True, allow_negative=False
                             )
@@ -207,10 +207,10 @@ class HistoryStatsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "history_stats/start_preview",
-        vol.Required("flow_id"): str,
-        vol.Required("flow_type"): vol.Any("config_flow", "options_flow"),
-        vol.Required("user_input"): dict,
+        probatio.Required("type"): "history_stats/start_preview",
+        probatio.Required("flow_id"): str,
+        probatio.Required("flow_type"): probatio.Any("config_flow", "options_flow"),
+        probatio.Required("user_input"): dict,
     }
 )
 @websocket_api.async_response
@@ -269,7 +269,7 @@ async def ws_start_preview(
         validated_data = (_get_options_schema_with_entity_id(entity_id, conf_type))(
             msg["user_input"]
         )
-    except vol.Invalid as ex:
+    except probatio.Invalid as ex:
         connection.send_error(msg["id"], "invalid_schema", str(ex))
         return
 

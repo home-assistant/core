@@ -10,7 +10,7 @@ from typing import Any
 from azure.eventhub import EventData, EventDataBatch
 from azure.eventhub.aio import EventHubProducerClient
 from azure.eventhub.exceptions import EventHubError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import MATCH_ALL
@@ -43,22 +43,22 @@ type AzureEventHubConfigEntry = ConfigEntry[AzureEventHub]
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_EVENT_HUB_INSTANCE_NAME): cv.string,
-                vol.Optional(CONF_EVENT_HUB_CON_STRING): cv.string,
-                vol.Optional(CONF_EVENT_HUB_NAMESPACE): cv.string,
-                vol.Optional(CONF_EVENT_HUB_SAS_POLICY): cv.string,
-                vol.Optional(CONF_EVENT_HUB_SAS_KEY): cv.string,
-                vol.Optional(CONF_SEND_INTERVAL): cv.positive_int,
-                vol.Optional(CONF_MAX_DELAY): cv.positive_int,
-                vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
+                probatio.Optional(CONF_EVENT_HUB_INSTANCE_NAME): cv.string,
+                probatio.Optional(CONF_EVENT_HUB_CON_STRING): cv.string,
+                probatio.Optional(CONF_EVENT_HUB_NAMESPACE): cv.string,
+                probatio.Optional(CONF_EVENT_HUB_SAS_POLICY): cv.string,
+                probatio.Optional(CONF_EVENT_HUB_SAS_KEY): cv.string,
+                probatio.Optional(CONF_SEND_INTERVAL): cv.positive_int,
+                probatio.Optional(CONF_MAX_DELAY): cv.positive_int,
+                probatio.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
             },
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 DATA_COMPONENT: HassKey[EntityFilter] = HassKey(DOMAIN)
 

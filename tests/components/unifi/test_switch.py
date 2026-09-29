@@ -1292,7 +1292,7 @@ async def test_traffic_rules(
     expected_enable_call = deepcopy(traffic_rule)
     expected_enable_call["enabled"] = True
 
-    assert aioclient_mock.call_count == call_count + 1
+    assert aioclient_mock.call_count == call_count + 2
     assert aioclient_mock.mock_calls[call_count][2] == expected_enable_call
 
 
@@ -1347,7 +1347,7 @@ async def test_traffic_routes(
     expected_enable_call = deepcopy(traffic_route)
     expected_enable_call["enabled"] = True
 
-    assert aioclient_mock.call_count == call_count + 1
+    assert aioclient_mock.call_count == call_count + 2
     assert aioclient_mock.mock_calls[call_count][2] == expected_enable_call
 
 
@@ -1436,13 +1436,25 @@ async def test_object_oriented_network_configs(
     aioclient_mock.put(config_url)
 
     call_count = aioclient_mock.call_count
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        "turn_off",
-        {"entity_id": entity_id},
-        blocking=True,
+    coordinator = (
+        config_entry_setup.runtime_data.entity_loader.get_data_update_coordinator(
+            config_entry_setup.runtime_data.api.object_oriented_network_configs
+        )
     )
+
+    with (
+        patch.object(coordinator, "async_refresh") as async_refresh,
+        patch.object(coordinator, "async_request_refresh") as async_request_refresh,
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            "turn_off",
+            {"entity_id": entity_id},
+            blocking=True,
+        )
+
+    async_refresh.assert_awaited_once()
+    async_request_refresh.assert_not_awaited()
     expected_disable_call = deepcopy(config)
     expected_disable_call["enabled"] = False
 

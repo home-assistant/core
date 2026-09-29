@@ -504,3 +504,24 @@ async def test_fan_set_percentage_without_multispeed(
         attribute_path="1/514/2",
         value=75,
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_air_purifier"])
+@pytest.mark.parametrize("attributes", [{"1/514/4": 0}])
+async def test_fan_without_speed_steps(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test a fan reporting no speed steps keeps the default step size."""
+    entity_id = "fan.mock_air_purifier"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["percentage_step"] == 1
+
+    # a proper speed count is picked up when the features are recalculated
+    set_node_attribute(matter_node, 1, 514, 4, 5)
+    set_node_attribute(matter_node, 1, 514, 65532, 47)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.attributes["percentage_step"] == 20

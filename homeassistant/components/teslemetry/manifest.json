@@ -3,15 +3,15 @@
   "name": "Teslemetry",
   "codeowners": ["@Bre77"],
   "config_flow": true,
-  "dependencies": ["application_credentials"],
+  "dependencies": ["application_credentials", "bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/teslemetry",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["aiopowerwall", "tesla_fleet_api", "teslemetry_stream"],
   "quality_scale": "platinum",
   "requirements": [
-    "aiopowerwall==0.2.0",
-    "tesla-fleet-api==1.12.4",
-    "teslemetry-stream==0.13.1"
+    "aiopowerwall==0.4.0",
+    "tesla-fleet-api==1.13.0",
+    "teslemetry-stream==1.0.2"
   ]
 }

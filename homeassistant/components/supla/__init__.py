@@ -3,7 +3,7 @@
 import logging
 
 from asyncpysupla import SuplaAPI
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -30,20 +30,24 @@ SUPLA_FUNCTION_NONE = "NONE"
 SUPLA_SERVERS = "supla_servers"
 SUPLA_COORDINATORS = "supla_coordinators"
 
-SERVER_CONFIG = vol.Schema(
+SERVER_CONFIG = probatio.Schema(
     {
-        vol.Required(CONF_SERVER): cv.string,
-        vol.Required(CONF_ACCESS_TOKEN): cv.string,
+        probatio.Required(CONF_SERVER): cv.string,
+        probatio.Required(CONF_ACCESS_TOKEN): cv.string,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
-            {vol.Required(CONF_SERVERS): vol.All(cv.ensure_list, [SERVER_CONFIG])}
+        DOMAIN: probatio.Schema(
+            {
+                probatio.Required(CONF_SERVERS): probatio.All(
+                    cv.ensure_list, [SERVER_CONFIG]
+                )
+            }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
