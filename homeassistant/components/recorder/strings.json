@@ -4,6 +4,20 @@
       "description": "The database backup stated at {start_time} failed due to lack of resources. The backup cannot be trusted and must be restarted. This can happen if the database is too large or if the system is under heavy load. Consider upgrading the system hardware or reducing the size of the database by decreasing the number of history days to keep or creating a filter.",
       "title": "Database backup failed due to lack of resources"
     },
+    "corrupt_database_files": {
+      "fix_flow": {
+        "abort": {
+          "delete_failed": "The corrupt database files could not be deleted. Check the log for details and delete them manually."
+        },
+        "step": {
+          "confirm": {
+            "description": "The recorder found a corrupt database and moved it aside to start a new one. {count} corrupt database files ({size} MB) are still kept in `{path}`.\n\nThey may still contain history that can be recovered with SQLite tools. If you don't need them, select **Submit** to delete them. To keep them, close this dialog and ignore this issue.",
+            "title": "[%key:component::recorder::issues::corrupt_database_files::title%]"
+          }
+        }
+      },
+      "title": "Corrupt database files are kept"
+    },
     "database_engine_not_supported_lts": {
       "description": "Version {server_version} of {database_engine} is not a supported long-term support (LTS) release. Support for short-term releases and end-of-life LTS releases will be removed; please upgrade to one of the supported LTS versions ({lts_versions}) and restart Home Assistant to continue using the recorder.",
       "title": "Update {database_engine} to a supported LTS version to continue using the recorder"
