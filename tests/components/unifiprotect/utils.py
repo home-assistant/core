@@ -828,7 +828,9 @@ def make_public_viewer(
     public.model = ModelType.VIEWPORT
     public.state = DeviceState[viewer.state.name] if state is None else state
     public.liveview_id = viewer.liveview_id if liveview_id is None else liveview_id
-    public.api = viewer.api
+    public.api = public._api = viewer.api
+    # Resolve through the library property instead of a mocked attribute.
+    type(public).liveview = PublicViewer.liveview
     public.set_liveview = AsyncMock()
     return public
 
