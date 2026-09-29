@@ -23,10 +23,14 @@ DEFAULT_UNIT_ID: Final = 1
 SUBSYSTEM_COMMON: Final = "common"
 SUBSYSTEM_INVERTER: Final = "inverter"
 
-# How the library names the blocks it probes for.
+# How the library names the blocks it probes for. Storage and export control
+# are probed apart, where a poll reports the two together as site control.
 SUBSYSTEM_BATTERIES: Final = "batteries"
+SUBSYSTEM_EXPORT_CONTROL: Final = "export_control"
+SUBSYSTEM_GRID_STATUS: Final = "grid_status"
 SUBSYSTEM_METERS: Final = "meters"
 SUBSYSTEM_STORAGE_CAPACITY: Final = "storage_capacity"
+SUBSYSTEM_STORAGE_CONTROL: Final = "storage_control"
 
 # The writable control blocks, as an UpdateReport names them. Export control's
 # read spans storage control, so the library reads and reports the two as one.
