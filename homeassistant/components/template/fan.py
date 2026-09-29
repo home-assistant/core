@@ -302,13 +302,23 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
             context=self._context,
         )
 
+        write_state = False
+
         if preset_mode is not None:
-            await self.async_set_preset_mode(preset_mode)
+            await self._async_set_preset_mode(preset_mode)
+            if self.update_assumed_attribute(CONF_PRESET_MODE, preset_mode):
+                write_state = True
+
         if percentage is not None:
-            await self.async_set_percentage(percentage)
+            await self._async_set_percentage(percentage)
+            if self.update_assumed_attribute(CONF_PERCENTAGE, percentage):
+                write_state = True
 
         if self._attr_assumed_state:
             self._attr_is_on = True
+            write_state = True
+
+        if write_state:
             self.async_write_ha_state()
 
     @override
@@ -322,9 +332,8 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
             self._attr_is_on = False
             self.async_write_ha_state()
 
-    @override
-    async def async_set_percentage(self, percentage: int) -> None:
-        """Set the percentage speed of the fan."""
+    async def _async_set_percentage(self, percentage: int) -> None:
+        """Run the set_percentage action script."""
         if script := self._action_scripts.get(CONF_SET_PERCENTAGE_ACTION):
             await self.async_run_script(
                 script,
@@ -332,18 +341,25 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
                 context=self._context,
             )
 
+    @override
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the percentage speed of the fan."""
+        await self._async_set_percentage(percentage)
+
+        write_state = False
+
+        if self.update_assumed_attribute(CONF_PERCENTAGE, percentage):
+            write_state = True
+
         if self._attr_assumed_state:
             self._attr_is_on = percentage != 0
+            write_state = True
 
-        if (
-            self.update_assumed_attribute(CONF_PERCENTAGE, percentage)
-            or self._attr_assumed_state
-        ):
+        if write_state:
             self.async_write_ha_state()
 
-    @override
-    async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set the preset_mode of the fan."""
+    async def _async_set_preset_mode(self, preset_mode: str) -> None:
+        """Run the set_preset_mode action script."""
         if script := self._action_scripts.get(CONF_SET_PRESET_MODE_ACTION):
             await self.async_run_script(
                 script,
@@ -351,13 +367,21 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
                 context=self._context,
             )
 
+    @override
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset_mode of the fan."""
+        await self._async_set_preset_mode(preset_mode)
+
+        write_state = False
+
+        if self.update_assumed_attribute(CONF_PRESET_MODE, preset_mode):
+            write_state = True
+
         if self._attr_assumed_state:
             self._attr_is_on = True
+            write_state = True
 
-        if (
-            self.update_assumed_attribute(CONF_PRESET_MODE, preset_mode)
-            or self._attr_assumed_state
-        ):
+        if write_state:
             self.async_write_ha_state()
 
     @override
