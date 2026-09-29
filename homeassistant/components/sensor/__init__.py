@@ -209,7 +209,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _invalid_unit_of_measurement_reported = False
     _last_reset_reported = False
     _sensor_option_display_precision: int | None = None
-    _sensor_option_unit_of_measurement: str | None | UndefinedType = UNDEFINED
+    _sensor_option_unit_of_measurement: str | UndefinedType | None = UNDEFINED
     _invalid_suggested_unit_of_measurement_reported = False
     _get_uptime: Callable[[datetime], datetime] | None = None
 
@@ -910,7 +910,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def _custom_unit_or_undef(
         self, primary_key: str, secondary_key: str
-    ) -> str | None | UndefinedType:
+    ) -> str | UndefinedType | None:
         """Return a custom unit, or UNDEFINED if not compatible with the native unit."""
         assert self.registry_entry
         if (

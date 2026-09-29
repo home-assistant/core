@@ -1,6 +1,6 @@
 """Support for UniFi Protect NVR alarm control panel."""
 
-from typing import override
+from typing import cast, override
 
 from uiprotect.data import NVR, NvrArmModeStatus
 from uiprotect.exceptions import GlobalAlarmManagerError
@@ -12,13 +12,15 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DEFAULT_BRAND, DOMAIN
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectNVREntity
-from .utils import async_ufp_instance_command
+from .utils import _async_unifi_mac_from_hass, async_ufp_instance_command
 
 PARALLEL_UPDATES = 0
 
@@ -52,7 +54,13 @@ async def async_setup_entry(
     if api.public_bootstrap.arm_mode is None:
         return
 
-    nvr = api.bootstrap.nvr
+    # In public-API-only mode there is no private bootstrap; the NVR device is
+    # the public one, whose mac the library backfills during priming. Setup
+    # guarantees it is present (it aborts with ConfigEntryNotReady otherwise).
+    if api.is_public_only:
+        nvr = cast(NVR, api.public_bootstrap.nvr)
+    else:
+        nvr = api.bootstrap.nvr
     async_add_entities([ProtectNVRAlarmControlPanel(data, device=nvr)])
 
 
@@ -70,6 +78,24 @@ class ProtectNVRAlarmControlPanel(ProtectNVREntity, AlarmControlPanelEntity):
         self._refresh_alarm_state()
 
     @callback
+    @override
+    def _async_set_device_info(self) -> None:
+        if not self.data.api.is_public_only:
+            super()._async_set_device_info()
+            return
+        # Degraded: no market name or console URL, and ``type`` only on
+        # newer firmware. The mac is backfilled by the library, matching the
+        # device created at setup.
+        mac = _async_unifi_mac_from_hass(self.device.mac)
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+            identifiers={(DOMAIN, mac)},
+            manufacturer=DEFAULT_BRAND,
+            name=self.device.display_name,
+            model=self.device.type,
+        )
+
+    @callback
     def _refresh_alarm_state(self) -> None:
         """Update _attr_alarm_state from the public bootstrap cache."""
         api = self.data.api
@@ -81,8 +107,9 @@ class ProtectNVRAlarmControlPanel(ProtectNVREntity, AlarmControlPanelEntity):
             self._attr_alarm_state = None
             return
         # arm_mode is delivered over the public devices websocket, so
-        # availability tracks the public WS health (like relay/siren), not the
-        # private connection the base class would otherwise apply for the NVR.
+        # availability tracks the public WS health, not the private connection
+        # the base class would otherwise apply for the NVR. The NVR carries no
+        # device state, so there is nothing else to gate on.
         self._attr_available = self.data.last_public_update_success
         # Fall back to DISARMED for unknown future status values rather than
         # rendering the entity as ``unknown``.

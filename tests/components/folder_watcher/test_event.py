@@ -7,6 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -40,6 +41,11 @@ async def test_event_entity(
             "path",
             "dest_folder",
             "dest_path",
+            # The state is a strictly-increasing event timestamp; its exact
+            # value depends on how many filesystem notifications the real
+            # watchdog backend emits (varies by platform), so it is asserted
+            # dynamically below instead of being pinned in the snapshot.
+            "state",
         }
         return prop in exclude_attrs
 
@@ -48,6 +54,7 @@ async def test_event_entity(
             name=f"{entity_entry.unique_id}-entry", exclude=limit_attrs
         )
         assert (state := hass.states.get(entity_entry.entity_id))
+        assert dt_util.parse_datetime(state.state) is not None
         assert state == snapshot(
             name=f"{entity_entry.unique_id}-state", exclude=limit_attrs
         )

@@ -1,6 +1,14 @@
 """Tests for Broadlink switches."""
 
+from unittest.mock import MagicMock
+
+import pytest
+
 from homeassistant.components.broadlink.const import DOMAIN
+from homeassistant.components.broadlink.switch import (
+    PLATFORM_SCHEMA,
+    async_setup_platform,
+)
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -12,6 +20,11 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import get_device
 
+IR_PACKET = (
+    "JgBGAJKVETkRORA6ERQRFBEUERQRFBE5ETkQOhAVEBUQFREUEBUQ"
+    "OhEUERQRORE5EBURFBA6EBUQOhE5EBUQFRA6EDoRFBEADQUAAA=="
+)
+
 
 async def test_switch_setup_works(
     hass: HomeAssistant,
@@ -22,8 +35,8 @@ async def test_switch_setup_works(
     device = get_device("Dining room")
     mock_setup = await device.setup_entry(hass)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
     )
     entries = er.async_entries_for_device(entity_registry, device_entry.id)
     switches = [entry for entry in entries if entry.domain == Platform.SWITCH]
@@ -46,8 +59,8 @@ async def test_switch_turn_off_turn_on(
     device = get_device("Dining room")
     mock_setup = await device.setup_entry(hass)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
     )
     entries = er.async_entries_for_device(entity_registry, device_entry.id)
     switches = [entry for entry in entries if entry.domain == Platform.SWITCH]
@@ -82,8 +95,8 @@ async def test_slots_switch_setup_works(
     device = get_device("Gaming room")
     mock_setup = await device.setup_entry(hass)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
     )
     entries = er.async_entries_for_device(entity_registry, device_entry.id)
     switches = [entry for entry in entries if entry.domain == Platform.SWITCH]
@@ -107,8 +120,8 @@ async def test_slots_switch_turn_off_turn_on(
     device = get_device("Gaming room")
     mock_setup = await device.setup_entry(hass)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
     )
     entries = er.async_entries_for_device(entity_registry, device_entry.id)
     switches = [entry for entry in entries if entry.domain == Platform.SWITCH]
@@ -132,3 +145,34 @@ async def test_slots_switch_turn_off_turn_on(
         assert hass.states.get(switch.entity_id).state == STATE_ON
 
         assert mock_setup.api.auth.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "device_name", ["Entrance", "Living Room", "Office", "Garage", "Study"]
+)
+async def test_custom_ir_switch_setup_works(
+    hass: HomeAssistant, device_name: str
+) -> None:
+    """Test a custom IR switch from YAML is added to each type of remote."""
+    device = get_device(device_name)
+    mock_setup = await device.setup_entry(hass)
+
+    config = PLATFORM_SCHEMA(
+        {
+            "platform": DOMAIN,
+            "mac": device.mac,
+            "switches": [
+                {"name": "Fan", "command_on": IR_PACKET, "command_off": IR_PACKET}
+            ],
+        }
+    )
+    await async_setup_platform(hass, config, MagicMock())
+    await hass.async_block_till_done()
+
+    entity_ids = hass.states.async_entity_ids(SWITCH_DOMAIN)
+    assert len(entity_ids) == 1
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {"entity_id": entity_ids[0]}, blocking=True
+    )
+    assert mock_setup.api.send_data.call_count == 1

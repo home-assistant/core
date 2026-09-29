@@ -2,7 +2,7 @@
 
 from typing import Any, Protocol, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_DOMAIN, CONF_OPTIONS
 from homeassistant.core import HomeAssistant
@@ -24,7 +24,7 @@ class DeviceAutomationConditionProtocol(Protocol):
     Each module must define either CONDITION_SCHEMA or async_validate_condition_config.
     """
 
-    CONDITION_SCHEMA: vol.Schema
+    CONDITION_SCHEMA: probatio.Schema
 
     async def async_validate_condition_config(
         self, hass: HomeAssistant, config: ConfigType
@@ -38,7 +38,7 @@ class DeviceAutomationConditionProtocol(Protocol):
 
     async def async_get_condition_capabilities(
         self, hass: HomeAssistant, config: ConfigType
-    ) -> dict[str, vol.Schema]:
+    ) -> dict[str, probatio.Schema]:
         """List condition capabilities."""
 
     async def async_get_conditions(

@@ -108,9 +108,9 @@ async def async_setup_entry(
     for device in entry.runtime_data.api.devices.values():
         entities.extend(
             NintendoParentalControlsPlayerSensorEntity(
-                entry.runtime_data, device, player_id, sensor
+                entry.runtime_data, device, player, sensor
             )
-            for player_id in device.players
+            for player in device.players
             for sensor in PLAYER_SENSOR_DESCRIPTIONS
         )
     async_add_entities(entities)
@@ -153,17 +153,18 @@ class NintendoParentalControlsPlayerSensorEntity(NintendoDevice, SensorEntity):
         self,
         coordinator: NintendoUpdateCoordinator,
         device: Device,
-        player_id: str,
+        player: Player,
         description: NintendoParentalControlsPlayerSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator=coordinator, device=device, key=description.key)
         self.entity_description = description
-        self.player_id = player_id
-        player_obj = device.get_player(player_id)
-        nickname = player_obj.nickname or ""
+        self.player_id = player.player_id
+        nickname = player.nickname or ""
         self._attr_translation_placeholders = {"nickname": nickname}
-        self._attr_unique_id = f"{device.device_id}_{player_id}_{description.key}"
+        self._attr_unique_id = (
+            f"{device.device_id}_{player.player_id}_{description.key}"
+        )
 
     @property
     @override

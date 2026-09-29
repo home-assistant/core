@@ -163,9 +163,15 @@ async def test_user_adbkey(hass: HomeAssistant) -> None:
         PATCH_SETUP_ENTRY as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=flow_input,
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=flow_input,
         )
         await hass.async_block_till_done()
 
@@ -189,9 +195,15 @@ async def test_error_both_key_server(hass: HomeAssistant) -> None:
         },
     }
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=flow_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=flow_input,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -221,9 +233,15 @@ async def test_error_invalid_key(hass: HomeAssistant) -> None:
         CONF_MORE_OPTIONS: {CONF_ADBKEY: ADBKEY},
     }
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=flow_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=flow_input,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -269,9 +287,15 @@ async def test_invalid_mac(
         return_value=(MockConfigDevice(eth_mac, wifi_mac), None),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=flow_input,
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=flow_input,
         )
 
         assert result["type"] is FlowResultType.ABORT
@@ -284,12 +308,17 @@ async def test_abort_if_host_exist(hass: HomeAssistant) -> None:
         domain=DOMAIN, data=CONFIG_ADB_SERVER, unique_id=ETH_MAC
     ).add_to_hass(hass)
 
-    config_data = CONFIG_PYTHON_ADB
     # Should fail, same HOST
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=config_data,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=FLOW_PYTHON_ADB,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -310,9 +339,15 @@ async def test_abort_if_unique_exist(hass: HomeAssistant) -> None:
         return_value=(MockConfigDevice(), None),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=CONFIG_ADB_SERVER,
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=FLOW_ADB_SERVER,
         )
 
         assert result["type"] is FlowResultType.ABORT

@@ -1,10 +1,9 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This NextDNS profile is already configured.",
-      "profile_not_available": "The configured NextDNS profile is no longer available in your account. Remove the configuration and configure the integration again.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "all_profiles_configured": "All NextDNS profiles are already configured.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "profile_not_available": "The configured NextDNS profile is no longer available in your account. Remove the configuration and configure the integration again."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -14,10 +13,10 @@
     "step": {
       "profiles": {
         "data": {
-          "profile_name": "Profile"
+          "profile_id": "Profile"
         },
         "data_description": {
-          "profile_name": "The NextDNS configuration profile you want to integrate"
+          "profile_id": "The NextDNS configuration profile you want to integrate"
         }
       },
       "reauth_confirm": {
@@ -42,6 +41,31 @@
         },
         "data_description": {
           "api_key": "The API key for your NextDNS account"
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "profile": {
+      "abort": {
+        "all_profiles_configured": "[%key:component::nextdns::config::abort::all_profiles_configured%]",
+        "already_configured": "This NextDNS profile is already configured.",
+        "entry_not_loaded": "The NextDNS configuration entry is not loaded. Please ensure it is set up correctly before adding a profile."
+      },
+      "entry_type": "NextDNS profile",
+      "initiate_flow": {
+        "user": "Add profile"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "profile_id": "[%key:component::nextdns::config::step::profiles::data::profile_id%]"
+          },
+          "data_description": {
+            "profile_id": "[%key:component::nextdns::config::step::profiles::data_description::profile_id%]"
+          },
+          "description": "Select the NextDNS profile you want to add.",
+          "title": "Add NextDNS profile"
         }
       }
     }
@@ -186,11 +210,17 @@
       "block_dailymotion": {
         "name": "Block Dailymotion"
       },
+      "block_data_drop_services": {
+        "name": "Block data-drop services"
+      },
       "block_dating": {
         "name": "Block dating"
       },
       "block_ddns": {
         "name": "Block dynamic DNS hostnames"
+      },
+      "block_decentralized_web_gateways": {
+        "name": "Block decentralized web gateways"
       },
       "block_discord": {
         "name": "Block Discord"
@@ -209,6 +239,9 @@
       },
       "block_fortnite": {
         "name": "Block Fortnite"
+      },
+      "block_free_hosting_domains": {
+        "name": "Block free hosting domains"
       },
       "block_gambling": {
         "name": "Block gambling"
@@ -273,6 +306,9 @@
       "block_reddit": {
         "name": "Block Reddit"
       },
+      "block_residential_hosting": {
+        "name": "Block residential hosting"
+      },
       "block_roblox": {
         "name": "Block Roblox"
       },
@@ -305,6 +341,9 @@
       },
       "block_tumblr": {
         "name": "Block Tumblr"
+      },
+      "block_tunneling_endpoints": {
+        "name": "Block tunneling endpoints"
       },
       "block_twitch": {
         "name": "Block Twitch"

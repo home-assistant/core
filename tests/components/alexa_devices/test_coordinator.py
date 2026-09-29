@@ -143,12 +143,12 @@ async def test_async_update_data_errors(
         ),
         pytest.param(
             CannotConnect,
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.LOADED,
             id="cannot_connect",
         ),
         pytest.param(
             CannotRetrieveData,
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.LOADED,
             id="cannot_retrieve_data",
         ),
     ],
@@ -160,7 +160,7 @@ async def test_sync_history_state_error(
     side_effect: type[Exception],
     expected_state: ConfigEntryState,
 ) -> None:
-    """Test sync_history_state error handling."""
+    """Test sync_history_state error handling does not block setup."""
     mock_amazon_devices_client.sync_history_state.side_effect = side_effect
 
     mock_config_entry.add_to_hass(hass)
@@ -180,22 +180,22 @@ async def test_sync_history_state_error(
         ),
         pytest.param(
             CannotConnect,
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.LOADED,
             id="cannot_connect",
         ),
         pytest.param(
             TimeoutError,
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.LOADED,
             id="timeout_error",
         ),
         pytest.param(
             CannotRetrieveData,
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.LOADED,
             id="cannot_retrieve_data",
         ),
         pytest.param(
             ValueError,
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.LOADED,
             id="value_error",
         ),
     ],
@@ -213,3 +213,71 @@ async def test_sync_media_state_auth_failed(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is expected_state
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(
+            CannotConnect("429 - Too Many Requests"),
+            id="http_429_too_many_requests",
+        ),
+        pytest.param(
+            CannotRetrieveData("503 - Service Unavailable"),
+            id="http_503_service_unavailable",
+        ),
+    ],
+)
+async def test_media_state_sync_failure_logged_on_first_refresh(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    error: Exception,
+) -> None:
+    """Test a failing media sync on first refresh is logged but does not block setup."""
+    mock_amazon_devices_client.sync_media_state.side_effect = error
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert "Sync failed for sync_media_state:" in caplog.text
+    assert str(error) in caplog.text
+    assert (
+        "Data may be missing or incomplete until updates are pushed by Amazon"
+        in caplog.text
+    )
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_media_state_sync_on_device_list_change(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test media state is resynced when a device is added."""
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_1_SN: TEST_DEVICE_1,
+    }
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_amazon_devices_client.sync_media_state.assert_awaited_once()
+
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_1_SN: TEST_DEVICE_1,
+        TEST_DEVICE_2_SN: TEST_DEVICE_2,
+    }
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_amazon_devices_client.sync_media_state.call_count == 2
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Device list unchanged: no additional resync
+    assert mock_amazon_devices_client.sync_media_state.call_count == 2

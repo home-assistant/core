@@ -126,6 +126,9 @@
       "person_detected": {
         "default": "mdi:walk"
       },
+      "relay_input": {
+        "default": "mdi:import"
+      },
       "siren_detected": {
         "default": "mdi:alarm-bell"
       },
@@ -181,11 +184,23 @@
       "fingerprint": {
         "default": "mdi:fingerprint"
       },
+      "keyfob": {
+        "default": "mdi:remote"
+      },
+      "motion_detection": {
+        "default": "mdi:motion-sensor"
+      },
       "nfc": {
         "default": "mdi:nfc"
       },
       "package": {
         "default": "mdi:package-variant-closed"
+      },
+      "smart_detection": {
+        "default": "mdi:cctv"
+      },
+      "sound_detection": {
+        "default": "mdi:waveform"
       },
       "vehicle": {
         "default": "mdi:car"
@@ -264,6 +279,9 @@
       },
       "doorbell_text": {
         "default": "mdi:card-text"
+      },
+      "fob_status": {
+        "default": "mdi:remote"
       },
       "infrared_mode": {
         "default": "mdi:circle-opacity"

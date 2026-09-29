@@ -3,8 +3,8 @@
 from collections.abc import Mapping
 from typing import Any, override
 
+import probatio
 from pysensibo.exceptions import AuthenticationError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
@@ -14,9 +14,9 @@ from homeassistant.helpers.selector import TextSelector
 from .const import DOMAIN
 from .util import NoDevicesError, NoUsernameError, async_validate_api
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): TextSelector(),
+        probatio.Required(CONF_API_KEY): TextSelector(),
     }
 )
 

@@ -3,7 +3,7 @@
 from http import HTTPStatus
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
@@ -30,17 +30,17 @@ PLATFORMS = [Platform.DEVICE_TRACKER]
 
 CONF_MOBILE_BEACONS = "mobile_beacons"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(DOMAIN): vol.Schema(
+        probatio.Optional(DOMAIN): probatio.Schema(
             {
-                vol.Optional(CONF_MOBILE_BEACONS, default=[]): vol.All(
+                probatio.Optional(CONF_MOBILE_BEACONS, default=[]): probatio.All(
                     cv.ensure_list, [cv.string]
                 )
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 ATTR_ADDRESS = "address"
@@ -63,19 +63,19 @@ def _address(value: str) -> str:
     return value.replace("\n", " ")
 
 
-WEBHOOK_SCHEMA = vol.Schema(
+WEBHOOK_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_ADDRESS): vol.All(cv.string, _address),
-        vol.Required(ATTR_DEVICE): vol.All(cv.string, slugify),
-        vol.Required(ATTR_ENTRY): vol.Any(LOCATION_ENTRY, LOCATION_EXIT),
-        vol.Required(ATTR_LATITUDE): cv.latitude,
-        vol.Required(ATTR_LONGITUDE): cv.longitude,
-        vol.Required(ATTR_NAME): vol.All(cv.string, slugify),
-        vol.Optional(ATTR_CURRENT_LATITUDE): cv.latitude,
-        vol.Optional(ATTR_CURRENT_LONGITUDE): cv.longitude,
-        vol.Optional(ATTR_BEACON_ID): cv.string,
+        probatio.Required(ATTR_ADDRESS): probatio.All(cv.string, _address),
+        probatio.Required(ATTR_DEVICE): probatio.All(cv.string, slugify),
+        probatio.Required(ATTR_ENTRY): probatio.Any(LOCATION_ENTRY, LOCATION_EXIT),
+        probatio.Required(ATTR_LATITUDE): cv.latitude,
+        probatio.Required(ATTR_LONGITUDE): cv.longitude,
+        probatio.Required(ATTR_NAME): probatio.All(cv.string, slugify),
+        probatio.Optional(ATTR_CURRENT_LATITUDE): cv.latitude,
+        probatio.Optional(ATTR_CURRENT_LONGITUDE): cv.longitude,
+        probatio.Optional(ATTR_BEACON_ID): cv.string,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 _DATA_GEOFENCY: HassKey[list[str]] = HassKey(DOMAIN)
@@ -94,7 +94,7 @@ async def handle_webhook(
     """Handle incoming webhook from Geofency."""
     try:
         data = WEBHOOK_SCHEMA(dict(await request.post()))
-    except vol.MultipleInvalid as error:
+    except probatio.MultipleInvalid as error:
         return web.Response(
             text=error.error_message, status=HTTPStatus.UNPROCESSABLE_ENTITY
         )

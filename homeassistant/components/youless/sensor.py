@@ -34,7 +34,7 @@ class YouLessSensorEntityDescription(SensorEntityDescription):
     """Describes a YouLess sensor entity."""
 
     device_group: str
-    value_func: Callable[[YoulessAPI], float | None | str]
+    value_func: Callable[[YoulessAPI], float | str | None]
 
 
 SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (

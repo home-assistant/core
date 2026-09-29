@@ -30,14 +30,14 @@ from .const import (
 
 # Maps a state attribute to the service call argument used to restore it.
 _STATE_ATTRIBUTE_TO_SERVICE_ARG: dict[ClimateEntityStateAttribute, str] = {
-    ClimateEntityStateAttribute.TEMPERATURE: ATTR_TEMPERATURE,
+    ClimateEntityStateAttribute.TARGET_TEMPERATURE: ATTR_TEMPERATURE,
     ClimateEntityStateAttribute.TARGET_TEMP_HIGH: ATTR_TARGET_TEMP_HIGH,
     ClimateEntityStateAttribute.TARGET_TEMP_LOW: ATTR_TARGET_TEMP_LOW,
     ClimateEntityStateAttribute.PRESET_MODE: ATTR_PRESET_MODE,
     ClimateEntityStateAttribute.SWING_MODE: ATTR_SWING_MODE,
     ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE: ATTR_SWING_HORIZONTAL_MODE,
     ClimateEntityStateAttribute.FAN_MODE: ATTR_FAN_MODE,
-    ClimateEntityStateAttribute.HUMIDITY: ATTR_HUMIDITY,
+    ClimateEntityStateAttribute.TARGET_HUMIDITY: ATTR_HUMIDITY,
 }
 
 
@@ -70,7 +70,7 @@ async def _async_reproduce_states(
         await call_service(SERVICE_SET_HVAC_MODE, [], {ATTR_HVAC_MODE: state.state})
 
     if (
-        state.attributes.get(ClimateEntityStateAttribute.TEMPERATURE) is not None
+        state.attributes.get(ClimateEntityStateAttribute.TARGET_TEMPERATURE) is not None
         or state.attributes.get(ClimateEntityStateAttribute.TARGET_TEMP_HIGH)
         is not None
         or state.attributes.get(ClimateEntityStateAttribute.TARGET_TEMP_LOW) is not None
@@ -78,7 +78,7 @@ async def _async_reproduce_states(
         await call_service(
             SERVICE_SET_TEMPERATURE,
             [
-                ClimateEntityStateAttribute.TEMPERATURE,
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE,
                 ClimateEntityStateAttribute.TARGET_TEMP_HIGH,
                 ClimateEntityStateAttribute.TARGET_TEMP_LOW,
             ],
@@ -116,8 +116,10 @@ async def _async_reproduce_states(
     ):
         await call_service(SERVICE_SET_FAN_MODE, [ClimateEntityStateAttribute.FAN_MODE])
 
-    if ClimateEntityStateAttribute.HUMIDITY in state.attributes:
-        await call_service(SERVICE_SET_HUMIDITY, [ClimateEntityStateAttribute.HUMIDITY])
+    if ClimateEntityStateAttribute.TARGET_HUMIDITY in state.attributes:
+        await call_service(
+            SERVICE_SET_HUMIDITY, [ClimateEntityStateAttribute.TARGET_HUMIDITY]
+        )
 
 
 async def async_reproduce_states(

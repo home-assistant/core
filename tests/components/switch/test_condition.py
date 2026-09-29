@@ -4,14 +4,17 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components.switch.condition import CONDITIONS
 from homeassistant.const import CONF_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     ConditionStateDescription,
+    TargetSupport,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
     assert_condition_options_supported,
+    assert_conditions_target_support,
     create_target_condition,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
@@ -30,6 +33,12 @@ async def target_switches(hass: HomeAssistant) -> dict[str, list[str]]:
 async def target_input_booleans(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple input_boolean entities associated with different targets."""
     return await target_entities(hass, "input_boolean")
+
+
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "is_off": TargetSupport.STANDARD,
+    "is_on": TargetSupport.STANDARD,
+}
 
 
 @pytest.mark.parametrize(
@@ -54,6 +63,11 @@ async def test_switch_condition_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(

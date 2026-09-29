@@ -7,7 +7,7 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pyControl4"],
-  "requirements": ["pyControl4==1.5.0"],
+  "requirements": ["pyControl4==2.0.2"],
   "ssdp": [
     {
       "st": "c4:director"

@@ -140,6 +140,15 @@
       "dust_collection": {
         "default": "mdi:delete"
       },
+      "dust_emptying": {
+        "default": "mdi:delete-empty"
+      },
+      "mop_drying": {
+        "default": "mdi:heat-wave"
+      },
+      "mop_washing": {
+        "default": "mdi:water-sync"
+      },
       "off_peak_switch": {
         "default": "mdi:power-plug"
       },
@@ -171,6 +180,9 @@
     },
     "set_vacuum_goto_position": {
       "service": "mdi:map-marker"
+    },
+    "set_vacuum_zoned_cleaning": {
+      "service": "mdi:select-marker"
     }
   }
 }

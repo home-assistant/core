@@ -1,0 +1,140 @@
+{
+  "entity": {
+    "button": {
+      "blue_down": {
+        "default": "mdi:alpha-b-circle-outline"
+      },
+      "blue_up": {
+        "default": "mdi:alpha-b-circle"
+      },
+      "brightness_down": {
+        "default": "mdi:brightness-5"
+      },
+      "brightness_up": {
+        "default": "mdi:brightness-7"
+      },
+      "green_down": {
+        "default": "mdi:alpha-g-circle-outline"
+      },
+      "green_up": {
+        "default": "mdi:alpha-g-circle"
+      },
+      "quick": {
+        "default": "mdi:speedometer"
+      },
+      "red_down": {
+        "default": "mdi:alpha-r-circle-outline"
+      },
+      "red_up": {
+        "default": "mdi:alpha-r-circle"
+      },
+      "slow": {
+        "default": "mdi:speedometer-slow"
+      },
+      "timer": {
+        "default": "mdi:timer"
+      },
+      "timer_2h": {
+        "default": "mdi:timer"
+      },
+      "timer_4h": {
+        "default": "mdi:timer"
+      },
+      "timer_6h": {
+        "default": "mdi:timer"
+      },
+      "timer_8h": {
+        "default": "mdi:timer"
+      },
+      "white_brightness_100": {
+        "default": "mdi:lightbulb-on"
+      },
+      "white_brightness_25": {
+        "default": "mdi:lightbulb-on-30"
+      },
+      "white_brightness_50": {
+        "default": "mdi:lightbulb-on-50"
+      },
+      "white_brightness_75": {
+        "default": "mdi:lightbulb-on-80"
+      },
+      "white_brightness_down": {
+        "default": "mdi:brightness-5"
+      },
+      "white_brightness_up": {
+        "default": "mdi:brightness-7"
+      },
+      "white_off": {
+        "default": "mdi:power-off"
+      },
+      "white_on": {
+        "default": "mdi:power-on"
+      }
+    },
+    "event": {
+      "received_command": {
+        "default": "mdi:remote"
+      }
+    },
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "aqua": "mdi:palette",
+              "auto": "mdi:auto-mode",
+              "blue": "mdi:palette",
+              "candle": "mdi:candle",
+              "cyan": "mdi:palette",
+              "dark_cyan": "mdi:palette",
+              "deep_blue": "mdi:palette",
+              "diy1": "mdi:numeric-1-box",
+              "diy2": "mdi:numeric-2-box",
+              "diy3": "mdi:numeric-3-box",
+              "diy4": "mdi:numeric-4-box",
+              "diy5": "mdi:numeric-5-box",
+              "diy6": "mdi:numeric-6-box",
+              "fade": "mdi:gradient-horizontal",
+              "fade3": "mdi:gradient-horizontal",
+              "fade7": "mdi:gradient-horizontal",
+              "flash": "mdi:flash",
+              "floral_white": "mdi:palette",
+              "ghost_white": "mdi:palette",
+              "green": "mdi:palette",
+              "jump3": "mdi:dots-circle",
+              "jump7": "mdi:dots-circle",
+              "lavender_blush": "mdi:palette",
+              "light": "mdi:lightbulb-on",
+              "light_cyan": "mdi:palette",
+              "light_green": "mdi:palette",
+              "magenta": "mdi:palette",
+              "mode_1": "mdi:numeric-1-box",
+              "mode_2": "mdi:numeric-2-box",
+              "mode_3": "mdi:numeric-3-box",
+              "mode_4": "mdi:numeric-4-box",
+              "mode_5": "mdi:numeric-5-box",
+              "mode_6": "mdi:numeric-6-box",
+              "mode_7": "mdi:numeric-7-box",
+              "mode_8": "mdi:numeric-8-box",
+              "orange": "mdi:palette",
+              "orange_red": "mdi:palette",
+              "pink": "mdi:palette",
+              "plum": "mdi:palette",
+              "purple": "mdi:palette",
+              "rebecca_purple": "mdi:palette",
+              "red": "mdi:palette",
+              "sky_blue": "mdi:palette",
+              "smooth": "mdi:looks",
+              "strobe": "mdi:light-flood-down",
+              "tomato": "mdi:palette",
+              "turquoise": "mdi:palette",
+              "white": "mdi:palette",
+              "yellow": "mdi:palette",
+              "yellowish": "mdi:palette"
+            }
+          }
+        }
+      }
+    }
+  }
+}

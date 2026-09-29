@@ -3,7 +3,7 @@
 import functools
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
@@ -53,8 +53,8 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_LOCK_USER_CODE,
         {
-            vol.Required("code_slot"): vol.Coerce(int),
-            vol.Required("user_code"): cv.string,
+            probatio.Required("code_slot"): probatio.Coerce(int),
+            probatio.Required("user_code"): cv.string,
         },
         "async_set_lock_user_code",
     )
@@ -62,7 +62,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_ENABLE_LOCK_USER_CODE,
         {
-            vol.Required("code_slot"): vol.Coerce(int),
+            probatio.Required("code_slot"): probatio.Coerce(int),
         },
         "async_enable_lock_user_code",
     )
@@ -70,7 +70,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_DISABLE_LOCK_USER_CODE,
         {
-            vol.Required("code_slot"): vol.Coerce(int),
+            probatio.Required("code_slot"): probatio.Coerce(int),
         },
         "async_disable_lock_user_code",
     )
@@ -78,7 +78,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_CLEAR_LOCK_USER_CODE,
         {
-            vol.Required("code_slot"): vol.Coerce(int),
+            probatio.Required("code_slot"): probatio.Coerce(int),
         },
         "async_clear_lock_user_code",
     )
@@ -93,7 +93,7 @@ class ZhaDoorLock(ZHAEntity, LockEntity):
     @override
     def is_locked(self) -> bool:
         """Return true if entity is locked."""
-        return self.entity_data.entity.is_locked
+        return self._zha_state.is_locked
 
     @convert_zha_error_to_ha_error()
     @override

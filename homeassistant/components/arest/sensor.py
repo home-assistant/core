@@ -4,8 +4,8 @@ from datetime import timedelta
 from http import HTTPStatus
 import logging
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -34,22 +34,22 @@ CONF_PINS = "pins"
 
 DEFAULT_NAME = "aREST sensor"
 
-PIN_VARIABLE_SCHEMA = vol.Schema(
+PIN_VARIABLE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
 )
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_RESOURCE): cv.url,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PINS, default={}): vol.Schema(
+        probatio.Required(CONF_RESOURCE): cv.url,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_PINS, default={}): probatio.Schema(
             {cv.string: PIN_VARIABLE_SCHEMA}
         ),
-        vol.Optional(CONF_MONITORED_VARIABLES, default={}): vol.Schema(
+        probatio.Optional(CONF_MONITORED_VARIABLES, default={}): probatio.Schema(
             {cv.string: PIN_VARIABLE_SCHEMA}
         ),
     }

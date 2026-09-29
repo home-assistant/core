@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -18,9 +18,9 @@ from .entity import MicroBotEntity
 
 CALIBRATE = "calibrate"
 CALIBRATE_SCHEMA: VolDictType = {
-    vol.Required("depth"): cv.positive_int,
-    vol.Required("duration"): cv.positive_int,
-    vol.Required("mode"): vol.In(["normal", "invert", "toggle"]),
+    probatio.Required("depth"): cv.positive_int,
+    probatio.Required("duration"): cv.positive_int,
+    probatio.Required("mode"): probatio.In(["normal", "invert", "toggle"]),
 }
 
 

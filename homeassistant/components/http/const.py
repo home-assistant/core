@@ -1,16 +1,25 @@
 """HTTP specific constants."""
 
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from aiohttp.web import Request
 
 from homeassistant.helpers.http import KEY_AUTHENTICATED, KEY_HASS  # noqa: F401
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.auth.models import User
 
 DOMAIN: Final = "http"
 
 KEY_HASS_USER: Final = "hass_user"
 KEY_HASS_REFRESH_TOKEN_ID: Final = "hass_refresh_token_id"
 KEY_SUPERVISOR_UNIX_SOCKET: Final = "ha_supervisor_unix_socket"
+
+# System user used to authenticate requests over the Supervisor Unix socket.
+# Set by the hassio integration during its setup; the Unix socket is only
+# started once it is available.
+DATA_SUPERVISOR_USER: HassKey[User] = HassKey("hassio_supervisor_user")
 
 CONF_SERVER_HOST: Final = "server_host"
 CONF_SERVER_PORT: Final = "server_port"
@@ -30,6 +39,11 @@ SSL_MODERN: Final = "modern"
 SSL_INTERMEDIATE: Final = "intermediate"
 
 ENV_SETUP_PORT: Final = "SETUP_PORT"
+ENV_SUPERVISOR: Final = "SUPERVISOR"
+
+# Default HTTP port when running under Supervisor, which fronts Core on the
+# standard HTTP port.
+SUPERVISOR_DEFAULT_PORT: Final = 80
 
 # Cast to be able to load custom cards.
 # My to be able to check url and version info.

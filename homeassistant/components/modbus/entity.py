@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
-    CONF_SLAVE,
     CONF_STRUCTURE,
     CONF_UNIQUE_ID,
     STATE_OFF,
@@ -29,7 +28,6 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
-    _LOGGER,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
@@ -41,7 +39,6 @@ from .const import (
     CALL_TYPE_X_COILS,
     CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_DATA_TYPE,
-    CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
     CONF_MAX_VALUE,
     CONF_MIN_VALUE,
@@ -60,10 +57,11 @@ from .const import (
     CONF_ZERO_SUPPRESS,
     DEFAULT_OFFSET,
     DEFAULT_SCALE,
+    LOGGER,
     SIGNAL_STOP_ENTITY,
     DataType,
 )
-from .modbus import ModbusHub
+from .modbus import ModbusHub, entity_unit_id
 
 
 class ModbusBaseEntity(Entity):
@@ -80,10 +78,7 @@ class ModbusBaseEntity(Entity):
         """Initialize the Modbus binary sensor."""
 
         self._hub = hub
-        if (conf_slave := entry.get(CONF_SLAVE)) is not None:
-            self._device_address = conf_slave
-        else:
-            self._device_address = entry.get(CONF_DEVICE_ADDRESS, 1)
+        self._device_address = entity_unit_id(entry)
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
@@ -128,7 +123,7 @@ class ModbusBaseEntity(Entity):
     @callback
     def async_disable(self) -> None:
         """Remote stop entity."""
-        _LOGGER.info(f"hold entity {self._attr_name}")
+        LOGGER.info(f"hold entity {self._attr_name}")
         if self._cancel_call:
             self._cancel_call()
             self._cancel_call = None
@@ -149,7 +144,11 @@ class ModbusBaseEntity(Entity):
             )
         )
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, SIGNAL_STOP_ENTITY, self.async_disable)
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_STOP_ENTITY.format(self._hub.name),
+                self.async_disable,
+            )
         )
 
 
@@ -249,7 +248,7 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
         except struct.error as err:
             recv_size = len(registers) * 2
             msg = f"Received {recv_size} bytes, unpack error {err}"
-            _LOGGER.error(msg)
+            LOGGER.error(msg)
             return None
         if len(val) > 1:
             # Apply scale, precision, limits to floats and ints
@@ -374,20 +373,21 @@ class ModbusToggleEntity(ModbusBaseEntity, ToggleEntity, RestoreEntity):
 
         self._attr_available = True
         if self._verify_type in (CALL_TYPE_COIL, CALL_TYPE_DISCRETE):
-            self._attr_is_on = bool(result.bits[0] & 1)
+            value = int(result.bits[0] & 1)
         else:
             value = int(result.registers[0])
-            if value in self._state_on:
-                self._attr_is_on = True
-            elif value in self._state_off:
-                self._attr_is_on = False
-            elif value is not None:
-                _LOGGER.error(
-                    (
-                        "Unexpected response from modbus device slave %s register %s,"
-                        " got 0x%2x"
-                    ),
-                    self._device_address,
-                    self._verify_address,
-                    value,
-                )
+
+        if value in self._state_on:
+            self._attr_is_on = True
+        elif value in self._state_off:
+            self._attr_is_on = False
+        elif value is not None:
+            LOGGER.error(
+                (
+                    "Unexpected response from modbus device slave %s register %s,"
+                    " got 0x%2x"
+                ),
+                self._device_address,
+                self._verify_address,
+                value,
+            )

@@ -2,10 +2,12 @@
 
 from unittest.mock import MagicMock
 
+from modbus_connection import ModbusTlsParams
 from pystiebeleltron import ControllerModel, StiebelEltronModbusError
 import pytest
 
-from homeassistant.components.stiebel_eltron.const import DOMAIN
+from homeassistant.components.modbus import async_get_unit
+from homeassistant.components.stiebel_eltron.const import DOMAIN, UNIT_ID
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -45,7 +47,7 @@ async def test_form_cannot_connect(
     hass: HomeAssistant,
     mock_get_controller_model: MagicMock,
 ) -> None:
-    """Test we handle cannot connect error."""
+    """Test we handle a cannot connect error while reading the device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -68,6 +70,29 @@ async def test_form_cannot_connect(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_form_conflicting_link_settings(hass: HomeAssistant) -> None:
+    """Test we handle the device being held with incompatible link settings."""
+    other_entry = MockConfigEntry(domain="modbus")
+    other_entry.add_to_hass(hass)
+    async_get_unit(
+        hass,
+        other_entry,
+        ModbusTlsParams(host=USER_INPUT[CONF_HOST], port=USER_INPUT[CONF_PORT]),
+        UNIT_ID,
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_unknown_exception(

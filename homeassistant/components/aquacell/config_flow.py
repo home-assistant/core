@@ -1,13 +1,13 @@
 """Config flow for Aquacell integration."""
 
 from collections.abc import Mapping
-from datetime import datetime
 import logging
+import time
 from typing import Any, override
 
 from aioaquacell import ApiException, AquacellApi, AuthenticationFailed
 from aioaquacell.const import SUPPORTED_BRANDS, Brand
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -22,19 +22,19 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_BRAND, default=Brand.AQUACELL): vol.In(
+        probatio.Required(CONF_BRAND, default=Brand.AQUACELL): probatio.In(
             {key: brand.name for key, brand in SUPPORTED_BRANDS.items()}
         ),
-        vol.Required(CONF_EMAIL): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_EMAIL): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
-STEP_REAUTH_SCHEMA = vol.Schema(
+STEP_REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -76,7 +76,7 @@ class AquaCellConfigFlow(ConfigFlow, domain=DOMAIN):
                         **user_input,
                         CONF_BRAND: user_input[CONF_BRAND],
                         CONF_REFRESH_TOKEN: refresh_token,
-                        CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),  # pylint: disable=home-assistant-enforce-naive-now
+                        CONF_REFRESH_TOKEN_CREATION_TIME: time.time(),
                     },
                 )
 
@@ -120,7 +120,7 @@ class AquaCellConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates={
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                         CONF_REFRESH_TOKEN: refresh_token,
-                        CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),  # pylint: disable=home-assistant-enforce-naive-now
+                        CONF_REFRESH_TOKEN_CREATION_TIME: time.time(),
                     },
                 )
 

@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.integration.const import DOMAIN
+from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import selector
@@ -151,3 +152,39 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     state = hass.states.get(f"{platform}.my_integration")
     assert state.state != "unknown"
     assert state.attributes["unit_of_measurement"] == "kdogmin"
+
+
+async def test_options_source_selector_with_missing_source_unit(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconfiguring when the current source unit is missing."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "method": "left",
+            "name": "My integration",
+            "round": 1.0,
+            "source": "sensor.input",
+            "unit_prefix": "k",
+            "unit_time": "min",
+        },
+        title="My integration",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.input", "unavailable")
+    hass.states.async_set(
+        "sensor.valid_power", 10, {"unit_of_measurement": UnitOfPower.WATT}
+    )
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    source = result["data_schema"].schema["source"]
+    assert isinstance(source, selector.EntitySelector)
+    assert source.config["domain"] == ["counter", "input_number", "sensor"]
+    assert "include_entities" not in source.config

@@ -5,6 +5,7 @@ import logging
 from typing import Any, cast, override
 
 from aiohttp import ClientConnectorCertificateError, ClientError
+import probatio
 from pyoverkiz.auth.credentials import (
     LocalTokenCredentials,
     RexelTokenCredentials,
@@ -30,13 +31,16 @@ from pyoverkiz.exceptions import (
 )
 from pyoverkiz.obfuscate import obfuscate_id
 from pyoverkiz.utils import create_local_server_config, is_overkiz_gateway
-import voluptuous as vol
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlowResult,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -126,6 +130,25 @@ class OverkizConfigFlow(
 
         return user_input
 
+    def _async_finish_validated_entry(
+        self, user_input: dict[str, Any], title: str
+    ) -> ConfigFlowResult:
+        """Create or update the entry once credentials have been validated."""
+        if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=user_input
+            )
+
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch(reason="reconfigure_wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data=user_input
+            )
+
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(title=title, data=user_input)
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -139,17 +162,13 @@ class OverkizConfigFlow(
             if self._server in SERVERS_WITH_LOCAL_API:
                 return await self.async_step_local_or_cloud()
 
-            # Rexel authenticates via OAuth2 (Azure AD B2C with PKCE).
-            if self._server == Server.REXEL:
-                return await self.async_step_pick_implementation()
-
             return await self.async_step_cloud()
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HUB, default=self._server): vol.In(
+                    probatio.Required(CONF_HUB, default=self._server): probatio.In(
                         {key: hub.name for key, hub in SUPPORTED_SERVERS.items()}
                     ),
                 }
@@ -174,9 +193,9 @@ class OverkizConfigFlow(
 
         return self.async_show_form(
             step_id="local_or_cloud",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_TYPE): vol.In(
+                    probatio.Required(CONF_API_TYPE): probatio.In(
                         {
                             APIType.LOCAL: "Local API",
                             APIType.CLOUD: "Cloud API",
@@ -262,26 +281,16 @@ class OverkizConfigFlow(
                 errors["base"] = "unknown"
                 LOGGER.exception("Unknown error")
             else:
-                if self.source == SOURCE_REAUTH:
-                    self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
-
-                    return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data_updates=user_input
-                    )
-
-                # Create new entry
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=user_input[CONF_USERNAME], data=user_input
+                return self._async_finish_validated_entry(
+                    user_input, title=user_input[CONF_USERNAME]
                 )
 
         return self.async_show_form(
             step_id="cloud",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME, default=self._user): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME, default=self._user): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             description_placeholders=description_placeholders,
@@ -332,27 +341,17 @@ class OverkizConfigFlow(
                 errors["base"] = "unknown"
                 LOGGER.exception("Unknown error")
             else:
-                if self.source == SOURCE_REAUTH:
-                    self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
-
-                    return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data_updates=user_input
-                    )
-
-                # Create new entry
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=user_input[CONF_HOST], data=user_input
+                return self._async_finish_validated_entry(
+                    user_input, title=user_input[CONF_HOST]
                 )
 
         return self.async_show_form(
             step_id="local",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST, default=self._host): str,
-                    vol.Required(CONF_TOKEN): str,
-                    vol.Required(CONF_VERIFY_SSL, default=self._verify_ssl): bool,
+                    probatio.Required(CONF_HOST, default=self._host): str,
+                    probatio.Required(CONF_TOKEN): str,
+                    probatio.Required(CONF_VERIFY_SSL, default=self._verify_ssl): bool,
                 }
             ),
             description_placeholders=description_placeholders,
@@ -402,9 +401,9 @@ class OverkizConfigFlow(
 
         return self.async_show_form(
             step_id="select_gateway",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_GATEWAY_ID): vol.In(
+                    probatio.Required(CONF_GATEWAY_ID): probatio.In(
                         {
                             candidate.gateway_id: candidate.label
                             or candidate.gateway_id
@@ -431,6 +430,12 @@ class OverkizConfigFlow(
             self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=data
+            )
+
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch(reason="reconfigure_wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data=data
             )
 
         self._abort_if_unique_id_configured()
@@ -482,12 +487,11 @@ class OverkizConfigFlow(
 
         return await self.async_step_user()
 
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reauth."""
-        # Overkiz entries always have unique IDs
-        self.context["title_placeholders"] = {"gateway_id": cast(str, self.unique_id)}
+    def _init_flow_from_entry(
+        self, entry_data: Mapping[str, Any], gateway_id: str
+    ) -> None:
+        """Initialize the flow's state from an existing entry for reauth/reconfigure."""
+        self.context["title_placeholders"] = {"gateway_id": gateway_id}
         self._api_type = entry_data.get(CONF_API_TYPE, APIType.CLOUD)
         self._server = entry_data[CONF_HUB]
 
@@ -498,4 +502,17 @@ class OverkizConfigFlow(
         elif self._server != Server.REXEL:
             self._user = entry_data[CONF_USERNAME]
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauth."""
+        self._init_flow_from_entry(entry_data, cast(str, self.unique_id))
         return await self.async_step_user(dict(entry_data))
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        entry = self._get_reconfigure_entry()
+        self._init_flow_from_entry(entry.data, cast(str, entry.unique_id))
+        return await self.async_step_user(dict(entry.data))

@@ -5,8 +5,10 @@ from datetime import datetime
 from homeassistant.components.diagnostics import (
     REDACTED,
     async_redact_data,
+    device_entry_as_dict,
     entity_entry_as_dict,
 )
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import RegistryEntry
 
 
@@ -87,4 +89,36 @@ def test_entity_entry_as_dict() -> None:
     assert result["platform"] == "test"
     assert result["original_name"] == "Test Sensor"
     assert result["supported_features"] == 0
+    assert result["created_at"] == created
+
+
+def test_device_entry_as_dict() -> None:
+    """Test device_entry_as_dict."""
+    created = datetime.fromisoformat("2024-01-01T00:00:00+00:00")
+    entry = DeviceEntry(
+        config_entry_id="mock-config-entry-id",
+        created_at=created,
+        identifiers={("test", "unique123")},
+        modified_at=created,
+        name="Test Device",
+    )
+
+    result = device_entry_as_dict(entry)
+
+    assert isinstance(result, dict)
+    # Internal bookkeeping and composite-device migration attributes are excluded
+    for attribute in (
+        "_cache",
+        "_composite_subentries",
+        "_pending_move",
+        "_suggested_area",
+        "composite_device_id",
+        "composite_primary_config_entry",
+        "has_composite_identifiers",
+        "split_at",
+    ):
+        assert attribute not in result
+    assert result["config_entry_id"] == "mock-config-entry-id"
+    assert result["identifiers"] == [["test", "unique123"]]
+    assert result["name"] == "Test Device"
     assert result["created_at"] == created

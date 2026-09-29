@@ -3,7 +3,15 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from elgato import BatteryInfo, ElgatoNoBatteryError, Info, Settings, State
+from elgato import (
+    BatteryInfo,
+    ElgatoNoBatteryError,
+    FirmwareImage,
+    FirmwareVersion,
+    Info,
+    Settings,
+    State,
+)
 import pytest
 
 from homeassistant.components.elgato.const import DOMAIN
@@ -90,6 +98,31 @@ def mock_elgato(device_fixtures: str, state_variant: str) -> Generator[MagicMock
             elgato.battery.side_effect = ElgatoNoBatteryError
 
         yield elgato
+
+
+@pytest.fixture(autouse=True)
+def mock_firmware_catalog() -> Generator[MagicMock]:
+    """Return a mocked Elgato firmware catalog.
+
+    The catalog reads Elgato's servers, so this is autouse: no test gets to
+    reach them. The builds here are ahead of what the device fixtures
+    report, which leaves an update waiting by default.
+    """
+    with patch(
+        "homeassistant.components.elgato.coordinator.FirmwareCatalog", autospec=True
+    ) as catalog_mock:
+        catalog = catalog_mock.return_value
+        catalog.versions.return_value = {
+            53: FirmwareVersion(board_type=53, build_number=222, version="1.0.3"),
+            202: FirmwareVersion(board_type=202, build_number=240, version="1.0.4"),
+        }
+        catalog.download.return_value = FirmwareImage(
+            board_type=53,
+            build_number=222,
+            version="1.0.3",
+            data=b"\x00" * 8192,
+        )
+        yield catalog
 
 
 @pytest.fixture

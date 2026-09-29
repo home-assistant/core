@@ -4,7 +4,7 @@ from collections.abc import Callable
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -19,6 +19,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightEntityStateAttribute,
     filter_supported_color_modes,
 )
 from homeassistant.const import (
@@ -88,30 +89,32 @@ VALUE_TEMPLATES = (
 PLATFORM_SCHEMA_MODERN_TEMPLATE = (
     MQTT_RW_SCHEMA.extend(
         {
-            vol.Optional(CONF_BLUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_BRIGHTNESS_TEMPLATE): cv.template,
-            vol.Optional(CONF_COLOR_TEMP_KELVIN, default=False): cv.boolean,
-            vol.Optional(CONF_COLOR_TEMP_TEMPLATE): cv.template,
-            vol.Required(CONF_COMMAND_OFF_TEMPLATE): cv.template,
-            vol.Required(CONF_COMMAND_ON_TEMPLATE): cv.template,
-            vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_EFFECT_TEMPLATE): cv.template,
-            vol.Optional(CONF_GREEN_TEMPLATE): cv.template,
-            vol.Optional(CONF_MAX_KELVIN): cv.positive_int,
-            vol.Optional(CONF_MIN_KELVIN): cv.positive_int,
-            vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
-            vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
-            vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-            vol.Optional(CONF_RED_TEMPLATE): cv.template,
-            vol.Optional(CONF_STATE_TEMPLATE): cv.template,
+            probatio.Optional(CONF_BLUE_TEMPLATE): cv.template,
+            probatio.Optional(CONF_BRIGHTNESS_TEMPLATE): cv.template,
+            probatio.Optional(CONF_COLOR_TEMP_KELVIN, default=False): cv.boolean,
+            probatio.Optional(CONF_COLOR_TEMP_TEMPLATE): cv.template,
+            probatio.Required(CONF_COMMAND_OFF_TEMPLATE): cv.template,
+            probatio.Required(CONF_COMMAND_ON_TEMPLATE): cv.template,
+            probatio.Optional(CONF_EFFECT_LIST): probatio.All(
+                cv.ensure_list, [cv.string]
+            ),
+            probatio.Optional(CONF_EFFECT_TEMPLATE): cv.template,
+            probatio.Optional(CONF_GREEN_TEMPLATE): cv.template,
+            probatio.Optional(CONF_MAX_KELVIN): cv.positive_int,
+            probatio.Optional(CONF_MIN_KELVIN): cv.positive_int,
+            probatio.Optional(CONF_MAX_MIREDS): cv.positive_int,
+            probatio.Optional(CONF_MIN_MIREDS): cv.positive_int,
+            probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+            probatio.Optional(CONF_RED_TEMPLATE): cv.template,
+            probatio.Optional(CONF_STATE_TEMPLATE): cv.template,
         }
     )
     .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
-DISCOVERY_SCHEMA_TEMPLATE = vol.All(
-    PLATFORM_SCHEMA_MODERN_TEMPLATE.extend({}, extra=vol.REMOVE_EXTRA),
+DISCOVERY_SCHEMA_TEMPLATE = probatio.All(
+    PLATFORM_SCHEMA_MODERN_TEMPLATE.extend({}, extra=probatio.REMOVE_EXTRA),
 )
 
 
@@ -361,17 +364,21 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         last_state = await self.async_get_last_state()
         if self._optimistic and last_state:
             self._attr_is_on = last_state.state == STATE_ON
-            if last_state.attributes.get(ATTR_BRIGHTNESS):
-                self._attr_brightness = last_state.attributes.get(ATTR_BRIGHTNESS)
-            if last_state.attributes.get(ATTR_HS_COLOR):
-                self._attr_hs_color = last_state.attributes.get(ATTR_HS_COLOR)
+            if brightness := last_state.attributes.get(
+                LightEntityStateAttribute.BRIGHTNESS
+            ):
+                self._attr_brightness = brightness
+            if hs_color := last_state.attributes.get(
+                LightEntityStateAttribute.HS_COLOR
+            ):
+                self._attr_hs_color = hs_color
                 self._update_color_mode()
-            if last_state.attributes.get(ATTR_COLOR_TEMP_KELVIN):
-                self._attr_color_temp_kelvin = last_state.attributes.get(
-                    ATTR_COLOR_TEMP_KELVIN
-                )
-            if last_state.attributes.get(ATTR_EFFECT):
-                self._attr_effect = last_state.attributes.get(ATTR_EFFECT)
+            if color_temp_kelvin := last_state.attributes.get(
+                LightEntityStateAttribute.COLOR_TEMP_KELVIN
+            ):
+                self._attr_color_temp_kelvin = color_temp_kelvin
+            if effect := last_state.attributes.get(LightEntityStateAttribute.EFFECT):
+                self._attr_effect = effect
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

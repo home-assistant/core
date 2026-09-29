@@ -30,9 +30,19 @@ class ScriptTool(ActionTool):
 
         super().__init__(hass, DOMAIN, action)
 
-        self.name = script_name
-        if self.name[0].isdigit():
-            self.name = "_" + self.name
+        self.name = f"{DOMAIN}__{script_name}"
+        # The script is named by the user, so its name is already in their
+        # language.
+        if state := hass.states.get(script_entity_id):
+            self.title = state.name
+
+        if entity_entry and (
+            aliases := er.async_get_entity_aliases(hass, entity_entry)
+        ):
+            alias_text = "Aliases: " + str(sorted(aliases))
+            self.description = (
+                f"{self.description}. {alias_text}" if self.description else alias_text
+            )
 
 
 @callback

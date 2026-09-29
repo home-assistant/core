@@ -167,7 +167,13 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
     @override
     def target_temperature(self) -> float | None:
         """Return the temperature."""
-        if state := self.device.states.get(OverkizState.CORE_TARGET_TEMPERATURE):
+        # core:TargetTemperatureState stays pinned to comfort in auto mode.
+        state_name = (
+            OverkizState.IO_EFFECTIVE_TEMPERATURE_SETPOINT
+            if self.hvac_mode == HVACMode.AUTO
+            else OverkizState.CORE_TARGET_TEMPERATURE
+        )
+        if state := self.device.states.get(state_name):
             return state.value_as_float
         return None
 
@@ -187,6 +193,10 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_TARGET_TEMPERATURE, temperature
+        # setTargetTemperature would overwrite comfort instead of the preset.
+        command = (
+            OverkizCommand.SET_DEROGATED_TARGET_TEMPERATURE
+            if self.hvac_mode == HVACMode.AUTO
+            else OverkizCommand.SET_TARGET_TEMPERATURE
         )
+        await self.executor.async_execute_command(command, temperature)

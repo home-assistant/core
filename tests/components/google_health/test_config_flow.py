@@ -2,9 +2,11 @@
 
 from unittest.mock import AsyncMock, patch
 
+from google_health_api.const import HealthApiScope
 from google_health_api.exceptions import (
     GoogleHealthApiError,
-    HealthApiForbiddenException,
+    HealthApiScopeInsufficientException,
+    HealthApiServiceDisabledException,
 )
 from google_health_api.model import Identity
 import pytest
@@ -20,6 +22,8 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
+
+from .conftest import HEALTH_USER_ID
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -63,6 +67,9 @@ async def test_full_flow(
         "&scope=https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
         "+https://www.googleapis.com/auth/googlehealth.profile.readonly"
         "+https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
+        "+https://www.googleapis.com/auth/googlehealth.nutrition.readonly"
+        "+https://www.googleapis.com/auth/googlehealth.settings.readonly"
+        "+https://www.googleapis.com/auth/googlehealth.sleep.readonly"
         "+https://www.googleapis.com/auth/userinfo.profile"
         "&access_type=offline"
         "&prompt=consent"
@@ -87,9 +94,58 @@ async def test_full_flow(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Allen"
-    assert result["result"].unique_id == "mock-health-user-id"
+    assert result["title"] == "Test"
+    assert result["result"].unique_id == HEALTH_USER_ID
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.usefixtures(
+    "current_request_with_host",
+    "mock_setup_entry",
+    "setup_credentials",
+    "mock_google_health_client",
+)
+async def test_already_configured(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test config flow aborts when account is already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=HEALTH_USER_ID,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+            "scope": " ".join(OAUTH_SCOPES),
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures(
@@ -146,7 +202,7 @@ async def test_config_flow_get_identity_error(
     mock_google_health_client: AsyncMock,
 ) -> None:
     """Test config flow aborts if get_identity raises an API error."""
-    mock_google_health_client.get_identity.side_effect = GoogleHealthApiError
+    mock_google_health_client.get_identity.side_effect = GoogleHealthApiError("Error")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -188,7 +244,9 @@ async def test_config_flow_api_not_enabled(
     mock_google_health_client: AsyncMock,
 ) -> None:
     """Test config flow aborts if the Google Health API is not enabled."""
-    mock_google_health_client.get_identity.side_effect = HealthApiForbiddenException
+    mock_google_health_client.get_identity.side_effect = (
+        HealthApiServiceDisabledException
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -221,6 +279,50 @@ async def test_config_flow_api_not_enabled(
     assert result["description_placeholders"] == {
         "url": "https://console.developers.google.com/apis/api/health.googleapis.com/overview"
     }
+
+
+@pytest.mark.usefixtures(
+    "current_request_with_host", "mock_setup_entry", "setup_credentials"
+)
+async def test_config_flow_scope_insufficient(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_google_health_client: AsyncMock,
+) -> None:
+    """Test config flow aborts if the OAuth token has insufficient scope."""
+    mock_google_health_client.get_identity.side_effect = (
+        HealthApiScopeInsufficientException
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+            "scope": " ".join(OAUTH_SCOPES),
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "missing_profile_scope"
 
 
 @pytest.mark.usefixtures(
@@ -264,7 +366,7 @@ async def test_config_flow_missing_health_user_id(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == "missing_profile_scope"
 
 
 @pytest.mark.usefixtures(
@@ -328,7 +430,7 @@ async def test_reauth_flow(
                 "scope": " ".join(OAUTH_SCOPES),
             },
         },
-        unique_id="mock-health-user-id",
+        unique_id=HEALTH_USER_ID,
     )
     config_entry.add_to_hass(hass)
 
@@ -376,15 +478,15 @@ async def test_reauth_flow(
         IDENTITY_URL,
         json={
             "name": "users/me/identity",
-            "healthUserId": "mock-health-user-id",
+            "healthUserId": HEALTH_USER_ID,
         },
     )
 
     aioclient_mock.get(
         USERINFO_URL,
         json={
-            "givenName": "Allen",
-            "name": "Allen Porter",
+            "givenName": "Test",
+            "name": "Test User",
         },
     )
 
@@ -399,3 +501,155 @@ async def test_reauth_flow(
     assert config_entry.data["token"]["access_token"] == "new-access-token"
     assert config_entry.data["token"]["refresh_token"] == "new-refresh-token"
     assert len(mock_setup.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    setup_credentials: None,
+) -> None:
+    """Test reconfigure flow completes successfully."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": "google",
+            "token": {
+                "access_token": "old-access-token",
+                "refresh_token": "old-refresh-token",
+                "scope": HealthApiScope.PROFILE_READ,
+            },
+        },
+        unique_id=HEALTH_USER_ID,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": config_entry.entry_id,
+        },
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "new-refresh-token",
+            "access_token": "new-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+            "scope": " ".join(OAUTH_SCOPES),
+        },
+    )
+
+    aioclient_mock.get(
+        IDENTITY_URL,
+        json={
+            "name": "users/me/identity",
+            "healthUserId": HEALTH_USER_ID,
+        },
+    )
+
+    aioclient_mock.get(
+        USERINFO_URL,
+        json={
+            "givenName": "Test",
+            "name": "Test User",
+        },
+    )
+
+    with patch(
+        "homeassistant.components.google_health.async_setup_entry", return_value=True
+    ) as mock_setup:
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+
+    assert config_entry.data["token"]["access_token"] == "new-access-token"
+    assert config_entry.data["token"]["refresh_token"] == "new-refresh-token"
+    assert config_entry.data["token"]["scope"] == " ".join(OAUTH_SCOPES)
+    assert len(mock_setup.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reconfigure_flow_wrong_account(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    setup_credentials: None,
+) -> None:
+    """Test reconfigure flow aborts if the wrong account is authenticated."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": "google",
+            "token": {
+                "access_token": "old-access-token",
+                "refresh_token": "old-refresh-token",
+                "scope": " ".join(OAUTH_SCOPES),
+            },
+        },
+        unique_id=HEALTH_USER_ID,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": config_entry.entry_id,
+        },
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "new-refresh-token",
+            "access_token": "new-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+            "scope": " ".join(OAUTH_SCOPES),
+        },
+    )
+
+    aioclient_mock.get(
+        IDENTITY_URL,
+        json={
+            "name": "users/me/identity",
+            "healthUserId": "wrong-health-user-id",
+        },
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "wrong_account"

@@ -5,7 +5,7 @@ from contextlib import suppress
 import logging
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_PAYLOAD, CONF_PLATFORM, CONF_VALUE_TEMPLATE
 from homeassistant.core import (
@@ -42,13 +42,13 @@ from .util import valid_subscribe_topic, valid_subscribe_topic_template
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): DOMAIN,
-        vol.Required(CONF_TOPIC): valid_subscribe_topic_template,
-        vol.Optional(CONF_PAYLOAD): cv.template,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
-        vol.Optional(CONF_QOS, default=DEFAULT_QOS): vol.All(
-            vol.Coerce(int), vol.In([0, 1, 2])
+        probatio.Required(CONF_PLATFORM): DOMAIN,
+        probatio.Required(CONF_TOPIC): valid_subscribe_topic_template,
+        probatio.Optional(CONF_PAYLOAD): cv.template,
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
+        probatio.Optional(CONF_QOS, default=DEFAULT_QOS): probatio.All(
+            probatio.Coerce(int), probatio.In([0, 1, 2])
         ),
     }
 )

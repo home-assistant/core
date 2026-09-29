@@ -8,7 +8,7 @@ from typing import Any, cast, override
 
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
-from aioshelly.const import MODEL_VALVE
+from aioshelly.const import DEFAULT_HTTPS_PORT, MODEL_VALVE
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -150,7 +150,9 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
     @cached_property
     def configuration_url(self) -> str:
         """Return the configuration URL for the device."""
-        return f"http://{get_host(self.config_entry.data[CONF_HOST])}:{get_http_port(self.config_entry.data)}"
+        port = get_http_port(self.config_entry.data)
+        scheme = "https" if port == DEFAULT_HTTPS_PORT else "http"
+        return f"{scheme}://{get_host(self.config_entry.data[CONF_HOST])}:{port}"
 
     @cached_property
     def model(self) -> str:
@@ -532,7 +534,6 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._ota_event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._connect_task: asyncio.Task | None = None
-        entry.async_on_unload(entry.add_update_listener(self._async_update_listener))
 
     @cached_property
     def bluetooth_source(self) -> str:
@@ -616,15 +617,6 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._event_listeners.append(event_callback)
 
         return _unsubscribe
-
-    async def _async_update_listener(
-        self, hass: HomeAssistant, entry: ShellyConfigEntry
-    ) -> None:
-        """Reconfigure on update."""
-        async with self._connection_lock:
-            if self.connected:
-                self._async_run_disconnected_events()
-                await self._async_run_connected_events()
 
     @callback
     def _async_device_event_handler(self, event_data: dict[str, Any]) -> None:
@@ -907,18 +899,17 @@ def get_block_coordinator_by_device_id(
     hass: HomeAssistant, device_id: str
 ) -> ShellyBlockCoordinator | None:
     """Get a Shelly block device coordinator for the given device id."""
-    dev_reg = dr.async_get(hass)
-    if device := dev_reg.async_get(device_id):
-        for config_entry in device.config_entries:
-            entry = hass.config_entries.async_get_entry(config_entry)
-            if (
-                entry
-                and entry.state is ConfigEntryState.LOADED
-                and hasattr(entry, "runtime_data")
-                and isinstance(entry.runtime_data, ShellyEntryData)
-                and (coordinator := entry.runtime_data.block)
-            ):
-                return coordinator
+    _device, entry = dr.async_get_device_and_config_entry_for_domain(
+        hass, device_id, domain=DOMAIN
+    )
+    if (
+        entry is not None
+        and entry.state is ConfigEntryState.LOADED
+        and hasattr(entry, "runtime_data")
+        and isinstance(entry.runtime_data, ShellyEntryData)
+        and (coordinator := entry.runtime_data.block)
+    ):
+        return coordinator
 
     return None
 
@@ -927,18 +918,17 @@ def get_rpc_coordinator_by_device_id(
     hass: HomeAssistant, device_id: str
 ) -> ShellyRpcCoordinator | None:
     """Get a Shelly RPC device coordinator for the given device id."""
-    dev_reg = dr.async_get(hass)
-    if device := dev_reg.async_get(device_id):
-        for config_entry in device.config_entries:
-            entry = hass.config_entries.async_get_entry(config_entry)
-            if (
-                entry
-                and entry.state is ConfigEntryState.LOADED
-                and hasattr(entry, "runtime_data")
-                and isinstance(entry.runtime_data, ShellyEntryData)
-                and (coordinator := entry.runtime_data.rpc)
-            ):
-                return coordinator
+    _device, entry = dr.async_get_device_and_config_entry_for_domain(
+        hass, device_id, domain=DOMAIN
+    )
+    if (
+        entry is not None
+        and entry.state is ConfigEntryState.LOADED
+        and hasattr(entry, "runtime_data")
+        and isinstance(entry.runtime_data, ShellyEntryData)
+        and (coordinator := entry.runtime_data.rpc)
+    ):
+        return coordinator
 
     return None
 
