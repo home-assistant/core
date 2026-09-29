@@ -45,17 +45,9 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         value_fn=lambda coordinator: (
             float(point.price_tax_included.euro)
-            if (
-                point := next(
-                    (
-                        point
-                        for electricity_prices in (coordinator.data.electricity_prices,)
-                        if electricity_prices is not None
-                        for point in electricity_prices.prices
-                        if point.start_date <= dt_util.utcnow() < point.end_date
-                    ),
-                    None,
-                )
+            if coordinator.data.electricity_prices is not None
+            and (
+                point := coordinator.data.electricity_prices.price_at(dt_util.utcnow())
             )
             else None
         ),
@@ -69,18 +61,10 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         value_fn=lambda coordinator: (
             float(point.price_tax_included.euro)
-            if (
-                point := next(
-                    (
-                        point
-                        for electricity_prices in (coordinator.data.electricity_prices,)
-                        if electricity_prices is not None
-                        for point in electricity_prices.prices
-                        if point.start_date
-                        <= dt_util.utcnow() + timedelta(hours=1)
-                        < point.end_date
-                    ),
-                    None,
+            if coordinator.data.electricity_prices is not None
+            and (
+                point := coordinator.data.electricity_prices.price_at(
+                    dt_util.utcnow() + timedelta(hours=1)
                 )
             )
             else None
@@ -94,17 +78,9 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
         options=["low", "normal", "high"],
         value_fn=lambda coordinator: (
             point.tariff_group
-            if (
-                point := next(
-                    (
-                        point
-                        for electricity_prices in (coordinator.data.electricity_prices,)
-                        if electricity_prices is not None
-                        for point in electricity_prices.prices
-                        if point.start_date <= dt_util.utcnow() < point.end_date
-                    ),
-                    None,
-                )
+            if coordinator.data.electricity_prices is not None
+            and (
+                point := coordinator.data.electricity_prices.price_at(dt_util.utcnow())
             )
             else None
         ),
@@ -118,17 +94,9 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
         suggested_display_precision=0,
         value_fn=lambda coordinator: (
             float(point.sustainability_score.fraction * 100)
-            if (
-                point := next(
-                    (
-                        point
-                        for electricity_prices in (coordinator.data.electricity_prices,)
-                        if electricity_prices is not None
-                        for point in electricity_prices.prices
-                        if point.start_date <= dt_util.utcnow() < point.end_date
-                    ),
-                    None,
-                )
+            if coordinator.data.electricity_prices is not None
+            and (
+                point := coordinator.data.electricity_prices.price_at(dt_util.utcnow())
             )
             and point.sustainability_score is not None
             else None
