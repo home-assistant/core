@@ -1194,9 +1194,7 @@ async def test_get_events_with_status(
 
 def _mock_calendar_holding(name: str, vevents: list[str]) -> Mock:
     """Return a mock calendar holding exactly the given VEVENTs."""
-    calendar = Mock()
-    calendar.name = name
-    calendar.get_supported_components = MagicMock(return_value=["VEVENT"])
+    calendar = _mock_calendar(name)
     calendar.search = MagicMock(
         return_value=[
             Event(None, f"{idx}.ics", vevent, calendar, str(idx))

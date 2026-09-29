@@ -44,7 +44,7 @@ def _get_status(vevent: CalendarObjectResource) -> CalendarEventStatus | None:
         return None
 
 
-def _is_cancelled(vevent: caldav.CalendarObjectResource) -> bool:
+def _is_cancelled(vevent: CalendarObjectResource) -> bool:
     """Return whether a VEVENT has been called off.
 
     rfc5545 keeps a cancelled event in the calendar rather than deleting it, so
