@@ -405,7 +405,10 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
         are not logged. Any other non-numeric value is logged once, until the
         sensor receives a valid value again.
         """
-        if not isinstance(value, str) or not self._numeric_state_expected:
+        if not self._numeric_state_expected:
+            return value
+        if not isinstance(value, str):
+            self._non_numeric_value_logged = False
             return value
         if value in ("None", STATE_UNKNOWN):
             return None
@@ -422,7 +425,7 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
                 f"{__package__}.{self.entity_id.split('.', maxsplit=1)[0]}"
             ).warning(
                 "Sensor %s expects a numeric value but received '%s', which is"
-                " not a number; its state is set to unknown",
+                " not a finite number; its state is set to unknown",
                 self.entity_id,
                 value,
             )

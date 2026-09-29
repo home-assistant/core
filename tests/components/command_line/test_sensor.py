@@ -1046,11 +1046,7 @@ async def test_non_numeric_value_for_numeric_sensor(
     value_template: str,
     log_count: int,
 ) -> None:
-    """Test a numeric sensor whose template renders a non-numeric value.
-
-    The state becomes unknown instead of an exception being raised on every
-    update, and a real non-numeric value is logged once, not on every update.
-    """
+    """Test a numeric sensor whose template renders a non-numeric value."""
     await setup.async_setup_component(hass, HA_DOMAIN, {})
     await setup.async_setup_component(
         hass,
@@ -1075,9 +1071,8 @@ async def test_non_numeric_value_for_numeric_sensor(
     assert entity_state
     assert entity_state.state == STATE_UNKNOWN
     assert "has the non-numeric value" not in caplog.text
-    assert caplog.text.count("which is not a number") == log_count
+    assert caplog.text.count("which is not a finite number") == log_count
 
-    # A repeated bad value is not logged again
     await hass.services.async_call(
         HA_DOMAIN,
         SERVICE_UPDATE_ENTITY,
@@ -1086,7 +1081,7 @@ async def test_non_numeric_value_for_numeric_sensor(
     )
     await hass.async_block_till_done()
     assert hass.states.get("sensor.test").state == STATE_UNKNOWN
-    assert caplog.text.count("which is not a number") == log_count
+    assert caplog.text.count("which is not a finite number") == log_count
 
 
 async def test_numeric_value_after_non_numeric_value(
@@ -1112,7 +1107,7 @@ async def test_numeric_value_after_non_numeric_value(
         )
         await hass.async_block_till_done()
     assert hass.states.get("sensor.test").state == STATE_UNKNOWN
-    assert caplog.text.count("which is not a number") == 1
+    assert caplog.text.count("which is not a finite number") == 1
 
     with mock_asyncio_subprocess_run(b"5"):
         await hass.services.async_call(
@@ -1131,4 +1126,4 @@ async def test_numeric_value_after_non_numeric_value(
             blocking=True,
         )
     assert hass.states.get("sensor.test").state == STATE_UNKNOWN
-    assert caplog.text.count("which is not a number") == 2
+    assert caplog.text.count("which is not a finite number") == 2
