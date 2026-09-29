@@ -1447,7 +1447,7 @@
         "view_telegrams": "View telegrams"
       },
       "title": "Project",
-      "upload_description": "To use the project viewer please upload a KNX project first!",
+      "upload_description": "To use the project viewer, please upload a KNX project first!",
       "version": {
         "description": "The `XKNXProject` version used for parsing the ETS project was:",
         "minimum_required": "minimum version required",
