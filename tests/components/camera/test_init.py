@@ -214,9 +214,9 @@ async def test_snapshot_service(hass: HomeAssistant) -> None:
     mopen = mock_open()
 
     with (
-        patch("homeassistant.components.camera.open", mopen, create=True),
+        patch("homeassistant.components.camera.services.open", mopen, create=True),
         patch(
-            "homeassistant.components.camera.os.makedirs",
+            "homeassistant.components.camera.services.os.makedirs",
         ),
         patch.object(hass.config, "is_allowed_path", return_value=True),
     ):
@@ -244,9 +244,9 @@ async def test_snapshot_service_entity_id_variable_removed(hass: HomeAssistant) 
     mopen = mock_open()
 
     with (
-        patch("homeassistant.components.camera.open", mopen, create=True),
+        patch("homeassistant.components.camera.services.open", mopen, create=True),
         patch(
-            "homeassistant.components.camera.os.makedirs",
+            "homeassistant.components.camera.services.os.makedirs",
         ),
         patch.object(hass.config, "is_allowed_path", return_value=True),
     ):
@@ -269,9 +269,9 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
     mopen = mock_open()
 
     with (
-        patch("homeassistant.components.camera.open", mopen, create=True),
+        patch("homeassistant.components.camera.services.open", mopen, create=True),
         patch(
-            "homeassistant.components.camera.os.makedirs",
+            "homeassistant.components.camera.services.os.makedirs",
         ),
         pytest.raises(
             HomeAssistantError,
@@ -293,7 +293,7 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("target", "side_effect"),
     [
-        ("homeassistant.components.camera.os.makedirs", OSError),
+        ("homeassistant.components.camera.services.os.makedirs", OSError),
         (
             "homeassistant.components.demo.camera.DemoCamera.async_camera_image",
             TimeoutError,
@@ -955,7 +955,7 @@ async def test_snapshot_service_webrtc_provider(
 
     with (
         patch.object(camera_obj, "use_stream_for_stills", return_value=True),
-        patch("homeassistant.components.camera.open"),
+        patch("homeassistant.components.camera.services.open"),
         patch.object(
             camera_obj.webrtc_provider,
             "async_get_image",
@@ -963,7 +963,7 @@ async def test_snapshot_service_webrtc_provider(
         ) as webrtc_get_image_mock,
         patch.object(camera_obj, "stream", AsyncMock()) as stream_mock,
         patch(
-            "homeassistant.components.camera.os.makedirs",
+            "homeassistant.components.camera.services.os.makedirs",
         ),
         patch.object(hass.config, "is_allowed_path", return_value=True),
     ):

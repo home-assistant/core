@@ -195,6 +195,26 @@ async def test_dhcp_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_dhcp_updates_host(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test DHCP discovery updates the host of a device that changed IP address."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="1.1.1.2", hostname="SMA123456789", macaddress="0015bb00abcd"
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "1.1.1.2"
+
+
 async def test_dhcp_already_configured_duplicate(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

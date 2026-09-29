@@ -298,7 +298,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
         if not (match := HOSTNAME_SERIAL.match(discovery_info.hostname)):
             return self.async_abort(reason="not_supported")
         await self.async_set_unique_id(match.group(1))
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self._data[CONF_HOST]})
 
         return await self.async_step_discovery_confirm()
 
