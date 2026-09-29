@@ -467,6 +467,65 @@ async def test_sensors_streaming_dc_charging(
     assert hass.states.get("sensor.test_charger_power").state == "7"
 
 
+async def test_sensors_streaming_dc_charging_ended(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+) -> None:
+    """Test charger power drops a lingering DC value once charging stops."""
+    await setup_platform(hass, [Platform.SENSOR])
+    vin = VEHICLE_DATA_ALT["response"]["vin"]
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {
+                Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+                Signal.AC_CHARGING_POWER: 0,
+                Signal.DC_CHARGING_POWER: 148.2,
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test_charger_power").state == "148.2"
+
+    # DC power is not reset, only the charge state changes
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateDisconnected"},
+            "createdAt": "2024-10-04T10:45:18.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test_charger_power").state == "0"
+
+    # A lingering DC value resent while not charging stays ignored
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {Signal.DC_CHARGING_POWER: 148.2},
+            "createdAt": "2024-10-04T10:45:19.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test_charger_power").state == "0"
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {
+                Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+                Signal.AC_CHARGING_POWER: 7,
+            },
+            "createdAt": "2024-10-04T10:45:20.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test_charger_power").state == "7"
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors_streaming_tpms_none_clears_state(
     hass: HomeAssistant,
