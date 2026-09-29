@@ -696,7 +696,7 @@ async def test_migration_exceptions(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
+    assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.usefixtures("xbox_live_client", "authentication_manager")
@@ -731,7 +731,7 @@ async def test_migration_implementation_unavailable(hass: HomeAssistant) -> None
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
+    assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.usefixtures(

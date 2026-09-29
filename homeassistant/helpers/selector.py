@@ -136,6 +136,13 @@ def _validate_selector_reorder_config(config: Any) -> Any:
     return config
 
 
+def _validate_media_selector_config(config: Any) -> Any:
+    """Validate media selectors with image_upload option."""
+    if config.get("image_upload") and not config.get("accept"):
+        raise probatio.Invalid("image_upload can only be used when accept is not empty")
+    return config
+
+
 def make_selector_config_schema(schema_dict: dict | None = None) -> probatio.Schema:
     """Make selector config schema."""
     if schema_dict is None:
@@ -714,7 +721,7 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
-    def __call__(self, data: Any) -> int:
+    def __call__(self, data: Any) -> float:
         """Validate the passed selection."""
         range_min = self.config.get("min")
         range_max = self.config.get("max")
@@ -725,7 +732,7 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
         if range_max is None:
             range_max = self.config.get("max_mireds")
 
-        value: int = probatio.All(
+        value: float = probatio.All(
             probatio.Coerce(float),
             probatio.Range(
                 min=range_min,
@@ -1358,6 +1365,7 @@ class MediaSelectorConfig(BaseSelectorConfig, total=False):
 
     accept: list[str]
     multiple: bool
+    image_upload: bool
 
 
 @SELECTORS.register("media")
@@ -1366,11 +1374,15 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 
     selector_type = "media"
 
-    CONFIG_SCHEMA = make_selector_config_schema(
-        {
-            probatio.Optional("accept"): [str],
-            probatio.Optional("multiple", default=False): cv.boolean,
-        }
+    CONFIG_SCHEMA = probatio.All(
+        make_selector_config_schema(
+            {
+                probatio.Optional("accept"): [str],
+                probatio.Optional("multiple", default=False): cv.boolean,
+                probatio.Optional("image_upload", default=False): cv.boolean,
+            }
+        ),
+        _validate_media_selector_config,
     )
     DATA_SCHEMA = probatio.Schema(
         {
@@ -1750,6 +1762,7 @@ class NumericThresholdSelector(Selector[NumericThresholdSelectorConfig]):
 class ObjectSelectorField(TypedDict, total=False):
     """Class to represent an object selector fields dict."""
 
+    default: Any
     label: str
     required: bool
     selector: Required[Selector | dict[str, Any]]
@@ -1778,6 +1791,7 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
                     probatio.Required("selector"): probatio.Any(
                         Selector, validate_selector
                     ),
+                    probatio.Optional("default"): cv.match_all,
                     probatio.Optional("required"): bool,
                     probatio.Optional("label"): str,
                 }

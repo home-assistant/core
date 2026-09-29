@@ -5,7 +5,8 @@ import probatio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
-from . import ATTR_PERCENTAGE, DOMAIN, SERVICE_TURN_ON
+from . import ATTR_PERCENTAGE, SERVICE_TURN_ON
+from .const import DOMAIN
 
 INTENT_FAN_SET_SPEED = "HassFanSetSpeed"
 

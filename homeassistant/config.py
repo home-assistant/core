@@ -479,10 +479,13 @@ def stringify_invalid(
         message_prefix += f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
     path = "->".join(str(m) for m in exc.path)
     if exc.code == "extra_keys_not_allowed":
-        return (
-            f"{message_prefix}: '{exc.path[-1]}' is an invalid option for '{domain}', "
-            f"check: {path}{message_suffix}"
+        message = (
+            f"{message_prefix}: '{exc.path[-1]}' is an invalid option for '{domain}'"
         )
+        if candidates := exc.context.get("candidates"):
+            options = " or ".join(f"'{candidate}'" for candidate in candidates)
+            message += f" (did you mean {options}?)"
+        return f"{message}, check: {path}{message_suffix}"
     if exc.error_message == "required key not provided":
         return (
             f"{message_prefix}: required key '{exc.path[-1]}' not provided"
@@ -823,8 +826,8 @@ def _get_log_message_and_stack_print_pref(
                 hass, exception, platform_path, platform_config, link
             )
             if annotation := find_annotation(platform_config, exception.path):
-                placeholders["config_file"], line = annotation
-                placeholders["line"] = str(line)
+                placeholders["config_file"] = _relpath(hass, annotation[0])
+                placeholders["line"] = str(annotation[1])
         else:
             if TYPE_CHECKING:
                 assert isinstance(exception, HomeAssistantError)
@@ -832,8 +835,8 @@ def _get_log_message_and_stack_print_pref(
                 hass, exception, platform_path, platform_config, link
             )
             if annotation := find_annotation(platform_config, [platform_path]):
-                placeholders["config_file"], line = annotation
-                placeholders["line"] = str(line)
+                placeholders["config_file"] = _relpath(hass, annotation[0])
+                placeholders["line"] = str(annotation[1])
             show_stack_trace = True
         return (log_message, show_stack_trace, placeholders)
 

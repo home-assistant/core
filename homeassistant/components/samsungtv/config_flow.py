@@ -26,7 +26,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TOKEN,
 )
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
@@ -39,7 +39,12 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
+from .bridge import (
+    SamsungTVBridge,
+    async_get_device_info,
+    mac_from_device_info,
+    model_may_require_encryption,
+)
 from .const import (
     CONF_MANUFACTURER,
     CONF_SESSION_ID,
@@ -47,6 +52,7 @@ from .const import (
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DEFAULT_MANUFACTURER,
     DOMAIN,
+    ENCRYPTED_WEBSOCKET_PORT,
     LOGGER,
     METHOD_ENCRYPTED_WEBSOCKET,
     METHOD_LEGACY,
@@ -324,6 +330,26 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             result = await self._bridge.async_try_connect()
             if result == RESULT_SUCCESS:
                 return self._get_entry_from_bridge()
+            if result == RESULT_CANNOT_CONNECT and model_may_require_encryption(
+                self._model
+            ):
+                # Some 2016 K-series sets advertise the websocket method but only
+                # pair via the encrypted PIN flow; try it before giving up
+                LOGGER.debug(
+                    "Websocket pairing failed for %s (%s), falling back to encrypted",
+                    self._host,
+                    self._model,
+                )
+                encrypted_bridge = SamsungTVBridge.get_bridge(
+                    self.hass,
+                    METHOD_ENCRYPTED_WEBSOCKET,
+                    self._host,
+                    ENCRYPTED_WEBSOCKET_PORT,
+                )
+                if await encrypted_bridge.async_try_connect() == RESULT_CANNOT_CONNECT:
+                    raise AbortFlow(RESULT_CANNOT_CONNECT)
+                self._bridge = encrypted_bridge
+                return await self.async_step_encrypted_pairing()
             if result != RESULT_AUTH_MISSING:
                 raise AbortFlow(result)
             errors = {"base": RESULT_AUTH_MISSING}
@@ -463,7 +489,9 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_abort_if_host_already_in_progress(self) -> None:
         if self.hass.config_entries.flow.async_has_matching_flow(self):
-            raise AbortFlow("already_in_progress")
+            raise AbortFlow(
+                "already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
 
     @override
     def is_matching(self, other_flow: Self) -> bool:

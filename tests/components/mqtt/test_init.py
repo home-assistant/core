@@ -37,7 +37,12 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+    UnknownUser,
+)
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -56,6 +61,7 @@ from tests.common import (
     MockEntity,
     MockEntityPlatform,
     MockMqttReasonCode,
+    MockUser,
     async_capture_events,
     async_fire_mqtt_message,
     async_fire_time_changed,
@@ -1111,6 +1117,77 @@ async def test_dump_service(
     writes = mopen.return_value.writelines.mock_calls
     assert len(writes) == 1
     assert writes[0][1][0] == ["bla/1,test1\n", "bla/2,test2\n"]
+
+
+ADMIN_SERVICE_CALLS = [
+    pytest.param(
+        mqtt.SERVICE_PUBLISH,
+        {mqtt.ATTR_TOPIC: "test/topic", mqtt.ATTR_PAYLOAD: "payload"},
+        id="publish",
+    ),
+    pytest.param(mqtt.SERVICE_DUMP, {"topic": "bla/#", "duration": 3}, id="dump"),
+]
+
+
+@pytest.mark.parametrize(("service", "service_data"), ADMIN_SERVICE_CALLS)
+async def test_admin_service_as_admin(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass_admin_user: MockUser,
+    service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test an admin user can call the action."""
+    await mqtt_mock_entry()
+
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        service,
+        service_data,
+        blocking=True,
+        context=ha.Context(user_id=hass_admin_user.id),
+    )
+
+
+@pytest.mark.parametrize(("service", "service_data"), ADMIN_SERVICE_CALLS)
+async def test_admin_service_as_non_admin(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass_read_only_user: MockUser,
+    service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test a non-admin user cannot call the action."""
+    await mqtt_mock_entry()
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            mqtt.DOMAIN,
+            service,
+            service_data,
+            blocking=True,
+            context=ha.Context(user_id=hass_read_only_user.id),
+        )
+
+
+@pytest.mark.parametrize(("service", "service_data"), ADMIN_SERVICE_CALLS)
+async def test_admin_service_as_unknown_user(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test a user that no longer exists cannot call the action."""
+    await mqtt_mock_entry()
+
+    with pytest.raises(UnknownUser):
+        await hass.services.async_call(
+            mqtt.DOMAIN,
+            service,
+            service_data,
+            blocking=True,
+            context=ha.Context(user_id="i-am-not-a-user"),
+        )
 
 
 async def test_mqtt_ws_remove_discovered_device(

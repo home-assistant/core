@@ -204,9 +204,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> boo
 async def async_migrate_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> bool:
     """Migrate old config entry schema to the current version."""
     if entry.version == 1:
-        # Clear legacy data only.
-        # Raising ConfigEntryNotReady from async_migrate_entry would permanently land
-        # the entry in MIGRATION_ERROR with no retry path.
         hass.config_entries.async_update_entry(entry, version=2, data={})
         return True
     return False

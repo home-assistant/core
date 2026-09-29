@@ -23,7 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.entity_component import EntityComponent
 
-from . import MediaPlayerDeviceClass, MediaPlayerEntity
+from . import MediaPlayerEntity
 from .browse_media import SearchMedia
 from .const import (
     ATTR_MEDIA_FILTER_CLASSES,
@@ -42,6 +42,7 @@ from .const import (
     SERVICE_PLAY_MEDIA,
     SERVICE_SEARCH_MEDIA,
     MediaClass,
+    MediaPlayerDeviceClass,
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )

@@ -12,13 +12,13 @@ from . import (
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
     ATTR_TEMPERATURE,
-    DOMAIN,
     INTENT_SET_FAN_MODE,
     INTENT_SET_TEMPERATURE,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
 )
+from .const import DOMAIN
 
 FAN_MODE_TRANSLATION_PREFIX = (
     f"component.{DOMAIN}.entity_component._.state_attributes.{ATTR_FAN_MODE}.state."
