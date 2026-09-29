@@ -377,9 +377,33 @@ class _StreamState:
     current_search_queries: list[str] | None = None
     current_search_signature: str | None = None
 
+    in_thought: bool = False
+    current_thought_start: int = 0
+    current_thought_length: int = 0
+    current_thought_signature: str | None = None
+
+
+def _flush_active_thought(state: _StreamState) -> None:
+    """Flush active thought part to part_details if any."""
+    if state.in_thought:
+        if state.current_thought_signature:
+            state.part_details.append(
+                PartDetails(
+                    part_type="thought",
+                    index=state.current_thought_start,
+                    length=state.current_thought_length,
+                    thought_signature=state.current_thought_signature,
+                )
+            )
+        state.in_thought = False
+        state.current_thought_signature = None
+        state.current_thought_length = 0
+
 
 def _handle_step_start(step: interactions.Step, state: _StreamState) -> None:
     """Handle step start events."""
+    _flush_active_thought(state)
+
     match step:
         case interactions.FunctionCallStep(id=call_id, name=name, arguments=args):
             state.current_tool_id = call_id
@@ -396,6 +420,11 @@ def _handle_step_start(step: interactions.Step, state: _StreamState) -> None:
             state.current_search_queries = (
                 list(args.queries) if args and args.queries is not None else None
             )
+        case interactions.ThoughtStep(signature=sig):
+            state.in_thought = True
+            state.current_thought_start = state.thinking_content_index
+            state.current_thought_length = 0
+            state.current_thought_signature = sig or None
 
 
 def _handle_step_delta(
@@ -405,6 +434,7 @@ def _handle_step_delta(
     match delta:
         case interactions.TextDelta(text=text):
             if text:
+                _flush_active_thought(state)
                 state.content_index += len(text)
                 return {"content": text}
 
@@ -412,19 +442,22 @@ def _handle_step_delta(
             content=interactions.TextContent(text=text)
         ):
             if text:
+                if not state.in_thought:
+                    state.in_thought = True
+                    state.current_thought_start = state.thinking_content_index
+                    state.current_thought_length = 0
+                    state.current_thought_signature = None
+                state.current_thought_length += len(text)
                 state.thinking_content_index += len(text)
                 return {"thinking_content": text}
 
         case interactions.ThoughtSignatureDelta(signature=sig):
             if sig:
-                state.part_details.append(
-                    PartDetails(
-                        part_type="thought",
-                        index=state.thinking_content_index,
-                        length=0,
-                        thought_signature=sig,
-                    )
-                )
+                if not state.in_thought:
+                    state.in_thought = True
+                    state.current_thought_start = state.thinking_content_index
+                    state.current_thought_length = 0
+                state.current_thought_signature = sig
 
         case interactions.GoogleSearchCallDelta(signature=sig, arguments=args):
             if sig:
@@ -443,6 +476,8 @@ def _handle_step_stop(
     state: _StreamState,
 ) -> conversation.AssistantContentDeltaDict | None:
     """Handle step stop events."""
+    _flush_active_thought(state)
+
     if state.current_tool_name:
         tool_args = _parse_tool_args(
             state.current_tool_args_str, state.current_tool_args_dict
@@ -521,6 +556,7 @@ async def transform_interactions_stream(
                     if out_delta := _handle_step_stop(state):
                         yield out_delta
 
+        _flush_active_thought(state)
         if state.part_details:
             yield {"native": ContentDetails(part_details=state.part_details)}
 
