@@ -20,6 +20,7 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from . import (
     AIR_PURIFIER_JP_SERVICE_INFO,
@@ -786,6 +787,7 @@ async def test_circulator_fan_pro_light_services(
 )
 async def test_circulator_fan_pro_light_state(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
     is_on: bool,
     level: int,
@@ -814,4 +816,6 @@ async def test_circulator_fan_pro_light_state(
         assert state.state == expected_state
         assert state.attributes.get(ATTR_BRIGHTNESS) == expected_brightness
         assert hass.states.get("sensor.test_name_battery") is not None
-        assert hass.states.get("sensor.test_name_bluetooth_signal") is not None
+        assert (
+            entity_registry.async_get("sensor.test_name_bluetooth_signal") is not None
+        )
