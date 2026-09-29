@@ -13,16 +13,22 @@ from tuya_device_handlers.device_wrapper.common import (
 )
 from tuya_device_handlers.device_wrapper.sensor import (
     DeltaIntegerWrapper,
+    ElectricityApparentPowerHexStringWrapper,
     ElectricityApparentPowerJsonWrapper,
     ElectricityApparentPowerRawWrapper,
+    ElectricityCurrentHexStringWrapper,
     ElectricityCurrentJsonWrapper,
     ElectricityCurrentRawWrapper,
+    ElectricityPowerFactorHexStringWrapper,
     ElectricityPowerFactorJsonWrapper,
     ElectricityPowerFactorRawWrapper,
+    ElectricityPowerHexStringWrapper,
     ElectricityPowerJsonWrapper,
     ElectricityPowerRawWrapper,
+    ElectricityReactivePowerHexStringWrapper,
     ElectricityReactivePowerJsonWrapper,
     ElectricityReactivePowerRawWrapper,
+    ElectricityVoltageHexStringWrapper,
     ElectricityVoltageJsonWrapper,
     ElectricityVoltageRawWrapper,
     WindDirectionEnumWrapper,
@@ -47,19 +53,22 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import ChildDeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
     DEVICE_CLASS_UNITS,
+    DOMAIN,
     LOGGER,
     TUYA_DISCOVERY_NEW,
     DeviceCategory,
     DPCode,
 )
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity, TuyaEntityDescription
+from .entity import TuyaEntity, TuyaEntityDescription, get_child_device_info
 from .util import get_device_temp_unit_convert
 
 
@@ -133,6 +142,73 @@ def _electricity_data(dpcode: DPCode) -> tuple[TuyaSensorEntityDescription, ...]
                 ElectricityPowerFactorRawWrapper,
                 ElectricityPowerFactorJsonWrapper,
             ),
+        ),
+    )
+
+
+def _has_multiple_phase_channels(device: CustomerDevice) -> bool:
+    """Return if the device reports more than one indexed phase channel."""
+    return DPCode.PHASE_S2 in device.status_range
+
+
+def _indexed_electricity_data(
+    dpcode: DPCode, index: int
+) -> tuple[TuyaSensorEntityDescription, ...]:
+    """Build sensors extracted from an indexed hex-string electricity DPCode."""
+    return (
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}electriccurrent",
+            dpcode=dpcode,
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(ElectricityCurrentHexStringWrapper,),
+            channel_index=index,
+            channel_condition=_has_multiple_phase_channels,
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}power",
+            dpcode=dpcode,
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(ElectricityPowerHexStringWrapper,),
+            channel_index=index,
+            channel_condition=_has_multiple_phase_channels,
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}voltage",
+            dpcode=dpcode,
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(ElectricityVoltageHexStringWrapper,),
+            channel_index=index,
+            channel_condition=_has_multiple_phase_channels,
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}reactivepower",
+            dpcode=dpcode,
+            device_class=SensorDeviceClass.REACTIVE_POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(ElectricityReactivePowerHexStringWrapper,),
+            channel_index=index,
+            channel_condition=_has_multiple_phase_channels,
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}apparentpower",
+            dpcode=dpcode,
+            device_class=SensorDeviceClass.APPARENT_POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(ElectricityApparentPowerHexStringWrapper,),
+            channel_index=index,
+            channel_condition=_has_multiple_phase_channels,
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}powerfactor",
+            dpcode=dpcode,
+            device_class=SensorDeviceClass.POWER_FACTOR,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(ElectricityPowerFactorHexStringWrapper,),
+            channel_index=index,
+            channel_condition=_has_multiple_phase_channels,
         ),
     )
 
@@ -1705,6 +1781,13 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         *_electricity_data(DPCode.PHASE_A),
         *_electricity_data(DPCode.PHASE_B),
         *_electricity_data(DPCode.PHASE_C),
+        *(
+            description
+            for index in range(1, 21)
+            for description in _indexed_electricity_data(
+                DPCode(f"phase_s{index}"), index
+            )
+        ),
     ),
     DeviceCategory.ZNJDQ: (
         TuyaSensorEntityDescription(
@@ -1836,8 +1919,21 @@ async def async_setup_entry(
         for device_id in device_ids:
             device = manager.device_map[device_id]
             if descriptions := SENSORS.get(device.category):
+                parent_device_id = dr.async_get_device_id_by_identifier(
+                    hass,
+                    (DOMAIN, device.id),
+                    config_entry_id=entry.entry_id,
+                )
                 entities.extend(
-                    TuyaSensorEntity(device, manager, description, definition)
+                    TuyaSensorEntity(
+                        device,
+                        manager,
+                        description,
+                        definition,
+                        device_info=get_child_device_info(
+                            device, parent_device_id, description
+                        ),
+                    )
                     for description in descriptions
                     if (
                         definition := get_default_definition(
@@ -1868,9 +1964,11 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         device_manager: Manager,
         description: TuyaSensorEntityDescription,
         definition: SensorDefinition,
+        *,
+        device_info: ChildDeviceInfo | None = None,
     ) -> None:
         """Init Tuya sensor."""
-        super().__init__(device, device_manager, description)
+        super().__init__(device, device_manager, description, device_info=device_info)
         self._dpcode_wrapper = definition.sensor_wrapper
 
         if description.suggested_unit_of_measurement is None:

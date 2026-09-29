@@ -50,7 +50,7 @@ from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import llm
 
-from .const import CONF_REQUIRE_ADMIN, DOMAIN
+from .const import CONF_ALL_LLM_APIS, CONF_REQUIRE_ADMIN, DOMAIN
 from .server import create_server
 from .session import Session
 from .types import MCPServerConfigEntry
@@ -91,6 +91,16 @@ def async_get_config_entry(hass: HomeAssistant) -> MCPServerConfigEntry:
     if len(config_entries) > 1:
         raise HTTPNotFound(text="Found multiple Model Context Protocol configurations")
     return config_entries[0]
+
+
+def _entry_llm_api_ids(
+    hass: HomeAssistant, entry: MCPServerConfigEntry
+) -> str | list[str]:
+    """Return the LLM APIs served by the config entry."""
+    if entry.data[CONF_ALL_LLM_APIS]:
+        return [api.id for api in llm.async_get_apis(hass)]
+    api_ids: str | list[str] = entry.data[CONF_LLM_HASS_API]
+    return api_ids
 
 
 def _validate_admin(request: web.Request, entry: MCPServerConfigEntry) -> None:
@@ -183,7 +193,7 @@ class ModelContextProtocolSSEView(HomeAssistantView):
         session_manager = entry.runtime_data
 
         server, options = await create_mcp_server(
-            hass, self.context(request), entry.data[CONF_LLM_HASS_API]
+            hass, self.context(request), _entry_llm_api_ids(hass, entry)
         )
 
         async with (
@@ -318,7 +328,7 @@ class ModelContextProtocolStreamableView(HomeAssistantView):
         entry = async_get_config_entry(hass)
         _validate_admin(request, entry)
         return await _async_handle_streamable_message(
-            request, self.context(request), entry.data[CONF_LLM_HASS_API]
+            request, self.context(request), _entry_llm_api_ids(hass, entry)
         )
 
 

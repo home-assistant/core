@@ -6,11 +6,16 @@ from typing import Any
 from unittest.mock import MagicMock, create_autospec, patch
 
 from boschshcpy import (
+    AlarmService,
     BatteryLevelService,
     BypassService,
+    CameraLightService,
     PowerSwitchService,
+    PrivacyModeService,
     RoutingService,
     SHCBatteryDevice,
+    SHCCameraEyes,
+    SHCCameraOutdoorGen2,
     SHCLightSwitchBSM,
     SHCMicromoduleBlinds,
     SHCMicromoduleRelay,
@@ -75,6 +80,7 @@ _EMPTY_DEVICE_BUCKETS: dict[str, Any] = {
     for bucket in (
         "camera_360",
         "camera_eyes",
+        "camera_outdoor_gen2",
         "light_switches_bsm",
         "micromodule_blinds",
         "micromodule_dimmers",
@@ -159,6 +165,46 @@ def battery_only_device(
     device.device_model = "MD"
     device.status = "AVAILABLE"
     device.deleted = False
+    return device
+
+
+def camera_eyes_device(
+    device_id: str = "hdm:Cameras:eyes-1",
+    name: str = "Camera Eyes",
+    cameralight: CameraLightService.State = CameraLightService.State.OFF,
+) -> SHCCameraEyes:
+    """Build a minimal device double for the camera_eyes bucket."""
+    device = create_autospec(SHCCameraEyes, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "CAMERA_EYES"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.cameralight = cameralight
+    return device
+
+
+def camera_outdoor_gen2_device(
+    device_id: str = "hdm:Cameras:outdoorgen2-1",
+    name: str = "Outdoor Camera",
+    privacymode: PrivacyModeService.State = PrivacyModeService.State.ENABLED,
+) -> SHCCameraOutdoorGen2:
+    """Build a minimal device double for the camera_outdoor_gen2 bucket."""
+    device = create_autospec(SHCCameraOutdoorGen2, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "CAMERA_OUTDOOR_GEN2"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.privacymode = privacymode
     return device
 
 
@@ -311,6 +357,9 @@ def micromodule_relay_device(
     device_id: str = "hdm:ZigBee:relay1",
     name: str = "Relay",
     child_lock: bool = False,
+    supports_switch_configuration: bool = False,
+    swap_inputs: bool = False,
+    swap_outputs: bool = False,
 ) -> SHCMicromoduleRelay:
     """Build a minimal device double for the micromodule_relays bucket."""
     device = create_autospec(SHCMicromoduleRelay, instance=True, spec_set=True)
@@ -324,6 +373,9 @@ def micromodule_relay_device(
     device.deleted = False
     device.status = "AVAILABLE"
     device.child_lock = child_lock
+    device.supports_switch_configuration = supports_switch_configuration
+    device.swap_inputs = swap_inputs
+    device.swap_outputs = swap_outputs
     return device
 
 
@@ -464,6 +516,26 @@ class FakeLatestMotionService:
         """No-op counterpart to subscribe_callback."""
 
 
+class FakeAlarmService:
+    """Minimal double of an Alarm DeviceService's event-callback API."""
+
+    id = "Alarm"
+
+    def __init__(self) -> None:
+        """Initialize the fake service's callback registry."""
+        self._event_callbacks: dict[str, Any] = {}
+
+    def register_event(self, event: str, callback: Any) -> None:
+        """Register a callback for the given device id."""
+        self._event_callbacks[event] = callback
+
+    def subscribe_callback(self, entity_id: str, callback: Any) -> None:
+        """No-op: SHCEntity subscribes to every device service's generic callback."""
+
+    def unsubscribe_callback(self, entity_id: str) -> None:
+        """No-op counterpart to subscribe_callback."""
+
+
 def motion_detector_device(
     device_id: str = "hdm:HomeMaticIP:motion1",
     name: str = "Motion Detector",
@@ -517,6 +589,7 @@ def smoke_detector_device(
     name: str = "Smoke Detector",
     supports_intrusion_alarm: bool = True,
     intrusion_alarm: bool = False,
+    alarmstate: AlarmService.State = AlarmService.State.IDLE_OFF,
 ) -> SHCSmokeDetector:
     """Build a minimal device double for the smoke_detectors bucket."""
     device = create_autospec(SHCSmokeDetector, instance=True, spec_set=True)
@@ -526,11 +599,12 @@ def smoke_detector_device(
     device.serial = f"serial-{device_id}"
     device.manufacturer = "Bosch"
     device.device_model = "SMOKE_DETECTOR2"
-    device.device_services = []
+    device.device_services = [FakeAlarmService()]
     device.deleted = False
     device.status = "AVAILABLE"
     device.supports_intrusion_alarm = supports_intrusion_alarm
     device.intrusion_alarm = intrusion_alarm
+    device.alarmstate = alarmstate
     return device
 
 

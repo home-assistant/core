@@ -15,6 +15,8 @@ from pyzonneplan import (
     Zonneplan,
     ZonneplanAuthenticationError,
     ZonneplanConnectionError,
+    ZonneplanError,
+    ZonneplanRateLimitError,
     ZonneplanTimeoutError,
 )
 from pyzonneplan.const import ConsumptionChart, PriceChart
@@ -131,6 +133,17 @@ class ZonneplanCoordinator(DataUpdateCoordinator[ZonneplanData]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
+            ) from err
+        except ZonneplanRateLimitError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="rate_limited",
+                retry_after=err.retry_after,
+            ) from err
+        except ZonneplanError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
             ) from err
 
         if TYPE_CHECKING:
