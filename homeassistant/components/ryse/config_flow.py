@@ -1,6 +1,5 @@
 """Config flow for RYSE BLE integration."""
 
-from collections.abc import Callable
 import logging
 from typing import Any, override
 
@@ -10,7 +9,6 @@ from ryseble import is_pairing_mode
 from ryseble.device import RyseBLEDevice
 
 from homeassistant.components.bluetooth import (
-    BaseHaRemoteScanner,
     BluetoothCallbackMatcher,
     BluetoothChange,
     BluetoothScannerDevice,
@@ -21,38 +19,40 @@ from homeassistant.components.bluetooth import (
     async_last_service_info,
     async_rediscover_address,
     async_register_callback,
-    async_scanner_devices_by_address,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ADDRESS
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 
-from .const import DOMAIN
+from . import _async_unpair
+from .const import DATA_LOCAL_WAITERS, DOMAIN, MANUFACTURER_ID, SERVICE_UUID
+from .helpers import async_cancel_local_waiter, async_local_scanner_devices
 
 _LOGGER = logging.getLogger(__name__)
 
-# Addresses waiting for a local adapter after a proxy-only discovery abort.
-_remove_local_waiters: dict[str, Callable[[], None]] = {}
+
+def _is_ryse_advertisement(info: BluetoothServiceInfoBleak) -> bool:
+    """Return True if *info* matches a RYSE shade."""
+    return (
+        MANUFACTURER_ID in info.manufacturer_data or SERVICE_UUID in info.service_uuids
+    )
 
 
-def _local_scanner_devices(
-    hass: HomeAssistant, address: str
-) -> list[BluetoothScannerDevice]:
-    """Return local-adapter scanner devices for *address*, ignoring proxies."""
-    return [
-        scanner_device
-        for scanner_device in async_scanner_devices_by_address(
-            hass, address, connectable=True
-        )
-        if not isinstance(scanner_device.scanner, BaseHaRemoteScanner)
-    ]
+def _async_local_waiters(hass: HomeAssistant) -> dict[str, CALLBACK_TYPE]:
+    """Return per-hass waiter unsubs, creating the store on first use."""
+    waiters = hass.data.get(DATA_LOCAL_WAITERS)
+    if waiters is None:
+        waiters = {}
+        hass.data[DATA_LOCAL_WAITERS] = waiters
 
+        @callback
+        def _async_unsubscribe_waiters(_event: Event) -> None:
+            while waiters:
+                _, unsub = waiters.popitem()
+                unsub()
 
-@callback
-def _async_cancel_local_waiter(address: str) -> None:
-    """Stop watching *address* for a local adapter."""
-    if unsub := _remove_local_waiters.pop(address, None):
-        unsub()
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_unsubscribe_waiters)
+    return waiters
 
 
 @callback
@@ -63,19 +63,19 @@ def _async_watch_for_local_route(hass: HomeAssistant, address: str) -> None:
     aborting flows. Rediscovery runs only after a local scanner sees the
     address.
     """
-    _async_cancel_local_waiter(address)
+    async_cancel_local_waiter(hass, address)
 
     @callback
     def _async_on_advertisement(
         _service_info: BluetoothServiceInfoBleak,
         _change: BluetoothChange,
     ) -> None:
-        if not _local_scanner_devices(hass, address):
+        if not async_local_scanner_devices(hass, address):
             return
-        _async_cancel_local_waiter(address)
+        async_cancel_local_waiter(hass, address)
         async_rediscover_address(hass, address)
 
-    _remove_local_waiters[address] = async_register_callback(
+    _async_local_waiters(hass)[address] = async_register_callback(
         hass,
         _async_on_advertisement,
         BluetoothCallbackMatcher(address=address, connectable=True),
@@ -144,7 +144,7 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
             if info not in candidates:
                 candidates.append(info)
 
-        scanner_devices = _local_scanner_devices(self.hass, service_info.address)
+        scanner_devices = async_local_scanner_devices(self.hass, service_info.address)
         if not scanner_devices:
             return None
         local_sources = {device.scanner.source for device in scanner_devices}
@@ -190,7 +190,8 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected error during pairing")
             return "unexpected_error"
         finally:
-            await device.unpair()
+            # Teardown errors must not override a successful pair or chosen error key.
+            await _async_unpair(device)
         return "cannot_connect"
 
     @override
@@ -199,6 +200,10 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle bluetooth discovery step."""
         await self.async_set_unique_id(discovery_info.address)
+        if self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, discovery_info.address
+        ):
+            async_cancel_local_waiter(self.hass, discovery_info.address)
         self._abort_if_unique_id_configured()
 
         latest = self._local_service_info(discovery_info, prefer_pairing=True)
@@ -208,7 +213,7 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(None)
             _async_watch_for_local_route(self.hass, discovery_info.address)
             return self.async_abort(reason="not_local_source")
-        _async_cancel_local_waiter(discovery_info.address)
+        async_cancel_local_waiter(self.hass, discovery_info.address)
         if not is_pairing_mode(latest.manufacturer_data):
             # Idle shades still match the manifest; drop them here so they are
             # not shown as unusable discoveries. Clear matcher history so a
@@ -220,6 +225,12 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovery_info = latest
 
         return await self.async_step_bluetooth_confirm()
+
+    @override
+    async def async_step_ignore(self, user_input: dict[str, Any]) -> ConfigFlowResult:
+        """Ignore a discovered shade and drop any leftover local-adapter waiter."""
+        async_cancel_local_waiter(self.hass, user_input["unique_id"])
+        return await super().async_step_ignore(user_input)
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -235,6 +246,7 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
             if error := await self._async_pair(discovery_info):
                 errors["base"] = error
             else:
+                async_cancel_local_waiter(self.hass, discovery_info.address)
                 return self.async_create_entry(
                     title=name,
                     data={},
@@ -266,6 +278,7 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
             if error := await self._async_pair(service_info):
                 errors["base"] = error
             else:
+                async_cancel_local_waiter(self.hass, address)
                 return self.async_create_entry(title=service_info.name, data={})
 
         if user_input is None:
@@ -278,6 +291,8 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
             discovered: dict[str, BluetoothServiceInfoBleak] = {}
             for info in async_discovered_service_info(self.hass, connectable=True):
                 if not info.name or info.address in current_ids:
+                    continue
+                if not _is_ryse_advertisement(info):
                     continue
                 local = self._local_service_info(info, prefer_pairing=True)
                 if local is None:
@@ -299,7 +314,7 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     probatio.Required(CONF_ADDRESS): probatio.In(
                         {
-                            address: info.name
+                            address: f"{info.name} ({address})"
                             for address, info in self._discovered_devices.items()
                         }
                     ),

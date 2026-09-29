@@ -3,27 +3,25 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from bleak.backends.device import BLEDevice
 import pytest
 
 from homeassistant.components.ryse.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
+from . import (
+    DEVICE_ADDRESS,
+    make_advertisement,
+    make_ble_device,
+    register_local_scanner,
+)
+
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-def mock_scanner_devices_by_address() -> Generator[MagicMock]:
-    """Default to a local adapter seeing the device."""
-    scanner_device = MagicMock()
-    scanner_device.scanner = MagicMock()
-    scanner_device.scanner.source = "local"
-    scanner_device.ble_device = MagicMock()
-    with patch(
-        "homeassistant.components.ryse.config_flow.async_scanner_devices_by_address",
-        create=True,
-        return_value=[scanner_device],
-    ) as mock:
-        yield mock
+def mock_bluetooth(enable_bluetooth: None) -> None:
+    """Set up the Bluetooth integration."""
 
 
 @pytest.fixture
@@ -32,7 +30,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="Test Device",
-        unique_id="AA:BB:CC:DD:EE:FF",
+        unique_id=DEVICE_ADDRESS,
         data={},
     )
 
@@ -41,7 +39,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_device() -> MagicMock:
     """Return a mocked RyseBLEDevice."""
     device = MagicMock()
-    device.address = "AA:BB:CC:DD:EE:FF"
+    device.address = DEVICE_ADDRESS
     device.update_callback = None
     device.client = None
     device.is_valid_position.return_value = True
@@ -74,24 +72,25 @@ def mock_ryse_ble_device(mock_device: MagicMock) -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_ble_device_from_address() -> Generator[MagicMock]:
-    """Patch the public scanner API so setup finds a local BLEDevice."""
-    local_device = MagicMock()
-    scanner_device = MagicMock()
-    scanner_device.scanner = MagicMock()
-    scanner_device.ble_device = local_device
-    with patch(
-        "homeassistant.components.ryse.async_scanner_devices_by_address",
-        return_value=[scanner_device],
-    ) as mock:
-        mock.ble_device = local_device
-        yield mock
+def local_ble_device() -> BLEDevice:
+    """Return the BLEDevice exposed by the local test scanner."""
+    return make_ble_device()
+
+
+@pytest.fixture
+def local_ryse_scanner(
+    hass: HomeAssistant, local_ble_device: BLEDevice
+) -> Generator[BLEDevice]:
+    """Register a local adapter that currently sees the RYSE shade."""
+    cancel = register_local_scanner(hass, local_ble_device, make_advertisement())
+    yield local_ble_device
+    cancel()
 
 
 @pytest.fixture
 async def setup_integration(
     hass: HomeAssistant,
-    mock_ble_device_from_address: MagicMock,
+    local_ryse_scanner: BLEDevice,
     mock_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:
     """Set up the RYSE integration and return its config entry."""

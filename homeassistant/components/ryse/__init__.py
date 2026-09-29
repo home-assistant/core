@@ -1,47 +1,57 @@
 """The RYSE integration."""
 
+from functools import partial
+import logging
+
 from bleak import BleakError
 from bleak.backends.device import BLEDevice
 from ryseble.device import RyseBLEDevice
 
 from homeassistant.components.bluetooth import (
-    BaseHaRemoteScanner,
     BluetoothCallbackMatcher,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
     async_register_callback,
-    async_scanner_devices_by_address,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
+from .helpers import async_cancel_local_waiter, async_local_scanner_devices
+
+_LOGGER = logging.getLogger(__name__)
+
 type RyseConfigEntry = ConfigEntry[RyseBLEDevice]
 
 PLATFORMS = [Platform.COVER]
 
 
-def _async_local_ble_device(hass: HomeAssistant, address: str) -> BLEDevice | None:
-    """Return the BLEDevice seen by a local adapter, ignoring Bluetooth proxies.
+async def _async_unpair(device: RyseBLEDevice) -> None:
+    """Release the BLE connection, ignoring teardown errors.
 
-    ``ryseble.pair()`` registers a BlueZ Agent1 on the Home Assistant host, which
-    cannot answer pairing for a device reached through an ESPHome/Shelly proxy.
+    Teardown must not replace a pairing/setup failure: the BLE link is often
+    already gone, and the original error is what setup should retry on.
     """
-    for scanner_device in async_scanner_devices_by_address(
-        hass, address, connectable=True
-    ):
-        if isinstance(scanner_device.scanner, BaseHaRemoteScanner):
-            continue
-        return scanner_device.ble_device
-    return None
+    try:
+        await device.unpair()
+    except Exception:
+        _LOGGER.debug("Error while releasing RYSE connection", exc_info=True)
+
+
+def _async_local_ble_device(hass: HomeAssistant, address: str) -> BLEDevice | None:
+    """Return the BLEDevice seen by a local adapter, ignoring Bluetooth proxies."""
+    devices = async_local_scanner_devices(hass, address)
+    return devices[0].ble_device if devices else None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> bool:
     """Set up RYSE."""
     address = entry.unique_id
     assert address is not None
+
+    async_cancel_local_waiter(hass, address)
 
     ble_device = _async_local_ble_device(hass, address)
     if not ble_device:
@@ -52,19 +62,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> bool
 
     device = RyseBLEDevice(ble_device)
     try:
-        if not await device.pair():
-            await device.unpair()
-            raise ConfigEntryNotReady(
-                f"Could not connect to RYSE device with address {address}"
-            )
+        paired = await device.pair()
     except (TimeoutError, OSError, EOFError, BleakError) as err:
-        await device.unpair()
+        await _async_unpair(device)
         raise ConfigEntryNotReady(
             f"Could not connect to RYSE device with address {address}"
         ) from err
+    if not paired:
+        await _async_unpair(device)
+        raise ConfigEntryNotReady(
+            f"Could not connect to RYSE device with address {address}"
+        )
 
     entry.runtime_data = device
-    entry.async_on_unload(device.unpair)
+    # Wrap disconnect so a teardown error cannot replace ConfigEntryNotReady
+    # when Home Assistant runs on_unload after a failed setup.
+    entry.async_on_unload(partial(_async_unpair, device))
+
+    missing_local_route = False
 
     @callback
     def _async_update_ble_device(
@@ -76,9 +91,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> bool
         Local adapters set ``service_info.source`` to the adapter MAC, not
         ``SOURCE_LOCAL``. Resolve via scanners that currently see the address.
         """
+        nonlocal missing_local_route
         ble_device = _async_local_ble_device(hass, service_info.address)
         if ble_device is None:
+            if not missing_local_route:
+                _LOGGER.info(
+                    "No local Bluetooth adapter currently sees %s; "
+                    "commands require a local adapter, not a proxy",
+                    service_info.address,
+                )
+                missing_local_route = True
             return
+        if missing_local_route:
+            _LOGGER.info(
+                "%s is visible on a local Bluetooth adapter again",
+                service_info.address,
+            )
+            missing_local_route = False
         device.set_ble_device(ble_device)
 
     entry.async_on_unload(

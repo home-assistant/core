@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 from bleak import BleakError
+from bleak.backends.device import BLEDevice
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -16,6 +17,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
     CoverState,
 )
+from homeassistant.components.ryse.const import MANUFACTURER_NAME
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -71,7 +73,7 @@ async def test_cover_entity(
 
     device_entry = device_registry.async_get(entity_entry.device_id)
     assert device_entry
-    assert device_entry.manufacturer == "RYSE"
+    assert device_entry.manufacturer == MANUFACTURER_NAME
     assert device_entry.model == "SmartShade BLE"
     assert (dr.CONNECTION_BLUETOOTH, DEVICE_ADDRESS) in device_entry.connections
 
@@ -84,16 +86,18 @@ async def test_cover_entity(
     )
 
 
-async def test_cover_unavailable_until_first_poll(
+async def test_cover_available_after_setup(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_device: MagicMock,
     setup_integration: MockConfigEntry,
 ) -> None:
-    """Test the cover stays unavailable until the device has been polled."""
+    """Test the cover is available after pairing, before the first poll."""
     state = hass.states.get(ENTITY_ID)
     assert state
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+    mock_device.send_get_position.assert_not_awaited()
 
     await async_poll_device(hass, freezer)
 
@@ -102,6 +106,25 @@ async def test_cover_unavailable_until_first_poll(
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_CURRENT_POSITION) is None
     mock_device.send_get_position.assert_awaited_once()
+
+
+async def test_cover_requests_position_when_already_connected(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    local_ryse_scanner: BLEDevice,
+    mock_device: MagicMock,
+) -> None:
+    """Test a connected device is asked for position as soon as the cover is added."""
+    mock_device.client = MagicMock(is_connected=True)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_device.send_get_position.assert_awaited_once()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(ATTR_CURRENT_POSITION) is None
 
 
 async def test_cover_polls_connected_device_without_pairing(
@@ -138,28 +161,6 @@ async def test_position_notification(
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
 
-async def test_cached_position_rejected_when_invalid(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_device: MagicMock,
-    caplog: pytest.LogCaptureFixture,
-    polled_cover: MockConfigEntry,
-) -> None:
-    """Test a cached position is not reported once it is no longer valid."""
-    caplog.set_level(logging.WARNING, logger=LOGGER_NAME)
-    await mock_device.update_callback(50)
-    await hass.async_block_till_done()
-
-    mock_device.client = MagicMock(is_connected=True)
-    mock_device.is_valid_position.return_value = False
-    await async_poll_device(hass, freezer)
-
-    state = hass.states.get(ENTITY_ID)
-    assert state
-    assert state.attributes.get(ATTR_CURRENT_POSITION) is None
-    assert "Invalid position value detected: 50" in caplog.text
-
-
 async def test_position_notification_out_of_range(
     hass: HomeAssistant,
     mock_device: MagicMock,
@@ -186,6 +187,55 @@ async def test_position_notification_out_of_range(
     assert state.attributes.get(ATTR_CURRENT_POSITION) is None
     assert state.state == STATE_UNKNOWN
     assert "Invalid position value detected: 150" in caplog.text
+
+
+async def test_poll_skips_get_position_when_cached(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_device: MagicMock,
+    polled_cover: MockConfigEntry,
+) -> None:
+    """Test polling does not request position again when a valid cache exists."""
+    await mock_device.update_callback(100)
+    await hass.async_block_till_done()
+    mock_device.client = MagicMock(is_connected=True)
+    mock_device.send_get_position.reset_mock()
+
+    await async_poll_device(hass, freezer)
+
+    mock_device.send_get_position.assert_not_awaited()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == CoverState.CLOSED
+    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+
+
+async def test_poll_refreshes_invalid_cached_position(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_device: MagicMock,
+    polled_cover: MockConfigEntry,
+) -> None:
+    """Test polling clears a cached position that later fails validation."""
+    await mock_device.update_callback(100)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == CoverState.CLOSED
+    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+
+    mock_device.client = MagicMock(is_connected=True)
+    mock_device.send_get_position.reset_mock()
+    mock_device.is_valid_position.return_value = False
+
+    await async_poll_device(hass, freezer)
+
+    mock_device.send_get_position.assert_awaited_once()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(ATTR_CURRENT_POSITION) is None
 
 
 @pytest.mark.parametrize(
@@ -285,7 +335,7 @@ async def test_pairing_failure_marks_unavailable(
     polled_cover: MockConfigEntry,
 ) -> None:
     """Test a failed pairing marks the cover unavailable and is logged once."""
-    caplog.set_level(logging.DEBUG, logger=LOGGER_NAME)
+    caplog.set_level(logging.INFO, logger=LOGGER_NAME)
     mock_device.pair.return_value = False
 
     await async_poll_device(hass, freezer)
@@ -293,7 +343,8 @@ async def test_pairing_failure_marks_unavailable(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_UNAVAILABLE
-    assert "Failed to pair with device, skipping update" in caplog.text
+    unavailable = f"{ENTITY_ID} became unavailable: failed to pair"
+    assert caplog.text.count(unavailable) == 1
 
     caplog.clear()
     await async_poll_device(hass, freezer)
@@ -301,7 +352,15 @@ async def test_pairing_failure_marks_unavailable(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_UNAVAILABLE
-    assert "Failed to pair with device, skipping update" not in caplog.text
+    assert unavailable not in caplog.text
+
+    mock_device.pair.return_value = True
+    await async_poll_device(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert f"{ENTITY_ID} is available again" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -318,7 +377,7 @@ async def test_ble_error_while_polling_marks_unavailable(
     exception: Exception,
 ) -> None:
     """Test a BLE error while polling marks the cover unavailable."""
-    caplog.set_level(logging.WARNING, logger=LOGGER_NAME)
+    caplog.set_level(logging.INFO, logger=LOGGER_NAME)
     mock_device.send_get_position.side_effect = exception
 
     await async_poll_device(hass, freezer)
@@ -326,16 +385,27 @@ async def test_ble_error_while_polling_marks_unavailable(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_UNAVAILABLE
-    assert "BLE communication error while reading device data" in caplog.text
+    unavailable = f"{ENTITY_ID} became unavailable: {exception}"
+    assert caplog.text.count(unavailable) == 1
+
+    caplog.clear()
+    await async_poll_device(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    assert unavailable not in caplog.text
 
 
 async def test_valid_notification_restores_availability(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_device: MagicMock,
+    caplog: pytest.LogCaptureFixture,
     polled_cover: MockConfigEntry,
 ) -> None:
     """Test a valid notification marks the cover available after a failed poll."""
+    caplog.set_level(logging.INFO, logger=LOGGER_NAME)
     mock_device.send_get_position.side_effect = BleakError("ble err")
     await async_poll_device(hass, freezer)
 
@@ -343,6 +413,7 @@ async def test_valid_notification_restores_availability(
     assert state
     assert state.state == STATE_UNAVAILABLE
 
+    caplog.clear()
     await mock_device.update_callback(100)
     await hass.async_block_till_done()
 
@@ -350,6 +421,7 @@ async def test_valid_notification_restores_availability(
     assert state
     assert state.state == CoverState.CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
+    assert f"{ENTITY_ID} is available again" in caplog.text
 
 
 async def test_notification_callback_lifecycle(
@@ -363,7 +435,7 @@ async def test_notification_callback_lifecycle(
     await hass.config_entries.async_unload(setup_integration.entry_id)
     await hass.async_block_till_done()
 
-    assert not hasattr(mock_device, "update_callback")
+    assert mock_device.update_callback is None
 
 
 async def test_notification_callback_replaced(
