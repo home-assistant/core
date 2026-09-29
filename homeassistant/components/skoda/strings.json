@@ -98,9 +98,6 @@
       "remaining_time_to_full_battery": {
         "name": "Time to full charge"
       },
-      "timestamp_last_sync": {
-        "name": "Last synchronization"
-      },
       "total_range": {
         "name": "Total range"
       }

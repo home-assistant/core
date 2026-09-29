@@ -469,58 +469,6 @@
     'state': '513.0',
   })
 # ---
-# name: test_sensors[sensor.enyaq_coupe_last_synchronization-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.enyaq_coupe_last_synchronization',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Last synchronization',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': 'mdi:cloud-sync-outline',
-    'original_name': 'Last synchronization',
-    'platform': 'skoda',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'timestamp_last_sync',
-    'unique_id': 'TMBJM7NP2M1TMP511_timestamp_last_sync',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.enyaq_coupe_last_synchronization-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Last synchronization',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cloud-sync-outline',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.enyaq_coupe_last_synchronization',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_sensors[sensor.enyaq_coupe_mileage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
