@@ -6,13 +6,14 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from pyportainer.exceptions import PortainerTimeoutError
 from pyportainer.models.docker import EndpointStatus
+from pyportainer.models.docker_inspect import DockerInspect
 from pyportainer.models.portainer import Endpoint
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.portainer.const import DOMAIN
 from homeassistant.components.portainer.coordinator import DEFAULT_DF_SCAN_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -23,6 +24,7 @@ from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_load_json_array_fixture,
+    load_json_value_fixture,
     snapshot_platform,
 )
 
@@ -101,3 +103,23 @@ async def test_df_endpoint_timeout_only_marks_that_endpoint_unavailable(
         state := hass.states.get("sensor.my_environment_image_disk_usage_total_size")
     )
     assert state.state != STATE_UNAVAILABLE
+
+
+async def test_container_never_started(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the started sensor is unknown for a container that never started."""
+    inspect = cast(
+        dict[str, Any], load_json_value_fixture("container_inspect.json", DOMAIN)
+    )
+    inspect["State"]["StartedAt"] = "0001-01-01T00:00:00Z"
+    mock_portainer_client.inspect_container.return_value = DockerInspect.from_dict(
+        inspect
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get("sensor.focused_einstein_started"))
+    assert state.state == STATE_UNKNOWN
