@@ -1192,7 +1192,7 @@ google-photos-library-api==0.12.1
 google_air_quality_api==3.0.1
 
 # homeassistant.components.google_wifi
-googlewifiapi==0.1.1
+googlewifiapi==0.1.2
 
 # homeassistant.components.slide
 # homeassistant.components.slide_local

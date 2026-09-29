@@ -43,7 +43,7 @@ from .coordinator import GoogleWifiCoordinator
 class GoogleWifiSensorEntityDescription(SensorEntityDescription):
     """Describes GoogleWifi sensor entity."""
 
-    value_fn: Callable[[GoogleWifiStatus], bool | datetime | float | str]
+    value_fn: Callable[[GoogleWifiStatus], bool | datetime | float | str | None]
 
 
 SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
@@ -55,7 +55,11 @@ SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
     GoogleWifiSensorEntityDescription(
         key=ATTR_NEW_VERSION,
         icon="mdi:update",
-        value_fn=lambda status: status.software.update_status,
+        value_fn=lambda status: (
+            "Latest"
+            if status.software.update_new_version == "0.0.0.0"
+            else status.software.update_new_version
+        ),
     ),
     # deprecated: The uptime sensor is deprecated and will be removed in 2027.4.0. Use last_restart instead.
     GoogleWifiSensorEntityDescription(
@@ -72,12 +76,14 @@ SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
     GoogleWifiSensorEntityDescription(
         key=ATTR_LOCAL_IP,
         icon="mdi:access-point-network",
-        value_fn=lambda status: str(status.wan.local_ip_address),
+        value_fn=lambda status: (
+            str(status.wan.local_ip_address) if status.wan.online else None
+        ),
     ),
     GoogleWifiSensorEntityDescription(
         key=ATTR_STATUS,
         icon="mdi:google",
-        value_fn=lambda status: status.wan.online,
+        value_fn=lambda status: "Online" if status.wan.online else "Offline",
     ),
 )
 

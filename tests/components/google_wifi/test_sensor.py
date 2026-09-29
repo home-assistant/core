@@ -7,7 +7,7 @@ import aiohttp
 import pytest
 
 from homeassistant.components.google_wifi import const
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -107,10 +107,10 @@ async def test_sensor_states_update_from_router_data(hass: HomeAssistant) -> Non
     assert (
         hass.states.get("sensor.test_wifi_current_version").state == "softwareVersion"
     )
-    assert hass.states.get("sensor.test_wifi_new_version").state == "idle"
+    assert hass.states.get("sensor.test_wifi_new_version").state == "Latest"
     assert hass.states.get("sensor.test_wifi_uptime").state == "1.0"
     assert hass.states.get("sensor.test_wifi_local_ip").state == "10.0.0.10"
-    assert hass.states.get("sensor.test_wifi_status").state == "True"
+    assert hass.states.get("sensor.test_wifi_status").state == "Online"
 
 
 @pytest.mark.usefixtures("mock_success")
@@ -136,5 +136,5 @@ async def test_sensor_updates_after_failure_and_recovery(
     assert hass.states.get("sensor.test_wifi_current_version").state == "newVersion"
     assert hass.states.get("sensor.test_wifi_new_version").state == "latest"
     assert hass.states.get("sensor.test_wifi_uptime").state == "2.0"
-    assert hass.states.get("sensor.test_wifi_local_ip").state == "10.0.0.11"
-    assert hass.states.get("sensor.test_wifi_status").state == "False"
+    assert hass.states.get("sensor.test_wifi_local_ip").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.test_wifi_status").state == "Offline"
