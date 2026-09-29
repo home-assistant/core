@@ -10,7 +10,10 @@ from homeassistant.components.marketplace.const import DOMAIN, STORAGE_VERSION
 from homeassistant.components.marketplace.critical import (
     async_create_critical_repository_issue,
 )
-from homeassistant.components.marketplace.exceptions import MarketplaceError
+from homeassistant.components.marketplace.exceptions import (
+    MarketplaceError,
+    NotModifiedError,
+)
 from homeassistant.components.marketplace.repairs import async_create_fix_flow
 from homeassistant.components.marketplace.utils.storage import (
     async_load_from_storage,
@@ -222,9 +225,12 @@ async def test_critical_repository_that_can_not_be_removed_is_tried_again(
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.data.installed = True
 
+    # The feed did not change, the catalog answers the second check with a 304
     with (
         patch.object(
-            marketplace.data_client, "get_data", return_value=[CRITICAL_REPOSITORY]
+            marketplace.data_client,
+            "get_data",
+            side_effect=[[CRITICAL_REPOSITORY], NotModifiedError],
         ),
         patch.object(
             repository, "uninstall", side_effect=MarketplaceError("Disk is gone")

@@ -9,6 +9,9 @@ import pytest
 from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.const import DOMAIN
 from homeassistant.components.marketplace.enums import RepositoryCategory
+from homeassistant.components.marketplace.repositories.base import Repository
+from homeassistant.components.marketplace.repositories.plugin import PluginRepository
+from homeassistant.components.marketplace.repositories.theme import ThemeRepository
 from homeassistant.components.marketplace.update import RepositoryUpdateEntity
 from homeassistant.components.marketplace.utils.validate import (
     VALIDATE_FETCHED_V2_REPO_DATA,
@@ -233,3 +236,31 @@ async def test_restart_repair_follows_a_new_repository_id(
     assert issue_registry.async_get_issue(
         DOMAIN, f"restart_required_999999_{repository.ref}"
     )
+
+
+@pytest.mark.parametrize(
+    ("repository_class", "full_name", "file_name", "directory"),
+    [
+        pytest.param(
+            PluginRepository, "owner/old-card", "old-card.js", "old-card", id="card"
+        ),
+        pytest.param(ThemeRepository, "owner/theme", "old.yaml", "old", id="theme"),
+    ],
+)
+async def test_stored_download_keeps_the_folder_it_is_in(
+    marketplace: MarketplaceManager,
+    repository_class: type[Repository],
+    full_name: str,
+    file_name: str,
+    directory: str,
+) -> None:
+    """Test a download stored before folders were kept is pinned to its folder."""
+    repository = repository_class(marketplace, full_name)
+    repository.data.id = "9100"
+    marketplace.repositories.register(repository)
+
+    marketplace.data.async_restore_repository(
+        "9100", {"full_name": full_name, "installed": True, "file_name": file_name}
+    )
+
+    assert repository.data.directory == directory

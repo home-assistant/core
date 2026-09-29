@@ -364,14 +364,17 @@ class MarketplaceData:
             "file_name", repository.data.file_name
         )
         repository.data.directory = repository_data.get("directory")
-        # Stored before cards kept their folder, the stored name is where it is
-        if (
-            repository.data.category == RepositoryCategory.PLUGIN
-            and repository.data.installed
-            and not repository.data.directory
-            and full_name
-        ):
-            repository.data.directory = full_name.rsplit("/", maxsplit=1)[-1]
+        # Stored before downloads kept their folder, the stored name is where it is
+        if repository.data.installed and not repository.data.directory:
+            if repository.data.category == RepositoryCategory.PLUGIN and full_name:
+                repository.data.directory = full_name.rsplit("/", maxsplit=1)[-1]
+            elif (
+                repository.data.category == RepositoryCategory.THEME
+                and repository.data.file_name
+            ):
+                repository.data.directory = repository.data.file_name.replace(
+                    ".yaml", ""
+                )
 
         if last_fetched := repository_data.get("last_fetched"):
             repository.data.last_fetched = datetime.fromtimestamp(last_fetched, UTC)

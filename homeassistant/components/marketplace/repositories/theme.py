@@ -34,7 +34,12 @@ class ThemeRepository(Repository):
     @override
     def localpath(self) -> str:
         """Return localpath."""
-        return f"{self.marketplace.core.config_path}/themes/{self.data.file_name.replace('.yaml', '')}"
+        return f"{self.marketplace.core.config_path}/themes/{self.directory}"
+
+    @property
+    def directory(self) -> str:
+        """Return the folder of the theme, the one it was downloaded to."""
+        return self.data.directory or self.data.file_name.replace(".yaml", "")
 
     @override
     async def async_pre_install(self) -> None:
@@ -54,6 +59,7 @@ class ThemeRepository(Repository):
     @override
     async def async_post_installation(self) -> None:
         """Run post installation steps."""
+        self.data.directory = self.directory
         await self._reload_frontend_themes()
 
     @override
@@ -133,6 +139,8 @@ class ThemeRepository(Repository):
     @override
     async def async_post_uninstall(self) -> None:
         """Run post uninstall steps."""
+        # Downloaded again, the theme goes to the folder of its current file
+        self.data.directory = None
         await self._reload_frontend_themes()
 
     @override

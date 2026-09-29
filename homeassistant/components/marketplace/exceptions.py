@@ -28,6 +28,17 @@ class CatalogContentUnresolvedError(MarketplaceError):
     """
 
 
+class ReplacesBuiltInNotConfirmedError(MarketplaceError):
+    """For a first download over a built-in integration that was not confirmed."""
+
+    def __init__(self, domain: str) -> None:
+        """Initialize the exception."""
+        super().__init__(
+            f"Replacing the built-in '{domain}' integration was not confirmed"
+        )
+        self.domain = domain
+
+
 class NotModifiedError(MarketplaceError):
     """For responses that are not modified."""
 

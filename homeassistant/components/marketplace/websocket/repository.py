@@ -12,6 +12,7 @@ from ..exceptions import (
     GitHubAnonymousRateLimitError,
     GitHubRateLimitError,
     MarketplaceError,
+    ReplacesBuiltInNotConfirmedError,
 )
 from ..utils.logger import LOGGER
 from ..utils.version import version_left_higher_then_right
@@ -277,27 +278,12 @@ async def marketplace_repository_download(
         send_repository_not_found(connection, msg["id"], msg["repository"])
         return
 
-    # Confirmed with the first download, updates replace the same integration
-    if (
-        not repository.data.installed
-        and not msg["confirm_replace_built_in"]
-        and await repository.async_replaces_built_in()
-    ):
-        send_translated_error(
-            connection,
-            msg["id"],
-            "replaces_built_in",
-            "replaces_built_in_not_confirmed",
-            {
-                "repository": repository.data.full_name,
-                "domain": str(repository.data.domain),
-            },
-        )
-        return
-
     try:
         was_installed = repository.data.installed
-        await repository.async_download_repository(ref=msg.get("version"))
+        await repository.async_download_repository(
+            ref=msg.get("version"),
+            confirm_replace_built_in=msg["confirm_replace_built_in"],
+        )
         if not was_installed:
             marketplace.async_dispatch(MarketplaceSignal.RELOAD, {"force": True})
             await marketplace.async_recreate_entities()
@@ -306,6 +292,15 @@ async def marketplace_repository_download(
         connection.send_message(websocket_api.result_message(msg["id"], {}))
     except GitHubAnonymousRateLimitError as exception:
         _send_rate_limited(connection, msg["id"], exception)
+    except ReplacesBuiltInNotConfirmedError as exception:
+        # Confirmed with the first download, updates replace the same integration
+        send_translated_error(
+            connection,
+            msg["id"],
+            "replaces_built_in",
+            "replaces_built_in_not_confirmed",
+            {"repository": repository.data.full_name, "domain": exception.domain},
+        )
     except MarketplaceError as exception:
         repository.logger.error("%s %s", repository.string, exception)
         send_translated_error(

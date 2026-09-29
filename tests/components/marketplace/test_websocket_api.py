@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 from http import HTTPStatus
+from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -888,6 +889,36 @@ async def test_download_replacing_a_built_in_needs_confirmation(
 
     assert response["success"] is downloaded
     assert repository.data.installed is downloaded
+
+
+async def test_download_confirms_the_domain_of_the_version_it_writes(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a version taking a built-in domain needs the confirmation too."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    assert not await repository.async_replaces_built_in()
+    use_manifest = IntegrationRepository._use_integration_manifest
+
+    def built_in_manifest(self: IntegrationRepository, manifest: dict) -> None:
+        use_manifest(self, manifest | {"domain": "light"})
+
+    client = await hass_ws_client(hass)
+    with patch.object(
+        IntegrationRepository, "_use_integration_manifest", built_in_manifest
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/download",
+                "repository": REPOSITORY_INTEGRATION_ID,
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["error"]["translation_key"] == "replaces_built_in_not_confirmed"
+    assert not repository.data.installed
+    assert not Path(hass.config.path("custom_components", "light")).exists()
 
 
 async def test_update_replacing_a_built_in_needs_no_new_confirmation(

@@ -193,3 +193,40 @@ async def test_theme_targets_the_file_in_its_folder(
     repository.update_filenames()
 
     assert repository.data.file_name == file_name
+
+
+async def test_theme_refresh_keeps_the_downloaded_folder(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a theme renamed upstream is removed from the folder it is in."""
+    owner = ThemeRepository(marketplace, "owner/new-theme")
+    owner.data.id = "9001"
+    owner.data.installed = True
+    owner.data.file_name = "new.yaml"
+    owner.data.directory = "new"
+    marketplace.repositories.register(owner)
+    owned = Path(owner.localpath)
+    owned.mkdir(parents=True)
+    (owned / "new.yaml").write_text("New Theme:\n  primary-color: blue\n")
+
+    repository = ThemeRepository(marketplace, "owner/theme")
+    repository.data.id = "9002"
+    repository.data.installed = True
+    repository.data.file_name = "old.yaml"
+    repository.data.directory = "old"
+    downloaded = Path(repository.localpath)
+    downloaded.mkdir(parents=True)
+    (downloaded / "old.yaml").write_text("Old Theme:\n  primary-color: red\n")
+
+    async def refresh(*args: object, **kwargs: object) -> bool:
+        repository.tree = [
+            GitHubGitTreeEntryModel({"path": "themes/new.yaml", "type": "blob"})
+        ]
+        return True
+
+    with patch.object(repository, "common_update", refresh):
+        await repository.update_repository(force=True)
+    await repository.uninstall()
+
+    assert not downloaded.exists()
+    assert (owned / "new.yaml").exists()

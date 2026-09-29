@@ -37,6 +37,7 @@ from ..exceptions import (
     GitHubRateLimitError,
     MarketplaceError,
     NotModifiedError,
+    ReplacesBuiltInNotConfirmedError,
     RepositoryArchivedError,
     RepositoryExistsError,
 )
@@ -445,6 +446,7 @@ class Repository:
         self.logger = LOGGER
         # Two downloads of one repository would write over each other's files
         self._download_lock = Lock()
+        self._replace_built_in_confirmed = False
 
     @override
     def __str__(self) -> str:
@@ -1030,6 +1032,13 @@ class Repository:
     async def _async_pre_install(self) -> None:
         """Run pre install steps."""
         self.logger.info("%s Running pre installation steps", self.string)
+        # Checked here, the version being written decides the domain it takes
+        if (
+            not self.data.installed
+            and not self._replace_built_in_confirmed
+            and await self.async_replaces_built_in()
+        ):
+            raise ReplacesBuiltInNotConfirmedError(str(self.data.domain))
         await self.async_pre_install()
         self.logger.info("%s Pre installation steps completed", self.string)
 
@@ -1809,14 +1818,22 @@ class Repository:
             )
 
     async def async_download_repository(
-        self, *, ref: str | None = None, **_: Any
+        self,
+        *,
+        ref: str | None = None,
+        confirm_replace_built_in: bool = False,
+        **_: Any,
     ) -> None:
         """Download the content of a repository."""
         if self._download_lock.locked():
             raise MarketplaceError(f"{self.data.full_name} is already downloading")
 
         async with self._download_lock:
-            await self._async_download_repository(ref)
+            self._replace_built_in_confirmed = confirm_replace_built_in
+            try:
+                await self._async_download_repository(ref)
+            finally:
+                self._replace_built_in_confirmed = False
 
     async def _async_download_repository(self, ref: str | None) -> None:
         """Download the content of a repository, one download at a time."""
@@ -1852,7 +1869,7 @@ class Repository:
 
         try:
             await self.async_install(version=ref)
-        except GitHubAnonymousRateLimitError:
+        except GitHubAnonymousRateLimitError, ReplacesBuiltInNotConfirmedError:
             raise
         except MarketplaceError as exception:
             raise MarketplaceError(
@@ -1918,7 +1935,7 @@ class Repository:
                         commit=commit,
                     )
                 )
-            except GitHubAnonymousRateLimitError:
+            except GitHubAnonymousRateLimitError, ReplacesBuiltInNotConfirmedError:
                 raise
             except MarketplaceError as exception:
                 raise MarketplaceError(

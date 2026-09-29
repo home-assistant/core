@@ -380,6 +380,7 @@ class MarketplaceManager:
     def __init__(self) -> None:
         """Initialize."""
         self.common = MarketplaceCommon()
+        self.critical_repositories: list[dict[str, Any]] = []
         self.configuration = MarketplaceConfiguration()
         self.coordinators: dict[str, MarketplaceUpdateCoordinator] = {}
         self.core = MarketplaceCore()
@@ -1190,9 +1191,12 @@ class MarketplaceManager:
         try:
             critical = await self.data_client.get_data("critical", validate=True)
         except GitHubNotModifiedException, NotModifiedError:
-            return
+            # Unchanged, still checked: a removal that failed before is tried again
+            critical = self.critical_repositories
         except MarketplaceError:
             pass
+        else:
+            self.critical_repositories = critical
 
         if not critical:
             LOGGER.debug("No critical repositories")
