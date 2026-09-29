@@ -12,7 +12,6 @@ from homeassistant.components.modbus import async_get_unit
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorExtraStoredData,
-    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
@@ -104,7 +103,7 @@ def _async_seed_high_water_marks(
     registry = er.async_get(hass)
     last_states = restore_state.async_get(hass).last_states
     for description in SENSOR_DESCRIPTIONS:
-        if description.state_class is not SensorStateClass.TOTAL_INCREASING:
+        if (total_fn := description.total_fn) is None:
             continue
         entity_id = registry.async_get_entity_id(
             SENSOR_DOMAIN, DOMAIN, f"{serial}_{description.key}"
@@ -116,9 +115,7 @@ def _async_seed_high_water_marks(
         extra = SensorExtraStoredData.from_dict(stored.extra_data.as_dict())
         if extra is None or not isinstance(extra.native_value, (int, float)):
             continue
-        getattr(device, description.component).seed_high_water(
-            description.key, float(extra.native_value)
-        )
+        total_fn(device).seed(float(extra.native_value))
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
