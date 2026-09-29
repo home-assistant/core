@@ -79,6 +79,9 @@
       "resume_container": {
         "name": "Resume container"
       },
+      "update_stack": {
+        "name": "Update stack"
+      },
       "volumes_prune": {
         "name": "Prune unused volumes"
       }
