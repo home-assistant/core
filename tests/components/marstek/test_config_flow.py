@@ -168,6 +168,29 @@ async def test_discovery_flow_reuses_shared_udp_client(
     mock_udp_client.async_cleanup.assert_not_awaited()
 
 
+async def test_discovery_flow_selects_device_with_shared_udp_client(
+    hass: HomeAssistant, mock_udp_client: MagicMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Selecting a discovered device reuses the shared UDP client."""
+    hass.data[MARSTEK_UDP_CLIENT] = mock_udp_client
+    mock_udp_client.discover_devices.return_value = [DISCOVERED_DEVICE]
+    mock_udp_client.get_device_info.return_value = MOCK_DISCOVERY_RESPONSE["result"]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await _async_run_discovery(hass, result, {"next_step_id": "discover"})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE: "0"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_udp_client.get_device_info.assert_awaited_once_with(TEST_HOST)
+    mock_udp_client.async_cleanup.assert_not_awaited()
+    mock_setup_entry.assert_called_once()
+
+
 async def test_discovery_flow_duplicate_device_names(
     hass: HomeAssistant, mock_udp_client: MagicMock
 ) -> None:
