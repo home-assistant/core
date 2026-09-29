@@ -71,6 +71,23 @@ async def test_query_basic(recorder_mock: Recorder, hass: HomeAssistant) -> None
     assert state.attributes["value"] == 5
 
 
+async def test_query_non_numeric_value(
+    recorder_mock: Recorder, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a numeric SQL sensor without a value template returning text."""
+    options = {
+        CONF_QUERY: "SELECT 'abc' as value",
+        CONF_COLUMN_NAME: "value",
+        CONF_ADDITIONAL_OPTIONS: {CONF_UNIT_OF_MEASUREMENT: "MiB"},
+    }
+    await init_integration(hass, title="Select value SQL query", options=options)
+
+    state = hass.states.get("sensor.select_value_sql_query")
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes["value"] == "abc"
+    assert "which is not a finite number" in caplog.text
+
+
 async def test_query_cte(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test the SQL sensor with CTE."""
     options = {

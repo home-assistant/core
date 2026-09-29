@@ -405,16 +405,13 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
         are not logged. Any other non-numeric value is logged once, until the
         sensor receives a valid value again.
         """
-        if not self._numeric_state_expected:
+        if value is None or not self._numeric_state_expected:
             return value
-        if not isinstance(value, str):
-            self._non_numeric_value_logged = False
-            return value
-        if value in ("None", STATE_UNKNOWN):
+        if isinstance(value, str) and value in ("None", STATE_UNKNOWN):
             return None
         try:
             is_number = isfinite(float(value))
-        except ValueError:
+        except TypeError, ValueError:
             is_number = False
         if is_number:
             self._non_numeric_value_logged = False
