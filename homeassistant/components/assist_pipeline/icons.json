@@ -1,0 +1,7 @@
+{
+  "services": {
+    "clear_debug_recordings": {
+      "service": "mdi:delete"
+    }
+  }
+}

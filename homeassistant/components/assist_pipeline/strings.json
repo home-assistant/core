@@ -28,6 +28,14 @@
       }
     }
   },
+  "exceptions": {
+    "debug_recording_dir_not_configured": {
+      "message": "No `debug_recording_dir` is configured for Assist pipeline."
+    },
+    "delete_debug_recordings_failed": {
+      "message": "The debug recordings could not be deleted."
+    }
+  },
   "issues": {
     "assist_in_progress_deprecated": {
       "fix_flow": {
@@ -38,6 +46,32 @@
         }
       },
       "title": "{integration_name} in progress binary sensors are deprecated"
+    },
+    "debug_recordings": {
+      "fix_flow": {
+        "abort": {
+          "delete_failed": "The debug recordings could not be deleted. Check the log for details and delete them manually."
+        },
+        "step": {
+          "confirm": {
+            "description": "Assist pipeline saves the audio of every voice command because `debug_recording_dir` is set in your configuration. {count} recordings ({size} MB) are kept in `{path}`, and they are never deleted automatically.\n\nSelect **Submit** to delete them. To stop recording, remove `debug_recording_dir` from your configuration and restart Home Assistant.",
+            "title": "[%key:component::assist_pipeline::issues::debug_recordings::title%]"
+          }
+        }
+      },
+      "title": "Voice debug recordings are kept"
+    }
+  },
+  "services": {
+    "clear_debug_recordings": {
+      "description": "Deletes the audio that Assist pipeline saved to the debug recording directory.",
+      "fields": {
+        "days": {
+          "description": "Only deletes recordings that are older than this many days. Leave empty to delete all recordings.",
+          "name": "Older than"
+        }
+      },
+      "name": "Clear debug recordings"
     }
   }
 }

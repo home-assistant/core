@@ -22,6 +22,7 @@ from .const import (
     SAMPLE_WIDTH,
     SAMPLES_PER_CHUNK,
 )
+from .debug_recording import async_check_debug_recordings, async_get_debug_recording_dir
 from .error import PipelineNotFound
 from .models import (
     AudioSettings,
@@ -42,6 +43,7 @@ from .pipeline import (
     async_update_pipeline,
 )
 from .select import AssistPipelineSelect, VadSensitivitySelect
+from .services import async_setup_services
 from .vad import VadSensitivity
 from .websocket_api import async_register_websocket_api
 
@@ -89,6 +91,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await async_setup_pipeline_store(hass)
     async_register_websocket_api(hass)
+    async_setup_services(hass)
+
+    if (recording_dir := async_get_debug_recording_dir(hass)) is not None:
+        hass.async_create_background_task(
+            async_check_debug_recordings(hass, recording_dir),
+            "assist_pipeline_check_debug_recordings",
+        )
 
     return True
 
