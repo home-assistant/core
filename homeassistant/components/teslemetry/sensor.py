@@ -204,17 +204,30 @@ def _listen_charger_power(
 ) -> Callable[[], None]:
     """Listen for charger power, which arrives as AC or DC power."""
     power: dict[str, float | None] = {"ac": None, "dc": None}
+    charging = True
 
     def _update(key: str, value: float | None) -> None:
         power[key] = value
         callback(power["dc"] or power["ac"])
 
+    def _update_dc(value: float | None) -> None:
+        # DC power is not reliably reset when a DC session ends
+        _update("dc", value if charging else None)
+
+    def _update_charging(state: str | None) -> None:
+        nonlocal charging
+        charging = state in {"Starting", "Charging"}
+        if not charging and power["dc"]:
+            _update("dc", None)
+
     unsub_ac = vehicle.listen_ACChargingPower(lambda value: _update("ac", value))
-    unsub_dc = vehicle.listen_DCChargingPower(lambda value: _update("dc", value))
+    unsub_dc = vehicle.listen_DCChargingPower(_update_dc)
+    unsub_state = vehicle.listen_DetailedChargeState(_update_charging)
 
     def _unsubscribe() -> None:
         unsub_ac()
         unsub_dc()
+        unsub_state()
 
     return _unsubscribe
 
