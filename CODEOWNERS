@@ -110,8 +110,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/alert/ @home-assistant/core @frenck
 /homeassistant/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
 /tests/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
-/homeassistant/components/alexa_devices/ @chemelli74
-/tests/components/alexa_devices/ @chemelli74
+/homeassistant/components/alexa_devices/ @chemelli74 @jamesonuk
+/tests/components/alexa_devices/ @chemelli74 @jamesonuk
 /homeassistant/components/altruist/ @airalab @LoSk-p
 /tests/components/altruist/ @airalab @LoSk-p
 /homeassistant/components/amazon_polly/ @jschlyter
@@ -368,8 +368,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/date/ @home-assistant/core
 /homeassistant/components/datetime/ @home-assistant/core
 /tests/components/datetime/ @home-assistant/core
-/homeassistant/components/de_dietrich/ @DaanVervacke
-/tests/components/de_dietrich/ @DaanVervacke
 /homeassistant/components/deako/ @sebirdman @balake @deakolights
 /tests/components/deako/ @sebirdman @balake @deakolights
 /homeassistant/components/debugpy/ @frenck
@@ -1394,9 +1392,10 @@ CLAUDE.md @home-assistant/core
 /tests/components/opower/ @tronikos
 /homeassistant/components/oralb/ @bdraco @Lash-L
 /tests/components/oralb/ @bdraco @Lash-L
-/homeassistant/components/oru/ @bvlaicu
 /homeassistant/components/osoenergy/ @osohotwateriot
 /tests/components/osoenergy/ @osohotwateriot
+/homeassistant/components/osram_infrared/ @freeDom-
+/tests/components/osram_infrared/ @freeDom-
 /homeassistant/components/otbr/ @home-assistant/core
 /tests/components/otbr/ @home-assistant/core
 /homeassistant/components/ouman_eh_800/ @Markus98
@@ -1538,7 +1537,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/radiotherm/ @vinnyfuria
 /homeassistant/components/rainbird/ @konikvranik @allenporter
 /tests/components/rainbird/ @konikvranik @allenporter
-/homeassistant/components/raincloud/ @vanstinator
 /homeassistant/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
 /tests/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
 /homeassistant/components/rainforest_raven/ @cottsay
@@ -1764,7 +1762,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/sofar/ @darkrain-nl
 /homeassistant/components/solaredge/ @frenck @bdraco @tronikos
 /tests/components/solaredge/ @frenck @bdraco @tronikos
-/homeassistant/components/solaredge_local/ @drobtravels @scheric
 /homeassistant/components/solaredge_modbus/ @frenck
 /tests/components/solaredge_modbus/ @frenck
 /homeassistant/components/solarlog/ @Ernst79 @dontinelli

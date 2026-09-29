@@ -98,6 +98,9 @@
       "bypass_infinite": {
         "name": "Break function never expires"
       },
+      "camera_light": {
+        "name": "Camera light"
+      },
       "child_lock": {
         "name": "Child lock"
       },
@@ -119,11 +122,23 @@
       "routing": {
         "name": "Range extension"
       },
+      "silent_mode": {
+        "name": "Whisper mode"
+      },
       "smart_sensitivity_enabled": {
         "name": "Automatic sensitivity"
       },
+      "swap_inputs": {
+        "name": "Swap inputs"
+      },
+      "swap_outputs": {
+        "name": "Swap outputs"
+      },
       "tamper_protection_enabled": {
         "name": "Sabotage detection"
+      },
+      "vibration_enabled": {
+        "name": "Vibration detection"
       }
     },
     "valve": {

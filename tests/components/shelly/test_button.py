@@ -3,7 +3,12 @@
 from copy import deepcopy
 from unittest.mock import AsyncMock, Mock, patch
 
-from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_PLUS_SMOKE, MODEL_WALL_DISPLAY
+from aioshelly.const import (
+    MODEL_BLU_GATEWAY_G3,
+    MODEL_PLUS_2PM,
+    MODEL_PLUS_SMOKE,
+    MODEL_WALL_DISPLAY,
+)
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -153,19 +158,21 @@ async def test_rpc_button_reauth_error(
     assert flow["context"].get("entry_id") == entry.entry_id
 
 
+@pytest.mark.parametrize("model", [MODEL_BLU_GATEWAY_G3, MODEL_PLUS_2PM])
 async def test_rpc_blu_trv_button(
     hass: HomeAssistant,
     mock_blu_trv: Mock,
     entity_registry: EntityRegistry,
     monkeypatch: pytest.MonkeyPatch,
     snapshot: SnapshotAssertion,
+    model: str,
 ) -> None:
     """Test RPC BLU TRV button."""
     monkeypatch.delitem(mock_blu_trv.status, "script:1")
     monkeypatch.delitem(mock_blu_trv.status, "script:2")
     monkeypatch.delitem(mock_blu_trv.status, "script:3")
 
-    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+    await init_integration(hass, 3, model=model)
 
     entity_id = "button.trv_name_calibrate"
 

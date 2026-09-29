@@ -27,12 +27,23 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "night": {
+        "name": "Night"
+      }
+    },
     "sensor": {
       "binmode": {
         "name": "Binning mode"
       },
+      "camera_id": {
+        "name": "Camera ID"
+      },
       "camera_sensor_temp": {
         "name": "Camera sensor temperature"
+      },
+      "create_date": {
+        "name": "Exposure creation time"
       },
       "exposure": {
         "name": "Exposure time"
