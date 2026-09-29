@@ -533,8 +533,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/eq3btsmart/ @eulemitkeule @dbuezas
 /homeassistant/components/escea/ @lazdavila
 /tests/components/escea/ @lazdavila
-/homeassistant/components/esphome/ @jesserockz @kbx81 @bdraco
-/tests/components/esphome/ @jesserockz @kbx81 @bdraco
+/homeassistant/components/esphome/ @jesserockz @kbx81 @bdraco @arturpragacz
+/tests/components/esphome/ @jesserockz @kbx81 @bdraco @arturpragacz
 /homeassistant/components/essent/ @jaapp
 /tests/components/essent/ @jaapp
 /homeassistant/components/eufylife_ble/ @bdr99
