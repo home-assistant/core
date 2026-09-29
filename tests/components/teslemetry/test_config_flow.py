@@ -1723,7 +1723,7 @@ async def test_energy_subentry_pairing_requires_key_approval(
     ],
 )
 async def test_subentry_lookup_failure_recovers(
-    hass: HomeAssistant, error: type[Exception], expected_error: str
+    hass: HomeAssistant, error: type[BaseException], expected_error: str
 ) -> None:
     """A failed authorized-clients read re-shows the form; a retry recovers."""
     entry = await _setup_account_no_subentry(hass)
@@ -2266,7 +2266,7 @@ async def test_unrecognized_state_recovers(hass: HomeAssistant) -> None:
     ],
 )
 async def test_add_authorized_client_failure_recovers(
-    hass: HomeAssistant, error: type[Exception], expected_error: str
+    hass: HomeAssistant, error: type[BaseException], expected_error: str
 ) -> None:
     """A failure registering the key re-shows the form; a retry pairs and recovers."""
     entry = await _setup_account_no_subentry(hass)
@@ -2335,7 +2335,7 @@ async def test_add_authorized_client_failure_recovers(
 )
 async def test_pair_step_second_lookup_errors(
     hass: HomeAssistant,
-    second_lookup: Exception | AuthorizedClients,
+    second_lookup: BaseException | AuthorizedClients,
     expected_error: str,
 ) -> None:
     """Re-checking the pending key reports each non-approval outcome on the form."""
@@ -2435,7 +2435,7 @@ async def test_pair_step_timeout_retry_reopens_window_and_succeeds(
     ],
 )
 async def test_pair_step_timeout_retry_failure_recovers(
-    hass: HomeAssistant, error: type[Exception], expected_error: str
+    hass: HomeAssistant, error: type[BaseException], expected_error: str
 ) -> None:
     """A failed re-registration after expiry re-shows the form; a retry recovers."""
     entry = await _setup_account_no_subentry(hass)
@@ -2779,7 +2779,7 @@ async def test_reconfigure_aborts_when_rsa_key_load_fails(hass: HomeAssistant) -
 async def test_reconfigure_aborts_when_local_and_cloud_lookups_fail(
     hass: HomeAssistant,
     mock_local_authorized_clients: AsyncMock,
-    error: type[Exception],
+    error: type[BaseException],
     expected_reason: str,
 ) -> None:
     """Reconfigure aborts when both the local and the cloud lookup fail."""
