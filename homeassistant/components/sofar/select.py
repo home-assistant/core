@@ -28,7 +28,7 @@ class SofarSelectEntityDescription(SelectEntityDescription, SofarEntityDescripti
     """Describe a Sofar select entity."""
 
     options_enum: type[IntEnum]
-    current_fn: Callable[[SofarInverter], IntEnum | None]
+    value_fn: Callable[[SofarInverter], IntEnum | None]
     write_fn: Callable[[SofarInverter, int], Awaitable[None]]
 
 
@@ -39,7 +39,7 @@ SELECT_DESCRIPTIONS: tuple[SofarSelectEntityDescription, ...] = (
         translation_key="charger_use_mode",
         options=_enum_options(ChargerUseMode),
         options_enum=ChargerUseMode,
-        current_fn=lambda device: device.charger.charger_use_mode,
+        value_fn=lambda device: device.charger.charger_use_mode,
         write_fn=lambda device, value: device.charger.write("charger_use_mode", value),
     ),
     SofarSelectEntityDescription(
@@ -48,7 +48,7 @@ SELECT_DESCRIPTIONS: tuple[SofarSelectEntityDescription, ...] = (
         translation_key="eps_control",
         options=_enum_options(EpsControlMode),
         options_enum=EpsControlMode,
-        current_fn=lambda device: device.eps.eps_control,
+        value_fn=lambda device: device.eps.eps_control,
         write_fn=lambda device, value: device.eps.async_write_control(
             EpsControlMode(value)
         ),
@@ -80,7 +80,7 @@ class SofarSelect(SofarEntity, SelectEntity):
     @override
     def current_option(self) -> str | None:
         """Return the currently selected option."""
-        value = self.entity_description.current_fn(self.coordinator.device)
+        value = self.entity_description.value_fn(self.coordinator.device)
         return value.name.lower() if value is not None else None
 
     @override
