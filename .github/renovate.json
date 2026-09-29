@@ -355,7 +355,14 @@
       "description": "Group pylint with astroid (their versions are linked and must move together)",
       "matchPackageNames": ["pylint", "astroid"],
       "groupName": "pylint",
-      "groupSlug": "pylint"
+      "groupSlug": "pylint",
+      "separateMinorPatch": true
+    },
+    {
+      "description": "Only move astroid to a new minor or major together with pylint. pylint pins the astroid minor it supports, so an astroid minor on its own can't be installed. The group above separates minor and patch updates, so astroid patches are still offered on their own.",
+      "matchPackageNames": ["astroid"],
+      "matchUpdateTypes": ["major", "minor"],
+      "minimumGroupSize": 2
     },
     {
       "description": "Group the github/codeql-action subactions into one PR (they share a release)",
