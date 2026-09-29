@@ -192,6 +192,30 @@ async def test_select_viewer_public_update(
     assert hass.states.get(entity_id).state == "Other"
 
 
+async def test_select_viewer_private_liveview(
+    hass: HomeAssistant, ufp: MockUFPFixture, viewer: Viewer, liveview: Liveview
+) -> None:
+    """A liveview the API key cannot read leaves the select without a state."""
+
+    # Sharing a liveview with a viewport from the Protect UI creates a private
+    # liveview that is missing from /v1/liveviews, so it is never an option.
+    setup_public_viewer(ufp, [liveview])
+    await init_entry(hass, ufp, [viewer])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, viewer, VIEWER_SELECTS[0]
+    )
+
+    public = ufp.api.public_bootstrap.viewers[viewer.id]
+    public.liveview_id = "private_liveview"
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_OPTIONS] == [liveview.name]
+
+
 async def test_select_viewer_unavailable_without_public(
     hass: HomeAssistant, ufp: MockUFPFixture, viewer: Viewer
 ) -> None:
