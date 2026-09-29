@@ -2278,6 +2278,77 @@ def _augment_result_with_change(
             prev_sum = _sum
 
 
+def _get_mixed_mean_statistics_period_result(
+    hass: HomeAssistant,
+    session: Session,
+    start_time: datetime,
+    end_time: datetime | None,
+    statistic_ids: set[str] | None,
+    metadata: dict[str, tuple[int, StatisticMetaData]],
+    period_start_end: Callable[[float], tuple[float, float]],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    table: type[StatisticsBase],
+    units: dict[str, str] | None,
+) -> dict[str, list[StatisticsRow]]:
+    """Fetch reduced statistics for mixed mean types."""
+    result: dict[str, list[StatisticsRow]] = {}
+
+    # Statistics without a mean can use the cheaper arithmetic query
+    # because the existing reducer ignores their mean value.
+    mean_groups = (
+        (
+            StatisticMeanType.ARITHMETIC,
+            {
+                statistic_id: item
+                for statistic_id, item in metadata.items()
+                if item[1]["mean_type"]
+                in {
+                    StatisticMeanType.ARITHMETIC,
+                    StatisticMeanType.NONE,
+                }
+            },
+        ),
+        (
+            StatisticMeanType.CIRCULAR,
+            {
+                statistic_id: item
+                for statistic_id, item in metadata.items()
+                if item[1]["mean_type"] is StatisticMeanType.CIRCULAR
+            },
+        ),
+    )
+
+    for mean_type, group_metadata in mean_groups:
+        group_stats = _get_statistics_period_rows(
+            session,
+            start_time,
+            end_time,
+            [metadata_id for metadata_id, _ in group_metadata.values()],
+            period_start_end,
+            types,
+            get_instance(hass).max_bind_vars,
+            mean_type,
+        )
+
+        if not group_stats:
+            continue
+
+        result.update(
+            _sorted_statistics_to_dict(
+                hass,
+                group_stats,
+                set(group_metadata) if statistic_ids is not None else None,
+                group_metadata,
+                True,
+                table,
+                units,
+                types,
+            )
+        )
+
+    return result
+
+
 def _statistics_during_period_with_session(
     hass: HomeAssistant,
     session: Session,
@@ -2366,7 +2437,7 @@ def _statistics_during_period_with_session(
     )
     stats: Sequence[Row]
 
-    # The optimized query can only use one mean aggregation strategy at a time.
+    # Each optimized query can only use one mean aggregation strategy at a time.
     mean_types = (
         {
             meta["mean_type"]
@@ -2377,14 +2448,16 @@ def _statistics_during_period_with_session(
         else set()
     )
     mean_type = next(iter(mean_types), StatisticMeanType.NONE)
+
     supported_types = {"mean", "min", "max", "sum", "state", "last_reset"}
-    if (
+    use_period_query = (
         types
         and period in {"day", "week", "month", "year"}
         and types <= supported_types
-        and len(mean_types) <= 1
         and ("mean" not in types or mean_type is not StatisticMeanType.NONE)
-    ):
+    )
+
+    if use_period_query:
         factories = {
             "day": reduce_day_ts_factory,
             "week": reduce_week_ts_factory,
@@ -2392,37 +2465,68 @@ def _statistics_during_period_with_session(
             "year": reduce_year_ts_factory,
         }
         _, period_start_end = factories[period]()
-        stats = _get_statistics_period_rows(
-            session,
-            start_time,
-            end_time,
-            metadata_ids,
-            period_start_end,
-            types,
-            get_instance(hass).max_bind_vars,
-            mean_type,
-        )
+
+        if len(mean_types) > 1:
+            result = _get_mixed_mean_statistics_period_result(
+                hass,
+                session,
+                start_time,
+                end_time,
+                statistic_ids,
+                metadata,
+                period_start_end,
+                types,
+                table,
+                units,
+            )
+        else:
+            stats = _get_statistics_period_rows(
+                session,
+                start_time,
+                end_time,
+                metadata_ids,
+                period_start_end,
+                types,
+                get_instance(hass).max_bind_vars,
+                mean_type,
+            )
+
+            if not stats:
+                return {}
+
+            result = _sorted_statistics_to_dict(
+                hass,
+                stats,
+                statistic_ids,
+                metadata,
+                True,
+                table,
+                units,
+                types,
+            )
+
     else:
         stmt = _generate_statistics_during_period_stmt(
             start_time, end_time, metadata_ids, table, types
         )
         stats = cast(
-            Sequence[Row], execute_stmt_lambda_element(session, stmt, orm_rows=False)
+            Sequence[Row],
+            execute_stmt_lambda_element(session, stmt, orm_rows=False),
         )
 
-    if not stats:
-        return {}
+        if not stats:
+            return {}
 
-    result = _sorted_statistics_to_dict(
-        hass,
-        stats,
-        statistic_ids,
-        metadata,
-        True,
-        table,
-        units,
-        types,
-    )
+        result = _sorted_statistics_to_dict(
+            hass,
+            stats,
+            statistic_ids,
+            metadata,
+            True,
+            table,
+            units,
+            types,
+        )
 
     if period == "day":
         result = _reduce_statistics_per_day(result, types, metadata)

@@ -1255,11 +1255,22 @@ async def test_circular_mean_uses_fast_path(
     assert actual["test:statistic_1"][0]["mean"] == pytest.approx(5.0)
 
 
-async def test_mixed_mean_types_fall_back(
+@pytest.mark.parametrize(
+    "statistic_ids",
+    [
+        pytest.param(None, id="all-statistics"),
+        pytest.param(
+            {"test:statistic_1", "test:statistic_2"},
+            id="selected-statistics",
+        ),
+    ],
+)
+async def test_mixed_mean_types_use_fast_path(
     statistics_session: Session,
     hass: HomeAssistant,
+    statistic_ids: set[str] | None,
 ) -> None:
-    """Fall back when arithmetic and circular means are requested together."""
+    """Reduce mixed mean types with separate optimized queries."""
     statistics_session.query(StatisticsMeta).filter(StatisticsMeta.id == 1).update(
         {
             StatisticsMeta.mean_type: StatisticMeanType.ARITHMETIC,
@@ -1267,6 +1278,7 @@ async def test_mixed_mean_types_fall_back(
             StatisticsMeta.unit_of_measurement: None,
         }
     )
+
     statistics_session.query(StatisticsMeta).filter(StatisticsMeta.id == 2).update(
         {
             StatisticsMeta.mean_type: StatisticMeanType.CIRCULAR,
@@ -1286,26 +1298,174 @@ async def test_mixed_mean_types_fall_back(
                 mean_weight=1.0,
             ),
             Statistics(
+                metadata_id=1,
+                start_ts=(start + timedelta(hours=1)).timestamp(),
+                mean=20.0,
+                mean_weight=1.0,
+            ),
+            Statistics(
                 metadata_id=2,
                 start_ts=start.timestamp(),
                 mean=350.0,
                 mean_weight=1.0,
             ),
+            Statistics(
+                metadata_id=2,
+                start_ts=(start + timedelta(hours=1)).timestamp(),
+                mean=20.0,
+                mean_weight=1.0,
+            ),
         ]
     )
+
     statistics_session.commit()
 
-    with patch.object(statistics, "_get_statistics_period_rows") as optimized:
+    with patch.object(
+        statistics,
+        "_get_statistics_period_rows",
+        wraps=statistics._get_statistics_period_rows,
+    ) as optimized:
         result = statistics._statistics_during_period_with_session(
             hass,
             statistics_session,
             start,
             start + timedelta(days=1),
-            {"test:statistic_1", "test:statistic_2"},
+            statistic_ids,
             "day",
             None,
             {"mean"},
         )
 
-    optimized.assert_not_called()
-    assert result
+    assert optimized.call_count == 2
+    assert result["test:statistic_1"][0]["mean"] == pytest.approx(15.0)
+    assert result["test:statistic_2"][0]["mean"] == pytest.approx(5.0)
+
+
+@pytest.mark.parametrize(
+    "statistic_ids",
+    [
+        pytest.param(None, id="all-statistics"),
+        pytest.param(
+            {
+                "test:statistic_1",
+                "test:statistic_2",
+                "test:statistic_3",
+            },
+            id="selected-statistics",
+        ),
+    ],
+)
+async def test_mixed_mean_types_include_statistics_without_mean(
+    statistics_session: Session,
+    hass: HomeAssistant,
+    statistic_ids: set[str] | None,
+) -> None:
+    """Keep statistics without a mean in mixed optimized queries."""
+    statistics_session.query(StatisticsMeta).filter(StatisticsMeta.id == 1).update(
+        {
+            StatisticsMeta.mean_type: StatisticMeanType.ARITHMETIC,
+            StatisticsMeta.unit_class: None,
+            StatisticsMeta.unit_of_measurement: None,
+        }
+    )
+
+    statistics_session.query(StatisticsMeta).filter(StatisticsMeta.id == 2).update(
+        {
+            StatisticsMeta.mean_type: StatisticMeanType.CIRCULAR,
+            StatisticsMeta.unit_class: None,
+            StatisticsMeta.unit_of_measurement: None,
+        }
+    )
+
+    statistics_session.query(StatisticsMeta).filter(StatisticsMeta.id == 3).update(
+        {
+            StatisticsMeta.mean_type: StatisticMeanType.NONE,
+            StatisticsMeta.unit_class: None,
+            StatisticsMeta.unit_of_measurement: None,
+        }
+    )
+
+    start = datetime(2024, 1, 1, tzinfo=dt_util.UTC)
+
+    statistics_session.add_all(
+        [
+            Statistics(
+                metadata_id=1,
+                start_ts=start.timestamp(),
+                mean=10.0,
+                mean_weight=1.0,
+                min=5.0,
+                max=15.0,
+            ),
+            Statistics(
+                metadata_id=1,
+                start_ts=(start + timedelta(hours=1)).timestamp(),
+                mean=20.0,
+                mean_weight=1.0,
+                min=8.0,
+                max=25.0,
+            ),
+            Statistics(
+                metadata_id=2,
+                start_ts=start.timestamp(),
+                mean=350.0,
+                mean_weight=1.0,
+                min=340.0,
+                max=355.0,
+            ),
+            Statistics(
+                metadata_id=2,
+                start_ts=(start + timedelta(hours=1)).timestamp(),
+                mean=20.0,
+                mean_weight=1.0,
+                min=10.0,
+                max=30.0,
+            ),
+            Statistics(
+                metadata_id=3,
+                start_ts=start.timestamp(),
+                mean=None,
+                min=2.0,
+                max=12.0,
+            ),
+            Statistics(
+                metadata_id=3,
+                start_ts=(start + timedelta(hours=1)).timestamp(),
+                mean=None,
+                min=4.0,
+                max=18.0,
+            ),
+        ]
+    )
+
+    statistics_session.commit()
+
+    with patch.object(
+        statistics,
+        "_get_statistics_period_rows",
+        wraps=statistics._get_statistics_period_rows,
+    ) as optimized:
+        result = statistics._statistics_during_period_with_session(
+            hass,
+            statistics_session,
+            start,
+            start + timedelta(days=1),
+            statistic_ids,
+            "day",
+            None,
+            {"mean", "min", "max"},
+        )
+
+    assert optimized.call_count == 2
+
+    assert result["test:statistic_1"][0]["mean"] == pytest.approx(15.0)
+    assert result["test:statistic_1"][0]["min"] == 5.0
+    assert result["test:statistic_1"][0]["max"] == 25.0
+
+    assert result["test:statistic_2"][0]["mean"] == pytest.approx(5.0)
+    assert result["test:statistic_2"][0]["min"] == 10.0
+    assert result["test:statistic_2"][0]["max"] == 355.0
+
+    assert result["test:statistic_3"][0]["mean"] is None
+    assert result["test:statistic_3"][0]["min"] == 2.0
+    assert result["test:statistic_3"][0]["max"] == 18.0
