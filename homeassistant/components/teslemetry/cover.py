@@ -1,7 +1,8 @@
 """Cover platform for Teslemetry integration."""
 
+from dataclasses import asdict, dataclass
 from itertools import chain
-from typing import Any, override
+from typing import Any, Self, override
 
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import (
@@ -23,7 +24,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
 from . import TeslemetryConfigEntry
 from .entity import (
@@ -175,6 +176,26 @@ class TeslemetryVehiclePollingWindowEntity(
             self._attr_is_closed = True
 
 
+@dataclass
+class TeslemetryWindowsExtraStoredData(ExtraStoredData):
+    """Per-window closed flags stored with the windows cover state."""
+
+    fd: bool | None
+    fp: bool | None
+    rd: bool | None
+    rp: bool | None
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the window flags."""
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self:
+        """Initialize the window flags from a dict."""
+        return cls(restored["fd"], restored["fp"], restored["rd"], restored["rp"])
+
+
 class TeslemetryStreamingWindowEntity(
     TeslemetryVehicleStreamEntity, TeslemetryWindowEntity, CoverRestoreEntity
 ):
@@ -200,8 +221,14 @@ class TeslemetryStreamingWindowEntity(
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        # A restored open state can't say which window is open
-        if self._attr_is_closed:
+        if (extra_data := await self.async_get_last_extra_data()) is not None:
+            windows = TeslemetryWindowsExtraStoredData.from_dict(extra_data.as_dict())
+            self.fd = windows.fd
+            self.fp = windows.fp
+            self.rd = windows.rd
+            self.rp = windows.rp
+        elif self._attr_is_closed:
+            # Without stored flags, closed still means every window was closed
             self.fd = self.fp = self.rd = self.rp = True
         self.async_on_remove(
             self.stream.async_add_listener(
@@ -220,6 +247,12 @@ class TeslemetryStreamingWindowEntity(
                 self.add_field(signal),
                 f"Adding field {signal} to {self.vehicle.vin}",
             )
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> TeslemetryWindowsExtraStoredData:
+        """Return the per-window flags to restore."""
+        return TeslemetryWindowsExtraStoredData(self.fd, self.fp, self.rd, self.rp)
 
     def _handle_stream_update(self, data: dict[str, Any]) -> None:
         """Update the entity attributes."""

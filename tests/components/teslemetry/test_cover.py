@@ -17,10 +17,11 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.restore_state import async_get as async_get_restore_state
 
 from . import assert_entities, setup_platform
 from .const import (
@@ -36,7 +37,9 @@ from .const import (
     VEHICLE_DATA_NONE,
 )
 
-from tests.common import mock_restore_cache
+from tests.common import mock_restore_cache_with_extra_data
+
+WINDOWS_ENTITY_ID = "cover.test_windows"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -576,16 +579,62 @@ async def test_cover_streaming(
     assert hass.states.get("cover.test_trunk").state == "unknown"
 
 
-async def test_cover_streaming_windows_restored_closed(
+@pytest.mark.parametrize(
+    ("restored_state", "extra_data", "expected_state", "expected_extra_data"),
+    [
+        pytest.param(
+            CoverState.CLOSED,
+            {"fd": True, "fp": True, "rd": True, "rp": True},
+            CoverState.CLOSED,
+            {"fd": True, "fp": True, "rd": True, "rp": True},
+            id="closed",
+        ),
+        pytest.param(
+            CoverState.OPEN,
+            {"fd": False, "fp": True, "rd": True, "rp": True},
+            CoverState.CLOSED,
+            {"fd": True, "fp": True, "rd": True, "rp": True},
+            id="open_window_closes",
+        ),
+        pytest.param(
+            CoverState.OPEN,
+            {"fd": False, "fp": False, "rd": True, "rp": True},
+            CoverState.OPEN,
+            {"fd": True, "fp": False, "rd": True, "rp": True},
+            id="other_window_still_open",
+        ),
+        pytest.param(
+            CoverState.CLOSED,
+            None,
+            CoverState.CLOSED,
+            {"fd": True, "fp": True, "rd": True, "rp": True},
+            id="no_extra_data_closed",
+        ),
+        pytest.param(
+            CoverState.OPEN,
+            None,
+            STATE_UNKNOWN,
+            {"fd": True, "fp": None, "rd": None, "rp": None},
+            id="no_extra_data_open",
+        ),
+    ],
+)
+async def test_cover_streaming_windows_restore(
     hass: HomeAssistant,
     mock_add_listener: AsyncMock,
+    restored_state: CoverState,
+    extra_data: dict[str, bool] | None,
+    expected_state: str,
+    expected_extra_data: dict[str, bool | None],
 ) -> None:
-    """Tests a restored closed windows cover stays closed on a single window update."""
+    """Tests the windows cover restores its per-window state."""
 
-    mock_restore_cache(hass, (State("cover.test_windows", CoverState.CLOSED),))
+    mock_restore_cache_with_extra_data(
+        hass, ((State(WINDOWS_ENTITY_ID, restored_state), extra_data),)
+    )
 
     await setup_platform(hass, [Platform.COVER])
-    assert hass.states.get("cover.test_windows").state == CoverState.CLOSED
+    assert hass.states.get(WINDOWS_ENTITY_ID).state == restored_state
 
     mock_add_listener.send(
         {
@@ -596,4 +645,9 @@ async def test_cover_streaming_windows_restored_closed(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("cover.test_windows").state == CoverState.CLOSED
+    assert hass.states.get(WINDOWS_ENTITY_ID).state == expected_state
+    stored_states = {
+        stored.state.entity_id: stored
+        for stored in async_get_restore_state(hass).async_get_stored_states()
+    }
+    assert stored_states[WINDOWS_ENTITY_ID].extra_data.as_dict() == expected_extra_data
