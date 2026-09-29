@@ -1,5 +1,6 @@
 """Tests for the Yoto integration setup."""
 
+import logging
 from unittest.mock import MagicMock, Mock, patch
 
 import aiohttp
@@ -108,6 +109,7 @@ async def test_status_push_tick_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """A failed status request is logged and the timer keeps running."""
+    caplog.set_level(logging.DEBUG)
     mock_yoto_client.is_mqtt_connected = True
     await setup_integration(hass, mock_config_entry)
     mock_yoto_client.request_player_status.side_effect = YotoError("timed out")
@@ -118,7 +120,7 @@ async def test_status_push_tick_error(
         await hass.async_block_till_done()
 
     assert mock_yoto_client.request_player_status.call_count == 2
-    assert "Error doing job" not in caplog.text
+    assert "Status request for player-test failed: timed out" in caplog.text
 
 
 async def test_status_push_skipped_when_mqtt_disconnected(
