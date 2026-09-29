@@ -5,6 +5,7 @@ from unittest.mock import Mock
 
 from besen.models import BesenData, BoardRevision, ChargerInfo, CommandResult
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.besen.diagnostics import (
     async_get_config_entry_diagnostics,
@@ -30,6 +31,7 @@ from tests.typing import ClientSessionGenerator
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     mock_besen_client: Mock,
 ) -> None:
@@ -52,53 +54,8 @@ async def test_diagnostics(
         hass, hass_client, mock_config_entry
     )
 
-    assert result["entry_data"] == {
-        CONF_ADDRESS: REDACTED,
-        CONF_NAME: REDACTED,
-        CONF_PIN: REDACTED,
-    }
+    assert result == snapshot
     data = result["data"]
-    assert set(data) == {
-        "info",
-        "config",
-        "charge",
-        "available",
-        "authenticated",
-        "auth_failed",
-    }
-    assert data["info"] == {
-        "address": REDACTED,
-        "serial": REDACTED,
-        "charger_type": None,
-        "phases": 1,
-        "manufacturer": "Besen",
-        "model": "BS20",
-        "hardware_version": "HW1",
-        "software_version": "SW1",
-        "output_power": None,
-        "output_max_amps": 32,
-        "feature": None,
-        "support": None,
-        "board_revision": "new",
-        "advertised_name": REDACTED,
-    }
-    assert data["config"] == {
-        "charge_amps": 16,
-        "lcd_brightness": None,
-        "system_time": None,
-        "system_time_raw": None,
-        "temperature_unit": "Celsius",
-        "language": None,
-        "device_name": REDACTED,
-        "rssi": -55,
-    }
-    assert data["charge"]["power"] == 3500
-    assert data["charge"]["total_energy"] == 12.3
-    assert data["charge"]["session_energy"] == 1.2
-    assert data["charge"]["error_details"] == "No Error"
-    assert data["available"] is True
-    assert data["authenticated"] is True
-    assert data["auth_failed"] is False
 
     serialized = json.dumps(result)
     for private_value in (

@@ -9,13 +9,16 @@ from homeassistant.core import HomeAssistant
 
 from . import BesenConfigEntry
 
+CONF_DEVICE_NAME = "device_name"
+CONF_SERIAL = "serial"
+
 TO_REDACT = {
     CONF_ADDRESS,
     CONF_NAME,
     CONF_PIN,
     "advertised_name",
-    "device_name",
-    "serial",
+    CONF_DEVICE_NAME,
+    CONF_SERIAL,
 }
 
 
