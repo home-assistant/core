@@ -721,7 +721,7 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
-    def __call__(self, data: Any) -> int:
+    def __call__(self, data: Any) -> float:
         """Validate the passed selection."""
         range_min = self.config.get("min")
         range_max = self.config.get("max")
@@ -732,7 +732,7 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
         if range_max is None:
             range_max = self.config.get("max_mireds")
 
-        value: int = probatio.All(
+        value: float = probatio.All(
             probatio.Coerce(float),
             probatio.Range(
                 min=range_min,

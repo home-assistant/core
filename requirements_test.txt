@@ -10,18 +10,18 @@
 # ast-serialize is an internal mypy dependency
 ast-serialize==0.6.0
 astroid==4.0.4
-coverage==7.16.1
+coverage==7.16.2
 freezegun==1.5.5
 # librt is an internal mypy dependency
 librt==0.13.0
 license-expression==30.4.4
 mock-open==1.4.0
 mypy==2.3.1
-prek==0.5.3
+prek==0.5.4
 pydantic==2.13.4
 PyGithub==2.10.0
 pylint==4.0.8
-pylint-per-file-ignores==3.2.1
+pylint-per-file-ignores==4.0.0
 pipdeptree==4.2.5
 pytest-asyncio==1.4.0
 pytest-aiohttp==1.1.1

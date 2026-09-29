@@ -1,6 +1,10 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
+    'advanced_power_control': dict({
+      'enabled': False,
+      'reactive_power_config': 0,
+    }),
     'batteries': list([
       dict({
         'dc_current': -0.0,
@@ -56,6 +60,15 @@
       'option': '',
       'serial_number': '**REDACTED**',
       'version': '',
+    }),
+    'export_control': dict({
+      'external_production': False,
+      'external_production_max': 0.0,
+      'limit_type': 0,
+      'mode': None,
+      'negative_site_limit': False,
+      'site_limit': 0.0,
+      'site_limit_raw': 0.0,
     }),
     'inverter': dict({
       'ac_current': 39.99,
@@ -154,7 +167,33 @@
           'meters[0]',
         ]),
       }),
+      'settings': dict({
+        'failed': dict({
+        }),
+        'updated': list([
+          'advanced_power_control',
+          'power_control',
+          'site_control',
+        ]),
+      }),
     }),
+    'power_control': dict({
+      'active_power_limit': 0,
+      'cos_phi': 0.0,
+      'rrcr_state': 0,
+    }),
+    'storage_control': dict({
+      'ac_charge_limit': 0.0,
+      'ac_charge_policy': 0,
+      'backup_reserve': 2.0,
+      'charge_limit': 11400.0,
+      'command_mode': None,
+      'command_timeout': 3600,
+      'control_mode': 1,
+      'default_mode': 0,
+      'discharge_limit': 11400.0,
+    }),
+    'sunspec_models': None,
     'unresponsive_blocks': list([
     ]),
   })
