@@ -873,15 +873,23 @@ async def test_monitor_input_emulate_key_hold(
         [key_down, key_up]
     )
 
-    await handler.async_device_start_monitoring(mock_input_device)
-    # Let the monitor loop and any repeat tasks process
-    await hass.async_block_till_done()
+    repeat_tasks: list[asyncio.Task] = []
 
-    # We should have at least the key_down and key_up events
-    key_down_events = [e for e in hold_events if e.data["type"] == "key_down"]
-    key_up_events = [e for e in hold_events if e.data["type"] == "key_up"]
-    assert len(key_down_events) >= 1
-    assert len(key_up_events) >= 1
+    async def _hold_until_cancelled(*args: object) -> None:
+        repeat_tasks.append(asyncio.current_task())
+        await asyncio.Event().wait()
+
+    with patch.object(
+        handler, "_async_keyrepeat", side_effect=_hold_until_cancelled
+    ) as mock_repeat:
+        await handler.async_device_start_monitoring(mock_input_device)
+        await hass.async_block_till_done()
+
+    # key_down started one repeat with the configured timing, key_up cancelled it
+    mock_repeat.assert_called_once_with(mock_input_device, 30, 0.01, 0.01)
+    assert len(repeat_tasks) == 1
+    assert repeat_tasks[0].cancelled()
+    assert [e.data["type"] for e in hold_events] == ["key_down", "key_up"]
 
 
 async def test_monitor_input_oserror_cleanup(
