@@ -146,6 +146,11 @@ def _electricity_data(dpcode: DPCode) -> tuple[TuyaSensorEntityDescription, ...]
     )
 
 
+def _has_multiple_phase_channels(device: CustomerDevice) -> bool:
+    """Return if the device reports more than one indexed phase channel."""
+    return DPCode.PHASE_S2 in device.status_range
+
+
 def _indexed_electricity_data(
     dpcode: DPCode, index: int
 ) -> tuple[TuyaSensorEntityDescription, ...]:
@@ -154,62 +159,56 @@ def _indexed_electricity_data(
         TuyaSensorEntityDescription(
             key=f"{dpcode}electriccurrent",
             dpcode=dpcode,
-            translation_key="current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
             wrapper_class=(ElectricityCurrentHexStringWrapper,),
             channel_index=index,
-            channel_condition=lambda device: DPCode.PHASE_S2 in device.status_range,
+            channel_condition=_has_multiple_phase_channels,
         ),
         TuyaSensorEntityDescription(
             key=f"{dpcode}power",
             dpcode=dpcode,
-            translation_key="power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
             wrapper_class=(ElectricityPowerHexStringWrapper,),
             channel_index=index,
-            channel_condition=lambda device: DPCode.PHASE_S2 in device.status_range,
+            channel_condition=_has_multiple_phase_channels,
         ),
         TuyaSensorEntityDescription(
             key=f"{dpcode}voltage",
             dpcode=dpcode,
-            translation_key="voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
             wrapper_class=(ElectricityVoltageHexStringWrapper,),
             channel_index=index,
-            channel_condition=lambda device: DPCode.PHASE_S2 in device.status_range,
+            channel_condition=_has_multiple_phase_channels,
         ),
         TuyaSensorEntityDescription(
             key=f"{dpcode}reactivepower",
             dpcode=dpcode,
-            translation_key="reactive_power",
             device_class=SensorDeviceClass.REACTIVE_POWER,
             state_class=SensorStateClass.MEASUREMENT,
             wrapper_class=(ElectricityReactivePowerHexStringWrapper,),
             channel_index=index,
-            channel_condition=lambda device: DPCode.PHASE_S2 in device.status_range,
+            channel_condition=_has_multiple_phase_channels,
         ),
         TuyaSensorEntityDescription(
             key=f"{dpcode}apparentpower",
             dpcode=dpcode,
-            translation_key="apparent_power",
             device_class=SensorDeviceClass.APPARENT_POWER,
             state_class=SensorStateClass.MEASUREMENT,
             wrapper_class=(ElectricityApparentPowerHexStringWrapper,),
             channel_index=index,
-            channel_condition=lambda device: DPCode.PHASE_S2 in device.status_range,
+            channel_condition=_has_multiple_phase_channels,
         ),
         TuyaSensorEntityDescription(
             key=f"{dpcode}powerfactor",
             dpcode=dpcode,
-            translation_key="power_factor",
             device_class=SensorDeviceClass.POWER_FACTOR,
             state_class=SensorStateClass.MEASUREMENT,
             wrapper_class=(ElectricityPowerFactorHexStringWrapper,),
             channel_index=index,
-            channel_condition=lambda device: DPCode.PHASE_S2 in device.status_range,
+            channel_condition=_has_multiple_phase_channels,
         ),
     )
 

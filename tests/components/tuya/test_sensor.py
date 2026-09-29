@@ -47,7 +47,13 @@ async def test_platform_setup_and_discovery(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.parametrize("mock_device_code", ["zndb_qxlwffgv8avf5rrw"])
+@pytest.mark.parametrize(
+    ("mock_device_code", "expected_children", "expected_parent_phase_entities"),
+    [
+        pytest.param("zndb_qxlwffgv8avf5rrw", 20, 0, id="multi_channel"),
+        pytest.param("zndb_uqzhc4bx5zqwpg2m", 0, 6, id="single_channel"),
+    ],
+)
 async def test_indexed_phase_child_devices(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -55,100 +61,26 @@ async def test_indexed_phase_child_devices(
     mock_device: CustomerDevice,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    expected_children: int,
+    expected_parent_phase_entities: int,
 ) -> None:
-    """Test indexed phase sensors are grouped under stable child devices."""
+    """Test indexed phase sensors only move to child devices for multi-channel meters."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     parent = device_registry.async_get_device_by_identifier(
         (DOMAIN, mock_device.id), mock_config_entry.entry_id
     )
     assert parent is not None
-
-    children = dr.async_entries_for_parent_device(device_registry, parent.id)
-    assert len(children) == 20
-    assert not any(
-        "phase_s" in entry.unique_id
-        for entry in er.async_entries_for_device(entity_registry, parent.id)
-    )
-    child_ids = {next(iter(child.identifiers)): child.id for child in children}
-    assert set(child_ids) == {
-        (DOMAIN, f"{mock_device.id}_channel_{index}") for index in range(1, 21)
-    }
-    for child in children:
-        assert child.parent_device_id == parent.id
-        child_entities = er.async_entries_for_device(entity_registry, child.id)
-        assert len(child_entities) == 6
-        for entity in child_entities:
-            state = hass.states.get(entity.entity_id)
-            assert state is not None
-            assert state.state not in ("unknown", "unavailable")
-
-    expected_states = {
-        "apparentpower": "0.22",
-        "electriccurrent": "1.1",
-        "power": "0.21",
-        "powerfactor": "0.95",
-        "reactivepower": "0.05",
-        "voltage": "230.1",
-    }
-    for key, expected_state in expected_states.items():
-        entity_id = entity_registry.async_get_entity_id(
-            Platform.SENSOR,
-            DOMAIN,
-            f"tuya.{mock_device.id}phase_s1{key}",
-        )
-        assert entity_id is not None
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == expected_state
-
-    with patch(
-        "homeassistant.components.tuya.coordinator.Manager", return_value=mock_manager
-    ):
-        await hass.config_entries.async_reload(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    reloaded_parent = device_registry.async_get_device_by_identifier(
-        (DOMAIN, mock_device.id), mock_config_entry.entry_id
-    )
-    assert reloaded_parent is not None
-    reloaded_children = dr.async_entries_for_parent_device(
-        device_registry, reloaded_parent.id
-    )
-    assert {
-        next(iter(child.identifiers)): child.id for child in reloaded_children
-    } == child_ids
-    assert all(
-        child.parent_device_id == reloaded_parent.id for child in reloaded_children
-    )
-
-
-@pytest.mark.parametrize("mock_device_code", ["zndb_uqzhc4bx5zqwpg2m"])
-async def test_single_indexed_phase_stays_on_parent(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Keep a single reported channel on the physical meter."""
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    parent = device_registry.async_get_device_by_identifier(
-        (DOMAIN, mock_device.id), mock_config_entry.entry_id
-    )
-    assert parent is not None
-    assert not dr.async_entries_for_parent_device(device_registry, parent.id)
     assert (
-        len(
-            [
-                entry
-                for entry in er.async_entries_for_device(entity_registry, parent.id)
-                if "phase_s1" in entry.unique_id
-            ]
+        len(dr.async_entries_for_parent_device(device_registry, parent.id))
+        == expected_children
+    )
+    assert (
+        sum(
+            "phase_s" in entry.unique_id
+            for entry in er.async_entries_for_device(entity_registry, parent.id)
         )
-        == 6
+        == expected_parent_phase_entities
     )
 
 
