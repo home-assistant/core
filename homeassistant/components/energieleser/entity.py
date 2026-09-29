@@ -12,17 +12,18 @@ from .coordinator import EnergieleserCoordinator
 def build_device_info(coordinator: EnergieleserCoordinator) -> DeviceInfo:
     """Return the device info shared by all entities of one device."""
     host = coordinator.config_entry.data[CONF_HOST]
-    serial_number = None
-    if isinstance(coordinator.data, WaermeleserDevice):
-        # Only wärmeleser devices report a fabrication number; others omit it.
-        serial_number = coordinator.data.fabrication_number
 
     return DeviceInfo(
         identifiers={(DOMAIN, coordinator.device_id)},
         name=coordinator.device_id,
         manufacturer="nineti GmbH",
         model=device_model_name(coordinator.data.device_type),
-        serial_number=serial_number,
+        # Only wärmeleser devices report a fabrication number; others omit it.
+        serial_number=(
+            coordinator.data.fabrication_number
+            if isinstance(coordinator.data, WaermeleserDevice)
+            else None
+        ),
         sw_version=coordinator.config_entry.data.get(CONF_SW_VERSION),
         configuration_url=f"http://{host}/",
     )

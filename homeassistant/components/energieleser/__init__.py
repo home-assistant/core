@@ -55,7 +55,7 @@ async def async_unload_entry(
     ir.async_delete_issue(hass, DOMAIN, f"pin_locked_{entry.entry_id}")
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
+    if unload_ok and not hass.config_entries.async_loaded_entries(DOMAIN):
         await hass.data[FIRMWARE_COORDINATOR].async_shutdown()
         hass.data.pop(FIRMWARE_COORDINATOR)
     return unload_ok
