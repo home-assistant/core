@@ -1674,6 +1674,11 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "ecospar": {
+      "name": "EcoSpar",
+      "integration_type": "virtual",
+      "supported_by": "fumis"
+    },
     "ecovacs": {
       "name": "Ecovacs",
       "integration_type": "hub",
