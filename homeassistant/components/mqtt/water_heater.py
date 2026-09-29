@@ -322,9 +322,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
         if (operation_mode := kwargs.get(ATTR_OPERATION_MODE)) is not None:
             await self.async_set_operation_mode(operation_mode)
 
-        temperature: float | None
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
+        temperature: float = kwargs[ATTR_TEMPERATURE]
         mqtt_payload = self._command_templates[CONF_TEMP_COMMAND_TEMPLATE](temperature)
         await self._publish(CONF_TEMP_COMMAND_TOPIC, mqtt_payload)
 
