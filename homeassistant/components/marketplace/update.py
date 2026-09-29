@@ -146,8 +146,14 @@ class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
                 self.repository.data.releases = True
                 self.repository.releases.objects = releases
                 self.repository.data.published_tags = [x.tag_name for x in releases]
+                # Fetched with pre-releases when those are shown, they are not stable
                 self.repository.data.last_version = next(
-                    iter(self.repository.data.published_tags)
+                    (
+                        release.tag_name
+                        for release in releases
+                        if not release.prerelease
+                    ),
+                    self.repository.data.last_version,
                 )
 
         release_notes = ""

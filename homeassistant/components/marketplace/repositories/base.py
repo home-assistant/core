@@ -322,7 +322,7 @@ class RepositoryData:
             if key not in self.__dict__:
                 continue
 
-            if key == "last_fetched" and isinstance(value, float):
+            if key == "last_fetched" and isinstance(value, (int, float)):
                 setattr(self, key, datetime.fromtimestamp(value, UTC))
             elif key == "id":
                 setattr(self, key, str(value))

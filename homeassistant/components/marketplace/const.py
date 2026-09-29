@@ -52,3 +52,6 @@ CONF_WARNING_ACCEPTED = "warning_accepted"
 # The panel shows the warning again once an acceptance is this old, downloads
 # and updates keep working in the meantime.
 WARNING_REMINDER_INTERVAL = timedelta(days=90)
+
+# Downloads that need a restart get an issue per repository and version
+RESTART_ISSUE_PREFIX = "restart_required_"

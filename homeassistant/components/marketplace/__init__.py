@@ -40,6 +40,7 @@ from .const import (
     DOMAIN,
     LEGACY_DASHBOARD_RESOURCE_BASE,
     LEGACY_HACS_SYSTEM_ID,
+    RESTART_ISSUE_PREFIX,
 )
 from .data_client import CatalogClient
 from .enums import DisabledReason, LovelaceMode, MarketplaceStage
@@ -61,9 +62,6 @@ from .websocket import async_register_websocket_commands
 PLATFORMS = [Platform.SWITCH, Platform.UPDATE]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-# Downloads that need a restart get an issue per repository and version
-RESTART_ISSUE_PREFIX = "restart_required_"
 
 # Set once the old plugin path is served, a route can not be removed on reload
 DATA_LEGACY_PLUGIN_PATH: HassKey[None] = HassKey(f"{DOMAIN}_legacy_plugin_path")
@@ -265,7 +263,9 @@ async def _async_initialize_integration(
         "Setup complete, waiting for Home Assistant before startup tasks starts"
     )
 
-    async_at_start(hass=hass, at_start_cb=marketplace.startup_tasks)
+    config_entry.async_on_unload(
+        async_at_start(hass=hass, at_start_cb=marketplace.startup_tasks)
+    )
 
     return True
 

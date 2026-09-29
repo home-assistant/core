@@ -8,9 +8,10 @@ from typing import Any
 
 from homeassistant.core import Event, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 
 from ..base import MarketplaceManager
-from ..const import LEGACY_HACS_REPOSITORY_ID
+from ..const import DOMAIN, LEGACY_HACS_REPOSITORY_ID, RESTART_ISSUE_PREFIX
 from ..enums import MarketplaceSignal, RepositoryCategory
 from ..migration import async_forget_retired_repositories
 from ..repositories.base import TOPIC_FILTER, Repository, RepositoryManifest
@@ -69,6 +70,8 @@ class MarketplaceData:
         self.logger = LOGGER
         self.marketplace = marketplace
         self.content: dict[str, Any] = {}
+        # The ids of downloads that wait for a restart, known while restoring
+        self._waiting_for_restart: set[str] = set()
 
     async def async_force_write(self, _: Event | None = None) -> None:
         """Force write."""
@@ -95,6 +98,7 @@ class MarketplaceData:
                 "ignored_repositories": set(
                     self.marketplace.common.ignored_repositories
                 ),
+                "custom_repositories": set(self.marketplace.common.custom_repositories),
             },
         )
         await self._async_store_content_and_repos()
@@ -193,7 +197,19 @@ class MarketplaceData:
             if entry not in self.marketplace.common.ignored_repositories:
                 self.marketplace.common.ignored_repositories.add(entry)
 
+        self.marketplace.common.custom_repositories = set(
+            common.get("custom_repositories", [])
+        )
+
         repositories = one_stored_entry_per_name(repositories)
+
+        # A reload does not load the downloaded code, only a restart does, and
+        # a restart removes these repairs
+        self._waiting_for_restart = {
+            issue_id.removeprefix(RESTART_ISSUE_PREFIX).split("_", maxsplit=1)[0]
+            for domain, issue_id in ir.async_get(self.marketplace.hass).issues
+            if domain == DOMAIN and issue_id.startswith(RESTART_ISSUE_PREFIX)
+        }
 
         try:
             await self.register_unknown_repositories(repositories)
@@ -342,6 +358,8 @@ class MarketplaceData:
         repository.data.installed_version = repository_data.get("version_installed")
         repository.data.installed_commit = repository_data.get("installed_commit")
         repository.data.manifest_name = repository_data.get("manifest_name")
+        repository.data.config_flow = repository_data.get("config_flow", False)
+        repository.pending_restart = entry in self._waiting_for_restart
         repository.data.file_name = repository_data.get(
             "file_name", repository.data.file_name
         )

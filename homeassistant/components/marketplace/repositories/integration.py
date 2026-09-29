@@ -15,7 +15,7 @@ from homeassistant.loader import (
     async_get_custom_components,
 )
 
-from ..const import DOMAIN
+from ..const import DOMAIN, RESTART_ISSUE_PREFIX
 from ..enums import MarketplaceSignal, RepositoryCategory, RepositoryFile
 from ..exceptions import (
     AppRepositoryError,
@@ -145,7 +145,7 @@ class IntegrationRepository(Repository):
             async_create_issue(
                 hass=self.marketplace.hass,
                 domain=DOMAIN,
-                issue_id=f"restart_required_{self.data.id}_{self.ref}",
+                issue_id=f"{RESTART_ISSUE_PREFIX}{self.data.id}_{self.ref}",
                 is_fixable=True,
                 issue_domain=self.data.domain or DOMAIN,
                 severity=IssueSeverity.WARNING,

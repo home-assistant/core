@@ -262,6 +262,7 @@ async def marketplace_repositories_remove(
         return
 
     repository.remove()
+    marketplace.common.custom_repositories.discard(str(repository.data.id))
     await marketplace.data.async_write()
 
     connection.send_message(websocket_api.result_message(msg["id"], {}))

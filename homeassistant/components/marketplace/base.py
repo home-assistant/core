@@ -153,6 +153,8 @@ class MarketplaceCommon:
     renamed_repositories: dict[str, str] = field(default_factory=dict)
     archived_repositories: set[str] = field(default_factory=set)
     ignored_repositories: set[str] = field(default_factory=set)
+    # The ids of repositories added by hand, the catalog does not list them
+    custom_repositories: set[str] = field(default_factory=set)
     skip: set[str] = field(default_factory=set)
 
 
@@ -719,6 +721,8 @@ class MarketplaceManager:
             )
 
         self.repositories.register(repository, default)
+        if check and not default:
+            self.common.custom_repositories.add(str(repository.data.id))
         return None
 
     async def startup_tasks(self, _: HomeAssistant | None = None) -> None:
@@ -744,6 +748,11 @@ class MarketplaceManager:
         self.recurring_tasks.append(
             async_track_time_interval(
                 self.hass, self.async_get_all_category_repositories, timedelta(hours=6)
+            )
+        )
+        self.recurring_tasks.append(
+            async_track_time_interval(
+                self.hass, self.async_handle_removed_repositories, timedelta(hours=6)
             )
         )
 
@@ -862,7 +871,7 @@ class MarketplaceManager:
         if (config_entry := self.configuration.config_entry) is None:
             return
 
-        platforms = [Platform.UPDATE]
+        platforms = [Platform.SWITCH, Platform.UPDATE]
 
         await self.hass.config_entries.async_unload_platforms(
             entry=config_entry,
@@ -967,6 +976,7 @@ class MarketplaceManager:
                     repository.data.category == category
                     and not repository.data.installed
                     and not self.repositories.is_default(str(repository.data.id))
+                    and str(repository.data.id) not in self.common.custom_repositories
                 ):
                     repository.logger.debug(
                         "%s Unregister stale custom repository", repository.string

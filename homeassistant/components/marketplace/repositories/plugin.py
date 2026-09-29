@@ -10,7 +10,12 @@ from homeassistant.components import lovelace
 from homeassistant.components.frontend import DATA_EXTRA_MODULE_URL
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from ..const import DASHBOARD_RESOURCE_BASE, DOMAIN, LEGACY_DASHBOARD_RESOURCE_BASE
+from ..const import (
+    DASHBOARD_RESOURCE_BASE,
+    DOMAIN,
+    LEGACY_DASHBOARD_RESOURCE_BASE,
+    RESTART_ISSUE_PREFIX,
+)
 from ..enums import MarketplaceSignal, RepositoryCategory
 from ..exceptions import CatalogContentUnresolvedError, MarketplaceError
 from ..utils.decorator import concurrent
@@ -99,7 +104,7 @@ class PluginRepository(Repository):
             async_create_issue(
                 hass=self.marketplace.hass,
                 domain=DOMAIN,
-                issue_id=f"restart_required_{self.data.id}_{self.ref}",
+                issue_id=f"{RESTART_ISSUE_PREFIX}{self.data.id}_{self.ref}",
                 is_fixable=True,
                 severity=IssueSeverity.WARNING,
                 translation_key="restart_required",
