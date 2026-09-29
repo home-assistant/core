@@ -65,9 +65,7 @@ async def test_options_flow_disabled_not_setup(
 async def test_async_step_user_macos(hass: HomeAssistant) -> None:
     """Test setting up manually with one adapter on MacOS."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "single_adapter"
@@ -90,9 +88,7 @@ async def test_async_step_user_macos(hass: HomeAssistant) -> None:
 async def test_async_step_user_linux_one_adapter(hass: HomeAssistant) -> None:
     """Test setting up manually with one adapter on Linux."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "single_adapter"
@@ -121,9 +117,7 @@ async def test_async_step_user_linux_crashed_adapter(
 ) -> None:
     """Test setting up manually with one crashed adapter on Linux."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_adapters"
@@ -133,9 +127,7 @@ async def test_async_step_user_linux_crashed_adapter(
 async def test_async_step_user_linux_two_adapters(hass: HomeAssistant) -> None:
     """Test setting up manually with two adapters on Linux."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "multiple_adapters"
@@ -164,9 +156,7 @@ async def test_async_step_user_only_allows_one(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, unique_id=DEFAULT_ADDRESS)
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_adapters"
@@ -557,9 +547,7 @@ async def test_async_step_user_linux_adapter_replace_ignored(
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
