@@ -1,5 +1,7 @@
 """Test Waze Travel Time sensors."""
 
+from json import JSONDecodeError
+
 import httpx
 import pytest
 from pywaze.route_calculator import WRCError
@@ -41,6 +43,13 @@ def mock_update_wrcerror_fixture(mock_update):
 def mock_update_connect_error_fixture(mock_update):
     """Mock an update to the sensor failed with httpx.ConnectError."""
     mock_update.side_effect = httpx.ConnectError("[Errno -3] Try again")
+    return mock_update
+
+
+@pytest.fixture(name="mock_update_json_error")
+def mock_update_json_error_fixture(mock_update):
+    """Mock an update to the sensor failed with a non-JSON response."""
+    mock_update.side_effect = JSONDecodeError("Expecting value", "", 0)
     return mock_update
 
 
@@ -153,6 +162,11 @@ async def test_excl_filter(hass: HomeAssistant) -> None:
         ),
         pytest.param(
             "mock_update_connect_error", "Connection error: ", id="connect_error"
+        ),
+        pytest.param(
+            "mock_update_json_error",
+            "Invalid response from Waze: ",
+            id="json_error",
         ),
     ],
 )
