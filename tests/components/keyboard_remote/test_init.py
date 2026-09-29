@@ -53,8 +53,6 @@ from .conftest import (
 
 from tests.common import MockConfigEntry, async_capture_events
 
-# --- Setup / unload tests ---
-
 
 async def test_setup_entry(
     hass: HomeAssistant,
@@ -124,9 +122,6 @@ async def test_multiple_entries_shared_manager(
     await hass.async_block_till_done()
 
     assert entry2.state is ConfigEntryState.NOT_LOADED
-
-
-# --- YAML import tests ---
 
 
 async def test_yaml_import_triggers_config_flow(hass: HomeAssistant) -> None:
@@ -344,9 +339,6 @@ async def test_async_setup_with_yaml_config(hass: HomeAssistant) -> None:
     assert mock_import.call_count == 2
 
 
-# --- DeviceHandler.matches_device tests ---
-
-
 async def test_matches_device_by_path(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -512,9 +504,6 @@ async def test_scan_prefers_device_path_over_name_match(
     assert list(manager._active_handlers_by_descriptor) == [FAKE_DEVICE_REAL_PATH]
     devices[sibling_path].close.assert_called_once()
     devices[FAKE_DEVICE_REAL_PATH].close.assert_not_called()
-
-
-# --- DeviceHandler start/stop monitoring tests ---
 
 
 async def test_device_start_monitoring_fires_connected_event(
@@ -754,9 +743,6 @@ async def test_late_read_failure_does_not_release_new_device(
     await handler.async_device_stop_monitoring()
 
 
-# --- DeviceHandler input monitoring tests ---
-
-
 async def test_monitor_input_fires_key_event(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -991,9 +977,6 @@ async def test_devices_are_released_on_hass_stop(
     mock_input_device.ungrab.assert_called_once()
     mock_input_device.close.assert_called_once()
     assert not manager._active_handlers_by_descriptor
-
-
-# --- KeyboardRemoteManager tests ---
 
 
 async def test_get_handler_for_device_oserror(

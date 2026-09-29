@@ -52,9 +52,6 @@ MOCK_SCAN_RESULT = [
 ]
 
 
-# --- User step tests ---
-
-
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_step_creates_entry(hass: HomeAssistant) -> None:
     """Test user step shows a form and creates a config entry on valid selection."""
@@ -278,9 +275,6 @@ async def test_user_step_offers_device_on_reused_yaml_descriptor(
     assert result["data_schema"].schema[CONF_DEVICE_PATH].config["options"] == [
         MOCK_SCAN_RESULT[1]
     ]
-
-
-# --- Import step tests ---
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -584,9 +578,6 @@ async def test_import_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-# --- Options flow tests ---
-
-
 async def test_options_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -636,9 +627,6 @@ async def test_options_flow_shows_device_path(
     assert result["description_placeholders"]["device_path"] == FAKE_DEVICE_PATH
 
 
-# --- _get_device_name tests ---
-
-
 def test_get_device_name_success() -> None:
     """Test _get_device_name returns device name and closes device."""
     mock_dev = MagicMock()
@@ -669,9 +657,6 @@ def test_get_device_name_oserror() -> None:
         result = _get_device_name(FAKE_DEVICE_PATH)
 
     assert result is None
-
-
-# --- _scan_input_devices_sync tests ---
 
 
 def test_scan_input_devices_no_dir() -> None:
@@ -765,9 +750,6 @@ def test_scan_input_devices_scandir_oserror() -> None:
         result = _scan_input_devices_sync()
 
     assert result == []
-
-
-# --- _resolve_yaml_device tests ---
 
 
 def test_resolve_yaml_descriptor_with_by_id() -> None:
