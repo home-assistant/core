@@ -209,6 +209,9 @@ class KeyboardRemoteManager:
         self._monitor_task: asyncio.Task | None = None
         self._stop_listener: CALLBACK_TYPE | None = None
         self._started = False
+        # Cleared as soon as stopping begins, unlike _started, so device checks
+        # still in flight cannot claim a device after the handlers were stopped.
+        self._accepting_devices = False
 
     async def async_start(self) -> None:
         """Start the inotify watcher (idempotent, lock-protected)."""
@@ -230,6 +233,7 @@ class KeyboardRemoteManager:
                 _LOGGER.error("Unable to watch %s for input devices: %s", DEVINPUT, err)
                 return
             self._watch_by_id()
+            self._accepting_devices = True
 
             # Config entries are not unloaded when Home Assistant stops, so
             # without this the devices are never ungrabbed on shutdown.
@@ -280,6 +284,7 @@ class KeyboardRemoteManager:
                 return
 
             _LOGGER.debug("Cleanup on shutdown")
+            self._accepting_devices = False
 
             if self._stop_listener is not None:
                 self._stop_listener()
@@ -492,7 +497,8 @@ class KeyboardRemoteManager:
         handler is really reading from.
         """
         if (
-            self._handlers.get(handler.entry.entry_id) is not handler
+            not self._accepting_devices
+            or self._handlers.get(handler.entry.entry_id) is not handler
             or descriptor in self._active_handlers_by_descriptor
             or handler.is_monitoring
         ):

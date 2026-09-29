@@ -1512,6 +1512,37 @@ async def test_stop_after_by_id_directory_removed(
     mock_input_device.close.assert_called_once()
 
 
+async def test_check_handler_does_not_claim_after_stop(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_input_device: MagicMock,
+) -> None:
+    """Test a device check that finishes after stop does not grab the device.
+
+    Check tasks are not tracked, and config entries stay registered when Home
+    Assistant stops, so the handler still looks valid when the check resumes.
+    """
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    manager: KeyboardRemoteManager = hass.data[DOMAIN]
+    handler = manager._handlers[mock_config_entry.entry_id]
+
+    await manager.async_stop()
+
+    with (
+        patch("evdev.list_devices", return_value=[FAKE_DEVICE_REAL_PATH]),
+        patch("evdev.InputDevice", return_value=mock_input_device),
+        patch.object(handler, "match_rank", return_value=MATCH_DEVICE_PATH),
+    ):
+        await manager._async_check_handler(handler)
+        await hass.async_block_till_done()
+
+    assert not handler.is_monitoring
+    assert not manager._active_handlers_by_descriptor
+    mock_input_device.close.assert_called_once()
+
+
 async def test_start_checks_handler_registered_during_scan(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
