@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This vehicle is already configured.",
-      "reauth_successful": "Re-authentication was successful."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "access_forbidden": "Access to this vehicle is forbidden.",
@@ -16,19 +15,9 @@
       "vehicle_not_found": "No vehicle found with this VIN."
     },
     "step": {
-      "reauth_confirm": {
-        "data": {
-          "api_key": "API key"
-        },
-        "data_description": {
-          "api_key": "Your API key from the MyŠkoda app under Profile -> Smart Home."
-        },
-        "description": "Your API key for this vehicle is no longer valid. Enter a new one to reconnect.",
-        "title": "Reauthenticate Škoda Connect"
-      },
       "user": {
         "data": {
-          "api_key": "API key",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
           "vin": "Vehicle VIN (17 characters)"
         },
         "data_description": {
@@ -60,7 +49,7 @@
           "ac": "AC",
           "dc": "DC",
           "not_charging": "Not charging",
-          "off": "Off"
+          "off": "[%key:common::state::off%]"
         }
       },
       "charging_power": {
@@ -97,9 +86,6 @@
       },
       "remaining_time_to_full_battery": {
         "name": "Time to full charge"
-      },
-      "timestamp_last_sync": {
-        "name": "Last synchronization"
       },
       "total_range": {
         "name": "Total range"

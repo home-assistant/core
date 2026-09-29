@@ -92,7 +92,7 @@ def mock_vehicle_response() -> VehicleResponse:
                 status=ChargingStatus(
                     charging_rate_in_kilometers_per_hour=20.0,
                     charge_power_in_kw=11.0,
-                    remaining_time_to_fully_charged_in_minutes=45,
+                    fully_charged_at="2024-01-15T14:30:00+00:00",
                     state=ChargingState.CHARGING,
                     charge_type=ChargeType.AC,
                     battery=BatteryStatus(

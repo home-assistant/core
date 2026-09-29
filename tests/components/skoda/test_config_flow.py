@@ -14,7 +14,6 @@ from skoda_public_api.api_layer.exceptions import (
     OpenApiTimeoutError,
     OpenApiVehicleNotFoundError,
 )
-from skoda_public_api.models.vehicle import VehicleResponse
 
 from homeassistant import config_entries
 from homeassistant.components.skoda.const import CONF_VIN, DOMAIN
@@ -23,8 +22,6 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv
-
-from tests.common import MockConfigEntry
 
 VIN = "TMBJM7NP2M1TMP511"
 API_KEY = "test-api-key"
@@ -91,17 +88,6 @@ def _serialized_api_key_field(result: ConfigFlowResult) -> dict:
 async def test_user_form_masks_api_key(hass: HomeAssistant) -> None:
     """Test the API key is entered in a masked password field."""
     result = await _init_flow(hass)
-
-    assert _serialized_api_key_field(result)["selector"]["text"]["type"] == "password"
-
-
-async def test_reauth_form_masks_api_key(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test the replacement API key is entered in a masked password field."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await mock_config_entry.start_reauth_flow(hass)
 
     assert _serialized_api_key_field(result)["selector"]["text"]["type"] == "password"
 
@@ -229,46 +215,3 @@ async def test_error_recovery(
     assert result["title"] == "Škoda Superb"
     assert mock.await_count == 2
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_reauth_success(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_vehicle_response: VehicleResponse,
-    request: pytest.FixtureRequest,
-) -> None:
-    """Test a successful reauth updates the stored API key and reloads the entry."""
-    mock_config_entry.add_to_hass(hass)
-    _patch_get_vehicle(request, return_value=mock_vehicle_response)
-
-    result = await mock_config_entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_API_KEY: "new-api-key"}
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert mock_config_entry.data[CONF_API_KEY] == "new-api-key"
-
-
-async def test_reauth_invalid_auth_shows_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    request: pytest.FixtureRequest,
-) -> None:
-    """Test an invalid API key during reauth keeps the form with an error."""
-    mock_config_entry.add_to_hass(hass)
-    _patch_get_vehicle(request, side_effect=OpenApiAuthenticationError())
-
-    result = await mock_config_entry.start_reauth_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_API_KEY: "still-bad-key"}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {"base": "invalid_auth"}

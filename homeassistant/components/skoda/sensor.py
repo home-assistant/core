@@ -35,9 +35,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .coordinator import SkodaUpdateCoordinator
+from .coordinator import SkodaConfigEntry, SkodaUpdateCoordinator
 from .entity import SkodaEntity
-from .models import SkodaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,19 +96,6 @@ def _mileage_value(entity: SkodaEntity) -> int | None:
     if odometer and odometer.mileage_in_km is not None:
         return odometer.mileage_in_km
     return None
-
-
-def _last_synchronization_value(entity: SkodaEntity) -> datetime | None:
-    status = entity.open_api_vehicle_status
-    if status is None or not status.car_captured_timestamp:
-        return None
-
-    timestamp = status.car_captured_timestamp
-    if isinstance(timestamp, datetime):
-        return dt_util.as_utc(timestamp)
-
-    parsed_dt = dt_util.parse_datetime(str(timestamp))
-    return dt_util.as_utc(parsed_dt) if parsed_dt else None
 
 
 def _fuel_level_value(entity: SkodaEntity) -> int | None:
@@ -204,13 +190,22 @@ def _charging_state_value(entity: SkodaEntity) -> str | None:
     return _CHARGING_STATE_MAP.get(charging.status.state)
 
 
-def _remaining_time_to_full_charge_value(entity: SkodaEntity) -> float | None:
+def _remaining_time_to_full_charge_value(entity: SkodaEntity) -> datetime | None:
     charging = entity.open_api_charging
     if not charging or not charging.status:
         return None
     if charging.status.state != ChargingState.CHARGING:
         return None
-    return charging.status.remaining_time_to_fully_charged_in_minutes
+
+    target_timestamp = charging.status.fully_charged_at
+    if target_timestamp is None:
+        return None
+
+    if isinstance(target_timestamp, datetime):
+        return dt_util.as_utc(target_timestamp)
+
+    parsed_dt = dt_util.parse_datetime(str(target_timestamp))
+    return dt_util.as_utc(parsed_dt) if parsed_dt else None
 
 
 def _charge_type_value(entity: SkodaEntity) -> str | None:
@@ -282,14 +277,6 @@ SENSOR_TYPES: tuple[SkodaSensorEntityDescription, ...] = (
         value_fn=_mileage_value,
     ),
     SkodaSensorEntityDescription(
-        key="timestamp_last_sync",
-        translation_key="timestamp_last_sync",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:cloud-sync-outline",
-        value_fn=_last_synchronization_value,
-    ),
-    SkodaSensorEntityDescription(
         key="fuel_level",
         translation_key="fuel_level",
         native_unit_of_measurement=PERCENTAGE,
@@ -303,7 +290,6 @@ SENSOR_TYPES: tuple[SkodaSensorEntityDescription, ...] = (
         translation_key="battery_percentage",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
-        icon="mdi:battery",
         required_capabilities=frozenset({VehicleCapability.CHARGING}),
         value_fn=_battery_percentage_value,
     ),
@@ -362,8 +348,7 @@ SENSOR_TYPES: tuple[SkodaSensorEntityDescription, ...] = (
     SkodaSensorEntityDescription(
         key="remaining_time_to_full_battery",
         translation_key="remaining_time_to_full_battery",
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        device_class=SensorDeviceClass.DURATION,
+        device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:battery-charging-medium",
         required_capabilities=frozenset({VehicleCapability.CHARGING}),
         value_fn=_remaining_time_to_full_charge_value,
@@ -414,6 +399,27 @@ SENSOR_TYPES: tuple[SkodaSensorEntityDescription, ...] = (
 )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: SkodaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Škoda sensors from ConfigEntry runtime_data."""
+    coordinator = entry.runtime_data.coordinator
+    vehicle_response = coordinator.data.vehicle_response if coordinator.data else None
+    capabilities = (
+        vehicle_response.supported_capabilities() if vehicle_response else set()
+    )
+    vin = vehicle_response.vehicle.vin if vehicle_response else None
+    _LOGGER.debug("[%s] CAPABILITIES: %s", vin, capabilities)
+
+    async_add_entities(
+        SkodaSensor(coordinator, description)
+        for description in SENSOR_TYPES
+        if description.is_supported(capabilities)
+    )
+
+
 class SkodaSensor(SkodaEntity, SensorEntity):
     """Generic Škoda sensor entity, driven entirely by its entity description."""
 
@@ -441,24 +447,3 @@ class SkodaSensor(SkodaEntity, SensorEntity):
         if self.entity_description.unit_fn is not None:
             return self.entity_description.unit_fn(self)
         return super().native_unit_of_measurement
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: SkodaConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up Škoda sensors from ConfigEntry runtime_data."""
-    coordinator = entry.runtime_data.coordinator
-    vehicle_response = coordinator.data.vehicle_response if coordinator.data else None
-    capabilities = (
-        vehicle_response.supported_capabilities() if vehicle_response else set()
-    )
-    vin = vehicle_response.vehicle.vin if vehicle_response else None
-    _LOGGER.debug("[%s] CAPABILITIES: %s", vin, capabilities)
-
-    async_add_entities(
-        SkodaSensor(coordinator, description)
-        for description in SENSOR_TYPES
-        if description.is_supported(capabilities)
-    )

@@ -77,11 +77,6 @@ def _make_charging_coordinator(
     return _make_vehicle_coordinator(SimpleNamespace(charging=charging, name=None))
 
 
-def _make_vehicle_status_coordinator(status: SimpleNamespace) -> SkodaUpdateCoordinator:
-    """Build a minimal fake coordinator exposing the given vehicle status."""
-    return _make_vehicle_coordinator(SimpleNamespace(status=status, name=None))
-
-
 def _make_auxiliary_heating_coordinator(
     auxiliary_heating: SimpleNamespace | None,
 ) -> SkodaUpdateCoordinator:
@@ -289,30 +284,6 @@ def test_remaining_ac_time_returns_none_without_target_timestamp() -> None:
     assert sensor.native_value is None
 
 
-def test_last_synchronization_parses_string_timestamp() -> None:
-    """A string timestamp from the API is parsed into a timezone-aware UTC datetime."""
-    status = SimpleNamespace(car_captured_timestamp="2024-01-10T10:00:00+00:00")
-    coordinator = _make_vehicle_status_coordinator(status)
-    sensor = SkodaSensor(coordinator, _description("timestamp_last_sync"))
-
-    assert sensor.native_value == dt_util.as_utc(
-        datetime.fromisoformat("2024-01-10T10:00:00+00:00")
-    )
-
-
-def test_last_synchronization_converts_naive_timestamp_object_to_utc() -> None:
-    """A timestamp that is already a datetime object is still normalized to UTC."""
-    timestamp = datetime(2024, 1, 10, 10, 0, 0)
-    status = SimpleNamespace(car_captured_timestamp=timestamp)
-    coordinator = _make_vehicle_status_coordinator(status)
-    sensor = SkodaSensor(coordinator, _description("timestamp_last_sync"))
-
-    native_value = sensor.native_value
-    assert isinstance(native_value, datetime)
-    assert native_value == dt_util.as_utc(timestamp)
-    assert native_value.tzinfo is not None
-
-
 def test_charging_power_returns_none_when_not_charging() -> None:
     """No charging power is reported while the vehicle isn't actively charging."""
     charging = SimpleNamespace(
@@ -329,8 +300,47 @@ def test_remaining_time_to_full_charge_returns_none_when_not_charging() -> None:
     charging = SimpleNamespace(
         status=SimpleNamespace(
             state=ChargingState.CONSERVING,
-            remaining_time_to_fully_charged_in_minutes=30,
+            fully_charged_at="2024-01-15T14:30:00+00:00",
         )
+    )
+    coordinator = _make_charging_coordinator(charging)
+    sensor = SkodaSensor(coordinator, _description("remaining_time_to_full_battery"))
+
+    assert sensor.native_value is None
+
+
+def test_remaining_time_to_full_charge_parses_datetime_target() -> None:
+    """A full-charge target already provided as a datetime is converted to UTC as-is."""
+    target = datetime(2024, 1, 15, 14, 30, 0)
+    charging = SimpleNamespace(
+        status=SimpleNamespace(state=ChargingState.CHARGING, fully_charged_at=target)
+    )
+    coordinator = _make_charging_coordinator(charging)
+    sensor = SkodaSensor(coordinator, _description("remaining_time_to_full_battery"))
+
+    assert sensor.native_value == dt_util.as_utc(target)
+
+
+def test_remaining_time_to_full_charge_parses_string_target() -> None:
+    """The full-charge target timestamp is parsed and converted to UTC while charging."""
+    charging = SimpleNamespace(
+        status=SimpleNamespace(
+            state=ChargingState.CHARGING,
+            fully_charged_at="2024-01-15T14:30:00+00:00",
+        )
+    )
+    coordinator = _make_charging_coordinator(charging)
+    sensor = SkodaSensor(coordinator, _description("remaining_time_to_full_battery"))
+    expected = dt_util.parse_datetime("2024-01-15T14:30:00+00:00")
+    assert expected is not None
+
+    assert sensor.native_value == dt_util.as_utc(expected)
+
+
+def test_remaining_time_to_full_charge_returns_none_without_target_timestamp() -> None:
+    """No full-charge target is reported when the API doesn't provide one."""
+    charging = SimpleNamespace(
+        status=SimpleNamespace(state=ChargingState.CHARGING, fully_charged_at=None)
     )
     coordinator = _make_charging_coordinator(charging)
     sensor = SkodaSensor(coordinator, _description("remaining_time_to_full_battery"))
