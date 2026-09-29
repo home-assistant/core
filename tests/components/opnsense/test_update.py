@@ -77,6 +77,7 @@ async def test_firmware_install(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_opnsense_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
     status: str,
 ) -> None:
     """Test starting a current-series or major firmware upgrade."""
@@ -84,6 +85,7 @@ async def test_firmware_install(
         {"status": status, "upgrade_major_version": "26.1"}
     )
     mock_opnsense_client.upgrade_firmware.return_value = {"status": "ok"}
+    mock_opnsense_client.upgrade_status.return_value = {"status": "running"}
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -95,6 +97,91 @@ async def test_firmware_install(
     )
 
     mock_opnsense_client.upgrade_firmware.assert_awaited_once_with(type=status)
+    assert hass.states.get("update.mock_title_firmware").attributes["in_progress"]
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_opnsense_client.upgrade_status.assert_awaited_once()
+    assert hass.states.get("update.mock_title_firmware").attributes["in_progress"]
+
+
+@pytest.mark.parametrize("terminal_status", ["done", "reboot", "error"])
+async def test_firmware_upgrade_finishes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    terminal_status: str,
+) -> None:
+    """Test terminal firmware status stops progress polling."""
+    mock_opnsense_client.get_firmware_update_info.return_value["status"] = "update"
+    mock_opnsense_client.upgrade_firmware.return_value = {"status": "ok"}
+    mock_opnsense_client.upgrade_status.return_value = {"status": terminal_status}
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "update", "install", {"entity_id": "update.mock_title_firmware"}, blocking=True
+    )
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not hass.states.get("update.mock_title_firmware").attributes["in_progress"]
+    mock_opnsense_client.upgrade_status.assert_awaited_once()
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_opnsense_client.upgrade_status.assert_awaited_once()
+
+
+async def test_firmware_upgrade_times_out(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test stalled firmware status eventually clears progress."""
+    mock_opnsense_client.get_firmware_update_info.return_value["status"] = "update"
+    mock_opnsense_client.upgrade_firmware.return_value = {"status": "ok"}
+    mock_opnsense_client.upgrade_status.return_value = {"status": "running"}
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "update", "install", {"entity_id": "update.mock_title_firmware"}, blocking=True
+    )
+    freezer.tick(timedelta(hours=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not hass.states.get("update.mock_title_firmware").attributes["in_progress"]
+
+
+async def test_firmware_upgrade_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test polling is cancelled when the update entity unloads."""
+    mock_opnsense_client.get_firmware_update_info.return_value["status"] = "update"
+    mock_opnsense_client.upgrade_firmware.return_value = {"status": "ok"}
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "update", "install", {"entity_id": "update.mock_title_firmware"}, blocking=True
+    )
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_opnsense_client.upgrade_status.assert_not_awaited()
 
 
 @pytest.mark.parametrize("response", [{"status": "failure"}, None])
