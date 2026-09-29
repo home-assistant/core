@@ -307,8 +307,8 @@ async def test_transform_interactions_stream_thinking_and_signature() -> None:
             part_details=[
                 PartDetails(
                     part_type="thought",
-                    index=18,
-                    length=0,
+                    index=0,
+                    length=18,
                     thought_signature="dGVzdF9zaWdfMTIz",
                 )
             ]
@@ -693,3 +693,143 @@ async def test_transform_interactions_stream_gemini_3_flash_google_search(
     )
     assert assistant_content.native.part_details[0].thought_signature == search_sig
     assert assistant_content.native.part_details[1].thought_signature == thought_sig
+
+
+async def test_transform_interactions_stream_multi_search_and_thought(
+    hass: HomeAssistant,
+) -> None:
+    """Test streaming multiple Google Searches and thoughts in a single turn."""
+    chat_log = conversation.ChatLog(hass, "test_conversation")
+
+    thought_1 = "First thought."
+    thought_2 = "Second thought."
+    sig_t1 = "sig_thought_1"
+    sig_t2 = "sig_thought_2"
+    sig_s1 = "sig_search_1"
+    sig_s2 = "sig_search_2"
+
+    async def mock_events():
+        # Step 0: Thought 1
+        yield interactions.StepStart(
+            index=0,
+            step=interactions.ThoughtStep(),
+        )
+        yield interactions.StepDelta(
+            index=0,
+            delta=interactions.ThoughtSummaryDelta(
+                content=interactions.TextContent(text=thought_1),
+            ),
+        )
+        yield interactions.StepDelta(
+            index=0,
+            delta=interactions.ThoughtSignatureDelta(signature=sig_t1),
+        )
+        yield interactions.StepStop(index=0)
+
+        # Step 1: Search 1
+        yield interactions.StepStart(
+            index=1,
+            step=interactions.GoogleSearchCallStep(
+                id="search_1",
+                arguments=interactions.GoogleSearchCallArguments(queries=None),
+            ),
+        )
+        yield interactions.StepDelta(
+            index=1,
+            delta=interactions.GoogleSearchCallDelta(
+                signature=sig_s1,
+                arguments=interactions.GoogleSearchCallArguments(queries=["query 1"]),
+            ),
+        )
+        yield interactions.StepStop(index=1)
+
+        # Step 2: Thought 2
+        yield interactions.StepStart(
+            index=2,
+            step=interactions.ThoughtStep(),
+        )
+        yield interactions.StepDelta(
+            index=2,
+            delta=interactions.ThoughtSummaryDelta(
+                content=interactions.TextContent(text=thought_2),
+            ),
+        )
+        yield interactions.StepDelta(
+            index=2,
+            delta=interactions.ThoughtSignatureDelta(signature=sig_t2),
+        )
+        yield interactions.StepStop(index=2)
+
+        # Step 3: Search 2
+        yield interactions.StepStart(
+            index=3,
+            step=interactions.GoogleSearchCallStep(
+                id="search_2",
+                arguments=interactions.GoogleSearchCallArguments(queries=None),
+            ),
+        )
+        yield interactions.StepDelta(
+            index=3,
+            delta=interactions.GoogleSearchCallDelta(
+                signature=sig_s2,
+                arguments=interactions.GoogleSearchCallArguments(queries=["query 2"]),
+            ),
+        )
+        yield interactions.StepStop(index=3)
+
+        # Step 4: Final text
+        yield interactions.StepStart(
+            index=4,
+            step=interactions.ModelOutputStep(),
+        )
+        yield interactions.StepDelta(
+            index=4,
+            delta=interactions.TextDelta(text="Final answer."),
+        )
+        yield interactions.StepStop(index=4)
+
+    contents = [
+        c
+        async for c in chat_log.async_add_delta_content_stream(
+            "test_agent", transform_interactions_stream(chat_log, mock_events())
+        )
+    ]
+
+    assistant_content = next(
+        c for c in contents if isinstance(c, conversation.AssistantContent)
+    )
+    assert isinstance(assistant_content, conversation.AssistantContent)
+    assert assistant_content.content == "Final answer."
+    assert assistant_content.thinking_content == f"{thought_1}{thought_2}"
+    assert len(assistant_content.tool_calls or []) == 2
+    assert assistant_content.tool_calls[0].tool_args == {"queries": ["query 1"]}
+    assert assistant_content.tool_calls[1].tool_args == {"queries": ["query 2"]}
+
+    assert assistant_content.native == ContentDetails(
+        part_details=[
+            PartDetails(
+                part_type="thought",
+                index=0,
+                length=len(thought_1),
+                thought_signature=sig_t1,
+            ),
+            PartDetails(
+                part_type="google_search_call",
+                index=0,
+                length=0,
+                thought_signature=sig_s1,
+            ),
+            PartDetails(
+                part_type="thought",
+                index=len(thought_1),
+                length=len(thought_2),
+                thought_signature=sig_t2,
+            ),
+            PartDetails(
+                part_type="google_search_call",
+                index=1,
+                length=0,
+                thought_signature=sig_s2,
+            ),
+        ]
+    )
