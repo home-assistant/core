@@ -858,69 +858,6 @@ async def test_config_flow_thread(
         assert start_addon.call_args == call("core_openthread_border_router")
 
 
-async def test_config_flow_thread_not_supported_over_serial_proxy(
-    hass: HomeAssistant,
-) -> None:
-    """Picking Thread for an adapter behind an ESPHome device explains and returns."""
-    init_result = await hass.config_entries.flow.async_init(
-        TEST_DOMAIN,
-        context={"source": "hardware"},
-        data={"device": TEST_PROXIED_DEVICE},
-    )
-    assert init_result["type"] is FlowResultType.MENU
-    assert init_result["step_id"] == "pick_firmware"
-
-    pick_result = await hass.config_entries.flow.async_configure(
-        init_result["flow_id"],
-        user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
-    )
-    assert pick_result["type"] is FlowResultType.FORM
-    assert pick_result["step_id"] == "thread_not_supported"
-    assert pick_result["description_placeholders"]["model"] == TEST_HARDWARE_NAME
-
-    # Acknowledging brings the choice back, with Zigbee still on offer
-    back_result = await hass.config_entries.flow.async_configure(
-        pick_result["flow_id"], user_input={}
-    )
-    assert back_result["type"] is FlowResultType.MENU
-    assert back_result["step_id"] == "pick_firmware"
-    assert STEP_PICK_FIRMWARE_ZIGBEE in back_result["menu_options"]
-
-
-async def test_options_flow_thread_not_supported_over_serial_proxy(
-    hass: HomeAssistant,
-) -> None:
-    """The same holds when changing the firmware of a configured adapter."""
-    config_entry = MockConfigEntry(
-        domain=TEST_DOMAIN,
-        data={
-            "firmware": "ezsp",
-            "device": TEST_PROXIED_DEVICE,
-            "hardware": TEST_HARDWARE_NAME,
-        },
-        version=1,
-        minor_version=2,
-    )
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-
-    init_result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert init_result["type"] is FlowResultType.MENU
-
-    pick_result = await hass.config_entries.options.async_configure(
-        init_result["flow_id"],
-        user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
-    )
-    assert pick_result["type"] is FlowResultType.FORM
-    assert pick_result["step_id"] == "thread_not_supported"
-
-    back_result = await hass.config_entries.options.async_configure(
-        pick_result["flow_id"], user_input={}
-    )
-    assert back_result["type"] is FlowResultType.MENU
-    assert back_result["step_id"] == "pick_firmware"
-
-
 @pytest.mark.usefixtures("addon_installed")
 async def test_config_flow_thread_addon_already_installed(
     hass: HomeAssistant,

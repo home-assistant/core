@@ -60,10 +60,6 @@
         "start_otbr_addon": {
           "title": "Configuring Thread"
         },
-        "thread_not_supported": {
-          "description": "Your {model} is connected to Home Assistant through an ESPHome device on your network. OpenThread Border Router needs a stable, low-latency connection to the radio and it is not recommended to run it over Ethernet or WiFi. Plug the {model} directly into your Home Assistant computer or use a standalone OpenThread Border Router instead.",
-          "title": "Thread is not available here"
-        },
         "zigbee_installation_type": {
           "description": "Choose the installation type for the Zigbee adapter.",
           "menu_option_descriptions": {

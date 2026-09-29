@@ -508,37 +508,12 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         """Continue the ZHA flow."""
         raise NotImplementedError
 
-    def _is_proxied_device(self) -> bool:
-        """Whether the adapter is reached through another device, not a local port."""
-        return self._device is not None and self._device.startswith("esphome-hass://")
-
     async def async_step_pick_firmware_thread(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Pick Thread firmware."""
-        if self._is_proxied_device():
-            return await self.async_step_thread_not_supported()
-
         self._picked_firmware_type = PickedFirmwareType.THREAD
         return await self._async_continue_picked_firmware()
-
-    async def async_step_thread_not_supported(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Explain that Thread needs the adapter on the host, then offer the choice again.
-
-        The OpenThread Border Router drives the 802.15.4 radio directly and needs a
-        low-latency link to it, which an adapter reached over Wi-Fi or Ethernet through an
-        ESPHome device cannot guarantee. Zigbee is unaffected. The option stays on the menu
-        so the reason is discoverable instead of the choice silently missing.
-        """
-        if user_input is not None:
-            return await self.async_step_pick_firmware()
-
-        return self.async_show_form(
-            step_id="thread_not_supported",
-            description_placeholders=self._get_translation_placeholders(),
-        )
 
     async def async_step_pick_firmware_thread_migrate(
         self, user_input: dict[str, Any] | None = None
@@ -761,10 +736,6 @@ class BaseFirmwareOptionsFlow(BaseFirmwareInstallFlow, OptionsFlow):
     ) -> ConfigFlowResult:
         """Pick Thread firmware."""
         assert self._device is not None
-
-        # Settled before asking who owns the port: Thread is impossible here whoever does
-        if self._is_proxied_device():
-            return await self.async_step_thread_not_supported()
 
         owners = await guess_hardware_owners(self.hass, self._device)
 

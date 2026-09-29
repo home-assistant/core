@@ -69,10 +69,6 @@
       "start_otbr_addon": {
         "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::start_otbr_addon::title%]"
       },
-      "thread_not_supported": {
-        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::thread_not_supported::description%]",
-        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::thread_not_supported::title%]"
-      },
       "zigbee_installation_type": {
         "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_installation_type::description%]",
         "menu_option_descriptions": {
@@ -221,10 +217,6 @@
       },
       "start_otbr_addon": {
         "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::start_otbr_addon::title%]"
-      },
-      "thread_not_supported": {
-        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::thread_not_supported::description%]",
-        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::thread_not_supported::title%]"
       },
       "uninstall_addon": {
         "data": {
