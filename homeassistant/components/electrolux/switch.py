@@ -128,7 +128,7 @@ class ElectroluxSwitch[T: HBAppliance](ElectroluxBaseEntity[T], SwitchEntity):
         self, command_fn: Callable[..., dict[str, Any]]
     ) -> None:
         command = command_fn(self._appliance_data)
-        await self.coordinator.send_command(command)
+        await self.coordinator.client.send_command(self._appliance_id, command)
         await self.coordinator.async_refresh()
 
     def _check_remote_control_enabled(self) -> None:
