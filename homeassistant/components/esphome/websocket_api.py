@@ -77,7 +77,7 @@ def get_device_capabilities(
 ) -> None:
     """Return cached ESPHome DeviceInfo capabilities for the device page."""
     device, candidate = dr.async_get_device_and_config_entry_for_domain(
-        hass, msg[DEVICE_ID], domain=DOMAIN, include_child_devices=False
+        hass, msg[DEVICE_ID], domain=DOMAIN
     )
     if device is None:
         connection.send_error(
@@ -94,7 +94,7 @@ def get_device_capabilities(
         return
     entry = cast(ESPHomeConfigEntry, candidate)
 
-    if not _is_main_esphome_device(device):
+    if isinstance(device, dr.ChildDeviceEntry):
         connection.send_error(
             msg["id"],
             websocket_api.ERR_NOT_FOUND,
@@ -138,13 +138,6 @@ def get_device_capabilities(
                 for proxy in device_info.serial_proxies
             ],
         },
-    )
-
-
-def _is_main_esphome_device(device: dr.DeviceEntry) -> bool:
-    """Return True if device is the MAC-connected ESPHome node."""
-    return any(
-        conn_type == dr.CONNECTION_NETWORK_MAC for conn_type, _ in device.connections
     )
 
 

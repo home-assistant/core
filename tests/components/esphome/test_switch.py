@@ -103,7 +103,7 @@ async def test_switch_sub_device_non_zero_device_id(
     assert main_state is not None
     assert main_state.state == STATE_ON
 
-    sub_state = hass.states.get("switch.sub_device_sub_switch")
+    sub_state = hass.states.get("switch.test_sub_device_sub_switch")
     assert sub_state is not None
     assert sub_state.state == STATE_OFF
 
@@ -111,7 +111,7 @@ async def test_switch_sub_device_non_zero_device_id(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.sub_device_sub_switch"},
+        {ATTR_ENTITY_ID: "switch.test_sub_device_sub_switch"},
         blocking=True,
     )
     mock_client.switch_command.assert_has_calls([call(2, True, device_id=11111111)])
@@ -121,7 +121,7 @@ async def test_switch_sub_device_non_zero_device_id(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.sub_device_sub_switch"},
+        {ATTR_ENTITY_ID: "switch.test_sub_device_sub_switch"},
         blocking=True,
     )
     mock_client.switch_command.assert_has_calls([call(2, False, device_id=11111111)])

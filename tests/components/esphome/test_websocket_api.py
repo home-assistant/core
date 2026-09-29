@@ -168,7 +168,7 @@ async def test_get_device_capabilities_wrong_domain(
     assert response["error"]["message"] == "Device is not an ESPHome device"
 
 
-async def test_get_device_capabilities_sub_device(
+async def test_get_device_capabilities_child_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
@@ -185,16 +185,16 @@ async def test_get_device_capabilities_sub_device(
         },
     )
 
-    sub_device = device_registry.async_get_device_by_identifier(
+    child_device = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_11111111"), device.entry.entry_id
     )
-    assert sub_device is not None
+    assert child_device is not None
 
     websocket_client = await hass_ws_client()
     await websocket_client.send_json_auto_id(
         {
             TYPE: "esphome/get_device_capabilities",
-            DEVICE_ID: sub_device.id,
+            DEVICE_ID: child_device.id,
         }
     )
 

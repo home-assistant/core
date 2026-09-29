@@ -498,6 +498,7 @@ async def test_cold_start_restores_same_key_on_sub_devices(
     hass: HomeAssistant,
     mock_client: APIClient,
     hass_storage: dict[str, Any],
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Restored states with the same key land on their own sub device entity."""
@@ -511,6 +512,10 @@ async def test_cold_start_restores_same_key_on_sub_devices(
 
     await _async_setup_without_connecting(hass, mock_client, entry)
 
+    main_device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:aa"), entry.entry_id
+    )
+    assert main_device is not None
     for info, expected in zip(_SUB_DEVICE_SENSOR_INFOS, ("11", "22"), strict=True):
         entity_id = entity_registry.async_get_entity_id(
             "sensor", DOMAIN, build_device_unique_id("11:22:33:44:55:AA", info)
@@ -519,6 +524,15 @@ async def test_cold_start_restores_same_key_on_sub_devices(
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == expected
+        # The entity is on a child device of the main device
+        child_device = device_registry.async_get_child_device_by_identifier(
+            (DOMAIN, f"11:22:33:44:55:AA_{info.device_id}"), entry.entry_id
+        )
+        assert child_device is not None
+        assert child_device.parent_device_id == main_device.id
+        entity_entry = entity_registry.async_get(entity_id)
+        assert entity_entry is not None
+        assert entity_entry.device_id == child_device.id
 
 
 async def test_restored_state_of_removed_entity_dropped_on_wake(
@@ -2543,7 +2557,7 @@ async def test_sub_device_creation(
     assert main_device.area_id == area_registry.async_get_area_by_name("Main Hub").id
 
     # Check sub devices are created
-    sub_device_1 = device_registry.async_get_device_by_identifier(
+    sub_device_1 = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_11111111"), device.entry.entry_id
     )
     assert sub_device_1 is not None
@@ -2551,9 +2565,9 @@ async def test_sub_device_creation(
     assert (
         sub_device_1.area_id == area_registry.async_get_area_by_name("Living Room").id
     )
-    assert sub_device_1.via_device_id == main_device.id
+    assert sub_device_1.parent_device_id == main_device.id
 
-    sub_device_2 = device_registry.async_get_device_by_identifier(
+    sub_device_2 = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_22222222"), device.entry.entry_id
     )
     assert sub_device_2 is not None
@@ -2561,15 +2575,15 @@ async def test_sub_device_creation(
     assert (
         sub_device_2.area_id == area_registry.async_get_area_by_name("Living Room").id
     )
-    assert sub_device_2.via_device_id == main_device.id
+    assert sub_device_2.parent_device_id == main_device.id
 
-    sub_device_3 = device_registry.async_get_device_by_identifier(
+    sub_device_3 = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_33333333"), device.entry.entry_id
     )
     assert sub_device_3 is not None
     assert sub_device_3.name == "Temperature Sensor"
     assert sub_device_3.area_id == area_registry.async_get_area_by_name("Bedroom").id
-    assert sub_device_3.via_device_id == main_device.id
+    assert sub_device_3.parent_device_id == main_device.id
 
 
 async def test_sub_device_cleanup(
@@ -2598,21 +2612,21 @@ async def test_sub_device_cleanup(
 
     # Verify all sub devices exist
     assert (
-        device_registry.async_get_device_by_identifier(
+        device_registry.async_get_child_device_by_identifier(
             (DOMAIN, f"{device.device_info.mac_address}_11111111"),
             device.entry.entry_id,
         )
         is not None
     )
     assert (
-        device_registry.async_get_device_by_identifier(
+        device_registry.async_get_child_device_by_identifier(
             (DOMAIN, f"{device.device_info.mac_address}_22222222"),
             device.entry.entry_id,
         )
         is not None
     )
     assert (
-        device_registry.async_get_device_by_identifier(
+        device_registry.async_get_child_device_by_identifier(
             (DOMAIN, f"{device.device_info.mac_address}_33333333"),
             device.entry.entry_id,
         )
@@ -2647,26 +2661,79 @@ async def test_sub_device_cleanup(
 
     # Verify device 2 was removed
     assert (
-        device_registry.async_get_device_by_identifier(
+        device_registry.async_get_child_device_by_identifier(
             (DOMAIN, f"{device.device_info.mac_address}_11111111"),
             device.entry.entry_id,
         )
         is not None
     )
     assert (
-        device_registry.async_get_device_by_identifier(
+        device_registry.async_get_child_device_by_identifier(
             (DOMAIN, f"{device.device_info.mac_address}_22222222"),
             device.entry.entry_id,
         )
         is None
     )  # Should be removed
     assert (
-        device_registry.async_get_device_by_identifier(
+        device_registry.async_get_child_device_by_identifier(
             (DOMAIN, f"{device.device_info.mac_address}_33333333"),
             device.entry.entry_id,
         )
         is not None
     )
+
+
+async def test_legacy_devices_converted_to_child_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test child devices registered as full devices keep their device ids."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="11:22:33:44:55:aa",
+        data={CONF_HOST: "test.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        title="test",
+    )
+    entry.add_to_hass(hass)
+    main_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:aa")},
+    )
+    legacy_sub_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "11:22:33:44:55:AA_11111111")},
+        name="Device 1",
+        via_device_id=main_device.id,
+    )
+    stale_sub_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "11:22:33:44:55:AA_22222222")},
+        name="Device 2",
+        via_device_id=main_device.id,
+    )
+    # The devices were registered by a previous setup session
+    device_registry.async_config_entry_unloaded(entry.entry_id)
+
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entry=entry,
+        device_info={
+            "devices": [SubDeviceInfo(device_id=11111111, name="Device 1", area_id=0)]
+        },
+    )
+
+    child_device = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, "11:22:33:44:55:AA_11111111"), entry.entry_id
+    )
+    assert child_device is not None
+    assert child_device.id == legacy_sub_device.id
+    assert child_device.parent_device_id == main_device.id
+    assert device_registry.async_get(stale_sub_device.id) is None
+    assert dr.async_entries_for_config_entry(device_registry, entry.entry_id) == [
+        device_registry.async_get(main_device.id)
+    ]
 
 
 async def test_sub_device_with_empty_name(
@@ -2694,7 +2761,7 @@ async def test_sub_device_with_empty_name(
     await hass.async_block_till_done()
 
     # Check sub device with empty name
-    sub_device_1 = device_registry.async_get_device_by_identifier(
+    sub_device_1 = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_11111111"), device.entry.entry_id
     )
     assert sub_device_1 is not None
@@ -2703,10 +2770,11 @@ async def test_sub_device_with_empty_name(
         (dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address),
         device.entry.entry_id,
     )
+    assert main_device is not None
     assert sub_device_1.name == main_device.name
 
     # Check sub device with valid name
-    sub_device_2 = device_registry.async_get_device_by_identifier(
+    sub_device_2 = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_22222222"), device.entry.entry_id
     )
     assert sub_device_2 is not None
@@ -2762,17 +2830,19 @@ async def test_sub_device_references_main_device_area(
         main_device.area_id == area_registry.async_get_area_by_name("Main Hub Area").id
     )
 
-    # Check sub device 1 uses main device's area
-    sub_device_1 = device_registry.async_get_device_by_identifier(
+    # Check child device 1 inherits the main device's area
+    sub_device_1 = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_11111111"), device.entry.entry_id
     )
     assert sub_device_1 is not None
+    assert sub_device_1.area_id is None
     assert (
-        sub_device_1.area_id == area_registry.async_get_area_by_name("Main Hub Area").id
+        dr.async_get_effective_area_id(hass, sub_device_1)
+        == area_registry.async_get_area_by_name("Main Hub Area").id
     )
 
     # Check sub device 2 uses Living Room
-    sub_device_2 = device_registry.async_get_device_by_identifier(
+    sub_device_2 = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_22222222"), device.entry.entry_id
     )
     assert sub_device_2 is not None
@@ -2781,7 +2851,7 @@ async def test_sub_device_references_main_device_area(
     )
 
     # Check sub device 3 uses Bedroom
-    sub_device_3 = device_registry.async_get_device_by_identifier(
+    sub_device_3 = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_33333333"), device.entry.entry_id
     )
     assert sub_device_3 is not None

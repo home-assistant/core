@@ -816,29 +816,29 @@ async def test_entity_assignment_to_sub_device(
     assert main_sensor.device_id == main_device.id
 
     # Check sub device 1 entity
-    sub_device_1 = device_registry.async_get_device_by_identifier(
+    sub_device_1 = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_11111111"), device.entry.entry_id
     )
     assert sub_device_1 is not None
 
-    motion_sensor = entity_registry.async_get("binary_sensor.motion_sensor_motion")
+    motion_sensor = entity_registry.async_get("binary_sensor.test_motion_sensor_motion")
     assert motion_sensor is not None
     assert motion_sensor.device_id == sub_device_1.id
 
     # Check sub device 2 entity
-    sub_device_2 = device_registry.async_get_device_by_identifier(
+    sub_device_2 = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_22222222"), device.entry.entry_id
     )
     assert sub_device_2 is not None
 
-    door_sensor = entity_registry.async_get("binary_sensor.door_sensor_door")
+    door_sensor = entity_registry.async_get("binary_sensor.test_door_sensor_door")
     assert door_sensor is not None
     assert door_sensor.device_id == sub_device_2.id
 
     # Check states
     assert hass.states.get("binary_sensor.test_main_sensor").state == STATE_ON
-    assert hass.states.get("binary_sensor.motion_sensor_motion").state == STATE_OFF
-    assert hass.states.get("binary_sensor.door_sensor_door").state == STATE_ON
+    assert hass.states.get("binary_sensor.test_motion_sensor_motion").state == STATE_OFF
+    assert hass.states.get("binary_sensor.test_door_sensor_door").state == STATE_ON
 
     # Check entity friendly names
     # Main device entity should have: "{device_name} {entity_name}"
@@ -846,11 +846,11 @@ async def test_entity_assignment_to_sub_device(
     assert main_sensor_state.attributes[ATTR_FRIENDLY_NAME] == "Test Main Sensor"
 
     # Sub device 1 entity should have: "Motion Sensor Motion"
-    motion_sensor_state = hass.states.get("binary_sensor.motion_sensor_motion")
+    motion_sensor_state = hass.states.get("binary_sensor.test_motion_sensor_motion")
     assert motion_sensor_state.attributes[ATTR_FRIENDLY_NAME] == "Motion Sensor Motion"
 
     # Sub device 2 entity should have: "Door Sensor Door"
-    door_sensor_state = hass.states.get("binary_sensor.door_sensor_door")
+    door_sensor_state = hass.states.get("binary_sensor.test_door_sensor_door")
     assert door_sensor_state.attributes[ATTR_FRIENDLY_NAME] == "Door Sensor Door"
 
 
@@ -921,21 +921,20 @@ async def test_entity_friendly_names_with_empty_device_names(
     )
 
     # Check entity friendly name on sub-device with empty name
-    # Since sub device has empty name, it falls back to main device name "Main device"
-    state_1 = hass.states.get("binary_sensor.main_device_motion_detected")
+    # The sub-device falls back to the main device name, so the entity_id
+    # carries it twice: once for the parent and once for the child device
+    state_1 = hass.states.get("binary_sensor.main_device_main_device_motion_detected")
     assert state_1 is not None
-    # With has_entity_name, friendly name is "{device_name} {entity_name}"
-    # Since sub-device falls back to main device name: "Main Device Motion Detected"
     assert state_1.attributes[ATTR_FRIENDLY_NAME] == "Main Device Motion Detected"
 
     # Check entity friendly name on sub-device with valid name
-    state_2 = hass.states.get("binary_sensor.kitchen_light_status")
+    state_2 = hass.states.get("binary_sensor.main_device_kitchen_light_status")
     assert state_2 is not None
     # Device has name "Kitchen Light", entity has name "Status"
     assert state_2.attributes[ATTR_FRIENDLY_NAME] == "Kitchen Light Status"
 
     # Test entity with empty name on sub-device
-    state_3 = hass.states.get("binary_sensor.kitchen_light")
+    state_3 = hass.states.get("binary_sensor.main_device_kitchen_light")
     assert state_3 is not None
     # Entity has empty name, so friendly name is just the device name
     assert state_3.attributes[ATTR_FRIENDLY_NAME] == "Kitchen Light"
@@ -1018,7 +1017,7 @@ async def test_entity_switches_between_devices(
     await device.mock_connect()
 
     # Verify entity is now on sub device 1
-    sub_device_1 = device_registry.async_get_device_by_identifier(
+    sub_device_1 = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_11111111"), device.entry.entry_id
     )
     assert sub_device_1 is not None
@@ -1047,7 +1046,7 @@ async def test_entity_switches_between_devices(
     await device.mock_connect()
 
     # Verify entity is now on sub device 2
-    sub_device_2 = device_registry.async_get_device_by_identifier(
+    sub_device_2 = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_22222222"), device.entry.entry_id
     )
     assert sub_device_2 is not None
@@ -1152,16 +1151,16 @@ async def test_entity_id_uses_sub_device_name(
     assert hass.states.get("binary_sensor.main_device_main_sensor") is not None
 
     # Check entity_id for sub device 1 entity
-    # Should be: binary_sensor.{sub_device_name}_{object_id}
-    assert hass.states.get("binary_sensor.motion_sensor_motion") is not None
+    # Should be: binary_sensor.{main_device_name}_{child_device_name}_{object_id}
+    assert hass.states.get("binary_sensor.main_device_motion_sensor_motion") is not None
 
     # Check entity_id for sub device 2 entity
-    # Should be: binary_sensor.{sub_device_name}_{object_id}
-    assert hass.states.get("binary_sensor.door_sensor_door") is not None
+    # Should be: binary_sensor.{main_device_name}_{child_device_name}_{object_id}
+    assert hass.states.get("binary_sensor.main_device_door_sensor_door") is not None
 
     # Check entity_id for entity without name on sub device
-    # Should be: binary_sensor.{sub_device_name}
-    assert hass.states.get("binary_sensor.motion_sensor") is not None
+    # Should be: binary_sensor.{main_device_name}_{child_device_name}
+    assert hass.states.get("binary_sensor.main_device_motion_sensor") is not None
 
 
 async def test_entity_id_with_empty_sub_device_name(
@@ -1204,9 +1203,9 @@ async def test_entity_id_with_empty_sub_device_name(
         states=states,
     )
 
-    # When sub device has empty name, entity_id should use main device name
-    # Should be: binary_sensor.{main_device_name}_{object_id}
-    assert hass.states.get("binary_sensor.main_device_sensor") is not None
+    # When sub device has empty name, it falls back to the main device name
+    # Should be: binary_sensor.{main_device_name}_{main_device_name}_{object_id}
+    assert hass.states.get("binary_sensor.main_device_main_device_sensor") is not None
 
 
 async def test_legacy_unique_id_migrated_to_v3_sub_device(
@@ -1312,17 +1311,6 @@ async def test_unique_id_migration_when_entity_moves_between_devices(
         SubDeviceInfo(device_id=22222222, name="kitchen_controller", area_id=0),
     ]
 
-    # Get the config entry from hass
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    entry = entries[0]
-
-    # Build device_id_to_name mapping like manager.py does
-    entry_data = entry.runtime_data
-    entry_data.device_id_to_name = {
-        sub_device.device_id: sub_device.name for sub_device in sub_devices
-    }
-
     # Create a new DeviceInfo with sub-devices since it's frozen
     # Get the current device info and convert to dict
     current_device_info = mock_client.device_info.return_value
@@ -1374,7 +1362,7 @@ async def test_unique_id_migration_when_entity_moves_between_devices(
     assert entity_entry.unique_id == expected_unique_id
 
     # Entity should now be associated with the sub-device
-    sub_device = device_registry.async_get_device_by_identifier(
+    sub_device = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_22222222"), device.entry.entry_id
     )
     assert sub_device is not None
@@ -1421,12 +1409,12 @@ async def test_unique_id_migration_sub_device_to_main_device(
     )
 
     # Check initial entity
-    state = hass.states.get("binary_sensor.kitchen_controller_temperature")
+    state = hass.states.get("binary_sensor.test_kitchen_controller_temperature")
     assert state is not None
 
     # Get the entity from registry
     entity_entry = entity_registry.async_get(
-        "binary_sensor.kitchen_controller_temperature"
+        "binary_sensor.test_kitchen_controller_temperature"
     )
     assert entity_entry is not None
     initial_unique_id = entity_entry.unique_id
@@ -1455,12 +1443,12 @@ async def test_unique_id_migration_sub_device_to_main_device(
     await hass.async_block_till_done()
 
     # The entity_id should remain the same
-    state = hass.states.get("binary_sensor.kitchen_controller_temperature")
+    state = hass.states.get("binary_sensor.test_kitchen_controller_temperature")
     assert state is not None
 
     # Get updated entity from registry
     entity_entry = entity_registry.async_get(
-        "binary_sensor.kitchen_controller_temperature"
+        "binary_sensor.test_kitchen_controller_temperature"
     )
     assert entity_entry is not None
 
@@ -1518,12 +1506,12 @@ async def test_unique_id_migration_between_sub_devices(
     )
 
     # Check initial entity
-    state = hass.states.get("binary_sensor.kitchen_controller_temperature")
+    state = hass.states.get("binary_sensor.test_kitchen_controller_temperature")
     assert state is not None
 
     # Get the entity from registry
     entity_entry = entity_registry.async_get(
-        "binary_sensor.kitchen_controller_temperature"
+        "binary_sensor.test_kitchen_controller_temperature"
     )
     assert entity_entry is not None
     initial_unique_id = entity_entry.unique_id
@@ -1552,12 +1540,12 @@ async def test_unique_id_migration_between_sub_devices(
     await hass.async_block_till_done()
 
     # The entity_id should remain the same
-    state = hass.states.get("binary_sensor.kitchen_controller_temperature")
+    state = hass.states.get("binary_sensor.test_kitchen_controller_temperature")
     assert state is not None
 
     # Get updated entity from registry
     entity_entry = entity_registry.async_get(
-        "binary_sensor.kitchen_controller_temperature"
+        "binary_sensor.test_kitchen_controller_temperature"
     )
     assert entity_entry is not None
 
@@ -1566,7 +1554,7 @@ async def test_unique_id_migration_between_sub_devices(
     assert entity_entry.unique_id == expected_unique_id
 
     # Entity should now be associated with the second sub-device
-    bedroom_device = device_registry.async_get_device_by_identifier(
+    bedroom_device = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_33333333"), device.entry.entry_id
     )
     assert bedroom_device is not None
@@ -1613,7 +1601,7 @@ async def test_entity_device_id_rename_in_yaml(
     )
 
     # Verify initial entity setup
-    state = hass.states.get("binary_sensor.old_device_sensor")
+    state = hass.states.get("binary_sensor.test_old_device_sensor")
     assert state is not None
     assert state.state == STATE_ON
 
@@ -1621,7 +1609,7 @@ async def test_entity_device_id_rename_in_yaml(
     await hass.async_block_till_done()
 
     # Get the entity from registry
-    entity_entry = entity_registry.async_get("binary_sensor.old_device_sensor")
+    entity_entry = entity_registry.async_get("binary_sensor.test_old_device_sensor")
     assert entity_entry is not None
     initial_unique_id = entity_entry.unique_id
     # Sub-device entities carry the sub-device id in the unique id
@@ -1633,17 +1621,6 @@ async def test_entity_device_id_rename_in_yaml(
     renamed_sub_devices = [
         SubDeviceInfo(device_id=99999999, name="renamed_device", area_id=0),
     ]
-
-    # Get the config entry from hass
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    entry = entries[0]
-
-    # Update device_id_to_name mapping
-    entry_data = entry.runtime_data
-    entry_data.device_id_to_name = {
-        sub_device.device_id: sub_device.name for sub_device in renamed_sub_devices
-    }
 
     # Create new DeviceInfo with renamed device
     current_device_info = mock_client.device_info.return_value
@@ -1674,17 +1651,17 @@ async def test_entity_device_id_rename_in_yaml(
     await hass.async_block_till_done()
 
     # The old entity should be gone (device was deleted)
-    state = hass.states.get("binary_sensor.old_device_sensor")
+    state = hass.states.get("binary_sensor.test_old_device_sensor")
     assert state is None
 
     # A new entity should exist with a new entity_id based on the new device name
     # This is a completely new entity, not a migrated one
-    state = hass.states.get("binary_sensor.renamed_device_sensor")
+    state = hass.states.get("binary_sensor.test_renamed_device_sensor")
     assert state is not None
     assert state.state == STATE_ON
 
     # Get the new entity from registry
-    entity_entry = entity_registry.async_get("binary_sensor.renamed_device_sensor")
+    entity_entry = entity_registry.async_get("binary_sensor.test_renamed_device_sensor")
     assert entity_entry is not None
 
     # Unique ID device segment should have the new device_id
@@ -1692,7 +1669,7 @@ async def test_entity_device_id_rename_in_yaml(
     assert entity_entry.unique_id == expected_unique_id
 
     # Entity should be associated with the new device
-    renamed_device = device_registry.async_get_device_by_identifier(
+    renamed_device = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_99999999"), device.entry.entry_id
     )
     assert renamed_device is not None
@@ -2263,13 +2240,17 @@ async def test_entities_rekeyed_on_sub_devices_with_same_name(
         entity_info=entity_info,
         states=states,
     )
-    entry_one = entity_registry.async_get("binary_sensor.sub_one_battery")
-    entry_two = entity_registry.async_get("binary_sensor.sub_two_battery")
+    entry_one = entity_registry.async_get("binary_sensor.test_sub_one_battery")
+    entry_two = entity_registry.async_get("binary_sensor.test_sub_two_battery")
     assert entry_one is not None
     assert entry_two is not None
 
-    actions_one = track_entity_registry_actions(hass, "binary_sensor.sub_one_battery")
-    actions_two = track_entity_registry_actions(hass, "binary_sensor.sub_two_battery")
+    actions_one = track_entity_registry_actions(
+        hass, "binary_sensor.test_sub_one_battery"
+    )
+    actions_two = track_entity_registry_actions(
+        hass, "binary_sensor.test_sub_two_battery"
+    )
 
     updated_entity_info = [
         BinarySensorInfo(
@@ -2287,8 +2268,8 @@ async def test_entities_rekeyed_on_sub_devices_with_same_name(
     ]
     await reconnect_with_updated_entity_info(hass, device, updated_entity_info)
 
-    new_entry_one = entity_registry.async_get("binary_sensor.sub_one_battery")
-    new_entry_two = entity_registry.async_get("binary_sensor.sub_two_battery")
+    new_entry_one = entity_registry.async_get("binary_sensor.test_sub_one_battery")
+    new_entry_two = entity_registry.async_get("binary_sensor.test_sub_two_battery")
     assert new_entry_one is not None
     assert new_entry_two is not None
     assert new_entry_one.id == entry_one.id
@@ -2304,8 +2285,8 @@ async def test_entities_rekeyed_on_sub_devices_with_same_name(
         BinarySensorState(key=101, state=True, missing_state=False, device_id=22222222)
     )
     await hass.async_block_till_done()
-    assert hass.states.get("binary_sensor.sub_one_battery").state == STATE_OFF
-    assert hass.states.get("binary_sensor.sub_two_battery").state == STATE_ON
+    assert hass.states.get("binary_sensor.test_sub_one_battery").state == STATE_OFF
+    assert hass.states.get("binary_sensor.test_sub_two_battery").state == STATE_ON
 
 
 async def test_entities_swap_keys(
@@ -2425,7 +2406,7 @@ async def test_entity_rekeyed_and_moved_between_devices(
     assert new_entry.id == entry_one.id
     assert "remove" not in actions_one
 
-    sub_device = device_registry.async_get_device_by_identifier(
+    sub_device = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_11111111"), device.entry.entry_id
     )
     assert sub_device is not None
@@ -2478,11 +2459,11 @@ async def test_entity_new_key_reuses_removed_entity_key_on_other_device(
         entity_info=entity_info,
         states=states,
     )
-    entry_two = entity_registry.async_get("binary_sensor.sub_one_sensor_two")
+    entry_two = entity_registry.async_get("binary_sensor.test_sub_one_sensor_two")
     assert entry_two is not None
 
     actions_two = track_entity_registry_actions(
-        hass, "binary_sensor.sub_one_sensor_two"
+        hass, "binary_sensor.test_sub_one_sensor_two"
     )
 
     # Sensor Two is removed while a new Sensor Three on the main
@@ -2501,7 +2482,7 @@ async def test_entity_new_key_reuses_removed_entity_key_on_other_device(
     ]
     await reconnect_with_updated_entity_info(hass, device, updated_entity_info)
 
-    assert entity_registry.async_get("binary_sensor.sub_one_sensor_two") is None
+    assert entity_registry.async_get("binary_sensor.test_sub_one_sensor_two") is None
     assert actions_two == ["remove"]
     entry_three = entity_registry.async_get("binary_sensor.test_sensor_three")
     assert entry_three is not None
@@ -2565,15 +2546,21 @@ async def test_entities_with_same_name_moved_between_devices(
         entity_info=entity_info,
         states=states,
     )
-    entry_one = entity_registry.async_get("binary_sensor.sub_one_battery")
-    entry_two = entity_registry.async_get("binary_sensor.sub_two_battery")
+    entry_one = entity_registry.async_get("binary_sensor.test_sub_one_battery")
+    entry_two = entity_registry.async_get("binary_sensor.test_sub_two_battery")
     assert entry_one is not None
     assert entry_two is not None
-    assert entity_registry.async_get("binary_sensor.sub_five_battery") is not None
+    assert entity_registry.async_get("binary_sensor.test_sub_five_battery") is not None
 
-    actions_one = track_entity_registry_actions(hass, "binary_sensor.sub_one_battery")
-    actions_two = track_entity_registry_actions(hass, "binary_sensor.sub_two_battery")
-    actions_five = track_entity_registry_actions(hass, "binary_sensor.sub_five_battery")
+    actions_one = track_entity_registry_actions(
+        hass, "binary_sensor.test_sub_one_battery"
+    )
+    actions_two = track_entity_registry_actions(
+        hass, "binary_sensor.test_sub_two_battery"
+    )
+    actions_five = track_entity_registry_actions(
+        hass, "binary_sensor.test_sub_five_battery"
+    )
 
     # Two of the same named entities move to new sub devices with
     # stable keys while the third is removed
@@ -2593,22 +2580,22 @@ async def test_entities_with_same_name_moved_between_devices(
     ]
     await reconnect_with_updated_entity_info(hass, device, updated_entity_info)
 
-    new_entry_one = entity_registry.async_get("binary_sensor.sub_one_battery")
-    new_entry_two = entity_registry.async_get("binary_sensor.sub_two_battery")
+    new_entry_one = entity_registry.async_get("binary_sensor.test_sub_one_battery")
+    new_entry_two = entity_registry.async_get("binary_sensor.test_sub_two_battery")
     assert new_entry_one is not None
     assert new_entry_two is not None
     assert new_entry_one.id == entry_one.id
     assert new_entry_two.id == entry_two.id
     assert "remove" not in actions_one
     assert "remove" not in actions_two
-    assert entity_registry.async_get("binary_sensor.sub_five_battery") is None
+    assert entity_registry.async_get("binary_sensor.test_sub_five_battery") is None
     assert actions_five == ["remove"]
 
     mac = device.device_info.mac_address
-    sub_three = device_registry.async_get_device_by_identifier(
+    sub_three = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{mac}_33333333"), device.entry.entry_id
     )
-    sub_four = device_registry.async_get_device_by_identifier(
+    sub_four = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{mac}_44444444"), device.entry.entry_id
     )
     assert sub_three is not None
@@ -2624,8 +2611,8 @@ async def test_entities_with_same_name_moved_between_devices(
         BinarySensorState(key=1, state=True, missing_state=False, device_id=44444444)
     )
     await hass.async_block_till_done()
-    assert hass.states.get("binary_sensor.sub_one_battery").state == STATE_OFF
-    assert hass.states.get("binary_sensor.sub_two_battery").state == STATE_ON
+    assert hass.states.get("binary_sensor.test_sub_one_battery").state == STATE_OFF
+    assert hass.states.get("binary_sensor.test_sub_two_battery").state == STATE_ON
 
 
 async def test_entity_rekeyed_while_old_key_reused_by_renamed_entity(
@@ -2739,13 +2726,17 @@ async def test_entity_moved_into_removed_entities_key_slot(
         entity_info=entity_info,
         states=states,
     )
-    entry_batt = entity_registry.async_get("binary_sensor.sub_one_batt")
-    entry_volt = entity_registry.async_get("binary_sensor.sub_two_volt")
+    entry_batt = entity_registry.async_get("binary_sensor.test_sub_one_batt")
+    entry_volt = entity_registry.async_get("binary_sensor.test_sub_two_volt")
     assert entry_batt is not None
     assert entry_volt is not None
 
-    actions_batt = track_entity_registry_actions(hass, "binary_sensor.sub_one_batt")
-    actions_volt = track_entity_registry_actions(hass, "binary_sensor.sub_two_volt")
+    actions_batt = track_entity_registry_actions(
+        hass, "binary_sensor.test_sub_one_batt"
+    )
+    actions_volt = track_entity_registry_actions(
+        hass, "binary_sensor.test_sub_two_volt"
+    )
 
     # Batt moves to sub_two keeping key 5, taking over Volt's old
     # (device_id, key) slot; Volt is removed
@@ -2759,25 +2750,25 @@ async def test_entity_moved_into_removed_entities_key_slot(
     ]
     await reconnect_with_updated_entity_info(hass, device, updated_entity_info)
 
-    new_entry_batt = entity_registry.async_get("binary_sensor.sub_one_batt")
+    new_entry_batt = entity_registry.async_get("binary_sensor.test_sub_one_batt")
     assert new_entry_batt is not None
     assert new_entry_batt.id == entry_batt.id
     assert "remove" not in actions_batt
 
-    sub_two = device_registry.async_get_device_by_identifier(
+    sub_two = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_22222222"), device.entry.entry_id
     )
     assert sub_two is not None
     assert new_entry_batt.device_id == sub_two.id
 
-    assert entity_registry.async_get("binary_sensor.sub_two_volt") is None
+    assert entity_registry.async_get("binary_sensor.test_sub_two_volt") is None
     assert actions_volt == ["remove"]
 
     device.set_state(
         BinarySensorState(key=5, state=False, missing_state=False, device_id=22222222)
     )
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.sub_one_batt")
+    state = hass.states.get("binary_sensor.test_sub_one_batt")
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_FRIENDLY_NAME] == "sub_two Batt"
 
@@ -2848,7 +2839,7 @@ async def test_entity_moved_while_new_entity_takes_old_slot_listed_first(
     assert new_entry_foo.id == entry_foo.id
     assert "remove" not in actions_foo
 
-    sub_one = device_registry.async_get_device_by_identifier(
+    sub_one = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_11111111"), device.entry.entry_id
     )
     assert sub_one is not None
@@ -2910,13 +2901,17 @@ async def test_entity_renamed_with_stable_key_and_same_named_sibling(
         entity_info=entity_info,
         states=states,
     )
-    entry_one = entity_registry.async_get("binary_sensor.sub_one_battery")
-    entry_two = entity_registry.async_get("binary_sensor.sub_two_battery")
+    entry_one = entity_registry.async_get("binary_sensor.test_sub_one_battery")
+    entry_two = entity_registry.async_get("binary_sensor.test_sub_two_battery")
     assert entry_one is not None
     assert entry_two is not None
 
-    actions_one = track_entity_registry_actions(hass, "binary_sensor.sub_one_battery")
-    actions_two = track_entity_registry_actions(hass, "binary_sensor.sub_two_battery")
+    actions_one = track_entity_registry_actions(
+        hass, "binary_sensor.test_sub_one_battery"
+    )
+    actions_two = track_entity_registry_actions(
+        hass, "binary_sensor.test_sub_two_battery"
+    )
 
     # Case only rename on sub_one keeps the object_id and key stable;
     # sub_two still carries the old name
@@ -2936,8 +2931,8 @@ async def test_entity_renamed_with_stable_key_and_same_named_sibling(
     ]
     await reconnect_with_updated_entity_info(hass, device, updated_entity_info)
 
-    new_entry_one = entity_registry.async_get("binary_sensor.sub_one_battery")
-    new_entry_two = entity_registry.async_get("binary_sensor.sub_two_battery")
+    new_entry_one = entity_registry.async_get("binary_sensor.test_sub_one_battery")
+    new_entry_two = entity_registry.async_get("binary_sensor.test_sub_two_battery")
     assert new_entry_one is not None
     assert new_entry_two is not None
     assert new_entry_one.id == entry_one.id
@@ -2953,7 +2948,7 @@ async def test_entity_renamed_with_stable_key_and_same_named_sibling(
         BinarySensorState(key=1, state=False, missing_state=False, device_id=11111111)
     )
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.sub_one_battery")
+    state = hass.states.get("binary_sensor.test_sub_one_battery")
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_FRIENDLY_NAME] == "sub_one BATTERY"
 
@@ -3051,12 +3046,14 @@ async def test_entity_renamed_while_same_named_sibling_moves(
         states=states,
     )
     entry_main = entity_registry.async_get("binary_sensor.test_battery")
-    entry_sub = entity_registry.async_get("binary_sensor.sub_one_battery")
+    entry_sub = entity_registry.async_get("binary_sensor.test_sub_one_battery")
     assert entry_main is not None
     assert entry_sub is not None
 
     actions_main = track_entity_registry_actions(hass, "binary_sensor.test_battery")
-    actions_sub = track_entity_registry_actions(hass, "binary_sensor.sub_one_battery")
+    actions_sub = track_entity_registry_actions(
+        hass, "binary_sensor.test_sub_one_battery"
+    )
 
     # Case only rename on the main device while the sub_one sibling
     # moves to sub_two; the renamed entity is listed first
@@ -3076,7 +3073,7 @@ async def test_entity_renamed_while_same_named_sibling_moves(
     await reconnect_with_updated_entity_info(hass, device, updated_entity_info)
 
     new_entry_main = entity_registry.async_get("binary_sensor.test_battery")
-    new_entry_sub = entity_registry.async_get("binary_sensor.sub_one_battery")
+    new_entry_sub = entity_registry.async_get("binary_sensor.test_sub_one_battery")
     assert new_entry_main is not None
     assert new_entry_sub is not None
     assert new_entry_main.id == entry_main.id
@@ -3089,7 +3086,7 @@ async def test_entity_renamed_while_same_named_sibling_moves(
         device.device_info.mac_address, updated_entity_info[0]
     )
     # The sibling migrated to sub_two
-    sub_two = device_registry.async_get_device_by_identifier(
+    sub_two = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_22222222"), device.entry.entry_id
     )
     assert sub_two is not None
@@ -3101,7 +3098,7 @@ async def test_entity_renamed_while_same_named_sibling_moves(
     )
     await hass.async_block_till_done()
     state_main = hass.states.get("binary_sensor.test_battery")
-    state_sub = hass.states.get("binary_sensor.sub_one_battery")
+    state_sub = hass.states.get("binary_sensor.test_sub_one_battery")
     assert state_main.state == STATE_OFF
     assert state_main.attributes[ATTR_FRIENDLY_NAME] == "Test BATTERY"
     assert state_sub.state == STATE_ON
@@ -3220,7 +3217,7 @@ async def test_new_entity_on_other_device_reusing_removed_entities_key(
     )
 
     assert hass.states.get("binary_sensor.test_volt") is None
-    assert hass.states.get("binary_sensor.sub_one_batt").state == STATE_UNKNOWN
+    assert hass.states.get("binary_sensor.test_sub_one_batt").state == STATE_UNKNOWN
 
 
 async def test_unnamed_entities_do_not_pair_across_devices(
@@ -3278,7 +3275,7 @@ async def test_unnamed_entities_do_not_pair_across_devices(
 
     assert entity_registry.async_get("binary_sensor.test") is None
     assert actions_main == ["remove"]
-    entry_sub = entity_registry.async_get("binary_sensor.sub_one")
+    entry_sub = entity_registry.async_get("binary_sensor.test_sub_one")
     assert entry_sub is not None
     assert entry_sub.id != entry_main.id
 
@@ -3323,7 +3320,7 @@ async def test_moved_entity_does_not_adopt_removed_entities_state(
         states=states,
     )
     assert hass.states.get("binary_sensor.test_foo").state == STATE_ON
-    assert hass.states.get("binary_sensor.sub_one_bar").state == STATE_OFF
+    assert hass.states.get("binary_sensor.test_sub_one_bar").state == STATE_OFF
 
     # Foo is removed while Bar moves to the main device and a firmware
     # rebuild hands it Foo's old key; no states are streamed
@@ -3339,7 +3336,7 @@ async def test_moved_entity_does_not_adopt_removed_entities_state(
     )
 
     assert hass.states.get("binary_sensor.test_foo") is None
-    assert hass.states.get("binary_sensor.sub_one_bar").state == STATE_UNKNOWN
+    assert hass.states.get("binary_sensor.test_sub_one_bar").state == STATE_UNKNOWN
 
 
 async def test_entity_move_with_claimed_unique_id(

@@ -744,11 +744,6 @@ class ESPHomeManager:
                 device_info.name,
                 device_mac,
             )
-        # Build device_id_to_name mapping for efficient lookup
-        entry_data.device_id_to_name = {
-            sub_device.device_id: sub_device.name or device_info.name
-            for sub_device in device_info.devices
-        }
         self.device_id = _async_setup_device_registry(hass, entry, entry_data)
 
         entry_data.async_update_device_state()
@@ -1209,6 +1204,16 @@ class ESPHomeManager:
             restore_states=bool(entry.unique_id)
         )
         if entry.unique_id:
+            if infos:
+                # Restored entities on child devices need the main device as parent
+                entry_data.main_device_id = (
+                    dr.async_get(hass)
+                    .async_get_or_create(
+                        config_entry_id=entry.entry_id,
+                        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)},
+                    )
+                    .id
+                )
             await entry_data.async_update_static_infos(
                 hass, entry, infos, entry.unique_id.upper()
             )
@@ -1279,26 +1284,6 @@ def _async_setup_device_registry(
         assert device_info is not None
 
     device_registry = dr.async_get(hass)
-    # Build sets of valid device identifiers and connections
-    valid_connections = {
-        (dr.CONNECTION_NETWORK_MAC, format_mac(device_info.mac_address))
-    }
-    valid_identifiers = {
-        (DOMAIN, f"{device_info.mac_address}_{sub_device.device_id}")
-        for sub_device in device_info.devices
-    }
-
-    # Remove devices that no longer exist
-    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
-        # Skip devices we want to keep
-        if (
-            device.connections & valid_connections
-            or device.identifiers & valid_identifiers
-        ):
-            continue
-        # Remove everything else
-        device_registry.async_remove_device(device.id)
-
     sw_version = device_info.esphome_version
     if device_info.compilation_time:
         sw_version += f" ({device_info.compilation_time})"
@@ -1322,13 +1307,12 @@ def _async_setup_device_registry(
         )
 
     suggested_area: str | None = None
-    if device_info.area and device_info.area.name:
+    if device_info.area.name:
         # Prefer device_info.area over suggested_area when area name is not empty
         suggested_area = device_info.area.name
     elif device_info.suggested_area:
         suggested_area = device_info.suggested_area
 
-    # Create/update main device
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         configuration_url=configuration_url,
@@ -1339,35 +1323,37 @@ def _async_setup_device_registry(
         sw_version=sw_version,
         suggested_area=suggested_area,
     )
+    entry_data.main_device_id = device_entry.id
 
-    # Handle sub devices
-    # Find available areas from device_info
     areas_by_id = {area.area_id: area for area in device_info.areas}
-    # Add the main device's area if it exists
-    if device_info.area:
-        areas_by_id[device_info.area.area_id] = device_info.area
-    # Create/update sub devices that should exist
-    for sub_device in device_info.devices:
-        # Determine the area for this sub device
-        sub_device_suggested_area: str | None = None
-        if sub_device.area_id is not None and sub_device.area_id in areas_by_id:
-            sub_device_suggested_area = areas_by_id[sub_device.area_id].name
+    valid_identifiers: set[tuple[str, str]] = set()
+    for child_device in device_info.devices:
+        child_device_suggested_area: str | None = None
+        if (area := areas_by_id.get(child_device.area_id)) is not None:
+            child_device_suggested_area = area.name
 
-        sub_device_entry = device_registry.async_get_or_create(
+        identifier = (DOMAIN, f"{device_info.mac_address}_{child_device.device_id}")
+        valid_identifiers.add(identifier)
+
+        device_registry.async_get_or_create_child(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, f"{device_info.mac_address}_{sub_device.device_id}")},
-            name=sub_device.name or device_entry.name,
-            manufacturer=manufacturer,
-            model=model,
-            sw_version=sw_version,
-            suggested_area=sub_device_suggested_area,
+            identifiers={identifier},
+            name=child_device.name or device_entry.name,
+            parent_device_id=device_entry.id,
+            suggested_area=child_device_suggested_area,
         )
 
-        # Update the sub device to set via_device_id
-        device_registry.async_update_device(
-            sub_device_entry.id,
-            via_device_id=device_entry.id,
-        )
+    # Any other main device is a legacy sub device that no longer exists; the
+    # ones that still exist were converted to child devices above
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        if device.id != device_entry.id:
+            device_registry.async_remove_device(device.id)
+    # Remove child devices that no longer exist
+    for child_device_entry in dr.async_child_entries_for_config_entry(
+        device_registry, entry.entry_id
+    ):
+        if not child_device_entry.identifiers & valid_identifiers:
+            device_registry.async_remove_device(child_device_entry.id)
 
     return device_entry.id
 
