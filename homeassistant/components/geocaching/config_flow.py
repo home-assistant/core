@@ -5,11 +5,14 @@ import logging
 import re
 from typing import Any, override
 
+from geocachingapi.exceptions import GeocachingApiError, GeocachingInvalidSettingsError
 from geocachingapi.geocachingapi import GeocachingApi
-import voluptuous as vol
+from geocachingapi.models import GeocachingSettings
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlowResult,
     ConfigSubentryFlow,
     OptionsFlow,
@@ -17,6 +20,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_CODE
 from homeassistant.core import callback
+from homeassistant.exceptions import OAuth2TokenRequestBaseError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
@@ -29,6 +33,7 @@ from .const import (
     MAX_TRACKED_TRACKABLES,
     SUBENTRY_TYPE_TRACKED_CACHE,
 )
+from .coordinator import GeocachingConfigEntry
 
 
 class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -101,6 +106,7 @@ class GeocachingCodeSubentryFlow(ConfigSubentryFlow):
 
     code_pattern: str
     invalid_code_error: str
+    not_found_error: str
     max_subentries: int
     max_subentries_abort: str
 
@@ -108,7 +114,9 @@ class GeocachingCodeSubentryFlow(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Add a Geocaching code subentry."""
-        entry = self._get_entry()
+        entry: GeocachingConfigEntry = self._get_entry()
+        if entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
         if (
             len(entry.get_subentries_of_type(self._subentry_type))
             >= self.max_subentries
@@ -127,15 +135,29 @@ class GeocachingCodeSubentryFlow(ConfigSubentryFlow):
             }:
                 errors[CONF_CODE] = "already_configured"
             else:
-                return self.async_create_entry(
-                    title=code,
-                    data={CONF_CODE: code},
-                    unique_id=code,
-                )
+                session = entry.runtime_data.session
+                try:
+                    await session.async_ensure_token_valid()
+                    await GeocachingApi(
+                        environment=ENVIRONMENT,
+                        token=session.token["access_token"],
+                        settings=GeocachingSettings(cache_codes={code}),
+                        session=async_get_clientsession(self.hass),
+                    ).verify_settings()
+                except GeocachingInvalidSettingsError:
+                    errors[CONF_CODE] = self.not_found_error
+                except GeocachingApiError, OAuth2TokenRequestBaseError:
+                    errors["base"] = "cannot_connect"
+                else:
+                    return self.async_create_entry(
+                        title=code,
+                        data={CONF_CODE: code},
+                        unique_id=code,
+                    )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_CODE): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_CODE): str}),
             errors=errors,
         )
 
@@ -145,6 +167,7 @@ class TrackedCacheSubentryFlow(GeocachingCodeSubentryFlow):
 
     code_pattern = r"GC[A-Z0-9]+"
     invalid_code_error = "invalid_cache_code"
+    not_found_error = "cache_not_found"
     max_subentries = MAX_TRACKED_CACHES
     max_subentries_abort = "too_many_caches"
 
@@ -210,9 +233,9 @@ class GeocachingOptionsFlow(OptionsFlow):
         current_codes = self.config_entry.options.get(CONF_TRACKABLE_CODES, [])
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_TRACKABLE_CODES,
                         default=", ".join(current_codes),
                     ): str

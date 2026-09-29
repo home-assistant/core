@@ -3,6 +3,7 @@
 from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from geocachingapi.exceptions import GeocachingApiError, GeocachingInvalidSettingsError
 from geocachingapi.models import GeocachingStatus, GeocachingTrackable
 import pytest
 
@@ -11,6 +12,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.components.geocaching import config_flow
 from homeassistant.components.geocaching.const import (
     CONF_TRACKABLE_CODES,
     DOMAIN,
@@ -20,10 +22,15 @@ from homeassistant.components.geocaching.const import (
     SUBENTRY_TYPE_TRACKED_CACHE,
 )
 from homeassistant.components.geocaching.sensor import PROFILE_SENSORS
-from homeassistant.config_entries import SOURCE_USER, ConfigSubentryDataWithId
+from homeassistant.config_entries import (
+    SOURCE_USER,
+    ConfigEntryState,
+    ConfigSubentryDataWithId,
+)
 from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import OAuth2TokenRequestConnectionError
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     device_registry as dr,
@@ -285,12 +292,22 @@ async def test_reauthentication(
     async_reload.assert_awaited_once_with(mock_config_entry.entry_id)
 
 
+def _mock_loaded(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Add the config entry to hass in a loaded state with an OAuth session."""
+    config_entry.add_to_hass(hass)
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    config_entry.runtime_data = MagicMock()
+    config_entry.runtime_data.session.async_ensure_token_valid = AsyncMock()
+    config_entry.runtime_data.session.token = {"access_token": "mock-access-token"}
+
+
 async def test_subentry_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_geocaching_config_flow: MagicMock,
 ) -> None:
     """Test adding and normalizing a tracked cache subentry."""
-    mock_config_entry.add_to_hass(hass)
+    _mock_loaded(hass, mock_config_entry)
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_TRACKED_CACHE),
@@ -311,14 +328,117 @@ async def test_subentry_flow(
     assert subentry.title == "GC12345"
     assert subentry.unique_id == "GC12345"
     assert subentry.data == {CONF_CODE: "GC12345"}
+    geocaching_api = config_flow.GeocachingApi
+    assert geocaching_api.call_args.kwargs["token"] == "mock-access-token"
+    assert geocaching_api.call_args.kwargs["settings"].tracked_cache_codes == {
+        "GC12345"
+    }
+    mock_config_entry.runtime_data.session.async_ensure_token_valid.assert_awaited_once()
+    mock_geocaching_config_flow.verify_settings.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("exception", "errors"),
+    [
+        pytest.param(
+            GeocachingInvalidSettingsError("geocache", {"GC12345"}),
+            {CONF_CODE: "cache_not_found"},
+            id="cache_not_found",
+        ),
+        pytest.param(
+            GeocachingApiError(),
+            {"base": "cannot_connect"},
+            id="cannot_connect",
+        ),
+    ],
+)
+async def test_subentry_flow_verify_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_geocaching_config_flow: MagicMock,
+    exception: Exception,
+    errors: dict[str, str],
+) -> None:
+    """Test verification errors when adding a subentry and recovering."""
+    _mock_loaded(hass, mock_config_entry)
+    mock_geocaching_config_flow.verify_settings.side_effect = exception
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_TRACKED_CACHE),
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CODE: "GC12345"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == errors
+    assert not mock_config_entry.subentries
+
+    mock_geocaching_config_flow.verify_settings.side_effect = None
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CODE: "GC12345"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_subentry_flow_token_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_geocaching_config_flow: MagicMock,
+) -> None:
+    """Test a token refresh error when adding a subentry and recovering."""
+    _mock_loaded(hass, mock_config_entry)
+    session = mock_config_entry.runtime_data.session
+    session.async_ensure_token_valid.side_effect = OAuth2TokenRequestConnectionError(
+        domain=DOMAIN
+    )
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_TRACKED_CACHE),
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CODE: "GC12345"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert not mock_config_entry.subentries
+    mock_geocaching_config_flow.verify_settings.assert_not_awaited()
+
+    session.async_ensure_token_valid.side_effect = None
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CODE: "GC12345"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_subentry_flow_entry_not_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test aborting when the config entry is not loaded."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_TRACKED_CACHE),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
 
 
 async def test_subentry_flow_invalid_code(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_geocaching_config_flow: MagicMock,
 ) -> None:
     """Test adding a subentry with an invalid code."""
-    mock_config_entry.add_to_hass(hass)
+    _mock_loaded(hass, mock_config_entry)
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_TRACKED_CACHE),
@@ -331,10 +451,12 @@ async def test_subentry_flow_invalid_code(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_CODE: "invalid_cache_code"}
+    mock_geocaching_config_flow.verify_settings.assert_not_awaited()
 
 
 async def test_subentry_flow_already_configured(
     hass: HomeAssistant,
+    mock_geocaching_config_flow: MagicMock,
 ) -> None:
     """Test adding an already configured subentry code."""
     config_entry = MockConfigEntry(
@@ -352,7 +474,7 @@ async def test_subentry_flow_already_configured(
             )
         ],
     )
-    config_entry.add_to_hass(hass)
+    _mock_loaded(hass, config_entry)
 
     result = await hass.config_entries.subentries.async_init(
         (config_entry.entry_id, SUBENTRY_TYPE_TRACKED_CACHE),
@@ -365,6 +487,7 @@ async def test_subentry_flow_already_configured(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_CODE: "already_configured"}
+    mock_geocaching_config_flow.verify_settings.assert_not_awaited()
 
 
 async def test_subentry_flow_maximum(
@@ -387,7 +510,7 @@ async def test_subentry_flow_maximum(
             for number in range(50)
         ],
     )
-    config_entry.add_to_hass(hass)
+    _mock_loaded(hass, config_entry)
 
     result = await hass.config_entries.subentries.async_init(
         (config_entry.entry_id, SUBENTRY_TYPE_TRACKED_CACHE),
