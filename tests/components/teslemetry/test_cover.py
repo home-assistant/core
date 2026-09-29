@@ -26,15 +26,15 @@ from . import assert_entities, setup_platform
 from .const import (
     COMMAND_ERRORS,
     COMMAND_OK,
+    CYBERTRUCK_VIN,
     METADATA,
+    METADATA_CYBERTRUCK,
     METADATA_NOSCOPE,
     PRODUCTS,
     PRODUCTS_CYBERTRUCK,
     VEHICLE_DATA_ALT,
     VEHICLE_DATA_NONE,
 )
-
-VIN = PRODUCTS_CYBERTRUCK["response"][0]["vin"]
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -95,21 +95,24 @@ async def test_cover_noscope(
 
 
 @pytest.mark.parametrize(
-    ("products", "expected"),
+    ("products", "metadata", "expected"),
     [
-        pytest.param(PRODUCTS, False, id="model3"),
-        pytest.param(PRODUCTS_CYBERTRUCK, True, id="cybertruck"),
+        pytest.param(PRODUCTS, METADATA, False, id="model3"),
+        pytest.param(PRODUCTS_CYBERTRUCK, METADATA_CYBERTRUCK, True, id="cybertruck"),
     ],
 )
 async def test_cover_tonneau_model_gate(
     hass: HomeAssistant,
     mock_products: AsyncMock,
+    mock_metadata: AsyncMock,
     products: dict,
+    metadata: dict,
     expected: bool,
 ) -> None:
-    """Tests that the tonneau cover is only created for a Cybertruck."""
+    """Tests that the tonneau cover is only created for a Cybertruck VIN."""
 
     mock_products.return_value = products
+    mock_metadata.return_value = metadata
     await setup_platform(hass, [Platform.COVER])
     assert (hass.states.get("cover.test_tonneau") is not None) == expected
 
@@ -131,8 +134,8 @@ async def test_cover_tonneau_firmware_gate(
     """Tests that the tonneau cover is only created on firmware >= 2024.44.25."""
 
     mock_products.return_value = PRODUCTS_CYBERTRUCK
-    metadata = deepcopy(METADATA)
-    metadata["vehicles"][VIN]["firmware"] = firmware
+    metadata = deepcopy(METADATA_CYBERTRUCK)
+    metadata["vehicles"][CYBERTRUCK_VIN]["firmware"] = firmware
     mock_metadata.return_value = metadata
 
     await setup_platform(hass, [Platform.COVER])
@@ -145,10 +148,12 @@ async def test_cover_cybertruck(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_products: AsyncMock,
+    mock_metadata: AsyncMock,
 ) -> None:
     """Tests that the cover entities are correct for a Cybertruck."""
 
     mock_products.return_value = PRODUCTS_CYBERTRUCK
+    mock_metadata.return_value = METADATA_CYBERTRUCK
     entry = await setup_platform(hass, [Platform.COVER])
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
@@ -157,10 +162,12 @@ async def test_cover_cybertruck(
 async def test_cover_tonneau_services(
     hass: HomeAssistant,
     mock_products: AsyncMock,
+    mock_metadata: AsyncMock,
 ) -> None:
     """Tests that the tonneau cover commands work for a Cybertruck."""
 
     mock_products.return_value = PRODUCTS_CYBERTRUCK
+    mock_metadata.return_value = METADATA_CYBERTRUCK
     await setup_platform(hass, [Platform.COVER])
 
     entity_id = "cover.test_tonneau"
@@ -207,19 +214,19 @@ async def test_cover_tonneau_services(
 async def test_cover_tonneau_streaming(
     hass: HomeAssistant,
     mock_products: AsyncMock,
+    mock_metadata: AsyncMock,
     mock_add_listener: AsyncMock,
 ) -> None:
     """Tests that the tonneau cover reflects streamed position and percent."""
 
     mock_products.return_value = PRODUCTS_CYBERTRUCK
+    mock_metadata.return_value = METADATA_CYBERTRUCK
     await setup_platform(hass, [Platform.COVER])
 
     entity_id = "cover.test_tonneau"
-    vin = PRODUCTS_CYBERTRUCK["response"][0]["vin"]
-
     mock_add_listener.send(
         {
-            "vin": vin,
+            "vin": CYBERTRUCK_VIN,
             "data": {
                 Signal.TONNEAU_POSITION: "TonneauPositionStateClosed",
                 Signal.TONNEAU_OPEN_PERCENT: 0,
@@ -236,7 +243,7 @@ async def test_cover_tonneau_streaming(
 
     mock_add_listener.send(
         {
-            "vin": vin,
+            "vin": CYBERTRUCK_VIN,
             "data": {
                 Signal.TONNEAU_POSITION: "TonneauPositionStateFullyOpen",
                 Signal.TONNEAU_OPEN_PERCENT: 100,

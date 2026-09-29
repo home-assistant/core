@@ -1,5 +1,6 @@
 """Tests for the Yoto integration setup."""
 
+import logging
 from unittest.mock import MagicMock, Mock, patch
 
 import aiohttp
@@ -98,6 +99,28 @@ async def test_status_push_tick(
     await hass.async_block_till_done()
 
     mock_yoto_client.request_player_status.assert_called_once_with("player-test")
+
+
+async def test_status_push_tick_error(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A failed status request is logged and the timer keeps running."""
+    caplog.set_level(logging.DEBUG)
+    mock_yoto_client.is_mqtt_connected = True
+    await setup_integration(hass, mock_config_entry)
+    mock_yoto_client.request_player_status.side_effect = YotoError("timed out")
+
+    for _ in range(2):
+        freezer.tick(STATUS_PUSH_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert mock_yoto_client.request_player_status.call_count == 2
+    assert "Status request for player-test failed: timed out" in caplog.text
 
 
 async def test_status_push_skipped_when_mqtt_disconnected(
