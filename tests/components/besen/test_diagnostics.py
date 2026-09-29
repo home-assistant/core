@@ -6,7 +6,9 @@ from unittest.mock import Mock
 from besen.models import BesenData, BoardRevision, ChargerInfo, CommandResult
 import pytest
 
-from homeassistant.components.besen.diagnostics import async_get_config_entry_diagnostics
+from homeassistant.components.besen.diagnostics import (
+    async_get_config_entry_diagnostics,
+)
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
