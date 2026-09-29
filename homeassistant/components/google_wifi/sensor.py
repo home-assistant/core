@@ -77,7 +77,7 @@ SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
     GoogleWifiSensorEntityDescription(
         key=ATTR_STATUS,
         icon="mdi:google",
-        value_fn=lambda status: status.wan.online,
+        value_fn=lambda status: "Online" if status.wan.online else "Offline",
     ),
 )
 

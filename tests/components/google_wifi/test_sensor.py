@@ -110,7 +110,7 @@ async def test_sensor_states_update_from_router_data(hass: HomeAssistant) -> Non
     assert hass.states.get("sensor.test_wifi_new_version").state == "idle"
     assert hass.states.get("sensor.test_wifi_uptime").state == "1.0"
     assert hass.states.get("sensor.test_wifi_local_ip").state == "10.0.0.10"
-    assert hass.states.get("sensor.test_wifi_status").state == "True"
+    assert hass.states.get("sensor.test_wifi_status").state == "Online"
 
 
 @pytest.mark.usefixtures("mock_success")
@@ -137,4 +137,4 @@ async def test_sensor_updates_after_failure_and_recovery(
     assert hass.states.get("sensor.test_wifi_new_version").state == "latest"
     assert hass.states.get("sensor.test_wifi_uptime").state == "2.0"
     assert hass.states.get("sensor.test_wifi_local_ip").state == "10.0.0.11"
-    assert hass.states.get("sensor.test_wifi_status").state == "False"
+    assert hass.states.get("sensor.test_wifi_status").state == "Offline"
