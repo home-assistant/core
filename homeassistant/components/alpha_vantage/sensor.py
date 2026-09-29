@@ -5,7 +5,7 @@ import logging
 
 from alpha_vantage.foreignexchange import ForeignExchange
 from alpha_vantage.timeseries import TimeSeries
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.sensor import (
@@ -44,27 +44,29 @@ ICONS = {
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-SYMBOL_SCHEMA = vol.Schema(
+SYMBOL_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_SYMBOL): cv.string,
-        vol.Optional(CONF_CURRENCY): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_SYMBOL): cv.string,
+        probatio.Optional(CONF_CURRENCY): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
     }
 )
 
-CURRENCY_SCHEMA = vol.Schema(
+CURRENCY_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_FROM): cv.string,
-        vol.Required(CONF_TO): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_FROM): cv.string,
+        probatio.Required(CONF_TO): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
     }
 )
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_FOREIGN_EXCHANGE): vol.All(cv.ensure_list, [CURRENCY_SCHEMA]),
-        vol.Optional(CONF_SYMBOLS): vol.All(cv.ensure_list, [SYMBOL_SCHEMA]),
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Optional(CONF_FOREIGN_EXCHANGE): probatio.All(
+            cv.ensure_list, [CURRENCY_SCHEMA]
+        ),
+        probatio.Optional(CONF_SYMBOLS): probatio.All(cv.ensure_list, [SYMBOL_SCHEMA]),
     }
 )
 

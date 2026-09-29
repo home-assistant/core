@@ -2,8 +2,8 @@
 
 import logging
 
+import probatio
 import pyombi
-import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_NAME,
@@ -39,44 +39,48 @@ _LOGGER = logging.getLogger(__name__)
 def urlbase(value) -> str:
     """Validate and transform urlbase."""
     if value is None:
-        raise vol.Invalid("string value is None")
+        raise probatio.Invalid("string value is None")
     value = str(value).strip("/")
     if not value:
         return value
     return f"{value}/"
 
 
-SUBMIT_MOVIE_REQUEST_SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): cv.string})
+SUBMIT_MOVIE_REQUEST_SERVICE_SCHEMA = probatio.Schema(
+    {probatio.Required(ATTR_NAME): cv.string}
+)
 
-SUBMIT_MUSIC_REQUEST_SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): cv.string})
+SUBMIT_MUSIC_REQUEST_SERVICE_SCHEMA = probatio.Schema(
+    {probatio.Required(ATTR_NAME): cv.string}
+)
 
-SUBMIT_TV_REQUEST_SERVICE_SCHEMA = vol.Schema(
+SUBMIT_TV_REQUEST_SERVICE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_NAME): cv.string,
-        vol.Optional(ATTR_SEASON, default=DEFAULT_SEASON): vol.In(
+        probatio.Required(ATTR_NAME): cv.string,
+        probatio.Optional(ATTR_SEASON, default=DEFAULT_SEASON): probatio.In(
             ["first", "latest", "all"]
         ),
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
-            vol.Schema(
+        DOMAIN: probatio.All(
+            probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): cv.string,
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Exclusive(CONF_API_KEY, "auth"): cv.string,
-                    vol.Exclusive(CONF_PASSWORD, "auth"): cv.string,
-                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                    vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): urlbase,
-                    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+                    probatio.Required(CONF_HOST): cv.string,
+                    probatio.Required(CONF_USERNAME): cv.string,
+                    probatio.Exclusive(CONF_API_KEY, "auth"): cv.string,
+                    probatio.Exclusive(CONF_PASSWORD, "auth"): cv.string,
+                    probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                    probatio.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): urlbase,
+                    probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
                 }
             ),
             cv.has_at_least_one_key(CONF_API_KEY, CONF_PASSWORD),
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

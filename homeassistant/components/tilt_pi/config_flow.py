@@ -3,8 +3,8 @@
 from typing import Any, override
 
 import aiohttp
+import probatio
 from tiltpi import TiltPiClient, TiltPiError
-import voluptuous as vol
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -59,6 +59,6 @@ class TiltPiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_URL): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_URL): str}),
             errors=errors,
         )

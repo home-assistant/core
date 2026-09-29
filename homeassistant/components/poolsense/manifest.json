@@ -7,5 +7,5 @@
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "loggers": ["poolsense"],
-  "requirements": ["poolsense==0.0.8"]
+  "requirements": ["poolsense==0.1.0"]
 }

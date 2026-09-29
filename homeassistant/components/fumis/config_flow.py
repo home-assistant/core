@@ -10,7 +10,7 @@ from fumis import (
     FumisInfo,
     FumisStoveOfflineError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_MAC, CONF_PIN
@@ -65,9 +65,9 @@ class FumisFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="dhcp_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PIN): TextSelector(
+                    probatio.Required(CONF_PIN): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }
@@ -99,12 +99,12 @@ class FumisFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_MAC): TextSelector(
+                        probatio.Required(CONF_MAC): TextSelector(
                             TextSelectorConfig(autocomplete="off")
                         ),
-                        vol.Required(CONF_PIN): TextSelector(
+                        probatio.Required(CONF_PIN): TextSelector(
                             TextSelectorConfig(type=TextSelectorType.PASSWORD)
                         ),
                     }
@@ -133,9 +133,9 @@ class FumisFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PIN): TextSelector(
+                    probatio.Required(CONF_PIN): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }
@@ -168,9 +168,9 @@ class FumisFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PIN): TextSelector(
+                    probatio.Required(CONF_PIN): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }

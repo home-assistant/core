@@ -10,11 +10,11 @@ from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 from propcache.api import cached_property
 import pytest
 from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentryData
 from homeassistant.const import (
@@ -979,7 +979,7 @@ async def test_entity_category_property(hass: HomeAssistant) -> None:
 )
 def test_entity_category_schema(value, expected) -> None:
     """Test entity category schema."""
-    schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
+    schema = probatio.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
     result = schema(value)
     assert result == expected
     assert isinstance(result, EntityCategory)
@@ -988,9 +988,9 @@ def test_entity_category_schema(value, expected) -> None:
 @pytest.mark.parametrize("value", [None, "non_existing"])
 def test_entity_category_schema_error(value) -> None:
     """Test entity category schema."""
-    schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
+    schema = probatio.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
     with pytest.raises(
-        vol.Invalid,
+        probatio.Invalid,
         match=r"expected EntityCategory or one of 'config', 'diagnostic'",
     ):
         schema(value)
@@ -1040,6 +1040,44 @@ async def _test_friendly_name(
 
     await async_update_entity(hass, ent.entity_id)
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name
+
+
+@pytest.mark.parametrize("has_entity_name", [False, True])
+async def test_friendly_name_empty_override_uses_device_name(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    has_entity_name: bool,
+) -> None:
+    """Test an empty name follows the device until the override is reset."""
+    ent = MockEntity(
+        unique_id="empty_name",
+        device_info={
+            "identifiers": {("test", "device")},
+            "name": "Device Bla",
+        },
+        has_entity_name=has_entity_name,
+        name="Temperature",
+    )
+    await _test_friendly_name(hass, ent, "Device Bla Temperature")
+
+    entry = entity_registry.async_update_entity(ent.entity_id, name="")
+    await hass.async_block_till_done()
+    assert hass.states.get(ent.entity_id).attributes[ATTR_FRIENDLY_NAME] == "Device Bla"
+
+    assert entry.device_id is not None
+    device_registry.async_update_device(entry.device_id, name_by_user="Living room")
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get(ent.entity_id).attributes[ATTR_FRIENDLY_NAME] == "Living room"
+    )
+
+    entity_registry.async_update_entity(ent.entity_id, name=None)
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get(ent.entity_id).attributes[ATTR_FRIENDLY_NAME]
+        == "Living room Temperature"
+    )
 
 
 @pytest.mark.parametrize(

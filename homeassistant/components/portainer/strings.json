@@ -2,8 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The Portainer instance ID does not match the previously configured instance. This can occur if the device was reset or reconfigured outside of Home Assistant."
     },
     "error": {
@@ -264,7 +262,7 @@
           "name": "Endpoint"
         },
         "until": {
-          "description": "Prune images unused for at least this time duration in the past. If not provided, all unused images will be pruned.",
+          "description": "Only prune images created longer ago than this duration. If not provided, images of any age are pruned.",
           "name": "Until"
         }
       },

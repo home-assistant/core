@@ -16,7 +16,7 @@ def mock_asyncio_subprocess_run(
         def returncode(self):
             return returncode
 
-        async def communicate(self):
+        async def communicate(self, input=None):
             if exception:
                 raise exception
             return response, b""

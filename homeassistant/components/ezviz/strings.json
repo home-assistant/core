@@ -3,7 +3,6 @@
     "abort": {
       "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
       "ezviz_cloud_account_missing": "EZVIZ cloud account missing. Please reconfigure EZVIZ cloud account",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {

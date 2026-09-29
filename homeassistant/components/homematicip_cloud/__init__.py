@@ -2,7 +2,7 @@
 
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
@@ -24,22 +24,24 @@ from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(DOMAIN, default=[]): vol.All(
+        probatio.Optional(DOMAIN, default=[]): probatio.All(
             cv.ensure_list,
             [
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Optional(CONF_NAME, default=""): vol.Any(cv.string),
-                        vol.Required(CONF_ACCESSPOINT): cv.string,
-                        vol.Required(CONF_AUTHTOKEN): cv.string,
+                        probatio.Optional(CONF_NAME, default=""): probatio.Any(
+                            cv.string
+                        ),
+                        probatio.Required(CONF_ACCESSPOINT): cv.string,
+                        probatio.Required(CONF_AUTHTOKEN): cv.string,
                     }
                 )
             ],
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

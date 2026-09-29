@@ -1,6 +1,6 @@
 """Support for LinkPlay media players."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -13,7 +13,7 @@ ATTR_PRESET_NUMBER = "preset_number"
 
 SERVICE_PLAY_PRESET_SCHEMA = cv.make_entity_service_schema(
     {
-        vol.Required(ATTR_PRESET_NUMBER): cv.positive_int,
+        probatio.Required(ATTR_PRESET_NUMBER): cv.positive_int,
     }
 )
 

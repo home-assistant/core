@@ -1,13 +1,12 @@
 """Support for Google Sheets."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
-from gspread import Client, Spreadsheet, Worksheet
-from gspread.exceptions import APIError
+from gspread import Client, GSpreadException, Spreadsheet, Worksheet
 from gspread.utils import ValueInputOption
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import (
@@ -21,7 +20,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import ConfigEntrySelector
 from homeassistant.util import dt as dt_util
-from homeassistant.util.json import JsonObjectType
+from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import DOMAIN
 
@@ -37,20 +36,24 @@ WORKSHEET = "worksheet"
 SERVICE_APPEND_SHEET = "append_sheet"
 SERVICE_GET_SHEET = "get_sheet"
 
-SHEET_SERVICE_SCHEMA = vol.All(
+SHEET_SERVICE_SCHEMA = probatio.All(
     {
-        vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Optional(WORKSHEET): cv.string,
-        vol.Optional(ADD_CREATED_COLUMN, default=True): cv.boolean,
-        vol.Required(DATA): vol.Any(cv.ensure_list, [dict]),
+        probatio.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
+        probatio.Optional(WORKSHEET): cv.string,
+        probatio.Optional(ADD_CREATED_COLUMN, default=True): cv.boolean,
+        probatio.Required(DATA): probatio.Any(cv.ensure_list, [dict]),
     },
 )
 
-get_SHEET_SERVICE_SCHEMA = vol.All(
+get_SHEET_SERVICE_SCHEMA = probatio.All(
     {
-        vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Optional(WORKSHEET): cv.string,
-        vol.Required(ROWS): cv.positive_int,
+        probatio.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
+        probatio.Optional(WORKSHEET): cv.string,
+        probatio.Required(ROWS): cv.positive_int,
     },
 )
 
@@ -69,6 +72,7 @@ def _get_worksheet(sheet: Spreadsheet, name: str | None) -> Worksheet:
 
 def _append_to_sheet(call: ServiceCall, entry: GoogleSheetsConfigEntry) -> None:
     """Run append in the executor."""
+    assert entry.unique_id is not None
     client = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))  # type: ignore[no-untyped-call]
     sheet = client.open_by_key(entry.unique_id)
     worksheet = _get_worksheet(sheet, call.data.get(WORKSHEET))
@@ -92,11 +96,12 @@ def _get_from_sheet(
     call: ServiceCall, entry: GoogleSheetsConfigEntry
 ) -> JsonObjectType:
     """Run get in the executor."""
+    assert entry.unique_id is not None
     client = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))  # type: ignore[no-untyped-call]
     sheet = client.open_by_key(entry.unique_id)
     worksheet = _get_worksheet(sheet, call.data.get(WORKSHEET))
     all_values = worksheet.get_values()
-    return {"range": all_values[-call.data[ROWS] :]}
+    return {"range": cast(JsonArrayType, all_values[-call.data[ROWS] :])}
 
 
 async def _async_append_to_sheet(call: ServiceCall) -> None:
@@ -110,7 +115,7 @@ async def _async_append_to_sheet(call: ServiceCall) -> None:
     except RefreshError:
         entry.async_start_reauth(call.hass)
         raise
-    except APIError as ex:
+    except (GSpreadException, PermissionError) as ex:
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="append_failed"
         ) from ex
@@ -127,7 +132,7 @@ async def _async_get_from_sheet(call: ServiceCall) -> ServiceResponse:
     except RefreshError:
         entry.async_start_reauth(call.hass)
         raise
-    except APIError as ex:
+    except (GSpreadException, PermissionError) as ex:
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="get_failed"
         ) from ex

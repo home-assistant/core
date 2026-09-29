@@ -179,7 +179,10 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
         if not self.client.is_mqtt_connected:
             return
         for device_id in list(self.client.players):
-            await self.client.request_player_status(device_id)
+            try:
+                await self.client.request_player_status(device_id)
+            except YotoError as err:
+                LOGGER.debug("Status request for %s failed: %s", device_id, err)
 
     def _mqtt_event(self, _player: YotoPlayer) -> None:
         """Handle a real-time update pushed by the Yoto MQTT broker."""

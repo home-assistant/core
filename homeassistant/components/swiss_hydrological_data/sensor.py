@@ -4,8 +4,8 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any, override
 
+import probatio
 from swisshydrodata import SwissHydroData
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -50,10 +50,10 @@ CONDITION_DETAILS = [
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_STATION): vol.Coerce(int),
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=[SENSOR_TEMPERATURE]): vol.All(
-            cv.ensure_list, [vol.In(CONDITIONS)]
-        ),
+        probatio.Required(CONF_STATION): probatio.Coerce(int),
+        probatio.Optional(
+            CONF_MONITORED_CONDITIONS, default=[SENSOR_TEMPERATURE]
+        ): probatio.All(cv.ensure_list, [probatio.In(CONDITIONS)]),
     }
 )
 

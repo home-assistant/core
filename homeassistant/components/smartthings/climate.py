@@ -115,6 +115,7 @@ PRESET_MODE_TO_HA = {
     "smart": "smart",
     "motionIndirect": "motion_indirect",
     "motionDirect": "motion_direct",
+    "dryComfort": "dry_comfort",
 }
 
 HA_MODE_TO_PRESET_MODE = {v: k for k, v in PRESET_MODE_TO_HA.items()}

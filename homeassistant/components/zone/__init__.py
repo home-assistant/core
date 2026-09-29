@@ -6,7 +6,7 @@ from operator import attrgetter
 import sys
 from typing import Any, Self, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.const import (  # noqa: F401
@@ -66,22 +66,22 @@ ICON_HOME = "mdi:home"
 ICON_IMPORT = "mdi:import"
 
 CREATE_FIELDS: VolDictType = {
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_LATITUDE): cv.latitude,
-    vol.Required(CONF_LONGITUDE): cv.longitude,
-    vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.Coerce(float),
-    vol.Optional(CONF_PASSIVE, default=DEFAULT_PASSIVE): cv.boolean,
-    vol.Optional(CONF_ICON): cv.icon,
+    probatio.Required(CONF_NAME): cv.string,
+    probatio.Required(CONF_LATITUDE): cv.latitude,
+    probatio.Required(CONF_LONGITUDE): cv.longitude,
+    probatio.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): probatio.Coerce(float),
+    probatio.Optional(CONF_PASSIVE, default=DEFAULT_PASSIVE): cv.boolean,
+    probatio.Optional(CONF_ICON): cv.icon,
 }
 
 
 UPDATE_FIELDS: VolDictType = {
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_LATITUDE): cv.latitude,
-    vol.Optional(CONF_LONGITUDE): cv.longitude,
-    vol.Optional(CONF_RADIUS): vol.Coerce(float),
-    vol.Optional(CONF_PASSIVE): cv.boolean,
-    vol.Optional(CONF_ICON): cv.icon,
+    probatio.Optional(CONF_NAME): cv.string,
+    probatio.Optional(CONF_LATITUDE): cv.latitude,
+    probatio.Optional(CONF_LONGITUDE): cv.longitude,
+    probatio.Optional(CONF_RADIUS): probatio.Coerce(float),
+    probatio.Optional(CONF_PASSIVE): cv.boolean,
+    probatio.Optional(CONF_ICON): cv.icon,
 }
 
 
@@ -90,20 +90,20 @@ def empty_value(value: Any) -> Any:
     if isinstance(value, dict) and len(value) == 0:
         return []
 
-    raise vol.Invalid("Not a default value")
+    raise probatio.Invalid("Not a default value")
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(DOMAIN, default=[]): vol.Any(
-            vol.All(cv.ensure_list, [vol.Schema(CREATE_FIELDS)]),
+        probatio.Optional(DOMAIN, default=[]): probatio.Any(
+            probatio.All(cv.ensure_list, [probatio.Schema(CREATE_FIELDS)]),
             empty_value,
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-RELOAD_SERVICE_SCHEMA = vol.Schema({})
+RELOAD_SERVICE_SCHEMA = probatio.Schema({})
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
@@ -306,8 +306,8 @@ def in_zone(zone: State, latitude: float, longitude: float, radius: float = 0) -
 class ZoneStorageCollection(collection.DictStorageCollection):
     """Zone collection stored in storage."""
 
-    CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
-    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+    CREATE_SCHEMA = probatio.Schema(CREATE_FIELDS)
+    UPDATE_SCHEMA = probatio.Schema(UPDATE_FIELDS)
 
     @override
     async def _process_create_data(self, data: dict) -> dict:
