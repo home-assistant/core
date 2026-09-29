@@ -106,7 +106,6 @@ async def test_device_tracker_streaming(
 
 async def test_device_tracker_streaming_route_ends(
     hass: HomeAssistant,
-    mock_vehicle_data: AsyncMock,
     mock_add_listener: AsyncMock,
 ) -> None:
     """Test the streaming route tracker clears when navigation ends."""

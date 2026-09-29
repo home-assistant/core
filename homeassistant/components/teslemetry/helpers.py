@@ -46,34 +46,44 @@ def listen_active_route[T](
     """Listen for a route field, reporting None while no navigation is active.
 
     The car keeps reporting the last trip's route fields after navigation ends;
-    only MinutesToArrival goes null. Nothing is reported until both are seen.
+    only MinutesToArrival goes null. Reports None once MinutesToArrival is null,
+    otherwise the value once both have been seen.
     """
     value: T | None = None
     minutes: float | None = None
-    value_seen = minutes_seen = False
+    value_seen = minutes_seen = changed = False
 
-    def _update() -> None:
+    def _value_callback(new_value: T | None) -> None:
+        nonlocal value, value_seen, changed
+        value, value_seen, changed = new_value, True, True
+
+    def _minutes_callback(new_minutes: float | None) -> None:
+        nonlocal minutes, minutes_seen, changed
+        minutes, minutes_seen, changed = new_minutes, True, True
+
+    def _event_callback(event: dict[str, Any]) -> None:
+        # Registered last, so both fields from one event are applied together
+        # rather than briefly reporting a value from a route that just ended.
+        nonlocal changed
+        if not changed:
+            return
+        changed = False
         if minutes_seen and minutes is None:
             route_callback(None)
         elif minutes_seen and value_seen:
             route_callback(value)
 
-    def _value_callback(new_value: T | None) -> None:
-        nonlocal value, value_seen
-        value, value_seen = new_value, True
-        _update()
-
-    def _minutes_callback(new_minutes: float | None) -> None:
-        nonlocal minutes, minutes_seen
-        minutes, minutes_seen = new_minutes, True
-        _update()
-
-    unsub_value = listen(_value_callback)
-    unsub_minutes = vehicle.listen_MinutesToArrival(_minutes_callback)
+    unsubs = (
+        listen(_value_callback),
+        vehicle.listen_MinutesToArrival(_minutes_callback),
+        vehicle.stream.async_add_listener(
+            _event_callback, {"vin": vehicle.vin, "data": {}}
+        ),
+    )
 
     def _unsubscribe() -> None:
-        unsub_value()
-        unsub_minutes()
+        for unsub in unsubs:
+            unsub()
 
     return _unsubscribe
 
