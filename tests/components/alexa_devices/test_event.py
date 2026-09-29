@@ -6,9 +6,10 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.alexa_devices.const import DOMAIN
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import assert_device_removed_and_readded, setup_integration
 from .const import (
@@ -94,3 +95,57 @@ async def test_device_removed_and_readded(
         devices_with={TEST_DEVICE_1_SN: TEST_DEVICE_1, TEST_DEVICE_2_SN: TEST_DEVICE_2},
         devices_without={TEST_DEVICE_1_SN: TEST_DEVICE_1},
     )
+
+
+async def test_voice_event_not_created_for_unsupported_device(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test voice event entity is not created for devices without voice control support."""
+    mock_amazon_devices_client.get_devices_data.return_value[
+        TEST_DEVICE_1_SN
+    ].voice_control_supported = False
+
+    with patch("homeassistant.components.alexa_devices.PLATFORMS", [Platform.EVENT]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert not hass.states.get(ENTITY_ID)
+
+
+async def test_voice_event_removed_for_unsupported_device(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test voice event entity is removed for devices without voice control support."""
+    mock_config_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, TEST_DEVICE_1_SN)},
+        name="Echo Test",
+        manufacturer="Amazon",
+        model="Echo Dot",
+    )
+
+    entity = entity_registry.async_get_or_create(
+        Platform.EVENT,
+        DOMAIN,
+        unique_id=f"{TEST_DEVICE_1_SN}-voice_event",
+        device_id=device.id,
+        config_entry=mock_config_entry,
+        has_entity_name=True,
+    )
+
+    mock_amazon_devices_client.get_devices_data.return_value[
+        TEST_DEVICE_1_SN
+    ].voice_control_supported = False
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not hass.states.get(entity.entity_id)
+    assert entity_registry.async_get(entity.entity_id) is None

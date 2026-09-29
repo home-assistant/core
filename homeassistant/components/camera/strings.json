@@ -34,19 +34,6 @@
       }
     }
   },
-  "issues": {
-    "deprecated_filename_template": {
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "description": "The pre-defined template variable `entity_id` was used when performing action `{service}` targeting camera entity `{entity_id}`. The pre-defined template variable `entity_id` is being removed from the `filename` parameter of `{service}`.\n\nPlease update your automations and scripts to use a manually defined variable instead and select **Submit** to close this issue.",
-            "title": "[%key:component::camera::issues::deprecated_filename_template::title%]"
-          }
-        }
-      },
-      "title": "Detected use of deprecated template variable"
-    }
-  },
   "selector": {},
   "services": {
     "disable_motion_detection": {
