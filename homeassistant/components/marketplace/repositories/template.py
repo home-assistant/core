@@ -51,9 +51,19 @@ class TemplateRepository(Repository):
         if not self.data.installed:
             self.data.file_name = self._file_name_to_write
 
+    def _check_file_name(self, file_name: str) -> None:
+        """Refuse a file name that is not a template in the root of the folder."""
+        if not file_name or "/" in file_name or not file_name.endswith(".jinja"):
+            raise MarketplaceError(
+                f"{self.string} Repository structure for {ref_version(self.ref)} is not compliant"
+            )
+
     @override
     async def async_pre_install(self) -> None:
         """Run pre install steps."""
+        # hacs.json of the version being written names it, not the one validated
+        self._check_file_name(self._file_name_to_write)
+
         # The folder is shared, a template file belongs to one repository
         for repository in self.marketplace.repositories.list_downloaded:
             if (
@@ -128,12 +138,8 @@ class TemplateRepository(Repository):
     def resolve_content(self) -> None:
         """Point the content at the template hacs.json names."""
         file_name = self.repository_manifest.filename or ""
-        if (
-            not file_name
-            or "/" in file_name
-            or not file_name.endswith(".jinja")
-            or file_name not in self.treefiles
-        ):
+        self._check_file_name(file_name)
+        if file_name not in self.treefiles:
             raise MarketplaceError(
                 f"{self.string} Repository structure for {ref_version(self.ref)} is not compliant"
             )

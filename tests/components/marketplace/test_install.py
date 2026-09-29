@@ -474,13 +474,24 @@ async def test_persistent_directory_has_to_be_a_directory_inside(
     assert (local / "__init__.py").read_text() == "# working old integration\n"
 
 
+@pytest.mark.parametrize(
+    ("theme", "error"),
+    [
+        pytest.param("Example:\n  primary-color: [\n", "not valid YAML", id="yaml"),
+        pytest.param(
+            "Example:\n  primary-color: [red, blue]\n", "not a valid theme", id="schema"
+        ),
+    ],
+)
 async def test_invalid_theme_keeps_the_configuration_loadable(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     response_mocker: MarketplaceResponses,
     config_dir: Path,
+    theme: str,
+    error: str,
 ) -> None:
-    """Test a theme that is not valid YAML is not written over a working one."""
+    """Test a theme the frontend can not load is not written over a working one."""
     (config_dir / "configuration.yaml").write_text(
         "frontend:\n  themes: !include_dir_merge_named themes\n"
     )
@@ -490,19 +501,23 @@ async def test_invalid_theme_keeps_the_configuration_loadable(
     assert await async_hass_config_yaml(hass)
 
     repository.data.last_version = "2.0.0"
-    archive = _zip({"repo-2.0.0/themes/example.yaml": "Example:\n  primary-color: [\n"})
+    archive = _zip({"repo-2.0.0/themes/example.yaml": theme})
     url = f"https://github.com/{repository.data.full_name}/archive/refs/tags/2.0.0.zip"
     response_mocker.add(url, mocked_response(url, content=archive), keep=True)
 
-    with pytest.raises(MarketplaceError, match="not valid YAML"):
+    with pytest.raises(MarketplaceError, match=error):
         await repository.async_download_repository()
     await hass.async_block_till_done()
 
     assert await async_hass_config_yaml(hass)
+    assert (config_dir / "themes/example/example.yaml").read_text() != theme
 
 
+@pytest.mark.parametrize(
+    "relative", [pytest.param(False, id="absolute"), pytest.param(True, id="relative")]
+)
 def test_interrupted_update_of_a_symlink_keeps_its_source(
-    marketplace: MarketplaceManager, config_dir: Path
+    marketplace: MarketplaceManager, config_dir: Path, relative: bool
 ) -> None:
     """Test recovery puts the symlink back, without touching what it points at."""
     source = config_dir / "development/example"
@@ -510,7 +525,11 @@ def test_interrupted_update_of_a_symlink_keeps_its_source(
     (source / "__init__.py").write_text("source checkout")
     local = config_dir / "custom_components/example"
     local.parent.mkdir(parents=True, exist_ok=True)
-    local.symlink_to(source, target_is_directory=True)
+    # A relative link does not resolve from inside the backup
+    local.symlink_to(
+        Path("../development/example") if relative else source,
+        target_is_directory=True,
+    )
 
     Backup(marketplace, local).create()
     local.mkdir()
@@ -623,3 +642,70 @@ async def test_failed_first_download_leaves_nothing_behind(
         await repository._async_write_content(download)
 
     assert not folder.exists()
+
+
+@pytest.mark.parametrize(
+    "file_name",
+    [
+        pytest.param("../configuration.yaml", id="outside"),
+        pytest.param("sub/example.jinja", id="subfolder"),
+        pytest.param("example.yaml", id="not_a_template"),
+    ],
+)
+async def test_template_update_checks_the_file_name(
+    marketplace: MarketplaceManager, config_dir: Path, file_name: str
+) -> None:
+    """Test a hacs.json of a new version can not point the template elsewhere."""
+    configuration = config_dir / "configuration.yaml"
+    configuration.write_text("default_config:\n")
+    repository = TemplateRepository(marketplace, "owner/template")
+    repository.data.id = "8007"
+    repository.data.installed = True
+    repository.data.file_name = "example.jinja"
+    repository.repository_manifest.filename = file_name
+
+    download = AsyncMock()
+    with pytest.raises(MarketplaceError, match="not compliant"):
+        await repository._async_write_content(download)
+
+    download.assert_not_called()
+    assert configuration.read_text() == "default_config:\n"
+
+
+async def test_failed_persistent_directory_restore_keeps_the_old_install(
+    marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
+) -> None:
+    """Test the old version stays when its kept data can not go into the new one."""
+    repository = await _working_integration(marketplace)
+    local = Path(repository.localpath)
+    (local / "data").mkdir()
+    (local / "data/settings.json").write_text("{}")
+    _release(
+        response_mocker,
+        repository,
+        {
+            "manifest.json": json.dumps(_manifest(version="2.0.0")),
+            "__init__.py": "# new release\n",
+        },
+        persistent_directory="data",
+    )
+    restore = Backup.restore
+    persistent = local / "data"
+    failed: list[Backup] = []
+
+    # Only the first attempt fails, the rollback puts the kept data back
+    def failing_restore(backup: Backup) -> None:
+        if backup.local_path == persistent and not failed:
+            failed.append(backup)
+            raise OSError("Disk is full")
+        restore(backup)
+
+    with (
+        patch.object(Backup, "restore", failing_restore),
+        pytest.raises(MarketplaceError),
+    ):
+        await repository.async_download_repository()
+
+    assert repository.data.installed_version == "1.0.0"
+    assert (local / "__init__.py").read_text() == "# working old integration\n"
+    assert (local / "data/settings.json").read_text() == "{}"

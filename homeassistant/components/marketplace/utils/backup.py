@@ -91,7 +91,7 @@ class Backup:
 
     def restore(self) -> None:
         """Put the backed up content back, replacing what is there now."""
-        if not self.content_path.exists():
+        if not self.has_content:
             return
 
         if self.local_path.is_dir() and not self.local_path.is_symlink():
@@ -101,6 +101,11 @@ class Backup:
 
         shutil.move(self.content_path, self.local_path)
         LOGGER.debug("Restored %s from backup %s", self.local_path, self.backup_path)
+
+    @property
+    def has_content(self) -> bool:
+        """Return if content was moved in, a relative symlink does not resolve here."""
+        return self.content_path.exists() or self.content_path.is_symlink()
 
     def cleanup(self) -> None:
         """Remove the backup."""
@@ -155,7 +160,7 @@ def restore_interrupted_backups(marketplace: MarketplaceManager) -> bool:
     restored = False
     for backup in backups:
         try:
-            if backup.content_path.exists():
+            if backup.has_content:
                 backup.restore()
                 restored = True
                 LOGGER.warning(

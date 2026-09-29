@@ -45,11 +45,16 @@ from ..types import DownloadableContent
 from ..utils.backup import Backup
 from ..utils.decode import decode_content
 from ..utils.decorator import concurrent, return_none_on_exception
-from ..utils.file_system import async_exists, async_remove, async_remove_directory
+from ..utils.file_system import (
+    async_exists,
+    async_lexists,
+    async_remove,
+    async_remove_directory,
+)
 from ..utils.filters import filter_content_return_one_of_type
 from ..utils.json import json_loads_object
 from ..utils.logger import LOGGER
-from ..utils.path import is_safe, resolve_in_directory
+from ..utils.path import entry_in_directory, is_safe, resolve_in_directory
 from ..utils.queue_manager import QueueManager
 from ..utils.storage import LEGACY_HACS_REPOSITORY_STORAGE_KEY, async_remove_storage
 from ..utils.tree import (
@@ -945,7 +950,7 @@ class Repository:
 
         try:
             if self.data.category == "template":
-                local_path = str(resolve_in_directory(local_path, self.data.file_name))
+                local_path = str(entry_in_directory(local_path, self.data.file_name))
             elif self.data.category == "integration":
                 if not self.data.domain:
                     self.logger.error("%s Missing domain", self.string)
@@ -954,9 +959,9 @@ class Repository:
 
             # The folder is named by remote input, removal stays inside its category
             if (directory := self._category_directory()) is not None:
-                local_path = str(resolve_in_directory(directory, local_path))
+                local_path = str(entry_in_directory(directory, local_path))
 
-            if await async_exists(self.marketplace.hass, local_path):
+            if await async_lexists(self.marketplace.hass, local_path):
                 if not is_safe(self.marketplace, local_path):
                     self.logger.error(
                         "%s Path %s is blocked from removal", self.string, local_path
@@ -969,7 +974,7 @@ class Repository:
                 else:
                     await async_remove_directory(self.marketplace.hass, local_path)
 
-                while await async_exists(self.marketplace.hass, local_path):
+                while await async_lexists(self.marketplace.hass, local_path):
                     await sleep(1)
             else:
                 self.logger.debug(
@@ -1209,6 +1214,12 @@ class Repository:
             )
             self._raise_for_download_errors()
             await self.async_check_written_content()
+
+            # Into the new content, while the old one can still come back
+            if persistent_directory is not None:
+                await self.marketplace.hass.async_add_executor_job(
+                    persistent_directory.restore
+                )
         except Exception as exception:
             # Whatever broke the download, the content that was there goes back
             await self.marketplace.hass.async_add_executor_job(_restore_backups)
@@ -1227,13 +1238,8 @@ class Repository:
             await self.marketplace.hass.async_add_executor_job(backup.cleanup)
 
         if persistent_directory is not None:
-
-            def _restore_persistent_directory() -> None:
-                persistent_directory.restore()
-                persistent_directory.cleanup()
-
             await self.marketplace.hass.async_add_executor_job(
-                _restore_persistent_directory
+                persistent_directory.cleanup
             )
 
     def _raise_for_download_errors(self) -> None:

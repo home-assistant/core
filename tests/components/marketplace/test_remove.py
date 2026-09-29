@@ -230,3 +230,22 @@ async def test_theme_refresh_keeps_the_downloaded_folder(
 
     assert not downloaded.exists()
     assert (owned / "new.yaml").exists()
+
+
+async def test_removing_a_symlinked_download_keeps_its_source(
+    marketplace: MarketplaceManager, config_dir: Path
+) -> None:
+    """Test removal takes the symlink away, not what it points at."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_PLUGIN_ID)
+    repository.data.installed = True
+    source = config_dir / "development/card"
+    source.mkdir(parents=True)
+    (source / "card.js").write_text("source checkout")
+    local = Path(repository.localpath)
+    local.parent.mkdir(parents=True, exist_ok=True)
+    local.symlink_to(source, target_is_directory=True)
+
+    await repository.uninstall()
+
+    assert not local.is_symlink()
+    assert (source / "card.js").read_text() == "source checkout"

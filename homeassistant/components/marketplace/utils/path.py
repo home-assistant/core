@@ -55,3 +55,16 @@ def resolve_in_directory(directory: str | Path, path: str | Path) -> Path:
         raise MarketplaceError(f"'{path}' is not inside {resolved_directory}")
 
     return resolved
+
+
+def entry_in_directory(directory: str | Path, path: str | Path) -> Path:
+    """Require the path to be an entry of directory, without following it.
+
+    A download can be a symlink, the link is what belongs to the directory
+    and not what it points at.
+    """
+    path = Path(path)
+    if path.name in ("", ".", ".."):
+        raise MarketplaceError(f"'{path}' is not inside {directory}")
+
+    return resolve_in_directory(directory, path.parent) / path.name

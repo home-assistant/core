@@ -238,8 +238,10 @@ async def _async_initialize_integration(
             translation_placeholders={"error": str(exception)},
         ) from exception
 
-    # The restore adopts the legacy storage files, only then can they go
-    await async_remove_legacy_files(hass)
+    # The restore adopts the legacy storage files, only then can they go. Safe
+    # and recovery mode are the way back to an older version, that needs them.
+    if not hass.config.safe_mode and not hass.config.recovery_mode:
+        await async_remove_legacy_files(hass)
 
     marketplace.set_stage(MarketplaceStage.SETUP)
 

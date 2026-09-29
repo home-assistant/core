@@ -678,6 +678,25 @@ async def test_legacy_files_removed(
     assert str(legacy_integration) in caplog.text
 
 
+@pytest.mark.parametrize("mode", ["safe_mode", "recovery_mode"])
+@pytest.mark.usefixtures("adopted_storage", "stored_repositories")
+async def test_legacy_files_kept_in_safe_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    config_dir: Path,
+    legacy_integration: Path,
+    mode: str,
+) -> None:
+    """Test safe and recovery mode keep HACS, they are the way back to it."""
+    setattr(hass.config, mode, True)
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert legacy_integration.is_dir()
+    assert _remaining_storage(config_dir) == set(LEGACY_STORAGE_FILES)
+
+
 @pytest.mark.parametrize(
     "manifest",
     [

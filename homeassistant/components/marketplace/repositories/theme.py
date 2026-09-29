@@ -4,6 +4,13 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, override
 
+import probatio
+
+from homeassistant.components.frontend import (
+    CONF_THEMES,
+    CONFIG_SCHEMA as FRONTEND_CONFIG_SCHEMA,
+    DOMAIN as FRONTEND_DOMAIN,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml
 
@@ -64,7 +71,7 @@ class ThemeRepository(Repository):
 
     @override
     async def async_check_written_content(self) -> None:
-        """Refuse a theme that is not valid YAML.
+        """Refuse a theme the frontend can not load.
 
         Themes are included in configuration.yaml, a broken one stops
         Home Assistant from loading its configuration at the next start.
@@ -73,10 +80,21 @@ class ThemeRepository(Repository):
         def _check() -> None:
             for theme in Path(self.content.path.local).rglob("*.yaml"):
                 try:
-                    load_yaml(theme)
+                    themes = load_yaml(theme)
                 except HomeAssistantError as exception:
                     raise MarketplaceError(
                         f"{theme.name} is not valid YAML: {exception}"
+                    ) from exception
+
+                # The include only merges a mapping, anything else is left out
+                if not isinstance(themes, dict):
+                    continue
+
+                try:
+                    FRONTEND_CONFIG_SCHEMA({FRONTEND_DOMAIN: {CONF_THEMES: themes}})
+                except probatio.Invalid as exception:
+                    raise MarketplaceError(
+                        f"{theme.name} is not a valid theme: {exception}"
                     ) from exception
 
         await self.marketplace.hass.async_add_executor_job(_check)
