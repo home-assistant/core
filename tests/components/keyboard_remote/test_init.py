@@ -222,6 +222,17 @@ async def test_yaml_import_unexpected_abort_uses_unknown_issue(
             1,
             id="input_directory_missing",
         ),
+        pytest.param(
+            {
+                "return_value": MagicMock(
+                    add_watch=MagicMock(
+                        side_effect=[MagicMock(), OSError(28, "No space left")]
+                    )
+                )
+            },
+            1,
+            id="by_id_watch_limit",
+        ),
     ],
 )
 async def test_setup_retries_when_input_directory_cannot_be_watched(
@@ -245,6 +256,42 @@ async def test_setup_retries_when_input_directory_cannot_be_watched(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert DOMAIN not in hass.data
     assert mock_cls.return_value.close.call_count == expected_closes
+
+
+async def test_entry_set_up_during_last_unload_gets_new_manager(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an entry that sets up while the last one unloads is not orphaned.
+
+    Registering with the manager being stopped would leave it loaded but
+    inactive once that manager is removed.
+    """
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    old_manager: KeyboardRemoteManager = hass.data[DOMAIN]
+    new_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="usb-Other-event-kbd",
+        data={CONF_DEVICE_PATH: "/dev/input/by-id/usb-Other-event-kbd"},
+    )
+    new_entry.add_to_hass(hass)
+    stop = old_manager.async_stop
+
+    async def _set_up_other_entry_during_stop() -> None:
+        await hass.config_entries.async_setup(new_entry.entry_id)
+        await stop()
+
+    with patch.object(
+        old_manager, "async_stop", side_effect=_set_up_other_entry_during_stop
+    ):
+        await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert new_entry.state is ConfigEntryState.LOADED
+    assert hass.data[DOMAIN] is not old_manager
+    assert new_entry.entry_id in hass.data[DOMAIN]._handlers
 
 
 async def test_unload_before_start_closes_watcher(
@@ -1511,6 +1558,39 @@ async def test_monitor_devices_by_id_directory_created(
         == [call(DEVINPUT_BY_ID, Mask.CREATE | Mask.MOVED_TO)] * expected_checks
     )
     assert mock_check.call_args_list == [call(handler)] * expected_checks
+
+
+async def test_monitor_devices_by_id_watch_failure_keeps_loop(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_inotify: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a by-id watch that cannot be added does not end the monitor loop.
+
+    Waiting handlers are still rechecked, since the links may already exist.
+    """
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    manager: KeyboardRemoteManager = hass.data[DOMAIN]
+    handler = manager._handlers[mock_config_entry.entry_id]
+    manager._by_id_watcher = None
+    mock_inotify.add_watch.side_effect = OSError(28, "No space left")
+
+    inotify_event = MagicMock(mask=Mask.CREATE | Mask.ISDIR)
+    inotify_event.name = "by-id"
+    inotify_iter = MockAsyncIterator([inotify_event])
+    mock_inotify.__aiter__ = MagicMock(return_value=inotify_iter)
+    mock_inotify.__anext__ = inotify_iter.__anext__
+
+    with patch.object(manager, "_async_check_handler") as mock_check:
+        await manager._async_monitor_devices()
+        await hass.async_block_till_done()
+
+    assert "Unable to watch /dev/input/by-id" in caplog.text
+    assert manager._by_id_watcher is None
+    mock_check.assert_called_once_with(handler)
 
 
 async def test_start_without_by_id_directory(

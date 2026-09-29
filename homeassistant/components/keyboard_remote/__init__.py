@@ -193,8 +193,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # If this was the last loaded entry, tear down the shared manager
     if not hass.config_entries.async_loaded_entries(DOMAIN):
-        await manager.async_stop()
+        # Detach it before awaiting, so an entry that sets up meanwhile creates
+        # a new manager instead of registering with this stopping one.
         hass.data.pop(DATA_MANAGER, None)
+        await manager.async_stop()
 
     return True
 
@@ -233,12 +235,13 @@ class KeyboardRemoteManager:
             self._watcher = self._inotify.add_watch(
                 DEVINPUT, Mask.CREATE | Mask.ATTRIB | Mask.DELETE
             )
+            self._watch_by_id()
         except OSError:
             if self._inotify is not None:
                 self._inotify.close()
                 self._inotify = None
+                self._watcher = None
             raise
-        self._watch_by_id()
 
     async def async_start(self) -> None:
         """Scan for devices and start monitoring (idempotent, lock-protected)."""
@@ -282,7 +285,7 @@ class KeyboardRemoteManager:
         assert self._inotify is not None
         # udev creates the directory with the first link and removes it with
         # the last one, so a missing directory is expected.
-        with suppress(OSError):
+        with suppress(FileNotFoundError):
             self._by_id_watcher = self._inotify.add_watch(
                 DEVINPUT_BY_ID, Mask.CREATE | Mask.MOVED_TO
             )
@@ -619,7 +622,12 @@ class KeyboardRemoteManager:
         """
         if self._by_id_watcher is not None:
             return
-        self._watch_by_id()
+        try:
+            self._watch_by_id()
+        except OSError as err:
+            # Raising here would end the monitor loop. Devices still connect
+            # on their node events, only a link that lands late is missed.
+            _LOGGER.warning("Unable to watch %s: %s", DEVINPUT_BY_ID, err)
         for handler in list(self._handlers.values()):
             if not handler.is_monitoring:
                 await self._async_check_handler(handler)
