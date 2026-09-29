@@ -8,18 +8,28 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import LOGGER
 
+WAV_MIME_TYPES = {"audio/wav", "audio/x-wav", "audio/wave"}
+
 
 def convert_to_wav(audio_data: bytes, mime_type: str) -> bytes:
-    """Generate a WAV file header for the given audio data and parameters.
+    """Return the given audio data as a WAV file.
+
+    Data that is already a WAV container is returned unchanged; raw PCM data
+    is wrapped in a WAV container.
 
     Args:
-        audio_data: The raw audio data as a bytes object.
+        audio_data: The audio data as a bytes object.
         mime_type: Mime type of the audio data.
 
     Returns:
-        A bytes object representing the WAV file header.
+        A bytes object representing the WAV file.
 
     """
+    if mime_type.split(";", 1)[0].strip().lower() in WAV_MIME_TYPES or (
+        audio_data[:4] == b"RIFF" and audio_data[8:12] == b"WAVE"
+    ):
+        return audio_data
+
     parameters = _parse_audio_mime_type(mime_type)
 
     wav_buffer = io.BytesIO()
