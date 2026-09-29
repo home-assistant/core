@@ -1683,6 +1683,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/senz/ @milanmeu
 /tests/components/senz/ @milanmeu
 /homeassistant/components/serial/ @fabaff
+/homeassistant/components/sesame_ble/ @deece
+/tests/components/sesame_ble/ @deece
 /homeassistant/components/seven_segments/ @fabaff
 /homeassistant/components/seventeentrack/ @shaiu
 /tests/components/seventeentrack/ @shaiu

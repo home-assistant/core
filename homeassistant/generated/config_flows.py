@@ -713,6 +713,7 @@ FLOWS = {
         "sensoterra",
         "sentry",
         "senz",
+        "sesame_ble",
         "seventeentrack",
         "sfr_box",
         "sftp_storage",
