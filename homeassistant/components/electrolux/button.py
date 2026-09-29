@@ -245,7 +245,7 @@ class ElectroluxBaseButton[T: SupportedAppliance](
         """Handle the button press."""
         self._is_command_executable()
         command = self._get_command()
-        await self.coordinator.client.send_command(self._appliance_id, command)
+        await self.coordinator.send_command(command)
         await self.coordinator.async_refresh()
 
     @abstractmethod
