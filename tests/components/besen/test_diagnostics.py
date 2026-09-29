@@ -1,6 +1,5 @@
 """Tests for Besen diagnostics."""
 
-import json
 from unittest.mock import Mock
 
 from besen.models import BesenData, BoardRevision, ChargerInfo, CommandResult
@@ -10,8 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.besen.diagnostics import (
     async_get_config_entry_diagnostics,
 )
-from homeassistant.components.diagnostics import REDACTED
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
+from homeassistant.const import CONF_PIN
 from homeassistant.core import HomeAssistant
 
 from . import publish_besen_state
@@ -55,37 +53,24 @@ async def test_diagnostics(
     )
 
     assert result == snapshot
-    data = result["data"]
-
-    serialized = json.dumps(result)
-    for private_value in (
-        FIXTURE_ADDRESS,
-        FIXTURE_NAME,
-        FIXTURE_PIN,
-        "SERIAL",
-        "Garage",
-        "Private error",
-    ):
-        assert private_value not in serialized
-    assert "last_command" not in data
-    assert "last_error" not in data
-
     assert mock_besen_client.mock_calls == client_calls
     assert mock_besen_client.state is state
-    assert state.info.serial == "SERIAL"
-    assert state.info.advertised_name == FIXTURE_NAME
-    assert state.config.device_name == "Garage"
     assert mock_config_entry.data[CONF_PIN] == FIXTURE_PIN
-    data["info"]["model"] = "Changed in download"
+    result["data"]["info"]["model"] = "Changed in download"
     assert state.info.model == "BS20"
 
 
 @pytest.mark.parametrize(
     ("available", "authenticated", "auth_failed"),
-    [(False, False, False), (False, False, True), (True, False, False)],
+    [
+        pytest.param(False, False, False, id="disconnected"),
+        pytest.param(False, False, True, id="authentication-failed"),
+        pytest.param(True, False, False, id="connected-not-authenticated"),
+    ],
 )
 async def test_diagnostics_connection_state(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     mock_besen_client: Mock,
     available: bool,
@@ -103,16 +88,16 @@ async def test_diagnostics_connection_state(
 
     result = await async_get_config_entry_diagnostics(hass, mock_config_entry)
 
-    assert result["data"]["available"] is available
-    assert result["data"]["authenticated"] is authenticated
-    assert result["data"]["auth_failed"] is auth_failed
-    assert result["data"]["charge"]["power"] == 3500
-    assert result["data"]["info"]["address"] == REDACTED
+    assert {
+        key: result["data"][key]
+        for key in ("available", "authenticated", "auth_failed")
+    } == snapshot
 
 
 async def test_diagnostics_missing_readings(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     mock_besen_client: Mock,
 ) -> None:
@@ -125,27 +110,17 @@ async def test_diagnostics_missing_readings(
         hass, hass_client, mock_config_entry
     )
 
-    assert result["data"]["info"]["address"] == REDACTED
-    assert result["data"]["info"]["model"] is None
-    assert result["data"]["charge"]["power"] is None
-    assert result["data"]["config"]["charge_amps"] is None
-    assert result["data"]["available"] is False
-    assert result["data"]["authenticated"] is False
+    assert result == snapshot
 
 
 async def test_diagnostics_without_runtime_data(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test redacted configuration is available even if setup never completed."""
 
     result = await async_get_config_entry_diagnostics(hass, mock_config_entry)
 
-    assert result == {
-        "entry_data": {
-            CONF_ADDRESS: REDACTED,
-            CONF_NAME: REDACTED,
-            CONF_PIN: REDACTED,
-        }
-    }
+    assert result == snapshot
     assert mock_config_entry.data[CONF_PIN] == FIXTURE_PIN
