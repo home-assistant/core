@@ -162,10 +162,7 @@ class IntentCacheKey:
     """Satellite id from user input."""
 
     device_id: str | None
-    """Device id from user input.
-
-    Recognition depends on this because the satellite area is resolved from it.
-    """
+    """Device id from user input."""
 
 
 @dataclass(frozen=True)
