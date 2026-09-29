@@ -550,7 +550,7 @@ def _async_get_full_entity_name(
     if name is None and overridden_name is not None:
         full_name = overridden_name
 
-    elif not use_legacy_naming or name is None:
+    elif not use_legacy_naming or not name:
         raw_device_name: str | None = None
         device_name: str | None = None
         parent_device_name: str | None = None

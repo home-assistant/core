@@ -62,6 +62,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry Climate platform from a config entry."""
 
+    # Streaming vehicles are never polled, so their vehicle_config comes from metadata
+    vehicles_metadata = entry.runtime_data.metadata_coordinator.data["vehicles"]
     async_add_entities(
         chain(
             (
@@ -80,7 +82,13 @@ async def async_setup_entry(
                 )
                 if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.44.25")
                 else TeslemetryStreamingCabinOverheatProtectionEntity(
-                    vehicle, entry.runtime_data.scopes
+                    vehicle,
+                    entry.runtime_data.scopes,
+                    bool(
+                        vehicles_metadata[vehicle.vin]
+                        .get("config", {})
+                        .get("cop_user_set_temp_supported")
+                    ),
                 )
                 for vehicle in entry.runtime_data.vehicles
             ),
@@ -507,6 +515,7 @@ class TeslemetryStreamingCabinOverheatProtectionEntity(
         self,
         data: TeslemetryVehicleData,
         scopes: list[Scope],
+        cop_temp_supported: bool,
     ) -> None:
         """Initialize the climate."""
 
@@ -523,7 +532,7 @@ class TeslemetryStreamingCabinOverheatProtectionEntity(
         self._attr_supported_features = (
             ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
         )
-        if data.coordinator.data.get("vehicle_config_cop_user_set_temp_supported"):
+        if cop_temp_supported:
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
         # Scopes

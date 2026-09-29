@@ -1360,7 +1360,13 @@ def test_next_name_part(
         name="Lamp",
     )
     entry = entity_registry.async_get_or_create(
-        "light", "hue", "5678", config_entry=config_entry, device_id=device_entry.id
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name="Light",
     )
     assert entry.next_name_part is dr.NextNamePart.DEVICE
 
@@ -3657,6 +3663,16 @@ async def test_restore_states(
         ),
         pytest.param(
             None, None, "Living Room Fan", "Living Room Fan", id="device_rename_applied"
+        ),
+        pytest.param(
+            "Temperature", "", None, "Pedestal Fan", id="empty_name_uses_device_name"
+        ),
+        pytest.param(
+            "Temperature",
+            "",
+            "Living Room Fan",
+            "Living Room Fan",
+            id="empty_name_uses_renamed_device",
         ),
     ],
 )
