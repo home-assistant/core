@@ -10,8 +10,8 @@ from itertools import groupby
 import logging
 from typing import Any, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.const import ATTR_ENTITY_ID, EntityStateAttribute
@@ -56,7 +56,7 @@ INTENT_RESPOND = "HassRespond"
 INTENT_BROADCAST = "HassBroadcast"
 INTENT_GET_TEMPERATURE = "HassClimateGetTemperature"
 
-SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
+SLOT_SCHEMA = probatio.Schema({}, extra=probatio.ALLOW_EXTRA)
 
 DATA_KEY: HassKey[dict[str, IntentHandler]] = HassKey("intent")
 
@@ -138,7 +138,7 @@ async def async_handle(
     try:
         _LOGGER.info("Triggering intent handler %s", handler)
         result = await handler.async_handle(intent)
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         _LOGGER.warning("Received invalid slot info for %s: %s", intent_type, err)
         raise InvalidSlotInfo(f"Received invalid slot info for {intent_type}") from err
     except IntentError:
@@ -192,7 +192,12 @@ class MatchFailedError(IntentError):
 
     @override
     def __str__(self) -> str:
-        """Return string representation."""
+        """Return why matching failed."""
+        return _match_failure_message(self.result, self.constraints)
+
+    @override
+    def __repr__(self) -> str:
+        """Return the full result and constraints, for logs and debugging."""
         return (
             f"<MatchFailedError result={self.result},"
             f" constraints={self.constraints},"
@@ -349,6 +354,65 @@ class MatchTargetsConstraints:
             or self.states
             or self.single_target
         )
+
+
+_MATCH_FAILURE_REASONS: dict[MatchFailedReason, str] = {
+    MatchFailedReason.NAME: "No entities matched the name",
+    MatchFailedReason.AREA: "No entities were in the area",
+    MatchFailedReason.FLOOR: "No entities were on the floor",
+    MatchFailedReason.DOMAIN: "No entities matched the domain",
+    MatchFailedReason.DEVICE_CLASS: "No entities matched the device class",
+    MatchFailedReason.FEATURE: "No entities supported the required features",
+    MatchFailedReason.STATE: "No entities were in the required state",
+    MatchFailedReason.ASSISTANT: "No matching entities are exposed to the assistant",
+    MatchFailedReason.INVALID_AREA: "The area does not exist",
+    MatchFailedReason.INVALID_FLOOR: "The floor does not exist",
+    MatchFailedReason.DUPLICATE_NAME: ("Multiple entities share the name"),
+    MatchFailedReason.MULTIPLE_TARGETS: (
+        "Multiple entities matched, but a single target is required"
+    ),
+}
+
+
+def _describe_constraints(constraints: MatchTargetsConstraints) -> str:
+    """List the constraints that were set, in an order that does not vary."""
+    described: list[str] = []
+
+    for label, value in (
+        ("name", constraints.name),
+        ("area", constraints.area_name),
+        ("floor", constraints.floor_name),
+    ):
+        if value:
+            described.append(f"{label} {value!r}")
+
+    # Sorted because a set's iteration order is not stable between runs
+    for label, values in (
+        ("domains", constraints.domains),
+        ("device classes", constraints.device_classes),
+        ("states", constraints.states),
+    ):
+        if values:
+            described.append(f"{label} {', '.join(sorted(values))}")
+
+    if constraints.features:
+        described.append(f"features {constraints.features}")
+
+    return ", ".join(described)
+
+
+def _match_failure_message(
+    result: MatchTargetsResult, constraints: MatchTargetsConstraints
+) -> str:
+    """Describe a failed match as a sentence naming the constraints in play."""
+    message = "No entities matched"
+    if (reason := result.no_match_reason) is not None:
+        message = _MATCH_FAILURE_REASONS.get(reason, message)
+
+    if described := _describe_constraints(constraints):
+        return f"{message} (given {described})"
+
+    return message
 
 
 @dataclass
@@ -843,15 +907,15 @@ class IntentHandler:
         return self._slot_schema(slots)  # type: ignore[no-any-return]
 
     @cached_property
-    def _slot_schema(self) -> vol.Schema:
+    def _slot_schema(self) -> probatio.Schema:
         """Create validation schema for slots."""
         assert self.slot_schema is not None
-        return vol.Schema(
+        return probatio.Schema(
             {
                 key: SLOT_SCHEMA.extend({"value": validator})
                 for key, validator in self.slot_schema.items()
             },
-            extra=vol.ALLOW_EXTRA,
+            extra=probatio.ALLOW_EXTRA,
         )
 
     async def async_handle(self, intent_obj: Intent) -> IntentResponse:
@@ -868,9 +932,14 @@ def non_empty_string(value: Any) -> str:
     """Coerce value to string and fail if string is empty or whitespace."""
     value_str = cv.string(value)
     if not value_str.strip():
-        raise vol.Invalid("string value is empty")
+        raise probatio.Invalid("string value is empty")
 
     return value_str
+
+
+def is_blank_slot_value(value: Any) -> bool:
+    """Return if an LLM tool's blank value should be omitted from intent slots."""
+    return value is None or (isinstance(value, str) and not value.strip())
 
 
 @dataclass(kw_only=True)
@@ -883,7 +952,7 @@ class IntentSlotInfo:
     description: str | None = None
     """Human readable description of the slot."""
 
-    value_schema: VolSchemaType | Callable[[Any], Any] = vol.Any
+    value_schema: VolSchemaType | Callable[[Any], Any] = probatio.Any
     """Validator for the slot."""
 
 
@@ -947,25 +1016,33 @@ class DynamicServiceIntentHandler(IntentHandler):
     def slot_schema(self) -> dict:
         """Return a slot schema."""
         domain_validator = (
-            vol.In(list(self.required_domains)) if self.required_domains else cv.string
+            probatio.In(list(self.required_domains))
+            if self.required_domains
+            else cv.string
         )
         slot_schema = {
-            vol.Any("name", "area", "floor"): non_empty_string,
-            vol.Optional("domain"): vol.All(cv.ensure_list, [domain_validator]),
+            probatio.Any("name", "area", "floor"): non_empty_string,
+            probatio.Optional("domain"): probatio.All(
+                cv.ensure_list, [domain_validator]
+            ),
         }
         if self.device_classes:
-            # The typical way to match enums is with vol.Coerce, but we build a
+            # The typical way to match enums is with probatio.Coerce, but we build a
             # flat list to make the API simpler to describe programmatically
-            flattened_device_classes = vol.In(
+            # Sort the enums by name: this is a set of classes, whose iteration
+            # order follows object identity, so the schema would differ per run.
+            flattened_device_classes = probatio.In(
                 [
                     device_class.value
-                    for device_class_enum in self.device_classes
+                    for device_class_enum in sorted(
+                        self.device_classes, key=lambda enum: enum.__name__
+                    )
                     for device_class in device_class_enum
                 ]
             )
             slot_schema.update(
                 {
-                    vol.Optional("device_class"): vol.All(
+                    probatio.Optional("device_class"): probatio.All(
                         cv.ensure_list,
                         [flattened_device_classes],
                     )
@@ -974,15 +1051,15 @@ class DynamicServiceIntentHandler(IntentHandler):
 
         slot_schema.update(
             {
-                vol.Optional("preferred_area_id"): cv.string,
-                vol.Optional("preferred_floor_id"): cv.string,
+                probatio.Optional("preferred_area_id"): cv.string,
+                probatio.Optional("preferred_floor_id"): cv.string,
             }
         )
 
         if self.required_slots:
             slot_schema.update(
                 {
-                    vol.Required(
+                    probatio.Required(
                         key, description=slot_info.description
                     ): slot_info.value_schema
                     for key, slot_info in self.required_slots.items()
@@ -992,7 +1069,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         if self.optional_slots:
             slot_schema.update(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         key, description=slot_info.description
                     ): slot_info.value_schema
                     for key, slot_info in self.optional_slots.items()

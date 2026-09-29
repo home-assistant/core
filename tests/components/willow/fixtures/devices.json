@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "sensor_id": "SENSOR123",
+    "battery_life": 88,
+    "version": "1.2.3",
+    "user_plant": {
+      "id": 10,
+      "name": "Basil",
+      "location": "Kitchen"
+    },
+    "latest_reading": {
+      "timestamp": "2026-05-08T12:00:00+00:00",
+      "temperature": 21.5,
+      "humidity": 55.0,
+      "moisture": 30.0,
+      "light": 1200.0
+    }
+  }
+]

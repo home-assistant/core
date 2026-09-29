@@ -1,8 +1,8 @@
 """SMLIGHT services."""
 
+import probatio
 from pysmlight.exceptions import SmlightError
 from pysmlight.models import BuzzerPayload
-import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -113,17 +113,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     },
                 ) from err
 
-    schema = vol.Schema(
+    schema = probatio.Schema(
         {
-            vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(ATTR_DURATION): vol.All(
-                vol.Coerce(int), vol.In([1, 2, 4, 8, 16, 32])
+            probatio.Required(ATTR_DEVICE_ID): probatio.All(
+                cv.ensure_list, [cv.string]
             ),
-            vol.Required(ATTR_OCTAVE): vol.All(
-                vol.Coerce(int), vol.Range(min=4, max=7)
+            probatio.Optional(ATTR_DURATION): probatio.All(
+                probatio.Coerce(int), probatio.In([1, 2, 4, 8, 16, 32])
             ),
-            vol.Optional(ATTR_BPM): vol.All(vol.Coerce(int), vol.In(RTTTL_VALID_BPMS)),
-            vol.Required(ATTR_NOTES): cv.string,
+            probatio.Required(ATTR_OCTAVE): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=4, max=7)
+            ),
+            probatio.Optional(ATTR_BPM): probatio.All(
+                probatio.Coerce(int), probatio.In(RTTTL_VALID_BPMS)
+            ),
+            probatio.Required(ATTR_NOTES): cv.string,
         }
     )
 

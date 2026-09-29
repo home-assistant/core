@@ -9,7 +9,7 @@ from aio_geojson_nsw_rfs_incidents import NswRuralFireServiceIncidentsFeedManage
 from aio_geojson_nsw_rfs_incidents.feed_entry import (
     NswRuralFireServiceIncidentsFeedEntry,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.geo_location import (
     PLATFORM_SCHEMA as GEO_LOCATION_PLATFORM_SCHEMA,
@@ -62,12 +62,14 @@ VALID_CATEGORIES = ["Advice", "Emergency Warning", "Not Applicable", "Watch and 
 
 PLATFORM_SCHEMA = GEO_LOCATION_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_CATEGORIES, default=[]): vol.All(
-            cv.ensure_list, [vol.In(VALID_CATEGORIES)]
+        probatio.Optional(CONF_CATEGORIES, default=[]): probatio.All(
+            cv.ensure_list, [probatio.In(VALID_CATEGORIES)]
         ),
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
+        probatio.Optional(CONF_LATITUDE): cv.latitude,
+        probatio.Optional(CONF_LONGITUDE): cv.longitude,
+        probatio.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): probatio.Coerce(
+            float
+        ),
     }
 )
 

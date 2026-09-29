@@ -10,7 +10,7 @@ import sys
 from typing import Any, overload
 
 from aiousbwatcher import AIOUSBWatcher, InotifyNotAvailableError
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.components import websocket_api
@@ -529,7 +529,7 @@ class USBDiscovery:
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "usb/scan"})
+@websocket_api.websocket_command({probatio.Required("type"): "usb/scan"})
 @websocket_api.async_response
 async def websocket_usb_scan(
     hass: HomeAssistant,
@@ -598,8 +598,8 @@ def _serialize_consumer(consumer: SerialPortConsumer) -> dict[str, Any]:
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "usb/list_serial_ports",
-        vol.Optional("include_usage", default=False): bool,
+        probatio.Required("type"): "usb/list_serial_ports",
+        probatio.Optional("include_usage", default=False): bool,
     }
 )
 @websocket_api.async_response

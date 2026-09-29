@@ -2291,6 +2291,11 @@
       }
     }
   },
+  "exceptions": {
+    "no_gateway": {
+      "message": "ZHA is not loaded, so this action cannot be performed."
+    }
+  },
   "issues": {
     "inconsistent_network_settings": {
       "fix_flow": {

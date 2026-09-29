@@ -6,9 +6,9 @@ import logging
 import ssl
 from typing import Any, cast
 
+import probatio
 from pylutron_caseta import BUTTON_STATUS_MULTITAP, BUTTON_STATUS_PRESSED
 from pylutron_caseta.smartbridge import Smartbridge
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, Platform
@@ -76,21 +76,21 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_BRIDGE_CONFIG = "lutron_caseta_bridges"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             cv.ensure_list,
             [
                 {
-                    vol.Required(CONF_HOST): cv.string,
-                    vol.Required(CONF_KEYFILE): cv.string,
-                    vol.Required(CONF_CERTFILE): cv.string,
-                    vol.Required(CONF_CA_CERTS): cv.string,
+                    probatio.Required(CONF_HOST): cv.string,
+                    probatio.Required(CONF_KEYFILE): cv.string,
+                    probatio.Required(CONF_CERTFILE): cv.string,
+                    probatio.Required(CONF_CA_CERTS): cv.string,
                 }
             ],
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 PLATFORMS = [
@@ -340,13 +340,13 @@ def _async_setup_keypads(
 @callback
 def _async_build_trigger_schemas(
     keypad_button_names_to_leap: dict[int, dict[str, int]],
-) -> dict[int, vol.Schema]:
+) -> dict[int, probatio.Schema]:
     """Build device trigger schemas."""
 
     return {
         keypad_id: LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
             {
-                vol.Required(CONF_SUBTYPE): vol.In(
+                probatio.Required(CONF_SUBTYPE): probatio.In(
                     keypad_button_names_to_leap[keypad_id]
                 ),
             }

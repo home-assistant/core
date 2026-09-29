@@ -90,6 +90,47 @@
       "video_mismatch": {
         "name": "Video mismatch"
       }
+    },
+    "event": {
+      "field_detection": {
+        "name": "[%key:component::hikvision::entity::binary_sensor::field_detection::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "human": "Human",
+              "pet": "Pet",
+              "triggered": "Triggered",
+              "vehicle": "Vehicle"
+            }
+          }
+        }
+      },
+      "line_crossing": {
+        "name": "[%key:component::hikvision::entity::binary_sensor::line_crossing::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "human": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::human%]",
+              "pet": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::pet%]",
+              "triggered": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::triggered%]",
+              "vehicle": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::vehicle%]"
+            }
+          }
+        }
+      },
+      "motion": {
+        "name": "[%key:component::event::entity_component::motion::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "human": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::human%]",
+              "pet": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::pet%]",
+              "triggered": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::triggered%]",
+              "vehicle": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::vehicle%]"
+            }
+          }
+        }
+      }
     }
   },
   "issues": {
