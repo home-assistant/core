@@ -171,7 +171,7 @@ async def _try_connection(user_input: dict[str, Any]) -> None:
         _LOGGER.debug("Caught HomeworksNoCredentialsProvided")
         raise SchemaFlowError("credentials_needed") from err
     except Exception as err:
-        _LOGGER.exception("Caught unexpected exception %s")
+        _LOGGER.exception("Caught unexpected exception")
         raise SchemaFlowError("unknown_error") from err
 
 

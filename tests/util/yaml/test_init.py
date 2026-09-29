@@ -12,13 +12,21 @@ import probatio
 import pytest
 import yaml as pyyaml
 
-from homeassistant.config import YAML_CONFIG_FILE, load_yaml_config_file
+from homeassistant.config import (
+    YAML_CONFIG_FILE,
+    _get_annotation,
+    load_yaml_config_file,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import yaml as yaml_util
 from homeassistant.util.yaml import loader as yaml_loader
+from homeassistant.util.yaml.objects import NodeDictClass, NodeListClass
 
-from tests.common import extract_stack_to_frame
+from tests.common import extract_stack_to_frame, get_fixture_path
+
+INCLUDE_DIRS_FIXTURE = str(get_fixture_path("core/config/annotations/include_dirs"))
+INCLUDE_DIRS_CONFIG = os.path.join(INCLUDE_DIRS_FIXTURE, "configuration.yaml")
 
 
 @pytest.fixture(params=["enable_c_loader", "disable_c_loader"])
@@ -372,6 +380,55 @@ def test_include_dir_merge_named_recursive(mock_walk: Mock) -> None:
             "key3": "three",
             "key4": "four",
         }
+
+
+@pytest.mark.parametrize(
+    ("key", "expected_type", "expected_line"),
+    [
+        pytest.param(
+            "dir_list",
+            NodeListClass,
+            1,
+            marks=pytest.mark.xfail(
+                strict=True,
+                reason=(
+                    "annotatedyaml _include_dir_list_yaml returns a bare list "
+                    "comprehension and never calls _add_reference, unlike the "
+                    "three sibling include_dir tags"
+                ),
+            ),
+            id="include_dir_list",
+        ),
+        pytest.param("dir_merge_list", NodeListClass, 2, id="include_dir_merge_list"),
+        pytest.param("dir_named", NodeDictClass, 3, id="include_dir_named"),
+        pytest.param("dir_merge_named", NodeDictClass, 4, id="include_dir_merge_named"),
+    ],
+)
+@pytest.mark.usefixtures("try_both_loaders")
+def test_include_dir_annotates_the_container(
+    key: str, expected_type: type, expected_line: int
+) -> None:
+    """Test each include_dir tag annotates the container it returns."""
+    doc = yaml_loader.load_yaml_dict(INCLUDE_DIRS_CONFIG)
+
+    assert type(doc[key]) is expected_type
+    assert _get_annotation(doc[key]) == (INCLUDE_DIRS_CONFIG, expected_line)
+
+
+@pytest.mark.usefixtures("try_both_loaders")
+def test_include_dir_list_annotates_its_elements() -> None:
+    """Test each element of an include_dir_list is annotated with its own file.
+
+    The elements are what masks the unannotated list: find_annotation recurses
+    into them, so an error reported at or below an element still gets a location
+    even though the list itself carries none.
+    """
+    doc = yaml_loader.load_yaml_dict(INCLUDE_DIRS_CONFIG)
+
+    assert [_get_annotation(element) for element in doc["dir_list"]] == [
+        (os.path.join(INCLUDE_DIRS_FIXTURE, "entries", "one.yaml"), 1),
+        (os.path.join(INCLUDE_DIRS_FIXTURE, "entries", "two.yaml"), 1),
+    ]
 
 
 @patch("annotatedyaml.loader.open", create=True)

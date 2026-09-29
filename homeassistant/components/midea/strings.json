@@ -118,6 +118,9 @@
       "arofene_link": {
         "name": "Methanal"
       },
+      "door_warn": {
+        "name": "Door warning"
+      },
       "fall_asleep_status": {
         "name": "Fall asleep"
       },
@@ -225,6 +228,9 @@
       },
       "leak_water_protection_value": {
         "name": "Leak water protection value"
+      },
+      "salt_setting": {
+        "name": "Salt setting"
       },
       "seat_temp_level": {
         "name": "Seat temperature level"
@@ -626,6 +632,9 @@
       "temperature_raw": {
         "name": "Raw temperature"
       },
+      "time_remaining": {
+        "name": "Time remaining"
+      },
       "top_compartment_temperature": {
         "name": "Top compartment temperature"
       },
@@ -674,6 +683,9 @@
       }
     },
     "switch": {
+      "ai_switch": {
+        "name": "AI switch"
+      },
       "anion": {
         "name": "Anion"
       },
