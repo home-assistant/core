@@ -1,7 +1,7 @@
 """Test the Teslemetry init."""
 
 import asyncio
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from copy import deepcopy
 from datetime import timedelta
@@ -25,6 +25,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tesla_fleet_api.const import EnergyExportMode
 from tesla_fleet_api.exceptions import (
     BluetoothCommandFailed,
     BluetoothTransportError,
@@ -51,6 +52,11 @@ from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
+)
+from homeassistant.components.select import (
+    ATTR_OPTION,
+    DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.teslemetry import (
@@ -89,6 +95,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -3085,6 +3092,28 @@ async def test_local_command_survives_poll_started_before_it(
     assert hass.states.get("number.energy_site_backup_reserve").state == "80"
 
 
+async def _push_site_info(
+    hass: HomeAssistant, mock_energy_info_stream: MagicMock, entity_id: str
+) -> None:
+    """Deliver the cloud site_info, with the off-grid reserve at 50, by stream."""
+    slim_site_info = _slim_site_info()
+    slim_site_info["off_grid_vehicle_charging_reserve_percent"] = 50
+    mock_energy_info_stream.send(slim_site_info)
+    await hass.async_block_till_done()
+
+
+async def _refresh_site_info(
+    hass: HomeAssistant, mock_energy_info_stream: MagicMock, entity_id: str
+) -> None:
+    """Deliver the cloud site_info by a manual entity refresh."""
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+
 @pytest.mark.parametrize(
     "entry_factory",
     [
@@ -3093,7 +3122,14 @@ async def test_local_command_survives_poll_started_before_it(
     ],
 )
 @pytest.mark.parametrize(
-    ("platform", "command", "service_call", "entity_id", "commanded", "pushed"),
+    "release",
+    [
+        pytest.param(_push_site_info, id="stream"),
+        pytest.param(_refresh_site_info, id="refresh"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("platform", "command", "service_call", "entity_id", "commanded", "confirmed"),
     [
         pytest.param(
             Platform.NUMBER,
@@ -3121,6 +3157,35 @@ async def test_local_command_survives_poll_started_before_it(
             STATE_ON,
             id="storm_watch",
         ),
+        pytest.param(
+            Platform.SWITCH,
+            "grid_import_export",
+            (
+                SWITCH_DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: "switch.energy_site_allow_charging_from_grid"},
+            ),
+            "switch.energy_site_allow_charging_from_grid",
+            STATE_ON,
+            STATE_OFF,
+            id="allow_charging_from_grid",
+        ),
+        pytest.param(
+            Platform.SELECT,
+            "grid_import_export",
+            (
+                SELECT_DOMAIN,
+                SERVICE_SELECT_OPTION,
+                {
+                    ATTR_ENTITY_ID: "select.energy_site_allow_export",
+                    ATTR_OPTION: EnergyExportMode.NEVER,
+                },
+            ),
+            "select.energy_site_allow_export",
+            EnergyExportMode.NEVER,
+            EnergyExportMode.PV_ONLY,
+            id="allow_export",
+        ),
     ],
 )
 async def test_cloud_owned_command_value_held_until_cloud_site_info(
@@ -3129,17 +3194,19 @@ async def test_cloud_owned_command_value_held_until_cloud_site_info(
     mock_site_info: AsyncMock,
     mock_energy_info_stream: MagicMock,
     entry_factory: Callable[[], MockConfigEntry],
+    release: Callable[[HomeAssistant, MagicMock, str], Awaitable[None]],
     platform: Platform,
     command: str,
     service_call: tuple[str, str, dict[str, Any]],
     entity_id: str,
     commanded: str,
-    pushed: str,
+    confirmed: str,
 ) -> None:
     """A cloud-owned command value holds through LAN polls until the next cloud site_info."""
     site_info = deepcopy(SITE_INFO)
     site_info["response"]["off_grid_vehicle_charging_reserve_percent"] = 20
     mock_site_info.side_effect = lambda: deepcopy(site_info)
+    assert await async_setup_component(hass, HA_DOMAIN, {})
     await _setup_energy_site_entry(hass, entry_factory(), [platform])
 
     with (
@@ -3158,12 +3225,11 @@ async def test_cloud_owned_command_value_held_until_cloud_site_info(
     await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
     assert hass.states.get(entity_id).state == commanded
 
-    slim_site_info = _slim_site_info()
-    slim_site_info["off_grid_vehicle_charging_reserve_percent"] = 50
-    mock_energy_info_stream.send(slim_site_info)
-    await hass.async_block_till_done()
+    # The cloud has not taken the command, and the off-grid reserve moved.
+    site_info["response"]["off_grid_vehicle_charging_reserve_percent"] = 50
+    await release(hass, mock_energy_info_stream, entity_id)
 
-    assert hass.states.get(entity_id).state == pushed
+    assert hass.states.get(entity_id).state == confirmed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
