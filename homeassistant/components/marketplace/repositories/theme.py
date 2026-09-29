@@ -1,8 +1,10 @@
 """Class for theme repositories."""
 
+from pathlib import Path
 from typing import TYPE_CHECKING, override
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.yaml import load_yaml
 
 from ..enums import MarketplaceSignal, RepositoryCategory
 from ..exceptions import MarketplaceError
@@ -37,6 +39,25 @@ class ThemeRepository(Repository):
     async def async_post_installation(self) -> None:
         """Run post installation steps."""
         await self._reload_frontend_themes()
+
+    @override
+    async def async_check_written_content(self) -> None:
+        """Refuse a theme that is not valid YAML.
+
+        Themes are included in configuration.yaml, a broken one stops
+        Home Assistant from loading its configuration at the next start.
+        """
+
+        def _check() -> None:
+            for theme in Path(self.content.path.local).rglob("*.yaml"):
+                try:
+                    load_yaml(theme)
+                except HomeAssistantError as exception:
+                    raise MarketplaceError(
+                        f"{theme.name} is not valid YAML: {exception}"
+                    ) from exception
+
+        await self.marketplace.hass.async_add_executor_job(_check)
 
     @override
     async def validate_repository(self) -> bool:

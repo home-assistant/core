@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from functools import partial
+from pathlib import Path
 import re
 from typing import TYPE_CHECKING, override
 
@@ -53,6 +54,16 @@ class PluginRepository(Repository):
                     f"The '{self.localpath.rsplit('/', 1)[-1]}' directory is owned "
                     f"by {repository.data.full_name}"
                 )
+
+    @override
+    async def async_check_written_content(self) -> None:
+        """Refuse a download without the dashboard resource it is used by."""
+        if not self.data.file_name:
+            return
+
+        resource = Path(self.content.path.local, self.data.file_name)
+        if not await self.marketplace.hass.async_add_executor_job(resource.is_file):
+            raise MarketplaceError(f"The download has no {self.data.file_name}")
 
     @override
     async def validate_repository(self) -> bool:

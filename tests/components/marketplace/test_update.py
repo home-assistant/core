@@ -337,6 +337,8 @@ async def test_install_newest_commit_of_a_custom_repository(
     data.installed_commit = "1234abc"
     data.last_commit = "7fd1a60"
     data.default_branch = "main"
+    # What the patched update_repository resolves the content to
+    downloaded_repository.content.path.remote = "custom_components/example"
     aioclient_mock.mock_calls.clear()
 
     with (

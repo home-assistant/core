@@ -2421,7 +2421,13 @@ async def test_download_from_the_catalog_zip_release(
         ),
         (
             f"https://github.com/{REPOSITORY_INTEGRATION}/releases/download/1.0.0/example.zip",
-            _zip_bytes({"__init__.py": "", "manifest.json": "{}"}),
+            _zip_bytes(
+                {
+                    "__init__.py": "",
+                    "manifest.json": '{"domain": "example", "name": "Example",'
+                    ' "version": "1.0.0"}',
+                }
+            ),
         ),
     ):
         response_mocker.add(url, mocked_response(url, content=content))

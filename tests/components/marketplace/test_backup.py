@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.marketplace.base import MarketplaceManager
+from homeassistant.components.marketplace.exceptions import MarketplaceError
 from homeassistant.components.marketplace.utils.backup import (
     BACKUP_DIRECTORY,
     TARGET_FILE,
@@ -96,22 +97,31 @@ def test_backups_do_not_share_a_directory(
     assert (second.content_path / "__init__.py").exists()
 
 
+def test_nothing_to_back_up(marketplace: MarketplaceManager, config_dir: Path) -> None:
+    """Test a path that is not there is left alone."""
+    backup = Backup(marketplace, config_dir / "missing")
+
+    backup.create()
+
+    assert not backup.backup_path.exists()
+
+
 @pytest.mark.parametrize(
     "target",
     [
         pytest.param(".", id="config-directory"),
         pytest.param("custom_components", id="custom-components"),
-        pytest.param("missing", id="missing"),
     ],
 )
-def test_nothing_to_back_up(
+def test_protected_path_is_refused(
     marketplace: MarketplaceManager, config_dir: Path, target: str
 ) -> None:
-    """Test a path that is not there, or must never move, is left alone."""
+    """Test a path that must never move is refused, not skipped."""
     (config_dir / "custom_components").mkdir(exist_ok=True)
     backup = Backup(marketplace, config_dir / target)
 
-    backup.create()
+    with pytest.raises(MarketplaceError, match="it is protected"):
+        backup.create()
 
     assert not backup.backup_path.exists()
     assert (config_dir / "custom_components").exists()

@@ -8,6 +8,7 @@ import gzip
 import math
 import os
 import shutil
+import tempfile
 from typing import TYPE_CHECKING, Any, Literal, overload
 
 from aiogithubapi import (
@@ -485,13 +486,23 @@ class MarketplaceManager:
                 file_handler.write(content)
 
             # Create gz for .js files
-            if os.path.isfile(file_path):
-                if file_path.endswith(".js"):
+            if os.path.isfile(file_path) and file_path.endswith(".js"):
+                # Swapped in whole, a release can ship this same .gz file
+                # and write it while this one is being compressed
+                handle, compressed = tempfile.mkstemp(
+                    dir=os.path.dirname(file_path), suffix=".gz.tmp"
+                )
+                os.close(handle)
+                try:
                     with (
                         open(file_path, "rb") as f_in,
-                        gzip.open(file_path + ".gz", "wb") as f_out,
+                        gzip.open(compressed, "wb") as f_out,
                     ):
                         shutil.copyfileobj(f_in, f_out)
+                    os.replace(compressed, f"{file_path}.gz")
+                finally:
+                    if os.path.exists(compressed):
+                        os.remove(compressed)
 
         try:
             await self.hass.async_add_executor_job(_write_file)

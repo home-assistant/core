@@ -1,5 +1,6 @@
 """Backups of downloaded content, kept while a download replaces it."""
 
+import os
 from pathlib import Path
 import shutil
 from typing import TYPE_CHECKING
@@ -48,12 +49,17 @@ class Backup:
         return self.backup_path / CONTENT_NAME
 
     def create(self) -> None:
-        """Move the content into the backup."""
-        if not self.local_path.exists():
+        """Move the content into the backup.
+
+        Raises when that fails, the content must not be replaced without one.
+        """
+        if not self.local_path.exists() and not self.local_path.is_symlink():
             return
 
         if not is_safe(self.marketplace, self.local_path):
-            return
+            raise MarketplaceError(
+                f"Could not back up {self.local_path}, it is protected"
+            )
 
         try:
             self.backup_path.mkdir(parents=True)
@@ -64,15 +70,21 @@ class Backup:
             )
             shutil.move(self.local_path, self.content_path)
         except OSError as exception:
-            LOGGER.warning("Could not create backup: %s", exception)
-            return
+            shutil.rmtree(self.backup_path, ignore_errors=True)
+            raise MarketplaceError(
+                f"Could not back up {self.local_path}: {exception}"
+            ) from exception
 
         LOGGER.debug("Backup for %s created in %s", self.local_path, self.backup_path)
 
     def _target(self) -> str:
-        """Return the content path, relative to the configuration directory."""
-        config_path = Path(self.marketplace.core.config_path).resolve()
-        local_path = self.local_path.resolve()
+        """Return the content path, relative to the configuration directory.
+
+        Symlinks are not followed, restoring puts a symlink back where it was
+        instead of replacing what it points at.
+        """
+        config_path = Path(os.path.abspath(self.marketplace.core.config_path))
+        local_path = Path(os.path.abspath(self.local_path))
         if local_path.is_relative_to(config_path):
             return local_path.relative_to(config_path).as_posix()
         return local_path.as_posix()
@@ -117,9 +129,13 @@ def restore_interrupted_backups(marketplace: MarketplaceManager) -> bool:
             shutil.rmtree(backup_path, ignore_errors=True)
             continue
 
+        local_path: Path | None = Path(marketplace.core.config_path, target)
         try:
-            local_path = resolve_in_directory(marketplace.core.config_path, target)
+            # Checks the resolved path, the backup is restored to the literal one
+            resolve_in_directory(marketplace.core.config_path, target)
         except MarketplaceError:
+            local_path = None
+        if Path(target).is_absolute() or ".." in Path(target).parts:
             local_path = None
 
         if local_path is None or not is_safe(marketplace, local_path):

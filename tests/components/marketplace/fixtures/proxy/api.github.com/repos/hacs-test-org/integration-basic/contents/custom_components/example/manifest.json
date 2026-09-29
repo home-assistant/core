@@ -4,7 +4,7 @@
   "size": 5362,
   "name": "manifest.json",
   "path": "custom_components/example/manifest.json",
-  "content": "ewogICAgIm5hbWUiOiAiUHJveHkgbWFuaWZlc3QiLAogICAgImRvbWFpbiI6ICJleGFtcGxlIiwKICAgICJjb25maWdfZmxvdyI6IHRydWUKfQ==",
+  "content": "ewogICAgIm5hbWUiOiAiUHJveHkgbWFuaWZlc3QiLAogICAgImRvbWFpbiI6ICJleGFtcGxlIiwKICAgICJjb25maWdfZmxvdyI6IHRydWUsCiAgICAidmVyc2lvbiI6ICIxLjAuMCIKfQo=",
   "sha": "3d21ec53a331a6f037a91c368710b99387d012c1",
   "url": "https://api.github.com/repos/hacs-test-org/integration-basic/contents/custom_components/example/manifest.json",
   "git_url": "https://api.github.com/repos/hacs-test-org/integration-basic/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1",

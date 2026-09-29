@@ -5,6 +5,9 @@ from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, override
 
+from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
+from awesomeversion.exceptions import AwesomeVersionException
+
 from homeassistant import components
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.loader import (
@@ -42,6 +45,53 @@ def _validated_domain(domain: Any) -> str:
         raise MarketplaceError(f"'{domain}' is not a valid integration domain")
 
     return domain
+
+
+# The version formats the loader accepts for a custom integration
+LOADABLE_VERSION_STRATEGIES = [
+    AwesomeVersionStrategy.CALVER,
+    AwesomeVersionStrategy.SEMVER,
+    AwesomeVersionStrategy.SIMPLEVER,
+    AwesomeVersionStrategy.BUILDVER,
+    AwesomeVersionStrategy.PEP440,
+]
+
+
+def _is_loadable_version(version: Any) -> bool:
+    """Return if the loader accepts this as the version of a custom integration."""
+    if not isinstance(version, str):
+        return False
+
+    try:
+        AwesomeVersion(version, ensure_strategy=LOADABLE_VERSION_STRATEGIES)
+    except AwesomeVersionException:
+        return False
+    return True
+
+
+def _check_loadable_manifest(directory: Path, domain: str | None) -> None:
+    """Refuse a downloaded manifest.json the loader would not load."""
+    try:
+        manifest = json_loads_object(
+            (directory / RepositoryFile.MAINIFEST_JSON).read_text(encoding="utf-8")
+        )
+    except (OSError, ValueError) as exception:
+        raise MarketplaceError(
+            f"The download has no usable {RepositoryFile.MAINIFEST_JSON}"
+            f" where Home Assistant looks for it: {exception}"
+        ) from exception
+
+    if manifest.get("domain") != domain:
+        raise MarketplaceError(
+            f"The {RepositoryFile.MAINIFEST_JSON} of the download is for"
+            f" '{manifest.get('domain')}', not '{domain}'"
+        )
+
+    if not _is_loadable_version(manifest.get("version")):
+        raise MarketplaceError(
+            f"The {RepositoryFile.MAINIFEST_JSON} of the download has no valid"
+            " version, Home Assistant would not load it"
+        )
 
 
 class IntegrationRepository(Repository):
@@ -104,6 +154,13 @@ class IntegrationRepository(Repository):
                     "name": self.display_name,
                 },
             )
+
+    @override
+    async def async_check_written_content(self) -> None:
+        """Refuse an integration the loader would not load."""
+        await self.marketplace.hass.async_add_executor_job(
+            _check_loadable_manifest, Path(self.content.path.local), self.data.domain
+        )
 
     @override
     async def async_replaces_built_in(self) -> bool:

@@ -1,4 +1,5 @@
 {
   "name": "Proxy  integration",
-  "domain": "example"
+  "domain": "example",
+  "version": "1.0.0"
 }

@@ -8,7 +8,7 @@ from ..enums import MarketplaceSignal, RepositoryCategory
 from ..exceptions import MarketplaceError
 from ..utils.decorator import concurrent
 from ..utils.url import ref_version
-from .base import Repository
+from .base import FileInformation, Repository
 
 if TYPE_CHECKING:
     from ..base import MarketplaceManager
@@ -32,6 +32,22 @@ class TemplateRepository(Repository):
     def localpath(self) -> str:
         """Return localpath."""
         return f"{self.marketplace.core.config_path}/custom_templates"
+
+    @override
+    def _backup_path(self) -> str | None:
+        """Return the template file, the folder is shared with other templates."""
+        if not self.data.file_name:
+            return None
+        return f"{self.localpath}/{self.data.file_name}"
+
+    @override
+    def gather_tree_files_to_download(self) -> list[FileInformation]:
+        """Return the template file, the one in the root that validation found."""
+        return [
+            self._tree_file_information(entry)
+            for entry in self.tree
+            if entry.path == self.data.file_name
+        ]
 
     @override
     async def async_post_installation(self) -> None:

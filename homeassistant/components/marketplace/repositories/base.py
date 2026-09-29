@@ -1,11 +1,10 @@
 """Repository."""
 
-from asyncio import sleep
+from asyncio import Lock, sleep
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from functools import partial
 import io
-import os
 from pathlib import Path
 import shutil
 import tempfile
@@ -156,6 +155,15 @@ REPOSITORY_MANIFEST_KEYS_TO_EXPORT: tuple[tuple[str, Any], ...] = (
 )
 
 
+def _path_below(path: str, directory: str | None) -> str | None:
+    """Return the path relative to the directory, None when it is not below it."""
+    if not (directory := (directory or "").strip("/")):
+        return path
+    if not path.startswith(f"{directory}/"):
+        return None
+    return path[len(directory) + 1 :]
+
+
 def _check_archive_size(archive: zipfile.ZipFile) -> None:
     """Reject an archive that expands to more than we are willing to write."""
     size = sum(info.file_size for info in archive.infolist())
@@ -233,13 +241,12 @@ class RepositoryArchive:
             extractable = []
             for path in archive.filelist:
                 filename = "/".join(path.filename.split("/")[1:])
-                if filename.startswith(remote) and filename != remote:
-                    path.filename = filename.replace(remote, "").lstrip("/")
-                    if not path.filename:
-                        # Blank files is not valid, and will start to throw in Python 3.12
-                        continue
-                    resolve_in_directory(local, path.filename)
-                    extractable.append(path)
+                # Blank names are the directory itself, not something to extract
+                if not (relative := _path_below(filename, remote)):
+                    continue
+                path.filename = relative
+                resolve_in_directory(local, path.filename)
+                extractable.append(path)
 
             if len(extractable) == 0:
                 raise MarketplaceError("No content to extract")
@@ -422,6 +429,8 @@ class Repository:
         self.treefiles: list[str] = []
         self.ref: str | None = None
         self.logger = LOGGER
+        # Two downloads of one repository would write over each other's files
+        self._download_lock = Lock()
 
     @override
     def __str__(self) -> str:
@@ -705,22 +714,20 @@ class Repository:
         validate: Validate,
     ) -> None:
         """Download ZIP archive from repository release."""
+        filecontent = await self.marketplace.async_download_file(content["url"])
+        if filecontent is None:
+            validate.errors.append(f"Failed to download {content['url']}")
+            return
+
+        temp_dir = await self.marketplace.hass.async_add_executor_job(tempfile.mkdtemp)
         try:
-            filecontent = await self.marketplace.async_download_file(content["url"])
-
-            if filecontent is None:
-                validate.errors.append(f"Failed to download {content['url']}")
-                return
-
-            temp_dir = await self.marketplace.hass.async_add_executor_job(
-                tempfile.mkdtemp
-            )
             # A scratch file, deliberately not named after the remote manifest
             temp_file = Path(temp_dir, "archive.zip")
+            if not await self.marketplace.async_save_file(str(temp_file), filecontent):
+                validate.errors.append(f"[{content['name']}] was not downloaded")
+                return
 
-            result = await self.marketplace.async_save_file(str(temp_file), filecontent)
-
-            def _extract_zip_file():
+            def _extract_zip_file() -> None:
                 with zipfile.ZipFile(temp_file, "r") as zip_file:
                     _check_archive_size(zip_file)
                     for member in zip_file.namelist():
@@ -728,23 +735,15 @@ class Repository:
                     zip_file.extractall(self.content.path.local)
 
             await self.marketplace.hass.async_add_executor_job(_extract_zip_file)
-
-            def cleanup_temp_dir():
-                """Cleanup temp_dir."""
-                if os.path.exists(temp_dir):
-                    self.logger.debug("%s Cleaning up %s", self.string, temp_dir)
-                    shutil.rmtree(temp_dir)
-
-            if result:
-                self.logger.info(
-                    "%s Download of %s completed", self.string, content["name"]
-                )
-                await self.marketplace.hass.async_add_executor_job(cleanup_temp_dir)
-                return
-
-            validate.errors.append(f"[{content['name']}] was not downloaded")
+            self.logger.info(
+                "%s Download of %s completed", self.string, content["name"]
+            )
         except OSError, zipfile.BadZipFile:
             validate.errors.append("Download was not completed")
+        finally:
+            await self.marketplace.hass.async_add_executor_job(
+                partial(shutil.rmtree, temp_dir, ignore_errors=True)
+            )
 
     async def download_content(self, version: str | None = None) -> None:
         """Download the content of a directory."""
@@ -794,11 +793,17 @@ class Repository:
             self.repository_manifest.content_in_root
             and self.repository_manifest.filename
         ):
-            return [
-                content
-                for content in contents
-                if content.name == self.repository_manifest.filename
-            ]
+            if not (
+                wanted := [
+                    content
+                    for content in contents
+                    if content.name == self.repository_manifest.filename
+                ]
+            ):
+                raise MarketplaceError(
+                    f"The content has no {self.repository_manifest.filename}"
+                )
+            return wanted
 
         return contents
 
@@ -1035,7 +1040,6 @@ class Repository:
         self, install_repository: Callable[[], Awaitable[None]]
     ) -> None:
         """Run the install steps around writing the content."""
-        await self._async_pre_install()
         self.marketplace.async_dispatch(
             MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
             {"repository": self.data.full_name, "progress": 30},
@@ -1132,31 +1136,15 @@ class Repository:
         self, download: Callable[[], Awaitable[None]]
     ) -> None:
         """Write the content, putting back what was there when it fails."""
-        persistent_directory = None
+        # Checked here, the version being written decides where it goes
+        await self._async_pre_install()
         self.marketplace.async_dispatch(
             MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
             {"repository": self.data.full_name, "progress": 40},
         )
 
-        if self.repository_manifest.persistent_directory:
-            persistent_path = resolve_in_directory(
-                self.content.path.local,
-                self.repository_manifest.persistent_directory,
-            )
-            if await async_exists(self.marketplace.hass, persistent_path):
-                persistent_directory = Backup(
-                    marketplace=self.marketplace, local_path=persistent_path
-                )
-                await self.marketplace.hass.async_add_executor_job(
-                    persistent_directory.create
-                )
-
-        backup = None
-        if self.data.installed and not self.content.single:
-            backup = Backup(
-                marketplace=self.marketplace, local_path=self.content.path.local
-            )
-            await self.marketplace.hass.async_add_executor_job(backup.create)
+        persistent_directory = await self._async_back_up_persistent_directory()
+        backup: Backup | None = None
 
         def _restore_backups() -> None:
             """Put back what the backups moved away."""
@@ -1166,6 +1154,20 @@ class Repository:
             if persistent_directory is not None:
                 persistent_directory.restore()
                 persistent_directory.cleanup()
+
+        if (backup_path := self._backup_path()) is not None:
+            content_backup = Backup(
+                marketplace=self.marketplace, local_path=backup_path
+            )
+            try:
+                await self.marketplace.hass.async_add_executor_job(
+                    content_backup.create
+                )
+            except MarketplaceError:
+                # Nothing was written yet, only the persistent directory goes back
+                await self.marketplace.hass.async_add_executor_job(_restore_backups)
+                raise
+            backup = content_backup
 
         LOGGER.debug("%s Local path is set to %s", self.string, self.content.path.local)
         LOGGER.debug(
@@ -1179,6 +1181,12 @@ class Repository:
 
         try:
             await download()
+            self.marketplace.async_dispatch(
+                MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+                {"repository": self.data.full_name, "progress": 70},
+            )
+            self._raise_for_download_errors()
+            await self.async_check_written_content()
         except Exception as exception:
             # Whatever broke the download, the content that was there goes back
             await self.marketplace.hass.async_add_executor_job(_restore_backups)
@@ -1187,17 +1195,6 @@ class Repository:
                     f"Could not write the downloaded content: {exception}"
                 ) from exception
             raise
-
-        self.marketplace.async_dispatch(
-            MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
-            {"repository": self.data.full_name, "progress": 70},
-        )
-
-        if self.validate.errors:
-            for error in self.validate.errors:
-                self.logger.error("%s %s", self.string, error)
-            await self.marketplace.hass.async_add_executor_job(_restore_backups)
-            raise MarketplaceError("Could not download, see log for details")
 
         self.marketplace.async_dispatch(
             MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
@@ -1216,6 +1213,47 @@ class Repository:
             await self.marketplace.hass.async_add_executor_job(
                 _restore_persistent_directory
             )
+
+    def _raise_for_download_errors(self) -> None:
+        """Raise for the errors the download ran into, after logging them."""
+        if not self.validate.errors:
+            return
+
+        for error in self.validate.errors:
+            self.logger.error("%s %s", self.string, error)
+        raise MarketplaceError("Could not download, see log for details")
+
+    async def _async_back_up_persistent_directory(self) -> Backup | None:
+        """Move the directory hacs.json keeps across updates out of the way."""
+        if not self.repository_manifest.persistent_directory:
+            return None
+
+        local_path = Path(self.content.path.local).resolve()
+        persistent_path = resolve_in_directory(
+            local_path, self.repository_manifest.persistent_directory
+        )
+        # Keeping the whole download would put the old version back over the new
+        if persistent_path == local_path:
+            raise MarketplaceError(
+                "The persistent_directory of hacs.json has to be a directory"
+                " inside the download"
+            )
+
+        if not await async_exists(self.marketplace.hass, persistent_path):
+            return None
+
+        persistent_directory = Backup(
+            marketplace=self.marketplace, local_path=persistent_path
+        )
+        await self.marketplace.hass.async_add_executor_job(persistent_directory.create)
+        return persistent_directory
+
+    def _backup_path(self) -> str | None:
+        """Return what the download replaces, and has to be backed up first."""
+        return self.content.path.local
+
+    async def async_check_written_content(self) -> None:
+        """Refuse content that would not work, before it replaces the old."""
 
     async def async_get_repository_object(
         self,
@@ -1474,7 +1512,7 @@ class Repository:
         for entry in tree:
             if tree_entry_is_directory(entry):
                 continue
-            if entry.path.startswith(self.content.path.remote):
+            if _path_below(entry.path, self.content.path.remote) is not None:
                 files.append(self._tree_file_information(entry))
         return files
 
@@ -1538,10 +1576,10 @@ class Repository:
 
             else:
                 _content_path = content.path
-                if not self.repository_manifest.content_in_root:
-                    _content_path = _content_path.replace(
-                        f"{self.content.path.remote}", ""
-                    )
+                if not self.repository_manifest.content_in_root and (
+                    relative := _path_below(_content_path, self.content.path.remote)
+                ):
+                    _content_path = relative
 
                 path_parts = f"{self.content.path.local}/{_content_path}".split("/")
                 del path_parts[-1]
@@ -1757,6 +1795,14 @@ class Repository:
         self, *, ref: str | None = None, **_: Any
     ) -> None:
         """Download the content of a repository."""
+        if self._download_lock.locked():
+            raise MarketplaceError(f"{self.data.full_name} is already downloading")
+
+        async with self._download_lock:
+            await self._async_download_repository(ref)
+
+    async def _async_download_repository(self, ref: str | None) -> None:
+        """Download the content of a repository, one download at a time."""
         if (catalog_version := self._catalog_version(ref)) is not None:
             try:
                 await self._async_download_catalog_version(
