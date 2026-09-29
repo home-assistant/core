@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator, MutableMapping
+from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime
 import hashlib
@@ -13,7 +14,7 @@ import os
 from pathlib import Path
 import re
 import secrets
-from time import monotonic
+from time import monotonic, time, time_ns
 from typing import Any, Final, Protocol
 
 from aiohttp import web
@@ -744,8 +745,12 @@ class SpeechManager:
         """Init config folder and load file cache."""
         self.file_cache.update(await self.hass.async_add_executor_job(self._init_cache))
 
-    async def async_clear_cache(self) -> None:
-        """Read file cache and delete files."""
+    async def async_clear_cache(self, days: int | None = None) -> None:
+        """Delete cached files, or only those not used for the given days."""
+        if days is not None:
+            await self._async_clear_unused_cache(days)
+            return
+
         self.mem_cache.clear()
 
         def remove_files(files: list[str]) -> None:
@@ -761,6 +766,40 @@ class SpeechManager:
         )
         self.file_cache.clear()
         await task
+
+    async def _async_clear_unused_cache(self, days: int) -> None:
+        """Delete cached files that were not used for the given days."""
+        cutoff = time() - days * 86400
+
+        def remove_unused_files(files: dict[str, str]) -> list[str]:
+            """Remove unused files from filesystem and return their keys."""
+            removed = []
+            for cache_key, filename in files.items():
+                voice_file = os.path.join(self.cache_dir, filename)
+                try:
+                    if os.stat(voice_file).st_atime >= cutoff:
+                        continue
+                    os.remove(voice_file)
+                except FileNotFoundError:
+                    # File was already removed, ignore :)
+                    pass
+                except OSError as err:
+                    _LOGGER.warning("Can't remove cache file '%s': %s", filename, err)
+                    continue
+                removed.append(cache_key)
+            return removed
+
+        # Messages in the memory cache are in use but don't touch their file
+        removed = await self.hass.async_add_executor_job(
+            remove_unused_files,
+            {
+                cache_key: filename
+                for cache_key, filename in self.file_cache.items()
+                if cache_key not in self.mem_cache
+            },
+        )
+        for cache_key in removed:
+            self.file_cache.pop(cache_key, None)
 
     @callback
     def async_get_cache_file_path(self, cache_key: str) -> Path | None:
@@ -1159,12 +1198,19 @@ class SpeechManager:
         def load_speech() -> bytes:
             """Load a speech from filesystem."""
             with open(voice_file, "rb") as speech:
-                return speech.read()
+                data = speech.read()
+                # Mark the file as used, independent of the mount's atime setting
+                with suppress(OSError):
+                    os.utime(
+                        speech.fileno(),
+                        ns=(time_ns(), os.fstat(speech.fileno()).st_mtime_ns),
+                    )
+                return data
 
         try:
             data = await self.hass.async_add_executor_job(load_speech)
         except OSError as err:
-            del self.file_cache[cache_key]
+            self.file_cache.pop(cache_key, None)
             raise HomeAssistantError(f"Can't read {voice_file}") from err
 
         yield data
