@@ -528,6 +528,10 @@ class AnthropicDeltaStream:
         stream: AsyncStream[MessageStreamEvent],
     ) -> None:
         """Initialize the delta stream."""
+        if stream is None or not hasattr(stream, "__aiter__"):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="unexpected_stream_object"
+            )
         self._chat_log: conversation.ChatLog = chat_log
         self._stream: AsyncStream[MessageStreamEvent] = stream
         self.stop_reason: StopReason | None = None
@@ -554,10 +558,6 @@ class AnthropicDeltaStream:
         conversation.AssistantContentDeltaDict | conversation.ToolResultContentDeltaDict
     ]:
         """Initialize the stream and return the async iterator."""
-        if self._stream is None or not hasattr(self._stream, "__aiter__"):
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="unexpected_stream_object"
-            )
         if self._stream_iterator is None:
             self._stream_iterator = self._stream.__aiter__()
         return self
@@ -1145,15 +1145,15 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 stream = await client.messages.create(**model_args)
                 delta_stream = AnthropicDeltaStream(chat_log, stream)
 
-                new_messages, model_args["container"] = _convert_content(
-                    [
-                        content
-                        async for content in chat_log.async_add_delta_content_stream(
-                            self.entity_id,
-                            delta_stream,
-                        )
-                    ]
-                )
+                async with stream:
+                    new_messages, model_args["container"] = _convert_content(
+                        [
+                            content
+                            async for content in chat_log.async_add_delta_content_stream(
+                                self.entity_id, delta_stream
+                            )
+                        ]
+                    )
                 cast(list[MessageParam], model_args["messages"]).extend(new_messages)
             except anthropic.AuthenticationError as err:
                 # Trigger coordinator to confirm the auth failure
