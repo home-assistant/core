@@ -560,6 +560,32 @@ async def test_repositories_list_ignores_country(
     assert "country" not in listed
 
 
+async def test_removing_a_custom_repository_tells_the_panel(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the panel hears a custom repository is gone, like one added."""
+    await marketplace.async_register_repository(
+        "hacs-test-org/integration-basic-custom", RepositoryCategory.INTEGRATION
+    )
+    repository = marketplace.repositories.get_by_full_name(
+        "hacs-test-org/integration-basic-custom"
+    )
+    signals: list[dict[str, Any]] = []
+    async_dispatcher_connect(hass, MarketplaceSignal.REPOSITORY, signals.append)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "marketplace/repositories/remove", "repository": repository.data.id}
+    )
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+
+    # The panel refetches on it, the dialog that removed it is not in the panel
+    assert signals
+
+
 async def test_repositories_removed(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
