@@ -965,10 +965,14 @@ class DynamicServiceIntentHandler(IntentHandler):
         if self.device_classes:
             # The typical way to match enums is with probatio.Coerce, but we build a
             # flat list to make the API simpler to describe programmatically
+            # Sort the enums by name: this is a set of classes, whose iteration
+            # order follows object identity, so the schema would differ per run.
             flattened_device_classes = probatio.In(
                 [
                     device_class.value
-                    for device_class_enum in self.device_classes
+                    for device_class_enum in sorted(
+                        self.device_classes, key=lambda enum: enum.__name__
+                    )
                     for device_class in device_class_enum
                 ]
             )
