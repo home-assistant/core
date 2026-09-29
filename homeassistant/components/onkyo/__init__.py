@@ -107,3 +107,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> bo
     entry.runtime_data.manager.start_unloading()
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: OnkyoConfigEntry, device: dr.AnyDeviceEntry
+) -> bool:
+    """Remove a device from the config entry.
+
+    Zones are child devices. A zone the receiver stopped reporting cannot be told
+    apart from one that is merely switched off, so removing it is left to the user.
+    The receiver itself is removed by deleting the config entry.
+    """
+    return isinstance(device, dr.ChildDeviceEntry)
