@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, override
 
-from boschshcpy import SHCMicromoduleRelay
+from boschshcpy import SHCMicromoduleRelay, SHCShutterContact2
 from boschshcpy.device import SHCDevice
 
 from homeassistant.components.number import (
@@ -50,7 +50,18 @@ async def _impulse_length_set_value_fn(
     await device.async_set_impulse_length(round(value * 10))
 
 
+def _bypass_timeout_value_fn(device: SHCShutterContact2) -> float | None:
+    return float(device.bypass_timeout)
+
+
+async def _bypass_timeout_set_value_fn(
+    device: SHCShutterContact2, value: float
+) -> None:
+    await device.async_set_bypass_timeout(round(value))
+
+
 IMPULSE_LENGTH = "impulse_length"
+BYPASS_TIMEOUT = "bypass_timeout"
 
 NUMBER_TYPES: dict[str, SHCNumberEntityDescription] = {
     IMPULSE_LENGTH: SHCNumberEntityDescription[SHCMicromoduleRelay](
@@ -65,6 +76,19 @@ NUMBER_TYPES: dict[str, SHCNumberEntityDescription] = {
         mode=NumberMode.BOX,
         value_fn=_impulse_length_value_fn,
         set_value_fn=_impulse_length_set_value_fn,
+    ),
+    BYPASS_TIMEOUT: SHCNumberEntityDescription[SHCShutterContact2](
+        key=BYPASS_TIMEOUT,
+        translation_key=BYPASS_TIMEOUT,
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_min_value=1.0,
+        native_max_value=15.0,
+        native_step=1.0,
+        mode=NumberMode.BOX,
+        value_fn=_bypass_timeout_value_fn,
+        set_value_fn=_bypass_timeout_set_value_fn,
     ),
 }
 
@@ -100,6 +124,17 @@ async def async_setup_entry(
                 description=NUMBER_TYPES[IMPULSE_LENGTH],
             )
         )
+
+    entities.extend(
+        SHCNumber(
+            hass=hass,
+            device=device,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=NUMBER_TYPES[BYPASS_TIMEOUT],
+        )
+        for device in session.device_helper.shutter_contacts2
+    )
 
     async_add_entities(entities)
 

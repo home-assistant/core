@@ -12,11 +12,16 @@ from homeassistant.components.number import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from .conftest import micromodule_relay_device, setup_integration
+from .conftest import (
+    micromodule_relay_device,
+    setup_integration,
+    shutter_contact2_device,
+)
 
 from tests.common import MockConfigEntry
 
 IMPULSE_LENGTH_ENTITY_ID = "number.relay_pulse_length"
+BYPASS_TIMEOUT_ENTITY_ID = "number.shutter_contact_break_function_timeout"
 
 
 @pytest.mark.parametrize(
@@ -99,3 +104,45 @@ async def test_micromodule_impulse_relay_impulse_length_partial_poll(
     state = hass.states.get(IMPULSE_LENGTH_ENTITY_ID)
     assert state is not None
     assert state.state == "unknown"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"shutter_contacts2": [shutter_contact2_device(bypass_timeout=7)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_shutter_contact2_bypass_timeout_value(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The bypass timeout is reported in minutes."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(BYPASS_TIMEOUT_ENTITY_ID)
+    assert state is not None
+    assert state.state == "7.0"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"shutter_contacts2": [shutter_contact2_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_shutter_contact2_bypass_timeout_set_value(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Setting a value writes the rounded minutes to the device."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.shutter_contacts2[0]
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: BYPASS_TIMEOUT_ENTITY_ID, ATTR_VALUE: 10},
+        blocking=True,
+    )
+    device.async_set_bypass_timeout.assert_awaited_once_with(10)
