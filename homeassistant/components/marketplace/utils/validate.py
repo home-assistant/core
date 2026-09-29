@@ -29,6 +29,8 @@ VALID_FULL_NAME = re.compile(r"^[A-Za-z0-9-]+/(?!\.\.?$)[A-Za-z0-9_.-]+$")
 VALID_DOMAIN = re.compile(r"^[a-z0-9_-]+$")
 # URLs collapse dot segments, even encoded ones, and cut at a query or fragment
 INVALID_REF = re.compile(r"(^|/)\.|[?#%\\\s]")
+# The last second a datetime can hold, a timestamp in milliseconds is far past it
+MAX_TIMESTAMP = 253402300799
 
 
 def valid_ref(value: Any) -> str:
@@ -36,6 +38,35 @@ def valid_ref(value: Any) -> str:
     if not isinstance(value, str) or not value or INVALID_REF.search(value):
         raise probatio.Invalid(f"'{value}' is not a usable version")
     return value
+
+
+def is_valid_ref(value: Any) -> bool:
+    """Return if a tag, branch or commit can be installed."""
+    try:
+        valid_ref(value)
+    except probatio.Invalid:
+        return False
+    return True
+
+
+def valid_version(value: Any) -> str:
+    """Validate a Home Assistant version a repository needs."""
+    if not isinstance(value, str) or not AwesomeVersion(value).valid:
+        raise probatio.Invalid(f"'{value}' is not a version")
+    return value
+
+
+# What the Marketplace reads from hacs.json, a value of another type is left out
+REPOSITORY_MANIFEST_VALUES = {
+    "content_in_root": probatio.Schema(bool),
+    "filename": probatio.Schema(str),
+    "hacs": probatio.Schema(str),
+    "hide_default_branch": probatio.Schema(bool),
+    "homeassistant": probatio.Schema(valid_version),
+    "name": probatio.Schema(str),
+    "persistent_directory": probatio.Schema(str),
+    "zip_release": probatio.Schema(bool),
+}
 
 
 REPOSITORY_MANIFEST_JSON_SCHEMA = probatio.Schema(
@@ -81,7 +112,7 @@ def validate_repo_data(schema: dict[Any, Any], extra: int) -> Callable[[Any], An
         """Validate integration repo data."""
         schema_errors: probatio.MultipleInvalid | None = None
         try:
-            _schema(data)
+            data = _schema(data)
         except probatio.MultipleInvalid as err:
             schema_errors = err
         try:
@@ -114,7 +145,9 @@ V2_COMMON_DATA_JSON_SCHEMA = {
     probatio.Required("etag_repository"): str,
     probatio.Required("full_name"): probatio.All(str, probatio.Match(VALID_FULL_NAME)),
     probatio.Optional("last_commit"): valid_ref,
-    probatio.Required("last_fetched"): probatio.Any(int, float),
+    probatio.Required("last_fetched"): probatio.All(
+        probatio.Any(int, float), probatio.Range(min=0, max=MAX_TIMESTAMP)
+    ),
     probatio.Required("last_updated"): str,
     probatio.Optional("last_version"): valid_ref,
     probatio.Optional("prerelease"): valid_ref,

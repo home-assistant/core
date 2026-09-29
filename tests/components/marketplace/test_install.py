@@ -39,12 +39,13 @@ from homeassistant.loader import Integration
 
 from . import mocked_response
 from .conftest import MarketplaceResponses
-from .const import REPOSITORY_INTEGRATION_ID
+from .const import REPOSITORY_INTEGRATION_ID, REPOSITORY_PLUGIN_ID
 
 THEME_ID = "1296266"
+TEMPLATE_ID = "1296268"
 
 
-def _zip(files: dict[str, str]) -> bytes:
+def _zip(files: dict[str, str | bytes]) -> bytes:
     """Return a ZIP file holding the given members."""
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w") as archive:
@@ -164,6 +165,7 @@ async def test_failed_backup_stops_the_install(
     """Test nothing is written when the backup of the install fails."""
     repository = PluginRepository(marketplace, "review/test-card")
     repository.data.installed = True
+    repository.content.path.remote = ""
     folder = Path(repository.localpath)
     folder.mkdir(parents=True)
     (folder / "test-card.js").write_bytes(b"old working version")
@@ -481,6 +483,14 @@ async def test_persistent_directory_has_to_be_a_directory_inside(
         pytest.param(
             "Example:\n  primary-color: [red, blue]\n", "not a valid theme", id="schema"
         ),
+        pytest.param(
+            "Example: !include ../../secrets.yaml\n", "!include", id="include"
+        ),
+        pytest.param(
+            "Example:\n  primary-color: café\n".encode("cp1252"),
+            "not valid YAML",
+            id="encoding",
+        ),
     ],
 )
 async def test_invalid_theme_keeps_the_configuration_loadable(
@@ -488,13 +498,15 @@ async def test_invalid_theme_keeps_the_configuration_loadable(
     marketplace: MarketplaceManager,
     response_mocker: MarketplaceResponses,
     config_dir: Path,
-    theme: str,
+    theme: str | bytes,
     error: str,
 ) -> None:
     """Test a theme the frontend can not load is not written over a working one."""
     (config_dir / "configuration.yaml").write_text(
         "frontend:\n  themes: !include_dir_merge_named themes\n"
     )
+    # A valid theme, so only the tag that reaches it can be what is refused
+    (config_dir / "secrets.yaml").write_text("primary-color: red\n")
     repository = marketplace.repositories.get_by_id(THEME_ID)
     await repository.async_install_repository()
     await hass.async_block_till_done()
@@ -511,6 +523,38 @@ async def test_invalid_theme_keeps_the_configuration_loadable(
 
     assert await async_hass_config_yaml(hass)
     assert (config_dir / "themes/example/example.yaml").read_text() != theme
+
+
+async def test_template_that_is_not_utf8_keeps_the_old_one(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+    config_dir: Path,
+) -> None:
+    """Test a template Home Assistant can not read is not written over a working one."""
+    repository = marketplace.repositories.get_by_id(TEMPLATE_ID)
+    await repository.async_install_repository()
+    await hass.async_block_till_done()
+    installed = config_dir / "custom_templates/example.jinja"
+    working = installed.read_bytes()
+
+    repository.data.last_version = "2.0.0"
+    archive = _zip(
+        {
+            "repo-2.0.0/example.jinja": "{{ 'café' }}".encode("cp1252"),
+            "repo-2.0.0/hacs.json": json.dumps(
+                {"name": "Template", "filename": "example.jinja"}
+            ),
+        }
+    )
+    url = f"https://github.com/{repository.data.full_name}/archive/refs/tags/2.0.0.zip"
+    response_mocker.add(url, mocked_response(url, content=archive), keep=True)
+
+    with pytest.raises(MarketplaceError, match="not UTF-8 encoded"):
+        await repository.async_install_repository()
+    await hass.async_block_till_done()
+
+    assert installed.read_bytes() == working
 
 
 @pytest.mark.parametrize(
@@ -670,6 +714,23 @@ async def test_template_update_checks_the_file_name(
 
     download.assert_not_called()
     assert configuration.read_text() == "default_config:\n"
+
+
+async def test_plugin_without_a_resource_is_not_written(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a card without a file to serve is refused before anything is written."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_PLUGIN_ID)
+    # What update_repository leaves behind for a version without a resource
+    repository.content.path.remote = None
+    repository.data.file_name = ""
+
+    download = AsyncMock()
+    with pytest.raises(MarketplaceError, match="not compliant"):
+        await repository._async_write_content(download)
+
+    download.assert_not_called()
+    assert not Path(repository.localpath).exists()
 
 
 async def test_failed_persistent_directory_restore_keeps_the_old_install(

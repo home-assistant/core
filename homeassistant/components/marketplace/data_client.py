@@ -85,6 +85,10 @@ class CatalogClient:
 
             validated_repositories: dict[str, Any] = {}
             for key, repo_data in data.items():
+                # The key becomes the repository id, in unique ids and in URLs
+                if not (key.isascii() and key.isdecimal()):
+                    LOGGER.info("Got invalid data for %s (not a repository id)", key)
+                    continue
                 if not isinstance(repo_data, dict):
                     LOGGER.info("Got invalid data for %s (not an object)", key)
                     continue

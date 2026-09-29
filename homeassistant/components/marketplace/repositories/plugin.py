@@ -51,6 +51,9 @@ class PluginRepository(Repository):
     @override
     async def async_pre_install(self) -> None:
         """Run pre install steps."""
+        # Refreshing only notes a missing resource, installing needs one
+        self._check_resolved_content()
+
         # The directory leaves out the owner, so two owners can share a name
         for repository in self.marketplace.repositories.list_installed:
             if (
@@ -401,10 +404,10 @@ class PluginRepository(Repository):
         # for example 'button' would also match 'button-card'.
         namespace = f"{self.generate_dashboard_resource_namespace()}/"
 
-        for entry in resources.async_items():
+        # A copy, deleting changes the items
+        for entry in list(resources.async_items()):
             if entry["url"].startswith(namespace):
                 self.logger.info(
                     "%s Removing dashboard resource %s", self.string, entry["url"]
                 )
                 await resources.async_delete_item(entry["id"])
-                return

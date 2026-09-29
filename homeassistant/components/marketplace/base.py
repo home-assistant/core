@@ -1014,7 +1014,8 @@ class MarketplaceManager:
                     repository.data.last_version = repo_data.get("last_version")
                     repository.data.last_commit = repo_data.get("last_commit")
 
-        if self.stage == MarketplaceStage.STARTUP:
+        # An answer without one usable entry says nothing about what is stale
+        if self.stage == MarketplaceStage.STARTUP and category_data:
             for repository in self.repositories.list_all:
                 if (
                     repository.data.category == category

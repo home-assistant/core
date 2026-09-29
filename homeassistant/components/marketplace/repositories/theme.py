@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, override
 
 import probatio
+import yaml
 
 from homeassistant.components.frontend import (
     CONF_THEMES,
@@ -12,7 +13,6 @@ from homeassistant.components.frontend import (
     DOMAIN as FRONTEND_DOMAIN,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.yaml import load_yaml
 
 from ..enums import MarketplaceSignal, RepositoryCategory
 from ..exceptions import MarketplaceError
@@ -74,14 +74,16 @@ class ThemeRepository(Repository):
         """Refuse a theme the frontend can not load.
 
         Themes are included in configuration.yaml, a broken one stops
-        Home Assistant from loading its configuration at the next start.
+        Home Assistant from loading its configuration at the next start. No
+        tags either: a theme is served to every user, an include would hand
+        them whatever file it points at.
         """
 
         def _check() -> None:
             for theme in Path(self.content.path.local).rglob("*.yaml"):
                 try:
-                    themes = load_yaml(theme)
-                except HomeAssistantError as exception:
+                    themes = yaml.safe_load(theme.read_text(encoding="utf-8"))
+                except (UnicodeDecodeError, yaml.YAMLError) as exception:
                     raise MarketplaceError(
                         f"{theme.name} is not valid YAML: {exception}"
                     ) from exception

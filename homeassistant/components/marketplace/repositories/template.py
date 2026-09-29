@@ -114,6 +114,25 @@ class TemplateRepository(Repository):
             )
 
     @override
+    async def async_check_written_content(self) -> None:
+        """Refuse a template Home Assistant can not read.
+
+        Home Assistant reads every template at startup, one it can not decode
+        stops it from starting.
+        """
+
+        def _check() -> None:
+            path = resolve_in_directory(self.localpath, self._file_name_to_write)
+            try:
+                path.read_bytes().decode("utf-8")
+            except UnicodeDecodeError as exception:
+                raise MarketplaceError(
+                    f"{path.name} is not UTF-8 encoded: {exception}"
+                ) from exception
+
+        await self.marketplace.hass.async_add_executor_job(_check)
+
+    @override
     async def async_post_installation(self) -> None:
         """Run post installation steps."""
         await self._reload_custom_templates()

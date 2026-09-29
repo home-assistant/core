@@ -9,6 +9,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.marketplace.base import MarketplaceManager
+from homeassistant.components.marketplace.enums import (
+    MarketplaceStage,
+    RepositoryCategory,
+)
 from homeassistant.components.marketplace.exceptions import (
     MarketplaceError,
     NotModifiedError,
@@ -22,6 +26,7 @@ from . import (
     mocked_response,
 )
 from .conftest import MarketplaceResponses
+from .const import REPOSITORY_PLUGIN_ID
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMockResponse
@@ -303,3 +308,49 @@ async def test_catalog_entry_that_is_not_an_object_is_skipped(
     response_mocker.add(url, mocked_response(url, json_content={"1": "broken"}))
 
     assert await marketplace.data_client.get_data("integration", validate=True) == {}
+
+
+async def test_catalog_entry_without_a_numeric_id_is_skipped(
+    marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
+) -> None:
+    """Test a catalog key that is not a GitHub repository id is dropped."""
+    data = GOOD_INTEGRATION_DATA | {"full_name": "owner/blah"}
+    url = "https://data-v2.hacs.xyz/integration/data.json"
+    response_mocker.add(
+        url,
+        mocked_response(
+            url, json_content={"../1": data, "-1": data, "١": data, "1": data}
+        ),
+    )
+
+    assert await marketplace.data_client.get_data("integration", validate=True) == {
+        "1": data
+    }
+
+
+@pytest.mark.parametrize(
+    "catalog",
+    [
+        pytest.param({}, id="empty"),
+        pytest.param({REPOSITORY_PLUGIN_ID: {"full_name": 1}}, id="nothing_valid"),
+    ],
+)
+async def test_empty_catalog_at_startup_keeps_the_category(
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+    catalog: dict[str, Any],
+) -> None:
+    """Test a catalog answer without usable entries does not make them all stale."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_PLUGIN_ID)
+    assert not repository.data.installed
+    # At startup nothing is known to be in the catalog yet
+    marketplace.repositories._default_repositories.clear()
+    marketplace.set_stage(MarketplaceStage.STARTUP)
+    url = "https://data-v2.hacs.xyz/plugin/data.json"
+    response_mocker.add(url, mocked_response(url, json_content=catalog))
+
+    await marketplace.async_get_category_repositories_from_catalog(
+        RepositoryCategory.PLUGIN
+    )
+
+    assert marketplace.repositories.get_by_id(REPOSITORY_PLUGIN_ID) is repository

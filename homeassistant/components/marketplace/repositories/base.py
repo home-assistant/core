@@ -20,6 +20,7 @@ from aiogithubapi import (
 )
 from aiogithubapi.models.git_tree import GitHubGitTreeEntryModel
 import attr
+import probatio
 
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.util import dt as dt_util
@@ -51,7 +52,6 @@ from ..utils.file_system import (
     async_remove,
     async_remove_directory,
 )
-from ..utils.filters import filter_content_return_one_of_type
 from ..utils.json import json_loads_object
 from ..utils.logger import LOGGER
 from ..utils.path import entry_in_directory, is_safe, resolve_in_directory
@@ -69,7 +69,7 @@ from ..utils.url import (
     github_release_asset,
     ref_version,
 )
-from ..utils.validate import Validate
+from ..utils.validate import REPOSITORY_MANIFEST_VALUES, Validate, is_valid_ref
 from ..utils.version import (
     version_left_higher_or_equal_then_right,
     version_left_higher_then_right,
@@ -377,11 +377,17 @@ class RepositoryManifest:
             raise MarketplaceError("Missing manifest data")
 
         manifest_data = RepositoryManifest()
-        manifest_data.manifest = {
-            k: v
-            for k, v in manifest.items()
-            if k in manifest_data.__dict__ and v != getattr(manifest_data, k)
-        }
+        manifest_data.manifest = {}
+        for key, value in manifest.items():
+            if (validator := REPOSITORY_MANIFEST_VALUES.get(key)) is None:
+                continue
+            try:
+                validator(value)
+            except probatio.Invalid:
+                LOGGER.warning("Ignoring %s in hacs.json, %r is not valid", key, value)
+                continue
+            if value != getattr(manifest_data, key):
+                manifest_data.manifest[key] = value
 
         for key, value in manifest_data.manifest.items():
             setattr(manifest_data, key, value)
@@ -1343,6 +1349,8 @@ class Repository:
                 break
             if release.draft or (release.prerelease and not prerelease):
                 continue
+            if not is_valid_ref(release.tag_name):
+                continue
             releases.append(release)
         return releases
 
@@ -1534,12 +1542,13 @@ class Repository:
             if files:
                 return files
 
-        if self.repository_manifest.content_in_root:
-            if not self.repository_manifest.filename:
-                if category == "theme":
-                    tree = filter_content_return_one_of_type(
-                        self.tree, "", "yaml", "path"
-                    )
+        # The whole root is not the theme, only the file validation found in it
+        if (
+            category == "theme"
+            and self.repository_manifest.content_in_root
+            and not self.repository_manifest.filename
+        ):
+            tree = [entry for entry in tree if entry.path == self.data.file_name]
 
         for entry in tree:
             if tree_entry_is_directory(entry):
@@ -2071,7 +2080,10 @@ class Repository:
             repository=self.data.full_name,
             kwargs={"per_page": 30},
         )
-        releases: list[GitHubReleaseModel] = response.data
+        # A tag ends up in the URLs the version is installed by
+        releases: list[GitHubReleaseModel] = [
+            release for release in response.data if is_valid_ref(release.tag_name)
+        ]
         return releases
 
     async def async_set_last_commits(self) -> None:

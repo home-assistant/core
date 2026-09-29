@@ -228,34 +228,6 @@ def test_version_to_install_forced_branch(mock_repository: Repository) -> None:
     assert mock_repository.version_to_install() == "my-ref"
 
 
-def test_filter_content_return_one_of_type_objects() -> None:
-    """Test that only the first file of the filtered type is kept."""
-    tree = [
-        _tree_file("test/file.file"),
-        _tree_file("test/newfile.file"),
-        _tree_file("test/file.png"),
-    ]
-
-    files = [
-        tree_entry_filename(entry)
-        for entry in filters.filter_content_return_one_of_type(
-            tree, "test", "file", "path"
-        )
-    ]
-
-    assert files == ["file.file", "file.png"]
-
-
-def test_filter_content_return_one_of_type_strings() -> None:
-    """Test filtering a plain list of paths."""
-    tree = ["test/file.file", "test/newfile.file", "test/file.png"]
-
-    assert filters.filter_content_return_one_of_type(tree, "test", "file") == [
-        "test/file.file",
-        "test/file.png",
-    ]
-
-
 def test_get_first_directory_in_directory() -> None:
     """Test finding the first subdirectory of a directory."""
     tree = [

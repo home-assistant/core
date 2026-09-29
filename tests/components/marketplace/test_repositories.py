@@ -120,6 +120,27 @@ def test_manifest_rejects_none() -> None:
         RepositoryManifest.from_dict(None)
 
 
+@pytest.mark.parametrize(
+    ("key", "value"),
+    [
+        pytest.param("homeassistant", True, id="homeassistant-bool"),
+        pytest.param("homeassistant", "", id="homeassistant-empty"),
+        pytest.param("homeassistant", "2024.x.y", id="homeassistant-not-a-version"),
+        pytest.param("homeassistant", ["2024.1"], id="homeassistant-list"),
+        pytest.param("filename", 123, id="filename-number"),
+        pytest.param("persistent_directory", 5, id="persistent-directory-number"),
+        pytest.param("zip_release", "yes", id="zip-release-string"),
+        pytest.param("name", {"en": "TEST"}, id="name-object"),
+    ],
+)
+def test_manifest_leaves_out_values_of_the_wrong_type(key: str, value: Any) -> None:
+    """Test a hacs.json value of the wrong type is left out, the rest is kept."""
+    manifest = RepositoryManifest.from_dict({"hacs": "1.0.0", key: value})
+
+    assert manifest.manifest == {"hacs": "1.0.0"}
+    assert getattr(manifest, key) == getattr(RepositoryManifest(), key)
+
+
 def test_repository_data_guards_generated_fields() -> None:
     """Test that the name derived from the full name can not be overwritten."""
     data = RepositoryData.create_from_dict({"full_name": "test/test"})
@@ -393,16 +414,31 @@ def test_gather_zip_release(mock_repository_plugin: Repository) -> None:
     assert files == ["test.zip"]
 
 
-def test_gather_theme_files_in_root(mock_repository_theme: Repository) -> None:
-    """Test that a theme in the repository root only takes one yaml file."""
+@pytest.mark.parametrize(
+    "tree",
+    [
+        pytest.param(
+            (("test.yaml", False), ("dir", True), ("test2.yaml", False)),
+            id="other_yaml_in_the_root",
+        ),
+        pytest.param(
+            (
+                (".github/workflows/ci.yaml", False),
+                ("README.md", False),
+                ("test.yaml", False),
+            ),
+            id="yaml_in_a_hidden_folder_first",
+        ),
+    ],
+)
+def test_gather_theme_files_in_root(
+    mock_repository_theme: Repository, tree: tuple[tuple[str, bool], ...]
+) -> None:
+    """Test that a theme in the repository root only takes its own yaml file."""
     mock_repository_theme.repository_manifest.content_in_root = True
     mock_repository_theme.content.path.remote = ""
     mock_repository_theme.data.file_name = "test.yaml"
-    mock_repository_theme.tree = _tree(
-        ("test.yaml", False),
-        ("dir", True),
-        ("test2.yaml", False),
-    )
+    mock_repository_theme.tree = _tree(*tree)
 
     files = [file.path for file in mock_repository_theme.gather_files_to_download()]
 
@@ -1209,6 +1245,32 @@ async def test_repository_releases(
     assert response["result"] == snapshot
 
 
+async def test_releases_with_an_unusable_tag_are_left_out(
+    marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
+) -> None:
+    """Test a release whose tag breaks the URLs it is installed by is not offered."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    url = f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}/releases"
+    releases = [
+        {
+            "name": tag,
+            "tag_name": tag,
+            "published_at": "2019-02-26T15:02:39Z",
+            "prerelease": False,
+            "draft": False,
+        }
+        for tag in ("2.0.0#latest", "1.5%2F..", "1.0.0")
+    ]
+    response_mocker.add(url, mocked_response(url, json_content=releases), keep=True)
+
+    assert [release.tag_name for release in await repository.get_releases()] == [
+        "1.0.0"
+    ]
+    assert [release.tag_name for release in await repository.async_get_releases()] == [
+        "1.0.0"
+    ]
+
+
 async def test_download_zip_release(
     marketplace: MarketplaceManager,
     response_mocker: MarketplaceResponses,
@@ -1767,6 +1829,7 @@ async def test_plugin_directory_owned_by_another_repository(
 ) -> None:
     """Test a plugin of another owner can not take over the same directory."""
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+    repository.content.path.remote = ""
 
     other = PluginRepository(marketplace, "someone-else/Plugin-Basic")
     other.data.id = "1337"
@@ -2077,6 +2140,21 @@ async def test_remove_dashboard_resource(
         "Removing dashboard resource"
         " /local/community/plugin-basic/plugin-basic.js?v=1296267-1.0.0" in caplog.text
     )
+    assert resources.async_items() == []
+
+
+async def test_remove_every_dashboard_resource_of_the_plugin(
+    installed_plugin: PluginRepository,
+) -> None:
+    """Test that a resource added twice by hand is removed twice."""
+    resources = installed_plugin._get_resource_handler()
+    await resources.async_create_item(
+        {"res_type": "module", "url": "/local/community/plugin-basic/extra.js"}
+    )
+    assert len(resources.async_items()) == 2
+
+    await installed_plugin.remove_dashboard_resources()
+
     assert resources.async_items() == []
 
 

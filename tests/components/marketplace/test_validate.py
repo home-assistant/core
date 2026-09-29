@@ -413,6 +413,18 @@ def test_repo_data_json_schema(category: str) -> None:
             does_not_raise(),
             id="extra-key-is-discarded",
         ),
+        *(
+            pytest.param(
+                GOOD_COMMON_DATA | {"last_fetched": last_fetched},
+                pytest.raises(Invalid),
+                id=f"last-fetched-{name}",
+            )
+            for name, last_fetched in (
+                ("milliseconds", 1_700_000_000_000),
+                ("negative", -1),
+                ("far-future", 1e20),
+            )
+        ),
     ],
 )
 def test_common_repo_data_json_schema_bad_data(
@@ -483,6 +495,31 @@ def test_integration_repo_data_json_schema_bad_data(
     """Test validating a single integration repository entry."""
     with expectation:
         VALIDATE_FETCHED_V2_REPO_DATA["integration"](data)
+
+
+@pytest.mark.parametrize(
+    ("category", "data"),
+    [
+        *(
+            pytest.param(category, GOOD_COMMON_DATA, id=category)
+            for category in COMMON_CATEGORIES
+        ),
+        pytest.param("integration", GOOD_INTEGRATION_DATA, id="integration"),
+    ],
+)
+def test_repo_data_keeps_only_catalog_keys(category: str, data: dict[str, Any]) -> None:
+    """Test the catalog cannot set what only the Marketplace knows."""
+    validated = VALIDATE_FETCHED_V2_REPO_DATA[category](
+        data
+        | {
+            "category": "theme",
+            "id": "1",
+            "installed": True,
+            "installed_version": "9.9",
+        }
+    )
+
+    assert validated == data
 
 
 @pytest.mark.parametrize(
