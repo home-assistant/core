@@ -17,7 +17,7 @@ librt==0.13.0
 license-expression==30.4.4
 mock-open==1.4.0
 mypy==2.3.1
-prek==0.5.3
+prek==0.5.4
 pydantic==2.13.4
 PyGithub==2.10.0
 pylint==4.0.8
