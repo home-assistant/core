@@ -63,13 +63,26 @@ def config_dir(tmp_path_factory: pytest.TempPathFactory) -> Generator[Path]:
         f"http:\n  server_host: 127.0.0.1\n  server_port: {_free_port()}\n"
     )
 
-    block_async_io.enable()
+    # Importing unittest makes block_async_io think it runs in tests, which
+    # skips part of the wrappers. Enable all of them, like production does.
+    with patch.object(block_async_io, "_IN_TESTS", False):
+        block_async_io.enable()
+
     with (
         patch("homeassistant.bootstrap.block_async_io.enable"),
         patch("homeassistant.bootstrap.async_enable_logging"),
     ):
         asyncio.run(_async_start_and_stop(config_dir))
         yield config_dir
+
+    # Undo the wrappers again, or they fire on pytest's own teardown. Same as
+    # the disable_block_async_io fixture of the test suite.
+    calls = block_async_io._BLOCKED_CALLS.calls  # noqa: SLF001
+    for blocking_call in calls:
+        setattr(
+            blocking_call.object, blocking_call.function, blocking_call.original_func
+        )
+    calls.clear()
 
 
 def test_startup(benchmark: BenchmarkFixture, config_dir: Path) -> None:

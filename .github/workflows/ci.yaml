@@ -769,17 +769,15 @@ jobs:
           apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Run benchmarks
         uses: CodSpeedHQ/action@373d6868929f444bc08d901fd0eb0ad52a8875ea # v5.2.1
+        env:
+          # The memory instrument hooks the libc allocator, but pymalloc serves
+          # most Python objects from its own arenas and hides them. The CodSpeed
+          # runner already sets this for simulation runs; do the same for memory.
+          PYTHONMALLOC: malloc
         with:
           mode: simulation,memory
           # No token: auth uses the OIDC id-token minted by the job permissions.
-          # The memory instrument hooks the libc allocator, but pymalloc serves
-          # most Python objects from its own arenas and hides them. Route every
-          # allocation through malloc for the memory run only, so the simulation
-          # numbers keep measuring the allocator we ship with.
           run: |
-            if [ "${CODSPEED_RUNNER_MODE}" = "memory" ]; then
-              export PYTHONMALLOC=malloc
-            fi
             . venv/bin/activate
             pytest benchmarks --codspeed --no-cov -o addopts=""
       # Start once outside CodSpeed first, so the measured start is a restart of
@@ -791,6 +789,9 @@ jobs:
       # far more than the memory instrument handles well.
       - name: Run startup benchmark
         uses: CodSpeedHQ/action@373d6868929f444bc08d901fd0eb0ad52a8875ea # v5.2.1
+        env:
+          # Also record peak resident memory, still experimental in CodSpeed.
+          CODSPEED_MEMTRACK_TRACK_PHYSICAL: "true"
         with:
           mode: memory
           config: benchmarks/codspeed.yml
