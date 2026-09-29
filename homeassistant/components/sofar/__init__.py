@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from modbus_connection import ModbusError, ModbusTcpParams
 from sofar_modbus.modern.device import SofarInverter, identify
+from sofar_modbus.tuning import LinkTuner, TimedUnit
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.components.sensor import (
@@ -49,18 +50,21 @@ PLATFORMS: list[Platform] = [
 
 _IDENTITY_ATTEMPTS = 3
 
+_REMOVED_SENSOR_KEYS = ("serial_number", "waiting_time")
+
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @callback
-def _async_remove_stale_waiting_time(hass: HomeAssistant, serial: str) -> None:
-    """Drop the removed waiting-time entity so it doesn't linger unavailable."""
+def _async_remove_stale_sensors(hass: HomeAssistant, serial: str) -> None:
+    """Drop removed sensors so they don't linger unavailable."""
     registry = er.async_get(hass)
-    entity_id = registry.async_get_entity_id(
-        SENSOR_DOMAIN, DOMAIN, f"{serial}_waiting_time"
-    )
-    if entity_id is not None:
-        registry.async_remove(entity_id)
+    for key in _REMOVED_SENSOR_KEYS:
+        entity_id = registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{serial}_{key}"
+        )
+        if entity_id is not None:
+            registry.async_remove(entity_id)
 
 
 @callback
@@ -124,10 +128,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> bool:
-    """Set up Sofar Inverter Modbus from a config entry."""
+    """Set up Sofar from a config entry."""
     serial = entry.unique_id
     assert serial is not None
-    _async_remove_stale_waiting_time(hass, serial)
+    _async_remove_stale_sensors(hass, serial)
     inverter_type, model = identify(serial)
     if not inverter_type:
         raise ConfigEntryError(
@@ -143,8 +147,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         entry.data[CONF_UNIT_ID],
     )
 
+    link = TimedUnit(unit)
+    tuner = LinkTuner(link)
     device = SofarInverter(
-        unit,
+        link,
         serial_number=serial,
         model=model,
         inverter_type=inverter_type,
@@ -157,6 +163,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         device,
         device.async_update_readings,
         timedelta(seconds=SCAN_INTERVAL),
+        tuner,
     )
     settings = SofarDataUpdateCoordinator(
         hass,
@@ -164,6 +171,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         device,
         device.async_update_settings,
         timedelta(seconds=SETTINGS_SCAN_INTERVAL),
+        tuner,
     )
     await readings.async_config_entry_first_refresh()
     await settings.async_refresh()
@@ -175,7 +183,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
     inverter = dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id, **readings.device_info
     )
-    entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id)
+    entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id, link, tuner)
     _async_remove_denied_meter_energy(
         hass, serial, entry.runtime_data.served_components
     )

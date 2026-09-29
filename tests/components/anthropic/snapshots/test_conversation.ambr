@@ -1831,7 +1831,9 @@
       'result': dict({
         'data': dict({
           'content': dict({
-            'citations': None,
+            'citations': dict({
+              'enabled': True,
+            }),
             'source': dict({
               'data': '''
                 Home Assistant new version is out!
@@ -1889,8 +1891,8 @@
                 'cited_text': 'Anthropic integration now supports web fetch tool.',
                 'document_index': 0,
                 'document_title': 'Latest Home Assistant Release Notes',
-                'end_char_index': 105,
-                'start_char_index': 56,
+                'end_char_index': 104,
+                'start_char_index': 54,
                 'type': 'char_location',
               }),
             ]),
@@ -1936,7 +1938,9 @@
         dict({
           'content': dict({
             'content': dict({
-              'citations': None,
+              'citations': dict({
+                'enabled': True,
+              }),
               'source': dict({
                 'data': '''
                   Home Assistant new version is out!
@@ -1982,8 +1986,8 @@
               'cited_text': 'Anthropic integration now supports web fetch tool.',
               'document_index': 0,
               'document_title': 'Latest Home Assistant Release Notes',
-              'end_char_index': 105,
-              'start_char_index': 56,
+              'end_char_index': 104,
+              'start_char_index': 54,
               'type': 'char_location',
             }),
           ]),

@@ -1572,12 +1572,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "dublin_bus_transport": {
-      "name": "Dublin Bus",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "duckdns": {
       "name": "Duck DNS",
       "integration_type": "service",
@@ -4351,21 +4345,10 @@
       "iot_class": "cloud_polling"
     },
     "melnor": {
-      "name": "Melnor",
-      "integrations": {
-        "melnor": {
-          "integration_type": "device",
-          "config_flow": true,
-          "iot_class": "local_polling",
-          "name": "Melnor Bluetooth"
-        },
-        "raincloud": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "cloud_polling",
-          "name": "Melnor RainCloud"
-        }
-      }
+      "name": "Melnor Bluetooth",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "meraki": {
       "name": "Meraki",
@@ -5175,6 +5158,11 @@
       "integration_type": "virtual",
       "supported_by": "shelly"
     },
+    "ogeneral": {
+      "name": "O General",
+      "integration_type": "virtual",
+      "supported_by": "fujitsu_fglair"
+    },
     "ohmconnect": {
       "name": "OhmConnect",
       "integration_type": "hub",
@@ -5391,12 +5379,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "oru": {
-      "name": "Orange and Rockland Utility (ORU)",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "oru_opower": {
       "name": "Orange and Rockland Utilities (ORU) Opower",
       "integration_type": "virtual",
@@ -5413,6 +5395,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "osram_infrared": {
+      "name": "OSRAM Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
     },
     "osramlightify": {
       "name": "Osramlightify",
@@ -6635,12 +6623,6 @@
       "integration_type": "virtual",
       "supported_by": "home_connect"
     },
-    "sigfox": {
-      "name": "Sigfox",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "sighthound": {
       "name": "Sighthound",
       "integration_type": "hub",
@@ -6892,12 +6874,6 @@
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "SolarEdge"
-        },
-        "solaredge_local": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "local_polling",
-          "name": "SolarEdge Local"
         },
         "solaredge_modbus": {
           "integration_type": "device",
@@ -7734,12 +7710,6 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
-    "travisci": {
-      "name": "Travis-CI",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "triggercmd": {
       "name": "TRIGGERcmd",
       "integration_type": "hub",
@@ -8569,12 +8539,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
-    },
-    "zestimate": {
-      "name": "Zestimate",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
     },
     "zeversolar": {
       "name": "Zeversolar",
