@@ -1824,13 +1824,7 @@ def test_attribute_selector_schema(
                 {"days": 10},  # Days is allowed also if `enable_day` is not set
                 {"milliseconds": 500},
             ),
-            (
-                None,
-                {},
-                {"seconds": -1},
-                {"negative": True, "seconds": 10},
-                {"negative": False, "seconds": 10},
-            ),
+            (None, {}, {"seconds": -1}),
         ),
         (
             {"enable_day": True, "enable_millisecond": True, "enable_second": True},
@@ -1840,27 +1834,26 @@ def test_attribute_selector_schema(
         (
             {"mode": "positive"},
             ({"seconds": 10},),
-            (None, {}, {"seconds": -1}, {"negative": True, "seconds": 10}),
+            (None, {}, {"seconds": -1}),
         ),
         (
             {"allow_negative": True},
-            ({"seconds": 10}, {"seconds": -1}, {"negative": True, "seconds": 10}),
-            (None, {}, {"negative": True}),
+            ({"seconds": 10}, {"seconds": -1}),
+            (None, {}),
         ),
         (
             {"mode": "signed"},
-            ({"seconds": 10}, {"seconds": -1}, {"negative": True, "seconds": 10}),
-            (None, {}, {"negative": True}),
+            ({"seconds": 10}, {"seconds": -1}, {"hours": -1, "minutes": -30}),
+            (None, {}),
         ),
         (
             {"mode": "offset", "enable_day": True},
             (
                 {"seconds": 10},
-                {"negative": True, "hours": 1},
-                {"negative": False, "hours": 1},
+                {"hours": -1, "minutes": -30},
                 {"days": 0, "hours": 0, "minutes": 0, "seconds": 0},
             ),
-            (None, {}, {"negative": True}),
+            (None, {}),
         ),
     ],
 )
