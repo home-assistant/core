@@ -1360,7 +1360,13 @@ def test_next_name_part(
         name="Lamp",
     )
     entry = entity_registry.async_get_or_create(
-        "light", "hue", "5678", config_entry=config_entry, device_id=device_entry.id
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name="Ceiling",
     )
     assert entry.next_name_part is dr.NextNamePart.DEVICE
 
