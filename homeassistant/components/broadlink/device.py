@@ -15,14 +15,7 @@ from broadlink.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MAC,
-    CONF_NAME,
-    CONF_TIMEOUT,
-    CONF_TYPE,
-    Platform,
-)
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TIMEOUT, CONF_TYPE, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -226,4 +219,4 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
             self.api.host[0],
         )
 
-        self.config.async_start_reauth(self.hass, data={CONF_NAME: self.name})
+        self.config.async_start_reauth(self.hass)

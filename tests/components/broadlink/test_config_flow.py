@@ -9,7 +9,6 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.broadlink.const import DOMAIN
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -743,10 +742,11 @@ async def test_flow_reauth_works(hass: HomeAssistant) -> None:
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.AuthenticationError()
 
-    with patch(DEVICE_FACTORY, return_value=mock_api):
-        result = await mock_entry.start_reauth_flow(hass, data={"name": device.name})
+    with patch(DEVICE_FACTORY, return_value=mock_api) as mock_gendevice:
+        result = await mock_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reset"
+    assert mock_gendevice.call_args.kwargs["name"] == mock_entry.title
 
     mock_api = device.get_mock_api()
 
@@ -764,26 +764,6 @@ async def test_flow_reauth_works(hass: HomeAssistant) -> None:
     assert mock_hello.call_count == 1
 
 
-async def test_flow_reauth_without_stored_name(hass: HomeAssistant) -> None:
-    """Test reauthentication of an entry that has no name in its data."""
-    device = get_device("Living Room")
-    mock_entry = device.get_mock_entry()
-    mock_entry.add_to_hass(hass)
-    assert CONF_NAME not in mock_entry.data
-
-    mock_api = device.get_mock_api()
-    mock_api.auth.side_effect = blke.AuthenticationError()
-
-    with patch(DEVICE_FACTORY, return_value=mock_api) as mock_gendevice:
-        result = await mock_entry.start_reauth_flow(hass)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reset"
-
-    # The name comes from the entry title, not from the entry data.
-    assert mock_gendevice.call_args.kwargs["name"] == mock_entry.title
-
-
 async def test_flow_reauth_invalid_host(hass: HomeAssistant) -> None:
     """Test we do not accept an invalid host for reauthentication.
 
@@ -795,7 +775,7 @@ async def test_flow_reauth_invalid_host(hass: HomeAssistant) -> None:
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.AuthenticationError()
     with patch(DEVICE_FACTORY, return_value=mock_api):
-        result = await mock_entry.start_reauth_flow(hass, data={"name": device.name})
+        result = await mock_entry.start_reauth_flow(hass)
 
     device.mac = get_device("Office").mac
     mock_api = device.get_mock_api()
@@ -826,7 +806,7 @@ async def test_flow_reauth_valid_host(hass: HomeAssistant) -> None:
     mock_api.auth.side_effect = blke.AuthenticationError()
 
     with patch(DEVICE_FACTORY, return_value=mock_api):
-        result = await mock_entry.start_reauth_flow(hass, data={"name": device.name})
+        result = await mock_entry.start_reauth_flow(hass)
 
     device.host = "192.168.1.128"
     mock_api = device.get_mock_api()
