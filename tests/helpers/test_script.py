@@ -6628,6 +6628,7 @@ async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
         {
             "0": [
                 {
+                    "error": "It is not working!",
                     "result": {
                         "params": {
                             "domain": "some",
