@@ -339,7 +339,11 @@
     },
     {
       "description": "Group zizmor pre-commit hook with its PyPI twin into one PR",
-      "matchPackageNames": ["zizmorcore/zizmor-pre-commit", "zizmor"],
+      "matchPackageNames": [
+        "zizmorcore/zizmor-action",
+        "zizmorcore/zizmor-pre-commit",
+        "zizmor"
+      ],
       "groupName": "zizmor",
       "groupSlug": "zizmor"
     },
