@@ -288,7 +288,6 @@ class RepositoryData:
     etag_repository: str | None = None
     etag_releases: str | None = None
     file_name: str = ""
-    first_install: bool = False
     full_name: str = ""
     hide: bool = False
     has_issues: bool = True

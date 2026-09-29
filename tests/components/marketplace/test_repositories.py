@@ -46,6 +46,7 @@ from homeassistant.components.marketplace.repositories.theme import ThemeReposit
 from homeassistant.components.marketplace.utils.validate import Validate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.loader import IntegrationNotLoaded
 
 from . import (
     CategoryTestData,
@@ -1605,25 +1606,52 @@ async def test_remove_refuses_plugin_name_outside_community(
     assert target.exists()
 
 
+@pytest.mark.parametrize(
+    ("config_flow", "loaded", "restart"),
+    [
+        pytest.param(True, False, False, id="new"),
+        pytest.param(True, True, True, id="known_to_the_loader"),
+        pytest.param(False, False, True, id="set_up_from_yaml"),
+    ],
+)
 async def test_integration_restart_required_issue(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
     issue_registry: ir.IssueRegistry,
     hass_ws_client: WebSocketGenerator,
+    config_flow: bool,
+    loaded: bool,
+    restart: bool,
 ) -> None:
-    """Test that downloading an integration asks for a restart."""
+    """Test a download only asks for a restart when this run can not load it."""
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    use_manifest = IntegrationRepository._use_integration_manifest
+
+    def manifest(self: IntegrationRepository, content: dict[str, Any]) -> None:
+        use_manifest(self, content | {"config_flow": config_flow})
 
     client = await hass_ws_client(hass)
-    await client.send_json_auto_id(
-        {"type": "marketplace/repository/download", "repository": repository.data.id}
-    )
-    assert (await client.receive_json())["success"]
+    with (
+        patch.object(IntegrationRepository, "_use_integration_manifest", manifest),
+        patch(
+            "homeassistant.components.marketplace.repositories.integration"
+            ".async_get_loaded_integration",
+            side_effect=None if loaded else IntegrationNotLoaded("example"),
+        ),
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/download",
+                "repository": repository.data.id,
+            }
+        )
+        assert (await client.receive_json())["success"]
 
-    assert repository.pending_restart is True
-    assert issue_registry.async_get_issue(
+    assert repository.pending_restart is restart
+    issue = issue_registry.async_get_issue(
         "marketplace", f"restart_required_{repository.data.id}_{repository.ref}"
     )
+    assert (issue is not None) is restart
 
 
 async def test_integration_manifest_missing_key(

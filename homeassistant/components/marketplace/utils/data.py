@@ -46,7 +46,6 @@ EXPORTED_DOWNLOADED_REPOSITORY_DATA: tuple[tuple[str, Any], ...] = (
     ("default_branch", None),
     ("directory", None),
     ("file_name", ""),
-    ("first_install", False),
     ("installed_commit", None),
     ("installed", False),
     ("last_commit", None),
@@ -402,6 +401,3 @@ class MarketplaceData:
         ):
             # Set local path
             repository.content.path.local = repository.localpath
-
-        if repository.data.installed:
-            repository.data.first_install = False

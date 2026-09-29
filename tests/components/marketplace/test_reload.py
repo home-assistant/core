@@ -28,6 +28,11 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 CUSTOM_REPOSITORY = "hacs-test-org/integration-basic-custom"
+# An update of code this run already runs, it waits for a restart
+KNOWN_TO_THE_LOADER = (
+    "homeassistant.components.marketplace.repositories.integration"
+    ".async_get_loaded_integration"
+)
 
 
 async def _async_reload(hass: HomeAssistant, marketplace: MarketplaceManager) -> None:
@@ -99,7 +104,8 @@ async def test_pending_restart_survives_a_reload(
 ) -> None:
     """Test a reload does not pretend the downloaded code is loaded."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
-    await repository.async_download_repository()
+    with patch(KNOWN_TO_THE_LOADER):
+        await repository.async_download_repository()
     assert repository.pending_restart
 
     await _async_reload(hass, marketplace)
@@ -226,7 +232,8 @@ async def test_restart_repair_follows_a_new_repository_id(
 ) -> None:
     """Test the repair a reload reads the pending restart from moves along."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
-    await repository.async_download_repository()
+    with patch(KNOWN_TO_THE_LOADER):
+        await repository.async_download_repository()
     old_issue = f"restart_required_{REPOSITORY_INTEGRATION_ID}_{repository.ref}"
     assert issue_registry.async_get_issue(DOMAIN, old_issue)
 

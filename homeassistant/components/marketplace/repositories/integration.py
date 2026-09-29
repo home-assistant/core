@@ -11,8 +11,10 @@ from awesomeversion.exceptions import AwesomeVersionException
 from homeassistant import components
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.loader import (
+    IntegrationNotLoaded,
     async_clear_custom_components_cache,
     async_get_custom_components,
+    async_get_loaded_integration,
 )
 
 from ..const import DOMAIN, RESTART_ISSUE_PREFIX
@@ -137,8 +139,9 @@ class IntegrationRepository(Repository):
         self.pending_restart = True
         if self.data.config_flow:
             await self.reload_custom_components()
-            if self.data.first_install:
-                self.pending_restart = False
+            # Code new to this run is found like any other integration, code
+            # the loader already knows keeps running until a restart.
+            self.pending_restart = self._known_to_the_loader()
 
         if self.pending_restart:
             self.logger.debug("%s Creating restart_required issue", self.string)
@@ -154,6 +157,14 @@ class IntegrationRepository(Repository):
                     "name": self.display_name,
                 },
             )
+
+    def _known_to_the_loader(self) -> bool:
+        """Return if this run already resolved the domain, its own or a built-in."""
+        try:
+            async_get_loaded_integration(self.marketplace.hass, str(self.data.domain))
+        except IntegrationNotLoaded:
+            return False
+        return True
 
     @override
     async def async_check_written_content(self) -> None:
