@@ -337,8 +337,6 @@
         "name": "Picture mode",
         "state": {
           "dynamic": "Dynamic",
-          "eco": "Eco",
-          "filmmaker_mode": "Filmmaker mode",
           "movie": "Movie",
           "natural": "Natural",
           "standard": "[%key:component::smartthings::entity::media_player::media_player::state_attributes::sound_mode::state::standard%]"
@@ -434,9 +432,7 @@
       "tv_sound_mode": {
         "name": "[%key:component::smartthings::entity::select::robot_cleaner_sound_mode::name%]",
         "state": {
-          "adaptive_sound": "[%key:component::smartthings::entity::media_player::media_player::state_attributes::sound_mode::state::adaptive_sound%]",
           "amplify": "Amplify",
-          "optimized": "Optimized",
           "standard": "[%key:component::smartthings::entity::media_player::media_player::state_attributes::sound_mode::state::standard%]"
         }
       },

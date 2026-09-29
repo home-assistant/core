@@ -185,6 +185,47 @@ async def test_select_tv_mode(
 
 
 @pytest.mark.parametrize("device_fixture", ["vd_stv_2017_k"])
+async def test_tv_picture_mode_unmapped_name(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a picture mode name without a mapping, like a localized one, passes through."""
+    set_attribute_value(
+        devices,
+        Capability.CUSTOM_PICTURE_MODE,
+        Attribute.SUPPORTED_PICTURE_MODES,
+        ["Dynamisch", "Film"],
+    )
+    set_attribute_value(
+        devices, Capability.CUSTOM_PICTURE_MODE, Attribute.PICTURE_MODE, "Film"
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("select.theater_tv_samsung_8_series_49_picture_mode")
+    assert state
+    assert state.state == "Film"
+    assert state.attributes[ATTR_OPTIONS] == ["Dynamisch", "Film"]
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.theater_tv_samsung_8_series_49_picture_mode",
+            ATTR_OPTION: "Dynamisch",
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1",
+        Capability.CUSTOM_PICTURE_MODE,
+        Command.SET_PICTURE_MODE,
+        MAIN,
+        argument="Dynamisch",
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["vd_stv_2017_k"])
 async def test_tv_picture_mode_not_in_supported_list(
     hass: HomeAssistant,
     devices: AsyncMock,

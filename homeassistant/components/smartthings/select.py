@@ -48,15 +48,11 @@ TV_PICTURE_MODE_TO_HA = {
     "Standard": "standard",
     "Natural": "natural",
     "Movie": "movie",
-    "FILMMAKER MODE": "filmmaker_mode",
-    "Eco": "eco",
 }
 
 TV_SOUND_MODE_TO_HA = {
     "Standard": "standard",
-    "Optimized": "optimized",
     "Amplify": "amplify",
-    "Adaptive Sound": "adaptive_sound",
 }
 
 WASHER_SOIL_LEVEL_TO_HA = {
