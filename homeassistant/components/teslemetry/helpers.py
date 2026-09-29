@@ -101,7 +101,10 @@ async def handle_command(command: Awaitable[dict[str, Any]]) -> dict[str, Any]:
     except TeslaFleetError as e:
         message = e.message
         if isinstance(e.data, dict):
-            message = e.data.get("error_description") or e.data.get("error") or message
+            # An error equal to the class key is the machine code that selected it
+            if (error := e.data.get("error")) == e.key:
+                error = None
+            message = e.data.get("error_description") or error or message
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="command_exception",

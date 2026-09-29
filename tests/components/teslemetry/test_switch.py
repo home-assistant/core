@@ -176,6 +176,11 @@ async def test_switch_command_errors(hass: HomeAssistant, response: dict) -> Non
             id="error",
         ),
         pytest.param(
+            InvalidCommand({"error": "invalid_command", "error_description": ""}),
+            "Command returned exception: The data request or command is unknown.",
+            id="error_is_key",
+        ),
+        pytest.param(
             InvalidRequest({"response": None}),
             "Command returned exception: The request body is not valid",
             id="no_error_detail",
