@@ -137,8 +137,24 @@ async def test_setup_retries_on_ble_error(
     mock_device.unpair.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("local_ryse_scanner")
+async def test_setup_releases_connection_on_unexpected_pair_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device: MagicMock,
+) -> None:
+    """Test an unexpected pairing error still releases the BLE connection."""
+    mock_device.pair.side_effect = RuntimeError("agent failed")
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_device.unpair.assert_awaited_once()
+
+
 @pytest.mark.parametrize(
-    "pair_side_effect",
+    "pair_result",
     [
         pytest.param(False, id="pair_returns_false"),
         pytest.param(BleakError("ble err"), id="pair_raises"),
@@ -156,14 +172,11 @@ async def test_setup_retries_when_unpair_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_device: MagicMock,
-    pair_side_effect: bool | BleakError,
+    pair_result: bool | BleakError,
     unpair_side_effect: Exception,
 ) -> None:
     """Test setup is retried even if releasing the connection after a failed pair raises."""
-    if pair_side_effect is False:
-        mock_device.pair.return_value = False
-    else:
-        mock_device.pair.side_effect = pair_side_effect
+    mock_device.pair.side_effect = [pair_result]
     mock_device.unpair.side_effect = unpair_side_effect
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

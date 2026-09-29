@@ -167,6 +167,8 @@ class RyseCoverEntity(CoverEntity):
 
         except (TimeoutError, OSError, EOFError, BleakError) as err:
             self._clear_cached_position()
+            # A failed client can still report is_connected, which skips pair().
+            await _async_unpair(self._device)
             self._set_available(False, str(err))
 
     @property

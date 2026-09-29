@@ -381,6 +381,7 @@ async def test_ble_error_while_polling_marks_unavailable(
     """Test a BLE error while polling marks the cover unavailable."""
     caplog.set_level(logging.INFO, logger=LOGGER_NAME)
     mock_device.send_get_position.side_effect = exception
+    mock_device.unpair.reset_mock()
 
     await async_poll_device(hass, freezer)
 
@@ -389,6 +390,7 @@ async def test_ble_error_while_polling_marks_unavailable(
     assert state.state == STATE_UNAVAILABLE
     unavailable = f"{ENTITY_ID} became unavailable: {exception}"
     assert caplog.text.count(unavailable) == 1
+    mock_device.unpair.assert_awaited_once()
 
     caplog.clear()
     await async_poll_device(hass, freezer)
@@ -411,17 +413,53 @@ async def test_ble_error_while_polling_clears_cached_position(
 
     mock_device.client = None
     mock_device.send_get_position.side_effect = BleakError("ble err")
+    mock_device.unpair.reset_mock()
     await async_poll_device(hass, freezer)
 
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_UNAVAILABLE
     assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+    mock_device.unpair.assert_awaited_once()
 
     mock_device.send_get_position.side_effect = None
     mock_device.send_get_position.reset_mock()
     await async_poll_device(hass, freezer)
 
+    mock_device.send_get_position.assert_awaited_once()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_ble_error_while_polling_resets_connection(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_device: MagicMock,
+    polled_cover: MockConfigEntry,
+) -> None:
+    """Test a poll error unpairs so the next poll reconnects instead of reusing the client."""
+    mock_device.client = MagicMock(is_connected=True)
+    mock_device.send_get_position.side_effect = BleakError("ble err")
+
+    def _drop_client() -> None:
+        mock_device.client = None
+
+    mock_device.unpair.side_effect = _drop_client
+    mock_device.unpair.reset_mock()
+    mock_device.pair.reset_mock()
+
+    await async_poll_device(hass, freezer)
+
+    mock_device.unpair.assert_awaited_once()
+    mock_device.pair.assert_not_awaited()
+
+    mock_device.send_get_position.side_effect = None
+    mock_device.send_get_position.reset_mock()
+    mock_device.pair.reset_mock()
+    await async_poll_device(hass, freezer)
+
+    mock_device.pair.assert_awaited_once()
     mock_device.send_get_position.assert_awaited_once()
     state = hass.states.get(ENTITY_ID)
     assert state

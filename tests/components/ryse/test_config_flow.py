@@ -384,6 +384,51 @@ async def test_async_step_user_keeps_proxy_selected_when_also_local(
     cancel_remote()
 
 
+async def test_async_step_user_uses_local_pair_when_proxy_is_idle(
+    hass: HomeAssistant, mock_device: MagicMock
+) -> None:
+    """Test a local PAIR advertisement is used even if the manager selected idle proxy data."""
+    device = make_ble_device()
+    remote, cancel_remote = register_remote_scanner(hass)
+    remote.inject_advertisement(device, make_advertisement(pairing=False))
+    cancel_local = register_local_scanner(hass, device, make_advertisement())
+    await _abort_bluetooth_flows(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_device.pair.assert_awaited_once()
+    cancel_local()
+    cancel_remote()
+
+
+async def test_async_step_user_skips_when_only_proxy_is_pairing(
+    hass: HomeAssistant,
+) -> None:
+    """Test an idle local advertisement is not rescued by a proxy PAIR packet."""
+    device = make_ble_device()
+    remote, cancel_remote = register_remote_scanner(hass)
+    remote.inject_advertisement(device, make_advertisement())
+    cancel_local = register_local_scanner(
+        hass, device, make_advertisement(pairing=False)
+    )
+    await _abort_bluetooth_flows(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+    cancel_local()
+    cancel_remote()
+
+
 async def test_bluetooth_discovery_from_manufacturer_id(
     hass: HomeAssistant, mock_device: MagicMock
 ) -> None:
@@ -635,6 +680,49 @@ async def test_async_step_bluetooth_proxy_selected_when_also_local(
         cancel_remote()
 
 
+async def test_async_step_bluetooth_uses_local_pair_when_proxy_is_idle(
+    hass: HomeAssistant, mock_device: MagicMock
+) -> None:
+    """Test bluetooth discovery uses the local PAIR packet when a proxy reports idle."""
+    device = make_ble_device()
+    remote, cancel_remote = register_remote_scanner(hass)
+    cancel_local = register_local_scanner(hass, device, make_advertisement())
+    try:
+        remote.inject_advertisement(device, make_advertisement(pairing=False))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        assert len(flows) == 1
+        result = await hass.config_entries.flow.async_configure(
+            flows[0]["flow_id"], user_input={}
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        mock_device.pair.assert_awaited_once()
+    finally:
+        cancel_local()
+        cancel_remote()
+
+
+async def test_async_step_bluetooth_rejects_idle_local_when_proxy_is_pairing(
+    hass: HomeAssistant, mock_device: MagicMock
+) -> None:
+    """Test bluetooth discovery is aborted when only the proxy still has the PAIR flag."""
+    device = make_ble_device()
+    remote, cancel_remote = register_remote_scanner(hass)
+    cancel_local = register_local_scanner(
+        hass, device, make_advertisement(pairing=False)
+    )
+    try:
+        remote.inject_advertisement(device, make_advertisement())
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        mock_device.pair.assert_not_called()
+    finally:
+        cancel_local()
+        cancel_remote()
+
+
 async def test_async_step_bluetooth_pairing_overrides_stale_idle(
     hass: HomeAssistant, mock_device: MagicMock
 ) -> None:
@@ -699,7 +787,10 @@ async def test_async_step_bluetooth_left_pairing_mode(
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     flow_id = flows[0]["flow_id"]
 
-    inject_ryse(hass, device, make_advertisement(pairing=False), LOCAL_SOURCE)
+    cancel()
+    idle = make_advertisement(pairing=False)
+    cancel = register_local_scanner(hass, device, idle)
+    inject_ryse(hass, device, idle, LOCAL_SOURCE)
     await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(flow_id, user_input={})
@@ -707,6 +798,8 @@ async def test_async_step_bluetooth_left_pairing_mode(
     assert result["errors"] == {"base": "not_in_pairing_mode"}
     mock_device.pair.assert_not_called()
 
+    cancel()
+    cancel = register_local_scanner(hass, device, pairing)
     inject_ryse(hass, device, pairing, LOCAL_SOURCE)
     await hass.async_block_till_done()
 

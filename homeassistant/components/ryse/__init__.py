@@ -61,18 +61,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> bool
         )
 
     device = RyseBLEDevice(ble_device)
+    connect_error = f"Could not connect to RYSE device with address {address}"
+    paired = False
     try:
         paired = await device.pair()
+        if not paired:
+            raise ConfigEntryNotReady(connect_error)
     except (TimeoutError, OSError, EOFError, BleakError) as err:
-        await _async_unpair(device)
-        raise ConfigEntryNotReady(
-            f"Could not connect to RYSE device with address {address}"
-        ) from err
-    if not paired:
-        await _async_unpair(device)
-        raise ConfigEntryNotReady(
-            f"Could not connect to RYSE device with address {address}"
-        )
+        raise ConfigEntryNotReady(connect_error) from err
+    finally:
+        if not paired:
+            await _async_unpair(device)
 
     entry.runtime_data = device
     # Wrap disconnect so a teardown error cannot replace ConfigEntryNotReady
