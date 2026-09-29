@@ -337,6 +337,7 @@ async def test_pairing_failure_marks_unavailable(
     """Test a failed pairing marks the cover unavailable and is logged once."""
     caplog.set_level(logging.INFO, logger=LOGGER_NAME)
     mock_device.pair.return_value = False
+    mock_device.unpair.reset_mock()
 
     await async_poll_device(hass, freezer)
 
@@ -345,6 +346,7 @@ async def test_pairing_failure_marks_unavailable(
     assert state.state == STATE_UNAVAILABLE
     unavailable = f"{ENTITY_ID} became unavailable: failed to pair"
     assert caplog.text.count(unavailable) == 1
+    mock_device.unpair.assert_awaited_once()
 
     caplog.clear()
     await async_poll_device(hass, freezer)
@@ -395,6 +397,35 @@ async def test_ble_error_while_polling_marks_unavailable(
     assert state
     assert state.state == STATE_UNAVAILABLE
     assert unavailable not in caplog.text
+
+
+async def test_ble_error_while_polling_clears_cached_position(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_device: MagicMock,
+    polled_cover: MockConfigEntry,
+) -> None:
+    """Test a poll error drops cached position so the next poll fetches again."""
+    await mock_device.update_callback(50)
+    await hass.async_block_till_done()
+
+    mock_device.client = None
+    mock_device.send_get_position.side_effect = BleakError("ble err")
+    await async_poll_device(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+
+    mock_device.send_get_position.side_effect = None
+    mock_device.send_get_position.reset_mock()
+    await async_poll_device(hass, freezer)
+
+    mock_device.send_get_position.assert_awaited_once()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_valid_notification_restores_availability(

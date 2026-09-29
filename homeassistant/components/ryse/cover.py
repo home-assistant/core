@@ -16,7 +16,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RyseConfigEntry
+from . import RyseConfigEntry, _async_unpair
 from .const import MANUFACTURER_NAME
 
 PARALLEL_UPDATES = 1  # one BLE connection at a time
@@ -150,6 +150,7 @@ class RyseCoverEntity(CoverEntity):
             if not self._device.client or not self._device.client.is_connected:
                 paired = await self._device.pair()
                 if not paired:
+                    await _async_unpair(self._device)
                     self._set_available(False, "failed to pair")
                     return
 
@@ -165,6 +166,7 @@ class RyseCoverEntity(CoverEntity):
             self._set_available(True)
 
         except (TimeoutError, OSError, EOFError, BleakError) as err:
+            self._clear_cached_position()
             self._set_available(False, str(err))
 
     @property

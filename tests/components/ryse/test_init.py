@@ -1,7 +1,7 @@
 """Tests for RYSE init setup."""
 
 import logging
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from bleak import BleakError
 from bleak.backends.device import BLEDevice
@@ -50,6 +50,30 @@ async def test_unload_succeeds_when_unpair_fails(
     await hass.async_block_till_done()
 
     assert setup_integration.state is ConfigEntryState.NOT_LOADED
+    mock_device.unpair.assert_awaited_once()
+
+
+async def test_setup_releases_connection_when_platform_setup_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    local_ryse_scanner: BLEDevice,
+    mock_device: MagicMock,
+) -> None:
+    """Test a failed platform setup still disconnects the paired device.
+
+    Home Assistant does not call async_unload_entry when async_setup_entry
+    raises; only async_on_unload callbacks run.
+    """
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
+        side_effect=RuntimeError("platform failed"),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_device.pair.assert_awaited_once()
     mock_device.unpair.assert_awaited_once()
 
 
