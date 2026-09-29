@@ -142,7 +142,7 @@ async def test_shutter_contact2_bypass_timeout_set_value(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: BYPASS_TIMEOUT_ENTITY_ID, ATTR_VALUE: 10},
+        {ATTR_ENTITY_ID: BYPASS_TIMEOUT_ENTITY_ID, ATTR_VALUE: 10.6},
         blocking=True,
     )
-    device.async_set_bypass_timeout.assert_awaited_once_with(10)
+    device.async_set_bypass_timeout.assert_awaited_once_with(11)
