@@ -399,6 +399,27 @@ SENSOR_TYPES: tuple[SkodaSensorEntityDescription, ...] = (
 )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: SkodaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Škoda sensors from ConfigEntry runtime_data."""
+    coordinator = entry.runtime_data.coordinator
+    vehicle_response = coordinator.data.vehicle_response if coordinator.data else None
+    capabilities = (
+        vehicle_response.supported_capabilities() if vehicle_response else set()
+    )
+    vin = vehicle_response.vehicle.vin if vehicle_response else None
+    _LOGGER.debug("[%s] CAPABILITIES: %s", vin, capabilities)
+
+    async_add_entities(
+        SkodaSensor(coordinator, description)
+        for description in SENSOR_TYPES
+        if description.is_supported(capabilities)
+    )
+
+
 class SkodaSensor(SkodaEntity, SensorEntity):
     """Generic Škoda sensor entity, driven entirely by its entity description."""
 
@@ -426,24 +447,3 @@ class SkodaSensor(SkodaEntity, SensorEntity):
         if self.entity_description.unit_fn is not None:
             return self.entity_description.unit_fn(self)
         return super().native_unit_of_measurement
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: SkodaConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up Škoda sensors from ConfigEntry runtime_data."""
-    coordinator = entry.runtime_data.coordinator
-    vehicle_response = coordinator.data.vehicle_response if coordinator.data else None
-    capabilities = (
-        vehicle_response.supported_capabilities() if vehicle_response else set()
-    )
-    vin = vehicle_response.vehicle.vin if vehicle_response else None
-    _LOGGER.debug("[%s] CAPABILITIES: %s", vin, capabilities)
-
-    async_add_entities(
-        SkodaSensor(coordinator, description)
-        for description in SENSOR_TYPES
-        if description.is_supported(capabilities)
-    )
