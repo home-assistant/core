@@ -72,9 +72,8 @@ class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[ArrivalData]]):
         arrivals = []
         for arrival in timetable.arrivals.values():
             nearest_arrival = self.__arrival_time(arrival.nearest_arrival)
-            nearest_arrival = (
-                nearest_arrival if nearest_arrival is not None else dt_util.utcnow()
-            )
+            if nearest_arrival is None:
+                continue
             next_arrival = self.__arrival_time(arrival.next_arrival)
 
             arrival_data = ArrivalData(
