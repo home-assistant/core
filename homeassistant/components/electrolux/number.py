@@ -282,7 +282,6 @@ class ElectroluxBaseNumber[T: ApplianceData](
         """Set Electrolux number to value."""
         command = self._get_command_payload(value)
         await self.coordinator.send_command(command)
-        await self.coordinator.async_refresh()
 
 
 class ElectroluxTemperatureNumber[T: OVAppliance](ElectroluxBaseNumber[T]):

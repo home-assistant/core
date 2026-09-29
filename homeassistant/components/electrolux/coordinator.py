@@ -96,8 +96,10 @@ class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[ApplianceState]):
 
         self.async_set_updated_data(updated_state)
 
-    async def send_command(self, command: dict[str, Any]) -> None:
-        """Send a command to the appliance."""
+    async def send_command(
+        self, command: dict[str, Any], *, refresh: bool = True
+    ) -> None:
+        """Send a command to the appliance, optionally refreshing the coordinator afterwards."""
         try:
             await self.client.send_command(self._appliance_id, command)
         except ApplianceClientException as exception:
@@ -116,3 +118,6 @@ class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[ApplianceState]):
                 translation_domain=DOMAIN,
                 translation_key="generic_error",
             ) from exception
+        else:
+            if refresh:
+                await self.async_refresh()
