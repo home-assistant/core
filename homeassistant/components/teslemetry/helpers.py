@@ -2,16 +2,63 @@
 
 import asyncio
 from collections.abc import Awaitable
-from typing import Any
+from typing import Any, cast
 
+from aiopowerwall import PowerwallAuthenticationError, PowerwallClient
 from tesla_fleet_api.exceptions import TeslaFleetError
+from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
+from tesla_fleet_api.teslemetry import EnergySite
+from tesla_fleet_api.teslemetry.energysite import TeslemetryEnergySite
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import BLE_PARENT_KEY, BLE_PARENT_LOCK_KEY, DOMAIN, LOGGER, VEHICLE_KEY_FILE
+
+
+class PowerwallKeyRejectedError(Exception):
+    """Signal that the gateway refused a v1r-signed read with our RSA key."""
+
+
+def cloud_energy_site(api: EnergySite | EnergySiteRouter) -> TeslemetryEnergySite:
+    """Return the cloud energy-site API behind a site's resolved api.
+
+    Pairing and gateway discovery always go through the Teslemetry cloud; a
+    paired site's api is an EnergySiteRouter, so unwrap its cloud secondary
+    rather than routing to the local Powerwall primary.
+    """
+    return cast(
+        TeslemetryEnergySite,
+        api.secondary if isinstance(api, EnergySiteRouter) else api,
+    )
+
+
+def create_powerwall_client(
+    hass: HomeAssistant, host: str, password: str, key_pem: bytes
+) -> PowerwallClient:
+    """Return a local Powerwall gateway client on the shared HTTP session."""
+    return PowerwallClient(
+        host=host,
+        gateway_password=password,
+        rsa_private_key_pem=key_pem,
+        session=async_get_clientsession(hass),
+    )
+
+
+async def async_verify_local_gateway(
+    hass: HomeAssistant, host: str, password: str, key_pem: bytes
+) -> None:
+    """Prove the LAN connection and the RSA key against the gateway."""
+    async with create_powerwall_client(hass, host, password, key_pem) as client:
+        await client.connect()
+        try:
+            # connect() passed the password, so a failure here is key rejection.
+            await client.get_status()
+        except PowerwallAuthenticationError as err:
+            raise PowerwallKeyRejectedError from err
 
 
 async def async_get_ble_parent(hass: HomeAssistant) -> TeslaBluetooth:

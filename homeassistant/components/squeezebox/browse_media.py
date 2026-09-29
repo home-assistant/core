@@ -46,6 +46,7 @@ MEDIA_TYPE_TO_SQUEEZEBOX: dict[str | MediaType, str] = {
     "genres": "genres",
     "new music": "new music",
     "album artists": "album artists",
+    "artist tracks": "titles",
     MediaType.ALBUM: "album",
     MediaType.ARTIST: "artist",
     MediaType.TRACK: "title",
@@ -61,6 +62,7 @@ SQUEEZEBOX_ID_BY_TYPE: dict[str | MediaType, str] = {
     "albums": "album_id",
     MediaType.ARTIST: "artist_id",
     "artists": "artist_id",
+    "artist tracks": "artist_id",
     MediaType.TRACK: "track_id",
     "tracks": "track_id",
     MediaType.PLAYLIST: "playlist_id",
@@ -87,6 +89,7 @@ CONTENT_TYPE_MEDIA_CLASS: dict[str | MediaType, dict[str, MediaClass | str]] = {
     "genres": {"item": MediaClass.DIRECTORY, "children": MediaClass.GENRE},
     "new music": {"item": MediaClass.DIRECTORY, "children": MediaClass.ALBUM},
     "album artists": {"item": MediaClass.DIRECTORY, "children": MediaClass.ARTIST},
+    "artist tracks": {"item": MediaClass.DIRECTORY, "children": MediaClass.TRACK},
     MediaType.ALBUM: {"item": MediaClass.ALBUM, "children": MediaClass.TRACK},
     MediaType.ARTIST: {"item": MediaClass.ARTIST, "children": MediaClass.ALBUM},
     MediaType.TRACK: {"item": MediaClass.TRACK, "children": ""},
@@ -101,7 +104,7 @@ CONTENT_TYPE_TO_CHILD_TYPE: dict[
     str | MediaType | None,
 ] = {
     MediaType.ALBUM: MediaType.TRACK,
-    MediaType.PLAYLIST: MediaType.PLAYLIST,
+    MediaType.PLAYLIST: MediaType.TRACK,
     MediaType.ARTIST: MediaType.ALBUM,
     MediaType.GENRE: MediaType.ARTIST,
     "artists": MediaType.ARTIST,
@@ -113,10 +116,18 @@ CONTENT_TYPE_TO_CHILD_TYPE: dict[
     "radios": MediaClass.APP,
     "new music": MediaType.ALBUM,
     "album artists": MediaType.ARTIST,
+    "artist tracks": MediaType.TRACK,
     MediaType.APPS: MediaType.APP,
     MediaType.APP: MediaType.TRACK,
     "favorite": None,
     "track": MediaType.TRACK,
+}
+
+# LMS ignores the search query when it lists the tracks of a playlist
+SEARCHABLE_TYPES: set[str | MediaType] = {
+    MediaType.ALBUM,
+    MediaType.ARTIST,
+    MediaType.GENRE,
 }
 
 
@@ -358,6 +369,7 @@ async def build_item_response(
                     media_class=CONTENT_TYPE_MEDIA_CLASS[item_type]["item"],
                     can_expand=bool(CONTENT_TYPE_MEDIA_CLASS[item_type]["children"]),
                     can_play=True,
+                    can_search=item_type in SEARCHABLE_TYPES,
                 )
 
             assert child_media.media_class is not None
@@ -397,6 +409,7 @@ async def build_item_response(
         can_play=any(child.can_play for child in children),
         children=children,
         can_expand=True,
+        can_search=search_type in SEARCHABLE_TYPES,
     )
 
 
