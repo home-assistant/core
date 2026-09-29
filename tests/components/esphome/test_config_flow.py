@@ -3472,14 +3472,14 @@ async def test_user_flow_no_zwave_discovery_without_home_id(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "192.168.1.103", CONF_PORT: 6053},
-    )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "192.168.1.103", CONF_PORT: 6053},
+        )
 
     # Verify the ESPHome entry was created
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -3529,14 +3529,14 @@ async def test_user_flow_no_zwave_discovery_without_capabilities(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "192.168.1.101", CONF_PORT: 6053},
-    )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "192.168.1.101", CONF_PORT: 6053},
+        )
 
     # Verify the entry was created
     assert result["type"] is FlowResultType.CREATE_ENTRY
