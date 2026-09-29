@@ -35,4 +35,3 @@ def test_esphome_socket_path() -> None:
     assert info.socket_path == "esphome://192.168.1.100:6053"
     info.noise_psk = "my-noise-psk"
     assert info.socket_path == "esphome://192.168.1.100:6053/?key=my-noise-psk"
-

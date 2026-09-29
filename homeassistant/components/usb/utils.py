@@ -3,7 +3,7 @@
 from collections.abc import Sequence
 import fnmatch
 import os
-import string
+import re
 from urllib.parse import parse_qs, urlsplit
 
 from serialx import SerialPortInfo, list_serial_ports
@@ -58,85 +58,26 @@ def scan_serial_ports() -> Sequence[USBDevice | SerialDevice]:
     return [usb_serial_device_from_port(port) for port in list_serial_ports()]
 
 
-# udev builds /dev/serial/by-id links in 60-serial.rules from the USB string descriptors,
-# after the usb_id builtin has sanitized them. Reproducing that naming lets a port reached
-# through a scanner, an ESPHome device say, be recognized as the adapter a stored by-id
-# path refers to, without config entries having to store anything beyond the path.
-SERIAL_BY_ID_DIR = "/dev/serial/by-id"
-_UDEV_SAFE_CHARS = frozenset(string.ascii_letters + string.digits + "#+-.:=@_")
-# usb_id keeps the vendor and model in 64-byte buffers
-_UDEV_MAX_STRING_LEN = 63
+SERIAL_BY_ID_DIR = "/dev/serial/by-id/"
+# udev only adds this for `usb-serial` drivers, not for CDC ACM
+_SERIAL_BY_ID_PORT_SUFFIX = re.compile(r"-port\d+$")
 
 
-def _udev_sanitize(value: str) -> str:
-    """Apply usb_id's whitespace and character replacement to a descriptor string."""
-    # udev_replace_whitespace: trim, and collapse each run of whitespace to one underscore
-    collapsed = "_".join(value.split())[:_UDEV_MAX_STRING_LEN]
-    # udev_replace_chars: everything outside the safe set becomes an underscore, except
-    # for valid UTF-8 beyond ASCII, which is kept as it is
-    return "".join(
-        char if char in _UDEV_SAFE_CHARS or ord(char) > 0x7F else "_"
-        for char in collapsed
-    )
+def serial_path_udev_id(path: str) -> str | None:
+    """Return the udev by-id link name a serial port path identifies its device by.
 
-
-def udev_serial_by_id_names(device: USBDevice) -> list[str]:
-    """Return the /dev/serial/by-id links udev would give this device on a Linux host.
-
-    Two candidates come back, because the driver cannot be told from the device alone: a
-    CDC ACM port has no `-port0` suffix, a port from a `usb-serial` driver has one.
+    This is the link name without the directory or the `-portN` suffix. A by-id link
+    names it directly and a serial proxy URL carries it as `port_udev_id`, so a device
+    is recognized when it moves between a port on the host and a serial proxy.
     """
-    # A device without a manufacturer or product string is named by the hex ids, the way
-    # sysfs spells them
-    vendor = (
-        _udev_sanitize(device.manufacturer)
-        if device.manufacturer
-        else device.vid.lower()
-    )
-
-    # The scan folds the interface string into the description; udev uses the product alone
-    product = device.description
-    if product is not None and device.interface_description is not None:
-        product = product.removesuffix(f" - {device.interface_description}")
-    model = _udev_sanitize(product) if product else device.pid.lower()
-
-    id_serial = f"{vendor}_{model}"
-    if device.serial_number:
-        id_serial += f"_{_udev_sanitize(device.serial_number)}"
-
-    interface_num = device.interface_num if device.interface_num is not None else 0
-    base = f"{SERIAL_BY_ID_DIR}/usb-{id_serial}-if{interface_num:02x}"
-    return [base, f"{base}-port0"]
-
-
-def usb_device_matches_serial_path(device: USBDevice, path: str) -> bool:
-    """Whether a stored serial port path refers to this device, wherever it is now.
-
-    A stored path is either a Linux by-id link or a scanner URL that pins a device in its
-    query. Both name the adapter rather than the socket it sits in, which is what allows an
-    adapter to be recognized after moving between a USB port on the host and one behind a
-    scanner. Plain device nodes and URLs that pin nothing name a socket, and never match.
-    """
-    if path == device.device:
-        return True
-
-    if path.startswith(f"{SERIAL_BY_ID_DIR}/"):
-        return path in udev_serial_by_id_names(device)
-
-    if "://" not in path:
-        return False
+    if path.startswith(SERIAL_BY_ID_DIR):
+        return _SERIAL_BY_ID_PORT_SUFFIX.sub("", path.removeprefix(SERIAL_BY_ID_DIR))
 
     query = parse_qs(urlsplit(path).query)
-    if "usb_serial" not in query or not device.serial_number:
-        return False
-    if query["usb_serial"][0] != device.serial_number:
-        return False
+    if "port_udev_id" in query:
+        return query["port_udev_id"][0]
 
-    for key, value in (("vid", device.vid), ("pid", device.pid)):
-        if key in query and query[key][0].upper() != value.upper():
-            return False
-
-    return True
+    return None
 
 
 def usb_device_from_path(device_path: str) -> USBDevice | None:

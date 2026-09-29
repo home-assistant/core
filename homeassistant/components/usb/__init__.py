@@ -36,10 +36,9 @@ from .models import SerialDevice, SerialPortConsumer, USBDevice
 from .serial_proxy_stub import register_serialx_transport
 from .utils import (
     scan_serial_ports,
-    udev_serial_by_id_names,
+    serial_path_udev_id,
     usb_device_from_path,
     usb_device_matches_matcher,
-    usb_device_matches_serial_path,
     usb_serial_device_from_port,
     usb_service_info_from_device,
     usb_unique_id_from_service_info,
@@ -62,17 +61,15 @@ __all__ = [
     "USBDevice",
     "async_get_serial_port_consumers",
     "async_is_serial_port_present",
+    "async_notify_serial_ports_changed",
     "async_register_port_event_callback",
     "async_register_scan_request_callback",
     "async_register_serial_port_scanner",
-    "async_request_scan",
-    "async_resolve_serial_port",
     "async_scan_serial_ports",
     "scan_serial_ports",
-    "udev_serial_by_id_names",
+    "serial_path_udev_id",
     "usb_device_from_path",
     "usb_device_matches_matcher",
-    "usb_device_matches_serial_path",
     "usb_serial_device_from_port",
     "usb_service_info_from_device",
     "usb_unique_id_from_service_info",
@@ -139,30 +136,14 @@ async def async_is_serial_port_present(hass: HomeAssistant, device_path: str) ->
     return await hass.async_add_executor_job(os.path.exists, device_path)
 
 
-async def async_resolve_serial_port(
-    hass: HomeAssistant, device_path: str
-) -> str | None:
-    """Return where the adapter a stored path refers to is present now, if anywhere.
+@hass_callback
+def async_notify_serial_ports_changed(hass: HomeAssistant) -> None:
+    """Rescan after ports a scanner contributes appeared or disappeared.
 
-    The stored path itself while it is present. Otherwise the one present port whose
-    identity the path names, which is how a config entry follows its adapter between a
-    USB port on the host and one behind an ESPHome device without storing anything new.
-    None when the adapter is absent, or when several ports claim the same identity, as
-    identical adapters without a serial number do.
+    This is what a udev event does for a local port. Unlike `async_request_scan`, it
+    also rescans while the udev watcher is running.
     """
-    if await async_is_serial_port_present(hass, device_path):
-        return device_path
-
-    candidates = [
-        port.device
-        for port in await async_scan_serial_ports(hass)
-        if isinstance(port, USBDevice)
-        and usb_device_matches_serial_path(port, device_path)
-    ]
-    if len(candidates) != 1:
-        return None
-
-    return candidates[0]
+    hass.data[_USB_DATA].async_delayed_add_remove_scan()
 
 
 @hass_callback
@@ -327,7 +308,7 @@ class USBDiscovery:
 
         @hass_callback
         def _usb_change_callback() -> None:
-            self._async_delayed_add_remove_scan()
+            self.async_delayed_add_remove_scan()
 
         watcher = AIOUSBWatcher()
         watcher.async_register_callback(_usb_change_callback)
@@ -531,7 +512,7 @@ class USBDiscovery:
             await self._async_process_discovered_usb_device(usb_device)
 
     @hass_callback
-    def _async_delayed_add_remove_scan(self) -> None:
+    def async_delayed_add_remove_scan(self) -> None:
         """Request a serial scan after a debouncer delay."""
         if not self._add_remove_debouncer:
             self._add_remove_debouncer = Debouncer(

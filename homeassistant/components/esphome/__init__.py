@@ -1,9 +1,16 @@
 """Support for esphome devices."""
 
+import dataclasses
 import logging
 
-from aioesphomeapi import APIConnectionError, SerialProxyPortType
-from serialx import SerialPortInfo
+from aioesphomeapi import (
+    APIConnectionError,
+    SerialProxyIdentity,
+    SerialProxyIdentityFlag,
+    SerialProxyIdentitySource,
+    SerialProxyPortType,
+)
+from serialx import SerialPortInfo, udev_serial_by_id_stem
 
 from homeassistant.components import zeroconf
 from homeassistant.components.bluetooth import async_remove_scanner
@@ -39,6 +46,33 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
+def _identity_port_info(identity: SerialProxyIdentity) -> SerialPortInfo | None:
+    """Describe the USB device behind a serial proxy port, if one is readable there."""
+    if (
+        identity.source is SerialProxyIdentitySource.NONE
+        or not identity.flags & SerialProxyIdentityFlag.CONNECTED
+        or identity.flags & SerialProxyIdentityFlag.ERROR
+        # A zero ID means the identity carries no USB metadata
+        or not identity.usb.vendor_id
+        or not identity.usb.product_id
+    ):
+        return None
+
+    return SerialPortInfo(
+        device="",
+        resolved_device="",
+        vid=identity.usb.vendor_id,
+        pid=identity.usb.product_id,
+        serial_number=identity.serial_number or None,
+        manufacturer=identity.manufacturer or None,
+        product=identity.product or None,
+        bcd_device=identity.usb.bcd_device,
+        # The identity carries no interface string
+        interface_description=None,
+        interface_num=identity.usb.interface_number,
+    )
+
+
 @callback
 def _async_scan_serial_ports(
     hass: HomeAssistant,
@@ -55,7 +89,7 @@ def _async_scan_serial_ports(
         if device_info is None:
             continue
 
-        usb_infos = entry_data.serial_proxy_usb_info
+        identities = entry_data.serial_proxy_identities
 
         for instance, proxy in enumerate(device_info.serial_proxies):
             if proxy.port_type is not SerialProxyPortType.USB_SERIAL:
@@ -76,7 +110,13 @@ def _async_scan_serial_ports(
                 )
                 continue
 
-            if instance not in usb_infos or not usb_infos[instance].connected:
+            info = (
+                _identity_port_info(identities[instance])
+                if instance in identities
+                else None
+            )
+
+            if info is None:
                 # An empty socket, or one not yet asked about. Offering it would be like
                 # listing a /dev node for an adapter that has been unplugged: nothing can
                 # be done with it, and a client that stored a path to the device that
@@ -84,37 +124,23 @@ def _async_scan_serial_ports(
                 # that answers nothing.
                 continue
 
-            usb = usb_infos[instance]
+            # A device with a serial number is found wherever it is plugged in, one
+            # without is only told apart from an identical one by the port it is on
             url = str(
                 serial_proxy.build_url(
                     entry.entry_id,
-                    proxy.name,
-                    usb.serial_number or None,
-                    # Spelled the way USBDevice spells them
-                    vid=f"{usb.vendor_id:04X}",
-                    pid=f"{usb.product_id:04X}",
+                    proxy.name if info.serial_number is None else None,
+                    udev_serial_by_id_stem(info),
                 )
             )
 
             # A USB port is a socket, so the device in it is what callers care about.
             # Reported through the same converter a local port goes through, so an adapter
-            # reached this way is described exactly as it would be when plugged into the
-            # host: the existing USB matchers recognize it, and its identity does not
-            # change when it moves between the two.
+            # reached this way is described as it would be when plugged into the host and
+            # the existing USB matchers recognize it.
             ports.append(
                 usb_serial_device_from_port(
-                    SerialPortInfo(
-                        device=url,
-                        resolved_device=url,
-                        vid=usb.vendor_id,
-                        pid=usb.product_id,
-                        serial_number=usb.serial_number or None,
-                        manufacturer=usb.manufacturer or None,
-                        product=usb.product or None,
-                        bcd_device=usb.bcd_device or None,
-                        interface_description=usb.interface_description or None,
-                        interface_num=usb.interface_number,
-                    )
+                    dataclasses.replace(info, device=url, resolved_device=url)
                 )
             )
 

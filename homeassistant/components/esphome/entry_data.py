@@ -47,7 +47,7 @@ from aioesphomeapi import (
     WaterHeaterInfo,
     build_device_unique_id,
 )
-from aioesphomeapi.model import ButtonInfo, SerialProxyUsbInfo
+from aioesphomeapi.model import ButtonInfo, SerialProxyIdentity
 from aioesphomeapi.model_conversions import STATE_TYPE_TO_INFO_TYPE
 from bleak_esphome.backend.device import ESPHomeBluetoothDevice
 
@@ -175,10 +175,12 @@ class RuntimeEntryData:
     available: bool = False
     expected_disconnect: bool = False  # Last disconnect was expected (e.g. deep sleep)
     device_info: DeviceInfo | None = None
-    # USB identity of each USB_SERIAL serial proxy port, keyed by instance index. Filled
-    # from the device on connect and kept current by its hotplug messages, so the USB
-    # port scanner can answer without asking the device.
-    serial_proxy_usb_info: dict[int, SerialProxyUsbInfo] = field(default_factory=dict)
+    # Identity of the device behind each serial proxy port, keyed by instance index.
+    # Filled from the device on connect and kept current by its hotplug messages, so
+    # the USB port scanner can answer without asking the device.
+    serial_proxy_identities: dict[int, SerialProxyIdentity] = field(
+        default_factory=dict
+    )
     bluetooth_device: ESPHomeBluetoothDevice | None = None
     api_version: APIVersion = field(default_factory=APIVersion)
     cleanup_callbacks: list[CALLBACK_TYPE] = field(default_factory=list)
@@ -603,7 +605,7 @@ class RuntimeEntryData:
         """
         self.available = False
         # Whatever is plugged in now is unknown until the device is back
-        self.serial_proxy_usb_info.clear()
+        self.serial_proxy_identities.clear()
         if self.bluetooth_device:
             # Fails pending BLE slot waiters and clears the dead
             # session's allocations in addition to closing the gate.

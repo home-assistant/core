@@ -23,9 +23,7 @@ from aioesphomeapi import (
     LogLevel,
     ReconnectLogic,
     RequiresEncryptionAPIError,
-    SerialProxyPortType,
-    SerialProxyStatus,
-    SerialProxyUsbInfo,
+    SerialProxyIdentity,
     SupportsResponseType,
     UserService,
     UserServiceArgType,
@@ -155,6 +153,9 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+# Devices below this never answer the serial proxy identity subscription
+MIN_VERSION_SERIAL_PROXY_IDENTITY = APIVersion(1, 18)
+
 # Max time to wait at startup for a BLE proxy to register its scanner.
 STARTUP_SCANNER_WAIT: Final = 3.0
 
@@ -243,7 +244,6 @@ class ESPHomeManager:
         "_cancel_subscribe_logs",
         "_dashboard_key_sync_warned",
         "_log_level",
-        "_serial_proxy_usb_syncing",
         "cli",
         "device_id",
         "domain_data",
@@ -280,7 +280,6 @@ class ESPHomeManager:
         self._cancel_subscribe_logs: CALLBACK_TYPE | None = None
         self._dashboard_key_sync_warned = False
         self._log_level = LogLevel.LOG_LEVEL_NONE
-        self._serial_proxy_usb_syncing = False
 
     async def on_stop(self, event: Event) -> None:
         """Cleanup the socket client on HA close."""
@@ -782,11 +781,14 @@ class ESPHomeManager:
                 cli.subscribe_zwave_proxy_request(self._async_zwave_proxy_request)
             )
 
-        if any(
-            proxy.port_type is SerialProxyPortType.USB_SERIAL
-            for proxy in device_info.serial_proxies
+        if (
+            device_info.serial_proxies
+            and api_version >= MIN_VERSION_SERIAL_PROXY_IDENTITY
         ):
-            await self._async_subscribe_serial_proxy_usb_info(device_info)
+            # The device answers with one message per port, then one per change
+            entry_data.disconnect_callbacks.add(
+                cli.subscribe_serial_proxy_identity(self._async_serial_proxy_identity)
+            )
 
         cli.subscribe_home_assistant_states_and_services(
             on_state=entry_data.async_update_state,
@@ -818,46 +820,23 @@ class ESPHomeManager:
             self.hass, self.entry_data.device_info, zwave_home_id
         )
 
-    async def _async_subscribe_serial_proxy_usb_info(
-        self, device_info: EsphomeDeviceInfo
-    ) -> None:
-        """Learn what is plugged into the device's USB serial ports, now and later."""
-        cli = self.cli
-        # Subscribe before asking, so a change between the two is not missed. The replies
-        # arrive through the subscription as well, so one handler covers both.
-        self.entry_data.disconnect_callbacks.add(
-            cli.subscribe_serial_proxy_usb_info(self._async_serial_proxy_usb_info)
-        )
-        # One scan once every port is known, rather than one per reply
-        self._serial_proxy_usb_syncing = True
-        try:
-            for instance, proxy in enumerate(device_info.serial_proxies):
-                if proxy.port_type is SerialProxyPortType.USB_SERIAL:
-                    await cli.serial_proxy_get_usb_info(instance)
-        finally:
-            self._serial_proxy_usb_syncing = False
-        self._async_request_usb_scan()
+    @callback
+    def _async_serial_proxy_identity(self, identity: SerialProxyIdentity) -> None:
+        """Record what is behind a serial proxy port, from the snapshot or a hotplug."""
+        identities = self.entry_data.serial_proxy_identities
+        if (
+            identity.instance in identities
+            and identities[identity.instance] == identity
+        ):
+            return
+        identities[identity.instance] = identity
+        self._async_notify_serial_ports_changed()
 
     @callback
-    def _async_serial_proxy_usb_info(self, info: SerialProxyUsbInfo) -> None:
-        """Record what is behind a USB serial port, from a query or a hotplug."""
-        if info.status is not SerialProxyStatus.OK:
-            return
-        usb_infos = self.entry_data.serial_proxy_usb_info
-        if info.instance in usb_infos and usb_infos[info.instance] == info:
-            return
-        usb_infos[info.instance] = info
-        if not self._serial_proxy_usb_syncing:
-            self._async_request_usb_scan()
-
-    @callback
-    def _async_request_usb_scan(self) -> None:
+    def _async_notify_serial_ports_changed(self) -> None:
         """Have the usb integration rescan, as a udev event would for a local port."""
-        if "usb" not in self.hass.config.components:
-            return
-        self.hass.async_create_background_task(
-            usb.async_request_scan(self.hass), "esphome serial proxy usb scan"
-        )
+        if "usb" in self.hass.config.components:
+            usb.async_notify_serial_ports_changed(self.hass)
 
     async def on_disconnect(self, expected_disconnect: bool) -> None:
         """Run disconnect callbacks on API disconnect."""
@@ -871,8 +850,8 @@ class ESPHomeManager:
             host,
             expected_disconnect,
         )
-        # The device's USB ports go with it, as a hub being unplugged takes its ports
-        had_usb_ports = bool(entry_data.serial_proxy_usb_info)
+        # The device's ports go with it, as a hub being unplugged takes its ports
+        had_serial_proxy_ports = bool(entry_data.serial_proxy_identities)
         entry_data.async_on_disconnect()
         entry_data.async_record_disconnect(expected_disconnect)
         if not hass.is_stopping:
@@ -881,8 +860,8 @@ class ESPHomeManager:
             # writes when we already know we're shutting down and the state
             # will be cleared anyway.
             entry_data.async_update_device_state()
-            if had_usb_ports:
-                self._async_request_usb_scan()
+            if had_serial_proxy_ports:
+                self._async_notify_serial_ports_changed()
 
         if Platform.ASSIST_SATELLITE in self.entry_data.loaded_platforms:
             await self.hass.config_entries.async_unload_platforms(
