@@ -356,8 +356,7 @@ class ElectroluxBaseClimate[T: ACAppliance | DAMACAppliance](
         if fan_speed is None:
             return
         command = self._appliance_data.get_fan_speed_command(fan_speed)
-        await self.coordinator.client.send_command(self._appliance_id, command)
-        await self.coordinator.async_refresh()
+        await self._send_command(command)
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -379,13 +378,11 @@ class ElectroluxBaseClimate[T: ACAppliance | DAMACAppliance](
 
     async def _turn_on_appliance(self) -> None:
         command = self._appliance_data.get_turn_on_command()
-        await self.coordinator.client.send_command(self._appliance_id, command)
-        await self.coordinator.async_refresh()
+        await self._send_command(command)
 
     async def _turn_off_appliance(self) -> None:
         command = self._appliance_data.get_turn_off_command()
-        await self.coordinator.client.send_command(self._appliance_id, command)
-        await self.coordinator.async_refresh()
+        await self._send_command(command)
 
     async def _set_appliance_mode(self, mode: HVACMode) -> None:
         current_mode = self._appliance_data.get_current_mode()
@@ -404,8 +401,7 @@ class ElectroluxBaseClimate[T: ACAppliance | DAMACAppliance](
             )
 
         if command:
-            await self.coordinator.client.send_command(self._appliance_id, command)
-            await self.coordinator.async_refresh()
+            await self._send_command(command)
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -419,12 +415,15 @@ class ElectroluxBaseClimate[T: ACAppliance | DAMACAppliance](
         )
         command = self._get_temperature_command(rounded_temperature)
 
-        await self.coordinator.client.send_command(self._appliance_id, command)
-        await self.coordinator.async_refresh()
+        await self._send_command(command)
 
     @abstractmethod
     def _get_temperature_command(self, temperature: float) -> dict[str, Any]:
         """Return the command payload to set the temperature."""
+
+    async def _send_command(self, command: dict[str, Any]) -> None:
+        await self.coordinator.send_command(command)
+        await self.coordinator.async_refresh()
 
 
 class ElectroluxClimateEntity(ElectroluxBaseClimate[ACAppliance], ClimateEntity):
