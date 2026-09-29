@@ -2,7 +2,6 @@
 
 from typing import Any, cast
 
-from aioesphomeapi.model import SerialProxyPortType
 import probatio
 
 from homeassistant.components import websocket_api
@@ -34,17 +33,11 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, get_device_capabilities)
 
 
-def _is_main_esphome_device(device: dr.DeviceEntry, mac_address: str | None) -> bool:
+def _is_main_esphome_device(device: dr.DeviceEntry) -> bool:
     """Return True if device is the MAC-connected ESPHome node."""
-    if mac_address is None:
-        return any(
-            conn_type == dr.CONNECTION_NETWORK_MAC
-            for conn_type, _ in device.connections
-        )
-    return (
-        dr.CONNECTION_NETWORK_MAC,
-        dr.format_mac(mac_address),
-    ) in device.connections
+    return any(
+        conn_type == dr.CONNECTION_NETWORK_MAC for conn_type, _ in device.connections
+    )
 
 
 def _zwave_js_config_entry_id(hass: HomeAssistant, home_id: int) -> str | None:
@@ -63,16 +56,6 @@ def _zwave_js_config_entry_id(hass: HomeAssistant, home_id: int) -> str | None:
         if str(entry.unique_id) == home_id_str:
             return entry.entry_id
     return None
-
-
-def _serial_port_type_name(port_type: SerialProxyPortType | int | None) -> str | None:
-    """Return the SerialProxyPortType name, or None if unknown."""
-    if port_type is None:
-        return None
-    try:
-        return SerialProxyPortType(port_type).name
-    except ValueError:
-        return None
 
 
 @callback
@@ -119,7 +102,7 @@ def get_device_capabilities(
 ) -> None:
     """Return cached ESPHome DeviceInfo capabilities for the device page."""
     device, candidate = dr.async_get_device_and_config_entry_for_domain(
-        hass, msg[DEVICE_ID], domain=DOMAIN
+        hass, msg[DEVICE_ID], domain=DOMAIN, include_child_devices=False
     )
     if device is None:
         connection.send_error(
@@ -136,8 +119,7 @@ def get_device_capabilities(
         return
     entry = cast(ESPHomeConfigEntry, candidate)
 
-    # Sub-devices share the config entry but not node-level proxy capabilities.
-    if not isinstance(device, dr.DeviceEntry):
+    if not _is_main_esphome_device(device):
         connection.send_error(
             msg["id"],
             websocket_api.ERR_NOT_FOUND,
@@ -148,15 +130,6 @@ def get_device_capabilities(
     device_info = None
     if entry.state is ConfigEntryState.LOADED:
         device_info = entry.runtime_data.device_info
-
-    mac_address = device_info.mac_address if device_info is not None else None
-    if not _is_main_esphome_device(device, mac_address):
-        connection.send_error(
-            msg["id"],
-            websocket_api.ERR_NOT_FOUND,
-            "Device is not the main ESPHome device",
-        )
-        return
 
     if device_info is None:
         connection.send_result(msg["id"], _UNAVAILABLE_CAPABILITIES)
@@ -182,7 +155,9 @@ def get_device_capabilities(
             "serial_proxies": [
                 {
                     "name": proxy.name,
-                    "port_type": _serial_port_type_name(proxy.port_type),
+                    "port_type": (
+                        proxy.port_type.name if proxy.port_type is not None else None
+                    ),
                     "url": str(build_url(entry.entry_id, proxy.name)),
                 }
                 for proxy in device_info.serial_proxies
