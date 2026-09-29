@@ -46,7 +46,7 @@ from homeassistant.config_entries import (
     SOURCE_ZEROCONF,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_DEVICE,
@@ -69,6 +69,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.util.network import is_ip_address
 
 from .ble_provisioning import (
     ProvisioningState,
@@ -96,7 +97,6 @@ from .utils import (
     get_model_name,
     get_rpc_device_wakeup_period,
     get_ws_context,
-    is_hostname,
     mac_address_from_name,
 )
 
@@ -722,7 +722,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         current_entry = await self.async_set_unique_id(mac)
         current_host = current_entry.data.get(CONF_HOST) if current_entry else None
         # A user-configured hostname must not be replaced by the resolved IP
-        keep_hostname = current_host is not None and is_hostname(current_host)
+        keep_hostname = current_host is not None and not is_ip_address(current_host)
         if current_entry and (current_host == host or keep_hostname):
             LOGGER.debug("async_reconnect_soon: host: %s, mac: %s", host, mac)
             await async_reconnect_soon(self.hass, current_entry)
@@ -1392,7 +1392,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         ) in RPC_GENERATIONS and not config_entry.data.get(CONF_SLEEP_PERIOD)
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle the option flow for shelly."""
 
     async def async_step_init(
@@ -1409,7 +1409,7 @@ class OptionsFlowHandler(OptionsFlow):
             return self.async_abort(reason="zigbee_firmware")
 
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
             step_id="init",

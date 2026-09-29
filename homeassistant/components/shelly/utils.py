@@ -608,15 +608,6 @@ def get_http_port(data: Mapping[str, Any]) -> int:
     return cast(int, data.get(CONF_PORT, DEFAULT_HTTP_PORT))
 
 
-def is_hostname(host: str) -> bool:
-    """Return True if host is a hostname rather than an IP address."""
-    try:
-        ip_address(host)
-    except ValueError:
-        return True
-    return False
-
-
 def get_host(host: str) -> str:
     """Get the device IP address or hostname."""
     try:

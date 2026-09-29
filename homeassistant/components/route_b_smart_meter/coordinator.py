@@ -21,10 +21,10 @@ _LOGGER = logging.getLogger(__name__)
 class BRouteData:
     """Class for data of the B Route."""
 
-    instantaneous_current_r_phase: float
-    instantaneous_current_t_phase: float
-    instantaneous_power: float
-    total_consumption: float
+    instantaneous_current_r_phase: float | None
+    instantaneous_current_t_phase: float | None
+    instantaneous_power: float | None
+    total_consumption: float | None
 
 
 type BRouteConfigEntry = ConfigEntry[BRouteUpdateCoordinator]
