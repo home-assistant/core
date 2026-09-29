@@ -4,6 +4,8 @@ Handles downloads of custom integrations, dashboard resources, themes,
 templates and python scripts from GitHub.
 """
 
+import asyncio
+import contextlib
 from functools import partial
 import os
 
@@ -265,8 +267,15 @@ async def _async_initialize_integration(
         "Setup complete, waiting for Home Assistant before startup tasks starts"
     )
 
+    @callback
+    def _async_start_tasks(_: HomeAssistant) -> None:
+        """Start the tasks of this entry, the unload stops them."""
+        marketplace.startup_task = config_entry.async_create_task(
+            hass, marketplace.startup_tasks(), "marketplace_startup_tasks"
+        )
+
     config_entry.async_on_unload(
-        async_at_start(hass=hass, at_start_cb=marketplace.startup_tasks)
+        async_at_start(hass=hass, at_start_cb=_async_start_tasks)
     )
 
     return True
@@ -288,22 +297,26 @@ async def async_unload_entry(
     """Handle removal of an entry."""
     marketplace = config_entry.runtime_data
 
-    if marketplace.queue.has_pending_tasks:
-        LOGGER.warning("Pending tasks, can not unload, try again later")
+    # A download writes on its own, a new setup would restore its backup under it
+    await marketplace.async_wait_for_downloads()
+
+    # Nothing stops before this, a failed unload leaves the Marketplace running
+    if not await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS):
         return False
 
-    # Clear out pending queue
+    # Cancelled first, the startup tasks add the recurring ones
+    if (startup_task := marketplace.startup_task) is not None:
+        startup_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await startup_task
+
+    # Queued work belongs to this setup, the next one queues its own
     marketplace.queue.clear()
 
     for task in marketplace.recurring_tasks:
-        # Cancel all pending tasks
         task()
 
-    # Store data
     await marketplace.data.async_write(force=True)
-
-    if not await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS):
-        return False
 
     marketplace.set_stage(None)
     marketplace.disable(DisabledReason.REMOVED)

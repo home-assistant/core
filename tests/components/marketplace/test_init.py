@@ -1,6 +1,7 @@
 """Tests for the Marketplace setup."""
 
 import asyncio
+from datetime import timedelta
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
@@ -11,6 +12,7 @@ from aiogithubapi import (
     GitHubException,
     GitHubRatelimitException,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -46,7 +48,7 @@ from .const import (
     REPOSITORY_PLUGIN_ID,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -142,9 +144,11 @@ async def test_legacy_plugin_path_without_plugins(
 async def test_unload_keeps_running_when_platforms_stay(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a failed unload leaves the Marketplace working."""
     await setup_integration(hass, mock_config_entry)
+    marketplace = get_marketplace(hass)
 
     with patch.object(
         hass.config_entries, "async_unload_platforms", return_value=False
@@ -152,7 +156,98 @@ async def test_unload_keeps_running_when_platforms_stay(
         assert not await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.FAILED_UNLOAD
-    assert not mock_config_entry.runtime_data.system.disabled
+    assert not marketplace.system.disabled
+
+    # The catalog is still refreshed on its interval
+    with patch.object(
+        marketplace.data_client, "get_data", AsyncMock(return_value={})
+    ) as get_data:
+        freezer.tick(timedelta(hours=6, seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    get_data.assert_called()
+
+
+async def test_unload_with_pending_queue_tasks(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test queued work does not keep the entry from unloading."""
+    await setup_integration(hass, mock_config_entry)
+    queued = AsyncMock()
+    get_marketplace(hass).queue.add(queued())
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    queued.assert_not_awaited()
+
+
+async def test_unload_waits_for_a_running_download(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unloading lets a download finish, a new setup would restore under it."""
+    await setup_integration(hass, mock_config_entry)
+    repository = get_marketplace(hass).repositories.get_by_id(REPOSITORY_PLUGIN_ID)
+    release = asyncio.Event()
+    finished: list[str] = []
+
+    async def download(ref: str | None) -> None:
+        await release.wait()
+        finished.append("download")
+
+    with patch.object(repository, "_async_download_repository", download):
+        downloading = hass.async_create_task(repository.async_download_repository())
+        await asyncio.sleep(0)
+        unloading = hass.async_create_task(
+            hass.config_entries.async_unload(mock_config_entry.entry_id)
+        )
+        await asyncio.sleep(0)
+        assert not unloading.done()
+
+        release.set()
+        await downloading
+        assert await unloading
+
+    assert finished == ["download"]
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_unload_stops_the_startup_tasks(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an unload during the startup tasks leaves nothing running behind."""
+    started = asyncio.Event()
+
+    async def removed_repositories(self: MarketplaceManager, *args: Any) -> None:
+        started.set()
+        await asyncio.Event().wait()
+
+    with (
+        patch.object(
+            MarketplaceManager,
+            "async_handle_removed_repositories",
+            removed_repositories,
+        ),
+        patch.object(
+            MarketplaceManager, "async_handle_critical_repositories"
+        ) as critical,
+    ):
+        # Not waiting for all tasks, the startup tasks never finish here
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await started.wait()
+        marketplace = get_marketplace(hass)
+
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    critical.assert_not_called()
+    assert marketplace.system.disabled
 
 
 async def test_custom_repository_updates_without_custom_repositories(

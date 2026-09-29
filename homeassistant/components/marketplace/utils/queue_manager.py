@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Coroutine
+import inspect
 import time
 from typing import Any
 
@@ -33,7 +34,10 @@ class QueueManager:
         return self.pending_tasks != 0
 
     def clear(self) -> None:
-        """Clear the queue."""
+        """Clear the queue, the tasks that did not start never will."""
+        for task in self.queue:
+            if inspect.getcoroutinestate(task) == inspect.CORO_CREATED:
+                task.close()
         self.queue = []
 
     def add(self, task: Coroutine[Any, Any, Any]) -> None:

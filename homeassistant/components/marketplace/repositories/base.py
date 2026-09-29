@@ -1841,6 +1841,14 @@ class Repository:
             finally:
                 self._replace_built_in_confirmed = False
 
+    async def async_wait_for_download(self) -> None:
+        """Wait for a download of this repository that is running to finish."""
+        if not self._download_lock.locked():
+            return
+
+        async with self._download_lock:
+            return
+
     async def _async_download_repository(self, ref: str | None) -> None:
         """Download the content of a repository, one download at a time."""
         if (catalog_version := self._catalog_version(ref)) is not None:

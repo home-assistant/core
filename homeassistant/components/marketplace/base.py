@@ -385,6 +385,7 @@ class MarketplaceManager:
         self.coordinators: dict[str, MarketplaceUpdateCoordinator] = {}
         self.core = MarketplaceCore()
         self.recurring_tasks: list[Callable[[], None]] = []
+        self.startup_task: asyncio.Task[None] | None = None
         self.repositories = Repositories()
         self.status = MarketplaceStatus()
         self.system = MarketplaceSystem()
@@ -899,6 +900,11 @@ class MarketplaceManager:
 
             return None
         return None
+
+    async def async_wait_for_downloads(self) -> None:
+        """Wait for the downloads that are running to finish."""
+        for repository in self.repositories.list_all:
+            await repository.async_wait_for_download()
 
     async def async_recreate_entities(self) -> None:
         """Recreate entities."""
