@@ -4,10 +4,7 @@ rules:
     status: exempt
     comment: Integration does not register custom actions.
   appropriate-polling: done
-  brands:
-    status: done
-    comment: |
-      Approved by a brands maintainer; blocked only on the parent Core PR being merged first (home-assistant/brands#11080).
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
