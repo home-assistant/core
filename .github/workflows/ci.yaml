@@ -818,15 +818,14 @@ jobs:
           path: pytest_test_counts.json
           # Primary key is a sentinel; restore-keys pick the most recent
           # prefix match since the real (content-addressed) key isn't
-          # known until split_tests.py runs below. The last restore-key
-          # ignores the requirements: entries are validated per file hash
-          # and counts only balance the buckets.
+          # known until split_tests.py runs below. The keys leave out the
+          # requirements: split_tests.py recounts a file when it or a conftest
+          # or helper module on its path changes, and a count that shifts with
+          # a library update only makes the buckets slightly uneven.
           key: >-
             pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{
-            steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}-restore-sentinel
+            steps.python.outputs.python-version }}-restore-sentinel
           restore-keys: |
-            pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{ needs.info.outputs.python_cache_key }}-
             pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-
       - name: Run split_tests.py
         env:
@@ -855,7 +854,6 @@ jobs:
           key: >-
             pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{
             steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}-${{
             steps.cache-pytest-counts-hash.outputs.hash }}
       - name: Upload pytest_buckets
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
