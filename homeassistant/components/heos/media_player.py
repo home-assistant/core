@@ -295,7 +295,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 self._clear_announcement_state()
                 self._announce_lock.release()
             raise
-        except HeosError, ValueError:
+        except (HeosError, ValueError):
             if self._announce_restore_state:
                 await self._restore_state()
             else:
@@ -379,11 +379,11 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
         try:
             volume = float(extra["volume"])
-        except TypeError:
+        except (TypeError, ValueError):
             return HeosMediaPlayer._raise_invalid_announcement_volume()
-        if not math.isfinite(volume) or not 0 <= volume <= 100:
-            raise ValueError("Announcement volume must be between 0 and 100")
-        return round(volume * 100 if volume <= 1 else volume)
+        if not math.isfinite(volume) or not 0 <= volume <= 1:
+            raise ValueError("Announcement volume must be between 0 and 1")
+        return round(volume * 100)
 
     @staticmethod
     def _raise_invalid_announcement_volume() -> NoReturn:
@@ -431,9 +431,13 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         try:
             # Remove TTS from queue if it was added.
             if state["tts_url"] and state.get("announcement_started", False):
-                if is_external_source and self._player.state == PlayState.PLAY:
+                if (
+                    self._player.state == PlayState.PLAY
+                    and (is_external_source or not state["was_playing"])
+                ):
                     # Stop before removing the current URL so HEOS cannot
-                    # automatically advance into its queue.
+                    # automatically advance into its queue. This also keeps a
+                    # previously paused or stopped player from being resumed.
                     await self._player.stop()
                 await asyncio.sleep(0.2)
                 await self._remove_tts_from_queue(
@@ -477,6 +481,10 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                     elif self._player.state != PlayState.PLAY:
                         _LOGGER.debug("Not on TTS track, ensuring playback continues")
                         await self._player.play()
+                elif state["play_state"] == PlayState.PAUSE:
+                    await self._player.pause()
+                elif state["play_state"] == PlayState.STOP:
+                    await self._player.stop()
             except HeosError as err:
                 _LOGGER.warning(
                     "Could not restore playback after announcement: %s", err
@@ -499,15 +507,33 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
     @override
     async def async_will_remove_from_hass(self) -> None:
-        """Cancel announcement tasks when the entity is removed."""
-        for task in (
+        """Restore state and cancel announcement tasks when removed."""
+        tasks = (
             self._announce_completion_task,
             self._announce_watchdog_task,
-        ):
+        )
+        for task in tasks:
             if task and not task.done():
                 task.cancel()
+
+        await asyncio.gather(
+            *(task for task in tasks if task and task is not asyncio.current_task()),
+            return_exceptions=True,
+        )
         self._announce_completion_task = None
         self._announce_watchdog_task = None
+
+        if self._announce_restore_state:
+            try:
+                await self._restore_state()
+            except (HeosError, ValueError) as err:
+                _LOGGER.warning(
+                    "Could not restore state while removing HEOS entity: %s", err
+                )
+        elif self._announce_lock.locked():
+            self._clear_announcement_state()
+            self._announce_lock.release()
+
         await super().async_will_remove_from_hass()
 
     def _clear_announcement_state(self) -> None:
@@ -925,13 +951,6 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
         player_ids: list[int] = [self._player.player_id]
-        # Keep the members of the group this player already leads. HEOS replaces
-        # the group with the players provided, so members that are not sent
-        # again are removed when another player is added to the group.
-        for group in self.coordinator.heos.groups.values():
-            if group.lead_player_id == self._player.player_id:
-                player_ids.extend(group.member_player_ids)
-                break
         # Resolve entity_ids to player_ids
         entity_registry = er.async_get(self.hass)
         for entity_id in group_members:
