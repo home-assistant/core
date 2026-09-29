@@ -16,10 +16,7 @@ from homeassistant.components.marstek.const import (
     CONF_WIFI_NAME,
     DOMAIN,
 )
-from homeassistant.components.marstek.coordinator import (
-    MARSTEK_SHARED_DATA,
-    MarstekSharedData,
-)
+from homeassistant.components.marstek.coordinator import MARSTEK_UDP_CLIENT
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -158,7 +155,7 @@ async def test_discovery_flow_reuses_shared_udp_client(
     hass: HomeAssistant, mock_udp_client: MagicMock
 ) -> None:
     """Discovery reuses the active integration client bound to the UDP port."""
-    hass.data[MARSTEK_SHARED_DATA] = MarstekSharedData(udp_client=mock_udp_client)
+    hass.data[MARSTEK_UDP_CLIENT] = mock_udp_client
     mock_udp_client.discover_devices.return_value = [DISCOVERED_DEVICE]
 
     result = await hass.config_entries.flow.async_init(

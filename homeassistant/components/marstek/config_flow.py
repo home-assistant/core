@@ -26,7 +26,7 @@ from .const import (
     DOMAIN,
     SUPPORTED_DEVICE_TYPES,
 )
-from .coordinator import MARSTEK_SHARED_DATA
+from .coordinator import MARSTEK_UDP_CLIENT
 from .helpers import async_create_udp_client
 
 _LOGGER = logging.getLogger(__name__)
@@ -118,19 +118,24 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.discovered_devices = []
         self.discovery_error = None
         _LOGGER.debug("Starting device discovery")
-        shared_data = self.hass.data.get(MARSTEK_SHARED_DATA)
-        udp_client = shared_data.udp_client if shared_data is not None else None
-        try:
-            if udp_client is None:
-                udp_client = await async_create_udp_client(self.hass)
+        udp_client = self.hass.data.get(MARSTEK_UDP_CLIENT)
+        own_client = False
+        if udp_client is None:
             try:
-                discovered_devices = await udp_client.discover_devices()
-            finally:
-                if shared_data is None:
-                    await udp_client.async_cleanup()
+                udp_client = await async_create_udp_client(self.hass)
+            except TimeoutError, OSError, TypeError:
+                self.discovery_error = "discovery_failed"
+                return
+            own_client = True
+
+        try:
+            discovered_devices = await udp_client.discover_devices()
         except TimeoutError, OSError, TypeError:
             self.discovery_error = "discovery_failed"
             return
+        finally:
+            if own_client:
+                await udp_client.async_cleanup()
 
         if not discovered_devices:
             self.discovery_error = "no_devices_found"
@@ -210,15 +215,13 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_device_from_host(self, host: str) -> MarstekDeviceInfo:
         """Fetch device information from a specific host."""
-        shared_data = self.hass.data.get(MARSTEK_SHARED_DATA)
-        udp_client = shared_data.udp_client if shared_data is not None else None
+        if (udp_client := self.hass.data.get(MARSTEK_UDP_CLIENT)) is not None:
+            return await udp_client.get_device_info(host)
+        udp_client = await async_create_udp_client(self.hass)
         try:
-            if udp_client is None:
-                udp_client = await async_create_udp_client(self.hass)
             return await udp_client.get_device_info(host)
         finally:
-            if shared_data is None and udp_client is not None:
-                await udp_client.async_cleanup()
+            await udp_client.async_cleanup()
 
     async def _async_create_entry_from_device(
         self, device: MarstekDeviceInfo

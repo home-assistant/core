@@ -2,20 +2,16 @@
 
 import logging
 
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import (
-    MARSTEK_SHARED_DATA,
+    MARSTEK_UDP_CLIENT,
     MarstekConfigEntry,
     MarstekDataUpdateCoordinator,
-    MarstekSharedData,
 )
 from .helpers import async_create_udp_client
 
@@ -23,40 +19,35 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-async def _async_release_udp_client(
-    hass: HomeAssistant, data: MarstekSharedData
-) -> None:
-    """Release a reference to the shared UDP client."""
-    data.entry_count -= 1
-    if data.entry_count == 0:
-        await data.udp_client.async_cleanup()
-        hass.data.pop(MARSTEK_SHARED_DATA, None)
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Marstek integration.
+
+    The shared UDP client is created once and lives for the lifetime of
+    the integration. If creation fails, integration setup fails and the
+    config entries stay not loaded; reloading the integration retries.
+    """
+    udp_client = await async_create_udp_client(hass)
+    hass.data[MARSTEK_UDP_CLIENT] = udp_client
+
+    async def close_udp_client(_: Event) -> None:
+        """Clean up the shared UDP client when Home Assistant stops."""
+        await udp_client.async_cleanup()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_udp_client)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MarstekConfigEntry) -> bool:
     """Set up Marstek from a config entry."""
-    shared_data = hass.data.get(MARSTEK_SHARED_DATA)
-    if shared_data is None:
-        try:
-            udp_client = await async_create_udp_client(hass)
-        except (TimeoutError, OSError, TypeError) as err:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="udp_client_setup_failed",
-            ) from err
-        shared_data = MarstekSharedData(udp_client=udp_client)
-        hass.data[MARSTEK_SHARED_DATA] = shared_data
-    shared_data.entry_count += 1
-
-    coordinator = MarstekDataUpdateCoordinator(hass, entry, shared_data.udp_client)
+    coordinator = MarstekDataUpdateCoordinator(
+        hass, entry, hass.data[MARSTEK_UDP_CLIENT]
+    )
     entry.runtime_data = coordinator
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryAuthFailed, ConfigEntryError, ConfigEntryNotReady:
-        await _async_release_udp_client(hass, shared_data)
-        raise
-
+    await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -64,8 +55,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: MarstekConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: MarstekConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        await _async_release_udp_client(hass, hass.data[MARSTEK_SHARED_DATA])
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

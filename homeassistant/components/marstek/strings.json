@@ -105,9 +105,6 @@
     "missing_stable_id": {
       "message": "The Marstek device at {host} did not provide a stable ID."
     },
-    "udp_client_setup_failed": {
-      "message": "Unable to set up the Marstek UDP client."
-    },
     "unsupported_device": {
       "message": "The Marstek device type {device_type} is not currently supported."
     }

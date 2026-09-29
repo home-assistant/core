@@ -1,6 +1,5 @@
 """Data update coordinator for Marstek devices."""
 
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import override
@@ -21,17 +20,9 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-@dataclass(slots=True, kw_only=True)
-class MarstekSharedData:
-    """Shared runtime data for all Marstek config entries."""
-
-    udp_client: MarstekUDPClient
-    entry_count: int = 0
-
-
 type MarstekConfigEntry = ConfigEntry[MarstekDataUpdateCoordinator]
 
-MARSTEK_SHARED_DATA: HassKey[MarstekSharedData] = HassKey(DOMAIN)
+MARSTEK_UDP_CLIENT: HassKey[MarstekUDPClient] = HassKey(DOMAIN)
 
 
 class MarstekDataUpdateCoordinator(DataUpdateCoordinator[MarstekDeviceStatus]):

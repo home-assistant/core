@@ -9,10 +9,16 @@ from aiomarstek import MarstekDeviceInfo
 import pytest
 
 from homeassistant.components.marstek import async_create_udp_client
-from homeassistant.components.marstek.coordinator import MarstekDataUpdateCoordinator
+from homeassistant.components.marstek.const import DOMAIN
+from homeassistant.components.marstek.coordinator import (
+    MARSTEK_UDP_CLIENT,
+    MarstekDataUpdateCoordinator,
+)
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -26,6 +32,50 @@ UNSUPPORTED_DEVICE_INFO = MarstekDeviceInfo(
     ble_mac="11:22:33:44:55:66",
     mac="AA:BB:CC:DD:EE:FF",
 )
+
+
+async def test_async_setup_creates_shared_udp_client(
+    hass: HomeAssistant,
+    mock_udp_client: MagicMock,
+) -> None:
+    """Test integration setup creates the shared UDP client."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert hass.data[MARSTEK_UDP_CLIENT] is mock_udp_client
+    mock_udp_client.async_cleanup.assert_not_awaited()
+
+
+async def test_async_setup_fails_when_client_creation_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test integration setup fails and entries stay not loaded."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.marstek.async_create_udp_client",
+        side_effect=OSError("network down"),
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert MARSTEK_UDP_CLIENT not in hass.data
+
+
+async def test_async_setup_cleans_up_client_at_stop(
+    hass: HomeAssistant,
+    mock_udp_client: MagicMock,
+) -> None:
+    """Test the shared UDP client is cleaned up when Home Assistant stops."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_udp_client.async_cleanup.assert_awaited_once()
 
 
 async def test_async_setup_entry(
@@ -54,7 +104,7 @@ async def test_async_unload_entry(
     mock_config_entry: MockConfigEntry,
     mock_udp_client: MagicMock,
 ) -> None:
-    """Test unloading a config entry cleans up its coordinator."""
+    """Test unloading a config entry keeps the shared UDP client alive."""
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -63,7 +113,9 @@ async def test_async_unload_entry(
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_udp_client.async_cleanup.assert_awaited_once()
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_udp_client.async_cleanup.assert_not_awaited()
+    assert hass.data[MARSTEK_UDP_CLIENT] is mock_udp_client
 
 
 async def test_async_unload_multiple_entries(
@@ -71,7 +123,7 @@ async def test_async_unload_multiple_entries(
     mock_config_entry: MockConfigEntry,
     mock_udp_client: MagicMock,
 ) -> None:
-    """Test the shared UDP client is cleaned up only when the last entry unloads."""
+    """Test the shared UDP client stays alive while entries are unloaded."""
     second_entry = MockConfigEntry(
         domain=mock_config_entry.domain,
         title="Marstek VNSD-0 v2 (192.168.1.101)",
@@ -104,25 +156,8 @@ async def test_async_unload_multiple_entries(
 
     assert await hass.config_entries.async_unload(second_entry.entry_id)
     await hass.async_block_till_done()
-    mock_udp_client.async_cleanup.assert_awaited_once()
-
-
-async def test_async_setup_entry_client_creation_fails(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test setup retries when the shared UDP client cannot be created."""
-    mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.marstek.async_create_udp_client",
-        side_effect=OSError("network down"),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert not hasattr(mock_config_entry, "runtime_data")
+    mock_udp_client.async_cleanup.assert_not_awaited()
+    assert hass.data[MARSTEK_UDP_CLIENT] is mock_udp_client
 
 
 async def test_async_create_udp_client(
@@ -190,7 +225,7 @@ async def test_async_setup_entry_not_ready(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    mock_udp_client.async_cleanup.assert_awaited_once()
+    mock_udp_client.async_cleanup.assert_not_awaited()
     assert "Unexpected error fetching Marstek" not in caplog.text
 
 
@@ -216,7 +251,7 @@ async def test_async_setup_entry_without_stable_id(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    mock_udp_client.async_cleanup.assert_awaited_once()
+    mock_udp_client.async_cleanup.assert_not_awaited()
 
 
 async def test_async_setup_entry_unsupported_device_type(
@@ -232,15 +267,15 @@ async def test_async_setup_entry_unsupported_device_type(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    mock_udp_client.async_cleanup.assert_awaited_once()
+    mock_udp_client.async_cleanup.assert_not_awaited()
 
 
-async def test_async_setup_entry_cleans_up_after_first_refresh_error(
+async def test_async_setup_entry_first_refresh_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_udp_client: MagicMock,
 ) -> None:
-    """Test setup cleans up when the first refresh raises an error."""
+    """Test setup fails when the first refresh raises an error."""
     mock_config_entry.add_to_hass(hass)
 
     with patch.object(
@@ -252,15 +287,15 @@ async def test_async_setup_entry_cleans_up_after_first_refresh_error(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    mock_udp_client.async_cleanup.assert_awaited_once()
+    mock_udp_client.async_cleanup.assert_not_awaited()
 
 
-async def test_async_setup_entry_cleans_up_after_first_refresh_failure(
+async def test_async_setup_entry_first_refresh_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_udp_client: MagicMock,
 ) -> None:
-    """Test setup cleans up when the first data refresh fails."""
+    """Test setup retries when the first data refresh fails."""
     mock_config_entry.add_to_hass(hass)
     mock_udp_client.get_device_status.side_effect = OSError("network down")
 
@@ -271,5 +306,5 @@ async def test_async_setup_entry_cleans_up_after_first_refresh_failure(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    mock_udp_client.async_cleanup.assert_awaited_once()
+    mock_udp_client.async_cleanup.assert_not_awaited()
     mock_forward_entry_setups.assert_not_awaited()
