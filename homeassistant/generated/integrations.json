@@ -2849,6 +2849,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "haas_sohn": {
+      "name": "HAAS+SOHN",
+      "integration_type": "virtual",
+      "supported_by": "fumis"
+    },
     "habitica": {
       "name": "Habitica",
       "integration_type": "service",
