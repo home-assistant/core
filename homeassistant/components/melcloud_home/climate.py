@@ -20,7 +20,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import async_setup_unit_entities
+from .common import async_setup_unit_entities, perform_action
 from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
 from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWZoneEntity
 
@@ -253,22 +253,26 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
         if hvac_mode == HVACMode.OFF:
-            await self.coordinator.client.control_ata_unit(self._unit_id, power=False)
+            action = self.coordinator.client.control_ata_unit(
+                self._unit_id, power=False
+            )
         else:
-            await self.coordinator.client.control_ata_unit(
+            action = self.coordinator.client.control_ata_unit(
                 self._unit_id,
                 power=True,
                 operation_mode=ATA_HVAC_MODE_TO_OPERATION[hvac_mode],
             )
-        await self.coordinator.async_request_refresh()
+        await perform_action(self.coordinator, action)
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
-        await self.coordinator.client.control_ata_unit(
-            self._unit_id, set_temperature=kwargs[ATTR_TEMPERATURE]
+        await perform_action(
+            self.coordinator,
+            self.coordinator.client.control_ata_unit(
+                self._unit_id, set_temperature=kwargs[ATTR_TEMPERATURE]
+            ),
         )
-        await self.coordinator.async_request_refresh()
 
     @property
     @override
@@ -285,39 +289,52 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
     @override
     async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
         """Set the horizontal vane direction."""
-        await self.coordinator.client.control_ata_unit(
-            self._unit_id,
-            vane_horizontal_direction=HA_VANE_HORIZONTAL_TO_ATA[swing_horizontal_mode],
+        await perform_action(
+            self.coordinator,
+            self.coordinator.client.control_ata_unit(
+                self._unit_id,
+                vane_horizontal_direction=HA_VANE_HORIZONTAL_TO_ATA[
+                    swing_horizontal_mode
+                ],
+            ),
         )
-        await self.coordinator.async_request_refresh()
 
     @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set the vertical vane direction."""
-        await self.coordinator.client.control_ata_unit(
-            self._unit_id, vane_vertical_direction=HA_VANE_VERTICAL_TO_ATA[swing_mode]
+        await perform_action(
+            self.coordinator,
+            self.coordinator.client.control_ata_unit(
+                self._unit_id,
+                vane_vertical_direction=HA_VANE_VERTICAL_TO_ATA[swing_mode],
+            ),
         )
-        await self.coordinator.async_request_refresh()
 
     @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode."""
-        await self.coordinator.client.control_ata_unit(
-            self._unit_id, set_fan_speed=HA_FAN_SPEED_TO_ATA[fan_mode]
+        await perform_action(
+            self.coordinator,
+            self.coordinator.client.control_ata_unit(
+                self._unit_id, set_fan_speed=HA_FAN_SPEED_TO_ATA[fan_mode]
+            ),
         )
-        await self.coordinator.async_request_refresh()
 
     @override
     async def async_turn_on(self) -> None:
         """Turn the unit on."""
-        await self.coordinator.client.control_ata_unit(self._unit_id, power=True)
-        await self.coordinator.async_request_refresh()
+        await perform_action(
+            self.coordinator,
+            self.coordinator.client.control_ata_unit(self._unit_id, power=True),
+        )
 
     @override
     async def async_turn_off(self) -> None:
         """Turn the unit off."""
-        await self.coordinator.client.control_ata_unit(self._unit_id, power=False)
-        await self.coordinator.async_request_refresh()
+        await perform_action(
+            self.coordinator,
+            self.coordinator.client.control_ata_unit(self._unit_id, power=False),
+        )
 
 
 class ATWZoneClimateEntity(MelCloudHomeATWZoneEntity, ClimateEntity):
@@ -413,45 +430,51 @@ class ATWZoneClimateEntity(MelCloudHomeATWZoneEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
         if hvac_mode == HVACMode.OFF:
-            await self.coordinator.client.control_atw_unit(self._unit_id, power=False)
+            action = self.coordinator.client.control_atw_unit(
+                self._unit_id, power=False
+            )
         else:
             zone_mode = HVAC_MODE_TO_ATW_ZONE_MODE[hvac_mode]
             if self.zone_number == 1:
-                await self.coordinator.client.control_atw_unit(
+                action = self.coordinator.client.control_atw_unit(
                     self._unit_id,
                     power=True,
                     operation_mode_zone1=zone_mode,
                 )
             else:
-                await self.coordinator.client.control_atw_unit(
+                action = self.coordinator.client.control_atw_unit(
                     self._unit_id,
                     power=True,
                     operation_mode_zone2=zone_mode,
                 )
-        await self.coordinator.async_request_refresh()
+        await perform_action(self.coordinator, action)
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
         if self.zone_number == 1:
-            await self.coordinator.client.control_atw_unit(
+            action = self.coordinator.client.control_atw_unit(
                 self._unit_id, set_temperature_zone1=temperature
             )
         else:
-            await self.coordinator.client.control_atw_unit(
+            action = self.coordinator.client.control_atw_unit(
                 self._unit_id, set_temperature_zone2=temperature
             )
-        await self.coordinator.async_request_refresh()
+        await perform_action(self.coordinator, action)
 
     @override
     async def async_turn_on(self) -> None:
         """Turn the zone on."""
-        await self.coordinator.client.control_atw_unit(self._unit_id, power=True)
-        await self.coordinator.async_request_refresh()
+        await perform_action(
+            self.coordinator,
+            self.coordinator.client.control_atw_unit(self._unit_id, power=True),
+        )
 
     @override
     async def async_turn_off(self) -> None:
         """Turn the zone off."""
-        await self.coordinator.client.control_atw_unit(self._unit_id, power=False)
-        await self.coordinator.async_request_refresh()
+        await perform_action(
+            self.coordinator,
+            self.coordinator.client.control_atw_unit(self._unit_id, power=False),
+        )
