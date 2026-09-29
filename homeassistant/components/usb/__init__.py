@@ -117,32 +117,20 @@ async def async_scan_serial_ports(
 
 
 async def async_is_serial_port_present(hass: HomeAssistant, device_path: str) -> bool:
-    """Return whether a port with this device path is currently present.
+    """Return whether a port with this device path is currently present."""
+    if "://" not in device_path:
+        return await hass.async_add_executor_job(os.path.exists, device_path)
 
-    A device path is not always a filesystem path: a port contributed by a scanner, such as
-    one proxied by an ESPHome device, is named by a URL. A caller that only stats the path
-    concludes such a device is unplugged when it is sitting right there.
-    """
-    for port in await async_scan_serial_ports(hass):
-        if port.device == device_path:
-            return True
-
-    if "://" in device_path:
-        # A URL says nothing about the filesystem, so the scan was the whole answer
-        return False
-
-    # A local path may be stored in an equivalent but different form to the one the scan
-    # reports, /dev/ttyUSB0 against a /dev/serial/by-id symlink for instance
-    return await hass.async_add_executor_job(os.path.exists, device_path)
+    # Ports contributed by a scanner, such as ESPHome serial proxies, are named by URLs
+    return any(
+        port.device == device_path for port in await async_scan_serial_ports(hass)
+    )
 
 
 @hass_callback
 def async_notify_serial_ports_changed(hass: HomeAssistant) -> None:
-    """Rescan after ports a scanner contributes appeared or disappeared.
-
-    This is what a udev event does for a local port. Unlike `async_request_scan`, it
-    also rescans while the udev watcher is running.
-    """
+    """Rescan after ports a scanner contributes appeared or disappeared."""
+    # Unlike `async_request_scan`, this also rescans while the udev watcher is running
     hass.data[_USB_DATA].async_delayed_add_remove_scan()
 
 

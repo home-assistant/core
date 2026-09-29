@@ -119,10 +119,7 @@ USB_PROXIES = [
 def _mock_identities(
     mock_client: APIClient, identities: list[SerialProxyIdentity]
 ) -> list[Callable[[SerialProxyIdentity], None]]:
-    """Answer the identity subscription the way the device does: one message per port.
-
-    Returns the subscribed callbacks, so a test can deliver a hotplug message.
-    """
+    """Answer the identity subscription with one message per port, like the device."""
     callbacks: list[Callable[[SerialProxyIdentity], None]] = []
 
     def _subscribe(

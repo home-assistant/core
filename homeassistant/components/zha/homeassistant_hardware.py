@@ -50,18 +50,15 @@ def get_firmware_info(
 async def async_update_device_path(
     hass: HomeAssistant, config_entry: ConfigEntry, new_path: str
 ) -> None:
-    """Follow the radio to a new serial port path.
+    """Follow the radio to a new serial port path."""
 
-    Called by the hardware layer once the hardware integration owning the radio has
-    seen it move, to another USB port on the host or to a port behind an ESPHome
-    device. The network the radio carries is what identifies this entry, so only the
-    path changes; a wrong radio is still caught when setup compares against the backup.
-    """
+    # Only the path changes: a wrong radio is still caught when setup compares its
+    # network against the backup
     device = config_entry.data[CONF_DEVICE]
     if device[CONF_DEVICE_PATH] == new_path:
         return
 
-    _LOGGER.info(
+    _LOGGER.debug(
         "Following the radio from %s to %s", device[CONF_DEVICE_PATH], new_path
     )
     hass.config_entries.async_update_entry(

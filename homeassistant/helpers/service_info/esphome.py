@@ -24,4 +24,3 @@ class ESPHomeServiceInfo(BaseServiceInfo):
         if self.noise_psk:
             url = url.with_query({"key": self.noise_psk})
         return str(url)
-

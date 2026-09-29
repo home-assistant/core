@@ -64,12 +64,10 @@ _SERIAL_BY_ID_PORT_SUFFIX = re.compile(r"-port\d+$")
 
 
 def serial_path_udev_id(path: str) -> str | None:
-    """Return the udev by-id link name a serial port path identifies its device by.
+    """Return the by-id link name of a serial port path's device, without `-portN`."""
 
-    This is the link name without the directory or the `-portN` suffix. A by-id link
-    names it directly and a serial proxy URL carries it as `port_udev_id`, so a device
-    is recognized when it moves between a port on the host and a serial proxy.
-    """
+    # A by-id link names the device directly, a serial proxy URL carries the same name
+    # as `port_udev_id`, so a device is recognized when it moves between the two
     if path.startswith(SERIAL_BY_ID_DIR):
         return _SERIAL_BY_ID_PORT_SUFFIX.sub("", path.removeprefix(SERIAL_BY_ID_DIR))
 

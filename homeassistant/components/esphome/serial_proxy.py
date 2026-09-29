@@ -28,18 +28,15 @@ _HASS_LOOP: asyncio.AbstractEventLoop | None = None
 def build_url(
     entry_id: str, port_name: str | None, port_udev_id: str | None = None
 ) -> URL:
-    """Build a canonical `esphome-hass://` URL.
-
-    A port is a socket, so without `port_udev_id` the connection succeeds against
-    whatever is plugged in. With it, serialx refuses a port with any other device behind
-    it, and the `usb` integration can match it to the same device's by-id link. Without
-    `port_name`, serialx uses whichever port that device is plugged into.
-    """
+    """Build a canonical `esphome-hass://` URL."""
     query = {}
+
     if port_name is not None:
         query["port_name"] = port_name
+
     if port_udev_id is not None:
         query["port_udev_id"] = port_udev_id
+
     return URL.build(
         scheme="esphome-hass",
         host="esphome",

@@ -58,18 +58,6 @@ type HardwareFirmwareInfoModule = (
 )
 
 
-class DevicePathUpdateModule(Protocol):
-    """Optional protocol for providers whose config entries can follow a moved adapter."""
-
-    async def async_update_device_path(
-        self,
-        hass: HomeAssistant,
-        entry: ConfigEntry,
-        new_path: str,
-    ) -> None:
-        """Point the config entry at the adapter's new serial port path."""
-
-
 @hass_callback
 def async_get_hardware_domain_for_usb_device(
     hass: HomeAssistant, usb_device: USBDevice
@@ -188,7 +176,7 @@ class HardwareInfoDispatcher:
     async def _async_get_firmware_info(
         self, fw_info_module: HardwareFirmwareInfoModule, config_entry: ConfigEntry
     ) -> FirmwareInfo | None:
-        """Ask a provider about one of its config entries, whichever method it offers."""
+        """Get firmware info for a config entry from its provider."""
         try:
             if hasattr(fw_info_module, "get_firmware_info"):
                 return fw_info_module.get_firmware_info(self.hass, config_entry)
@@ -210,13 +198,7 @@ class HardwareInfoDispatcher:
                     yield fw_info
 
     async def notify_device_path_changed(self, old_path: str, new_path: str) -> None:
-        """Move every config entry using a device from its old path to its new one.
-
-        A hardware integration calls this once it has followed its adapter to another
-        port, on the host or behind an ESPHome device, so the integrations using that
-        adapter follow along without anyone re-pairing. Providers that cannot move an
-        entry are left as they are.
-        """
+        """Move every config entry using a device from its old path to its new one."""
         for domain, fw_info_module in self._providers.items():
             if not hasattr(fw_info_module, "async_update_device_path"):
                 continue
@@ -301,6 +283,20 @@ def async_notify_device_path_changed(
 ) -> Awaitable[None]:
     """Notify the dispatcher that an adapter moved to a new serial port path."""
     return hass.data[DATA_COMPONENT].notify_device_path_changed(old_path, new_path)
+
+
+async def async_follow_moved_adapter(
+    hass: HomeAssistant, domain: str, serial_number: str | None, new_path: str
+) -> None:
+    """Move the users of a known adapter to the path it was just discovered at."""
+    if serial_number is None:
+        return
+
+    entry = hass.config_entries.async_entry_for_domain_unique_id(domain, serial_number)
+    if entry is None or "device" not in entry.data or entry.data["device"] == new_path:
+        return
+
+    await async_notify_device_path_changed(hass, entry.data["device"], new_path)
 
 
 @hass_callback

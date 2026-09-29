@@ -124,6 +124,37 @@ async def test_aiousbwatcher_discovery(
         await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("force_usb_polling_watcher")
+async def test_is_serial_port_present(hass: HomeAssistant) -> None:
+    """A local path is checked on disk, a URL against the scanned ports."""
+    proxy_url = "esphome-hass://esphome/01M0EP649N48N88Z52ZG2B21VT?port_name=uart0"
+    assert await async_setup_component(hass, DOMAIN, {"usb": {}})
+
+    with (
+        patch_scanned_serial_ports(
+            return_value=[
+                SerialDevice(
+                    device=proxy_url,
+                    serial_number=None,
+                    manufacturer=None,
+                    description=None,
+                )
+            ]
+        ) as mock_scan,
+        patch("homeassistant.components.usb.os.path.exists", return_value=True),
+    ):
+        assert await usb.async_is_serial_port_present(hass, "/dev/ttyUSB0")
+        assert len(mock_scan.mock_calls) == 0
+
+        assert await usb.async_is_serial_port_present(hass, proxy_url)
+        assert not await usb.async_is_serial_port_present(
+            hass, proxy_url.replace("uart0", "uart1")
+        )
+
+    with patch("homeassistant.components.usb.os.path.exists", return_value=False):
+        assert not await usb.async_is_serial_port_present(hass, "/dev/ttyUSB0")
+
+
 async def test_notify_serial_ports_changed_with_aiousbwatcher(
     hass: HomeAssistant,
 ) -> None:

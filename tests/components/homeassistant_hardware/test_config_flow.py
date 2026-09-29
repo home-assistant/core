@@ -56,10 +56,6 @@ from tests.common import (
 
 TEST_DOMAIN = "test_firmware_domain"
 TEST_DEVICE = "/dev/SomeDevice123"
-TEST_PROXIED_DEVICE = (
-    "esphome-hass://esphome/01M0EP649N48N88Z52ZG2B21VT"
-    "?port_name=USB+(Zigbee)&usb_serial=10B41DE58F10"
-)
 TEST_HARDWARE_NAME = "Some Hardware Name"
 TEST_RELEASES_URL = URL("http://invalid/releases")
 
@@ -84,7 +80,7 @@ class FakeFirmwareConfigFlow(BaseFirmwareConfigFlow, domain=TEST_DOMAIN):
         self, data: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle hardware flow."""
-        self._device = data["device"] if data is not None else TEST_DEVICE
+        self._device = TEST_DEVICE
         self._hardware_name = TEST_HARDWARE_NAME
 
         return await self.async_step_confirm()
