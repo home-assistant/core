@@ -432,6 +432,7 @@ async def test_select_update_liveview_no_warning(
     elif case == "public_bootstrap_not_loaded":
         ufp.api.has_public_bootstrap = False
     else:
+        updated.id = "personal_liveview"
         updated.is_global = False
 
     mock_msg = Mock()
@@ -442,6 +443,41 @@ async def test_select_update_liveview_no_warning(
     await hass.async_block_till_done()
 
     assert "Restart Home Assistant to update Viewport select" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "case", ["new_global", "made_personal", "api_key_user_personal"]
+)
+async def test_select_update_liveview_warns_for_options(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    viewer: Viewer,
+    liveview: Liveview,
+    caplog: pytest.LogCaptureFixture,
+    case: str,
+) -> None:
+    """A liveview that is, was or becomes an option logs the restart warning."""
+
+    setup_public_viewer(ufp, [liveview])
+    await init_entry(hass, ufp, [viewer])
+    updated = copy(liveview)
+    if case == "new_global":
+        updated.id = "new_global"
+    else:
+        updated.is_global = False
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = updated
+    if case == "made_personal":
+        # the public list has not caught up with the change yet or dropped it
+        ufp.api.public_bootstrap.liveviews.clear()
+        mock_msg.old_obj = liveview
+    caplog.clear()
+    ufp.ws_msg(mock_msg)
+    await hass.async_block_till_done()
+
+    assert "Restart Home Assistant to update Viewport select" in caplog.text
 
 
 async def test_select_update_doorbell_settings(

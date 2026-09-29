@@ -752,10 +752,14 @@ class ProtectData:
         if (
             model_type is ModelType.LIVEVIEW
             and isinstance(new_obj, Liveview)
-            # personal liveviews never reach the public options
-            and new_obj.is_global
             and self.api.has_public_bootstrap
             and self.api.public_bootstrap.viewers
+            # only liveviews that are, were or become a public option
+            and (
+                new_obj.is_global
+                or new_obj.id in self.api.public_bootstrap.liveviews
+                or (isinstance(message.old_obj, Liveview) and message.old_obj.is_global)
+            )
         ):
             # alert user viewport needs restart so voice clients can get new options
             _LOGGER.warning(
