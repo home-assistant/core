@@ -25,6 +25,7 @@ TEMPERATURE_UNIT = "temperature_unit"
 LED_BAR_MODE = "led_bar_mode"
 LED_BAR_BRIGHTNESS = "led_bar_brightness"
 DISPLAY_BRIGHTNESS = "display_brightness"
+MEASUREMENT_INTERVAL = "measurement_interval"
 GPS_MODE = "gps_mode"
 FRONT_LED_BRIGHTNESS = "front_led_brightness"
 BACK_LED_BRIGHTNESS = "back_led_brightness"
@@ -62,6 +63,7 @@ GO_CONFIG = frozenset(
         TVOC_LEARNING_OFFSET,
         PM_STANDARD_CONFIG,
         TEMPERATURE_UNIT,
+        MEASUREMENT_INTERVAL,
         GPS_MODE,
         FRONT_LED_BRIGHTNESS,
         BACK_LED_BRIGHTNESS,
@@ -69,6 +71,11 @@ GO_CONFIG = frozenset(
         BUZZER_ENABLED,
         CLOUD_CONNECTION,
     }
+)
+
+OUTDOOR_CAPABILITIES = ModelCapabilities(
+    config=COMMON_LEGACY_CONFIG,
+    actions=frozenset({CO2_CALIBRATION}),
 )
 
 MODEL_CAPABILITIES: tuple[tuple[str, ModelCapabilities], ...] = (
@@ -86,13 +93,8 @@ MODEL_CAPABILITIES: tuple[tuple[str, ModelCapabilities], ...] = (
             actions=frozenset({CO2_CALIBRATION, LED_BAR_TEST}),
         ),
     ),
-    (
-        "O-1",
-        ModelCapabilities(
-            config=COMMON_LEGACY_CONFIG,
-            actions=frozenset({CO2_CALIBRATION}),
-        ),
-    ),
+    ("O-1", OUTDOOR_CAPABILITIES),
+    ("0-1PS", OUTDOOR_CAPABILITIES),
     (
         "DIY",
         ModelCapabilities(

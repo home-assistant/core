@@ -6,8 +6,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Concatenate, override
 
+import probatio
 from regenmaschine.errors import RainMachineError
-import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -183,7 +183,7 @@ async def async_setup_entry(
         (
             "start_zone",
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_DEFAULT_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN
                 ): cv.positive_int
             },

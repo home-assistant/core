@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.cover import (
     PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
@@ -46,18 +46,18 @@ STATES_MAP = {
     "stopped": STATE_STOPPED,
 }
 
-COVER_SCHEMA = vol.Schema(
+COVER_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_ACCESS_TOKEN): cv.string,
-        vol.Optional(CONF_DEVICE): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_USERNAME): cv.string,
+        probatio.Optional(CONF_ACCESS_TOKEN): cv.string,
+        probatio.Optional(CONF_DEVICE): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_USERNAME): cv.string,
     }
 )
 
 PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA)}
+    {probatio.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA)}
 )
 
 

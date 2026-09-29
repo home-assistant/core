@@ -4,9 +4,9 @@ from http import HTTPStatus
 import logging
 from typing import Any, override
 
+import probatio
 from rachiopy import Rachio
 from requests.exceptions import ConnectTimeout
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -33,7 +33,9 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str}, extra=vol.ALLOW_EXTRA)
+DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_API_KEY): str}, extra=probatio.ALLOW_EXTRA
+)
 
 
 async def validate_input(hass: HomeAssistant, data):
@@ -128,9 +130,9 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_MANUAL_RUN_MINS,
                     default=self.config_entry.options.get(
                         CONF_MANUAL_RUN_MINS, DEFAULT_MANUAL_RUN_MINS

@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from . import make_advertisement
+from . import MISCALE_V2_SERVICE_INFO, make_advertisement
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import (
@@ -171,6 +171,35 @@ async def test_opening(hass: HomeAssistant) -> None:
         opening_sensor_attribtes[ATTR_FRIENDLY_NAME]
         == "Door/Window Sensor E567 Opening"
     )
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_miscale_v2_stabilized_binary_sensor(hass: HomeAssistant) -> None:
+    """Test MiScale V2 stabilized binary sensor."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="50:FB:19:1B:B5:DC",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info_bleak(hass, MISCALE_V2_SERVICE_INFO)
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 4
+
+    stabilized_sensor = hass.states.get(
+        "binary_sensor.mi_body_composition_scale_b5dc_stabilized"
+    )
+    assert stabilized_sensor.state == STATE_ON
+    assert (
+        stabilized_sensor.attributes[ATTR_FRIENDLY_NAME]
+        == "Mi Body Composition Scale (B5DC) Stabilized"
+    )
+
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 

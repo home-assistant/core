@@ -4,13 +4,13 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from pythonkuma import (
     UptimeKuma,
     UptimeKumaAuthenticationException,
     UptimeKumaException,
     UptimeKumaParseException,
 )
-import voluptuous as vol
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -28,19 +28,21 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): TextSelector(
+        probatio.Required(CONF_URL): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.URL,
                 autocomplete="url",
             ),
         ),
-        vol.Required(CONF_VERIFY_SSL, default=True): bool,
-        vol.Optional(CONF_API_KEY, default=""): str,
+        probatio.Required(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Optional(CONF_API_KEY, default=""): str,
     }
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Optional(CONF_API_KEY, default=""): str})
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {probatio.Optional(CONF_API_KEY, default=""): str}
+)
 PLACEHOLDER = {"example_url": "https://uptime.example.com:3001"}
 
 

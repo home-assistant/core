@@ -4,8 +4,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 import PyTado
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -79,20 +79,20 @@ ATTR_TIME_PERIOD = "time_period"
 ATTR_REQUESTED_OVERLAY = "requested_overlay"
 
 CLIMATE_TIMER_SCHEMA: VolDictType = {
-    vol.Required(ATTR_TEMPERATURE): vol.Coerce(float),
-    vol.Exclusive(ATTR_TIME_PERIOD, CONST_EXCLUSIVE_OVERLAY_GROUP): vol.All(
+    probatio.Required(ATTR_TEMPERATURE): probatio.Coerce(float),
+    probatio.Exclusive(ATTR_TIME_PERIOD, CONST_EXCLUSIVE_OVERLAY_GROUP): probatio.All(
         cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds()
     ),
-    vol.Exclusive(ATTR_REQUESTED_OVERLAY, CONST_EXCLUSIVE_OVERLAY_GROUP): vol.In(
-        CONST_OVERLAY_TADO_OPTIONS
-    ),
+    probatio.Exclusive(
+        ATTR_REQUESTED_OVERLAY, CONST_EXCLUSIVE_OVERLAY_GROUP
+    ): probatio.In(CONST_OVERLAY_TADO_OPTIONS),
 }
 
 SERVICE_TEMP_OFFSET = "set_climate_temperature_offset"
 ATTR_OFFSET = "offset"
 
 CLIMATE_TEMP_OFFSET_SCHEMA: VolDictType = {
-    vol.Required(ATTR_OFFSET, default=0): vol.Coerce(float),
+    probatio.Required(ATTR_OFFSET, default=0): probatio.Coerce(float),
 }
 
 

@@ -2,7 +2,7 @@
 
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.config_entries import ConfigEntry
@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entity_id = er.async_validate_entity_id(
             entity_registry, entry.options[CONF_ENTITY_ID]
         )
-    except vol.Invalid:
+    except probatio.Invalid:
         # The entity is identified by an unknown entity registry ID
         _LOGGER.error(
             "Failed to setup switch_as_x for unknown entity %s",
@@ -124,7 +124,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         switch_entity_id = er.async_validate_entity_id(
             registry, entry.options[CONF_ENTITY_ID]
         )
-    except vol.Invalid:
+    except probatio.Invalid:
         # The source entity has been removed from the entity registry
         return
 

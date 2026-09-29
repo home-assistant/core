@@ -5,7 +5,7 @@ from typing import Any, override
 
 from openevsehttp.__main__ import OpenEVSE
 from openevsehttp.exceptions import AuthenticationError, MissingSerial
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -25,14 +25,14 @@ from homeassistant.helpers.service_info import zeroconf
 
 from .const import CONF_SERIAL, DOMAIN
 
-USER_SCHEMA = vol.Schema({vol.Required(CONF_HOST): TextSelector()})
+USER_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): TextSelector()})
 
-AUTH_SCHEMA = vol.Schema(
+AUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): TextSelector(
+        probatio.Required(CONF_USERNAME): TextSelector(
             TextSelectorConfig(autocomplete="username")
         ),
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD, autocomplete="current-password"
             )
@@ -40,13 +40,13 @@ AUTH_SCHEMA = vol.Schema(
     }
 )
 
-RECONFIGURE_SCHEMA = vol.Schema(
+RECONFIGURE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(),
-        vol.Optional(CONF_USERNAME): TextSelector(
+        probatio.Required(CONF_HOST): TextSelector(),
+        probatio.Optional(CONF_USERNAME): TextSelector(
             TextSelectorConfig(autocomplete="username")
         ),
-        vol.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",

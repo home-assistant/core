@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
@@ -28,20 +28,20 @@ _STATISTIC_MEASURES = [
 ]
 
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ENTITY_IDS): selector.EntitySelector(
+        probatio.Required(CONF_ENTITY_IDS): selector.EntitySelector(
             selector.EntitySelectorConfig(
                 domain=[SENSOR_DOMAIN, NUMBER_DOMAIN, INPUT_NUMBER_DOMAIN],
                 multiple=True,
             ),
         ),
-        vol.Required(CONF_TYPE): selector.SelectSelector(
+        probatio.Required(CONF_TYPE): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=_STATISTIC_MEASURES, translation_key=CONF_TYPE
             ),
         ),
-        vol.Required(CONF_ROUND_DIGITS, default=2): selector.NumberSelector(
+        probatio.Required(CONF_ROUND_DIGITS, default=2): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=0, max=6, mode=selector.NumberSelectorMode.BOX
             ),
@@ -49,9 +49,9 @@ OPTIONS_SCHEMA = vol.Schema(
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required("name"): selector.TextSelector(),
+        probatio.Required("name"): selector.TextSelector(),
     }
 ).extend(OPTIONS_SCHEMA.schema)
 

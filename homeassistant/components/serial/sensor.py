@@ -6,8 +6,8 @@ import json
 import logging
 from typing import override
 
+import probatio
 from serialx import Parity, SerialException, StopBits, open_serial_connection
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -42,12 +42,14 @@ DEFAULT_DSRDTR = False
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_SERIAL_PORT): cv.string,
-        vol.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): cv.positive_int,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_BYTESIZE, default=DEFAULT_BYTESIZE): vol.In([5, 6, 7, 8]),
-        vol.Optional(CONF_PARITY, default=DEFAULT_PARITY): vol.In(
+        probatio.Required(CONF_SERIAL_PORT): cv.string,
+        probatio.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): cv.positive_int,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_BYTESIZE, default=DEFAULT_BYTESIZE): probatio.In(
+            [5, 6, 7, 8]
+        ),
+        probatio.Optional(CONF_PARITY, default=DEFAULT_PARITY): probatio.In(
             [
                 Parity.NONE,
                 Parity.EVEN,
@@ -56,16 +58,16 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
                 Parity.SPACE,
             ]
         ),
-        vol.Optional(CONF_STOPBITS, default=DEFAULT_STOPBITS): vol.In(
+        probatio.Optional(CONF_STOPBITS, default=DEFAULT_STOPBITS): probatio.In(
             [
                 StopBits.ONE,
                 StopBits.ONE_POINT_FIVE,
                 StopBits.TWO,
             ]
         ),
-        vol.Optional(CONF_XONXOFF, default=DEFAULT_XONXOFF): cv.boolean,
-        vol.Optional(CONF_RTSCTS, default=DEFAULT_RTSCTS): cv.boolean,
-        vol.Optional(CONF_DSRDTR, default=DEFAULT_DSRDTR): cv.boolean,
+        probatio.Optional(CONF_XONXOFF, default=DEFAULT_XONXOFF): cv.boolean,
+        probatio.Optional(CONF_RTSCTS, default=DEFAULT_RTSCTS): cv.boolean,
+        probatio.Optional(CONF_DSRDTR, default=DEFAULT_DSRDTR): cv.boolean,
     }
 )
 

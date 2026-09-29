@@ -2,8 +2,8 @@
 
 from typing import override
 
+import probatio
 import pyads
-import voluptuous as vol
 
 from homeassistant.components.select import (
     PLATFORM_SCHEMA as SELECT_PLATFORM_SCHEMA,
@@ -23,9 +23,9 @@ DEFAULT_NAME = "ADS select"
 
 PLATFORM_SCHEMA = SELECT_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ADS_VAR): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_OPTIONS): vol.All(cv.ensure_list, [cv.string]),
+        probatio.Required(CONF_ADS_VAR): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_OPTIONS): probatio.All(cv.ensure_list, [cv.string]),
     }
 )
 

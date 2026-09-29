@@ -6,7 +6,7 @@ from decimal import Decimal
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
@@ -16,6 +16,8 @@ from homeassistant.components.sensor import (
     STATE_CLASSES_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
+    SensorEntityCapabilityAttribute,
+    SensorEntityStateAttribute,
     SensorExtraStoredData,
     SensorStateClass,
 )
@@ -54,28 +56,32 @@ def validate_last_reset(val):
         val.get(CONF_LAST_RESET) is not None
         and val.get(CONF_STATE_CLASS) != SensorStateClass.TOTAL
     ):
-        raise vol.Invalid(
+        raise probatio.Invalid(
             "last_reset is only valid for template sensors with state_class 'total'"
         )
 
     return val
 
 
-SENSOR_COMMON_SCHEMA = vol.Schema(
+SENSOR_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_STATE): cv.template,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        probatio.Required(CONF_STATE): cv.template,
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 )
 
-_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(device_class=True)
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=(SensorEntityCapabilityAttribute, SensorEntityStateAttribute),
+    device_class=True,
+    allowed_attributes=(SensorEntityCapabilityAttribute.OPTIONS,),
+)
 
-SENSOR_YAML_SCHEMA = vol.All(
-    vol.Schema(
+SENSOR_YAML_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Optional(CONF_LAST_RESET): cv.template,
+            probatio.Optional(CONF_LAST_RESET): cv.template,
         }
     )
     .extend(SENSOR_COMMON_SCHEMA.schema)

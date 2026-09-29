@@ -4,6 +4,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
+from python_qube_heatpump import STATUS_CODE_MAP
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -31,20 +33,17 @@ if TYPE_CHECKING:
     from . import QubeConfigEntry
     from .coordinator import QubeCoordinator
 
-# Status code to state mapping
+# Status code to state mapping, derived from the library's status code map.
 STATUS_MAP: dict[int, str] = {
-    1: "standby",
-    2: "alarm",
-    6: "keyboard_off",
-    8: "compressor_startup",
-    9: "compressor_shutdown",
-    14: "standby",
-    15: "cooling",
-    16: "heating",
-    17: "start_fail",
-    18: "standby",
-    22: "heating_dhw",
+    code: status.value for code, status in STATUS_CODE_MAP.items()
 }
+
+# Options list for the status sensor: unique status strings from STATUS_MAP,
+# in first-seen order. StatusCode also defines ANTI_LEGIONELLA and UNKNOWN,
+# but those are not part of STATUS_CODE_MAP (only surfaced via the library's
+# resolve_status() helper, which this integration does not use), so they are
+# excluded here automatically rather than needing an explicit filter.
+STATUS_OPTIONS: list[str] = list(dict.fromkeys(STATUS_MAP.values()))
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -226,17 +225,7 @@ SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
         key="status_heatpump",
         translation_key="status_heatpump",
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "standby",
-            "alarm",
-            "keyboard_off",
-            "compressor_startup",
-            "compressor_shutdown",
-            "cooling",
-            "heating",
-            "start_fail",
-            "heating_dhw",
-        ],
+        options=STATUS_OPTIONS,
         value_fn=_status_value,
     ),
 )
@@ -248,7 +237,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Qube sensors."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
 
     async_add_entities(
         QubeSensor(coordinator, entry, description) for description in SENSOR_TYPES
