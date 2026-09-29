@@ -24,6 +24,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
+    issue_registry as ir,
 )
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.helpers.typing import UNDEFINED
@@ -85,6 +86,45 @@ async def test_get_all_entity_aliases(
 
     assert er.async_get_entity_aliases(hass, entry, allow_empty=allow_empty) == (
         expected
+    )
+
+
+async def test_get_entity_aliases_next_name_part(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the computed name follows next_name_part."""
+    mock_config = MockConfigEntry(domain="light")
+    mock_config.add_to_hass(hass)
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        name="Wall switch",
+    )
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "1234",
+        config_entry=mock_config,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name="Light",
+    )
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, aliases=[er.COMPUTED_NAME]
+    )
+
+    assert er.async_get_entity_aliases(hass, entry) == ["Wall switch Light"]
+
+    # An entity with an area of its own leaves the device out of its computed
+    # name; the friendly name does not follow next_name_part and is unaffected
+    entry = entity_registry.async_update_entity(entry.entity_id, area_id="garage")
+    assert er.async_get_entity_aliases(hass, entry) == ["Light"]
+    assert (
+        er.async_get_full_entity_name(hass, entry, use_next_name_part=False)
+        == "Wall switch Light"
     )
 
 
@@ -797,7 +837,7 @@ def test_get_available_entity_id_considers_existing_entities(
             None,
             None,
             "sensor.kitchen_lamp_temperature",
-            "sensor.garage_lamp_temperature",
+            "sensor.garage_temperature",
             id="entity_area",
         ),
         pytest.param(
@@ -1173,7 +1213,7 @@ def test_generate_entity_id_parts_entity_area(
     entry = entity_registry.async_update_entity(entry.entity_id, area_id=garage.id)
 
     new_entity_id = entity_registry.async_regenerate_entity_id(entry)
-    assert new_entity_id == "sensor.second_floor_garage_lamp_temperature"
+    assert new_entity_id == "sensor.second_floor_garage_temperature"
 
 
 def test_generate_entity_id_parent_device_part(
@@ -1235,6 +1275,99 @@ def test_generate_entity_id_parent_device_part(
         entity_id_parts=[er.EntityNamePart.DEVICE, er.EntityNamePart.ENTITY]
     )
     assert entity_registry.async_regenerate_entity_id(entry) == "sensor.outlet_1_power"
+
+
+def test_generate_entity_id_next_name_part(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test owners above the first node with an area of its own are omitted."""
+    config_entry = MockConfigEntry(domain="sensor")
+    config_entry.add_to_hass(hass)
+
+    kitchen = area_registry.async_create("Kitchen")
+    garage = area_registry.async_create("Garage")
+
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    device_registry.async_update_device(parent_device.id, area_id=kitchen.id)
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent_device.id,
+        name="Freezer",
+    )
+
+    # A child device inheriting its area keeps the full context
+    entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "1234",
+        config_entry=config_entry,
+        device_id=child_device.id,
+        has_entity_name=True,
+        object_id_base="Power",
+        original_name="Power",
+    )
+    assert entry.entity_id == "sensor.kitchen_power_strip_freezer_power"
+
+    # A child device with an area of its own leaves the parent out
+    device_registry.async_update_child_device(child_device.id, area_id=garage.id)
+    assert (
+        entity_registry.async_regenerate_entity_id(entry)
+        == "sensor.garage_freezer_power"
+    )
+
+    # An entity with an area of its own leaves all owners out
+    entry = entity_registry.async_update_entity(entry.entity_id, area_id=garage.id)
+    assert entity_registry.async_regenerate_entity_id(entry) == "sensor.garage_power"
+
+    # A manually set format follows the same rule
+    entity_registry.async_update_settings(
+        entity_id_parts=[
+            er.EntityNamePart.AREA,
+            er.EntityNamePart.PARENT_DEVICE,
+            er.EntityNamePart.DEVICE,
+            er.EntityNamePart.ENTITY,
+        ]
+    )
+    assert entity_registry.async_regenerate_entity_id(entry) == "sensor.garage_power"
+
+
+def test_next_name_part(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the context source of entities."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+
+    # An entity without a device or an area of its own has no context
+    entry = entity_registry.async_get_or_create("light", "hue", "1234")
+    assert entry.next_name_part is None
+    assert entry.as_partial_dict["next_name_part"] is None
+
+    # An entity on a device continues to the device
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("hue", "abcd")},
+        name="Lamp",
+    )
+    entry = entity_registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=config_entry, device_id=device_entry.id
+    )
+    assert entry.next_name_part is dr.NextNamePart.DEVICE
+
+    # An entity with an area of its own continues to the area
+    entry = entity_registry.async_update_entity(entry.entity_id, area_id="kitchen")
+    assert entry.next_name_part is dr.NextNamePart.AREA
+    assert entry.as_partial_dict["next_name_part"] is dr.NextNamePart.AREA
 
 
 def test_regenerate_entity_id_after_settings_change(
@@ -2811,6 +2944,215 @@ async def test_update_entity(
             == updated_entry.entity_id
         )
         entry = updated_entry
+
+
+async def test_update_entity_own_area_without_own_name(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an entity without a name of its own cannot get an area of its own."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        name="Device",
+    )
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+    )
+
+    with pytest.raises(ValueError, match="without a name of its own"):
+        entity_registry.async_update_entity(entry.entity_id, area_id="kitchen")
+    assert entity_registry.async_get(entry.entity_id).area_id is None
+
+    # A name equal to the device name is not a name of its own
+    with pytest.raises(ValueError, match="without a name of its own"):
+        entity_registry.async_update_entity(
+            entry.entity_id, area_id="kitchen", name="Device"
+        )
+
+    # Naming the entity in the same update makes the area valid
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, area_id="kitchen", name="Light"
+    )
+    assert entry.area_id == "kitchen"
+
+    # Clearing the name would leave the area without a name
+    with pytest.raises(ValueError, match="without a name of its own"):
+        entity_registry.async_update_entity(entry.entity_id, name=None)
+    assert entity_registry.async_get(entry.entity_id).name == "Light"
+
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, area_id=None, name=None
+    )
+    assert entry.area_id is None
+
+    # Without a device there is no area to inherit
+    entry = entity_registry.async_get_or_create(
+        "light", "hue", "9012", has_entity_name=True
+    )
+    entry = entity_registry.async_update_entity(entry.entity_id, area_id="kitchen")
+    assert entry.area_id == "kitchen"
+
+    # A legacy name that is just the device name is not a name of its own
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "3456",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        original_name="Device",
+    )
+    with pytest.raises(ValueError, match="without a name of its own"):
+        entity_registry.async_update_entity(entry.entity_id, area_id="kitchen")
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "3456",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        original_name="Device Light",
+    )
+    entry = entity_registry.async_update_entity(entry.entity_id, area_id="kitchen")
+    assert entry.area_id == "kitchen"
+
+
+async def test_entity_own_area_without_own_name_issue(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a repair issue tracks a device's main entity with an area of its own."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name="Light",
+    )
+    entity_registry.async_update_entity(entry.entity_id, area_id="kitchen")
+    issue_id = f"entity_own_area_without_own_name_{entry.id}"
+    assert issue_registry.async_get_issue("homeassistant", issue_id) is None
+
+    # The integration dropping the name is not rejected but reported
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name=None,
+    )
+    assert entry.original_name is None
+    issue = issue_registry.async_get_issue("homeassistant", issue_id)
+    assert issue is not None
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.translation_key == "entity_own_area_without_own_name"
+    assert issue.translation_placeholders == {
+        "entity_id": entry.entity_id,
+        "entity_settings_url": (
+            f"/config/devices/device/{device_entry.id}"
+            f"?more-info-entity-id={entry.entity_id}&more-info-view=settings"
+        ),
+    }
+
+    # A rename updates the issue and keeps its ignored state
+    issue_registry.async_ignore("homeassistant", issue_id, True)
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="light.renamed"
+    )
+    issue = issue_registry.async_get_issue("homeassistant", issue_id)
+    assert issue is not None
+    assert issue.dismissed_version is not None
+    assert issue.translation_placeholders["entity_id"] == "light.renamed"
+
+    # Removing the area resolves it
+    entity_registry.async_update_entity(entry.entity_id, area_id=None)
+    assert issue_registry.async_get_issue("homeassistant", issue_id) is None
+
+    # Removing the entity resolves it as well
+    entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name="Light",
+    )
+    entity_registry.async_update_entity(entry.entity_id, area_id="kitchen")
+    entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name=None,
+    )
+    assert issue_registry.async_get_issue("homeassistant", issue_id) is not None
+    entity_registry.async_remove(entry.entity_id)
+    assert issue_registry.async_get_issue("homeassistant", issue_id) is None
+
+
+async def test_entity_own_area_without_own_name_issue_on_start(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test main entities with an area of their own are reported on start."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name="Light",
+    )
+    entity_registry.async_update_entity(entry.entity_id, area_id="kitchen")
+    entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name=None,
+    )
+    issue_id = f"entity_own_area_without_own_name_{entry.id}"
+    # The issue is not persistent, so a restart drops it
+    issue_registry.async_delete("homeassistant", issue_id)
+    assert issue_registry.async_get_issue("homeassistant", issue_id) is None
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue("homeassistant", issue_id) is not None
 
 
 async def test_update_entity_recalculates_original_name_unprefixed(
@@ -6356,6 +6698,7 @@ async def test_async_get_effective_area_id(
         "outlet_1",
         config_entry=config_entry,
         device_id=child_device.id,
+        original_name="Power",
     )
 
     # The entity inherits the child device's effective area (the parent's area)
