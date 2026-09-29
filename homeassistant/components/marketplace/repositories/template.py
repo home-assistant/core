@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, override
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.template import MAX_CUSTOM_TEMPLATE_SIZE
 
 from ..enums import MarketplaceSignal, RepositoryCategory
 from ..exceptions import MarketplaceError
@@ -64,6 +65,13 @@ class TemplateRepository(Repository):
         # hacs.json of the version being written names it, not the one validated
         self._check_file_name(self._file_name_to_write)
 
+        # A ZIP extracts all of it into the folder the templates share
+        if self.repository_manifest.zip_release:
+            raise MarketplaceError(
+                f"{self.string} A template is one file, it can not come from a"
+                " ZIP release"
+            )
+
         # The folder is shared, a template file belongs to one repository
         for repository in self.marketplace.repositories.list_installed:
             if (
@@ -122,8 +130,15 @@ class TemplateRepository(Repository):
 
         def _check() -> None:
             path = resolve_in_directory(self.localpath, self._file_name_to_write)
+            content = path.read_bytes()
+            # Core skips a larger one without a word
+            if len(content) > MAX_CUSTOM_TEMPLATE_SIZE:
+                raise MarketplaceError(
+                    f"{path.name} is larger than the"
+                    f" {MAX_CUSTOM_TEMPLATE_SIZE} bytes Home Assistant reads"
+                )
             try:
-                path.read_bytes().decode("utf-8")
+                content.decode("utf-8")
             except UnicodeDecodeError as exception:
                 raise MarketplaceError(
                     f"{path.name} is not UTF-8 encoded: {exception}"

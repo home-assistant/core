@@ -1,5 +1,6 @@
 """Repository."""
 
+import asyncio
 from asyncio import Lock, sleep
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
@@ -462,6 +463,8 @@ class Repository:
         self.logger = LOGGER
         # Two installs of one repository would write over each other's files
         self._install_lock = Lock()
+        # What the files downloaded one by one may still add up to
+        self._download_budget = MAX_DOWNLOAD_SIZE
         self._replace_built_in_confirmed = False
 
     @override
@@ -803,9 +806,21 @@ class Repository:
         await self._async_download_files(contents)
 
     async def _async_download_files(self, contents: list[FileInformation]) -> None:
-        """Download the files of the repository content."""
+        """Download the files of the repository content.
+
+        It is also the way around an archive over the limits, so it has the
+        same limits.
+        """
+        wanted = self._wanted_contents(contents)
+        if len(wanted) > MAX_ARCHIVE_MEMBERS:
+            raise MarketplaceError(
+                f"The content holds {len(wanted)} files, "
+                f"the limit is {MAX_ARCHIVE_MEMBERS}"
+            )
+
+        self._download_budget = MAX_DOWNLOAD_SIZE
         download_queue = QueueManager(hass=self.marketplace.hass)
-        for content in self._wanted_contents(contents):
+        for content in wanted:
             download_queue.add(self.dowload_repository_content(content))
 
         await download_queue.execute()
@@ -1255,9 +1270,12 @@ class Repository:
                 await self.marketplace.hass.async_add_executor_job(
                     persistent_directory.restore
                 )
-        except Exception as exception:
-            # Whatever broke the install, the content that was there goes back
-            await self.marketplace.hass.async_add_executor_job(_restore_backups)
+        except (Exception, asyncio.CancelledError) as exception:
+            # Whatever broke the install, the content that was there goes back,
+            # also when it was cancelled
+            await asyncio.shield(
+                self.marketplace.hass.async_add_executor_job(_restore_backups)
+            )
             if isinstance(exception, OSError):
                 raise MarketplaceError(
                     f"Could not write the downloaded content: {exception}"
@@ -1642,6 +1660,14 @@ class Repository:
 
         if filecontent is None:
             self.validate.errors.append(f"[{content.name}] was not downloaded.")
+            return
+
+        self._download_budget -= len(filecontent)
+        if self._download_budget < 0:
+            self.validate.errors.append(
+                f"[{content.name}] was not written, the content is over the "
+                f"limit of {MAX_DOWNLOAD_SIZE} bytes"
+            )
             return
 
         await self._async_write_file(content, filecontent)

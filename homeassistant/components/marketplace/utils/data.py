@@ -1,6 +1,7 @@
 """Data handler for the Marketplace."""
 
 import asyncio
+import contextlib
 from datetime import UTC, datetime
 import os
 from typing import Any
@@ -70,6 +71,8 @@ class MarketplaceData:
         self.content: dict[str, Any] = {}
         # The ids of installs that wait for a restart, known while restoring
         self._waiting_for_restart: set[str] = set()
+        # Written back as they were, dropping them would lose track of installs
+        self._unrestorable: dict[str, dict[str, Any]] = {}
 
     async def async_force_write(self, _: Event | None = None) -> None:
         """Force write."""
@@ -115,6 +118,8 @@ class MarketplaceData:
         for repository in self.marketplace.repositories.list_all:
             if repository.data.category in self.marketplace.common.categories:
                 self.async_store_repository_data(repository)
+        for entry, repo_data in self._unrestorable.items():
+            self.content.setdefault(entry, repo_data)
 
         await async_save_to_storage(self.marketplace.hass, "repositories", self.content)
         for event in (MarketplaceSignal.REPOSITORY, MarketplaceSignal.CONFIG):
@@ -275,6 +280,7 @@ class MarketplaceData:
                 entry,
                 exc_info=True,
             )
+            self._unrestorable[entry] = repo_data
             if repository := self.marketplace.repositories.get_by_id(entry):
                 self.marketplace.repositories.unregister(repository)
 
@@ -417,13 +423,18 @@ class MarketplaceData:
                     ".yaml", ""
                 )
 
+        # Only decides when catalog data is taken over again, without it right away
         if last_fetched := repository_data.get("last_fetched"):
-            repository.data.last_fetched = datetime.fromtimestamp(last_fetched, UTC)
+            with contextlib.suppress(TypeError, ValueError, OverflowError):
+                repository.data.last_fetched = datetime.fromtimestamp(last_fetched, UTC)
 
-        repository.repository_manifest = RepositoryManifest.from_dict(
+        manifest = (
             repository_data.get("manifest")
             or repository_data.get("repository_manifest")
             or {}
+        )
+        repository.repository_manifest = RepositoryManifest.from_dict(
+            manifest if isinstance(manifest, dict) else {}
         )
 
         # Stored before file names were, a template names its file in hacs.json

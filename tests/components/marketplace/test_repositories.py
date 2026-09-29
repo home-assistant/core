@@ -1840,6 +1840,32 @@ async def test_plugin_directory_owned_by_another_repository(
         await repository.async_pre_install()
 
 
+@pytest.mark.parametrize(
+    ("key", "value", "attribute", "default"),
+    [
+        pytest.param("codeowners", [42], "authors", [], id="codeowners_numbers"),
+        pytest.param("codeowners", "@owner", "authors", [], id="codeowners_string"),
+        pytest.param("name", 42, "manifest_name", None, id="name_number"),
+        pytest.param(
+            "config_flow", "no", "config_flow", False, id="config_flow_string"
+        ),
+    ],
+)
+def test_integration_manifest_values_of_the_wrong_type(
+    marketplace: MarketplaceManager,
+    key: str,
+    value: Any,
+    attribute: str,
+    default: Any,
+) -> None:
+    """Test a manifest.json value of the wrong type is left out."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+
+    repository._use_integration_manifest({"domain": "example", key: value})
+
+    assert getattr(repository.data, attribute) == default
+
+
 async def test_integration_manifest_missing_file(
     marketplace: MarketplaceManager,
 ) -> None:
@@ -2371,12 +2397,17 @@ async def test_install_from_the_catalog_archive_too_large(
     aioclient_mock: AiohttpClientMocker,
     config_dir: Path,
 ) -> None:
-    """Test an archive over the size limit is not extracted."""
+    """Test an archive over the limits is not extracted.
+
+    The limits hold for the whole repository, the few files of the
+    integration in it still come in one by one.
+    """
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     aioclient_mock.mock_calls.clear()
 
     with patch(
-        "homeassistant.components.marketplace.repositories.base.MAX_DOWNLOAD_SIZE", 1
+        "homeassistant.components.marketplace.repositories.base.MAX_ARCHIVE_MEMBERS",
+        2,
     ):
         assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
 
@@ -2715,6 +2746,20 @@ async def test_theme_with_content_in_the_root_is_valid(
 
     with patch.object(repository, "common_validate", AsyncMock()):
         assert await repository.validate_repository()
+
+
+def test_resource_url_keeps_the_file_name_whole(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a file name with URL characters does not lose its end to a fragment."""
+    repository = PluginRepository(marketplace, "owner/card")
+    repository.data.id = "8004"
+    repository.data.file_name = "card#1?.js"
+    repository.data.installed_version = "1.0.0"
+
+    assert repository.generate_dashboard_resource_url().startswith(
+        "/local/community/card/card%231%3F.js?v="
+    )
 
 
 @pytest.mark.parametrize(

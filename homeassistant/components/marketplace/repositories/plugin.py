@@ -321,8 +321,9 @@ class PluginRepository(Repository):
                 "%s have defined an invalid file name %s", self.string, filename
             )
             filename = filename.split("/")[-1]
+        # Quoted, a character like # would cut the rest of the name off the path
         return (
-            f"{self.generate_dashboard_resource_namespace()}/{filename}"
+            f"{self.generate_dashboard_resource_namespace()}/{quote(filename)}"
             f"?v={self.generate_dashboard_resource_tag()}"
         )
 

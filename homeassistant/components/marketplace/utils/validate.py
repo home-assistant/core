@@ -69,6 +69,15 @@ REPOSITORY_MANIFEST_VALUES = {
 }
 
 
+# What the Marketplace reads from manifest.json besides the domain, a value of
+# another type is left out
+INTEGRATION_MANIFEST_VALUES = {
+    "codeowners": probatio.Schema([str]),
+    "config_flow": probatio.Schema(bool),
+    "name": probatio.Schema(str),
+}
+
+
 REPOSITORY_MANIFEST_JSON_SCHEMA = probatio.Schema(
     {
         probatio.Optional("content_in_root"): bool,

@@ -98,12 +98,14 @@ def test_backups_do_not_share_a_directory(
 
 
 def test_nothing_to_back_up(marketplace: MarketplaceManager, config_dir: Path) -> None:
-    """Test a path that is not there is left alone."""
+    """Test a path that is not there is only marked as a first install."""
     backup = Backup(marketplace, config_dir / "missing")
 
     backup.create()
 
-    assert not backup.backup_path.exists()
+    assert backup.is_first_install
+    assert not backup.has_content
+    assert not (config_dir / "missing").exists()
 
 
 @pytest.mark.parametrize(
@@ -183,6 +185,24 @@ def test_restore_after_the_persistent_directory_moved_in(
 
     assert (target / "__init__.py").read_text() == "installed"
     assert (target / "config" / "settings.yaml").read_text() == "mine"
+
+
+def test_restore_removes_an_unfinished_first_install(
+    marketplace: MarketplaceManager, config_dir: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a first install that never finished leaves nothing behind."""
+    target = config_dir / "custom_components" / "example"
+    Backup(marketplace, target).create()
+
+    # Part of it is written, then Home Assistant stops
+    target.mkdir(parents=True)
+    (target / "__init__.py").write_text("half of it")
+
+    assert not restore_interrupted_backups(marketplace)
+
+    assert not target.exists()
+    assert list(_backup_root(config_dir).iterdir()) == []
+    assert "a first install of it did not finish" in caplog.text
 
 
 def test_restore_removes_empty_backups(

@@ -23,6 +23,8 @@ BACKUP_DIRECTORY = "marketplace_backups"
 # Holds the path the backed up content belongs to, for restoring after a restart.
 TARGET_FILE = "target"
 CONTENT_NAME = "content"
+# Marks a first install, there was nothing to keep, only what it writes to remove
+ABSENT_FILE = "absent"
 
 
 def _backup_root(marketplace: MarketplaceManager) -> Path:
@@ -54,8 +56,7 @@ class Backup:
 
         Raises when that fails, the content must not be replaced without one.
         """
-        if not self.local_path.exists() and not self.local_path.is_symlink():
-            return
+        absent = not self.local_path.exists() and not self.local_path.is_symlink()
 
         if not is_safe(self.marketplace, self.local_path):
             raise MarketplaceError(
@@ -68,7 +69,10 @@ class Backup:
             # backup behind, never content nobody knows the place of. Written
             # whole or not at all, half a path would restore to the wrong place.
             write_utf8_file_atomic(str(self.backup_path / TARGET_FILE), self._target())
-            shutil.move(self.local_path, self.content_path)
+            if absent:
+                (self.backup_path / ABSENT_FILE).touch()
+            else:
+                shutil.move(self.local_path, self.content_path)
         except (OSError, WriteError) as exception:
             shutil.rmtree(self.backup_path, ignore_errors=True)
             raise MarketplaceError(
@@ -101,6 +105,22 @@ class Backup:
 
         shutil.move(self.content_path, self.local_path)
         LOGGER.debug("Restored %s from backup %s", self.local_path, self.backup_path)
+
+    @property
+    def is_first_install(self) -> bool:
+        """Return if nothing was there to back up, the install was a first one."""
+        return (self.backup_path / ABSENT_FILE).exists()
+
+    def remove_first_install(self) -> bool:
+        """Remove what a first install wrote, return if there was anything."""
+        if not os.path.lexists(self.local_path):
+            return False
+
+        if self.local_path.is_dir() and not self.local_path.is_symlink():
+            shutil.rmtree(self.local_path)
+        else:
+            self.local_path.unlink()
+        return True
 
     @property
     def has_content(self) -> bool:
@@ -186,6 +206,11 @@ def restore_interrupted_backups(marketplace: MarketplaceManager) -> bool:
                 restored = True
                 LOGGER.warning(
                     "Restored %s, an install replacing it did not finish",
+                    backup.local_path,
+                )
+            elif backup.is_first_install and backup.remove_first_install():
+                LOGGER.warning(
+                    "Removed %s, a first install of it did not finish",
                     backup.local_path,
                 )
             backup.cleanup()

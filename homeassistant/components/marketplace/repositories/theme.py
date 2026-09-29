@@ -13,6 +13,7 @@ from homeassistant.components.frontend import (
     DOMAIN as FRONTEND_DOMAIN,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.yaml import load_yaml
 
 from ..enums import MarketplaceSignal, RepositoryCategory
 from ..exceptions import MarketplaceError
@@ -81,9 +82,16 @@ class ThemeRepository(Repository):
 
         def _check() -> None:
             for theme in Path(self.content.path.local).rglob("*.yaml"):
+                # The plain loader refuses the tags, the loader of Home Assistant
+                # reads it the way the include in configuration.yaml does
                 try:
-                    themes = yaml.safe_load(theme.read_text(encoding="utf-8"))
-                except (UnicodeDecodeError, yaml.YAMLError) as exception:
+                    yaml.safe_load(theme.read_text(encoding="utf-8"))
+                    themes = load_yaml(theme)
+                except (
+                    HomeAssistantError,
+                    UnicodeDecodeError,
+                    yaml.YAMLError,
+                ) as exception:
                     raise MarketplaceError(
                         f"{theme.name} is not valid YAML: {exception}"
                     ) from exception

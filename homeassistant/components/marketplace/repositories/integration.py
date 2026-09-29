@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 from awesomeversion.exceptions import AwesomeVersionException
+import probatio
 
 from homeassistant import components
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -30,7 +31,7 @@ from ..utils.filters import get_first_directory_in_directory
 from ..utils.json import json_loads_object
 from ..utils.logger import LOGGER
 from ..utils.url import github_raw_file, ref_version
-from ..utils.validate import VALID_DOMAIN
+from ..utils.validate import INTEGRATION_MANIFEST_VALUES, VALID_DOMAIN
 from .base import Repository
 
 if TYPE_CHECKING:
@@ -47,6 +48,20 @@ def _validated_domain(domain: Any) -> str:
         raise MarketplaceError(f"'{domain}' is not a valid integration domain")
 
     return domain
+
+
+def _manifest_value(manifest: dict[str, Any], key: str, default: Any) -> Any:
+    """Return a value of manifest.json, the default when it has the wrong type."""
+    if key not in manifest:
+        return default
+
+    try:
+        return INTEGRATION_MANIFEST_VALUES[key](manifest[key])
+    except probatio.Invalid:
+        LOGGER.warning(
+            "Ignoring %s in manifest.json, %r is not valid", key, manifest[key]
+        )
+        return default
 
 
 # The version formats the loader accepts for a custom integration
@@ -285,10 +300,10 @@ class IntegrationRepository(Repository):
                 )
 
             self.integration_manifest = manifest
-            self.data.authors = manifest.get("codeowners", [])
+            self.data.authors = _manifest_value(manifest, "codeowners", [])
             self.data.domain = domain
-            self.data.manifest_name = manifest.get("name")
-            self.data.config_flow = manifest.get("config_flow", False)
+            self.data.manifest_name = _manifest_value(manifest, "name", None)
+            self.data.config_flow = _manifest_value(manifest, "config_flow", False)
 
         except KeyError as exception:
             self.validate.errors.append(

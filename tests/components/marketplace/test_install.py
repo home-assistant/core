@@ -43,6 +43,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.template import MAX_CUSTOM_TEMPLATE_SIZE
 from homeassistant.loader import Integration
 
 from . import mocked_response
@@ -236,6 +237,42 @@ def test_archive_extracts_only_the_named_directory(tmp_path: Path) -> None:
     assert (tmp_path / "__init__.py").read_text() == "foo code"
     assert (tmp_path / "bar" / "__init__.py").read_text() == "correct submodule"
     assert sorted(path.name for path in tmp_path.iterdir()) == ["__init__.py", "bar"]
+
+
+async def test_file_by_file_download_has_the_archive_limits(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test the way around a capped archive is capped the same way."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_PLUGIN_ID)
+    repository.content.path.remote = ""
+    contents = [
+        FileInformation(f"https://example.com/{name}", name, name)
+        for name in ("a.js", "b.js", "c.js")
+    ]
+
+    with (
+        patch(
+            "homeassistant.components.marketplace.repositories.base.MAX_ARCHIVE_MEMBERS",
+            2,
+        ),
+        pytest.raises(MarketplaceError, match="files, the limit is 2"),
+    ):
+        await repository._async_download_files(contents)
+
+    with (
+        patch(
+            "homeassistant.components.marketplace.repositories.base.MAX_DOWNLOAD_SIZE",
+            100,
+        ),
+        patch.object(
+            marketplace, "async_download_file", AsyncMock(return_value=b"x" * 60)
+        ),
+        patch.object(repository, "_async_write_file") as write,
+    ):
+        await repository._async_download_files(contents)
+
+    assert write.call_count == 1
+    assert any("limit" in error for error in repository.validate.errors)
 
 
 def test_archive_with_too_many_members_is_refused() -> None:
@@ -508,6 +545,7 @@ async def test_persistent_directory_has_to_be_a_directory_inside(
         pytest.param(
             "Example: !include ../../secrets.yaml\n", "!include", id="include"
         ),
+        pytest.param("&x [*x]\n", "recursive", id="recursive_alias"),
         pytest.param(
             "Example:\n  primary-color: café\n".encode("cp1252"),
             "not valid YAML",
@@ -545,6 +583,24 @@ async def test_invalid_theme_keeps_the_configuration_loadable(
 
     assert await async_hass_config_yaml(hass)
     assert (config_dir / "themes/example/example.yaml").read_text() != theme
+
+
+async def test_template_larger_than_core_reads_is_refused(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a template Core would skip is not reported as installed."""
+    repository = TemplateRepository(marketplace, "owner/template")
+    repository.repository_manifest.filename = "large.jinja"
+
+    async def write_large_template() -> None:
+        path = Path(repository.localpath)
+        path.mkdir(parents=True, exist_ok=True)
+        (path / "large.jinja").write_bytes(b"x" * (MAX_CUSTOM_TEMPLATE_SIZE + 1))
+
+    with pytest.raises(MarketplaceError, match="larger than"):
+        await repository._async_write_content(write_large_template)
+
+    assert not (Path(repository.localpath) / "large.jinja").exists()
 
 
 async def test_template_that_is_not_utf8_keeps_the_old_one(
@@ -825,6 +881,43 @@ async def test_plugin_without_a_resource_is_not_written(
 
     download.assert_not_called()
     assert not Path(repository.localpath).exists()
+
+
+async def test_template_from_a_zip_release_is_refused(
+    marketplace: MarketplaceManager, config_dir: Path
+) -> None:
+    """Test a release ZIP can not spread files over the shared template folder."""
+    repository = TemplateRepository(marketplace, "owner/template")
+    repository.data.id = "8008"
+    repository.repository_manifest.filename = "own.jinja"
+    repository.repository_manifest.zip_release = True
+
+    download = AsyncMock()
+    with pytest.raises(MarketplaceError, match="ZIP release"):
+        await repository._async_write_content(download)
+
+    download.assert_not_called()
+    assert not (config_dir / "custom_templates").exists()
+
+
+async def test_cancelled_first_install_leaves_nothing(
+    marketplace: MarketplaceManager, config_dir: Path
+) -> None:
+    """Test a first install that is cancelled halfway removes what it wrote."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_PLUGIN_ID)
+    repository.content.path.remote = ""
+    local = Path(repository.localpath)
+
+    async def cancelled_download() -> None:
+        local.mkdir(parents=True)
+        (local / "half.js").write_text("half of it")
+        raise asyncio.CancelledError
+
+    with pytest.raises(asyncio.CancelledError):
+        await repository._async_write_content(cancelled_download)
+
+    assert not local.exists()
+    assert list((config_dir / ".storage" / "marketplace_backups").iterdir()) == []
 
 
 async def test_failed_persistent_directory_restore_keeps_the_old_install(

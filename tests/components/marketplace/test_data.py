@@ -164,10 +164,6 @@ async def test_restore_skips_placeholder_repository(
         pytest.param(None, id="null"),
         pytest.param("an entry", id="string"),
         pytest.param({"category": "theme"}, id="no_full_name"),
-        pytest.param(
-            {"category": "theme", "full_name": "owner/theme", "last_fetched": 1e20},
-            id="bad_timestamp",
-        ),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -215,6 +211,67 @@ async def test_restore_names_the_legacy_file_it_could_not_read(
 
     assert "/config/.storage/hacs.hacs" in caplog.text
     assert ".storage/marketplace.common" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("key", "value"),
+    [
+        pytest.param("last_fetched", 1e20, id="timestamp_out_of_range"),
+        pytest.param("last_fetched", "yesterday", id="timestamp_not_a_number"),
+        pytest.param("manifest", ["a list"], id="manifest_not_an_object"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_restore_an_entry_with_an_unreadable_field(
+    marketplace: MarketplaceManager, config_dir: Path, key: str, value: Any
+) -> None:
+    """Test a field that can not be read does not cost the install its record."""
+    create_install_folders(config_dir, RESTORED_REPOSITORIES)
+    data = MarketplaceData(marketplace)
+    stored = {
+        entry: dict(repo_data) for entry, repo_data in RESTORED_REPOSITORIES.items()
+    }
+    stored["1296269"][key] = value
+
+    async def mocked_load(hass: HomeAssistant, storage_key: str) -> Any:
+        """Return the stored repositories, one with a field that is broken."""
+        return stored if storage_key == "repositories" else {}
+
+    with patch(
+        "homeassistant.components.marketplace.utils.data.async_load_from_storage",
+        side_effect=mocked_load,
+    ):
+        assert await data.restore()
+
+    assert marketplace.repositories.get_by_id("1296269").data.installed is True
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_unrestorable_entry_is_kept_in_storage(
+    hass: HomeAssistant, marketplace: MarketplaceManager, config_dir: Path
+) -> None:
+    """Test an entry that can not be restored is written back as it was."""
+    create_install_folders(config_dir, RESTORED_REPOSITORIES)
+    data = MarketplaceData(marketplace)
+    restore = data.async_restore_repository
+
+    def restore_or_fail(entry: str, repository_data: dict[str, Any]) -> None:
+        if entry == "1296269":
+            raise ValueError("Something in it can not be read")
+        restore(entry, repository_data)
+
+    with (
+        patch(
+            "homeassistant.components.marketplace.utils.data.async_load_from_storage",
+            side_effect=_mocked_repositories,
+        ),
+        patch.object(data, "async_restore_repository", restore_or_fail),
+    ):
+        assert await data.restore()
+    await data.async_write()
+
+    stored = await async_load_from_storage(hass, "repositories")
+    assert stored["1296269"] == RESTORED_REPOSITORIES["1296269"]
 
 
 @pytest.mark.parametrize(
