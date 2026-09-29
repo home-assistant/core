@@ -528,7 +528,7 @@ class AnthropicDeltaStream:
         stream: AsyncStream[MessageStreamEvent],
     ) -> None:
         """Initialize the delta stream."""
-        if stream is None or not hasattr(stream, "__aiter__"):
+        if not hasattr(stream, "__aiter__"):
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="unexpected_stream_object"
             )
