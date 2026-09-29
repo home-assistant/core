@@ -209,17 +209,9 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
 
     Cloud updates are driven by ``live_status`` stream events; the REST update
     method is retained for the deterministic setup cold read and manual
-    recovery only. Success/error state is therefore stream-owned. A paired site
-    additionally polls its LAN gateway on an independent timer (never via
-    ``update_interval``, so a burst of stream pushes cannot postpone it) and
-    overlays the locally-owned keys onto the cloud document via
-    ``merge_live_status``, re-running the merge on every update from either side
-    so neither cadence can transiently clobber the other's keys. A stream push
-    publishes through ``async_set_updated_data`` so the stream owns the
-    coordinator's success/error state and restores it on recovery, while the
-    local poll publishes with ``async_update_listeners`` and deliberately never
-    touches that state; a key the gateway does not serve, or a failed poll, falls
-    back to the cloud value.
+    recovery only, so success/error state is stream-owned. A paired site also
+    polls its LAN gateway on an independent timer and overlays the locally-owned
+    keys via ``merge_live_status``; that poll never touches success/error state.
     """
 
     config_entry: TeslemetryConfigEntry
@@ -374,34 +366,11 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
     The flattened coordinator view is recomposed from both whenever either
     changes, so a removed field or a cleared tariff never lingers. Cloud updates
     are driven by stream events; the REST update method is retained for the
-    deterministic setup cold read and manual recovery only. Success/error state
-    is therefore stream-owned, which is what the cloud-only site-info and tariff
-    entities key their availability off. A paired site additionally polls its LAN
-    gateway's ``config.json`` on an independent timer (never via
-    ``update_interval``) and overlays the locally-owned keys onto the composed
-    cloud view via ``merge_site_info``, re-running the merge on every update from
-    either side. That poll publishes directly with ``async_update_listeners``
-    rather than through the update path, so it never touches the stream-owned
-    success/error state; a key the gateway does not serve, or a failed poll,
-    falls back to the cloud value.
-
-    Only the keys in ``LOCAL_SITE_INFO_KEYS`` are locally owned. A command on one
-    of those keys writes straight into ``_local_config`` via
-    :meth:`async_set_local_value`, so the entity shows the new value immediately
-    rather than waiting up to :data:`ENERGY_CONFIG_INTERVAL` for the next poll to
-    confirm it; a command on any other key is cloud-owned and must not touch this
-    cache at all. Because the LAN read is awaited, a poll already in flight when a
-    command lands would otherwise resolve with its pre-command snapshot and
-    overwrite the value the command just set; :meth:`_async_local_poll` detects
-    that with a generation counter and discards that stale read rather than
-    publishing it, leaving the command's value in place until the next,
-    uncontended poll confirms it.
-
-    A command on a cloud-owned key is optimistically cached separately, in
-    ``_cloud_optimistic``, so that neither a LAN poll nor a cloud push that
-    doesn't happen to carry that key can recompose it back to unknown before
-    real cloud data arrives. :meth:`_merged` drops a key from that cache as
-    soon as the composed cloud view actually provides it.
+    deterministic setup cold read and manual recovery only, so success/error
+    state is stream-owned and keys the cloud-only entities' availability. A
+    paired site also polls its LAN ``config.json`` on an independent timer and
+    overlays the ``LOCAL_SITE_INFO_KEYS`` via ``merge_site_info``; that poll
+    never touches success/error state.
     """
 
     config_entry: TeslemetryConfigEntry
