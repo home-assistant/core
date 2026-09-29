@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
+    STATE_UNKNOWN,
     EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -398,22 +399,23 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
 
     @callback
     def _numeric_value_or_none(self, value: Any) -> Any:
-        """Return None instead of a value a numeric sensor cannot hold.
+        """Return None for a value a numeric sensor cannot hold.
 
-        A template rendering `none` gives the string "None", which means no
-        value. Any other non-numeric value is logged once until the sensor
-        receives a valid value again, instead of raising on every update.
+        "None" (a template rendering `none`) and "unknown" mean no value and
+        are not logged. Any other non-numeric value is logged once, until the
+        sensor receives a valid value again.
         """
         if not isinstance(value, str) or not self._numeric_state_expected:
             return value
-        if value == "None":
+        if value in ("None", STATE_UNKNOWN):
             return None
         try:
-            if isfinite(float(value)):
-                self._non_numeric_value_logged = False
-                return value
+            is_number = isfinite(float(value))
         except ValueError:
-            pass
+            is_number = False
+        if is_number:
+            self._non_numeric_value_logged = False
+            return value
         if not self._non_numeric_value_logged:
             self._non_numeric_value_logged = True
             logging.getLogger(

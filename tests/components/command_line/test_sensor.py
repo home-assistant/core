@@ -10,10 +10,7 @@ import pytest
 
 from homeassistant import setup
 from homeassistant.components.command_line import DOMAIN
-from homeassistant.components.command_line.sensor import (
-    CommandSensor,
-    CommandSensorData,
-)
+from homeassistant.components.command_line.sensor import CommandSensor
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
@@ -1038,7 +1035,9 @@ async def test_availability_blocks_value_template(
     ("value_template", "log_count"),
     [
         pytest.param("{{ none }}", 0, id="none"),
+        pytest.param("{{ 'unknown' }}", 0, id="unknown"),
         pytest.param("{{ 'not_a_number' }}", 1, id="text"),
+        pytest.param("{{ 'inf' }}", 1, id="non_finite"),
     ],
 )
 async def test_non_numeric_value_for_numeric_sensor(
@@ -1095,12 +1094,7 @@ async def test_numeric_value_after_non_numeric_value(
 ) -> None:
     """Test the sensor recovers, and a later bad value is logged again."""
     await setup.async_setup_component(hass, HA_DOMAIN, {})
-    values = iter(["not_a_number", "5", "not_a_number"])
-
-    async def _next_value(data: CommandSensorData) -> None:
-        data.value = next(values)
-
-    with patch.object(CommandSensorData, "async_update", _next_value):
+    with mock_asyncio_subprocess_run(b"not_a_number"):
         await setup.async_setup_component(
             hass,
             DOMAIN,
@@ -1117,22 +1111,24 @@ async def test_numeric_value_after_non_numeric_value(
             },
         )
         await hass.async_block_till_done()
-        assert hass.states.get("sensor.test").state == STATE_UNKNOWN
-        assert caplog.text.count("which is not a number") == 1
+    assert hass.states.get("sensor.test").state == STATE_UNKNOWN
+    assert caplog.text.count("which is not a number") == 1
 
+    with mock_asyncio_subprocess_run(b"5"):
         await hass.services.async_call(
             HA_DOMAIN,
             SERVICE_UPDATE_ENTITY,
             {ATTR_ENTITY_ID: ["sensor.test"]},
             blocking=True,
         )
-        assert hass.states.get("sensor.test").state == "5"
+    assert hass.states.get("sensor.test").state == "5"
 
+    with mock_asyncio_subprocess_run(b"not_a_number"):
         await hass.services.async_call(
             HA_DOMAIN,
             SERVICE_UPDATE_ENTITY,
             {ATTR_ENTITY_ID: ["sensor.test"]},
             blocking=True,
         )
-        assert hass.states.get("sensor.test").state == STATE_UNKNOWN
-        assert caplog.text.count("which is not a number") == 2
+    assert hass.states.get("sensor.test").state == STATE_UNKNOWN
+    assert caplog.text.count("which is not a number") == 2
