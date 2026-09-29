@@ -167,7 +167,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             manager.open_watcher()
         except OSError as err:
             raise ConfigEntryNotReady(
-                f"Unable to watch {DEVINPUT} for input devices: {err}"
+                # The error names the path, which may be the by-id directory
+                f"Unable to watch for input devices: {err}"
             ) from err
         hass.data[DATA_MANAGER] = manager
 

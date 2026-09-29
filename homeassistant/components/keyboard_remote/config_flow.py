@@ -225,7 +225,7 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         entries = self._async_current_entries()
         configured_ids = {entry.unique_id for entry in entries}
         # Not the YAML descriptor: runtime matching ignores it, and its eventN
-        # may since belong to an unrelated device.
+        # may now belong to an unrelated device.
         configured_paths = [
             path for entry in entries if (path := entry.data.get(CONF_DEVICE_PATH))
         ]
