@@ -343,6 +343,89 @@ def _convert_user_content_step(
     return interactions.UserInputStep(content=step_content)
 
 
+def _create_thought_step(
+    detail: PartDetails,
+    thinking_content: str | None,
+    single_thought: bool,
+) -> interactions.ThoughtStep:
+    """Create a ThoughtStep from PartDetails and thinking content."""
+    thought_text = ""
+    if thinking_content:
+        if detail.length > 0:
+            thought_text = thinking_content[detail.index : detail.index + detail.length]
+        elif single_thought:
+            thought_text = thinking_content
+        else:
+            thought_text = thinking_content[detail.index :]
+
+    summary: list[interactions.ThoughtSummaryContent] | None = (
+        [interactions.TextContent(text=thought_text)] if thought_text else None
+    )
+    return interactions.ThoughtStep(
+        signature=detail.thought_signature,
+        summary=summary,
+    )
+
+
+def _create_google_search_step(
+    tool_call: llm.ToolInput,
+    signature: str | None,
+) -> interactions.GoogleSearchCallStep:
+    """Create a GoogleSearchCallStep from ToolInput."""
+    queries = (
+        list(tool_call.tool_args["queries"])
+        if isinstance(tool_call.tool_args, dict)
+        and "queries" in tool_call.tool_args
+        and tool_call.tool_args["queries"] is not None
+        else None
+    )
+    return interactions.GoogleSearchCallStep(
+        id=tool_call.id,
+        arguments=interactions.GoogleSearchCallArguments(queries=queries),
+        signature=signature,
+        search_type="web_search",
+    )
+
+
+def _create_function_call_step(
+    tool_call: llm.ToolInput,
+) -> interactions.FunctionCallStep:
+    """Create a FunctionCallStep from ToolInput."""
+    args = tool_call.tool_args if isinstance(tool_call.tool_args, dict) else {}
+    return interactions.FunctionCallStep(
+        id=tool_call.id,
+        name=tool_call.tool_name,
+        arguments=args,
+    )
+
+
+def _find_tool_call(
+    tool_calls: list[llm.ToolInput] | None,
+    index: int,
+    is_search: bool,
+    handled_indices: set[int],
+) -> tuple[int, llm.ToolInput] | tuple[None, None]:
+    """Find matching tool call by index or next available."""
+    if not tool_calls:
+        return None, None
+
+    if 0 <= index < len(tool_calls):
+        cand = tool_calls[index]
+        if (cand.tool_name == "google_search") == is_search:
+            handled_indices.add(index)
+            return index, cand
+
+    for idx, cand in enumerate(tool_calls):
+        if (
+            idx not in handled_indices
+            and (cand.tool_name == "google_search") == is_search
+        ):
+            handled_indices.add(idx)
+            return idx, cand
+
+    return None, None
+
+
 def _convert_assistant_content_steps(
     content: conversation.AssistantContent,
 ) -> list[interactions.Step]:
@@ -353,66 +436,51 @@ def _convert_assistant_content_steps(
         if isinstance(content.native, ContentDetails)
         else []
     )
+    handled_tool_indices: set[int] = set()
+    single_thought = len([d for d in part_details if d.part_type == "thought"]) == 1
 
-    search_tool = next(
-        (tc for tc in (content.tool_calls or []) if tc.tool_name == "google_search"),
-        None,
-    )
-    if search_tool:
-        search_sig = next(
-            (
-                d.thought_signature
-                for d in part_details
-                if d.part_type == "google_search_call"
-            ),
-            None,
-        )
-        queries = (
-            list(search_tool.tool_args["queries"])
-            if isinstance(search_tool.tool_args, dict)
-            and "queries" in search_tool.tool_args
-            and search_tool.tool_args["queries"] is not None
-            else None
-        )
-        steps.append(
-            interactions.GoogleSearchCallStep(
-                id=search_tool.id,
-                arguments=interactions.GoogleSearchCallArguments(queries=queries),
-                signature=search_sig,
-                search_type="web_search",
-            )
-        )
-
-    thought_sig = next(
-        (d.thought_signature for d in part_details if d.part_type == "thought"),
-        None,
-    )
-    if thought_sig:
-        steps.append(
-            interactions.ThoughtStep(
-                signature=thought_sig,
-                summary=[interactions.TextContent(text=content.thinking_content)]
-                if content.thinking_content
-                else None,
-            )
-        )
-    elif content.thinking_content:
-        steps.append(
-            interactions.ThoughtStep(
-                summary=[interactions.TextContent(text=content.thinking_content)]
-            )
-        )
-
-    for tool_call in content.tool_calls or []:
-        if tool_call.tool_name != "google_search":
-            args = tool_call.tool_args if isinstance(tool_call.tool_args, dict) else {}
-            steps.append(
-                interactions.FunctionCallStep(
-                    id=tool_call.id,
-                    name=tool_call.tool_name,
-                    arguments=args,
+    for detail in part_details:
+        match detail.part_type:
+            case "thought":
+                steps.append(
+                    _create_thought_step(
+                        detail, content.thinking_content, single_thought
+                    )
                 )
-            )
+            case "google_search_call":
+                _, search_tool = _find_tool_call(
+                    content.tool_calls, detail.index, True, handled_tool_indices
+                )
+                if search_tool:
+                    steps.append(
+                        _create_google_search_step(
+                            search_tool, detail.thought_signature
+                        )
+                    )
+            case "function_call":
+                _, func_tool = _find_tool_call(
+                    content.tool_calls, detail.index, False, handled_tool_indices
+                )
+                if func_tool:
+                    steps.append(_create_function_call_step(func_tool))
+
+    if content.thinking_content and not any(
+        isinstance(s, interactions.ThoughtStep) for s in steps
+    ):
+        fallback_summary: list[interactions.ThoughtSummaryContent] = [
+            interactions.TextContent(text=content.thinking_content)
+        ]
+        steps.append(interactions.ThoughtStep(summary=fallback_summary))
+
+    if content.tool_calls:
+        for idx, tool_call in enumerate(content.tool_calls):
+            if idx in handled_tool_indices:
+                continue
+            if tool_call.tool_name == "google_search":
+                steps.append(_create_google_search_step(tool_call, None))
+            else:
+                steps.append(_create_function_call_step(tool_call))
+            handled_tool_indices.add(idx)
 
     if content.content:
         steps.append(
@@ -546,9 +614,33 @@ class _StreamState:
     current_search_queries: list[str] | None = None
     current_search_signature: str | None = None
 
+    in_thought: bool = False
+    current_thought_start: int = 0
+    current_thought_length: int = 0
+    current_thought_signature: str | None = None
+
+
+def _flush_active_thought(state: _StreamState) -> None:
+    """Flush active thought part to part_details if any."""
+    if state.in_thought:
+        if state.current_thought_signature:
+            state.part_details.append(
+                PartDetails(
+                    part_type="thought",
+                    index=state.current_thought_start,
+                    length=state.current_thought_length,
+                    thought_signature=state.current_thought_signature,
+                )
+            )
+        state.in_thought = False
+        state.current_thought_signature = None
+        state.current_thought_length = 0
+
 
 def _handle_step_start(step: interactions.Step, state: _StreamState) -> None:
     """Handle step start events."""
+    _flush_active_thought(state)
+
     match step:
         case interactions.FunctionCallStep(id=call_id, name=name, arguments=args):
             state.current_tool_id = call_id
@@ -565,6 +657,11 @@ def _handle_step_start(step: interactions.Step, state: _StreamState) -> None:
             state.current_search_queries = (
                 list(args.queries) if args and args.queries is not None else None
             )
+        case interactions.ThoughtStep(signature=sig):
+            state.in_thought = True
+            state.current_thought_start = state.thinking_content_index
+            state.current_thought_length = 0
+            state.current_thought_signature = sig or None
 
 
 def _handle_step_delta(
@@ -574,6 +671,7 @@ def _handle_step_delta(
     match delta:
         case interactions.TextDelta(text=text):
             if text:
+                _flush_active_thought(state)
                 state.content_index += len(text)
                 return {"content": text}
 
@@ -581,19 +679,22 @@ def _handle_step_delta(
             content=interactions.TextContent(text=text)
         ):
             if text:
+                if not state.in_thought:
+                    state.in_thought = True
+                    state.current_thought_start = state.thinking_content_index
+                    state.current_thought_length = 0
+                    state.current_thought_signature = None
+                state.current_thought_length += len(text)
                 state.thinking_content_index += len(text)
                 return {"thinking_content": text}
 
         case interactions.ThoughtSignatureDelta(signature=sig):
             if sig:
-                state.part_details.append(
-                    PartDetails(
-                        part_type="thought",
-                        index=state.thinking_content_index,
-                        length=0,
-                        thought_signature=sig,
-                    )
-                )
+                if not state.in_thought:
+                    state.in_thought = True
+                    state.current_thought_start = state.thinking_content_index
+                    state.current_thought_length = 0
+                state.current_thought_signature = sig
 
         case interactions.GoogleSearchCallDelta(signature=sig, arguments=args):
             if sig:
@@ -612,6 +713,8 @@ def _handle_step_stop(
     state: _StreamState,
 ) -> conversation.AssistantContentDeltaDict | None:
     """Handle step stop events."""
+    _flush_active_thought(state)
+
     if state.current_tool_name:
         tool_args = _parse_tool_args(
             state.current_tool_args_str, state.current_tool_args_dict
@@ -690,6 +793,7 @@ async def transform_interactions_stream(
                     if out_delta := _handle_step_stop(state):
                         yield out_delta
 
+        _flush_active_thought(state)
         if state.part_details:
             yield {"native": ContentDetails(part_details=state.part_details)}
 

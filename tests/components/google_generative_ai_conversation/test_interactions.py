@@ -316,8 +316,8 @@ async def test_transform_interactions_stream_thinking_and_signature() -> None:
             part_details=[
                 PartDetails(
                     part_type="thought",
-                    index=18,
-                    length=0,
+                    index=0,
+                    length=18,
                     thought_signature="dGVzdF9zaWdfMTIz",
                 )
             ]
@@ -704,6 +704,146 @@ async def test_transform_interactions_stream_gemini_3_flash_google_search(
     assert assistant_content.native.part_details[1].thought_signature == thought_sig
 
 
+async def test_transform_interactions_stream_multi_search_and_thought(
+    hass: HomeAssistant,
+) -> None:
+    """Test streaming multiple Google Searches and thoughts in a single turn."""
+    chat_log = conversation.ChatLog(hass, "test_conversation")
+
+    thought_1 = "First thought."
+    thought_2 = "Second thought."
+    sig_t1 = "sig_thought_1"
+    sig_t2 = "sig_thought_2"
+    sig_s1 = "sig_search_1"
+    sig_s2 = "sig_search_2"
+
+    async def mock_events():
+        # Step 0: Thought 1
+        yield interactions.StepStart(
+            index=0,
+            step=interactions.ThoughtStep(),
+        )
+        yield interactions.StepDelta(
+            index=0,
+            delta=interactions.ThoughtSummaryDelta(
+                content=interactions.TextContent(text=thought_1),
+            ),
+        )
+        yield interactions.StepDelta(
+            index=0,
+            delta=interactions.ThoughtSignatureDelta(signature=sig_t1),
+        )
+        yield interactions.StepStop(index=0)
+
+        # Step 1: Search 1
+        yield interactions.StepStart(
+            index=1,
+            step=interactions.GoogleSearchCallStep(
+                id="search_1",
+                arguments=interactions.GoogleSearchCallArguments(queries=None),
+            ),
+        )
+        yield interactions.StepDelta(
+            index=1,
+            delta=interactions.GoogleSearchCallDelta(
+                signature=sig_s1,
+                arguments=interactions.GoogleSearchCallArguments(queries=["query 1"]),
+            ),
+        )
+        yield interactions.StepStop(index=1)
+
+        # Step 2: Thought 2
+        yield interactions.StepStart(
+            index=2,
+            step=interactions.ThoughtStep(),
+        )
+        yield interactions.StepDelta(
+            index=2,
+            delta=interactions.ThoughtSummaryDelta(
+                content=interactions.TextContent(text=thought_2),
+            ),
+        )
+        yield interactions.StepDelta(
+            index=2,
+            delta=interactions.ThoughtSignatureDelta(signature=sig_t2),
+        )
+        yield interactions.StepStop(index=2)
+
+        # Step 3: Search 2
+        yield interactions.StepStart(
+            index=3,
+            step=interactions.GoogleSearchCallStep(
+                id="search_2",
+                arguments=interactions.GoogleSearchCallArguments(queries=None),
+            ),
+        )
+        yield interactions.StepDelta(
+            index=3,
+            delta=interactions.GoogleSearchCallDelta(
+                signature=sig_s2,
+                arguments=interactions.GoogleSearchCallArguments(queries=["query 2"]),
+            ),
+        )
+        yield interactions.StepStop(index=3)
+
+        # Step 4: Final text
+        yield interactions.StepStart(
+            index=4,
+            step=interactions.ModelOutputStep(),
+        )
+        yield interactions.StepDelta(
+            index=4,
+            delta=interactions.TextDelta(text="Final answer."),
+        )
+        yield interactions.StepStop(index=4)
+
+    contents = [
+        c
+        async for c in chat_log.async_add_delta_content_stream(
+            "test_agent", transform_interactions_stream(chat_log, mock_events())
+        )
+    ]
+
+    assistant_content = next(
+        c for c in contents if isinstance(c, conversation.AssistantContent)
+    )
+    assert isinstance(assistant_content, conversation.AssistantContent)
+    assert assistant_content.content == "Final answer."
+    assert assistant_content.thinking_content == f"{thought_1}{thought_2}"
+    assert len(assistant_content.tool_calls or []) == 2
+    assert assistant_content.tool_calls[0].tool_args == {"queries": ["query 1"]}
+    assert assistant_content.tool_calls[1].tool_args == {"queries": ["query 2"]}
+
+    assert assistant_content.native == ContentDetails(
+        part_details=[
+            PartDetails(
+                part_type="thought",
+                index=0,
+                length=len(thought_1),
+                thought_signature=sig_t1,
+            ),
+            PartDetails(
+                part_type="google_search_call",
+                index=0,
+                length=0,
+                thought_signature=sig_s1,
+            ),
+            PartDetails(
+                part_type="thought",
+                index=len(thought_1),
+                length=len(thought_2),
+                thought_signature=sig_t2,
+            ),
+            PartDetails(
+                part_type="google_search_call",
+                index=1,
+                length=0,
+                thought_signature=sig_s2,
+            ),
+        ]
+    )
+
+
 async def test_convert_chat_log_to_interactions_steps_simple(
     hass: HomeAssistant,
 ) -> None:
@@ -1000,7 +1140,7 @@ async def test_convert_chat_log_to_interactions_steps_thought_with_signature(
                     PartDetails(
                         part_type="thought",
                         index=0,
-                        length=17,
+                        length=18,
                         thought_signature=thought_sig,
                     )
                 ]
@@ -1028,6 +1168,112 @@ async def test_convert_chat_log_to_interactions_steps_thought_with_signature(
     )
     assert steps[3] == interactions.UserInputStep(
         content=[interactions.TextContent(text="And what is 4+4?")]
+    )
+
+
+async def test_convert_chat_log_to_interactions_steps_multi_thought_and_search(
+    hass: HomeAssistant,
+) -> None:
+    """Test converting history with multiple thoughts and multiple searches chronologically."""
+    chat_log = conversation.ChatLog(hass, "test_conversation")
+    chat_log.async_add_user_content(
+        conversation.UserContent(content="What should I wear in Paris?")
+    )
+
+    thought_1 = "Checking weather first."
+    thought_2 = "Checking clothing recommendations."
+    sig_t1 = "sig_thought_1"
+    sig_t2 = "sig_thought_2"
+    sig_s1 = "sig_search_1"
+    sig_s2 = "sig_search_2"
+
+    chat_log.async_add_assistant_content_without_tools(
+        conversation.AssistantContent(
+            agent_id="test_agent",
+            content="Wear a light jacket!",
+            thinking_content=f"{thought_1}{thought_2}",
+            tool_calls=[
+                llm.ToolInput(
+                    tool_name="google_search",
+                    tool_args={"queries": ["weather in Paris"]},
+                    id="search_call_1",
+                    external=True,
+                ),
+                llm.ToolInput(
+                    tool_name="google_search",
+                    tool_args={"queries": ["what to wear in Paris sunny 18C"]},
+                    id="search_call_2",
+                    external=True,
+                ),
+            ],
+            native=ContentDetails(
+                part_details=[
+                    PartDetails(
+                        part_type="thought",
+                        index=0,
+                        length=len(thought_1),
+                        thought_signature=sig_t1,
+                    ),
+                    PartDetails(
+                        part_type="google_search_call",
+                        index=0,
+                        length=0,
+                        thought_signature=sig_s1,
+                    ),
+                    PartDetails(
+                        part_type="thought",
+                        index=len(thought_1),
+                        length=len(thought_2),
+                        thought_signature=sig_t2,
+                    ),
+                    PartDetails(
+                        part_type="google_search_call",
+                        index=1,
+                        length=0,
+                        thought_signature=sig_s2,
+                    ),
+                ]
+            ),
+        )
+    )
+
+    chat_log.async_add_user_content(
+        conversation.UserContent(content="Any umbrella needed?")
+    )
+
+    steps = convert_chat_log_to_interactions_steps(chat_log)
+
+    assert len(steps) == 7
+    assert steps[0] == interactions.UserInputStep(
+        content=[interactions.TextContent(text="What should I wear in Paris?")]
+    )
+    assert steps[1] == interactions.ThoughtStep(
+        signature=sig_t1,
+        summary=[interactions.TextContent(text=thought_1)],
+    )
+    assert steps[2] == interactions.GoogleSearchCallStep(
+        id="search_call_1",
+        arguments=interactions.GoogleSearchCallArguments(queries=["weather in Paris"]),
+        signature=sig_s1,
+        search_type="web_search",
+    )
+    assert steps[3] == interactions.ThoughtStep(
+        signature=sig_t2,
+        summary=[interactions.TextContent(text=thought_2)],
+    )
+    assert steps[4] == interactions.GoogleSearchCallStep(
+        id="search_call_2",
+        arguments=interactions.GoogleSearchCallArguments(
+            queries=["what to wear in Paris sunny 18C"]
+        ),
+        signature=sig_s2,
+        search_type="web_search",
+    )
+    assert steps[5] == interactions.ModelOutputStep(
+        content=[interactions.TextContent(text="Wear a light jacket!")]
+    )
+    assert steps[6] == interactions.UserInputStep(
+        content=[interactions.TextContent(text="Any umbrella needed?")]
     )
 
 
