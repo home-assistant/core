@@ -447,8 +447,6 @@ class MarketplaceData:
         if repository.data.prerelease == repository.data.last_version:
             repository.data.prerelease = None
 
-        if repository.localpath is not None and is_safe(
-            self.marketplace, repository.localpath
-        ):
-            # Set local path
+        # Every removal checks it is safe again, resolving here would block
+        if repository.localpath is not None:
             repository.content.path.local = repository.localpath

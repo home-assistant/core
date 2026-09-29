@@ -18,6 +18,9 @@ from .exceptions import GitHubAnonymousRateLimitError, MarketplaceError
 from .utils.logger import LOGGER
 from .utils.validate import valid_ref
 
+# Installs write to disk and reload integrations, one at a time
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -57,7 +60,7 @@ class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
         """Return the URL of the release page."""
         if self.repository.display_version_or_commit == "commit":
             return f"https://github.com/{self.repository.data.full_name}"
-        return f"https://github.com/{self.repository.data.full_name}/releases/{self.latest_version}"
+        return f"https://github.com/{self.repository.data.full_name}/releases/tag/{self.latest_version}"
 
     @property
     @override

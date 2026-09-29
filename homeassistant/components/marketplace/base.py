@@ -515,6 +515,8 @@ class MarketplaceManager:
         self.system.disabled_reason = reason
         if reason != DisabledReason.REMOVED:
             LOGGER.error("The Marketplace is disabled - %s", reason)
+        # The panel shows the reason, it comes and goes without a write
+        self.async_dispatch(MarketplaceSignal.CONFIG, {})
 
         if (
             reason == DisabledReason.INVALID_TOKEN
@@ -527,6 +529,7 @@ class MarketplaceManager:
         if self.system.disabled_reason is not None:
             self.system.disabled_reason = None
             LOGGER.info("The Marketplace is enabled")
+            self.async_dispatch(MarketplaceSignal.CONFIG, {})
 
     def enable_category(self, category: RepositoryCategory) -> None:
         """Enable a repository category."""
@@ -1027,7 +1030,14 @@ class MarketplaceManager:
                 continue
             if repo_name in self.common.archived_repositories:
                 continue
-            if repository := self.repositories.get_by_full_name(repo_name):
+            repository = self.repositories.get_by_full_name(repo_name)
+            # Renamed on GitHub, the id is the one thing the catalog keeps
+            if repository is None and (
+                repository := self.repositories.get_by_id(repo_id)
+            ):
+                self.common.renamed_repositories[repository.data.full_name] = repo_name
+                self.repositories.rename(repository, repo_name)
+            if repository:
                 self.async_set_repository_id(repository, repo_id)
                 self.repositories.mark_default(repository)
                 if repository.data.last_fetched is None or (

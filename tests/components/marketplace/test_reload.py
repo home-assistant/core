@@ -20,6 +20,7 @@ from homeassistant.components.marketplace.utils.validate import (
 from homeassistant.const import EVENT_HOMEASSISTANT_START, Platform
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.loader import IntegrationNotLoaded
 from homeassistant.util import dt as dt_util
 
 from . import get_marketplace
@@ -303,3 +304,31 @@ async def test_unload_stops_a_recurring_run(
         )
 
     assert cancelled.is_set()
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "repair"),
+    [
+        pytest.param(None, True, id="loaded_in_this_run"),
+        pytest.param(IntegrationNotLoaded("example"), False, id="never_loaded"),
+    ],
+)
+async def test_uninstall_of_loaded_code_asks_for_a_restart(
+    marketplace: MarketplaceManager,
+    issue_registry: ir.IssueRegistry,
+    side_effect: Exception | None,
+    repair: bool,
+) -> None:
+    """Test code this run loaded keeps running, the user is told to restart."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    await repository.async_install_repository()
+    assert repository.data.config_flow
+
+    with patch(KNOWN_TO_THE_LOADER, side_effect=side_effect):
+        await repository.uninstall()
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"restart_required_{REPOSITORY_INTEGRATION_ID}_uninstall"
+    )
+    assert (issue is not None) is repair
+    assert repository.pending_restart is repair

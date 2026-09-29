@@ -354,3 +354,40 @@ async def test_empty_catalog_at_startup_keeps_the_category(
     )
 
     assert marketplace.repositories.get_by_id(REPOSITORY_PLUGIN_ID) is repository
+
+
+async def test_catalog_rename_follows_the_repository_id(
+    marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
+) -> None:
+    """Test a repository renamed on GitHub keeps its updates under the new name."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_PLUGIN_ID)
+    old_name = repository.data.full_name
+    url = "https://data-v2.hacs.xyz/plugin/data.json"
+    response_mocker.add(
+        url,
+        mocked_response(
+            url,
+            json_content={
+                REPOSITORY_PLUGIN_ID: GOOD_COMMON_DATA
+                | {
+                    "full_name": "hacs-test-org/plugin-renamed",
+                    "last_fetched": 2000000000,
+                    "last_version": "9.0.0",
+                }
+            },
+        ),
+    )
+
+    await marketplace.async_get_category_repositories_from_catalog(
+        RepositoryCategory.PLUGIN
+    )
+
+    assert (
+        marketplace.repositories.get_by_full_name("hacs-test-org/plugin-renamed")
+        is repository
+    )
+    assert marketplace.repositories.get_by_full_name(old_name) is None
+    assert repository.data.last_version == "9.0.0"
+    assert marketplace.common.renamed_repositories == {
+        old_name: "hacs-test-org/plugin-renamed"
+    }

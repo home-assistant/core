@@ -205,10 +205,24 @@ class IntegrationRepository(Repository):
     @override
     async def async_post_uninstall(self) -> None:
         """Run post uninstall steps."""
+        # Code this run loaded keeps running until a restart, and so does
+        # an integration only set up from YAML
+        loaded = self._known_to_the_loader()
         if self.data.config_flow:
             await self.reload_custom_components()
-        else:
-            self.pending_restart = True
+        self.pending_restart = loaded or not self.data.config_flow
+
+        if self.pending_restart:
+            async_create_issue(
+                hass=self.marketplace.hass,
+                domain=DOMAIN,
+                issue_id=f"{RESTART_ISSUE_PREFIX}{self.data.id}_uninstall",
+                is_fixable=True,
+                issue_domain=self.data.domain or DOMAIN,
+                severity=IssueSeverity.WARNING,
+                translation_key="restart_required_uninstall",
+                translation_placeholders={"name": self.display_name},
+            )
 
     @override
     async def validate_repository(self) -> bool:

@@ -29,8 +29,10 @@ from homeassistant.components.marketplace.repositories.integration import (
 )
 from homeassistant.components.marketplace.utils.storage import async_save_to_storage
 from homeassistant.config_entries import (
+    SOURCE_IGNORE,
     SOURCE_RECONFIGURE,
     SOURCE_SYSTEM,
+    SOURCE_USER,
     ConfigEntryDisabler,
     ConfigEntryState,
 )
@@ -1087,6 +1089,43 @@ async def test_repository_uninstall(
     assert (await client.receive_json())["success"]
 
     assert repository.data.installed is False
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        pytest.param(SOURCE_USER, id="set_up"),
+        pytest.param(SOURCE_IGNORE, id="ignored"),
+    ],
+)
+async def test_repository_uninstall_refused_while_in_use(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    source: str,
+) -> None:
+    """Test an integration that still has entries is not pulled from under them."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/install",
+            "repository": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    assert (await client.receive_json())["success"]
+    MockConfigEntry(domain=repository.data.domain, source=source).add_to_hass(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/uninstall",
+            "repository": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["error"]["code"] == "repository_in_use"
+    assert repository.data.installed is True
 
 
 async def test_repository_release_notes(

@@ -18,6 +18,7 @@ from homeassistant.components.marketplace.enums import (
     RepositoryCategory,
 )
 from homeassistant.components.marketplace.repositories.base import Repository
+from homeassistant.components.marketplace.update import RepositoryUpdateEntity
 from homeassistant.components.update import (
     ATTR_VERSION,
     DOMAIN as UPDATE_DOMAIN,
@@ -783,3 +784,15 @@ async def test_release_notes_rate_limited_without_github(
     assert response["success"]
     assert response["result"] == ""
     assert not marketplace.system.disabled
+
+
+def test_release_url_points_at_the_release(marketplace: MarketplaceManager) -> None:
+    """Test the link goes to the page of the release, not the release list."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.releases = True
+    repository.data.last_version = "2.0.0"
+    entity = RepositoryUpdateEntity(marketplace, repository)
+
+    assert entity.release_url == (
+        f"https://github.com/{REPOSITORY_INTEGRATION}/releases/tag/2.0.0"
+    )

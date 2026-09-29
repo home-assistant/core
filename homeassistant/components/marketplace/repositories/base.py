@@ -1691,8 +1691,10 @@ class Repository:
                 del path_parts[-1]
                 local_directory = "/".join(path_parts)
 
-            local_file_path = resolve_in_directory(
-                self.content.path.local, f"{local_directory}/{content.name}"
+            local_file_path = await self.marketplace.hass.async_add_executor_job(
+                resolve_in_directory,
+                self.content.path.local,
+                f"{local_directory}/{content.name}",
             )
 
             result = await self.marketplace.async_save_file(

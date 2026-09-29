@@ -352,6 +352,21 @@ async def marketplace_repository_uninstall(
         _send_repository_busy(connection, msg["id"], repository)
         return
 
+    # The entries run its files, they go first, also the ignored ones
+    if (
+        repository.data.category == RepositoryCategory.INTEGRATION
+        and repository.data.domain
+        and hass.config_entries.async_entries(repository.data.domain)
+    ):
+        send_translated_error(
+            connection,
+            msg["id"],
+            "repository_in_use",
+            "repository_in_use",
+            {"repository": repository.data.full_name},
+        )
+        return
+
     repository.data.new = False
     # What is on disk is enough to uninstall it, GitHub is only asked when it can be,
     # or for a theme that was stored before its file name was

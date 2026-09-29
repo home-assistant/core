@@ -93,6 +93,9 @@
     "repository_exists": {
       "message": "{repository} is already in the Marketplace."
     },
+    "repository_in_use": {
+      "message": "{repository} is still set up. Delete it under Settings > Devices & services before uninstalling it."
+    },
     "repository_installed": {
       "message": "Uninstall {repository} first."
     },
@@ -151,6 +154,17 @@
         "step": {
           "confirm_restart": {
             "description": "Restart Home Assistant to finish the installation or update of {name}. Select **Submit** to restart now.",
+            "title": "Restart required"
+          }
+        }
+      },
+      "title": "Restart required"
+    },
+    "restart_required_uninstall": {
+      "fix_flow": {
+        "step": {
+          "confirm_restart": {
+            "description": "Restart Home Assistant to finish uninstalling {name}, its code keeps running until then. Select **Submit** to restart now.",
             "title": "Restart required"
           }
         }

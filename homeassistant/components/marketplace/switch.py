@@ -11,6 +11,8 @@ from .base import MarketplaceConfigEntry, MarketplaceManager
 from .entity import RepositoryEntity
 from .repositories.base import Repository
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -28,7 +30,7 @@ async def async_setup_entry(
 class RepositoryPreReleaseSwitchEntity(RepositoryEntity, SwitchEntity):
     """Pre-release switch entity for an installed repository."""
 
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_has_entity_name = True
     _attr_translation_key = "pre-release"
 

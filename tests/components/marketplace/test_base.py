@@ -15,6 +15,7 @@ from homeassistant.components.marketplace.const import (
 )
 from homeassistant.components.marketplace.enums import (
     DisabledReason,
+    MarketplaceSignal,
     RepositoryCategory,
 )
 from homeassistant.components.marketplace.exceptions import MarketplaceError
@@ -267,3 +268,19 @@ async def test_unreadable_acceptance_is_left_out(
 ) -> None:
     """Test an acceptance with a date that can not be read counts as none."""
     assert marketplace.warning_acceptances == {}
+
+
+async def test_panel_hears_when_the_marketplace_is_disabled_or_enabled(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a change of the disabled reason reaches the panel, a repeat does not."""
+    with patch.object(marketplace, "async_dispatch") as dispatch:
+        marketplace.disable(DisabledReason.RATE_LIMIT)
+        marketplace.disable(DisabledReason.RATE_LIMIT)
+        marketplace.enable()
+        marketplace.enable()
+
+    assert [call.args for call in dispatch.call_args_list] == [
+        (MarketplaceSignal.CONFIG, {}),
+        (MarketplaceSignal.CONFIG, {}),
+    ]
