@@ -1,5 +1,6 @@
 """Tests for the Alexa Devices sensor platform."""
 
+from copy import deepcopy
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -8,7 +9,7 @@ from aioamazondevices.exceptions import (
     CannotConnect,
     CannotRetrieveData,
 )
-from aioamazondevices.structures import AmazonDeviceSensor
+from aioamazondevices.structures import AmazonDevice, AmazonDeviceSensor
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -31,14 +32,24 @@ from .const import (
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.parametrize(
+    "devices",
+    [
+        pytest.param({TEST_DEVICE_1_SN: TEST_DEVICE_1}, id="echo"),
+        pytest.param({TEST_DEVICE_AQM_SN: TEST_DEVICE_AQM}, id="aqm"),
+    ],
+)
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    devices: dict[str, AmazonDevice],
 ) -> None:
     """Test all entities."""
+    mock_amazon_devices_client.get_devices_data.return_value = deepcopy(devices)
+
     with patch("homeassistant.components.alexa_devices.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
@@ -204,21 +215,3 @@ async def test_sensor_unavailable(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
-
-
-async def test_aqm_entities(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    mock_amazon_devices_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test sensor entities for an Air Quality Monitor device."""
-    mock_amazon_devices_client.get_devices_data.return_value = {
-        TEST_DEVICE_AQM_SN: TEST_DEVICE_AQM
-    }
-
-    with patch("homeassistant.components.alexa_devices.PLATFORMS", [Platform.SENSOR]):
-        await setup_integration(hass, mock_config_entry)
-
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

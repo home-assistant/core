@@ -163,7 +163,6 @@ async def test_voice_event_not_created_for_aqm_device(
         TEST_DEVICE_AQM_SN: TEST_DEVICE_AQM
     }
 
-    with patch("homeassistant.components.alexa_devices.PLATFORMS", [Platform.EVENT]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     assert not hass.states.get("event.air_quality_monitor_test_voice_event")
