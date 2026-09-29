@@ -22,12 +22,10 @@ class MarketplaceSignal(StrEnum):
     """Dispatcher signals the Marketplace sends."""
 
     CONFIG = "marketplace_config"
-    ERROR = "marketplace_error"
     RELOAD = "marketplace_reload"
     REPOSITORY = "marketplace_repository"
     REPOSITORY_DOWNLOAD_PROGRESS = "marketplace_repository_download_progress"
     STAGE = "marketplace_stage"
-    STARTUP = "marketplace_startup"
     STATUS = "marketplace_status"
 
 
