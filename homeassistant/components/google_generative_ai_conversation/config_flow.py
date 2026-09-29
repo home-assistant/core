@@ -236,11 +236,19 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
+        errors: dict[str, str] = {}
         if user_input is not None:
-            return self.async_create_entry(
-                title="",
-                data=user_input,
-            )
+            if not user_input.get(CONF_USE_INTERACTIONS_API, False) and any(
+                subentry.data.get(CONF_LLM_HASS_API)
+                and subentry.data.get(CONF_USE_GOOGLE_SEARCH_TOOL, False) is True
+                for subentry in self.config_entry.subentries.values()
+            ):
+                errors["base"] = "cannot_disable_interactions"
+            else:
+                return self.async_create_entry(
+                    title="",
+                    data=user_input,
+                )
 
         schema = probatio.Schema(
             {
@@ -256,6 +264,7 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=schema,
+            errors=errors,
         )
 
 
@@ -336,7 +345,14 @@ class LLMSubentryFlowHandler(ConfigSubentryFlow):
             options = user_input
 
         schema = await google_generative_ai_config_option_schema(
-            self.hass, self._is_new, self._subentry_type, options, self._genai_client
+            self.hass,
+            self._is_new,
+            self._subentry_type,
+            options,
+            self._genai_client,
+            self._get_entry().options.get(
+                CONF_USE_INTERACTIONS_API, RECOMMENDED_USE_INTERACTIONS_API
+            ),
         )
         return self.async_show_form(
             step_id="set_options", data_schema=probatio.Schema(schema), errors=errors
@@ -352,6 +368,7 @@ async def google_generative_ai_config_option_schema(
     subentry_type: str,
     options: Mapping[str, Any],
     genai_client: genai.Client,
+    use_interactions_api: bool = False,
 ) -> dict:
     """Return a schema for Google Generative AI completion options."""
     hass_apis: list[SelectOptionDict] = [
@@ -542,36 +559,45 @@ async def google_generative_ai_config_option_schema(
                         ],
                     )
                 ),
-                probatio.Optional(
-                    CONF_HARASSMENT_BLOCK_THRESHOLD,
-                    description={
-                        "suggested_value": options.get(CONF_HARASSMENT_BLOCK_THRESHOLD)
-                    },
-                    default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                ): harm_block_thresholds_selector,
-                probatio.Optional(
-                    CONF_HATE_BLOCK_THRESHOLD,
-                    description={
-                        "suggested_value": options.get(CONF_HATE_BLOCK_THRESHOLD)
-                    },
-                    default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                ): harm_block_thresholds_selector,
-                probatio.Optional(
-                    CONF_SEXUAL_BLOCK_THRESHOLD,
-                    description={
-                        "suggested_value": options.get(CONF_SEXUAL_BLOCK_THRESHOLD)
-                    },
-                    default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                ): harm_block_thresholds_selector,
-                probatio.Optional(
-                    CONF_DANGEROUS_BLOCK_THRESHOLD,
-                    description={
-                        "suggested_value": options.get(CONF_DANGEROUS_BLOCK_THRESHOLD)
-                    },
-                    default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                ): harm_block_thresholds_selector,
             }
         )
+        if not use_interactions_api:
+            schema.update(
+                {
+                    probatio.Optional(
+                        CONF_HARASSMENT_BLOCK_THRESHOLD,
+                        description={
+                            "suggested_value": options.get(
+                                CONF_HARASSMENT_BLOCK_THRESHOLD
+                            )
+                        },
+                        default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                    ): harm_block_thresholds_selector,
+                    probatio.Optional(
+                        CONF_HATE_BLOCK_THRESHOLD,
+                        description={
+                            "suggested_value": options.get(CONF_HATE_BLOCK_THRESHOLD)
+                        },
+                        default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                    ): harm_block_thresholds_selector,
+                    probatio.Optional(
+                        CONF_SEXUAL_BLOCK_THRESHOLD,
+                        description={
+                            "suggested_value": options.get(CONF_SEXUAL_BLOCK_THRESHOLD)
+                        },
+                        default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                    ): harm_block_thresholds_selector,
+                    probatio.Optional(
+                        CONF_DANGEROUS_BLOCK_THRESHOLD,
+                        description={
+                            "suggested_value": options.get(
+                                CONF_DANGEROUS_BLOCK_THRESHOLD
+                            )
+                        },
+                        default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                    ): harm_block_thresholds_selector,
+                }
+            )
     if subentry_type == "conversation":
         schema.update(
             {

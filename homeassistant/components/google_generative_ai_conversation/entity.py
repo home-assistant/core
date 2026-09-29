@@ -71,6 +71,7 @@ from .const import (
 )
 from .helpers import ContentDetails, PartDetails
 from .interactions import (
+    async_prepare_chat_log_attachments,
     build_interaction_request,
     convert_chat_log_to_interactions_steps,
     format_response_format,
@@ -763,8 +764,14 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             ),
         )
 
+        prepared_attachments = await async_prepare_chat_log_attachments(
+            self.hass, chat_log
+        )
+
         for _iteration in range(max_iterations):
-            input_steps = convert_chat_log_to_interactions_steps(chat_log)
+            input_steps = convert_chat_log_to_interactions_steps(
+                chat_log, prepared_attachments=prepared_attachments
+            )
 
             if not supports_system_instruction:
                 input_steps = [

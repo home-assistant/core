@@ -28,6 +28,7 @@ from .entity import (
     async_prepare_files_for_prompt,
 )
 from .interactions import (
+    async_prepare_chat_log_attachments,
     build_interaction_request,
     convert_chat_log_to_interactions_steps,
     extract_output_image,
@@ -148,7 +149,12 @@ class GoogleGenerativeAITaskEntity(
         chat_log: conversation.ChatLog,
     ) -> ai_task.GenImageTaskResult:
         """Generate an image using the Interactions API."""
-        input_steps = convert_chat_log_to_interactions_steps(chat_log)
+        prepared_attachments = await async_prepare_chat_log_attachments(
+            self.hass, chat_log
+        )
+        input_steps = convert_chat_log_to_interactions_steps(
+            chat_log, prepared_attachments=prepared_attachments
+        )
         request = build_interaction_request(
             model=model,
             input_content=input_steps,

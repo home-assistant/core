@@ -433,18 +433,19 @@ async def async_prepare_attachment_for_interactions(
 async def async_prepare_chat_log_attachments(
     hass: HomeAssistant,
     chat_log: conversation.ChatLog,
-) -> dict[str, interactions.Content]:
+) -> dict[str | Path, interactions.Content]:
     """Prepare all attachments in a chat log asynchronously for Interactions API."""
-    prepared: dict[str, interactions.Content] = {}
+    prepared: dict[str | Path, interactions.Content] = {}
     for content in chat_log.content:
         if isinstance(content, conversation.UserContent) and content.attachments:
             for attachment in content.attachments:
                 if attachment.media_content_id not in prepared:
-                    prepared[
-                        attachment.media_content_id
-                    ] = await async_prepare_attachment_for_interactions(
+                    part = await async_prepare_attachment_for_interactions(
                         hass, attachment
                     )
+                    prepared[attachment.media_content_id] = part
+                    if attachment.path:
+                        prepared[attachment.path] = part
     return prepared
 
 
