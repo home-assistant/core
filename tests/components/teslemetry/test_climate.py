@@ -508,7 +508,7 @@ async def test_climate_streaming_hvac_power(
     hvac_power: str,
     expected: HVACMode,
 ) -> None:
-    """Tests that preconditioning reports the streaming climate as on."""
+    """Tests the HvacPower to HVAC mode mapping for streaming vehicles."""
 
     await setup_platform(hass, [Platform.CLIMATE])
 

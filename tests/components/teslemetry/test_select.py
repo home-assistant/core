@@ -364,6 +364,7 @@ async def test_select_streaming(
         pytest.param("HvacPowerStateOn", False, 0, id="climate_on_ac_off"),
         pytest.param("HvacPowerStatePrecondition", False, 0, id="preconditioning"),
         pytest.param("HvacPowerStateOff", True, 1, id="climate_off_ac_on"),
+        pytest.param("HvacPowerStateOverheatProtect", True, 1, id="overheat_protect"),
     ],
 )
 async def test_select_streaming_climate_start(
