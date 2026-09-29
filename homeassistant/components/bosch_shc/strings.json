@@ -59,6 +59,11 @@
         }
       }
     },
+    "number": {
+      "impulse_length": {
+        "name": "Pulse length"
+      }
+    },
     "sensor": {
       "air_quality": {
         "name": "Air quality"
