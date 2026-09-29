@@ -400,11 +400,48 @@ async def test_select_update_liveview(
     mock_msg = Mock()
     mock_msg.changed_data = {}
     mock_msg.new_obj = new_liveview
+    caplog.clear()
     ufp.ws_msg(mock_msg)
+    public = ufp.api.public_bootstrap.viewers[viewer.id]
+    ufp.devices_ws_subscription(public_device_ws_message(public))
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).attributes[ATTR_OPTIONS] == [liveview.name]
     assert "Restart Home Assistant to update Viewport select" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "public_bootstrap_loaded",
+    [
+        pytest.param(True, id="no_public_viewers"),
+        pytest.param(False, id="public_bootstrap_not_loaded"),
+    ],
+)
+async def test_select_update_liveview_no_warning(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    viewer: Viewer,
+    liveview: Liveview,
+    caplog: pytest.LogCaptureFixture,
+    public_bootstrap_loaded: bool,
+) -> None:
+    """A liveview update without public viewers logs no restart warning."""
+
+    setup_public_viewer(ufp, [liveview])
+    await init_entry(hass, ufp, [viewer])
+    if public_bootstrap_loaded:
+        ufp.api.public_bootstrap.viewers.clear()
+    else:
+        ufp.api.has_public_bootstrap = False
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = liveview
+    caplog.clear()
+    ufp.ws_msg(mock_msg)
+    await hass.async_block_till_done()
+
+    assert "Restart Home Assistant to update Viewport select" not in caplog.text
 
 
 async def test_select_update_doorbell_settings(
