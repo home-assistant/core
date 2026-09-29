@@ -2,11 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from jvcprojector import (
-    Command,
-    JvcProjectorTimeoutError,
-    command as cmd,
-)
+from jvcprojector import Command, JvcProjectorTimeoutError, command as cmd
 import pytest
 
 from homeassistant.const import STATE_UNKNOWN
@@ -80,6 +76,8 @@ async def test_diagnostic_sensor_timeout_is_unknown(
         entity_registry.async_update_entity(entity_id, disabled_by=None)
 
     await hass.config_entries.async_reload(mock_integration.entry_id)
+    await hass.async_block_till_done()
+    await mock_integration.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
     for entity_id in entity_ids:

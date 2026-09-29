@@ -70,6 +70,8 @@ async def test_motion_enhance_timeout_is_unknown(
 
     await hass.config_entries.async_reload(mock_integration.entry_id)
     await hass.async_block_till_done()
+    await mock_integration.runtime_data.async_refresh()
+    await hass.async_block_till_done()
 
     state = hass.states.get(MOTION_ENHANCE_ENTITY_ID)
     assert state is not None
