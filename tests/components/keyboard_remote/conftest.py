@@ -27,14 +27,12 @@ from tests.common import MockConfigEntry
 # so that mocked events behave consistently with the integration under test)
 EV_KEY = 1
 
-# Build a mock evdev module with stable constants before any integration import
+# The integration only imports evdev inside functions, so the fixture below
+# covers every import without touching sys.modules for the whole session.
 _mock_ecodes = SimpleNamespace(EV_KEY=EV_KEY)
 _mock_evdev = MagicMock()
 _mock_evdev.ecodes = _mock_ecodes
 _mock_evdev.categorize = MagicMock(side_effect=lambda e: f"key event {e.code}")
-
-if "evdev" not in sys.modules:
-    sys.modules["evdev"] = _mock_evdev
 
 
 @pytest.fixture(autouse=True)
