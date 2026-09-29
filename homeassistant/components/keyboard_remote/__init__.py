@@ -221,15 +221,16 @@ class KeyboardRemoteManager:
 
             _LOGGER.debug("Start monitoring")
 
-            self._inotify = Inotify()
             try:
+                self._inotify = Inotify()
                 self._watcher = self._inotify.add_watch(
                     DEVINPUT, Mask.CREATE | Mask.ATTRIB | Mask.DELETE
                 )
             except OSError as err:
                 # Leave nothing behind, so the next entry load can retry
-                self._inotify.close()
-                self._inotify = None
+                if self._inotify is not None:
+                    self._inotify.close()
+                    self._inotify = None
                 _LOGGER.error("Unable to watch %s for input devices: %s", DEVINPUT, err)
                 return
             self._watch_by_id()

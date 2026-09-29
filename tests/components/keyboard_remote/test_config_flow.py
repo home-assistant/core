@@ -410,6 +410,50 @@ async def test_import_adopts_entry_created_before_by_id_existed(
 
 
 @pytest.mark.parametrize(
+    ("title", "expected_title"),
+    [
+        pytest.param(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, id="fallback_title"),
+        pytest.param("Living room remote", "Living room remote", id="user_title"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_import_adoption_refreshes_fallback_name(
+    hass: HomeAssistant,
+    title: str,
+    expected_title: str,
+) -> None:
+    """Test adoption replaces the raw path stored as name when the device was absent.
+
+    A title the user has changed since is kept.
+    """
+    existing = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FAKE_DEVICE_REAL_PATH,
+        title=title,
+        data={
+            CONF_DEVICE_PATH: FAKE_DEVICE_REAL_PATH,
+            CONF_DEVICE_NAME: FAKE_DEVICE_REAL_PATH,
+            CONF_DEVICE_DESCRIPTOR: FAKE_DEVICE_REAL_PATH,
+        },
+    )
+    existing.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
+        return_value=(FAKE_DEVICE_PATH, FAKE_DEVICE_NAME, FAKE_BY_ID_BASENAME),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={"device_descriptor": FAKE_DEVICE_REAL_PATH},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert existing.data[CONF_DEVICE_NAME] == FAKE_DEVICE_NAME
+    assert existing.title == expected_title
+
+
+@pytest.mark.parametrize(
     ("import_data", "legacy_unique_id"),
     [
         pytest.param(

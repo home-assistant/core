@@ -14,6 +14,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import selector
+from homeassistant.helpers.typing import UNDEFINED
 
 from .const import (
     CONF_DEVICE_DESCRIPTOR,
@@ -305,10 +306,22 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
             # The startup scan may already have run with the old identity, and
             # nothing rescans a loaded entry when only its data changes.
+            data_updates: dict[str, Any] = {}
+            if device_path:
+                data_updates[CONF_DEVICE_PATH] = device_path
+            if device_name:
+                data_updates[CONF_DEVICE_NAME] = device_name
             return self.async_update_reload_and_abort(
                 entry,
                 unique_id=unique_id,
-                data_updates={CONF_DEVICE_PATH: device_path} if device_path else {},
+                # The first import titled the entry with its fallback name.
+                # Replace that, but keep a title the user has since changed.
+                title=(
+                    device_name
+                    if device_name and entry.title == entry.data.get(CONF_DEVICE_NAME)
+                    else UNDEFINED
+                ),
+                data_updates=data_updates,
                 reason="already_configured",
             )
 

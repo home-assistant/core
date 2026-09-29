@@ -226,6 +226,27 @@ async def test_start_fails_when_input_directory_cannot_be_watched(
     assert "Unable to watch /dev/input for input devices" in caplog.text
 
 
+async def test_start_fails_when_inotify_cannot_be_created(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test running out of inotify instances is logged, not raised."""
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.keyboard_remote.Inotify",
+        side_effect=OSError(24, "Too many open files"),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    manager: KeyboardRemoteManager = hass.data[DOMAIN]
+    assert not manager._started
+    assert manager._inotify is None
+    assert manager._stop_listener is None
+    assert "Unable to watch /dev/input for input devices" in caplog.text
+
+
 async def test_async_setup_no_yaml_config(hass: HomeAssistant) -> None:
     """Test setup succeeds when DOMAIN not in config."""
     assert await async_setup_component(hass, DOMAIN, {})
