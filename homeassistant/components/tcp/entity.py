@@ -66,15 +66,12 @@ class TcpEntity(Entity):
 
     def update(self) -> None:
         """Get the latest value for this sensor."""
-        # Keep initial failures as unknown, but mark later failures as unavailable.
-        if self._state is not None:
-            self.available = False
-
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(self._config[CONF_TIMEOUT])
             try:
                 sock.connect((self._config[CONF_HOST], self._config[CONF_PORT]))
             except OSError as err:
+                self._attr_available = False
                 _LOGGER.error(
                     "Unable to connect to %s on port %s: %s",
                     self._config[CONF_HOST],
@@ -91,6 +88,7 @@ class TcpEntity(Entity):
             try:
                 sock.send(self._config[CONF_PAYLOAD].encode())
             except OSError as err:
+                self._attr_available = False
                 _LOGGER.error(
                     "Unable to send payload %r to %s on port %s: %s",
                     self._config[CONF_PAYLOAD],
@@ -102,6 +100,7 @@ class TcpEntity(Entity):
 
             readable, _, _ = select.select([sock], [], [], self._config[CONF_TIMEOUT])
             if not readable:
+                self._attr_available = False
                 _LOGGER.warning(
                     (
                         "Timeout (%s second(s)) waiting for a response after "
@@ -116,6 +115,7 @@ class TcpEntity(Entity):
 
             value = sock.recv(self._config[CONF_BUFFER_SIZE]).decode()
 
+        self._attr_available = True
         value_template = self._config[CONF_VALUE_TEMPLATE]
         if value_template is None:
             self._state = value
@@ -129,5 +129,3 @@ class TcpEntity(Entity):
                     value,
                 )
                 return
-
-        self.available = True
