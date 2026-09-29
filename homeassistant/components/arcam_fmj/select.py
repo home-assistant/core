@@ -15,7 +15,6 @@ from .entity import ArcamFmjEntity, convert_exception
 
 PARALLEL_UPDATES = 1
 
-_DEFAULT_ROOM_EQ_NAMES = ("EQ1", "EQ2", "EQ3")
 _ROOM_EQ_MODES = (RoomEqMode.EQ1, RoomEqMode.EQ2, RoomEqMode.EQ3)
 
 ROOM_EQ_DESCRIPTION = SelectEntityDescription(
@@ -24,34 +23,16 @@ ROOM_EQ_DESCRIPTION = SelectEntityDescription(
 )
 
 
-def _room_eq_names(coordinator: ArcamFmjCoordinator) -> tuple[str, ...]:
-    """Return a name for each available Room EQ profile slot."""
-    names = coordinator.state.get_room_eq_names() or []
-    return (
-        tuple(
-            name or default
-            for name, default in zip(
-                names[: len(_DEFAULT_ROOM_EQ_NAMES)],
-                _DEFAULT_ROOM_EQ_NAMES,
-                strict=False,
-            )
-        )
-        + _DEFAULT_ROOM_EQ_NAMES[len(names) :]
-    )
-
-
 def _room_eq_options(
     coordinator: ArcamFmjCoordinator,
 ) -> tuple[tuple[RoomEqMode, str], ...]:
     """Return uniquely labelled Room EQ profile options."""
-    return tuple(
-        (mode, f"{mode.name}: {name}")
-        for mode, name in zip(
-            _ROOM_EQ_MODES,
-            _room_eq_names(coordinator),
-            strict=True,
-        )
-    )
+    names = coordinator.state.get_room_eq_names() or []
+    options: list[tuple[RoomEqMode, str]] = []
+    for index, mode in enumerate(_ROOM_EQ_MODES):
+        name = names[index] if index < len(names) else None
+        options.append((mode, f"{mode.name}: {name}" if name else mode.name))
+    return tuple(options)
 
 
 async def async_setup_entry(
