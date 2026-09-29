@@ -128,11 +128,6 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
     def state(self) -> MediaPlayerState | None:
         """State of the player."""
 
-        # Home Assistant reads this through supported_features and
-        # entity_picture before the console has been polled
-        if not self.available:
-            return None
-
         status = self.data.status
         if status.playback_state in XBOX_STATE_MAP:
             return XBOX_STATE_MAP[status.playback_state]
@@ -142,7 +137,10 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
     @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
-        if self.state not in [MediaPlayerState.PLAYING, MediaPlayerState.PAUSED]:
+        if not self.available or self.state not in [
+            MediaPlayerState.PLAYING,
+            MediaPlayerState.PAUSED,
+        ]:
             return (
                 SUPPORT_XBOX
                 & ~MediaPlayerEntityFeature.NEXT_TRACK
