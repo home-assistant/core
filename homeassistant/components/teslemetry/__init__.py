@@ -583,11 +583,7 @@ async def _async_rediscover_gateway(
 
 
 async def _async_vehicle_first_refresh(vehicle: TeslemetryVehicleData) -> None:
-    """Refresh a polling vehicle, bounding a sleeping car's slow response.
-
-    A sleeping vehicle can hold vehicle_data open for minutes; bound it so setup
-    retries instead of stalling HA's bootstrap. The stream stays unbounded.
-    """
+    """Refresh a polling vehicle, bounding a sleeping car's slow response."""
     try:
         async with asyncio.timeout(VEHICLE_FIRST_REFRESH_TIMEOUT):
             await vehicle.coordinator.async_config_entry_first_refresh()
