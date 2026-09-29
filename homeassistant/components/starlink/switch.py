@@ -35,6 +35,7 @@ class StarlinkSwitchEntityDescription(SwitchEntityDescription):
     value_fn: Callable[[StarlinkData], bool | None]
     turn_on_fn: Callable[[StarlinkUpdateCoordinator], Awaitable[None]]
     turn_off_fn: Callable[[StarlinkUpdateCoordinator], Awaitable[None]]
+    available_fn: Callable[[StarlinkData], bool]
 
 
 class StarlinkSwitchEntity(StarlinkEntity, SwitchEntity):
@@ -47,6 +48,12 @@ class StarlinkSwitchEntity(StarlinkEntity, SwitchEntity):
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.entity_description.available_fn(self.coordinator.data)
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -67,17 +74,19 @@ SWITCHES = [
         value_fn=lambda data: data.status["state"] == "STOWED",
         turn_on_fn=lambda coordinator: coordinator.async_stow_starlink(True),
         turn_off_fn=lambda coordinator: coordinator.async_stow_starlink(False),
+        available_fn=lambda data: True,
     ),
     StarlinkSwitchEntityDescription(
         key="sleep_schedule",
         translation_key="sleep_schedule",
         device_class=SwitchDeviceClass.SWITCH,
-        value_fn=lambda data: data.sleep[2],
+        value_fn=lambda data: data.sleep[2] if data.sleep else None,
         turn_on_fn=lambda coordinator: coordinator.async_set_sleep_schedule_enabled(
             True
         ),
         turn_off_fn=lambda coordinator: coordinator.async_set_sleep_schedule_enabled(
             False
         ),
+        available_fn=lambda data: data.sleep is not None,
     ),
 ]

@@ -98,6 +98,70 @@ async def test_setup_with_unimplemented_location_or_sleep(
         assert entry.runtime_data.data
 
 
+async def test_sleep_entities_unavailable_when_sleep_unimplemented(
+    hass: HomeAssistant,
+) -> None:
+    """Test sleep-related entities go unavailable, not a false 'off', when unsupported.
+
+    A fabricated (0, 0, False) fallback would make switch.starlink_sleep_schedule
+    report a normal-looking, interactable "off" even though the dish never
+    actually reported a schedule - and toggling it on would just fail. It
+    should be unavailable instead, same as the two sleep time entities.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "1.2.3.4:0000"},
+    )
+
+    with (
+        LOCATION_DATA_SUCCESS_PATCHER,
+        SLEEP_DATA_UNIMPLEMENTED_PATCHER,
+        STATUS_DATA_SUCCESS_PATCHER,
+        HISTORY_STATS_SUCCESS_PATCHER,
+    ):
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert entry.state is ConfigEntryState.LOADED
+        assert entry.runtime_data.data.sleep is None
+        assert hass.states.get("switch.starlink_sleep_schedule").state == "unavailable"
+        assert hass.states.get("time.starlink_sleep_start").state == "unavailable"
+        assert hass.states.get("time.starlink_sleep_end").state == "unavailable"
+        # A switch unrelated to sleep config must stay unaffected.
+        assert hass.states.get("switch.starlink_stowed").state == "off"
+
+
+async def test_sleep_switch_reports_real_off_when_supported(
+    hass: HomeAssistant,
+) -> None:
+    """Test the sleep switch reports a real, interactable 'off' when supported.
+
+    Guards against a fix for the above accidentally treating a genuine,
+    supported "schedule disabled" as unavailable too.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "1.2.3.4:0000"},
+    )
+
+    with (
+        LOCATION_DATA_SUCCESS_PATCHER,
+        SLEEP_DATA_SUCCESS_PATCHER,
+        STATUS_DATA_SUCCESS_PATCHER,
+        HISTORY_STATS_SUCCESS_PATCHER,
+    ):
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("switch.starlink_sleep_schedule")
+        assert state is not None
+        assert state.state in ("on", "off")
+
+
 @pytest.mark.parametrize(
     ("location_patcher", "sleep_patcher"),
     [
