@@ -4,10 +4,10 @@ from collections.abc import AsyncIterator, Generator
 from copy import deepcopy
 import datetime
 from pathlib import Path
-from typing import Any, Unpack
-from unittest.mock import AsyncMock, Mock, patch
+from typing import Unpack
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from anthropic import RateLimitError
+from anthropic import AsyncStream, RateLimitError
 from anthropic.types import (
     CitationCharLocation,
     CitationCharLocationParam,
@@ -343,7 +343,9 @@ async def test_token_stats_reported(
     """Test that cache reads, not cache creation, are reported as cached tokens."""
     trace.async_clear_traces()
 
-    async def mock_stream(**kwargs: Any):
+    async def mock_stream(
+        **kwargs: Unpack[MessageCreateParamsStreaming],
+    ) -> AsyncIterator[RawMessageStreamEvent]:
         """Stream a single response carrying distinct cache read and creation usage."""
         yield RawMessageStartEvent(
             type="message_start",
@@ -370,11 +372,16 @@ async def test_token_stats_reported(
         )
         yield RawMessageStopEvent(type="message_stop")
 
+    stream = MagicMock(spec=AsyncStream)
+    stream.__aenter__.return_value = stream
     with patch(
         "anthropic.resources.messages.AsyncMessages.create",
         new_callable=AsyncMock,
-        side_effect=mock_stream,
-    ):
+        return_value=stream,
+    ) as mock_create:
+        stream.__aiter__.side_effect = lambda: mock_stream(
+            **mock_create.call_args.kwargs
+        )
         await conversation.async_converse(
             hass,
             "hello",
