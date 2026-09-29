@@ -93,3 +93,24 @@ async def test_event_press_release(
 
     assert len(events) == 2
     assert events[1].data["action"] == "released"
+
+
+async def test_event_release_only_button(
+    hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """A button that only ever reports a release still fires a single press."""
+    mock_config_entry.add_to_hass(hass)
+
+    button = mock_lutron.areas[0].keypads[0].buttons[0]
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    events = async_capture_events(hass, "lutron_event")
+
+    for call in button.subscribe.call_args_list:
+        callback = call[0][0]
+        callback(button, None, Button.Event.RELEASED, None)
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data["action"] == "single"

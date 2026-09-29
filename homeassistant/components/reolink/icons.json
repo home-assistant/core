@@ -500,6 +500,12 @@
         "state": {
           "off": "mdi:music-note-off"
         }
+      },
+      "work_mode_battery": {
+        "default": "mdi:battery"
+      },
+      "work_mode_powered": {
+        "default": "mdi:power-plug"
       }
     },
     "sensor": {

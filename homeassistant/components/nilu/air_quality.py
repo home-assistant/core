@@ -20,7 +20,7 @@ from niluclient import (
     create_station_client,
     lookup_stations_in_area,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.air_quality import (
     PLATFORM_SCHEMA as AIR_QUALITY_PLATFORM_SCHEMA,
@@ -90,13 +90,13 @@ CONF_ALLOWED_AREAS = [
 
 PLATFORM_SCHEMA = AIR_QUALITY_PLATFORM_SCHEMA.extend(
     {
-        vol.Inclusive(
+        probatio.Inclusive(
             CONF_LATITUDE, "coordinates", "Latitude and longitude must exist together"
         ): cv.latitude,
-        vol.Inclusive(
+        probatio.Inclusive(
             CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
         ): cv.longitude,
-        vol.Exclusive(
+        probatio.Exclusive(
             CONF_AREA,
             "station_collection",
             (
@@ -104,8 +104,8 @@ PLATFORM_SCHEMA = AIR_QUALITY_PLATFORM_SCHEMA.extend(
                 "stations in a specific area pr sensor. "
                 "Please only configure station or area."
             ),
-        ): vol.All(cv.string, vol.In(CONF_ALLOWED_AREAS)),
-        vol.Exclusive(
+        ): probatio.All(cv.string, probatio.In(CONF_ALLOWED_AREAS)),
+        probatio.Exclusive(
             CONF_STATION,
             "station_collection",
             (
@@ -113,9 +113,9 @@ PLATFORM_SCHEMA = AIR_QUALITY_PLATFORM_SCHEMA.extend(
                 "stations in a specific area pr sensor. "
                 "Please only configure station or area."
             ),
-        ): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
+        ): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
     }
 )
 

@@ -2,8 +2,8 @@
 
 from typing import Any, override
 
+import probatio
 from python_qube_heatpump import QubeClient
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -38,7 +38,7 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
                     version = await client.async_get_software_version()
                     if version is None:
                         errors["base"] = "not_qube_device"
-            except OSError, TimeoutError:
+            except OSError:
                 errors["base"] = "cannot_connect"
             finally:
                 await client.close()
@@ -52,9 +52,9 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_HOST): str,
+                probatio.Required(CONF_HOST): str,
             }
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)

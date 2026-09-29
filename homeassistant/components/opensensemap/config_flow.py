@@ -4,7 +4,7 @@ from typing import Any, override
 
 from opensensemap_api import OpenSenseMap
 from opensensemap_api.exceptions import OpenSenseMapError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME
@@ -65,7 +65,7 @@ class OpenSenseMapConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_STATION_ID): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_STATION_ID): str}),
             errors=errors,
         )
 

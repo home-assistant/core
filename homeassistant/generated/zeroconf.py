@@ -525,6 +525,11 @@ ZEROCONF = {
             "domain": "energieleser",
         },
     ],
+    "_gaspulse._tcp.local.": [
+        {
+            "domain": "energieleser",
+        },
+    ],
     "_googlecast._tcp.local.": [
         {
             "domain": "cast",
@@ -690,6 +695,10 @@ ZEROCONF = {
                 "vendor": "tailwind",
             },
         },
+        {
+            "domain": "velux",
+            "name": "velux_klf_lan_*",
+        },
     ],
     "_hue._tcp.local.": [
         {
@@ -731,6 +740,11 @@ ZEROCONF = {
         {
             "domain": "overkiz",
             "name": "gateway*",
+        },
+    ],
+    "_lifx._udp.local.": [
+        {
+            "domain": "lifx",
         },
     ],
     "_linkplay._tcp.local.": [
@@ -819,6 +833,11 @@ ZEROCONF = {
             "domain": "bluesound",
         },
     ],
+    "_mypv._tcp.local.": [
+        {
+            "domain": "my_pv",
+        },
+    ],
     "_nanoleafapi._tcp.local.": [
         {
             "domain": "nanoleaf",
@@ -872,6 +891,11 @@ ZEROCONF = {
     "_plugwise._tcp.local.": [
         {
             "domain": "plugwise",
+        },
+    ],
+    "_powerhub._udp.local.": [
+        {
+            "domain": "bitvis",
         },
     ],
     "_powerview._tcp.local.": [
@@ -956,6 +980,11 @@ ZEROCONF = {
     "_smoip._tcp.local.": [
         {
             "domain": "cambridge_audio",
+        },
+    ],
+    "_solaredge-modbus._tcp.local.": [
+        {
+            "domain": "solaredge_modbus",
         },
     ],
     "_solarman._tcp.local.": [

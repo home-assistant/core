@@ -40,6 +40,45 @@ def test_get_datetime_from_future_time_valid() -> None:
     assert isinstance(result, datetime)
 
 
+@pytest.mark.usefixtures("setup_credentials", "mock_lyric_mixed_devices")
+async def test_room_sensors_created_regardless_of_device_id_prefix(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Room/accessory sensors are created regardless of device ID prefix."""
+    with patch("homeassistant.components.lyric.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    lcc_room_sensor = hass.states.get(
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, "AABBCC000001_room0_acc0_room_temperature"
+        )
+    )
+    assert lcc_room_sensor.state == "22.5"
+
+    non_lcc_room_sensor = hass.states.get(
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, "AABBCC000002_room0_acc0_room_temperature"
+        )
+    )
+    assert non_lcc_room_sensor.state == "24.5"
+
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, "AABBCC000003_room0_acc0_room_temperature"
+        )
+        is None
+    )
+
+    unsupported_device_sensor = hass.states.get(
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, "AABBCC000003_indoor_temperature"
+        )
+    )
+    assert unsupported_device_sensor.state == "21.5"
+
+
 @pytest.mark.usefixtures("setup_credentials", "mock_lyric_api")
 async def test_sensor(
     hass: HomeAssistant,

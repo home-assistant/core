@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 
 import iperf3
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -70,35 +70,45 @@ SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PROTOCOLS = ["tcp", "udp"]
 
-HOST_CONFIG_SCHEMA = vol.Schema(
+HOST_CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): vol.Range(5, 10),
-        vol.Optional(CONF_PARALLEL, default=DEFAULT_PARALLEL): vol.Range(1, 20),
-        vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.In(PROTOCOLS),
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_DURATION, default=DEFAULT_DURATION): probatio.Range(
+            5, 10
+        ),
+        probatio.Optional(CONF_PARALLEL, default=DEFAULT_PARALLEL): probatio.Range(
+            1, 20
+        ),
+        probatio.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): probatio.In(
+            PROTOCOLS
+        ),
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_HOSTS): vol.All(cv.ensure_list, [HOST_CONFIG_SCHEMA]),
-                vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
-                    cv.ensure_list, [vol.In(SENSOR_KEYS)]
+                probatio.Required(CONF_HOSTS): probatio.All(
+                    cv.ensure_list, [HOST_CONFIG_SCHEMA]
                 ),
-                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL): vol.All(
-                    cv.time_period, cv.positive_timedelta
-                ),
-                vol.Optional(CONF_MANUAL, default=False): cv.boolean,
+                probatio.Optional(
+                    CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS
+                ): probatio.All(cv.ensure_list, [probatio.In(SENSOR_KEYS)]),
+                probatio.Optional(
+                    CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL
+                ): probatio.All(cv.time_period, cv.positive_timedelta),
+                probatio.Optional(CONF_MANUAL, default=False): cv.boolean,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_HOST, default=None): cv.string})
+SERVICE_SCHEMA = probatio.Schema(
+    {probatio.Optional(ATTR_HOST, default=None): cv.string}
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

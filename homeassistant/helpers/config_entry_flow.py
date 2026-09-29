@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, cast, override
 
 from homeassistant import config_entries
 from homeassistant.components import onboarding
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 
 from .typing import DiscoveryInfoType
 
@@ -47,7 +47,10 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         await self.async_set_unique_id(self._domain, raise_on_progress=False)
 
@@ -73,14 +76,20 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
                     has_devices = await cast("asyncio.Future[bool]", discovery_result)
 
             if not has_devices:
-                return self.async_abort(reason="no_devices_found")
+                return self.async_abort(
+                    reason="no_devices_found",
+                    translation_domain=HOMEASSISTANT_DOMAIN,
+                )
 
             # Cancel the discovered one.
             for flow in in_progress:
                 self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
         if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         return self.async_create_entry(title=self._title, data={})
 
@@ -90,7 +99,10 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         await self.async_set_unique_id(self._domain)
 
@@ -102,7 +114,10 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by bluetooth discovery."""
         if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         await self.async_set_unique_id(self._domain)
 
@@ -114,7 +129,10 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by dhcp discovery."""
         if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         await self.async_set_unique_id(self._domain)
 
@@ -126,7 +144,10 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by Homekit discovery."""
         if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         await self.async_set_unique_id(self._domain)
 
@@ -138,7 +159,10 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by mqtt discovery."""
         if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         await self.async_set_unique_id(self._domain)
 
@@ -150,7 +174,10 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by Zeroconf discovery."""
         if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         await self.async_set_unique_id(self._domain)
 
@@ -162,7 +189,10 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by Ssdp discovery."""
         if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         await self.async_set_unique_id(self._domain)
 
@@ -173,7 +203,10 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by import."""
         if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         # Cancel other flows.
         in_progress = self._async_in_progress()
@@ -227,7 +260,10 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
             and self._async_current_entries()
             and self.source != config_entries.SOURCE_RECONFIGURE
         ):
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         if user_input is None:
             return self.async_show_form(
@@ -259,7 +295,10 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
             self.hass
         ):
             if not async_is_connected(self.hass):
-                return self.async_abort(reason="cloud_not_connected")
+                return self.async_abort(
+                    reason="cloud_not_connected",
+                    translation_domain=HOMEASSISTANT_DOMAIN,
+                )
 
             webhook_url = await async_create_cloudhook(self.hass, webhook_id)
             cloudhook = True

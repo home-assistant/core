@@ -1,5 +1,6 @@
 """Support for Alexa Devices."""
 
+from asyncio import Lock
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import timedelta
@@ -167,6 +168,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         }
 
         self._todo_list_items: dict[str, dict[str, AmazonListItem]] = {}
+        self._todo_refresh_lock = Lock()
         self.api.on_todo_event.append(self.todo_event_handler)
         self.api.on_todo_event.freeze()
 
@@ -214,9 +216,15 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             ) from err
         else:
             current_devices = set(data.keys())
+            device_list_changed = current_devices != self.previous_devices
             if stale_devices := self.previous_devices - current_devices:
                 await self._async_remove_device_stale(stale_devices)
             self.previous_devices = current_devices
+
+            # sync data on first refresh and after the device list changes
+            # self.data is None only on the first refresh
+            if self.data is None or device_list_changed:
+                await self._async_sync_on_device_list_change()
 
             current_routines = {
                 f"{slugify(self.config_entry.unique_id)}-{slugify(routine)}"
@@ -235,6 +243,18 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             self.previous_todo_lists = current_todo_lists
 
             return data
+
+    async def _async_sync_on_device_list_change(self) -> None:
+        """Sync per-device state on first refresh and after the device list changes."""
+        for sync_call in (self.sync_media_state,):
+            try:
+                await sync_call()
+            except ConfigEntryNotReady as err:
+                LOGGER.warning(
+                    "Sync failed for %s: %s. Data may be missing or incomplete until updates are pushed by Amazon",
+                    sync_call.__name__,
+                    err,
+                )
 
     async def _async_remove_device_stale(
         self,
@@ -308,23 +328,45 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                     todo_list.id
                 ] = await self.api.get_todo_list_items(todo_list.id)
 
-    async def todo_event_handler(self, list_event: AmazonListEvent) -> None:
-        """Handle changes on To-Do lists."""
-        if list_event.type == AmazonListEventType.DELETED:
-            self._todo_list_items.get(list_event.list_id, {}).pop(
-                list_event.item_id, None
-            )
-        elif (
-            list_event.type
-            in (AmazonListEventType.UPDATED, AmazonListEventType.CREATED)
-        ) and list_event.items:
-            if list_event.list_id not in self._todo_list_items:
-                # List was newly created after initial sync
-                self._todo_list_items[list_event.list_id] = {}
+    async def refresh_todo_list_items(self, list_id: str) -> None:
+        """Refresh the cached items of a single to-do list.
 
-            self._todo_list_items[list_event.list_id][list_event.item_id] = (
-                list_event.items
-            )
+        Cached items are otherwise only filled by the initial sync and by
+        pushed events, so a write of our own needs a pull to become visible.
+
+        The pulls are serialized, as an older answer landing last would leave
+        the cache behind with nothing to repair it.
+        """
+        async with self._todo_refresh_lock, alexa_api_call(self):
+            self._todo_list_items[list_id] = await self.api.get_todo_list_items(list_id)
+
+            # Reading the list back proves the API answers again
+            self.last_update_success = True
+
+        self.async_update_listeners()
+
+    async def todo_event_handler(self, list_event: AmazonListEvent) -> None:
+        """Handle changes on To-Do lists.
+
+        Takes the refresh lock, so an event arriving while a list is being
+        read back is applied on top of that read instead of under it.
+        """
+        async with self._todo_refresh_lock:
+            if list_event.type == AmazonListEventType.DELETED:
+                self._todo_list_items.get(list_event.list_id, {}).pop(
+                    list_event.item_id, None
+                )
+            elif (
+                list_event.type
+                in (AmazonListEventType.UPDATED, AmazonListEventType.CREATED)
+            ) and list_event.items:
+                if list_event.list_id not in self._todo_list_items:
+                    # List was newly created after initial sync
+                    self._todo_list_items[list_event.list_id] = {}
+
+                self._todo_list_items[list_event.list_id][list_event.item_id] = (
+                    list_event.items
+                )
 
         self.async_update_listeners()
 

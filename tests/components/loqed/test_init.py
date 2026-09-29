@@ -1,7 +1,6 @@
 """Tests the init part of the Loqed integration."""
 
 from datetime import timedelta
-import json
 from typing import Any
 from unittest.mock import AsyncMock, call, patch
 
@@ -22,6 +21,7 @@ from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_load_fixture,
+    async_load_json_array_fixture,
     async_load_json_object_fixture,
 )
 from tests.typing import ClientSessionGenerator
@@ -36,8 +36,8 @@ async def test_webhook_accepts_valid_message(
     """Test webhook called with valid message."""
     await async_setup_component(hass, "http", {"http": {}})
     client = await hass_client_no_auth()
-    processed_message = json.loads(
-        await async_load_fixture(hass, "lock_going_to_nightlock.json", DOMAIN)
+    processed_message = await async_load_json_object_fixture(
+        hass, "lock_going_to_nightlock.json", DOMAIN
     )
     lock.receiveWebhook = AsyncMock(return_value=processed_message)
 
@@ -58,9 +58,9 @@ async def test_setup_webhook_in_bridge(
     config: dict[str, Any] = {DOMAIN: {}}
     config_entry.add_to_hass(hass)
 
-    lock_status = json.loads(await async_load_fixture(hass, "status_ok.json", DOMAIN))
-    webhooks_fixture = json.loads(
-        await async_load_fixture(hass, "get_all_webhooks.json", DOMAIN)
+    lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
+    webhooks_fixture = await async_load_json_array_fixture(
+        hass, "get_all_webhooks.json", DOMAIN
     )
     lock.getWebhooks = AsyncMock(side_effect=[[], webhooks_fixture])
 
@@ -89,8 +89,8 @@ async def test_webhook_prefers_internal_url(
 
     lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
 
-    webhooks_fixture = json.loads(
-        await async_load_fixture(hass, "get_all_webhooks.json", DOMAIN)
+    webhooks_fixture = await async_load_json_array_fixture(
+        hass, "get_all_webhooks.json", DOMAIN
     )
     webhooks_fixture[0]["url"] = f"{hass.config.internal_url}/api/webhook/Webhook_id"
 
@@ -230,9 +230,9 @@ async def test_setup_retry_after_bridge_webhook_failure(
     """
     config_entry.add_to_hass(hass)
 
-    lock_status = json.loads(await async_load_fixture(hass, "status_ok.json", DOMAIN))
-    webhooks_fixture = json.loads(
-        await async_load_fixture(hass, "get_all_webhooks.json", DOMAIN)
+    lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
+    webhooks_fixture = await async_load_json_array_fixture(
+        hass, "get_all_webhooks.json", DOMAIN
     )
     lock.getWebhooks = AsyncMock(
         side_effect=[ConfigEntryNotReady, webhooks_fixture, webhooks_fixture]
@@ -264,9 +264,9 @@ async def test_setup_cloudhook_in_bridge(
     config: dict[str, Any] = {DOMAIN: {}}
     config_entry.add_to_hass(hass)
 
-    lock_status = json.loads(await async_load_fixture(hass, "status_ok.json", DOMAIN))
-    webhooks_fixture = json.loads(
-        await async_load_fixture(hass, "get_all_webhooks.json", DOMAIN)
+    lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
+    webhooks_fixture = await async_load_json_array_fixture(
+        hass, "get_all_webhooks.json", DOMAIN
     )
     lock.getWebhooks = AsyncMock(side_effect=[[], webhooks_fixture])
 
@@ -294,14 +294,14 @@ async def test_setup_cloudhook_from_entry_in_bridge(
     hass: HomeAssistant, cloud_config_entry: MockConfigEntry, lock: loqed.Lock
 ) -> None:
     """Test webhook setup in loqed bridge."""
-    webhooks_fixture = json.loads(
-        await async_load_fixture(hass, "get_all_webhooks.json", DOMAIN)
+    webhooks_fixture = await async_load_json_array_fixture(
+        hass, "get_all_webhooks.json", DOMAIN
     )
 
     config: dict[str, Any] = {DOMAIN: {}}
     cloud_config_entry.add_to_hass(hass)
 
-    lock_status = json.loads(await async_load_fixture(hass, "status_ok.json", DOMAIN))
+    lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
 
     lock.getWebhooks = AsyncMock(side_effect=[[], webhooks_fixture])
 
