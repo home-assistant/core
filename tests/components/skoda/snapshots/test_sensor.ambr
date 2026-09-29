@@ -194,7 +194,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-    'original_icon': 'mdi:battery',
+    'original_icon': None,
     'original_name': 'Battery state of charge',
     'platform': 'skoda',
     'previous_unique_id': None,
@@ -210,7 +210,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Battery state of charge',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,

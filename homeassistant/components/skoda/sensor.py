@@ -328,7 +328,6 @@ SENSOR_TYPES: tuple[SkodaSensorEntityDescription, ...] = (
         translation_key="battery_percentage",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
-        icon="mdi:battery",
         required_capabilities=frozenset({VehicleCapability.CHARGING}),
         value_fn=_battery_percentage_value,
     ),
