@@ -1,0 +1,83 @@
+rules:
+  action-setup:
+    status: exempt
+    comment: The integration defines no custom actions or services.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: todo
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: The integration defines no custom actions or services.
+  docs-triggers:
+    status: exempt
+    comment: The integration defines no triggers.
+  docs-conditions:
+    status: exempt
+    comment: The integration defines no conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner:
+    status: todo
+    comment: Add a real, active GitHub code owner before publishing; none can be inferred safely from this workspace.
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage:
+    status: todo
+    comment: The workspace does not include Home Assistant or pytest-homeassistant-custom-component; comprehensive coverage and the 95 percent threshold are not verified.
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: DRIQON is cloud-only and provides no local-discovery network metadata to update.
+  discovery:
+    status: exempt
+    comment: DRIQON devices are account-scoped; there is no safe unauthenticated device discovery before a user configures the account.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: done
+  entity-category:
+    status: exempt
+    comment: The integration currently exposes only primary control entities, not diagnostic or configuration entities.
+  entity-device-class:
+    status: exempt
+    comment: Home Assistant switch entities do not have a relevant device class for the current generic on/off capability.
+  entity-disabled-by-default:
+    status: exempt
+    comment: All current entities are primary controls and should be enabled by default.
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: todo
+    comment: No repair flow is implemented yet for account or service problems outside the built-in reauthentication flow.
+  stale-devices:
+    status: todo
+    comment: Devices missing from the account response become unavailable; Home Assistant device/entity registry cleanup is not implemented.
+  async-dependency: done
+  inject-websession: done
+  strict-typing:
+    status: todo
+    comment: Type annotations and typed API models are added, but strict type checking is not available in the current environment.
