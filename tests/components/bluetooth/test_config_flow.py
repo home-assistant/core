@@ -549,6 +549,8 @@ async def test_async_step_user_linux_adapter_replace_ignored(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "single_adapter"
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
         patch(
