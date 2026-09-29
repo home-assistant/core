@@ -146,7 +146,8 @@ rules:
   repair-issues:
     status: exempt
     comment: |
-      Integration does not raise repair issues.
+      Connection failures are retried via ConfigEntryNotReady and an invalid
+      token starts the reauth flow, so there is nothing for a repair to fix.
   stale-devices:
     status: exempt
     comment: |
