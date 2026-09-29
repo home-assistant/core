@@ -108,7 +108,7 @@
   },
   "exceptions": {
     "api_error": {
-      "message": "Unexpected response from the Zonneplan API: {error}"
+      "message": "Unexpected error from the Zonneplan API"
     },
     "cannot_connect": {
       "message": "Error communicating with the Zonneplan API"
