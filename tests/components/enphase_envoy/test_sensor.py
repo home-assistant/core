@@ -14,8 +14,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.enphase_envoy.const import (
-    DAILY_CONSUMPTION_UPPER_LIMIT,
-    DAILY_PRODUCTION_UPPER_LIMIT,
+    DAILY_ENERGY_UPPER_LIMIT,
     DOMAIN,
     Platform,
 )
@@ -1897,12 +1896,8 @@ async def test_sensor_daily_production_consumption_upper_limit(
         assert float(entity_state.state) == target
 
     # set daily production above upper_limit
-    mock_envoy.data.system_production.watt_hours_today = (
-        DAILY_PRODUCTION_UPPER_LIMIT + 1
-    )
-    mock_envoy.data.system_consumption.watt_hours_today = (
-        DAILY_CONSUMPTION_UPPER_LIMIT + 1
-    )
+    mock_envoy.data.system_production.watt_hours_today = DAILY_ENERGY_UPPER_LIMIT + 1
+    mock_envoy.data.system_consumption.watt_hours_today = DAILY_ENERGY_UPPER_LIMIT + 1
     # force HA to detect changed data by changing raw
     mock_envoy.data.raw = {"I": "am changed again"}
     # Move time to next update
@@ -1960,12 +1955,12 @@ async def test_sensor_daily_production_consumption_phase_upper_limit(
 
     # set daily values above upper_limit
     for phase in PHASENAMES:
-        mock_envoy.data.system_production_phases[
-            phase
-        ].watt_hours_today += DAILY_PRODUCTION_UPPER_LIMIT
-        mock_envoy.data.system_consumption_phases[
-            phase
-        ].watt_hours_today += DAILY_CONSUMPTION_UPPER_LIMIT
+        mock_envoy.data.system_production_phases[phase].watt_hours_today = (
+            DAILY_ENERGY_UPPER_LIMIT + 1
+        )
+        mock_envoy.data.system_consumption_phases[phase].watt_hours_today = (
+            DAILY_ENERGY_UPPER_LIMIT + 1
+        )
 
     # force HA to detect changed data by changing raw
     mock_envoy.data.raw = {"I": "am changed again"}

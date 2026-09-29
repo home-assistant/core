@@ -56,7 +56,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DAILY_CONSUMPTION_UPPER_LIMIT, DAILY_PRODUCTION_UPPER_LIMIT, DOMAIN
+from .const import DAILY_ENERGY_UPPER_LIMIT, DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 from .entity import EnvoyACBAggregateEntity, EnvoyACBBatteryEntity, EnvoyBaseEntity
 
@@ -231,7 +231,7 @@ PRODUCTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         value_fn=attrgetter("watt_hours_today"),
-        upper_limit=DAILY_PRODUCTION_UPPER_LIMIT,
+        upper_limit=DAILY_ENERGY_UPPER_LIMIT,
     ),
     EnvoyProductionSensorEntityDescription(
         key="seven_days_production",
@@ -300,7 +300,7 @@ CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         value_fn=attrgetter("watt_hours_today"),
-        upper_limit=DAILY_CONSUMPTION_UPPER_LIMIT,
+        upper_limit=DAILY_ENERGY_UPPER_LIMIT,
     ),
     EnvoyConsumptionSensorEntityDescription(
         key="seven_days_consumption",

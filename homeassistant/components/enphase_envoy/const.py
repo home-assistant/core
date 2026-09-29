@@ -38,6 +38,7 @@ OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE = False
 OPTION_DISABLE_KEEP_ALIVE = "disable_keep_alive"
 OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE = False
 
-# protection for 2^32 peaks showing in daily production and consumption values
-DAILY_PRODUCTION_UPPER_LIMIT = 4_000_000_000
-DAILY_CONSUMPTION_UPPER_LIMIT = 4_000_000_000
+# The Envoy occasionally reports daily energy values of 2^32 Wh offset by the
+# actual daily value (both above and below 2^32). Anything over 4 GWh for a
+# single day is not physically plausible, so treat it as invalid.
+DAILY_ENERGY_UPPER_LIMIT = 4_000_000_000
