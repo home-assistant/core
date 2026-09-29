@@ -142,6 +142,25 @@ def assert_entity_counts(
     assert len(hass.states.async_all(platform.value)) == enabled
 
 
+def registered_keys(
+    entity_registry: er.EntityRegistry, platform: Platform, mac: str
+) -> set[str]:
+    """Return the description keys registered for a device on a platform."""
+    prefix = f"{mac}_"
+    return {
+        entry.unique_id.removeprefix(prefix)
+        for entry in entity_registry.entities.values()
+        if entry.domain == platform and entry.unique_id.startswith(prefix)
+    }
+
+
+def make_streamless_public_camera(camera: Camera, **kwargs: Any) -> Mock:
+    """Build a public camera without RTSPS streams (snapshot-only)."""
+    public = make_public_camera(camera, **kwargs)
+    public.rtsps_streams = None
+    return public
+
+
 def normalize_name(name: str) -> str:
     """Normalize name."""
 
@@ -483,6 +502,7 @@ def make_public_sensor(
     for name in (
         "is_contact_sensor_enabled",
         "is_leak_sensor_enabled",
+        "is_leak_detection_enabled",
         "is_motion_sensor_enabled",
         "is_alarm_sensor_enabled",
         "is_temperature_sensor_enabled",

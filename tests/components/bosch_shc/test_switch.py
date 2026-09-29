@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from boschshcpy import (
     BypassService,
     CameraLightService,
+    PrivacyModeService,
     SilentModeService,
     ThermostatService,
 )
@@ -23,6 +24,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
     camera_eyes_device,
+    camera_outdoor_gen2_device,
     light_switch_bsm_device,
     micromodule_relay_device,
     motion_detector2_device,
@@ -1043,3 +1045,45 @@ async def test_camera_eyes_cameralight(
         blocking=True,
     )
     assert device.cameralight is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "camera_outdoor_gen2": [
+                camera_outdoor_gen2_device(privacymode=PrivacyModeService.State.ENABLED)
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_camera_outdoor_gen2_privacy_mode(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An Outdoor Camera Gen2's privacy mode is exposed and controllable as a switch."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.camera_outdoor_gen2[0]
+
+    state = hass.states.get("switch.outdoor_camera")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.outdoor_camera"},
+        blocking=True,
+    )
+    assert device.privacymode is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.outdoor_camera"},
+        blocking=True,
+    )
+    assert device.privacymode is False
