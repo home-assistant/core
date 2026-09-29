@@ -2933,6 +2933,38 @@ async def test_paired_site_live_reads_merge_over_cloud(
     )
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_paired_site_local_gap_keeps_cloud_value(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_powerwall_live_status: AsyncMock,
+) -> None:
+    """A locally-owned key the gateway returns as None keeps its cloud value."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    local = deepcopy(_LOCAL_LIVE_STATUS)
+    local["response"]["solar_power"] = None
+    mock_powerwall_live_status.side_effect = lambda: deepcopy(local)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SENSOR]),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        freezer.tick(ENERGY_LIVE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert mock_powerwall_live_status.await_count == 1
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+    assert hass.states.get("sensor.energy_site_battery_power").state == "3.0"
+
+
 async def test_paired_site_config_reads_merge_over_cloud(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
