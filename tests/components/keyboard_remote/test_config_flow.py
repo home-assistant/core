@@ -1,7 +1,7 @@
 """Tests for the Keyboard Remote config flow."""
 
 import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -370,9 +370,9 @@ async def test_import_name_only_discards_transient_path(hass: HomeAssistant) -> 
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_adopts_entry_created_before_by_id_existed(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     import_data: dict[str, str],
     legacy_unique_id: str,
 ) -> None:
@@ -404,6 +404,9 @@ async def test_import_adopts_entry_created_before_by_id_existed(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert existing.unique_id == FAKE_BY_ID_BASENAME
     assert existing.data[CONF_DEVICE_PATH] == FAKE_DEVICE_PATH
+    # Reloaded so the new identity is scanned for, not only matched on events
+    await hass.async_block_till_done()
+    mock_setup_entry.assert_called_once()
 
 
 @pytest.mark.parametrize(

@@ -36,6 +36,7 @@ from homeassistant.components.keyboard_remote.const import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
@@ -179,6 +180,50 @@ async def test_yaml_import_failure_creates_issue(
         domain=DOMAIN,
         issue_id="deprecated_yaml_import_issue_cannot_identify_device",
     )
+
+
+async def test_yaml_import_unexpected_abort_uses_unknown_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a framework abort reason creates the issue that has strings."""
+    with patch.object(
+        hass.config_entries.flow,
+        "async_init",
+        return_value={"type": FlowResultType.ABORT, "reason": "already_in_progress"},
+    ):
+        await _async_import_yaml_device(hass, {})
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id="deprecated_yaml_import_issue_unknown"
+    )
+    assert not issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id="deprecated_yaml_import_issue_already_in_progress"
+    )
+
+
+async def test_start_fails_when_input_directory_cannot_be_watched(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_inotify: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failed start releases inotify and registers no stop listener.
+
+    A container without /dev/input mapped cannot be watched, and leaving the
+    manager half started would stop a later load from retrying.
+    """
+    mock_inotify.add_watch.side_effect = FileNotFoundError(2, "No such file")
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    manager: KeyboardRemoteManager = hass.data[DOMAIN]
+    assert not manager._started
+    assert manager._inotify is None
+    assert manager._stop_listener is None
+    mock_inotify.close.assert_called_once()
+    assert "Unable to watch /dev/input for input devices" in caplog.text
 
 
 async def test_async_setup_no_yaml_config(hass: HomeAssistant) -> None:

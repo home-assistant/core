@@ -303,13 +303,14 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                 DOMAIN, unique_id
             ):
                 return self.async_abort(reason="already_configured")
-            updated_data = dict(entry.data)
-            if device_path:
-                updated_data[CONF_DEVICE_PATH] = device_path
-            self.hass.config_entries.async_update_entry(
-                entry, unique_id=unique_id, data=updated_data
+            # The startup scan may already have run with the old identity, and
+            # nothing rescans a loaded entry when only its data changes.
+            return self.async_update_reload_and_abort(
+                entry,
+                unique_id=unique_id,
+                data_updates={CONF_DEVICE_PATH: device_path} if device_path else {},
+                reason="already_configured",
             )
-            return self.async_abort(reason="already_configured")
 
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()

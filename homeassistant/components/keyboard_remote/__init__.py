@@ -119,8 +119,11 @@ async def _async_import_yaml_device(
 
     if (
         result.get("type") is FlowResultType.ABORT
-        and (reason := result.get("reason", "unknown")) != "already_configured"
+        and (reason := result.get("reason")) != "already_configured"
     ):
+        # Framework aborts such as already_in_progress have no issue strings
+        if reason != "cannot_identify_device":
+            reason = "unknown"
         ir.async_create_issue(
             hass,
             DOMAIN,
@@ -215,17 +218,24 @@ class KeyboardRemoteManager:
 
             _LOGGER.debug("Start monitoring")
 
+            self._inotify = Inotify()
+            try:
+                self._watcher = self._inotify.add_watch(
+                    DEVINPUT, Mask.CREATE | Mask.ATTRIB | Mask.DELETE
+                )
+            except OSError as err:
+                # Leave nothing behind, so the next entry load can retry
+                self._inotify.close()
+                self._inotify = None
+                _LOGGER.error("Unable to watch %s for input devices: %s", DEVINPUT, err)
+                return
+            self._watch_by_id()
+
             # Config entries are not unloaded when Home Assistant stops, so
             # without this the devices are never ungrabbed on shutdown.
             self._stop_listener = self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, self._async_handle_hass_stop
             )
-
-            self._inotify = Inotify()
-            self._watcher = self._inotify.add_watch(
-                DEVINPUT, Mask.CREATE | Mask.ATTRIB | Mask.DELETE
-            )
-            self._watch_by_id()
 
             # Scan initial devices AFTER starting watcher to avoid race
             # conditions leading to missing device connections
