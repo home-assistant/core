@@ -235,11 +235,7 @@ async def test_webhook_live_activity_dismissed(
     assert tokens == {}
 
     assert len(events) == 1
-    assert events[0].data == {
-        "tag": "washer_cycle",
-        "device_id": device.id,
-        "device_name": "Test 1",
-    }
+    assert events[0].data == {"tag": "washer_cycle", "device_id": device.id}
 
 
 async def test_webhook_live_activity_dismissed_nonexistent_tag(

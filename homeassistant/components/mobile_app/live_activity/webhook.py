@@ -11,7 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from ..const import (
-    ATTR_DEVICE_NAME,
     ATTR_LIVE_ACTIVITY_EXPIRES_AT,
     ATTR_PUSH_TOKEN,
     ATTR_TAG,
@@ -64,7 +63,6 @@ async def webhook_live_activity_dismissed(
         {
             ATTR_TAG: data[ATTR_TAG],
             ATTR_DEVICE_ID: device.id if device else None,
-            ATTR_DEVICE_NAME: config_entry.data[ATTR_DEVICE_NAME],
         },
         context=registration_context(config_entry.data),
     )
