@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from starlink_grpc import GrpcError
+
 from tests.common import load_json_array_fixture, load_json_object_fixture
 
 SETUP_ENTRY_PATCHER = patch(
@@ -13,9 +15,19 @@ LOCATION_DATA_SUCCESS_PATCHER = patch(
     return_value=load_json_object_fixture("location_data_success.json", "starlink"),
 )
 
+LOCATION_DATA_UNIMPLEMENTED_PATCHER = patch(
+    "homeassistant.components.starlink.coordinator.location_data",
+    side_effect=GrpcError("Unimplemented: *device.Request_GetLocation"),
+)
+
 SLEEP_DATA_SUCCESS_PATCHER = patch(
     "homeassistant.components.starlink.coordinator.get_sleep_config",
     return_value=load_json_array_fixture("sleep_data_success.json", "starlink"),
+)
+
+SLEEP_DATA_UNIMPLEMENTED_PATCHER = patch(
+    "homeassistant.components.starlink.coordinator.get_sleep_config",
+    side_effect=GrpcError("Unimplemented: *device.Request_DishGetConfig"),
 )
 
 STATUS_DATA_TARGET = "homeassistant.components.starlink.coordinator.status_data"

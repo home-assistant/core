@@ -40,7 +40,7 @@ type StarlinkConfigEntry = ConfigEntry[StarlinkUpdateCoordinator]
 class StarlinkData:
     """Contains data pulled from the Starlink system."""
 
-    location: LocationDict
+    location: LocationDict | None
     sleep: tuple[int, int, bool]
     status: StatusDict
     obstruction: ObstructionDict
@@ -71,8 +71,22 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
     def _get_starlink_data(self) -> StarlinkData:
         """Retrieve Starlink data."""
         context = self.channel_context
-        location = location_data(context)
-        sleep = get_sleep_config(context)
+        try:
+            location = location_data(context)
+        except GrpcError:
+            # GetLocation is Unimplemented on non-Priority plans.
+            _LOGGER.debug(
+                "location_data unavailable, continuing without location", exc_info=True
+            )
+            location = None
+        try:
+            sleep = get_sleep_config(context)
+        except GrpcError:
+            # DishGetConfig is Unimplemented on non-Priority plans.
+            _LOGGER.debug(
+                "get_sleep_config unavailable, defaulting to disabled", exc_info=True
+            )
+            sleep = (0, 0, False)
         status, obstruction, alert = status_data(context)
         index, _, _, _, _, usage, consumption, *_ = history_stats(
             parse_samples=-1 if self.history_stats_start is not None else 1,
