@@ -6,10 +6,10 @@ DOMAIN = "broadlink"
 
 DOMAINS_AND_TYPES = {
     Platform.CLIMATE: {"HYS"},
-    Platform.INFRARED: {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"},
+    Platform.INFRARED: {"RM4MINI", "RM4PRO", "RM5PLUS", "RMMINI", "RMMINIB", "RMPRO"},
     Platform.LIGHT: {"LB1", "LB2"},
     Platform.RADIO_FREQUENCY: {"RM4PRO", "RMPRO"},
-    Platform.REMOTE: {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"},
+    Platform.REMOTE: {"RM4MINI", "RM4PRO", "RM5PLUS", "RMMINI", "RMMINIB", "RMPRO"},
     Platform.SELECT: {"HYS"},
     Platform.SENSOR: {
         "A1",
@@ -29,6 +29,7 @@ DOMAINS_AND_TYPES = {
         "MP1S",
         "RM4MINI",
         "RM4PRO",
+        "RM5PLUS",
         "RMMINI",
         "RMMINIB",
         "RMPRO",

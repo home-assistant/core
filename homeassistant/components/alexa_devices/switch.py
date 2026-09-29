@@ -96,7 +96,7 @@ async def async_setup_entry(
         coordinator,
         SWITCH_DOMAIN,
         old_key,
-        remove_fn=lambda d: d.device_family == SPEAKER_GROUP_FAMILY,
+        remove_fn=lambda device: device.device_family == SPEAKER_GROUP_FAMILY,
     )
 
     # Replace unique id for DND switch
