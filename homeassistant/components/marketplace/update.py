@@ -2,9 +2,11 @@
 
 from typing import Any, override
 
+import probatio
+
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -14,6 +16,7 @@ from .entity import RepositoryEntity
 from .enums import MarketplaceSignal, RepositoryCategory
 from .exceptions import GitHubAnonymousRateLimitError, MarketplaceError
 from .utils.logger import LOGGER
+from .utils.validate import valid_ref
 
 
 async def async_setup_entry(
@@ -80,6 +83,16 @@ class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
+        if version is not None:
+            try:
+                valid_ref(version)
+            except probatio.Invalid as exception:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_version",
+                    translation_placeholders={"version": version},
+                ) from exception
+
         user_id = self._context.user_id if self._context else None
 
         # Automations and scripts run without a user, someone has to have read it

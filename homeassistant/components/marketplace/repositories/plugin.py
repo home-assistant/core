@@ -333,11 +333,7 @@ class PluginRepository(Repository):
             )
             return None
 
-        if (resources := lovelace_data.resources) is None:
-            self.logger.warning(
-                "%s Can not access the dashboard resources", self.string
-            )
-            return None
+        resources = lovelace_data.resources
 
         # Only the storage resource mode has a store to update
         if (

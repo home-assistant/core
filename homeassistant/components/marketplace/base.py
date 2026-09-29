@@ -83,6 +83,10 @@ if TYPE_CHECKING:
     from .utils.data import MarketplaceData
 
 
+# A release can be large, only a stalled connection counts as a failure
+DOWNLOAD_TIMEOUT = ClientTimeout(total=10 * 60, sock_read=60)
+
+
 @dataclass
 class RemovedRepository:
     """Removed repository."""
@@ -484,7 +488,7 @@ class MarketplaceManager:
     async def async_save_file(self, file_path: str, content: Any) -> bool:
         """Save a file."""
 
-        def _write_file():
+        def _write_file() -> None:
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
             with open(
                 file_path,
@@ -836,12 +840,12 @@ class MarketplaceManager:
 
     async def async_download_file(
         self,
-        url: str,
+        url: str | None,
         *,
         headers: dict | None = None,
         nolog: bool = False,
         handle_rate_limit: bool = False,
-        **_,
+        **_: Any,
     ) -> bytes | None:
         """Download files, and return the content."""
         if url is None:
@@ -854,7 +858,7 @@ class MarketplaceManager:
             try:
                 async with self.session.get(
                     url=url,
-                    timeout=ClientTimeout(total=60),
+                    timeout=DOWNLOAD_TIMEOUT,
                     headers=headers,
                 ) as response:
                     if response.status == 200:

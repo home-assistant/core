@@ -3,11 +3,7 @@
     "abort": {
       "activation_failed": "GitHub did not complete the connection. Try connecting again.",
       "could_not_register": "Could not register the device with GitHub.",
-      "not_setup": "The Marketplace is not set up.",
       "single_instance_allowed": "Only a single configuration of the Marketplace is allowed."
-    },
-    "error": {
-      "auth": "Personal Access Token is not correct"
     },
     "progress": {
       "wait_for_device": "1. Open {url} \n2. Paste the following key to authorize the Marketplace: \n```\n{code}\n```"
@@ -72,6 +68,9 @@
     },
     "invalid_token": {
       "message": "The GitHub token of the Marketplace is no longer valid. Connect GitHub again."
+    },
+    "invalid_version": {
+      "message": "{version} is not a version the Marketplace can download."
     },
     "not_loaded": {
       "message": "The Marketplace is not loaded."

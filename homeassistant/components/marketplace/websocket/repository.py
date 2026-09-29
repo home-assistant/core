@@ -15,6 +15,7 @@ from ..exceptions import (
     ReplacesBuiltInNotConfirmedError,
 )
 from ..utils.logger import LOGGER
+from ..utils.validate import valid_ref
 from ..utils.version import version_left_higher_then_right
 from .decorators import (
     ERR_GITHUB_RATE_LIMITED,
@@ -200,7 +201,7 @@ async def marketplace_repository_state(
     {
         probatio.Required("type"): "marketplace/repository/version",
         probatio.Required("repository"): cv.string,
-        probatio.Required("version"): cv.string,
+        probatio.Required("version"): valid_ref,
     }
 )
 @websocket_api.require_admin
@@ -285,7 +286,7 @@ async def marketplace_repository_beta(
     {
         probatio.Required("type"): "marketplace/repository/download",
         probatio.Required("repository"): cv.string,
-        probatio.Optional("version"): cv.string,
+        probatio.Optional("version"): valid_ref,
         probatio.Optional("confirm_replace_built_in", default=False): cv.boolean,
     }
 )

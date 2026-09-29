@@ -11,6 +11,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from ..base import MarketplaceManager
 from ..const import DOMAIN
+from ..enums import MarketplaceSignal
 from .critical import marketplace_critical_acknowledge, marketplace_critical_list
 from .decorators import marketplace_command
 from .repositories import (
@@ -66,7 +67,9 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
 @websocket_api.websocket_command(
     {
         probatio.Required("type"): "marketplace/subscribe",
-        probatio.Required("signal"): str,
+        probatio.Required("signal"): probatio.In(
+            [signal.value for signal in MarketplaceSignal]
+        ),
     }
 )
 @websocket_api.require_admin

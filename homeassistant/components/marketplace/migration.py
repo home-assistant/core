@@ -216,11 +216,11 @@ def _display_name(repository_data: dict[str, Any]) -> str:
         or {}
     )
     if name := manifest.get("name"):
-        return name
+        return str(name)
 
+    full_name: str = repository_data["full_name"]
     return (
-        repository_data["full_name"]
-        .split("/")[-1]
+        full_name.rsplit("/", maxsplit=1)[-1]
         .replace("-", " ")
         .replace("_", " ")
         .title()

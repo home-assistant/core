@@ -26,7 +26,7 @@ from homeassistant.components.update import (
 from homeassistant.config_entries import SOURCE_SYSTEM
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -432,6 +432,22 @@ async def test_install_already_downloaded_version(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: "1.0.0"},
+            blocking=True,
+        )
+
+
+async def test_install_refuses_a_version_that_is_a_path(
+    hass: HomeAssistant, integration_update_entity: str
+) -> None:
+    """Test the version of an install can not point at another repository."""
+    with pytest.raises(ServiceValidationError, match="not a version"):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {
+                ATTR_ENTITY_ID: integration_update_entity,
+                ATTR_VERSION: "../../other/repo/archive/refs/heads/main",
+            },
             blocking=True,
         )
 

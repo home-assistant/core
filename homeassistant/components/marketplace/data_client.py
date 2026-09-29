@@ -120,4 +120,7 @@ class CatalogClient:
 
     async def get_repositories(self, section: str) -> list[str]:
         """Get repositories."""
-        return await self._do_request(filename="repositories.json", section=section)
+        repositories: list[str] = await self._do_request(
+            filename="repositories.json", section=section
+        )
+        return repositories

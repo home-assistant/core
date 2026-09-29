@@ -7,14 +7,17 @@ from aiogithubapi.models.git_tree import GitHubGitTreeEntryModel
 
 def tree_entry_filename(entry: GitHubGitTreeEntryModel) -> str:
     """Return the file name of a tree entry, without its directories."""
-    return posixpath.basename(entry.path)
+    path: str = entry.path
+    return posixpath.basename(path)
 
 
 def tree_entry_directory(entry: GitHubGitTreeEntryModel) -> str:
     """Return the directory of a tree entry, empty in the repository root."""
-    return posixpath.dirname(entry.path)
+    path: str = entry.path
+    return posixpath.dirname(path)
 
 
 def tree_entry_is_directory(entry: GitHubGitTreeEntryModel) -> bool:
     """Return if a tree entry is a directory."""
-    return entry.type == "tree"
+    entry_type: str = entry.type
+    return entry_type == "tree"

@@ -473,7 +473,7 @@ class Repository:
             if self.data.manifest_name is not None:
                 return self.data.manifest_name
             if "name" in self.integration_manifest:
-                return self.integration_manifest["name"]
+                return str(self.integration_manifest["name"])
 
         return (
             self.data.full_name.rsplit("/", maxsplit=1)[-1]
@@ -1327,7 +1327,8 @@ class Repository:
             )
         except GitHubException as exception:
             raise MarketplaceError(exception) from exception
-        return response.data.tree
+        tree: list[GitHubGitTreeEntryModel] = response.data.tree
+        return tree
 
     async def get_releases(
         self, prerelease: bool = False, returnlimit: int = RELEASE_LIMIT
@@ -2066,14 +2067,15 @@ class Repository:
             self.data.releases = True
             self.data.installed_version = version
 
-    async def async_get_releases(self, *, first: int = 30) -> list[GitHubReleaseModel]:
-        """Get the last x releases of a repository."""
+    async def async_get_releases(self) -> list[GitHubReleaseModel]:
+        """Get the last 30 releases of a repository."""
         response = await self.marketplace.async_github_api_method(
             method=self.marketplace.githubapi.repos.releases.list,
             repository=self.data.full_name,
             kwargs={"per_page": 30},
         )
-        return response.data
+        releases: list[GitHubReleaseModel] = response.data
+        return releases
 
     async def async_set_last_commits(self) -> None:
         """Set the last commit for the repository."""

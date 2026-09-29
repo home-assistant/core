@@ -155,6 +155,9 @@ ANONYMOUS_GITHUB_COMMANDS: tuple[dict[str, Any], ...] = (
     {"type": "marketplace/repository/refresh", "repository": REPOSITORY_INTEGRATION_ID},
 )
 
+# Dot segments collapse in the URL, this downloads another repository
+VERSION_ESCAPE = "../../other/repo/archive/refs/heads/main"
+
 # The commands that need the first-run warning accepted, with a valid message.
 WARNING_COMMANDS: tuple[dict[str, Any], ...] = (
     {
@@ -350,6 +353,52 @@ async def test_subscribe(
     response = await client.receive_json()
     assert response["type"] == "event"
     assert response["event"] == {"action": "update", "id": 1337}
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_subscribe_to_another_signal(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test a subscription only forwards the signals of the Marketplace."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "marketplace/subscribe", "signal": "homeassistant_stop"}
+    )
+    response = await client.receive_json()
+
+    assert response["error"]["code"] == "invalid_format"
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        pytest.param(
+            {"type": "marketplace/repository/download", "version": VERSION_ESCAPE},
+            id="download",
+        ),
+        pytest.param(
+            {"type": "marketplace/repository/version", "version": VERSION_ESCAPE},
+            id="version",
+        ),
+    ],
+)
+async def test_commands_refuse_a_version_that_is_a_path(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    message: dict[str, Any],
+) -> None:
+    """Test a version can not point the download at another repository."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(message | {"repository": REPOSITORY_INTEGRATION_ID})
+    response = await client.receive_json()
+
+    assert response["error"]["code"] == "invalid_format"
+    assert repository.data.selected_tag is None
+    assert not repository.data.installed
 
 
 @pytest.mark.usefixtures("init_integration")

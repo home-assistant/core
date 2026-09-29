@@ -1953,18 +1953,6 @@ async def test_resource_handler_yaml_mode(
     assert "YAML mode detected, can not update resources" in caplog.text
 
 
-async def test_resource_handler_without_resources(
-    hass: HomeAssistant,
-    downloaded_plugin: PluginRepository,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test a dashboard without any resource collection."""
-    hass.data["lovelace"].resources = None
-
-    assert downloaded_plugin._get_resource_handler() is None
-    assert "Can not access the dashboard resources" in caplog.text
-
-
 async def test_resource_handler_without_lovelace(
     hass: HomeAssistant,
     downloaded_plugin: PluginRepository,
