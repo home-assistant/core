@@ -818,13 +818,16 @@ jobs:
           path: pytest_test_counts.json
           # Primary key is a sentinel; restore-keys pick the most recent
           # prefix match since the real (content-addressed) key isn't
-          # known until split_tests.py runs below.
+          # known until split_tests.py runs below. The last restore-key
+          # ignores the requirements: entries are validated per file hash
+          # and counts only balance the buckets.
           key: >-
             pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{
             steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}-restore-sentinel
           restore-keys: |
             pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{ needs.info.outputs.python_cache_key }}-
+            pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-
       - name: Run split_tests.py
         env:
           TEST_GROUP_COUNT: ${{ needs.info.outputs.test_group_count }}
