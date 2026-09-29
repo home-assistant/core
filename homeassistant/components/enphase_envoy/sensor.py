@@ -1197,6 +1197,18 @@ class EnvoySystemSensorEntity(EnvoySensorBaseEntity):
             serial_number=self.envoy_serial_num,
         )
 
+    def _apply_upper_limit(self, value: int, upper_limit: int | None) -> int | None:
+        """Return None for values above the upper limit."""
+        if upper_limit is not None and value > upper_limit:
+            _LOGGER.debug(
+                "Upper limit applied for %s: %s limited to %s",
+                self.entity_id,
+                value,
+                upper_limit,
+            )
+            return None
+        return value
+
 
 class EnvoyProductionEntity(EnvoySystemSensorEntity):
     """Envoy production entity."""
@@ -1209,12 +1221,10 @@ class EnvoyProductionEntity(EnvoySystemSensorEntity):
         """Return the state of the sensor."""
         if (system_production := self.data.system_production) is None:
             return None
-        value: int = self.entity_description.value_fn(system_production)
-        if self.entity_description.upper_limit is not None and (
-            value > self.entity_description.upper_limit
-        ):
-            return None
-        return value
+        return self._apply_upper_limit(
+            self.entity_description.value_fn(system_production),
+            self.entity_description.upper_limit,
+        )
 
 
 class EnvoyConsumptionEntity(EnvoySystemSensorEntity):
@@ -1228,12 +1238,10 @@ class EnvoyConsumptionEntity(EnvoySystemSensorEntity):
         """Return the state of the sensor."""
         if (system_consumption := self.data.system_consumption) is None:
             return None
-        value = self.entity_description.value_fn(system_consumption)
-        if self.entity_description.upper_limit is not None and (
-            value > self.entity_description.upper_limit
-        ):
-            return None
-        return value
+        return self._apply_upper_limit(
+            self.entity_description.value_fn(system_consumption),
+            self.entity_description.upper_limit,
+        )
 
 
 class EnvoyNetConsumptionEntity(EnvoySystemSensorEntity):
@@ -1272,12 +1280,10 @@ class EnvoyProductionPhaseEntity(EnvoySystemSensorEntity):
             ]
         ) is None:
             return None
-        value = self.entity_description.value_fn(system_production)
-        if self.entity_description.upper_limit is not None and (
-            value > self.entity_description.upper_limit
-        ):
-            return None
-        return value
+        return self._apply_upper_limit(
+            self.entity_description.value_fn(system_production),
+            self.entity_description.upper_limit,
+        )
 
 
 class EnvoyConsumptionPhaseEntity(EnvoySystemSensorEntity):
@@ -1302,12 +1308,10 @@ class EnvoyConsumptionPhaseEntity(EnvoySystemSensorEntity):
             ]
         ) is None:
             return None
-        value = self.entity_description.value_fn(system_consumption)
-        if self.entity_description.upper_limit is not None and (
-            value > self.entity_description.upper_limit
-        ):
-            return None
-        return value
+        return self._apply_upper_limit(
+            self.entity_description.value_fn(system_consumption),
+            self.entity_description.upper_limit,
+        )
 
 
 class EnvoyNetConsumptionPhaseEntity(EnvoySystemSensorEntity):
