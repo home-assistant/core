@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from boschshcpy import (
     BypassService,
+    CameraAmbientLightService,
     CameraLightService,
     PrivacyModeService,
     SilentModeService,
@@ -1087,3 +1088,47 @@ async def test_camera_outdoor_gen2_privacy_mode(
         blocking=True,
     )
     assert device.privacymode is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "camera_outdoor_gen2": [
+                camera_outdoor_gen2_device(
+                    cameraambientlight=CameraAmbientLightService.State.OFF
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_camera_outdoor_gen2_ambient_light(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An Outdoor Camera Gen2's ambient light is exposed and controllable as a switch."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.camera_outdoor_gen2[0]
+
+    state = hass.states.get("switch.outdoor_camera_ambient_light")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.outdoor_camera_ambient_light"},
+        blocking=True,
+    )
+    assert device.cameraambientlight is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.outdoor_camera_ambient_light"},
+        blocking=True,
+    )
+    assert device.cameraambientlight is False
