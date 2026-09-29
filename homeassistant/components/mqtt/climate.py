@@ -470,6 +470,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     _attributes_extra_blocked = MQTT_CLIMATE_ATTRIBUTES_BLOCKED
     _attr_target_temperature_low: float | None = None
     _attr_target_temperature_high: float | None = None
+    _single_and_range_setpoints: bool
 
     @staticmethod
     @override
@@ -481,6 +482,13 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_hvac_modes = config[CONF_MODE_LIST]
+        self._single_and_range_setpoints = (
+            HVACMode.HEAT_COOL in self._attr_hvac_modes
+            and (
+                HVACMode.HEAT in self._attr_hvac_modes
+                or HVACMode.COOL in self._attr_hvac_modes
+            )
+        )
         # Make sure the min an max temp is converted to the correct when not set
         self._attr_temperature_unit = config.get(
             CONF_TEMPERATURE_UNIT, self.hass.config.units.temperature_unit
@@ -666,8 +674,12 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             value := self._parse_float_payload(
                 msg, CONF_TEMP_STATE_TEMPLATE, "target temperature"
             )
-        ) is not UNDEFINED:
-            self._attr_target_temperature = value
+        ) is UNDEFINED:
+            return
+        self._attr_target_temperature = value
+        if value is not None and self._single_and_range_setpoints:
+            self._attr_target_temperature_low = None
+            self._attr_target_temperature_high = None
 
     @callback
     def _handle_target_temperature_low_received(self, msg: ReceiveMessage) -> None:
@@ -676,8 +688,11 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             value := self._parse_float_payload(
                 msg, CONF_TEMP_LOW_STATE_TEMPLATE, "target temperature low"
             )
-        ) is not UNDEFINED:
-            self._attr_target_temperature_low = value
+        ) is UNDEFINED:
+            return
+        self._attr_target_temperature_low = value
+        if value is not None and self._single_and_range_setpoints:
+            self._attr_target_temperature = None
 
     @callback
     def _handle_target_temperature_high_received(self, msg: ReceiveMessage) -> None:
@@ -686,8 +701,11 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             value := self._parse_float_payload(
                 msg, CONF_TEMP_HIGH_STATE_TEMPLATE, "target temperature high"
             )
-        ) is not UNDEFINED:
-            self._attr_target_temperature_high = value
+        ) is UNDEFINED:
+            return
+        self._attr_target_temperature_high = value
+        if value is not None and self._single_and_range_setpoints:
+            self._attr_target_temperature = None
 
     @callback
     def _handle_current_humidity_received(self, msg: ReceiveMessage) -> None:
@@ -778,20 +796,25 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             self._handle_current_temperature_received,
             {"_attr_current_temperature"},
         )
+        setpoints = {
+            "_attr_target_temperature",
+            "_attr_target_temperature_low",
+            "_attr_target_temperature_high",
+        }
         self.add_subscription(
             CONF_TEMP_STATE_TOPIC,
             self._handle_target_temperature_received,
-            {"_attr_target_temperature"},
+            setpoints,
         )
         self.add_subscription(
             CONF_TEMP_LOW_STATE_TOPIC,
             self._handle_target_temperature_low_received,
-            {"_attr_target_temperature_low"},
+            setpoints,
         )
         self.add_subscription(
             CONF_TEMP_HIGH_STATE_TOPIC,
             self._handle_target_temperature_high_received,
-            {"_attr_target_temperature_high"},
+            setpoints,
         )
 
     @override
@@ -807,6 +830,10 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             if self._optimistic or self._topic[CONF_TEMP_STATE_TOPIC] is None:
                 optimistic_update = True
                 self._attr_target_temperature = temperature
+                # We reset low and high setpoints when a single setpoint is set
+                if self._single_and_range_setpoints:
+                    self._attr_target_temperature_low = None
+                    self._attr_target_temperature_high = None
             mqtt_payload = self._command_templates[CONF_TEMP_COMMAND_TEMPLATE](
                 temperature
             )
@@ -817,6 +844,9 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             if self._optimistic or self._topic[CONF_TEMP_LOW_STATE_TOPIC] is None:
                 optimistic_update = True
                 self._attr_target_temperature_low = target_temp_low
+                # We reset the single setpoint when a setpoint range is set
+                if self._single_and_range_setpoints:
+                    self._attr_target_temperature = None
             mqtt_payload = self._command_templates[CONF_TEMP_LOW_COMMAND_TEMPLATE](
                 target_temp_low
             )
@@ -827,6 +857,8 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             if self._optimistic or self._topic[CONF_TEMP_HIGH_STATE_TOPIC] is None:
                 optimistic_update = True
                 self._attr_target_temperature_high = target_temp_high
+                if self._single_and_range_setpoints:
+                    self._attr_target_temperature = None
             mqtt_payload = self._command_templates[CONF_TEMP_HIGH_COMMAND_TEMPLATE](
                 target_temp_high
             )
