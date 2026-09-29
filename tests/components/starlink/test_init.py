@@ -16,8 +16,10 @@ from homeassistant.util import dt as dt_util
 from .patchers import (
     HISTORY_STATS_SUCCESS_PATCHER,
     LOCATION_DATA_SUCCESS_PATCHER,
+    LOCATION_DATA_UNAVAILABLE_PATCHER,
     LOCATION_DATA_UNIMPLEMENTED_PATCHER,
     SLEEP_DATA_SUCCESS_PATCHER,
+    SLEEP_DATA_UNAVAILABLE_PATCHER,
     SLEEP_DATA_UNIMPLEMENTED_PATCHER,
     STATUS_DATA_FIXTURE,
     STATUS_DATA_SUCCESS_PATCHER,
@@ -94,6 +96,56 @@ async def test_setup_with_unimplemented_location_or_sleep(
         assert entry.state is ConfigEntryState.LOADED
         assert entry.runtime_data
         assert entry.runtime_data.data
+
+
+@pytest.mark.parametrize(
+    ("location_patcher", "sleep_patcher"),
+    [
+        pytest.param(
+            LOCATION_DATA_UNAVAILABLE_PATCHER,
+            SLEEP_DATA_SUCCESS_PATCHER,
+            id="location_unavailable",
+        ),
+        pytest.param(
+            LOCATION_DATA_SUCCESS_PATCHER,
+            SLEEP_DATA_UNAVAILABLE_PATCHER,
+            id="sleep_unavailable",
+        ),
+        pytest.param(
+            LOCATION_DATA_UNAVAILABLE_PATCHER,
+            SLEEP_DATA_UNAVAILABLE_PATCHER,
+            id="both_unavailable",
+        ),
+    ],
+)
+async def test_setup_retries_on_other_grpc_errors(
+    hass: HomeAssistant,
+    location_patcher: patch,
+    sleep_patcher: patch,
+) -> None:
+    """Test that non-Unimplemented gRPC errors still fail setup as before.
+
+    Only Unimplemented should be swallowed. A real communication failure
+    (e.g. Unavailable) must still surface as a failed/retried setup instead
+    of being silently treated as "no data".
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "1.2.3.4:0000"},
+    )
+
+    with (
+        location_patcher,
+        sleep_patcher,
+        STATUS_DATA_SUCCESS_PATCHER,
+        HISTORY_STATS_SUCCESS_PATCHER,
+    ):
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:

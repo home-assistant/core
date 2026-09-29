@@ -7,6 +7,7 @@ import logging
 from typing import override
 from zoneinfo import ZoneInfo
 
+import grpc
 from starlink_grpc import (
     AlertDict,
     ChannelContext,
@@ -34,6 +35,19 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 _LOGGER = logging.getLogger(__name__)
 
 type StarlinkConfigEntry = ConfigEntry[StarlinkUpdateCoordinator]
+
+
+def _is_unimplemented(exc: GrpcError) -> bool:
+    """Return whether a GrpcError was caused by an Unimplemented gRPC status.
+
+    Some Starlink plans/hardware don't support every gRPC call (e.g.
+    GetLocation, DishGetConfig on non-Priority plans), matching the same
+    grpc.Call.code() check location_data() itself uses for PERMISSION_DENIED.
+    """
+    cause = exc.__cause__
+    return (
+        isinstance(cause, grpc.Call) and cause.code() is grpc.StatusCode.UNIMPLEMENTED
+    )
 
 
 @dataclass
@@ -73,16 +87,18 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         context = self.channel_context
         try:
             location = location_data(context)
-        except GrpcError:
-            # GetLocation is Unimplemented on non-Priority plans.
+        except GrpcError as exc:
+            if not _is_unimplemented(exc):
+                raise
             _LOGGER.debug(
                 "location_data unavailable, continuing without location", exc_info=True
             )
             location = None
         try:
             sleep = get_sleep_config(context)
-        except GrpcError:
-            # DishGetConfig is Unimplemented on non-Priority plans.
+        except GrpcError as exc:
+            if not _is_unimplemented(exc):
+                raise
             _LOGGER.debug(
                 "get_sleep_config unavailable, defaulting to disabled", exc_info=True
             )
