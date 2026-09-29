@@ -44,9 +44,7 @@ def _translate_errors(*, auth_recoverable: bool = False) -> Iterator[None]:
         ) from err
     except VitesyError as err:
         raise UpdateFailed(
-            translation_domain=DOMAIN,
-            translation_key="update_failed",
-            translation_placeholders={"error": str(err)},
+            translation_domain=DOMAIN, translation_key="update_failed"
         ) from err
 
 

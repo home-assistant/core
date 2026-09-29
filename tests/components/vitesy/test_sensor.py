@@ -1,9 +1,11 @@
 """Test the Vitesy sensor platform."""
 
+from typing import Any
 from unittest.mock import AsyncMock
 
 from aiovitesy.api import VitesyDevice
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.vitesy.coordinator import UPDATE_INTERVAL
@@ -17,6 +19,8 @@ from .conftest import DEVICE_ID
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 AIR_QUALITY_SCORE = "sensor.kitchen_shelfy_air_quality_score"
+FILTER_CHANGE_DUE = "sensor.kitchen_shelfy_filter_change_due"
+FRIDGE_TEMPERATURE = "sensor.kitchen_shelfy_fridge_temperature"
 
 
 async def test_all_entities(
@@ -71,6 +75,58 @@ async def test_air_quality_score_without_value(
     await hass.async_block_till_done()
 
     assert hass.states.get(AIR_QUALITY_SCORE).state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("attribute", "update", "entity_id", "warning"),
+    [
+        pytest.param(
+            "measurement",
+            {"sensors_data": [{"id": "TMP01-SY", "value": {"avg": "n/a"}}]},
+            FRIDGE_TEMPERATURE,
+            "Ignoring non-numeric value for reading TMP01-SY on Kitchen Shelfy: 'n/a'",
+            id="reading_non_numeric_avg",
+        ),
+        pytest.param(
+            "measurement",
+            {"sensors_data": [{"id": "TMP01-SY", "value": "n/a"}]},
+            FRIDGE_TEMPERATURE,
+            "Ignoring non-numeric value for reading TMP01-SY on Kitchen Shelfy: 'n/a'",
+            id="reading_non_numeric_scalar",
+        ),
+        pytest.param(
+            "maintenance",
+            {"filter": {"due_date": "not-a-date"}},
+            FILTER_CHANGE_DUE,
+            "Ignoring unparsable filter due date for Kitchen Shelfy: not-a-date",
+            id="due_date_unparsable",
+        ),
+    ],
+)
+async def test_sensor_unknown_on_invalid_value(
+    hass: HomeAssistant,
+    mock_vitesy_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_devices: dict[str, VitesyDevice],
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    attribute: str,
+    update: dict[str, Any],
+    entity_id: str,
+    warning: str,
+) -> None:
+    """Test a sensor reports unknown and warns when its value turns invalid."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(entity_id).state != STATE_UNKNOWN
+
+    device = mock_devices[DEVICE_ID]
+    setattr(device, attribute, {**getattr(device, attribute), **update})
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    assert warning in caplog.text
 
 
 async def test_sensors_absent_from_measurement_are_not_created(
