@@ -1895,15 +1895,37 @@ async def test_sensor_daily_production_consumption_upper_limit(
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
         assert float(entity_state.state) == target
 
-    # set daily production above upper_limit
+    # test upper limit is applied
     mock_envoy.data.system_production.watt_hours_today = DAILY_ENERGY_UPPER_LIMIT + 1
     mock_envoy.data.system_consumption.watt_hours_today = DAILY_ENERGY_UPPER_LIMIT + 1
-    # force HA to detect changed data by changing raw
-    mock_envoy.data.raw = {"I": "am changed again"}
-    # Move time to next update
+    mock_envoy.data.raw = {"change": 1}
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
+
+    for name in NAMES:
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
+        assert entity_state.state == "unknown"
+
+    # test values are restored when not exceeding upper limit anymore
+    mock_envoy.data.system_production.watt_hours_today = DAILY_ENERGY_UPPER_LIMIT
+    mock_envoy.data.system_consumption.watt_hours_today = DAILY_ENERGY_UPPER_LIMIT
+    mock_envoy.data.raw = {"change": 2}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    for name in NAMES:
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
+        assert float(entity_state.state) == DAILY_ENERGY_UPPER_LIMIT / 1000.0
+
+    # test upper limit is applied for reported issue value
+    mock_envoy.data.system_production.watt_hours_today = 2**32 - 669_000
+    mock_envoy.data.system_consumption.watt_hours_today = 2**32 - 669_000
+    mock_envoy.data.raw = {"change": 3}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
     for name in NAMES:
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
         assert entity_state.state == "unknown"
@@ -1953,7 +1975,7 @@ async def test_sensor_daily_production_consumption_phase_upper_limit(
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
         assert float(entity_state.state) == target
 
-    # set daily values above upper_limit
+    # test upper limit is applied
     for phase in PHASENAMES:
         mock_envoy.data.system_production_phases[phase].watt_hours_today = (
             DAILY_ENERGY_UPPER_LIMIT + 1
@@ -1962,9 +1984,7 @@ async def test_sensor_daily_production_consumption_phase_upper_limit(
             DAILY_ENERGY_UPPER_LIMIT + 1
         )
 
-    # force HA to detect changed data by changing raw
-    mock_envoy.data.raw = {"I": "am changed again"}
-    # Move time to next update
+    mock_envoy.data.raw = {"change": 1}
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -1972,14 +1992,37 @@ async def test_sensor_daily_production_consumption_phase_upper_limit(
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
         assert entity_state.state == "unknown"
 
-    # test actual reported value
+    # test values are restored when not exceeding upper limit anymore
     for phase in PHASENAMES:
-        mock_envoy.data.system_production_phases[phase].watt_hours_today = 2**32
-        mock_envoy.data.system_consumption_phases[phase].watt_hours_today = 2**32
+        mock_envoy.data.system_production_phases[
+            phase
+        ].watt_hours_today = DAILY_ENERGY_UPPER_LIMIT
+        mock_envoy.data.system_consumption_phases[
+            phase
+        ].watt_hours_today = DAILY_ENERGY_UPPER_LIMIT
 
-    # force HA to detect changed data by changing raw
-    mock_envoy.data.raw = {"Hi": "Let's try again"}
-    # Move time to next update
+    mock_envoy.data.raw = {"change": 2}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    for name in PHASE_NAMES:
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
+        assert float(entity_state.state) == DAILY_ENERGY_UPPER_LIMIT / 1000.0
+
+    # test upper limit is applied for reported issue value
+    mock_envoy.data.system_production.watt_hours_today = 2**32 - 669_000
+    mock_envoy.data.system_consumption.watt_hours_today = 2**32 - 669_000
+
+    # test upper limit is applied for reported values
+    for phase in PHASENAMES:
+        mock_envoy.data.system_production_phases[phase].watt_hours_today = (
+            2**32 - 669_000
+        )
+        mock_envoy.data.system_consumption_phases[phase].watt_hours_today = (
+            2**32 - 669_000
+        )
+
+    mock_envoy.data.raw = {"change": 3}
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
