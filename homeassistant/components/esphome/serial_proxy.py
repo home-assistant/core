@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
-from typing import cast, override
+from typing import NotRequired, TypedDict, Unpack, cast, override
 
 from aioesphomeapi import APIClient
 from serialx import register_uri_handler
@@ -25,23 +25,31 @@ from .entry_data import ESPHomeConfigEntry
 _HASS_LOOP: asyncio.AbstractEventLoop | None = None
 
 
-def build_url(
-    entry_id: str, port_name: str | None, port_udev_id: str | None = None
-) -> URL:
-    """Build a canonical `esphome-hass://` URL."""
-    query = {}
+class SerialProxyFilters(TypedDict):
+    """Device filters for a serial proxy URL, `None` values are left out."""
 
-    if port_name is not None:
-        query["port_name"] = port_name
+    port_name: NotRequired[str | None]
+    port_manufacturer: NotRequired[str | None]
+    port_product: NotRequired[str | None]
+    port_serial_number: NotRequired[str | None]
+    port_usb_vid: NotRequired[int | None]
+    port_usb_pid: NotRequired[int | None]
+    port_usb_bcd_device: NotRequired[int | None]
+    port_usb_interface_num: NotRequired[int | None]
+    port_udev_id: NotRequired[str | None]
 
-    if port_udev_id is not None:
-        query["port_udev_id"] = port_udev_id
+
+def build_url(entry_id: str, **filters: Unpack[SerialProxyFilters]) -> URL:
+    """Build a canonical `esphome-hass://` URL from filters."""
+    trimmed_filters = {k: v for k, v in filters.items() if v is not None}
+    if not trimmed_filters:
+        raise TypeError("Filters are required to connect to an ESPHome serial proxy")
 
     return URL.build(
         scheme="esphome-hass",
         host="esphome",
         path=f"/{entry_id}",
-        query=query,
+        query=trimmed_filters,
     )
 
 

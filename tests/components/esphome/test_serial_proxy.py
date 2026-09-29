@@ -29,13 +29,13 @@ from tests.common import MockConfigEntry
 
 def test_build_url_basic() -> None:
     """Build a URL with a simple port name."""
-    url = serial_proxy.build_url("abc123DEF456", "uart0")
+    url = serial_proxy.build_url("abc123DEF456", port_name="uart0")
     assert url == URL("esphome-hass://esphome/abc123DEF456?port_name=uart0")
 
 
 def test_build_url_escapes_port_name() -> None:
     """Port names with special characters are URL-encoded."""
-    url = serial_proxy.build_url("abc123", "uart 0/main")
+    url = serial_proxy.build_url("abc123", port_name="uart 0/main")
     # Round-trip via yarl recovers the original port name
     assert URL(str(url)).query["port_name"] == "uart 0/main"
 
@@ -136,7 +136,9 @@ def _mock_identities(
 
 def _zbt2_port(entry_id: str) -> USBDevice:
     url = str(
-        serial_proxy.build_url(entry_id, None, "usb-Nabu_Casa_ZBT-2_10B41DE58F10-if00")
+        serial_proxy.build_url(
+            entry_id, port_udev_id="usb-Nabu_Casa_ZBT-2_10B41DE58F10-if00"
+        )
     )
     assert url.endswith("?port_udev_id=usb-Nabu_Casa_ZBT-2_10B41DE58F10-if00")
     return USBDevice(
@@ -184,13 +186,13 @@ async def test_scan_serial_ports_happy_path(
     entry_id = device.entry.entry_id
     assert ports == [
         SerialDevice(
-            device=str(serial_proxy.build_url(entry_id, "Left Port")),
+            device=str(serial_proxy.build_url(entry_id, port_name="Left Port")),
             serial_number="AABBCCDDEEFF-left_port",
             manufacturer="Espressif",
             description="ESP32 (Left Port)",
         ),
         SerialDevice(
-            device=str(serial_proxy.build_url(entry_id, "Right Port")),
+            device=str(serial_proxy.build_url(entry_id, port_name="Right Port")),
             serial_number="AABBCCDDEEFF-right_port",
             manufacturer="Espressif",
             description="ESP32 (Right Port)",
@@ -220,7 +222,9 @@ async def test_scan_serial_ports_uses_project_info(
 
     assert _async_scan_serial_ports(hass) == [
         SerialDevice(
-            device=str(serial_proxy.build_url(device.entry.entry_id, "uart0")),
+            device=str(
+                serial_proxy.build_url(device.entry.entry_id, port_name="uart0")
+            ),
             serial_number="AABBCCDDEEFF-uart0",
             manufacturer="vendor",
             description="gadget (uart0)",
@@ -249,7 +253,9 @@ async def test_scan_serial_ports_defaults_manufacturer(
 
     assert _async_scan_serial_ports(hass) == [
         SerialDevice(
-            device=str(serial_proxy.build_url(device.entry.entry_id, "uart0")),
+            device=str(
+                serial_proxy.build_url(device.entry.entry_id, port_name="uart0")
+            ),
             serial_number="AABBCCDDEEFF-uart0",
             manufacturer="espressif",
             description="ESP32 (uart0)",
@@ -390,7 +396,7 @@ async def test_async_open_without_port_name(
 
     url = str(
         serial_proxy.build_url(
-            device.entry.entry_id, None, "usb-Nabu_Casa_ZBT-2_10B41DE58F10-if00"
+            device.entry.entry_id, port_udev_id="usb-Nabu_Casa_ZBT-2_10B41DE58F10-if00"
         )
     )
     proxy = serial_proxy.HassESPHomeSerial(url)
@@ -416,7 +422,7 @@ async def test_async_open_happy_path(
     device = await mock_esphome_device(mock_client=mock_client)
     mock_client._loop = hass.loop
 
-    url = str(serial_proxy.build_url(device.entry.entry_id, "uart0"))
+    url = str(serial_proxy.build_url(device.entry.entry_id, port_name="uart0"))
     proxy = serial_proxy.HassESPHomeSerial(url)
 
     with patch(
