@@ -33,31 +33,6 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, get_device_capabilities)
 
 
-def _is_main_esphome_device(device: dr.DeviceEntry) -> bool:
-    """Return True if device is the MAC-connected ESPHome node."""
-    return any(
-        conn_type == dr.CONNECTION_NETWORK_MAC for conn_type, _ in device.connections
-    )
-
-
-def _zwave_js_config_entry_id(hass: HomeAssistant, home_id: int) -> str | None:
-    """Return the entry ID of the zwave_js entry whose unique ID is this home ID."""
-    if not home_id:
-        return None
-    home_id_str = str(home_id)
-    # Ignored and disabled entries are not the configured network. Scan all
-    # matches because the unique ID index returns only the first one, and
-    # compare with str() so legacy integer unique IDs still match.
-    for entry in hass.config_entries.async_entries(
-        ZWAVE_JS_DOMAIN,
-        include_ignore=False,
-        include_disabled=False,
-    ):
-        if str(entry.unique_id) == home_id_str:
-            return entry.entry_id
-    return None
-
-
 @callback
 @websocket_api.require_admin
 @websocket_api.websocket_command(
@@ -164,3 +139,28 @@ def get_device_capabilities(
             ],
         },
     )
+
+
+def _is_main_esphome_device(device: dr.DeviceEntry) -> bool:
+    """Return True if device is the MAC-connected ESPHome node."""
+    return any(
+        conn_type == dr.CONNECTION_NETWORK_MAC for conn_type, _ in device.connections
+    )
+
+
+def _zwave_js_config_entry_id(hass: HomeAssistant, home_id: int) -> str | None:
+    """Return the entry ID of the zwave_js entry whose unique ID is this home ID."""
+    if not home_id:
+        return None
+    home_id_str = str(home_id)
+    # Ignored and disabled entries are not the configured network. Scan all
+    # matches because the unique ID index returns only the first one, and
+    # compare with str() so legacy integer unique IDs still match.
+    for entry in hass.config_entries.async_entries(
+        ZWAVE_JS_DOMAIN,
+        include_ignore=False,
+        include_disabled=False,
+    ):
+        if str(entry.unique_id) == home_id_str:
+            return entry.entry_id
+    return None
