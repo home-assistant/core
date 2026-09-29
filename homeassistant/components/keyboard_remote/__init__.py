@@ -50,7 +50,6 @@ from .const import (
     KEY_VALUE_NAME,
     MATCH_DEVICE_NAME,
     MATCH_DEVICE_PATH,
-    MATCH_YAML_DESCRIPTOR,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -672,7 +671,9 @@ class DeviceHandler:
         """
         real_path = os.path.realpath(descriptor)
 
-        # Check by-id or configured path
+        # An imported YAML descriptor is stored here too, or replaced by the
+        # by-id link it resolved to. Matching the raw descriptor on its own
+        # would bind whatever device reuses that eventN while the link is gone.
         device_path = self._device_path
         if (
             device_path
@@ -681,18 +682,13 @@ class DeviceHandler:
         ):
             return MATCH_DEVICE_PATH
 
-        # Check original YAML descriptor
-        yaml_descriptor = self._device_descriptor
-        if yaml_descriptor and os.path.realpath(yaml_descriptor) == real_path:
-            return MATCH_YAML_DESCRIPTOR
-
         # Check by device name, but only for entries that have nothing better.
         # An entry configured with a path keeps that identity even while the
         # node is missing, because a composite keyboard reports the same name
         # on every node it exposes and a sibling would be the wrong device.
         if (
             not device_path
-            and not yaml_descriptor
+            and not self._device_descriptor
             and self._device_name_config
             and dev.name == self._device_name_config
         ):

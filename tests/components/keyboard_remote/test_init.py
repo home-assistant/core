@@ -229,11 +229,15 @@ async def test_matches_device_by_path(
         assert handler.matches_device(FAKE_DEVICE_REAL_PATH, mock_input_device) is True
 
 
-async def test_matches_device_by_yaml_descriptor(
+async def test_no_match_on_reused_yaml_descriptor(
     hass: HomeAssistant,
     mock_input_device: MagicMock,
 ) -> None:
-    """Test matches_device returns True when YAML descriptor resolves to same path."""
+    """Test the raw YAML descriptor does not match once a by-id path is stored.
+
+    While the by-id link is missing, another device can take over the eventN
+    node the YAML named, and grabbing it would take it from its real user.
+    """
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=FAKE_BY_ID_BASENAME,
@@ -258,7 +262,7 @@ async def test_matches_device_by_yaml_descriptor(
         patch("os.path.realpath", return_value=FAKE_DEVICE_REAL_PATH),
         patch("os.path.exists", return_value=False),
     ):
-        assert handler.matches_device(FAKE_DEVICE_REAL_PATH, mock_input_device) is True
+        assert handler.matches_device(FAKE_DEVICE_REAL_PATH, mock_input_device) is False
 
 
 async def test_matches_device_by_name(

@@ -37,8 +37,7 @@ KEY_CODE: Final = "key_code"
 # nodes reporting the same name, and only the one the user picked carries the
 # configured by-id path, so a name match must never outrank a path match.
 MATCH_DEVICE_PATH: Final = 0
-MATCH_YAML_DESCRIPTOR: Final = 1
-MATCH_DEVICE_NAME: Final = 2
+MATCH_DEVICE_NAME: Final = 1
 
 # System paths
 DEVINPUT: Final = "/dev/input"

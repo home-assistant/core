@@ -142,6 +142,7 @@ def _resolve_yaml_device(
         return (descriptor, dev_name, None)
 
     if name:
+        matches: list[str] = []
         for dev_path in list_devices(DEVINPUT):
             try:
                 dev = InputDevice(dev_path)
@@ -152,11 +153,17 @@ def _resolve_yaml_device(
             finally:
                 dev.close()
             if dev_name == name:
-                real_path = os.path.realpath(dev_path)
-                if real_path in by_id_map:
-                    by_id_path = by_id_map[real_path]
-                    return (by_id_path, name, os.path.basename(by_id_path))
-                return (dev_path, name, None)
+                matches.append(dev_path)
+        # A composite keyboard can report the same name on several nodes.
+        # Promoting one of them to its by-id path would lock the entry to
+        # whichever node list_devices returned first, so keep it name-based.
+        if len(matches) == 1:
+            dev_path = matches[0]
+            real_path = os.path.realpath(dev_path)
+            if real_path in by_id_map:
+                by_id_path = by_id_map[real_path]
+                return (by_id_path, name, os.path.basename(by_id_path))
+            return (dev_path, name, None)
 
     return (None, None, None)
 

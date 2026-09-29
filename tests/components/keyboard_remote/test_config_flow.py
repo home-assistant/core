@@ -819,6 +819,44 @@ def test_resolve_yaml_name_with_by_id() -> None:
     assert result == (FAKE_DEVICE_PATH, FAKE_DEVICE_NAME, FAKE_BY_ID_BASENAME)
 
 
+def test_resolve_yaml_name_matching_several_nodes() -> None:
+    """Test a name shared by several nodes is not promoted to one by-id path.
+
+    A composite keyboard reports the same name on each node, and picking the
+    first would lock the entry to whichever node list_devices returned first.
+    """
+    by_id_entry = MagicMock(spec_set=os.DirEntry)
+    by_id_entry.is_symlink.return_value = True
+    by_id_entry.path = FAKE_DEVICE_PATH
+
+    mock_dev = MagicMock()
+    mock_dev.name = FAKE_DEVICE_NAME
+
+    with (
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.scandir",
+        ) as mock_scandir,
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
+            side_effect=lambda p: {FAKE_DEVICE_PATH: FAKE_DEVICE_REAL_PATH}.get(p, p),
+        ),
+        patch("evdev.InputDevice", return_value=mock_dev),
+        patch(
+            "evdev.list_devices",
+            return_value=[FAKE_DEVICE_REAL_PATH, "/dev/input/event6"],
+        ),
+    ):
+        mock_scandir.return_value.__enter__ = MagicMock(return_value=[by_id_entry])
+        mock_scandir.return_value.__exit__ = MagicMock(return_value=False)
+        result = _resolve_yaml_device({"device_name": FAKE_DEVICE_NAME})
+
+    assert result == (None, None, None)
+
+
 def test_resolve_yaml_name_no_by_id() -> None:
     """Test resolve with device name match but no by-id symlink."""
     mock_dev = MagicMock()
