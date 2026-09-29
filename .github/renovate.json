@@ -267,8 +267,7 @@
         "codespell-project/codespell",
         "adrienverge/yamllint",
         "zizmorcore/zizmor-pre-commit",
-        "pre-commit/pre-commit-hooks",
-        "cdce8p/python-typing-update"
+        "pre-commit/pre-commit-hooks"
       ],
       "enabled": true,
       "labels": ["dependency"]
