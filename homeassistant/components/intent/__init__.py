@@ -339,16 +339,21 @@ class GetStateIntentHandler(intent.IntentHandler):
         match_result = intent.async_match_targets(
             hass, match_constraints, match_preferences
         )
-        if (
-            (not match_result.is_match)
-            and (match_result.no_match_reason is not None)
-            and (not match_result.no_match_reason.is_no_entities_reason())
+        if (not match_result.is_match) and (
+            (no_match_reason := match_result.no_match_reason) is not None
         ):
             # Don't try to answer questions for certain errors.
             # Other match failure reasons are OK.
-            raise intent.MatchFailedError(
-                result=match_result, constraints=match_constraints
-            )
+            #
+            # A named entity that is only missing because it is not exposed is
+            # reported as an error too, otherwise the question is answered with
+            # no states at all.
+            if (not no_match_reason.is_no_entities_reason()) or (
+                entity_name and (no_match_reason is intent.MatchFailedReason.ASSISTANT)
+            ):
+                raise intent.MatchFailedError(
+                    result=match_result, constraints=match_constraints
+                )
 
         # Create response
         response = intent_obj.create_response()
