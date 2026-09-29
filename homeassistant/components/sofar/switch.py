@@ -21,7 +21,7 @@ PARALLEL_UPDATES = 1
 class SofarSwitchEntityDescription(SwitchEntityDescription, SofarEntityDescription):
     """Describe a Sofar switch entity."""
 
-    is_on_fn: Callable[[SofarInverter], bool | None]
+    value_fn: Callable[[SofarInverter], RemoteSwitchOnOff | None]
     write_fn: Callable[[SofarInverter, bool], Awaitable[None]]
 
 
@@ -30,11 +30,7 @@ SWITCH_DESCRIPTIONS: tuple[SofarSwitchEntityDescription, ...] = (
         key="remote_switch_on_off",
         component="remote",
         name=None,
-        is_on_fn=lambda device: (
-            None
-            if (value := device.remote.remote_switch_on_off) is None
-            else bool(value)
-        ),
+        value_fn=lambda device: device.remote.remote_switch_on_off,
         write_fn=lambda device, value: device.remote.write(
             "remote_switch_on_off",
             RemoteSwitchOnOff.ON if value else RemoteSwitchOnOff.OFF,
@@ -67,7 +63,8 @@ class SofarSwitch(SofarEntity, SwitchEntity):
     @override
     def is_on(self) -> bool | None:
         """Return whether the remote switch is on."""
-        return self.entity_description.is_on_fn(self.coordinator.device)
+        value = self.entity_description.value_fn(self.coordinator.device)
+        return None if value is None else bool(value)
 
     async def _async_write(self, value: bool) -> None:
         """Write the switch state to the device."""

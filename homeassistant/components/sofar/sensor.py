@@ -7,10 +7,8 @@ from enum import IntEnum
 from typing import cast, override
 
 from sofar_modbus.model import CorrectedTotal
-from sofar_modbus.modern.battery import BatteryString
 from sofar_modbus.modern.device import SofarInverter
 from sofar_modbus.modern.enums import FeedinLimitationMode, PassiveModeTimeoutAction
-from sofar_modbus.modern.pv import PvString
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -37,7 +35,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import BATTERY_COMPONENTS, METER_ENERGY
-from .coordinator import SofarConfigEntry, SofarRuntimeData
+from .coordinator import SofarConfigEntry
 from .entity import SofarEntity, SofarEntityDescription
 
 PARALLEL_UPDATES = 0
@@ -53,7 +51,7 @@ async def async_setup_entry(
     served = runtime_data.served_components
 
     async_add_entities(
-        _sensor(runtime_data, description)
+        _sensor_class(description)(runtime_data, description)
         for description in SENSOR_DESCRIPTIONS
         if description.component in served and not _is_battery_pack(description)
     )
@@ -71,7 +69,7 @@ async def async_setup_entry(
             return
         wired.update(new)
         async_add_entities(
-            _sensor(runtime_data, description)
+            _sensor_class(description)(runtime_data, description)
             for description in SENSOR_DESCRIPTIONS
             if (part := description.part) is not None
             and part[0] == "battery"
@@ -84,21 +82,21 @@ async def async_setup_entry(
     )
 
 
-def _is_battery_pack(
-    description: SofarSensorDescription | SofarTotalSensorDescription,
-) -> bool:
+def _is_battery_pack(description: SofarSensorDescription) -> bool:
     """Whether a description belongs to one numbered battery pack."""
     return description.part is not None and description.part[0] == "battery"
 
 
-def _sensor(
-    runtime_data: SofarRuntimeData,
-    description: SofarSensorDescription | SofarTotalSensorDescription,
-) -> SofarSensor | SofarTotalSensor:
-    """Build the entity a description's type asks for."""
-    if isinstance(description, SofarTotalSensorDescription):
-        return SofarTotalSensor(runtime_data, description)
-    return SofarSensor(runtime_data, description)
+def _sensor_class(
+    description: SofarSensorDescription,
+) -> type[SofarSensor | SofarTotalSensor]:
+    """Pick the entity class a description's semantics ask for."""
+    if description.state_class in (
+        SensorStateClass.TOTAL,
+        SensorStateClass.TOTAL_INCREASING,
+    ):
+        return SofarTotalSensor
+    return SofarSensor
 
 
 class SofarSensor(SofarEntity, SensorEntity):
@@ -119,7 +117,7 @@ class SofarSensor(SofarEntity, SensorEntity):
 class SofarTotalSensor(SofarEntity, RestoreSensor):
     """Defines a Sofar cumulative total sensor."""
 
-    entity_description: SofarTotalSensorDescription
+    entity_description: SofarSensorDescription
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -133,12 +131,13 @@ class SofarTotalSensor(SofarEntity, RestoreSensor):
         except ValueError, TypeError:
             return
         self._attr_native_value = val
-        self.entity_description.total_fn(self.coordinator.device).seed(val)
+        if (total_fn := self.entity_description.total_fn) is not None:
+            total_fn(self.coordinator.device).seed(val)
 
     @property
     @override
     def native_value(self) -> int | float | None:
-        value = self.entity_description.total_fn(self.coordinator.device).value
+        value = self.entity_description.value_fn(self.coordinator.device)
         if isinstance(value, (int, float)):
             self._attr_native_value = value
         return cast(int | float | None, self._attr_native_value)
@@ -149,17 +148,11 @@ class SofarSensorDescription(SensorEntityDescription, SofarEntityDescription):
     """Describe a Sofar sensor."""
 
     value_fn: Callable[[SofarInverter], StateType]
+    total_fn: Callable[[SofarInverter], CorrectedTotal] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
-class SofarTotalSensorDescription(SensorEntityDescription, SofarEntityDescription):
-    """Describe a Sofar torn-read-corrected total sensor."""
-
-    total_fn: Callable[[SofarInverter], CorrectedTotal]
-
-
-@dataclass(frozen=True, kw_only=True)
-class _PartMeasurement[V]:
+class _PartMeasurement:
     """One measurement every string or pack repeats, before it gets a number."""
 
     key: str
@@ -170,7 +163,7 @@ class _PartMeasurement[V]:
     suggested_display_precision: int | None = None
     entity_category: EntityCategory | None = None
     entity_registry_enabled_default: bool = True
-    value_fn: Callable[[V], StateType]
+    value_fn: Callable[[SofarInverter, int], StateType]
 
 
 # Which register block each string or pack is read from.
@@ -187,14 +180,14 @@ _PV_STRING_COMPONENTS = {
     10: "pv_9_10",
 }
 
-_PV_STRING_MEASUREMENTS: tuple[_PartMeasurement[PvString], ...] = (
+_PV_STRING_MEASUREMENTS = (
     _PartMeasurement(
         key="pv_voltage",
         translation_key="voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         entity_registry_enabled_default=False,
-        value_fn=lambda string: string.voltage,
+        value_fn=lambda device, number: device.pv_string(number).voltage,
     ),
     _PartMeasurement(
         key="pv_current",
@@ -203,7 +196,7 @@ _PV_STRING_MEASUREMENTS: tuple[_PartMeasurement[PvString], ...] = (
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
-        value_fn=lambda string: string.current,
+        value_fn=lambda device, number: device.pv_string(number).current,
     ),
     _PartMeasurement(
         key="pv_power",
@@ -212,17 +205,17 @@ _PV_STRING_MEASUREMENTS: tuple[_PartMeasurement[PvString], ...] = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
-        value_fn=lambda string: string.power,
+        value_fn=lambda device, number: device.pv_string(number).power,
     ),
 )
 
-_BATTERY_MEASUREMENTS: tuple[_PartMeasurement[BatteryString], ...] = (
+_BATTERY_MEASUREMENTS = (
     _PartMeasurement(
         key="battery_voltage",
         translation_key="voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        value_fn=lambda string: string.voltage,
+        value_fn=lambda device, number: device.battery_string(number).voltage,
     ),
     _PartMeasurement(
         key="battery_current",
@@ -230,7 +223,7 @@ _BATTERY_MEASUREMENTS: tuple[_PartMeasurement[BatteryString], ...] = (
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         suggested_display_precision=2,
-        value_fn=lambda string: string.current,
+        value_fn=lambda device, number: device.battery_string(number).current,
     ),
     _PartMeasurement(
         key="battery_power",
@@ -239,7 +232,7 @@ _BATTERY_MEASUREMENTS: tuple[_PartMeasurement[BatteryString], ...] = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
-        value_fn=lambda string: string.power,
+        value_fn=lambda device, number: device.battery_string(number).power,
     ),
     _PartMeasurement(
         key="battery_temperature",
@@ -248,7 +241,7 @@ _BATTERY_MEASUREMENTS: tuple[_PartMeasurement[BatteryString], ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda string: string.temperature,
+        value_fn=lambda device, number: device.battery_string(number).temperature,
     ),
     _PartMeasurement(
         key="battery_capacity",
@@ -256,30 +249,29 @@ _BATTERY_MEASUREMENTS: tuple[_PartMeasurement[BatteryString], ...] = (
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda string: string.capacity,
+        value_fn=lambda device, number: device.battery_string(number).capacity,
     ),
     _PartMeasurement(
         key="battery_state_of_health",
         translation_key="state_of_health",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda string: string.state_of_health,
+        value_fn=lambda device, number: device.battery_string(number).state_of_health,
     ),
     _PartMeasurement(
         key="battery_charge_cycle",
         translation_key="charge_cycle",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda string: string.charge_cycle,
+        value_fn=lambda device, number: device.battery_string(number).charge_cycle,
     ),
 )
 
 
-def _part_sensors[V](
+def _part_sensors(
     kind: str,
     components: Mapping[int, str],
-    view_fn: Callable[[SofarInverter, int], V],
-    measurements: tuple[_PartMeasurement[V], ...],
+    measurements: tuple[_PartMeasurement, ...],
 ) -> tuple[SofarSensorDescription, ...]:
     """Repeat a part's measurements across every string or pack it has."""
     return tuple(
@@ -296,25 +288,21 @@ def _part_sensors[V](
             entity_registry_enabled_default=(
                 measurement.entity_registry_enabled_default
             ),
-            value_fn=_part_value_fn(view_fn, number, measurement.value_fn),
+            value_fn=_part_value_fn(measurement.value_fn, number),
         )
         for number, component in components.items()
         for measurement in measurements
     )
 
 
-def _part_value_fn[V](
-    view_fn: Callable[[SofarInverter, int], V],
-    number: int,
-    value_fn: Callable[[V], StateType],
+def _part_value_fn(
+    value_fn: Callable[[SofarInverter, int], StateType], number: int
 ) -> Callable[[SofarInverter], StateType]:
     """Bind a measurement to one numbered string or pack."""
-    return lambda device: value_fn(view_fn(device, number))
+    return lambda device: value_fn(device, number)
 
 
-SENSOR_DESCRIPTIONS: tuple[
-    SofarSensorDescription | SofarTotalSensorDescription, ...
-] = (
+SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
     SofarSensorDescription(
         key="pv_power_total",
         component="pv_1_2",
@@ -324,7 +312,7 @@ SENSOR_DESCRIPTIONS: tuple[
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.pv_1_2.pv_power_total,
     ),
-    SofarTotalSensorDescription(
+    SofarSensorDescription(
         key="solar_generation_total",
         component="energy",
         translation_key="solar_generation_total",
@@ -332,6 +320,7 @@ SENSOR_DESCRIPTIONS: tuple[
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
+        value_fn=lambda device: device.energy.solar_generation_total_corrected.value,
         total_fn=lambda device: device.energy.solar_generation_total_corrected,
     ),
     SofarSensorDescription(
@@ -1291,7 +1280,7 @@ SENSOR_DESCRIPTIONS: tuple[
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.battery_totals.battery_state_of_health_total,
     ),
-    SofarTotalSensorDescription(
+    SofarSensorDescription(
         key="solar_generation_today",
         component="energy",
         translation_key="solar_generation_today",
@@ -1300,9 +1289,10 @@ SENSOR_DESCRIPTIONS: tuple[
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
+        value_fn=lambda device: device.energy.solar_generation_today_corrected.value,
         total_fn=lambda device: device.energy.solar_generation_today_corrected,
     ),
-    SofarTotalSensorDescription(
+    SofarSensorDescription(
         key="load_consumption_today",
         component=METER_ENERGY,
         translation_key="load_consumption_today",
@@ -1311,9 +1301,12 @@ SENSOR_DESCRIPTIONS: tuple[
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
+        value_fn=lambda device: (
+            device.meter_energy.load_consumption_today_corrected.value
+        ),
         total_fn=lambda device: device.meter_energy.load_consumption_today_corrected,
     ),
-    SofarTotalSensorDescription(
+    SofarSensorDescription(
         key="load_consumption_total",
         component=METER_ENERGY,
         translation_key="load_consumption_total",
@@ -1321,9 +1314,12 @@ SENSOR_DESCRIPTIONS: tuple[
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
+        value_fn=lambda device: (
+            device.meter_energy.load_consumption_total_corrected.value
+        ),
         total_fn=lambda device: device.meter_energy.load_consumption_total_corrected,
     ),
-    SofarTotalSensorDescription(
+    SofarSensorDescription(
         key="import_energy_today",
         component=METER_ENERGY,
         translation_key="import_energy_today",
@@ -1332,9 +1328,10 @@ SENSOR_DESCRIPTIONS: tuple[
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
+        value_fn=lambda device: device.meter_energy.import_energy_today_corrected.value,
         total_fn=lambda device: device.meter_energy.import_energy_today_corrected,
     ),
-    SofarTotalSensorDescription(
+    SofarSensorDescription(
         key="import_energy_total",
         component=METER_ENERGY,
         translation_key="import_energy_total",
@@ -1342,9 +1339,10 @@ SENSOR_DESCRIPTIONS: tuple[
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
+        value_fn=lambda device: device.meter_energy.import_energy_total_corrected.value,
         total_fn=lambda device: device.meter_energy.import_energy_total_corrected,
     ),
-    SofarTotalSensorDescription(
+    SofarSensorDescription(
         key="export_energy_today",
         component=METER_ENERGY,
         translation_key="export_energy_today",
@@ -1353,9 +1351,10 @@ SENSOR_DESCRIPTIONS: tuple[
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
+        value_fn=lambda device: device.meter_energy.export_energy_today_corrected.value,
         total_fn=lambda device: device.meter_energy.export_energy_today_corrected,
     ),
-    SofarTotalSensorDescription(
+    SofarSensorDescription(
         key="export_energy_total",
         component=METER_ENERGY,
         translation_key="export_energy_total",
@@ -1363,9 +1362,10 @@ SENSOR_DESCRIPTIONS: tuple[
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
+        value_fn=lambda device: device.meter_energy.export_energy_total_corrected.value,
         total_fn=lambda device: device.meter_energy.export_energy_total_corrected,
     ),
-    SofarTotalSensorDescription(
+    SofarSensorDescription(
         key="battery_input_energy_today",
         component="battery_energy",
         translation_key="battery_input_energy_today",
@@ -1374,11 +1374,14 @@ SENSOR_DESCRIPTIONS: tuple[
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
+        value_fn=lambda device: (
+            device.battery_energy.battery_input_energy_today_corrected.value
+        ),
         total_fn=lambda device: (
             device.battery_energy.battery_input_energy_today_corrected
         ),
     ),
-    SofarTotalSensorDescription(
+    SofarSensorDescription(
         key="battery_input_energy_total",
         component="battery_energy",
         translation_key="battery_input_energy_total",
@@ -1386,11 +1389,14 @@ SENSOR_DESCRIPTIONS: tuple[
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
+        value_fn=lambda device: (
+            device.battery_energy.battery_input_energy_total_corrected.value
+        ),
         total_fn=lambda device: (
             device.battery_energy.battery_input_energy_total_corrected
         ),
     ),
-    SofarTotalSensorDescription(
+    SofarSensorDescription(
         key="battery_output_energy_today",
         component="battery_energy",
         translation_key="battery_output_energy_today",
@@ -1399,11 +1405,14 @@ SENSOR_DESCRIPTIONS: tuple[
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
+        value_fn=lambda device: (
+            device.battery_energy.battery_output_energy_today_corrected.value
+        ),
         total_fn=lambda device: (
             device.battery_energy.battery_output_energy_today_corrected
         ),
     ),
-    SofarTotalSensorDescription(
+    SofarSensorDescription(
         key="battery_output_energy_total",
         component="battery_energy",
         translation_key="battery_output_energy_total",
@@ -1411,6 +1420,9 @@ SENSOR_DESCRIPTIONS: tuple[
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
+        value_fn=lambda device: (
+            device.battery_energy.battery_output_energy_total_corrected.value
+        ),
         total_fn=lambda device: (
             device.battery_energy.battery_output_energy_total_corrected
         ),
@@ -1705,13 +1717,5 @@ SENSOR_DESCRIPTIONS: tuple[
 )
 
 SENSOR_DESCRIPTIONS += _part_sensors(
-    "pv_string",
-    _PV_STRING_COMPONENTS,
-    SofarInverter.pv_string,
-    _PV_STRING_MEASUREMENTS,
-) + _part_sensors(
-    "battery",
-    BATTERY_COMPONENTS,
-    SofarInverter.battery_string,
-    _BATTERY_MEASUREMENTS,
-)
+    "pv_string", _PV_STRING_COMPONENTS, _PV_STRING_MEASUREMENTS
+) + _part_sensors("battery", BATTERY_COMPONENTS, _BATTERY_MEASUREMENTS)
