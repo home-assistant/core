@@ -99,17 +99,43 @@ def _mileage_value(entity: SkodaEntity) -> int | None:
     return None
 
 
-def _last_synchronization_value(entity: SkodaEntity) -> datetime | None:
-    status = entity.open_api_vehicle_status
-    if status is None or not status.car_captured_timestamp:
-        return None
+def _parse_car_captured_timestamp(value: datetime | str) -> datetime | None:
+    """Parse a car_captured_timestamp value into an aware UTC datetime."""
+    if isinstance(value, datetime):
+        return dt_util.as_utc(value)
 
-    timestamp = status.car_captured_timestamp
-    if isinstance(timestamp, datetime):
-        return dt_util.as_utc(timestamp)
-
-    parsed_dt = dt_util.parse_datetime(str(timestamp))
+    parsed_dt = dt_util.parse_datetime(str(value))
     return dt_util.as_utc(parsed_dt) if parsed_dt else None
+
+
+def _last_synchronization_value(entity: SkodaEntity) -> datetime | None:
+    """Return the newest car_captured_timestamp across all vehicle data blocks.
+
+    Each block (status, odometer, ...) can independently be absent from the
+    API response, so relying on a single block leaves the entity permanently
+    unknown for vehicles that don't report it.
+    """
+    blocks = (
+        entity.open_api_vehicle_status,
+        entity.open_api_odometer,
+        entity.open_api_driving_range,
+        entity.open_api_charging,
+        entity.open_api_charging_profiles,
+        entity.open_api_air_conditioning,
+        entity.open_api_auxiliary_heating,
+        entity.open_api_active_ventilation,
+    )
+
+    timestamps = [
+        parsed_dt
+        for block in blocks
+        if block is not None
+        and block.car_captured_timestamp
+        and (parsed_dt := _parse_car_captured_timestamp(block.car_captured_timestamp))
+        is not None
+    ]
+
+    return max(timestamps, default=None)
 
 
 def _fuel_level_value(entity: SkodaEntity) -> int | None:

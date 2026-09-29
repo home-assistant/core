@@ -77,9 +77,31 @@ def _make_charging_coordinator(
     return _make_vehicle_coordinator(SimpleNamespace(charging=charging, name=None))
 
 
-def _make_vehicle_status_coordinator(status: SimpleNamespace) -> SkodaUpdateCoordinator:
-    """Build a minimal fake coordinator exposing the given vehicle status."""
-    return _make_vehicle_coordinator(SimpleNamespace(status=status, name=None))
+def _make_last_sync_coordinator(
+    *,
+    status: SimpleNamespace | None = None,
+    odometer: SimpleNamespace | None = None,
+    fuel_status: SimpleNamespace | None = None,
+    charging: SimpleNamespace | None = None,
+    charging_profiles: SimpleNamespace | None = None,
+    air_conditioning: SimpleNamespace | None = None,
+    auxiliary_heating: SimpleNamespace | None = None,
+    active_ventilation: SimpleNamespace | None = None,
+) -> SkodaUpdateCoordinator:
+    """Build a fake coordinator exposing all data blocks the last-sync sensor reads."""
+    return _make_vehicle_coordinator(
+        SimpleNamespace(
+            status=status,
+            odometer=odometer,
+            fuel_status=fuel_status,
+            charging=charging,
+            charging_profiles=charging_profiles,
+            air_conditioning=air_conditioning,
+            auxiliary_heating=auxiliary_heating,
+            active_ventilation=active_ventilation,
+            name=None,
+        )
+    )
 
 
 def _make_auxiliary_heating_coordinator(
@@ -292,7 +314,7 @@ def test_remaining_ac_time_returns_none_without_target_timestamp() -> None:
 def test_last_synchronization_parses_string_timestamp() -> None:
     """A string timestamp from the API is parsed into a timezone-aware UTC datetime."""
     status = SimpleNamespace(car_captured_timestamp="2024-01-10T10:00:00+00:00")
-    coordinator = _make_vehicle_status_coordinator(status)
+    coordinator = _make_last_sync_coordinator(status=status)
     sensor = SkodaSensor(coordinator, _description("timestamp_last_sync"))
 
     assert sensor.native_value == dt_util.as_utc(
@@ -304,13 +326,44 @@ def test_last_synchronization_converts_naive_timestamp_object_to_utc() -> None:
     """A timestamp that is already a datetime object is still normalized to UTC."""
     timestamp = datetime(2024, 1, 10, 10, 0, 0)
     status = SimpleNamespace(car_captured_timestamp=timestamp)
-    coordinator = _make_vehicle_status_coordinator(status)
+    coordinator = _make_last_sync_coordinator(status=status)
     sensor = SkodaSensor(coordinator, _description("timestamp_last_sync"))
 
     native_value = sensor.native_value
     assert isinstance(native_value, datetime)
     assert native_value == dt_util.as_utc(timestamp)
     assert native_value.tzinfo is not None
+
+
+def test_last_synchronization_falls_back_when_status_is_missing() -> None:
+    """A vehicle without a status block still reports a sync time from another block."""
+    odometer = SimpleNamespace(car_captured_timestamp="2024-01-10T10:00:00+00:00")
+    coordinator = _make_last_sync_coordinator(status=None, odometer=odometer)
+    sensor = SkodaSensor(coordinator, _description("timestamp_last_sync"))
+
+    assert sensor.native_value == dt_util.as_utc(
+        datetime.fromisoformat("2024-01-10T10:00:00+00:00")
+    )
+
+
+def test_last_synchronization_picks_newest_across_blocks() -> None:
+    """When several blocks report a timestamp, the newest one wins."""
+    status = SimpleNamespace(car_captured_timestamp="2024-01-10T10:00:00+00:00")
+    odometer = SimpleNamespace(car_captured_timestamp="2024-01-10T10:02:00+00:00")
+    coordinator = _make_last_sync_coordinator(status=status, odometer=odometer)
+    sensor = SkodaSensor(coordinator, _description("timestamp_last_sync"))
+
+    assert sensor.native_value == dt_util.as_utc(
+        datetime.fromisoformat("2024-01-10T10:02:00+00:00")
+    )
+
+
+def test_last_synchronization_returns_none_when_no_block_has_a_timestamp() -> None:
+    """A vehicle reporting no timestamp anywhere leaves the sensor unknown."""
+    coordinator = _make_last_sync_coordinator()
+    sensor = SkodaSensor(coordinator, _description("timestamp_last_sync"))
+
+    assert sensor.native_value is None
 
 
 def test_charging_power_returns_none_when_not_charging() -> None:
