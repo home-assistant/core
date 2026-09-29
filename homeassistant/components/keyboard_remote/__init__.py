@@ -311,7 +311,10 @@ class KeyboardRemoteManager:
                 self._stop_listener = None
 
             if self._inotify and self._watcher:
-                self._inotify.rm_watch(self._watcher)
+                # Fails if /dev/input went away and the kernel dropped the
+                # watch, which must not stop the devices from being released.
+                with suppress(OSError):
+                    self._inotify.rm_watch(self._watcher)
                 self._watcher = None
             if self._inotify and self._by_id_watcher:
                 # Fails if udev removed the directory before its IGNORED
@@ -748,10 +751,16 @@ class DeviceHandler:
             return
 
         self.dev = dev
-        # Report the path the user configured. An imported YAML descriptor comes
-        # first so that automations matching the path from before the migration
-        # keep firing, even though the entry now resolves a by-id path too.
-        self._descriptor = self._device_descriptor or self._device_path or self.dev.path
+        # Report what the integration reported before the migration, so that
+        # automations matching it keep firing: the YAML descriptor, or for a
+        # YAML entry configured by name the node that was opened, even though
+        # the import may also have resolved a by-id path.
+        if self._device_descriptor:
+            self._descriptor = self._device_descriptor
+        elif self.entry.source == SOURCE_IMPORT:
+            self._descriptor = dev.path
+        else:
+            self._descriptor = self._device_path or dev.path
 
         # Not eager: a device that fails immediately would otherwise run the
         # whole monitor body, including the teardown that clears this

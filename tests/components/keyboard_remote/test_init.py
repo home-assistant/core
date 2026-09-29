@@ -34,7 +34,7 @@ from homeassistant.components.keyboard_remote.const import (
     KEY_VALUE,
     MATCH_DEVICE_PATH,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, CoreState, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -527,23 +527,51 @@ async def test_device_start_monitoring_fires_connected_event(
     assert handler.dev is mock_input_device
 
 
-async def test_events_keep_the_imported_yaml_descriptor(
+@pytest.mark.parametrize(
+    ("source", "data", "expected_descriptor"),
+    [
+        pytest.param(
+            SOURCE_IMPORT,
+            {
+                CONF_DEVICE_PATH: FAKE_DEVICE_PATH,
+                CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
+                CONF_DEVICE_DESCRIPTOR: "/dev/input/event3",
+            },
+            "/dev/input/event3",
+            id="yaml_descriptor",
+        ),
+        pytest.param(
+            SOURCE_IMPORT,
+            {CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
+            FAKE_DEVICE_REAL_PATH,
+            id="yaml_name",
+        ),
+        pytest.param(
+            SOURCE_USER,
+            {CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
+            FAKE_DEVICE_PATH,
+            id="ui",
+        ),
+    ],
+)
+async def test_events_report_the_pre_migration_descriptor(
     hass: HomeAssistant,
     mock_input_device: MagicMock,
+    source: str,
+    data: dict[str, str],
+    expected_descriptor: str,
 ) -> None:
-    """Test an imported YAML entry reports the descriptor it was configured with.
+    """Test events report what the integration reported before the migration.
 
-    Automations written against the pre-migration path must keep matching, even
-    though the import also resolved a stable by-id path for the same device.
+    Automations written against the YAML setup must keep matching, even though
+    the import also resolved a stable by-id path. YAML configured by name
+    reported the opened node, and UI entries report their by-id path.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
+        source=source,
         unique_id=FAKE_BY_ID_BASENAME,
-        data={
-            CONF_DEVICE_PATH: FAKE_DEVICE_PATH,
-            CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
-            CONF_DEVICE_DESCRIPTOR: FAKE_DEVICE_REAL_PATH,
-        },
+        data=data,
         options={
             CONF_KEY_TYPES: ["key_up"],
             CONF_EMULATE_KEY_HOLD: DEFAULT_EMULATE_KEY_HOLD,
@@ -561,7 +589,7 @@ async def test_events_keep_the_imported_yaml_descriptor(
     await hass.async_block_till_done()
 
     assert len(events) == 1
-    assert events[0].data[CONF_DEVICE_DESCRIPTOR] == FAKE_DEVICE_REAL_PATH
+    assert events[0].data[CONF_DEVICE_DESCRIPTOR] == expected_descriptor
 
 
 async def test_device_start_monitoring_idempotent(
@@ -1715,6 +1743,32 @@ async def test_check_handler_does_not_claim_after_stop(
 
     assert not handler.is_monitoring
     assert not manager._active_handlers_by_descriptor
+    mock_input_device.close.assert_called_once()
+
+
+async def test_stop_after_input_directory_watch_dropped(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_input_device: MagicMock,
+    mock_inotify: MagicMock,
+) -> None:
+    """Test teardown still releases devices when the main watch is gone.
+
+    The kernel drops the watch if /dev/input is removed, and removing it
+    again raises.
+    """
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    manager: KeyboardRemoteManager = hass.data[DOMAIN]
+    handler = manager._handlers[mock_config_entry.entry_id]
+    await handler.async_device_start_monitoring(mock_input_device)
+    manager._active_handlers_by_descriptor[FAKE_DEVICE_REAL_PATH] = handler
+    mock_inotify.rm_watch.side_effect = OSError(22, "Invalid argument")
+
+    await manager.async_stop()
+
+    assert not manager._started
     mock_input_device.close.assert_called_once()
 
 
