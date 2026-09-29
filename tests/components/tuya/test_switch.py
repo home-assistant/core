@@ -21,6 +21,8 @@ from . import TuyaNotificationHelper, check_selective_state_update, initialize_e
 
 from tests.common import MockConfigEntry, snapshot_platform
 
+GGQ_ENTITY_ID = "switch.wifi_watering_pump_switch"
+
 
 @pytest.fixture(autouse=True)
 def platform_autouse():
@@ -165,3 +167,37 @@ async def test_state(
     state = hass.states.get(entity_id)
     assert state is not None, f"{entity_id} does not exist"
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["ggq_uabva2zng0w1jmna"],
+)
+@pytest.mark.parametrize(
+    ("service", "expected_commands"),
+    [
+        (SERVICE_TURN_ON, [{"code": "switch", "value": True}]),
+        (SERVICE_TURN_OFF, [{"code": "switch", "value": False}]),
+    ],
+)
+async def test_ggq_action(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    service: str,
+    expected_commands: list[dict[str, Any]],
+) -> None:
+    """Test GGQ switch action."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    assert hass.states.get(GGQ_ENTITY_ID) is not None
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: GGQ_ENTITY_ID},
+        blocking=True,
+    )
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id, expected_commands
+    )
