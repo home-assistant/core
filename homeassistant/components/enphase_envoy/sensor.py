@@ -1201,7 +1201,7 @@ class EnvoySystemSensorEntity(EnvoySensorBaseEntity):
         """Return None for values above the upper limit."""
         if upper_limit is not None and value > upper_limit:
             _LOGGER.debug(
-                "Upper limit applied for %s: %s limited to %s",
+                "Value discarded as it exceeds the upper limit %s: %s > %s",
                 self.entity_id,
                 value,
                 upper_limit,
