@@ -2,11 +2,14 @@
 
 import asyncio
 from contextlib import suppress
-from unittest.mock import AsyncMock, MagicMock, patch
+import threading
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from asyncinotify import Mask
+import pytest
 
 from homeassistant.components.keyboard_remote import (
+    DeviceHandler,
     KeyboardRemoteManager,
     _async_import_yaml_device,
 )
@@ -21,6 +24,7 @@ from homeassistant.components.keyboard_remote.const import (
     DEFAULT_EMULATE_KEY_HOLD,
     DEFAULT_EMULATE_KEY_HOLD_DELAY,
     DEFAULT_EMULATE_KEY_HOLD_REPEAT,
+    DEVINPUT_BY_ID,
     DOMAIN,
     EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED,
     EVENT_KEYBOARD_REMOTE_CONNECTED,
@@ -1252,6 +1256,249 @@ async def test_monitor_devices_cancelled(
         await task
 
     assert task.done()
+
+
+@pytest.mark.parametrize(
+    "mask",
+    [
+        pytest.param(Mask.CREATE, id="create"),
+        pytest.param(Mask.MOVED_TO, id="moved_to"),
+    ],
+)
+async def test_monitor_devices_by_id_link_starts_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_input_device: MagicMock,
+    mock_inotify: MagicMock,
+    mask: Mask,
+) -> None:
+    """Test a by-id link appearing after its node starts the matching handler.
+
+    udev adds the link after the node's own CREATE and ATTRIB events, which a
+    handler configured with the by-id path cannot match on.
+    """
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    manager: KeyboardRemoteManager = hass.data[DOMAIN]
+    handler = list(manager._handlers.values())[0]
+    events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
+
+    by_id_watch = MagicMock()
+    manager._by_id_watcher = by_id_watch
+    inotify_event = MagicMock(watch=by_id_watch, mask=mask)
+    inotify_event.name = FAKE_BY_ID_BASENAME
+    inotify_iter = MockAsyncIterator([inotify_event])
+    mock_inotify.__aiter__ = MagicMock(return_value=inotify_iter)
+    mock_inotify.__anext__ = inotify_iter.__anext__
+
+    with (
+        patch(
+            "homeassistant.components.keyboard_remote.os.path.realpath",
+            side_effect=lambda p: {FAKE_DEVICE_PATH: FAKE_DEVICE_REAL_PATH}.get(p, p),
+        ),
+        patch("evdev.InputDevice", return_value=mock_input_device),
+        patch.object(handler, "match_rank", return_value=MATCH_DEVICE_PATH),
+    ):
+        await manager._async_monitor_devices()
+        await hass.async_block_till_done()
+
+    assert manager._active_handlers_by_descriptor[FAKE_DEVICE_REAL_PATH] is handler
+    assert len(events) == 1
+
+
+@pytest.mark.parametrize(
+    ("target", "mask"),
+    [
+        pytest.param("/dev/input/mouse0", Mask.CREATE, id="not_an_event_node"),
+        pytest.param(FAKE_DEVICE_REAL_PATH, Mask.DELETE, id="link_removed"),
+    ],
+)
+async def test_monitor_devices_by_id_event_ignored(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_inotify: MagicMock,
+    target: str,
+    mask: Mask,
+) -> None:
+    """Test by-id events that cannot bring up an evdev device open nothing."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    manager: KeyboardRemoteManager = hass.data[DOMAIN]
+    by_id_watch = MagicMock()
+    manager._by_id_watcher = by_id_watch
+    inotify_event = MagicMock(watch=by_id_watch, mask=mask)
+    inotify_event.name = FAKE_BY_ID_BASENAME
+    inotify_iter = MockAsyncIterator([inotify_event])
+    mock_inotify.__aiter__ = MagicMock(return_value=inotify_iter)
+    mock_inotify.__anext__ = inotify_iter.__anext__
+
+    with (
+        patch(
+            "homeassistant.components.keyboard_remote.os.path.realpath",
+            return_value=target,
+        ),
+        patch("evdev.InputDevice") as mock_open,
+    ):
+        await manager._async_monitor_devices()
+        await hass.async_block_till_done()
+
+    mock_open.assert_not_called()
+    assert not manager._active_handlers_by_descriptor
+
+
+async def test_monitor_devices_by_id_directory_removed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_inotify: MagicMock,
+) -> None:
+    """Test the by-id watch is dropped when udev removes the directory."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    manager: KeyboardRemoteManager = hass.data[DOMAIN]
+    by_id_watch = MagicMock()
+    manager._by_id_watcher = by_id_watch
+    inotify_event = MagicMock(watch=by_id_watch, mask=Mask.IGNORED)
+    inotify_event.name = None
+    inotify_iter = MockAsyncIterator([inotify_event])
+    mock_inotify.__aiter__ = MagicMock(return_value=inotify_iter)
+    mock_inotify.__anext__ = inotify_iter.__anext__
+
+    await manager._async_monitor_devices()
+    await hass.async_block_till_done()
+
+    assert manager._by_id_watcher is None
+
+
+@pytest.mark.parametrize(
+    ("already_watching", "expected_checks"),
+    [
+        pytest.param(False, 1, id="new_directory"),
+        pytest.param(True, 0, id="already_watching"),
+    ],
+)
+async def test_monitor_devices_by_id_directory_created(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_inotify: MagicMock,
+    already_watching: bool,
+    expected_checks: int,
+) -> None:
+    """Test a by-id directory created after startup is watched and rechecked.
+
+    Links udev created before the watch existed produced no event, so the
+    handlers still waiting for a device have to look again.
+    """
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    manager: KeyboardRemoteManager = hass.data[DOMAIN]
+    handler = list(manager._handlers.values())[0]
+    manager._by_id_watcher = MagicMock() if already_watching else None
+    mock_inotify.add_watch.reset_mock()
+
+    inotify_event = MagicMock(mask=Mask.CREATE | Mask.ISDIR)
+    inotify_event.name = "by-id"
+    inotify_iter = MockAsyncIterator([inotify_event])
+    mock_inotify.__aiter__ = MagicMock(return_value=inotify_iter)
+    mock_inotify.__anext__ = inotify_iter.__anext__
+
+    with patch.object(manager, "_async_check_handler") as mock_check:
+        await manager._async_monitor_devices()
+        await hass.async_block_till_done()
+
+    assert (
+        mock_inotify.add_watch.call_args_list
+        == [call(DEVINPUT_BY_ID, Mask.CREATE | Mask.MOVED_TO)] * expected_checks
+    )
+    assert mock_check.call_args_list == [call(handler)] * expected_checks
+
+
+async def test_start_without_by_id_directory(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_inotify: MagicMock,
+) -> None:
+    """Test the manager starts when udev has not created the by-id directory."""
+    mock_inotify.add_watch.side_effect = [MagicMock(), FileNotFoundError]
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    manager: KeyboardRemoteManager = hass.data[DOMAIN]
+    assert manager._started
+    assert manager._by_id_watcher is None
+
+
+async def test_stop_after_by_id_directory_removed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_input_device: MagicMock,
+    mock_inotify: MagicMock,
+) -> None:
+    """Test teardown finishes when the by-id watch is already gone.
+
+    udev removes the directory with its last link, and the kernel drops the
+    watch before the manager reads the IGNORED event.
+    """
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    manager: KeyboardRemoteManager = hass.data[DOMAIN]
+    handler = manager._handlers[mock_config_entry.entry_id]
+    await handler.async_device_start_monitoring(mock_input_device)
+    manager._active_handlers_by_descriptor[FAKE_DEVICE_REAL_PATH] = handler
+    manager._by_id_watcher = MagicMock()
+    mock_inotify.rm_watch.side_effect = [None, OSError(22, "Invalid argument")]
+
+    await manager.async_stop()
+
+    assert not manager._started
+    mock_input_device.close.assert_called_once()
+
+
+async def test_start_checks_handler_registered_during_scan(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an entry that loads while the initial scan runs still gets checked.
+
+    register_handler skips the check before the manager has started, and the
+    scan took its handler snapshot before this entry existed.
+    """
+    manager = KeyboardRemoteManager(hass)
+    first = DeviceHandler(hass, mock_config_entry)
+    manager.register_handler(mock_config_entry.entry_id, first)
+    late_entry = MockConfigEntry(domain=DOMAIN, data={CONF_DEVICE_PATH: "late"})
+    late = DeviceHandler(hass, late_entry)
+
+    scanning = asyncio.Event()
+    release = threading.Event()
+
+    def _scan(handlers: list[DeviceHandler]) -> list:
+        hass.loop.call_soon_threadsafe(scanning.set)
+        release.wait(5)
+        return []
+
+    with (
+        patch.object(manager, "_scan_and_match_devices", _scan),
+        patch.object(manager, "_async_check_handler") as mock_check,
+    ):
+        start = hass.async_create_task(manager.async_start())
+        await scanning.wait()
+        manager.register_handler(late_entry.entry_id, late)
+        release.set()
+        await start
+        await hass.async_block_till_done()
+
+    mock_check.assert_called_once_with(late)
+    await manager.async_stop()
 
 
 async def test_keyrepeat_fires_hold_events(

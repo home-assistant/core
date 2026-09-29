@@ -7,7 +7,7 @@ import logging
 import os
 from typing import TYPE_CHECKING, Any
 
-from asyncinotify import Inotify, Mask
+from asyncinotify import Event as InotifyEvent, Inotify, Mask, Watch
 import probatio
 
 if TYPE_CHECKING:
@@ -40,6 +40,7 @@ from .const import (
     DEFAULT_EMULATE_KEY_HOLD_REPEAT,
     DEFAULT_KEY_TYPES,
     DEVINPUT,
+    DEVINPUT_BY_ID,
     DOMAIN,
     EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED,
     EVENT_KEYBOARD_REMOTE_CONNECTED,
@@ -202,6 +203,7 @@ class KeyboardRemoteManager:
         self._active_handlers_by_descriptor: dict[str, DeviceHandler] = {}
         self._inotify: Inotify | None = None
         self._watcher: Any = None
+        self._by_id_watcher: Watch | None = None
         self._monitor_task: asyncio.Task | None = None
         self._stop_listener: CALLBACK_TYPE | None = None
         self._started = False
@@ -224,15 +226,38 @@ class KeyboardRemoteManager:
             self._watcher = self._inotify.add_watch(
                 DEVINPUT, Mask.CREATE | Mask.ATTRIB | Mask.DELETE
             )
+            self._watch_by_id()
 
             # Scan initial devices AFTER starting watcher to avoid race
             # conditions leading to missing device connections
-            await self._async_scan_initial_devices()
+            scanned = await self._async_scan_initial_devices()
 
             self._monitor_task = self.hass.async_create_task(
                 self._async_monitor_devices()
             )
             self._started = True
+
+            # Entries that loaded while the scan ran were not part of it, and
+            # register_handler skipped them because the manager had not started.
+            for handler in self._handlers.values():
+                if handler not in scanned:
+                    self.hass.async_create_task(self._async_check_handler(handler))
+
+    def _watch_by_id(self) -> None:
+        """Watch the by-id directory for new symlinks.
+
+        udev creates the by-id symlink after the event node and its permission
+        changes, so a handler configured with a by-id path cannot match on the
+        node's own events. systemd-udevd renames each link into place, so the
+        final name arrives as MOVED_TO rather than CREATE.
+        """
+        assert self._inotify is not None
+        # udev creates the directory with the first link and removes it with
+        # the last one, so a missing directory is expected.
+        with suppress(OSError):
+            self._by_id_watcher = self._inotify.add_watch(
+                DEVINPUT_BY_ID, Mask.CREATE | Mask.MOVED_TO
+            )
 
     async def _async_handle_hass_stop(self, event: Event) -> None:
         """Tear down when Home Assistant stops."""
@@ -254,6 +279,12 @@ class KeyboardRemoteManager:
             if self._inotify and self._watcher:
                 self._inotify.rm_watch(self._watcher)
                 self._watcher = None
+            if self._inotify and self._by_id_watcher:
+                # Fails if udev removed the directory before its IGNORED
+                # event was read.
+                with suppress(OSError):
+                    self._inotify.rm_watch(self._by_id_watcher)
+                self._by_id_watcher = None
 
             if self._monitor_task is not None:
                 if not self._monitor_task.done():
@@ -388,8 +419,11 @@ class KeyboardRemoteManager:
 
         return matches
 
-    async def _async_scan_initial_devices(self) -> None:
-        """Scan all current /dev/input/ devices and start matching handlers."""
+    async def _async_scan_initial_devices(self) -> list[DeviceHandler]:
+        """Scan all current /dev/input/ devices and start matching handlers.
+
+        Returns the handlers the scan considered.
+        """
         handlers = list(self._handlers.values())
         matches = await self.hass.async_add_executor_job(
             self._scan_and_match_devices, handlers
@@ -405,6 +439,8 @@ class KeyboardRemoteManager:
 
         if start_tasks:
             await asyncio.wait(start_tasks)
+
+        return handlers
 
     def _find_device_for_handler(
         self,
@@ -476,6 +512,17 @@ class KeyboardRemoteManager:
         assert self._inotify is not None
         try:
             async for event in self._inotify:
+                if self._by_id_watcher is not None and (
+                    event.watch is self._by_id_watcher
+                ):
+                    await self._async_handle_by_id_event(event)
+                    continue
+
+                if event.name is not None and str(event.name) == "by-id":
+                    if Mask.CREATE in event.mask:
+                        await self._async_handle_by_id_created()
+                    continue
+
                 descriptor = f"{DEVINPUT}/{event.name}"
                 _LOGGER.debug(
                     "got event for %s: %s",
@@ -494,20 +541,56 @@ class KeyboardRemoteManager:
                     (event.mask & Mask.CREATE) or (event.mask & Mask.ATTRIB)
                 ) and not descriptor_active:
                     _LOGGER.debug("checking new: %s", descriptor)
-                    handlers = list(self._handlers.values())
-                    result = await self.hass.async_add_executor_job(
-                        self._get_handler_for_device, descriptor, handlers
-                    )
-                    if result[0] is None or result[1] is None:
-                        continue
-                    dev, handler = result[0], result[1]
-                    if not self._claim_descriptor(descriptor, dev, handler):
-                        continue
-                    _LOGGER.debug("adding: %s", descriptor)
-                    await handler.async_device_start_monitoring(dev)
+                    await self._async_attach_descriptor(descriptor)
         except asyncio.CancelledError:
             _LOGGER.debug("Monitoring canceled")
             return
+
+    async def _async_attach_descriptor(self, descriptor: str) -> None:
+        """Start the best matching handler on a device node, if any."""
+        handlers = list(self._handlers.values())
+        dev, handler = await self.hass.async_add_executor_job(
+            self._get_handler_for_device, descriptor, handlers
+        )
+        if dev is None or handler is None:
+            return
+        if not self._claim_descriptor(descriptor, dev, handler):
+            return
+        _LOGGER.debug("adding: %s", descriptor)
+        await handler.async_device_start_monitoring(dev)
+
+    async def _async_handle_by_id_event(self, event: InotifyEvent) -> None:
+        """Handle a new by-id symlink by checking the node it points to."""
+        if Mask.IGNORED in event.mask:
+            # The directory was removed along with its last link
+            self._by_id_watcher = None
+            return
+        if event.name is None or not event.mask & (Mask.CREATE | Mask.MOVED_TO):
+            return
+        descriptor = await self.hass.async_add_executor_job(
+            os.path.realpath, f"{DEVINPUT_BY_ID}/{event.name}"
+        )
+        # by-id also links mouse and joystick nodes, which evdev cannot open
+        if (
+            not descriptor.startswith(f"{DEVINPUT}/event")
+            or descriptor in self._active_handlers_by_descriptor
+        ):
+            return
+        _LOGGER.debug("checking new by-id link: %s -> %s", event.name, descriptor)
+        await self._async_attach_descriptor(descriptor)
+
+    async def _async_handle_by_id_created(self) -> None:
+        """Start watching a by-id directory that udev just created.
+
+        Links created before the watch was added produced no event, so check
+        every handler that is still waiting for a device.
+        """
+        if self._by_id_watcher is not None:
+            return
+        self._watch_by_id()
+        for handler in list(self._handlers.values()):
+            if not handler.is_monitoring:
+                await self._async_check_handler(handler)
 
 
 class DeviceHandler:

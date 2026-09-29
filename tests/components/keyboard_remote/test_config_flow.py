@@ -204,6 +204,43 @@ async def test_user_step_already_configured(
     assert result["data"][CONF_DEVICE_PATH] == FAKE_DEVICE_PATH_2
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_step_hides_device_configured_by_raw_path(
+    hass: HomeAssistant,
+) -> None:
+    """Test a device imported before its by-id link existed is not offered again.
+
+    That entry is keyed by the raw descriptor, so only the resolved node shows
+    that the by-id link now listed points at the same device.
+    """
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FAKE_DEVICE_REAL_PATH,
+        data={
+            CONF_DEVICE_PATH: FAKE_DEVICE_REAL_PATH,
+            CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
+            CONF_DEVICE_DESCRIPTOR: FAKE_DEVICE_REAL_PATH,
+        },
+    ).add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow._scan_input_devices_sync",
+            return_value=[MOCK_SCAN_RESULT[0]],
+        ),
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
+            side_effect=lambda p: {FAKE_DEVICE_PATH: FAKE_DEVICE_REAL_PATH}.get(p, p),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "all_devices_configured"
+
+
 # --- Import step tests ---
 
 
@@ -367,6 +404,58 @@ async def test_import_adopts_entry_created_before_by_id_existed(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert existing.unique_id == FAKE_BY_ID_BASENAME
     assert existing.data[CONF_DEVICE_PATH] == FAKE_DEVICE_PATH
+
+
+@pytest.mark.parametrize(
+    ("import_data", "legacy_unique_id"),
+    [
+        pytest.param(
+            {"device_descriptor": FAKE_DEVICE_REAL_PATH},
+            FAKE_DEVICE_REAL_PATH,
+            id="descriptor",
+        ),
+        pytest.param(
+            {"device_name": FAKE_DEVICE_NAME},
+            FAKE_DEVICE_NAME,
+            id="name",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_import_does_not_adopt_onto_a_taken_unique_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    import_data: dict[str, str],
+    legacy_unique_id: str,
+) -> None:
+    """Test the legacy entry is left alone when the by-id ID is already in use.
+
+    The user added the device through the UI before the YAML was re-imported,
+    so adopting would give both entries the same unique ID.
+    """
+    mock_config_entry.add_to_hass(hass)
+    legacy = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=legacy_unique_id,
+        data={CONF_DEVICE_PATH: legacy_unique_id, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
+    )
+    legacy.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
+        return_value=(FAKE_DEVICE_PATH, FAKE_DEVICE_NAME, FAKE_BY_ID_BASENAME),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=import_data,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+    assert legacy.unique_id == legacy_unique_id
+    assert legacy.data[CONF_DEVICE_PATH] == legacy_unique_id
 
 
 async def test_import_cannot_identify(hass: HomeAssistant) -> None:

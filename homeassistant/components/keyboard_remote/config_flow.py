@@ -79,6 +79,18 @@ def _scan_input_devices_sync() -> list[selector.SelectOptionDict]:
     return options
 
 
+def _exclude_configured_devices(
+    devices: list[selector.SelectOptionDict], configured_paths: list[str]
+) -> list[selector.SelectOptionDict]:
+    """Drop devices whose node an existing entry already points at.
+
+    An entry imported from YAML before its by-id link existed is keyed by the
+    raw path, so the by-id basename alone does not show it as configured.
+    """
+    configured = {os.path.realpath(path) for path in configured_paths}
+    return [d for d in devices if os.path.realpath(d["value"]) not in configured]
+
+
 async def _scan_input_devices(
     hass: HomeAssistant,
 ) -> list[selector.SelectOptionDict]:
@@ -202,12 +214,23 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         if not available_devices:
             return self.async_abort(reason="no_devices")
 
-        configured_ids = {entry.unique_id for entry in self._async_current_entries()}
-        available_devices = [
-            d
-            for d in available_devices
-            if os.path.basename(d["value"]) not in configured_ids
+        entries = self._async_current_entries()
+        configured_ids = {entry.unique_id for entry in entries}
+        configured_paths = [
+            path
+            for entry in entries
+            for key in (CONF_DEVICE_PATH, CONF_DEVICE_DESCRIPTOR)
+            if (path := entry.data.get(key))
         ]
+        available_devices = await self.hass.async_add_executor_job(
+            _exclude_configured_devices,
+            [
+                d
+                for d in available_devices
+                if os.path.basename(d["value"]) not in configured_ids
+            ],
+            configured_paths,
+        )
 
         if not available_devices:
             return self.async_abort(reason="all_devices_configured")
@@ -267,6 +290,12 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         for entry in self._async_current_entries():
             if entry.unique_id not in legacy_ids:
                 continue
+            # The device was added again through the UI under its by-id ID.
+            # Renaming this entry would give two entries the same unique ID.
+            if self.hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, unique_id
+            ):
+                return self.async_abort(reason="already_configured")
             updated_data = dict(entry.data)
             if device_path:
                 updated_data[CONF_DEVICE_PATH] = device_path
