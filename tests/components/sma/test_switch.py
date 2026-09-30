@@ -1,12 +1,14 @@
 """Test the SMA switch platform."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pysma import (
     ModbusControl,
     SmaConnectionException,
+    SmaSunSpecException,
     SmaTimeoutException,
     SmaWriteException,
 )
@@ -61,14 +63,24 @@ async def test_all_entities(
         )
 
 
+@pytest.mark.parametrize(
+    "modbus_config",
+    [
+        pytest.param({"get_control_schema.return_value": None}, id="not_supported"),
+        pytest.param({"connect.side_effect": SmaConnectionException}, id="no_modbus"),
+        pytest.param({"connect.side_effect": SmaTimeoutException}, id="timeout"),
+        pytest.param({"discover.side_effect": SmaSunSpecException}, id="no_sunspec"),
+    ],
+)
 async def test_not_supported(
     hass: HomeAssistant,
     mock_sma_client: MagicMock,
     mock_sma_modbus: MagicMock,
     mock_config_entry: MockConfigEntry,
+    modbus_config: dict[str, Any],
 ) -> None:
-    """Test the switch is not created when the control is not supported."""
-    mock_sma_modbus.get_control_schema.return_value = None
+    """Test the switch is not created without Modbus or a supported control."""
+    mock_sma_modbus.configure_mock(**modbus_config)
 
     await setup_integration(hass, mock_config_entry)
 
