@@ -7,13 +7,17 @@ import logging
 from typing import Any, override
 
 import aiounifi
-from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
+from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.devices import Devices
 from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client
 from aiounifi.models.device import Device
 from aiounifi.models.event import Event, EventKey
+from aiounifi.network.v1.interfaces.clients import Clients as NetworkClients
+from aiounifi.network.v1.interfaces.devices import Devices as NetworkDevices
+from aiounifi.network.v1.models.client import Client as NetworkClient
+from aiounifi.network.v1.models.device import Device as NetworkDevice
 from propcache.api import cached_property
 
 from homeassistant.components.device_tracker import (
@@ -26,16 +30,21 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import UnifiConfigEntry
+from .coordinator import UnifiApiHandler
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
     async_device_available_fn,
+    async_network_device_available_fn,
     is_locally_administered_mac,
 )
 from .hub import UnifiHub
 
 LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
+
+NETWORK_DEVICE_HEARTBEAT = timedelta(seconds=30)
+"""Integration API devices are polled every 10 seconds; allow two misses."""
 
 CLIENT_TRACKER = "client"
 DEVICE_TRACKER = "device"
@@ -145,8 +154,43 @@ def async_device_heartbeat_timedelta_fn(hub: UnifiHub, obj_id: str) -> timedelta
     return timedelta(seconds=device.next_interval + 60)
 
 
+@callback
+def async_network_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if a client of the Integration API is allowed.
+
+    The Integration API does not say which SSID a client is on, so the SSID
+    filter does not apply.
+    """
+    if obj_id in hub.config.option_supported_clients:
+        return True
+
+    if not hub.config.option_track_clients:
+        return False
+
+    wired = hub.api.network.clients[obj_id].type == "WIRED"
+    if wired and not hub.config.option_track_wired_clients:
+        return False
+
+    return not (
+        hub.config.option_ignore_local_mac
+        and not wired
+        and is_locally_administered_mac(obj_id)
+    )
+
+
+@callback
+def async_network_client_is_connected_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if a client of the Integration API is connected.
+
+    A client the latest poll listed is connected. One the poll left out is
+    not, but its tracker stays home until the heartbeat its last listing
+    set lapses, one detection time later, as with the classic API.
+    """
+    return hub.api.network.clients.is_connected(obj_id)
+
+
 @dataclass(frozen=True, kw_only=True)
-class UnifiTrackerEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
+class UnifiTrackerEntityDescription[HandlerT: UnifiApiHandler, ApiItemT: ApiItem](
     UnifiEntityDescription[HandlerT, ApiItemT], ScannerEntityDescription
 ):
     """Class describing UniFi device tracker entity."""
@@ -195,18 +239,53 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
 )
 
 
+NETWORK_API_ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
+    UnifiTrackerEntityDescription[NetworkClients, NetworkClient](
+        key="Client device scanner",
+        allowed_fn=async_network_client_allowed_fn,
+        api_handler_fn=lambda api: api.network.clients,
+        device_info_fn=lambda api, obj_id: None,
+        heartbeat_timedelta_fn=lambda hub, _: hub.config.option_detection_time,
+        is_connected_fn=async_network_client_is_connected_fn,
+        name_fn=lambda client: client.name or None,
+        object_fn=lambda api, obj_id: api.network.clients[obj_id],
+        unique_id_fn=lambda hub, obj_id: f"{hub.site}-{obj_id}",
+        ip_address_fn=lambda api, obj_id: api.network.clients[obj_id].ip_address,
+        hostname_fn=lambda api, obj_id: None,
+    ),
+    UnifiTrackerEntityDescription[NetworkDevices, NetworkDevice](
+        key="Device scanner",
+        allowed_fn=lambda hub, obj_id: hub.config.option_track_devices,
+        api_handler_fn=lambda api: api.network.devices,
+        device_info_fn=lambda api, obj_id: None,
+        heartbeat_timedelta_fn=lambda hub, _: NETWORK_DEVICE_HEARTBEAT,
+        is_connected_fn=async_network_device_available_fn,
+        name_fn=lambda device: device.name or device.model,
+        object_fn=lambda api, obj_id: api.network.devices[obj_id],
+        unique_id_fn=lambda hub, obj_id: obj_id,
+        ip_address_fn=lambda api, obj_id: api.network.devices[obj_id].ip_address,
+        hostname_fn=lambda api, obj_id: None,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: UnifiConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for UniFi Network integration."""
-    config_entry.runtime_data.entity_loader.register_platform(
-        async_add_entities, UnifiScannerEntity, ENTITY_DESCRIPTIONS
+    hub = config_entry.runtime_data
+    hub.entity_loader.register_platform(
+        async_add_entities,
+        UnifiScannerEntity,
+        NETWORK_API_ENTITY_DESCRIPTIONS
+        if hub.config.uses_api_key
+        else ENTITY_DESCRIPTIONS,
     )
 
 
-class UnifiScannerEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
+class UnifiScannerEntity[HandlerT: UnifiApiHandler, ApiItemT: ApiItem](
     UnifiEntity[HandlerT, ApiItemT], ScannerEntity
 ):
     """Representation of a UniFi scanner."""

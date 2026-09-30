@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import aiounifi
 
 from homeassistant.const import (
+    CONF_API_KEY,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -22,6 +23,7 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from ..const import ATTR_MANUFACTURER, CONF_SITE_ID, DOMAIN, PLATFORMS
+from .client_store import UnifiNetworkClientStore
 from .config import UnifiConfig
 from .entity_helper import UnifiEntityHelper
 from .entity_loader import UnifiEntityLoader
@@ -44,16 +46,30 @@ class UnifiHub:
         self.hass = hass
         self.api = api
         self.config = UnifiConfig.from_config_entry(config_entry)
+        self.network_clients: UnifiNetworkClientStore | None = (
+            UnifiNetworkClientStore(hass, config_entry)
+            if self.config.uses_api_key
+            else None
+        )
+        """Clients kept across restarts; the Integration API cannot list them."""
         self.entity_loader = UnifiEntityLoader(self)
         self._entity_helper = UnifiEntityHelper(hass, api)
         self.websocket = UnifiWebsocket(hass, api, self.signal_reachable)
 
         self.site = config_entry.data[CONF_SITE_ID]
         self.is_admin = False
+        self.application_version: str | None = None
+        """Network application version, as the Integration API reports it."""
 
     @property
     def available(self) -> bool:
-        """Websocket connection state."""
+        """Websocket connection state.
+
+        The Integration API has no websocket; each entity follows the state of
+        the coordinator polling its handler instead.
+        """
+        if self.config.uses_api_key:
+            return True
         return self.websocket.available
 
     @property
@@ -94,7 +110,11 @@ class UnifiHub:
         self._entity_helper.initialize()
 
         assert self.config.entry.unique_id is not None
-        self.is_admin = self.api.sites[self.config.entry.unique_id].role == "admin"
+        if self.config.uses_api_key:
+            # A key carries the permissions of the admin who created it
+            self.is_admin = True
+        else:
+            self.is_admin = self.api.sites[self.config.entry.unique_id].role == "admin"
 
         self.config.entry.async_on_unload(
             self.config.entry.add_update_listener(self.async_config_entry_updated)
@@ -105,7 +125,7 @@ class UnifiHub:
         """UniFi Network device info."""
         assert self.config.entry.unique_id is not None
 
-        version: str | None = None
+        version = self.application_version
         if sysinfo := next(iter(self.api.system_information.values()), None):
             version = sysinfo.version
 
@@ -141,6 +161,7 @@ class UnifiHub:
             CONF_PORT: "port",
             CONF_USERNAME: "username",
             CONF_PASSWORD: "password",
+            CONF_API_KEY: "api_key",
             CONF_SITE_ID: "site",
             CONF_VERIFY_SSL: "ssl_context",
         }
@@ -153,7 +174,7 @@ class UnifiHub:
                 ):
                     hass.config_entries.async_schedule_reload(config_entry.entry_id)
                     return
-            if config_entry.data[key] != getattr(hub.config, value):
+            if config_entry.data.get(key) != getattr(hub.config, value):
                 hass.config_entries.async_schedule_reload(config_entry.entry_id)
                 return
 
@@ -183,6 +204,8 @@ class UnifiHub:
         if not unload_ok:
             return False
 
+        if self.network_clients is not None:
+            await self.network_clients.async_unload()
         self._entity_helper.reset()
 
         return True
