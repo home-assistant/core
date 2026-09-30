@@ -23,8 +23,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up all time entities for this entry."""
     if config_entry.runtime_data.data.sleep is None:
-        # Sleep config is not supported on this plan/hardware; don't add
-        # entities that could never report a value.
         return
     async_add_entities(
         StarlinkTimeEntity(config_entry.runtime_data, description)

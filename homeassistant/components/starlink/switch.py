@@ -24,8 +24,6 @@ async def async_setup_entry(
     """Set up all binary sensors for this entry."""
     descriptions = list(SWITCHES)
     if config_entry.runtime_data.data.sleep is None:
-        # Sleep config is not supported on this plan/hardware; don't add
-        # an entity that could never report a value.
         descriptions.remove(SLEEP_SCHEDULE_SWITCH)
     async_add_entities(
         StarlinkSwitchEntity(config_entry.runtime_data, description)
