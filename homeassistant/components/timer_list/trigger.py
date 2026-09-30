@@ -6,8 +6,20 @@ from typing import TYPE_CHECKING, Any, cast, override
 
 import probatio
 
-from homeassistant.const import ATTR_ENTITY_ID, CONF_OPTIONS, CONF_TARGET
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback, split_entity_id
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_OPTIONS,
+    CONF_TARGET,
+    STATE_UNAVAILABLE,
+)
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    callback,
+    split_entity_id,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
@@ -53,6 +65,7 @@ class TimerEventListener(TargetEntityChangeTracker):
         super().__init__(hass, target_selection, entity_filter)
         self._listener = listener
         self._unsubscribe_listeners: list[CALLBACK_TYPE] = []
+        self._state_change_unsub: CALLBACK_TYPE | None = None
 
     @override
     @callback
@@ -63,25 +76,38 @@ class TimerEventListener(TargetEntityChangeTracker):
         self._unsubscribe_listeners = []
 
         component = self._hass.data[DATA_COMPONENT]
-        pending: set[str] = set()
         for entity_id in tracked_entities:
             if (entity := component.get_entity(entity_id)) is None:
-                pending.add(entity_id)
                 continue
             self._unsubscribe_listeners.append(
                 entity.async_subscribe_updates(partial(self._listener, entity_id))
             )
 
-        if pending:
-            # Entity registry creation fires before EntityPlatform hands the
-            # entity to the component, so a targeted list added after this
-            # trigger is not resolvable yet. Its first state write is, so retry
-            # then instead of dropping it for the lifetime of the automation.
-            self._unsubscribe_listeners.append(
-                async_track_state_change_event(
-                    self._hass, pending, self._handle_target_update
-                )
+        if self._state_change_unsub:
+            self._state_change_unsub()
+            self._state_change_unsub = None
+        if tracked_entities:
+            self._state_change_unsub = async_track_state_change_event(
+                self._hass, tracked_entities, self._async_entity_state_changed
             )
+
+    @callback
+    def _async_entity_state_changed(self, event: Event[EventStateChangedData]) -> None:
+        """Resubscribe when a targeted entity becomes available.
+
+        Covers a list added after this trigger, whose registry entry exists
+        before the component can resolve the entity, and a reloaded config
+        entry, which swaps in a new entity object while leaving the registry
+        entry alone: nothing else would tell us the subscriptions above now
+        point at a discarded object.
+        """
+        new_state = event.data["new_state"]
+        old_state = event.data["old_state"]
+        if new_state is None or new_state.state == STATE_UNAVAILABLE:
+            return
+        if old_state is not None and old_state.state != STATE_UNAVAILABLE:
+            return
+        self._handle_target_update()
 
     @override
     @callback
@@ -91,6 +117,9 @@ class TimerEventListener(TargetEntityChangeTracker):
         for unsub in self._unsubscribe_listeners:
             unsub()
         self._unsubscribe_listeners = []
+        if self._state_change_unsub:
+            self._state_change_unsub()
+            self._state_change_unsub = None
 
 
 class TimerEventTrigger(Trigger):

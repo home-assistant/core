@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components import automation
 from homeassistant.components.timer_list.const import DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
@@ -15,11 +16,18 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 
-from . import MockTimerListEntity, create_mock_platform
+from . import TEST_DOMAIN, MockTimerListEntity, create_mock_platform
 
-from tests.common import async_fire_time_changed, async_mock_service
+from tests.common import (
+    MockConfigEntry,
+    MockPlatform,
+    async_fire_time_changed,
+    async_mock_service,
+    mock_platform,
+)
 from tests.components.common import assert_trigger_options_supported
 
 TEST_ENTITY_ID = "timer_list.timers"
@@ -298,3 +306,52 @@ async def test_trigger_without_target_fails_to_attach(
     await hass.async_block_till_done()
 
     assert "No target defined" in caplog.text
+
+
+async def test_trigger_follows_entity_replaced_by_reload(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test the trigger resubscribes to the entity object a reload creates.
+
+    A config entry reload builds a new entity object but leaves its registry
+    entry untouched, so the target set never changes and nothing else would
+    tell the trigger its subscription points at a discarded object.
+    """
+    reloaded_entity_id = "timer_list.reloaded"
+    await _setup_automation(hass, "timer_created", entity_id=reloaded_entity_id)
+
+    async def async_setup_entry_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Build a fresh entity per setup, as a real integration does."""
+        entity = MockTimerListEntity(name="Reloaded")
+        entity.entity_id = reloaded_entity_id
+        entity._attr_unique_id = "reloaded"
+        async_add_entities([entity])
+
+    mock_platform(
+        hass,
+        f"{TEST_DOMAIN}.{DOMAIN}",
+        MockPlatform(async_setup_entry=async_setup_entry_platform),
+    )
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        DOMAIN,
+        "create_timer",
+        {"duration": {"seconds": 60}},
+        target={ATTR_ENTITY_ID: reloaded_entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+    assert service_calls[0].data["entity_id"] == reloaded_entity_id

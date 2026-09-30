@@ -19,7 +19,7 @@ from homeassistant.util import dt as dt_util
 
 from . import TEST_DOMAIN, MockTimerListEntity, create_mock_platform
 
-from tests.common import async_fire_time_changed
+from tests.common import MockUser, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 TEST_ENTITY_ID = "timer_list.timers"
@@ -504,3 +504,29 @@ async def test_finish_callback_for_removed_timer_is_noop(
     test_entity._async_timer_finished(timer_id, dt_util.utcnow())
 
     assert await _get_timers(hass) == []
+
+
+@pytest.mark.usefixtures("test_entity")
+@pytest.mark.parametrize(
+    "command",
+    [
+        pytest.param("timer_list/item/subscribe", id="subscribe"),
+        pytest.param("timer_list/item/list", id="list"),
+    ],
+)
+async def test_websocket_requires_read_permission(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    command: str,
+) -> None:
+    """Test a user without read access cannot see another entity's timers."""
+    await _create_timer(hass, name="Pasta")
+    hass_admin_user.mock_policy({"entities": {"entity_ids": {TEST_ENTITY_ID: False}}})
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": command, "entity_id": TEST_ENTITY_ID})
+
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unauthorized"
