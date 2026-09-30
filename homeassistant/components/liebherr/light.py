@@ -70,7 +70,7 @@ class LiebherrPresentationLight(LiebherrEntity, LightEntity):
     ) -> None:
         """Initialize the presentation light entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.device_id}_presentation_light"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
+        self._attr_unique_id = f"{coordinator.device_id}_presentation_light"
 
     @property
     def _light_control(self) -> PresentationLightControl | None:

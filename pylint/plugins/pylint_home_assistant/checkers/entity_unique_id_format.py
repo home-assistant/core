@@ -52,6 +52,10 @@ Three locations are scanned for both rules: class-body
 assignments inside method bodies, and ``return`` values inside a
 ``unique_id`` property/method override. Aliased imports
 (``from .const import DOMAIN as MY_DOMAIN``) are not scanned.
+
+Integrations with existing unique IDs in these formats are exempted as a
+whole via ``REDUNDANT_DOMAIN_EXEMPTIONS`` and
+``REDUNDANT_PLATFORM_EXEMPTIONS``.
 """
 
 from collections.abc import Callable, Iterable
@@ -71,6 +75,81 @@ from pylint_home_assistant.helpers.module_info import (
 
 _ATTR_NAME = "_attr_unique_id"
 _PROPERTY_NAME = "unique_id"
+
+# Integrations with existing unique IDs in these formats. Migrating unique IDs
+# is easy to get wrong, so they are exempted instead. Do not add new entries.
+REDUNDANT_DOMAIN_EXEMPTIONS = frozenset(
+    {
+        "adguard",
+        "backup",
+        "bayesian",
+        "cloud",
+        "coinbase",
+        "demo",
+        "goodwe",
+        "homewizard",
+        "huisbaasje",
+        "nasweb",
+        "nmbs",
+        "opensky",
+        "ovo_energy",
+        "plex",
+        "point",
+        "powerwall",
+        "rpi_power",
+        "starline",
+        "supla",
+        "toon",
+        "tuya",
+        "withings",
+        "youless",
+        "zodiac",
+    }
+)
+REDUNDANT_PLATFORM_EXEMPTIONS = frozenset(
+    {
+        "adguard",
+        "airgradient",
+        "airos",
+        "android_ip_webcam",
+        "backup",
+        "blink",
+        "broadlink",
+        "bsblan",
+        "demo",
+        "ecobee",
+        "fibaro",
+        "fully_kiosk",
+        "immich",
+        "kaiterra",
+        "kitchen_sink",
+        "lametric",
+        "liebherr",
+        "lutron_caseta",
+        "nasweb",
+        "nest",
+        "netatmo",
+        "netgear",
+        "openhome",
+        "plex",
+        "plugwise",
+        "rachio",
+        "saunum",
+        "sleepiq",
+        "smlight",
+        "switchbot",
+        "tolo",
+        "toon",
+        "tradfri",
+        "unifiprotect",
+        "vallox",
+        "velux",
+        "vistapool",
+        "wyoming",
+        "yolink",
+        "zwave_js",
+    }
+)
 
 
 _FSTRING_PLACEHOLDER = "a"
@@ -293,6 +372,8 @@ class EntityUniqueIdFormatChecker(BaseChecker):
     _is_integration_module: bool
     _integration_domain: str | None
     _platform: str | None
+    _check_domain: bool
+    _check_platform: bool
 
     def visit_module(self, node: nodes.Module) -> None:
         """Cache per-module state."""
@@ -302,6 +383,10 @@ class EntityUniqueIdFormatChecker(BaseChecker):
         )
         self._platform = (
             _module_platform(node.name) if self._is_integration_module else None
+        )
+        self._check_domain = self._integration_domain not in REDUNDANT_DOMAIN_EXEMPTIONS
+        self._check_platform = (
+            self._integration_domain not in REDUNDANT_PLATFORM_EXEMPTIONS
         )
 
     def visit_classdef(self, node: nodes.ClassDef) -> None:
@@ -316,16 +401,17 @@ class EntityUniqueIdFormatChecker(BaseChecker):
             return
         if not inherits_from_entity(node):
             return
-        for value_node in _redundant_value_nodes(
-            node, lambda v: _value_references_domain(v, self._integration_domain)
-        ):
-            self.add_message(
-                "home-assistant-entity-unique-id-redundant-domain",
-                node=value_node,
-                args=(node.name,),
-            )
+        if self._check_domain:
+            for value_node in _redundant_value_nodes(
+                node, lambda v: _value_references_domain(v, self._integration_domain)
+            ):
+                self.add_message(
+                    "home-assistant-entity-unique-id-redundant-domain",
+                    node=value_node,
+                    args=(node.name,),
+                )
         platform = self._platform
-        if platform is None:
+        if platform is None or not self._check_platform:
             return
         for value_node in _redundant_value_nodes(
             node, lambda v: _value_references_platform(v, platform)
