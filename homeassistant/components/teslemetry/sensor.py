@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from typing import override
 
 from tesla_fleet_api import firmware_at_least
+from tesla_fleet_api.const import Scope
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
 from teslemetry_stream.const import CreditsEvent
 
@@ -215,6 +216,7 @@ class TeslemetryVehicleSensorEntityDescription(SensorEntityDescription):
     ) = None
     streaming_firmware: str = "2024.26"
     requires_hw4: bool = False
+    requires_location_scope: bool = False
 
 
 VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
@@ -548,6 +550,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="drive_state_active_route_destination",
+        requires_location_scope=True,
         polling=True,
         streaming_listener=lambda vehicle, callback: vehicle.listen_DestinationName(
             callback
@@ -632,7 +635,11 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="cruise_follow_distance",
         streaming_listener=lambda vehicle, callback: (
-            vehicle.listen_CruiseFollowDistance(callback)
+            vehicle.listen_CruiseFollowDistance(
+                lambda value: callback(
+                    int(value) if value and value.isdigit() else None
+                )
+            )
         ),
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -1093,6 +1100,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="gps_heading",
+        requires_location_scope=True,
         streaming_listener=lambda vehicle, callback: vehicle.listen_GpsHeading(
             callback
         ),
@@ -1670,9 +1678,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry sensor platform from a config entry."""
 
+    location_scope = Scope.VEHICLE_LOCATION in entry.runtime_data.scopes
     entities: list[SensorEntity] = []
     for vehicle in entry.runtime_data.vehicles:
         for description in VEHICLE_DESCRIPTIONS:
+            if description.requires_location_scope and not location_scope:
+                continue
             if (
                 not vehicle.poll
                 and description.streaming_listener
@@ -1706,7 +1717,10 @@ async def async_setup_entry(
         if energysite.live_coordinator
         for description in ENERGY_LIVE_DESCRIPTIONS
         if description.key in energysite.live_coordinator.data
-        or description.key == "percentage_charged"
+        or (
+            description.key == "percentage_charged"
+            and energysite.info_coordinator.data.get("components_battery")
+        )
     )
 
     entities.extend(

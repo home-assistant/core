@@ -34,7 +34,7 @@ from . import (
     setup_ble_platform,
     setup_platform,
 )
-from .const import ADDRESS, VEHICLE_DATA_ALT, VIN
+from .const import ADDRESS, METADATA, VEHICLE_DATA_ALT, VIN
 
 from tests.common import async_fire_time_changed, mock_restore_cache
 from tests.components.bluetooth import (
@@ -408,3 +408,35 @@ async def test_bluetooth_binary_sensors_removed_with_subentry(
 
     assert entity_registry.async_get(PRESENCE_ENTITY_ID) is None
     assert entity_registry.async_get(SESSION_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    ("scopes", "expected"),
+    [
+        pytest.param(METADATA["scopes"], True, id="location_scope"),
+        pytest.param(
+            [scope for scope in METADATA["scopes"] if scope != "vehicle_location"],
+            False,
+            id="no_location_scope",
+        ),
+    ],
+)
+async def test_gps_state_requires_location_scope(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_metadata: AsyncMock,
+    scopes: list[str],
+    expected: bool,
+) -> None:
+    """Test the GPS state binary sensor is only created with the location scope."""
+
+    mock_metadata.return_value = {**METADATA, "scopes": scopes}
+
+    await setup_platform(hass, [Platform.BINARY_SENSOR])
+
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR, DOMAIN, "LRW3F7EK4NC700000-gps_state"
+        )
+        is not None
+    ) is expected

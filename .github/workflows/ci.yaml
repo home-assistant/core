@@ -818,13 +818,15 @@ jobs:
           path: pytest_test_counts.json
           # Primary key is a sentinel; restore-keys pick the most recent
           # prefix match since the real (content-addressed) key isn't
-          # known until split_tests.py runs below.
+          # known until split_tests.py runs below. The keys leave out the
+          # requirements: split_tests.py recounts a file when it or a conftest
+          # or helper module on its path changes, and a count that shifts with
+          # a library update only makes the buckets slightly uneven.
           key: >-
             pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{
-            steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}-restore-sentinel
+            steps.python.outputs.python-version }}-restore-sentinel
           restore-keys: |
-            pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{ needs.info.outputs.python_cache_key }}-
+            pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-
       - name: Run split_tests.py
         env:
           TEST_GROUP_COUNT: ${{ needs.info.outputs.test_group_count }}
@@ -852,7 +854,6 @@ jobs:
           key: >-
             pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{
             steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}-${{
             steps.cache-pytest-counts-hash.outputs.hash }}
       - name: Upload pytest_buckets
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -943,7 +944,7 @@ jobs:
             --timeout=9 \
             --durations=0 \
             --durations-min=1 \
-            --numprocesses auto \
+            --numprocesses logical \
             --snapshot-details \
             --dist=loadfile \
             ${cov_params[@]} \
@@ -1359,7 +1360,7 @@ jobs:
           python3 -b -X dev -m pytest \
             -qq \
             --timeout=20 \
-            --numprocesses auto \
+            --numprocesses logical \
             --dist=loadfile \
             --snapshot-details \
             -o console_output_style=count \
@@ -1498,7 +1499,7 @@ jobs:
           python3 -b -X dev -m pytest \
             -qq \
             --timeout=9 \
-            --numprocesses auto \
+            --numprocesses logical \
             --snapshot-details \
             ${cov_params[@]} \
             -o console_output_style=count \

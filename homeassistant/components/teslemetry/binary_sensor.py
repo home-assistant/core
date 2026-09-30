@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import cast, override
 
 from tesla_fleet_api import firmware_at_least
+from tesla_fleet_api.const import Scope
 from teslemetry_stream.vehicle import TeslemetryStreamVehicle
 
 from homeassistant.components import bluetooth
@@ -54,6 +55,7 @@ class TeslemetryBinarySensorEntityDescription(BinarySensorEntityDescription):
         | None
     ) = None
     streaming_firmware: str = "2024.26"
+    requires_location_scope: bool = False
 
 
 VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
@@ -353,6 +355,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
     ),
     TeslemetryBinarySensorEntityDescription(
         key="gps_state",
+        requires_location_scope=True,
         streaming_listener=lambda vehicle, callback: vehicle.listen_GpsState(callback),
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -573,9 +576,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry binary sensor platform from a config entry."""
 
+    location_scope = Scope.VEHICLE_LOCATION in entry.runtime_data.scopes
     entities: list[BinarySensorEntity] = []
     for vehicle in entry.runtime_data.vehicles:
         for description in VEHICLE_DESCRIPTIONS:
+            if description.requires_location_scope and not location_scope:
+                continue
             if (
                 not vehicle.poll
                 and description.streaming_listener
