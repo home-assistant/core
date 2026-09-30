@@ -50,7 +50,11 @@ class MarketplaceConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Connect a GitHub account, started from the Marketplace panel."""
+        """Tell what connecting GitHub does, before GitHub is asked for a code."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reconfigure", data_schema=probatio.Schema({})
+            )
         return await self.async_step_device(None)
 
     async def async_step_device(

@@ -15,6 +15,11 @@
       "reauth_confirm": {
         "description": "The GitHub connection of the Marketplace no longer works. Connect GitHub again to keep using it.",
         "title": "Reconnect GitHub"
+      },
+      "reconfigure": {
+        "description": "Browsing and installing from the catalog work without GitHub. A connection is needed to add custom repositories and keep them up to date, and it raises the limit GitHub puts on requests from your network.\n\nNext, you get a code to enter on GitHub. You never enter your GitHub password in Home Assistant. The connection only reads public information, the same as anyone without an account, and you can revoke it at any time in your GitHub settings.",
+        "submit": "Continue",
+        "title": "Connect GitHub"
       }
     }
   },

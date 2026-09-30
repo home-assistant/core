@@ -1427,8 +1427,9 @@ async def test_connect_github(
     flow = hass.config_entries.flow.async_get(flow_id)
     assert flow["context"]["source"] == SOURCE_RECONFIGURE
     assert flow["context"]["entry_id"] == init_integration.entry_id
-    assert flow["step_id"] == "device"
+    assert flow["step_id"] == "reconfigure"
 
+    await hass.config_entries.flow.async_configure(flow_id, {})
     device_activation_event.set()
     await hass.async_block_till_done()
 

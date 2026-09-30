@@ -22,6 +22,7 @@ async def _start_device_step(hass: HomeAssistant, entry: MockConfigEntry) -> str
     entry.add_to_hass(hass)
 
     result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["step_id"] == "device"
     assert result["type"] is FlowResultType.SHOW_PROGRESS
@@ -56,6 +57,13 @@ async def test_connect_github(
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
+    # First what connecting does and why, GitHub is asked for a code after it
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    github_device_client.register.assert_not_called()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
     assert result["step_id"] == "device"
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["progress_action"] == "wait_for_device"
@@ -86,6 +94,7 @@ async def test_registration_failure(
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "could_not_register"
@@ -105,6 +114,7 @@ async def test_registration_without_data(
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "could_not_register"
