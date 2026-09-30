@@ -64,8 +64,8 @@ class BoschCameraFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create the entry, or update the existing one during reauth."""
         try:
-            # Identify the account from the token's subject; the signature was
-            # already validated by the token endpoint exchange.
+            # The token comes straight from the token endpoint over TLS, so only
+            # the subject is read and the signature is not verified again.
             account_id = jwt.decode(
                 data["token"]["access_token"], options={"verify_signature": False}
             )["sub"]
