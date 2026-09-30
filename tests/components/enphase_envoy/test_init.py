@@ -3,11 +3,12 @@
 import asyncio
 from datetime import timedelta
 import logging
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, call, patch
+from unittest.mock import DEFAULT, AsyncMock, MagicMock, PropertyMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from jwt import encode
 from pyenphase import (
+    Envoy,
     EnvoyAuthenticationError,
     EnvoyClientClosedError,
     EnvoyError,
@@ -977,3 +978,112 @@ async def test_coordinator_background_tasks_session_is_closed(
         await hass.async_block_till_done(wait_background_tasks=True)
 
         assert msg in caplog.text
+
+
+@respx.mock
+async def test_coordinator_background_task_start(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator startup sequence and background task starting."""
+    caplog.set_level(logging.DEBUG)
+    await setup_integration(hass, config_entry)
+
+    # verify regular start sequence with resulting background task starting on loaded event
+    assert (
+        f"setup completed: False, config state: {ConfigEntryState.SETUP_IN_PROGRESS}"
+        in caplog.text
+    )
+    assert f"State changed for Envoy 1234: {ConfigEntryState.LOADED}" in caplog.text
+    assert "Config entry loaded, starting background task timers" in caplog.text
+    assert (entity_state := hass.states.get("sensor.inverter_1"))
+    assert entity_state.state == "116"
+
+    # verify reload sequence resulting with background tasks starting
+    caplog.clear()
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        f"State changed for Envoy 1234: {ConfigEntryState.UNLOAD_IN_PROGRESS}"
+        in caplog.text
+    )
+    assert (
+        f"setup completed: False, config state: {ConfigEntryState.SETUP_IN_PROGRESS}"
+        in caplog.text
+    )
+    assert f"State changed for Envoy 1234: {ConfigEntryState.LOADED}" in caplog.text
+    assert "Config entry loaded, starting background task timers" in caplog.text
+    assert (entity_state := hass.states.get("sensor.inverter_1"))
+    assert entity_state.state == "116"
+
+    # verify failed load triggered by reload does not start background task timers
+    caplog.clear()
+    mock_envoy.setup.side_effect = EnvoyAuthenticationError("test auth error"), True
+
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        f"State changed for Envoy 1234: {ConfigEntryState.UNLOAD_IN_PROGRESS}"
+        in caplog.text
+    )
+    assert (
+        f"setup completed: False, config state: {ConfigEntryState.SETUP_IN_PROGRESS}"
+        in caplog.text
+    )
+    assert (
+        f"INVALID_AUTH_ERRORS test auth error, config state: {ConfigEntryState.SETUP_IN_PROGRESS}"
+        in caplog.text
+    )
+    assert f"State changed for Envoy 1234: {ConfigEntryState.LOADED}" not in caplog.text
+    assert "Config entry loaded, starting background task timers" not in caplog.text
+    assert (entity_state := hass.states.get("sensor.inverter_1"))
+    assert entity_state.state == "unavailable"
+
+    # verify auth failure on update does not restart background task timers
+    # previous test left config entry in SETUP_FAILED. first reload regularly
+    caplog.clear()
+    mock_envoy.setup.reset_mock(return_value=True, side_effect=True)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        f"setup completed: False, config state: {ConfigEntryState.SETUP_IN_PROGRESS}"
+        in caplog.text
+    )
+    assert f"State changed for Envoy 1234: {ConfigEntryState.LOADED}" in caplog.text
+    assert "Config entry loaded, starting background task timers" in caplog.text
+
+    # verify auth failure on update does not restart background task timers
+    caplog.clear()
+    mock_envoy.update.side_effect = [
+        EnvoyAuthenticationError("test auth error at update"),
+        DEFAULT,
+    ]
+    mock_envoy.update.wraps = Envoy.update
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        f"update on try 0, INVALID_AUTH_ERRORS test auth error at update, config state: {ConfigEntryState.LOADED}"
+        in caplog.text
+    )
+    assert (
+        f"update on try 0, setup was complete, retry, config state: {ConfigEntryState.LOADED}"
+        in caplog.text
+    )
+    assert (
+        f"update on try 1, setup completed: False, config state: {ConfigEntryState.LOADED}"
+        in caplog.text
+    )
+    assert "Envoy setup complete for serial: 1234" in caplog.text
+
+    assert "State changed for Envoy 1234" not in caplog.text
+    assert "Config entry loaded, starting background task timers" not in caplog.text
+    assert (entity_state := hass.states.get("sensor.inverter_1"))
+    assert entity_state.state == "116"

@@ -11,7 +11,7 @@ from aiohttp import ClientSession
 from pyenphase import Envoy, EnvoyClientClosedError, EnvoyError, EnvoyTokenAuth
 from pyenphase.models.home import EnvoyInterfaceInformation
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -66,6 +66,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.password = entry_data.get(CONF_PASSWORD)
         self.manual_token = entry_data.get(CONF_MANUAL_TOKEN, False)
         self._setup_complete = False
+        self._background_started = False
         self._operational_timeout = False
         self.envoy_firmware = ""
         self.interface = None
@@ -319,9 +320,8 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         _LOGGER.debug("added connection: %s to %s", connection, self.name)
 
     @callback
-    def _async_mark_setup_complete(self) -> None:
-        """Mark setup as complete, setup firmware checks and token refresh."""
-        self._setup_complete = True
+    def _async_start_background_task_timers(self) -> None:
+        """Setup firmware check, mac verification and token refresh background task timers."""
         self.async_cancel_firmware_refresh()
         self._cancel_firmware_refresh = async_track_time_interval(
             self.hass,
@@ -339,6 +339,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             TOKEN_REFRESH_CHECK_INTERVAL,
             cancel_on_shutdown=True,
         )
+        self._background_started = True
 
     async def _async_setup_and_authenticate(self) -> None:
         """Set up and authenticate with the envoy."""
@@ -394,21 +395,34 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         for tries in range(2):
             try:
                 if not self._setup_complete:
-                    _LOGGER.debug("update on try %s, setup not complete", tries)
+                    _LOGGER.debug(
+                        "update on try %s, setup completed: %s, config state: %s",
+                        tries,
+                        self._setup_complete,
+                        self.config_entry.state,
+                    )
                     self.envoy.set_retry_policy(max_delay=SETUP_RETRY_TIMEOUT)
                     self._operational_timeout = False
                     await self._async_setup_and_authenticate()
-                    self._async_mark_setup_complete()
-                # dump all received data in debug mode to assist troubleshooting
+                    self._setup_complete = True
                 envoy_data = await envoy.update()
                 if not self._operational_timeout:
                     self.envoy.set_retry_policy(max_delay=OPERATIONAL_RETRY_TIMEOUT)
                     self._operational_timeout = True
             except INVALID_AUTH_ERRORS as err:
-                _LOGGER.debug("update on try %s, INVALID_AUTH_ERRORS %s", tries, err)
+                _LOGGER.debug(
+                    "update on try %s, INVALID_AUTH_ERRORS %s, config state: %s",
+                    tries,
+                    err,
+                    self.config_entry.state,
+                )
                 if self._setup_complete and tries == 0:
                     # token likely expired or firmware changed, try to re-authenticate
-                    _LOGGER.debug("update on try %s, setup was complete, retry", tries)
+                    _LOGGER.debug(
+                        "update on try %s, setup was complete, retry, config state: %s",
+                        tries,
+                        self.config_entry.state,
+                    )
                     self._setup_complete = False
                     continue
                 raise ConfigEntryAuthFailed(
@@ -420,7 +434,12 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     },
                 ) from err
             except EnvoyError as err:
-                _LOGGER.debug("update on try %s, EnvoyError %s", tries, err)
+                _LOGGER.debug(
+                    "update on try %s, EnvoyError %s, config state: %s",
+                    tries,
+                    err,
+                    self.config_entry.state,
+                )
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="envoy_error",
@@ -473,3 +492,11 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self._cancel_mac_verification:
             self._cancel_mac_verification()
             self._cancel_mac_verification = None
+
+    @callback
+    def state_changes(self) -> None:
+        """Process config entry state changes."""
+        _LOGGER.debug("State changed for %s: %s", self.name, self.config_entry.state)
+        if self.config_entry.state is ConfigEntryState.LOADED:
+            _LOGGER.debug("Config entry loaded, starting background task timers")
+            self._async_start_background_task_timers()

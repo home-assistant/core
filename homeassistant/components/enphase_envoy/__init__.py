@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from pyenphase import Envoy
 
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -92,6 +92,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    @callback
+    def state_changes() -> None:
+        """Process config entry state change events."""
+        coordinator.state_changes()
+
+    entry.async_on_unload(entry.async_on_state_change(state_changes))
 
     return True
 
