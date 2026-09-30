@@ -16,9 +16,9 @@ from tesla_fleet_api.const import (
     AuthorizedClientType,
 )
 from tesla_fleet_api.exceptions import (
-    BadGateway,
     BluetoothTimeout,
     BluetoothTransportError,
+    EnergyGatewayUnreachable,
     InvalidToken,
     NotOnWhitelistFault,
     PrivateKeyError,
@@ -481,7 +481,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             try:
                 await self._prepare_energy_site(energy_data)
                 return await self._async_begin_pairing()
-            except BadGateway:
+            except EnergyGatewayUnreachable:
                 errors["base"] = "powerwall_unreachable"
             except PowerwallSetupError:
                 errors["base"] = "cannot_connect"
@@ -523,7 +523,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         try:
             await self._prepare_energy_site(energy_data)
             return await self._async_begin_pairing()
-        except BadGateway:
+        except EnergyGatewayUnreachable:
             return self.async_abort(reason="powerwall_unreachable")
         except PowerwallSetupError:
             return self.async_abort(reason="cannot_connect")
@@ -591,7 +591,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 key_type=AuthorizedClientKeyType.RSA,
                 authorized_client_type=AuthorizedClientType.CUSTOMER_MOBILE_APP,
             )
-        except BadGateway:
+        except EnergyGatewayUnreachable:
             raise
         except (ClientError, TeslaFleetError) as err:
             LOGGER.error("Add authorized client failed: %s", err)
@@ -612,7 +612,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             # The user saw the expired-window notice and submitted to try again.
             try:
                 result = await self._async_begin_pairing()
-            except BadGateway:
+            except EnergyGatewayUnreachable:
                 return self.async_show_form(
                     step_id="pair", errors={"base": "powerwall_unreachable"}
                 )
@@ -625,7 +625,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
         try:
             client = await self._find_authorized_client()
-        except BadGateway:
+        except EnergyGatewayUnreachable:
             return self.async_show_form(
                 step_id="pair", errors={"base": "powerwall_unreachable"}
             )
@@ -656,7 +656,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             assert self._energy_site is not None
         try:
             result = await self._energy_site.find_authorized_clients()
-        except BadGateway:
+        except EnergyGatewayUnreachable:
             # Unwrapped so callers can report an unreachable gateway as retryable.
             raise
         except (ClientError, TeslaFleetError) as err:

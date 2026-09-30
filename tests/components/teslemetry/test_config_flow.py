@@ -24,6 +24,7 @@ from tesla_fleet_api.exceptions import (
     BadGateway,
     BluetoothTimeout,
     BluetoothTransportError,
+    EnergyGatewayUnreachable,
     InvalidResponse,
     InvalidToken,
     NotOnWhitelistFault,
@@ -1719,7 +1720,12 @@ async def test_energy_subentry_pairing_requires_key_approval(
     ("error", "expected_error"),
     [
         pytest.param(InvalidResponse, "cannot_connect", id="null_body"),
-        pytest.param(BadGateway, "powerwall_unreachable", id="gateway_unreachable"),
+        pytest.param(BadGateway, "cannot_connect", id="bad_gateway"),
+        pytest.param(
+            EnergyGatewayUnreachable,
+            "powerwall_unreachable",
+            id="gateway_unreachable",
+        ),
     ],
 )
 async def test_subentry_lookup_failure_recovers(
@@ -2262,7 +2268,12 @@ async def test_unrecognized_state_recovers(hass: HomeAssistant) -> None:
     [
         pytest.param(ClientError, "cannot_connect", id="client_error"),
         pytest.param(TeslaFleetError, "cannot_connect", id="tesla_fleet_error"),
-        pytest.param(BadGateway, "powerwall_unreachable", id="gateway_unreachable"),
+        pytest.param(BadGateway, "cannot_connect", id="bad_gateway"),
+        pytest.param(
+            EnergyGatewayUnreachable,
+            "powerwall_unreachable",
+            id="gateway_unreachable",
+        ),
     ],
 )
 async def test_add_authorized_client_failure_recovers(
@@ -2323,7 +2334,12 @@ async def test_add_authorized_client_failure_recovers(
     ("second_lookup", "expected_error"),
     [
         pytest.param(InvalidResponse(), "cannot_connect", id="lookup_failure"),
-        pytest.param(BadGateway(), "powerwall_unreachable", id="gateway_unreachable"),
+        pytest.param(BadGateway(), "cannot_connect", id="bad_gateway"),
+        pytest.param(
+            EnergyGatewayUnreachable(),
+            "powerwall_unreachable",
+            id="gateway_unreachable",
+        ),
         pytest.param(_empty_clients(), "key_not_registered", id="key_not_registered"),
         pytest.param(
             _own_key_clients(AuthorizedClientState.PENDING_VERIFICATION_TIMEOUT),
@@ -2431,7 +2447,12 @@ async def test_pair_step_timeout_retry_reopens_window_and_succeeds(
     ("error", "expected_error"),
     [
         pytest.param(ClientError, "cannot_connect", id="client_error"),
-        pytest.param(BadGateway, "powerwall_unreachable", id="gateway_unreachable"),
+        pytest.param(BadGateway, "cannot_connect", id="bad_gateway"),
+        pytest.param(
+            EnergyGatewayUnreachable,
+            "powerwall_unreachable",
+            id="gateway_unreachable",
+        ),
     ],
 )
 async def test_pair_step_timeout_retry_failure_recovers(
@@ -2773,7 +2794,12 @@ async def test_reconfigure_aborts_when_rsa_key_load_fails(hass: HomeAssistant) -
     ("error", "expected_reason"),
     [
         pytest.param(TeslaFleetError, "cannot_connect", id="tesla_fleet_error"),
-        pytest.param(BadGateway, "powerwall_unreachable", id="gateway_unreachable"),
+        pytest.param(BadGateway, "cannot_connect", id="bad_gateway"),
+        pytest.param(
+            EnergyGatewayUnreachable,
+            "powerwall_unreachable",
+            id="gateway_unreachable",
+        ),
     ],
 )
 async def test_reconfigure_aborts_when_local_and_cloud_lookups_fail(
