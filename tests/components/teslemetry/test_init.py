@@ -3305,6 +3305,24 @@ async def test_cloud_owned_command_value_held_until_cloud_site_info(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_cloud_push_before_first_local_poll_sets_owned_key(
+    hass: HomeAssistant,
+    mock_powerwall_live_status: AsyncMock,
+    mock_energy_live_stream: MagicMock,
+) -> None:
+    """Until the first LAN poll a locally-owned key follows the cloud stream."""
+    await _setup_energy_site_entry(hass, _entry_with_powerwall(), [Platform.SENSOR])
+
+    push = deepcopy(LIVE_STATUS["response"])
+    push["solar_power"] = 456
+    mock_energy_live_stream.send(push)
+    await hass.async_block_till_done()
+
+    assert mock_powerwall_live_status.await_count == 0
+    assert hass.states.get("sensor.energy_site_solar_power").state == "0.456"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_cloud_push_between_local_ticks_keeps_owned_key(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -3544,11 +3562,11 @@ async def test_paired_site_without_live_status_reads_config_only(
     mock_powerwall_local_config: AsyncMock,
 ) -> None:
     """A paired site with no cloud live status still reads its config from the gateway."""
-    mock_live_status.side_effect = AsyncMock(return_value={"response": ""})
+    mock_live_status.side_effect = lambda: {"response": ""}
     mock_powerwall_local_config.return_value = {"default_real_mode": "autonomous"}
-    await _setup_energy_site_entry(
-        hass, _entry_with_powerwall(), [Platform.SENSOR, Platform.SELECT]
-    )
+    entry = _entry_with_powerwall()
+    await _setup_energy_site_entry(hass, entry, [Platform.SENSOR, Platform.SELECT])
+    assert entry.state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.energy_site_grid_power") is None
 
     await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
