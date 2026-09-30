@@ -25,6 +25,7 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
     PublicBootstrap,
+    PublicStoreChange,
     Sensor,
     SmartDetectAudioType,
     SmartDetectObjectType,
@@ -81,6 +82,7 @@ class MockUFPFixture:
     events_subscription: Callable[[ProtectEvent, EventChange], None] | None = None
     devices_ws_state_subscription: Callable[[WebsocketState], None] | None = None
     events_ws_state_subscription: Callable[[WebsocketState], None] | None = None
+    public_store_subscription: Callable[[PublicStoreChange], None] | None = None
 
     def ws_msg(self, msg: WSSubscriptionMessage) -> None:
         """Emit WS message for testing."""
@@ -93,6 +95,12 @@ class MockUFPFixture:
 
         if self.events_subscription is not None:
             self.events_subscription(event, change)
+
+    def public_store_change(self, change: PublicStoreChange) -> None:
+        """Emit a public store change for testing."""
+
+        if self.public_store_subscription is not None:
+            self.public_store_subscription(change)
 
 
 def reset_objects(bootstrap: Bootstrap):

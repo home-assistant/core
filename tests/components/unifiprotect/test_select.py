@@ -3,6 +3,7 @@
 from collections.abc import Callable, Coroutine
 from copy import copy
 from functools import partial
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -25,6 +26,7 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
     PTZPatrol,
     PublicHdrMode,
+    PublicStoreChange,
     RecordingMode,
     Sensor,
     Viewer,
@@ -32,7 +34,7 @@ from uiprotect.data import (
 )
 from uiprotect.data.nvr import DoorbellMessage
 from uiprotect.data.public_devices import SensorFeatureCapability
-from uiprotect.exceptions import GlobalAlarmManagerError
+from uiprotect.exceptions import GlobalAlarmManagerError, NotAuthorized, NvrError
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.select import ATTR_OPTIONS
@@ -385,18 +387,22 @@ async def test_select_setup_camera_none(
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
-async def test_select_update_liveview(
+def _liveview_change(
+    added: frozenset[str] = frozenset(), removed: frozenset[str] = frozenset()
+) -> PublicStoreChange:
+    return PublicStoreChange("liveviews", added, removed, frozenset())
+
+
+async def test_select_viewer_options_follow_public_liveviews(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     viewer: Viewer,
     liveview: Liveview,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """New liveviews do not reach the select options until a restart."""
+    """The viewport options follow the public liveview store without a restart."""
 
     setup_public_viewer(ufp, [liveview])
     await init_entry(hass, ufp, [viewer])
-
     _, entity_id = await ids_from_device_description(
         hass, Platform.SELECT, viewer, VIEWER_SELECTS[0]
     )
@@ -404,90 +410,120 @@ async def test_select_update_liveview(
     new_liveview = copy(liveview)
     new_liveview.id = "new_liveview"
     new_liveview.name = "New"
-    ufp.api.public_bootstrap.liveviews[new_liveview.id] = make_public_liveview(
-        new_liveview
-    )
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = new_liveview
-    caplog.clear()
-    ufp.ws_msg(mock_msg)
-    public = ufp.api.public_bootstrap.viewers[viewer.id]
-    ufp.devices_ws_subscription(public_device_ws_message(public))
+    liveviews = ufp.api.public_bootstrap.liveviews
+    liveviews[new_liveview.id] = make_public_liveview(new_liveview)
+    ufp.public_store_change(_liveview_change(added=frozenset({new_liveview.id})))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_OPTIONS] == [liveview.name, "New"]
+    assert state.state == liveview.name
+
+    del liveviews[new_liveview.id]
+    ufp.public_store_change(_liveview_change(removed=frozenset({new_liveview.id})))
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).attributes[ATTR_OPTIONS] == [liveview.name]
-    assert "Restart Home Assistant to update Viewport select" in caplog.text
 
 
-@pytest.mark.parametrize(
-    "case",
-    ["no_public_viewers", "public_bootstrap_not_loaded", "personal_liveview"],
-)
-async def test_select_update_liveview_no_warning(
+async def test_select_viewer_ignores_other_public_stores(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     viewer: Viewer,
     liveview: Liveview,
-    caplog: pytest.LogCaptureFixture,
-    case: str,
 ) -> None:
-    """A liveview update the select cannot show logs no restart warning."""
+    """A change of another public store leaves the viewport options alone."""
 
     setup_public_viewer(ufp, [liveview])
     await init_entry(hass, ufp, [viewer])
-    updated = copy(liveview)
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, viewer, VIEWER_SELECTS[0]
+    )
+
+    new_liveview = copy(liveview)
+    new_liveview.id = "new_liveview"
+    ufp.api.public_bootstrap.liveviews[new_liveview.id] = make_public_liveview(
+        new_liveview
+    )
+    ufp.public_store_change(
+        PublicStoreChange(
+            "arm_profiles", frozenset({"profile"}), frozenset(), frozenset()
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).attributes[ATTR_OPTIONS] == [liveview.name]
+
+
+@pytest.mark.parametrize(
+    ("case", "refreshes"),
+    [
+        ("public_viewers", True),
+        ("no_public_viewers", False),
+        ("public_bootstrap_not_loaded", False),
+    ],
+)
+async def test_select_liveview_change_refreshes_public_liveviews(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    viewer: Viewer,
+    liveview: Liveview,
+    case: str,
+    refreshes: bool,
+) -> None:
+    """A private liveview change refetches the public liveviews for the viewports."""
+
+    setup_public_viewer(ufp, [liveview])
+    await init_entry(hass, ufp, [viewer])
     if case == "no_public_viewers":
         ufp.api.public_bootstrap.viewers.clear()
     elif case == "public_bootstrap_not_loaded":
         ufp.api.has_public_bootstrap = False
-    else:
-        updated.id = "personal_liveview"
-        updated.is_global = False
 
     mock_msg = Mock()
     mock_msg.changed_data = {}
-    mock_msg.new_obj = updated
-    caplog.clear()
+    mock_msg.new_obj = copy(liveview)
     ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
 
-    assert "Restart Home Assistant to update Viewport select" not in caplog.text
+    if refreshes:
+        ufp.api.refresh_public_store.assert_awaited_once_with("liveviews")
+    else:
+        ufp.api.refresh_public_store.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
-    "case", ["new_global", "made_personal", "api_key_user_personal"]
+    "error", [NvrError("down"), NotAuthorized("no access"), TimeoutError()]
 )
-async def test_select_update_liveview_warns_for_options(
+async def test_select_liveview_refresh_failure_keeps_options(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     viewer: Viewer,
     liveview: Liveview,
     caplog: pytest.LogCaptureFixture,
-    case: str,
+    error: Exception,
 ) -> None:
-    """A liveview that is, was or becomes an option logs the restart warning."""
+    """A failed liveview refetch is logged and leaves the viewport as it was."""
 
     setup_public_viewer(ufp, [liveview])
     await init_entry(hass, ufp, [viewer])
-    updated = copy(liveview)
-    if case == "new_global":
-        updated.id = "new_global"
-    else:
-        updated.is_global = False
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, viewer, VIEWER_SELECTS[0]
+    )
+    ufp.api.refresh_public_store.side_effect = error
 
     mock_msg = Mock()
     mock_msg.changed_data = {}
-    mock_msg.new_obj = updated
-    if case == "made_personal":
-        # the public list has not caught up with the change yet or dropped it
-        ufp.api.public_bootstrap.liveviews.clear()
-        mock_msg.old_obj = liveview
-    caplog.clear()
-    ufp.ws_msg(mock_msg)
-    await hass.async_block_till_done()
+    mock_msg.new_obj = copy(liveview)
+    with caplog.at_level(logging.DEBUG, "homeassistant.components.unifiprotect"):
+        ufp.ws_msg(mock_msg)
+        await hass.async_block_till_done()
 
-    assert "Restart Home Assistant to update Viewport select" in caplog.text
+    assert "Unable to refresh public liveviews" in caplog.text
+    state = hass.states.get(entity_id)
+    assert state.state == liveview.name
+    assert state.attributes[ATTR_OPTIONS] == [liveview.name]
+    assert ufp.entry.state is ConfigEntryState.LOADED
 
 
 async def test_select_update_doorbell_settings(
