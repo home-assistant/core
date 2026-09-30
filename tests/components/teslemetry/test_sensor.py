@@ -744,6 +744,43 @@ async def test_sensors_streaming_dc_charging_ended(
             STATE_UNKNOWN,
             id="null_power_kept_while_not_charging",
         ),
+        pytest.param(
+            [
+                {
+                    Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+                    Signal.AC_CHARGING_POWER: 7,
+                },
+                {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateDisconnected"},
+                {Signal.AC_CHARGING_POWER: None},
+            ],
+            "0",
+            id="null_ac_power_after_charging_ended",
+        ),
+        pytest.param(
+            [
+                {
+                    Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+                    Signal.AC_CHARGING_POWER: 7,
+                },
+                {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateDisconnected"},
+                {Signal.AC_CHARGING_POWER: 0.6, Signal.DC_CHARGING_POWER: 148.2},
+            ],
+            "0",
+            id="late_power_from_both_sources_while_not_charging",
+        ),
+        pytest.param(
+            [
+                {
+                    Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+                    Signal.AC_CHARGING_POWER: 0.6,
+                },
+                {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateDisconnected"},
+                {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging"},
+                {Signal.DC_CHARGING_POWER: 0},
+            ],
+            "0",
+            id="dc_power_zero_after_ac_session",
+        ),
     ],
 )
 async def test_sensors_streaming_charger_power_sequence(
@@ -858,13 +895,25 @@ async def test_sensors_streaming_charger_power_uninformative_charge_state(
             "7.2",
             id="dc_power_zero_while_ac_charging",
         ),
+        pytest.param(
+            "148.2",
+            [
+                {
+                    Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+                    Signal.AC_CHARGING_POWER: 0,
+                    Signal.DC_CHARGING_POWER: None,
+                }
+            ],
+            "0",
+            id="no_power_from_either_source",
+        ),
     ],
 )
 async def test_sensors_streaming_charger_power_restored(
     hass: HomeAssistant,
     mock_add_listener: AsyncMock,
     restored_state: str,
-    messages: list[dict[Signal, str | float]],
+    messages: list[dict[Signal, str | float | None]],
     expected_state: str,
 ) -> None:
     """Test a charger power restored mid-session is kept until it is superseded."""
@@ -883,7 +932,6 @@ async def test_sensors_streaming_charger_power_restored(
     await setup_platform(hass, [Platform.SENSOR])
     assert hass.states.get(CHARGER_POWER_ENTITY).state == restored_state
 
-    # The charging power itself is not streamed again after the restart
     for message in messages:
         mock_add_listener.send(
             {
