@@ -471,7 +471,7 @@ aiounifi==96
 aiousbwatcher==1.1.2
 
 # homeassistant.components.vitesy
-aiovitesy==1.1.0
+aiovitesy==1.3.0
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.5.1
@@ -2498,7 +2498,7 @@ pyotgw==2.2.3
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.otp
-pyotp==2.9.0
+pyotp==2.10.0
 
 # homeassistant.components.overkiz
 pyoverkiz[nexity]==2.1.2
@@ -2687,7 +2687,7 @@ pythinkingcleaner==0.0.3
 python-MotionMount==2.3.0
 
 # homeassistant.components.aidot
-python-aidot==0.3.58
+python-aidot==0.3.59
 
 # homeassistant.components.awair
 python-awair==0.2.5
@@ -2887,10 +2887,10 @@ pyvlx==0.2.36
 pyvolumio==0.1.5
 
 # homeassistant.components.waze_travel_time
-pywaze==1.2.0
+pywaze==1.2.1
 
 # homeassistant.components.weatherflow
-pyweatherflowudp==1.6.2
+pyweatherflowudp==1.6.3
 
 # homeassistant.components.html5
 pywebpush==2.3.0
@@ -3227,7 +3227,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.17.1
+tesla-fleet-api==1.17.2
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3

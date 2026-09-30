@@ -32,6 +32,19 @@
         "name": "Night"
       }
     },
+    "camera": {
+      "latest_capture": {
+        "name": "Latest capture"
+      }
+    },
+    "image": {
+      "latest_keogram": {
+        "name": "Latest keogram"
+      },
+      "latest_startrail": {
+        "name": "Latest star trail"
+      }
+    },
     "sensor": {
       "ambient_temperature": {
         "name": "Ambient temperature"
