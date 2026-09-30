@@ -46,6 +46,5 @@ async def test_integration_already_exists(hass: HomeAssistant) -> None:
         context={"source": SOURCE_USER},
     )
 
-    assert result.get("type") is FlowResultType.ABORT
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
