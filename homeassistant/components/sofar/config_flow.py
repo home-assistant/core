@@ -9,7 +9,12 @@ import probatio
 from sofar_modbus.modern.device import SofarInverter
 
 from homeassistant.components.modbus import async_get_temporary_unit
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -67,6 +72,17 @@ STEP_SERIAL_DATA_SCHEMA = probatio.Schema(
         probatio.Required(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): UNIT_ID_SELECTOR,
     }
 )
+
+
+def _needs_relink(entry: ConfigEntry, data: Mapping[str, Any]) -> bool:
+    """Whether probing these settings clashes with the link in use."""
+    if entry.state not in (ConfigEntryState.LOADED, ConfigEntryState.SETUP_RETRY):
+        return False
+
+    current = create_modbus_params(entry.data)
+    new = create_modbus_params(data)
+
+    return new.endpoint == current.endpoint and new != current
 
 
 async def _async_probe(hass: HomeAssistant, data: Mapping[str, Any]) -> SofarInverter:
@@ -171,9 +187,19 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
             data = {CONF_TYPE: connection_type, **user_input}
+
+            relinking = False
+            if _needs_relink(entry, data):
+                relinking = await self.hass.config_entries.async_unload(entry.entry_id)
+
             device, errors, description_placeholders = await self._async_validate(data)
+            probed = device.serial_number if device is not None else None
+
+            if relinking and probed != entry.unique_id:
+                await self.hass.config_entries.async_setup(entry.entry_id)
+
             if device is not None:
-                await self.async_set_unique_id(device.serial_number)
+                await self.async_set_unique_id(probed)
                 self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(entry, data=data)
 
