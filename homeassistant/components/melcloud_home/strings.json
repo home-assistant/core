@@ -104,6 +104,9 @@
             }
           }
         }
+      },
+      "atw_zone": {
+        "name": "Zone {zone_number}"
       }
     },
     "number": {
