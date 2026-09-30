@@ -41,7 +41,7 @@ DEVINPUT = "/dev/input"
 CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 probatio.Schema(
                     {
@@ -50,7 +50,7 @@ CONFIG_SCHEMA = probatio.Schema(
                         ): cv.string,
                         probatio.Exclusive(DEVICE_NAME, DEVICE_ID_GROUP): cv.string,
                         probatio.Optional(TYPE, default=["key_up"]): probatio.All(
-                            cv.ensure_list, [probatio.In(KEY_VALUE)]
+                            probatio.EnsureList(), [probatio.In(KEY_VALUE)]
                         ),
                         probatio.Optional(EMULATE_KEY_HOLD, default=False): cv.boolean,
                         probatio.Optional(EMULATE_KEY_HOLD_DELAY, default=0.250): float,

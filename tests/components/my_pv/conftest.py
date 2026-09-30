@@ -13,13 +13,23 @@ from . import ELWA2_SERIAL_NUMBER
 from tests.common import MockConfigEntry
 
 SETUP_CONFIGURATION = {
-    "ww1target": {"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0},
     "bstmode": {"type": "boolean"},
+    "bsttemp": {"type": "number", "step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0},
+    "ww1boost": {"type": "number", "step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0},
+    "ww_boost_h": {"type": "number", "step": 0.1, "unit": "°C", "min": 0.1, "max": 9.9},
+    "ww_targ_h": {"type": "number", "step": 0.1, "unit": "°C", "min": 0.1, "max": 9.9},
+    "ww1target": {"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0},
 }
 
 COMMAND_CONFIGURATION = {"reboot_device": {"type": "any"}}
 
-SETUP_VALUE = {"bstmode": False}
+SETUP_VALUE = {
+    "bstmode": False,
+    "bsttemp": 55.0,
+    "ww1boost": 65.0,
+    "ww_boost_h": 3.5,
+    "ww_targ_h": 4.5,
+}
 
 
 def _setup_configuration_lookup(key):

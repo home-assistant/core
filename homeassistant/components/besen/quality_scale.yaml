@@ -37,9 +37,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: todo
-    comment: Expand switch command exception handling in a follow-up PR.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -47,16 +45,12 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow:
-    status: todo
-    comment: Split into a follow-up PR after the initial integration lands.
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
   devices: done
-  diagnostics:
-    status: todo
-    comment: Split into a follow-up PR after the initial integration lands.
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: |
@@ -80,8 +74,9 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow:
-    status: todo
-    comment: Split into a follow-up PR after the initial integration lands.
+    status: exempt
+    comment: |
+      The Bluetooth address is the unique ID, and a changed PIN is handled by the reauthentication flow.
   repair-issues:
     status: todo
     comment: Split into a follow-up PR after the initial integration lands.

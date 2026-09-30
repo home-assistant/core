@@ -22,8 +22,7 @@ from homeassistant.exceptions import ConfigValidationError, HomeAssistantError
 from homeassistant.helpers import check_config, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
-from homeassistant.util.yaml import SECRET_YAML
-from homeassistant.util.yaml.objects import NodeDictClass
+from homeassistant.util.yaml import SECRET_YAML, load_yaml_dict
 
 from .common import (
     MockModule,
@@ -41,6 +40,13 @@ AUTOMATIONS_PATH = os.path.join(CONFIG_DIR, config_util.AUTOMATION_CONFIG_PATH)
 SCRIPTS_PATH = os.path.join(CONFIG_DIR, config_util.SCRIPT_CONFIG_PATH)
 SCENES_PATH = os.path.join(CONFIG_DIR, config_util.SCENE_CONFIG_PATH)
 SAFE_MODE_PATH = os.path.join(CONFIG_DIR, config_util.SAFE_MODE_FILENAME)
+COMPONENT_EXCEPTIONS_DIR = os.path.join(
+    os.path.dirname(__file__), "fixtures", "core", "config", "component_exceptions"
+)
+COMPONENT_EXCEPTIONS_YAML = os.path.join(COMPONENT_EXCEPTIONS_DIR, "configuration.yaml")
+ERROR_PROCESSING_CONFIG = load_yaml_dict(
+    os.path.join(COMPONENT_EXCEPTIONS_DIR, "error_processing.yaml")
+)
 
 
 def create_file(path):
@@ -347,13 +353,6 @@ async def mock_custom_validator_integrations_with_docs(
             f"{domain}.config",
             Mock(async_validate_config=AsyncMock(side_effect=exception)),
         )
-
-
-class ConfigTestClass(NodeDictClass):
-    """Test class for config with wrapper."""
-
-    __line__ = 140
-    __config_file__ = "configuration.yaml"
 
 
 async def test_create_default_config(hass: HomeAssistant) -> None:
@@ -839,20 +838,19 @@ async def test_merge_split_component_definition(hass: HomeAssistant) -> None:
 async def test_component_config_exceptions(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test unexpected exceptions validating component config."""
+    """Test unexpected exceptions validating component config.
 
-    # Create test config with embedded info
-    test_config = ConfigTestClass({"test_domain": {}})
-    test_platform_config = ConfigTestClass(
-        {"test_domain": {"platform": "test_platform"}}
+    The fixture puts the root mapping on line 4 and the 'test_domain' key on line 5,
+    so asserting line 5 pins that find_annotation answered from the key.
+    """
+
+    hass.config.config_dir = COMPONENT_EXCEPTIONS_DIR
+    test_config = load_yaml_dict(COMPONENT_EXCEPTIONS_YAML)
+    test_platform_config = load_yaml_dict(
+        os.path.join(COMPONENT_EXCEPTIONS_DIR, "platform.yaml")
     )
-    test_multi_platform_config = ConfigTestClass(
-        {
-            "test_domain": [
-                {"platform": "test_platform1"},
-                {"platform": "test_platform2"},
-            ]
-        },
+    test_multi_platform_config = load_yaml_dict(
+        os.path.join(COMPONENT_EXCEPTIONS_DIR, "multi_platform.yaml")
     )
 
     test_integration = Mock(
@@ -901,8 +899,8 @@ async def test_component_config_exceptions(
         is None
     )
     assert (
-        "Invalid config for 'test_domain' at ../../configuration.yaml, "
-        "line 140: broken, please check the docs at" in caplog.text
+        "Invalid config for 'test_domain' at configuration.yaml, "
+        "line 5: broken, please check the docs at" in caplog.text
     )
     with pytest.raises(HomeAssistantError) as ex:
         await config_util.async_process_component_and_handle_errors(
@@ -911,7 +909,7 @@ async def test_component_config_exceptions(
     assert (
         str(ex.value)
         == "Invalid config for integration test_domain at configuration.yaml, "
-        "line 140: broken"
+        "line 5: broken"
     )
     # component.CONFIG_SCHEMA
     caplog.clear()
@@ -1191,7 +1189,7 @@ async def test_component_config_exceptions(
                     ImportError("bla"),
                     "component_import_err",
                     "test_domain",
-                    ConfigTestClass({"test_domain": []}),
+                    ERROR_PROCESSING_CONFIG,
                     "https://example.com",
                 )
             ],
@@ -1206,14 +1204,14 @@ async def test_component_config_exceptions(
                     HomeAssistantError("bla"),
                     "config_validation_err",
                     "test_domain",
-                    ConfigTestClass({"test_domain": []}),
+                    ERROR_PROCESSING_CONFIG,
                     "https://example.com",
                 )
             ],
             "bla",
             [
                 "Invalid config for 'test_domain' at "
-                "../../configuration.yaml, line 140: bla, "
+                "error_processing.yaml, line 6: bla, "
                 "please check the docs at https://example.com",
                 "bla",
             ],
@@ -1226,14 +1224,14 @@ async def test_component_config_exceptions(
                     probatio.Invalid("bla", ["path"]),
                     "config_validation_err",
                     "test_domain",
-                    ConfigTestClass({"test_domain": []}),
+                    ERROR_PROCESSING_CONFIG,
                     "https://example.com",
                 )
             ],
             "bla at 'path'",
             [
                 "Invalid config for 'test_domain' at "
-                "../../configuration.yaml, line 140: bla 'path', "
+                "error_processing.yaml, line 5: bla 'path', "
                 "got None, please check the docs at https://example.com",
                 "bla",
             ],
@@ -1246,14 +1244,14 @@ async def test_component_config_exceptions(
                     probatio.Invalid("bla", ["path"]),
                     "platform_config_validation_err",
                     "test_domain",
-                    ConfigTestClass({"test_domain": []}),
+                    ERROR_PROCESSING_CONFIG,
                     "https://alt.example.com",
                 )
             ],
             "bla at 'path'",
             [
                 "Invalid config for 'test_domain' at "
-                "../../configuration.yaml, line 140: bla 'path', "
+                "error_processing.yaml, line 5: bla 'path', "
                 "got None, please check the docs at https://alt.example.com",
                 "bla",
             ],
@@ -1266,7 +1264,7 @@ async def test_component_config_exceptions(
                     ImportError("bla"),
                     "platform_component_load_err",
                     "test_domain",
-                    ConfigTestClass({"test_domain": []}),
+                    ERROR_PROCESSING_CONFIG,
                     "https://example.com",
                 )
             ],
@@ -1287,8 +1285,15 @@ async def test_component_config_error_processing(
     show_stack_trace: bool,
     translation_key: str,
 ) -> None:
-    """Test component config error processing."""
+    """Test component config error processing.
 
+    The fixture puts the root mapping on line 5 and the 'test_domain' key on line 6.
+    An expected message naming line 6 therefore pins that find_annotation answered
+    from the key, and one naming line 5 that it fell back to the container, which is
+    what happens when the reported path is absent from the config.
+    """
+
+    hass.config.config_dir = COMPONENT_EXCEPTIONS_DIR
     test_integration = Mock(
         domain="test_domain",
         documentation="https://example.com",
@@ -1323,7 +1328,7 @@ async def test_component_config_error_processing(
         return_value=config_util.IntegrationConfigInfo(None, exception_info_list),
     ):
         await config_util.async_process_component_and_handle_errors(
-            hass, ConfigTestClass({}), test_integration
+            hass, {}, test_integration
         )
     assert all(message in caplog.text for message in messages)
 

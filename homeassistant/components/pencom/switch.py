@@ -37,7 +37,9 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_HOST): cv.string,
         probatio.Required(CONF_PORT): cv.port,
         probatio.Optional(CONF_BOARDS, default=1): cv.positive_int,
-        probatio.Required(CONF_RELAYS): probatio.All(cv.ensure_list, [RELAY_SCHEMA]),
+        probatio.Required(CONF_RELAYS): probatio.All(
+            probatio.EnsureList(), [RELAY_SCHEMA]
+        ),
     }
 )
 

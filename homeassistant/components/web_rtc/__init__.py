@@ -30,12 +30,12 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Required(CONF_ICE_SERVERS): probatio.All(
-                    cv.ensure_list,
+                    probatio.EnsureList(),
                     [
                         probatio.Schema(
                             {
                                 probatio.Required(CONF_URL): probatio.All(
-                                    cv.ensure_list, [validate_stun_or_turn_url]
+                                    probatio.EnsureList(), [validate_stun_or_turn_url]
                                 ),
                                 probatio.Optional(CONF_USERNAME): cv.string,
                                 probatio.Optional(CONF_CREDENTIAL): cv.string,
