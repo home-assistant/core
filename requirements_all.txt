@@ -3090,7 +3090,7 @@ simplefin4py==0.0.18
 simplehound==0.3
 
 # homeassistant.components.simplepush
-simplepush==2.2.3
+simplepush[legacy]==3.8.0
 
 # homeassistant.components.simplisafe
 simplisafe-python==2026.06.0
