@@ -1706,7 +1706,10 @@ async def async_setup_entry(
         if energysite.live_coordinator
         for description in ENERGY_LIVE_DESCRIPTIONS
         if description.key in energysite.live_coordinator.data
-        or description.key == "percentage_charged"
+        or (
+            description.key == "percentage_charged"
+            and energysite.info_coordinator.data.get("components_battery")
+        )
     )
 
     entities.extend(

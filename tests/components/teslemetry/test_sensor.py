@@ -111,6 +111,34 @@ async def test_energy_only_account_streams_live_status(
     )
 
 
+@pytest.mark.parametrize(
+    ("has_battery", "expected"),
+    [
+        pytest.param(True, "0", id="battery"),
+        pytest.param(False, None, id="no_battery"),
+    ],
+)
+async def test_energy_percentage_charged_requires_battery(
+    hass: HomeAssistant,
+    mock_live_status: AsyncMock,
+    mock_site_info: AsyncMock,
+    has_battery: bool,
+    expected: str | None,
+) -> None:
+    """The battery level sensor is created for battery sites even when Tesla omits it at 0 %."""
+    live_status = deepcopy(LIVE_STATUS)
+    del live_status["response"]["percentage_charged"]
+    mock_live_status.side_effect = lambda: deepcopy(live_status)
+    site_info = deepcopy(SITE_INFO)
+    site_info["response"]["components"]["battery"] = has_battery
+    mock_site_info.side_effect = lambda: deepcopy(site_info)
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    state = hass.states.get("sensor.energy_site_percentage_charged")
+    assert (state and state.state) == expected
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
