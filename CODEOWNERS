@@ -592,8 +592,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/fluss/ @fluss @Marcello17
 /homeassistant/components/flux_led/ @icemanch
 /tests/components/flux_led/ @icemanch
-/homeassistant/components/foreca/ @EetuPelkonen
-/tests/components/foreca/ @EetuPelkonen
+/homeassistant/components/foreca/ @EetuPelkonen @hyvatti-foreca
+/tests/components/foreca/ @EetuPelkonen @hyvatti-foreca
 /homeassistant/components/forecast_solar/ @klaasnicolaas @frenck
 /tests/components/forecast_solar/ @klaasnicolaas @frenck
 /homeassistant/components/forked_daapd/ @uvjustin
