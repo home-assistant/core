@@ -21,6 +21,16 @@
     }
   },
   "entity": {
+    "select": {
+      "mode": {
+        "name": "Mode",
+        "state": {
+          "boost": "Boost",
+          "eco": "Eco",
+          "shelf": "Shelf"
+        }
+      }
+    },
     "sensor": {
       "air_quality_score": {
         "name": "Air quality score"
@@ -45,6 +55,9 @@
   "exceptions": {
     "invalid_auth": {
       "message": "Vitesy Hub credentials are no longer valid."
+    },
+    "set_mode_failed": {
+      "message": "Could not change the mode on Vitesy Hub."
     },
     "update_failed": {
       "message": "Error communicating with Vitesy Hub, check logs for details"
