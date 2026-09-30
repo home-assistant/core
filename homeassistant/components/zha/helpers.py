@@ -392,7 +392,7 @@ class ZHADeviceProxy(EventBase):
         device_info[ENTITIES] = [
             {
                 ATTR_ENTITY_ID: entity_ref.ha_entity_id,
-                ATTR_NAME: entity_ref.ha_device_info[ATTR_NAME],
+                ATTR_NAME: device_info[ATTR_NAME],
             }
             for entity_ref in self.gateway_proxy.ha_entity_refs[self.device.ieee]
         ]
@@ -571,7 +571,6 @@ class EntityReference(NamedTuple):
 
     ha_entity_id: str
     entity_data: EntityData
-    ha_device_info: dr.DeviceInfo
     remove_future: asyncio.Future[Any]
 
 
@@ -623,7 +622,6 @@ class ZHAGatewayProxy(EventBase):
         self,
         ha_entity_id: str,
         entity_data: EntityData,
-        ha_device_info: dr.DeviceInfo,
         remove_future: asyncio.Future[Any],
     ) -> None:
         """Record the creation of a hass entity associated with ieee."""
@@ -631,7 +629,6 @@ class ZHAGatewayProxy(EventBase):
             EntityReference(
                 ha_entity_id=ha_entity_id,
                 entity_data=entity_data,
-                ha_device_info=ha_device_info,
                 remove_future=remove_future,
             )
         )

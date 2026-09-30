@@ -51,8 +51,12 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_PIN): cv.string,
         probatio.Required(CONF_URL): cv.string,
         probatio.Optional(CONF_NAME): cv.string,
-        probatio.Optional(CONF_ACCOUNTS, default=[]): cv.ensure_list(SCHEMA_ACCOUNTS),
-        probatio.Optional(CONF_HOLDINGS, default=[]): cv.ensure_list(SCHEMA_ACCOUNTS),
+        probatio.Optional(CONF_ACCOUNTS, default=[]): probatio.EnsureList()(
+            SCHEMA_ACCOUNTS
+        ),
+        probatio.Optional(CONF_HOLDINGS, default=[]): probatio.EnsureList()(
+            SCHEMA_ACCOUNTS
+        ),
     }
 )
 

@@ -8,5 +8,5 @@
   "iot_class": "cloud_push",
   "loggers": ["energyid_webhooks"],
   "quality_scale": "silver",
-  "requirements": ["energyid-webhooks==0.0.14"]
+  "requirements": ["energyid-webhooks==0.0.16"]
 }

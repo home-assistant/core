@@ -37,7 +37,7 @@ CONFIG_SCHEMA = probatio.All(
         {
             DOMAIN: {
                 LIGHT_DOMAIN: probatio.Schema(
-                    probatio.All(cv.ensure_list, [INTERFACE_SCHEMA])
+                    probatio.All(probatio.EnsureList(), [INTERFACE_SCHEMA])
                 )
             }
         },

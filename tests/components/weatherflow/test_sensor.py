@@ -6,7 +6,7 @@ import pytest
 from pyweatherflowudp.aioudp import LocalEndpoint
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, Platform
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import (
@@ -51,7 +51,7 @@ async def test_all_entities(
     ("unit_system", "entity_id", "unit"),
     [
         pytest.param(METRIC_SYSTEM, STATION_PRESSURE, "hPa", id="metric-pressure"),
-        pytest.param(METRIC_SYSTEM, VAPOR_PRESSURE, "mbar", id="metric-vapor"),
+        pytest.param(METRIC_SYSTEM, VAPOR_PRESSURE, "hPa", id="metric-vapor"),
         pytest.param(METRIC_SYSTEM, RAIN_LAST_MINUTE, "mm", id="metric-rain"),
         pytest.param(US_CUSTOMARY_SYSTEM, STATION_PRESSURE, "inHg", id="us-pressure"),
         pytest.param(US_CUSTOMARY_SYSTEM, VAPOR_PRESSURE, "inHg", id="us-vapor"),
@@ -116,3 +116,20 @@ async def test_last_strike_restored_until_next_strike(
     assert hass.states.get(LAST_STRIKE_DISTANCE).state == "27"
     assert hass.states.get(LAST_STRIKE_ENERGY).state == "3848"
     assert hass.states.get(LAST_STRIKE_TIME).state == "2017-11-16T18:13:10+00:00"
+
+
+async def test_last_strike_out_of_range(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_udp_endpoint: LocalEndpoint,
+) -> None:
+    """Test the last distance is unknown when the strike is out of range."""
+    await setup_integration(hass, mock_config_entry, mock_udp_endpoint)
+
+    mock_udp_endpoint.feed_datagram(
+        load_fixture_bytes("evt_strike_out_of_range.json", "weatherflow"), HUB_ADDRESS
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(LAST_STRIKE_DISTANCE).state == STATE_UNKNOWN
+    assert hass.states.get(LAST_STRIKE_ENERGY).state == "3848"

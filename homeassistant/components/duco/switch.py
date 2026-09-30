@@ -21,6 +21,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
+from .helpers import remove_stale_node_ids
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +53,7 @@ async def async_setup_entry(
     @callback
     def _async_add_new_entities() -> None:
         """Add identify switches for newly discovered controllable nodes."""
+        remove_stale_node_ids(coordinator, known_nodes)
         identify_nodes = _discover_identify_nodes(coordinator.data.node_actions)
         new_nodes = [
             node

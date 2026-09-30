@@ -42,7 +42,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import WeatherFlowConfigEntry
 from .const import DOMAIN, LOGGER, format_dispatch_call
@@ -63,8 +62,9 @@ class WeatherFlowSensorEntityDescription(SensorEntityDescription):
 
     device_attr: str | None = None
     restore_last_value: bool = False
+    # No value means there is nothing to report, not that the device is unavailable.
+    none_is_unknown: bool = False
     event_subscriptions: list[str] = field(default_factory=lambda: [EVENT_OBSERVATION])
-    imperial_suggested_unit: str | None = None
 
     def get_native_value(self, device: WeatherFlowDevice) -> datetime | StateType:
         """Return the parsed sensor value."""
@@ -79,7 +79,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         translation_key="air_density",
         native_unit_of_measurement="kg/m³",
         state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=5,
+        suggested_display_precision=3,
         raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
@@ -124,6 +124,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
         raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
@@ -132,6 +133,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
@@ -147,7 +149,8 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         translation_key="lightning_average_distance",
-        suggested_display_precision=2,
+        suggested_display_precision=0,
+        none_is_unknown=True,
         raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
@@ -164,9 +167,12 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
-        suggested_display_precision=2,
+        suggested_display_precision=0,
+        none_is_unknown=True,
         event_subscriptions=[EVENT_STRIKE],
-        raw_data_conv_fn=lambda raw_data: raw_data.distance.magnitude,
+        raw_data_conv_fn=lambda raw_data: (
+            None if raw_data.distance is None else raw_data.distance.magnitude
+        ),
     ),
     WeatherFlowSensorEntityDescription(
         key="lightning_strike_last_energy",
@@ -174,6 +180,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         restore_last_value=True,
         translation_key="lightning_strike_last_energy",
         state_class=SensorStateClass.MEASUREMENT,
+        none_is_unknown=True,
         event_subscriptions=[EVENT_STRIKE],
         raw_data_conv_fn=lambda raw_data: raw_data.energy,
     ),
@@ -183,6 +190,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         restore_last_value=True,
         translation_key="lightning_strike_last_epoch",
         device_class=SensorDeviceClass.TIMESTAMP,
+        none_is_unknown=True,
         event_subscriptions=[EVENT_STRIKE],
         raw_data_conv_fn=lambda raw_data: raw_data.timestamp,
     ),
@@ -198,6 +206,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.PRECIPITATION,
+        suggested_display_precision=2,
         raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
@@ -205,6 +214,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        suggested_display_precision=1,
         raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
@@ -212,6 +222,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
@@ -230,7 +241,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPressure.MBAR,
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=5,
+        suggested_display_precision=1,
         raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
@@ -254,16 +265,16 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         translation_key="uv_index",
         native_unit_of_measurement=UV_INDEX,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
         raw_data_conv_fn=lambda raw_data: raw_data,
     ),
     WeatherFlowSensorEntityDescription(
         key="vapor_pressure",
         translation_key="vapor_pressure",
         native_unit_of_measurement=UnitOfPressure.MBAR,
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
-        imperial_suggested_unit=UnitOfPressure.INHG,
-        suggested_display_precision=5,
+        suggested_display_precision=1,
         raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     ## Wind Sensors
@@ -335,11 +346,7 @@ async def async_setup_entry(
         LOGGER.debug("Adding sensors for %s", device)
 
         sensors: list[WeatherFlowSensorEntity] = [
-            WeatherFlowSensorEntity(
-                device=device,
-                description=description,
-                is_metric=(hass.config.units == METRIC_SYSTEM),
-            )
+            WeatherFlowSensorEntity(device=device, description=description)
             for description in SENSORS
             if hasattr(device, description.device_attr or description.key)
         ]
@@ -366,7 +373,6 @@ class WeatherFlowSensorEntity(RestoreSensor):
         self,
         device: WeatherFlowSensorDevice,
         description: WeatherFlowSensorEntityDescription,
-        is_metric: bool = True,
     ) -> None:
         """Initialize a WeatherFlow sensor entity."""
         self.device = device
@@ -383,14 +389,6 @@ class WeatherFlowSensorEntity(RestoreSensor):
 
         self._attr_unique_id = f"{device.serial_number}_{description.key}"
 
-        # In the case of the USA - we may want to have a
-        # suggested US unit which differs from the internal
-        # suggested units
-        if description.imperial_suggested_unit is not None and not is_metric:
-            self._attr_suggested_unit_of_measurement = (
-                description.imperial_suggested_unit
-            )
-
     @property
     @override
     def last_reset(self) -> datetime | None:
@@ -402,7 +400,9 @@ class WeatherFlowSensorEntity(RestoreSensor):
     def _async_update_state(self) -> None:
         """Update entity state."""
         value = self.entity_description.get_native_value(self.device)
-        self._attr_available = value is not None
+        self._attr_available = (
+            value is not None or self.entity_description.none_is_unknown
+        )
         self._attr_native_value = value
         self.async_write_ha_state()
 

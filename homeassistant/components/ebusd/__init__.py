@@ -49,7 +49,7 @@ CONFIG_SCHEMA = probatio.Schema(
                     probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                     probatio.Optional(
                         CONF_MONITORED_CONDITIONS, default=[]
-                    ): cv.ensure_list,
+                    ): probatio.EnsureList(),
                 },
                 verify_ebusd_config,
             )

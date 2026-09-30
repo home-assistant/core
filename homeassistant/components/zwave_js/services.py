@@ -41,6 +41,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.group import expand_entity_ids
 from homeassistant.helpers.service import async_register_platform_entity_service
+from homeassistant.helpers.typing import VolDictType
 
 from . import const
 from .config_validation import BITMASK_SCHEMA, VALUE_SCHEMA
@@ -59,9 +60,9 @@ type _NodeOrEndpointType = ZwaveNode | Endpoint
 
 UNIT16_SCHEMA = probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=65535))
 
-TARGET_VALIDATORS = {
-    probatio.Optional(ATTR_AREA_ID): probatio.All(cv.ensure_list, [cv.string]),
-    probatio.Optional(ATTR_DEVICE_ID): probatio.All(cv.ensure_list, [cv.string]),
+TARGET_VALIDATORS: VolDictType = {
+    probatio.Optional(ATTR_AREA_ID): probatio.All(probatio.EnsureList(), [cv.string]),
+    probatio.Optional(ATTR_DEVICE_ID): probatio.All(probatio.EnsureList(), [cv.string]),
     probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 }
 

@@ -88,7 +88,7 @@ PLATFORM_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_PLATFORM): DOMAIN,
         probatio.Required(STATES): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 probatio.Schema(
                     {
