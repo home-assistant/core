@@ -45,14 +45,14 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         self.latest_exposure: ExposureData | None = None
         self.latest_sensor: SensorData | None = None
 
-        unsub_exp = self.client.register_callback(
-            "exposure_complete", self._handle_exposure_complete
+        entry.async_on_unload(
+            self.client.register_callback(
+                "exposure_complete", self._handle_exposure_complete
+            )
         )
-        unsub_sensor = self.client.register_callback(
-            "sensor_update", self._handle_sensor_update
+        entry.async_on_unload(
+            self.client.register_callback("sensor_update", self._handle_sensor_update)
         )
-        entry.async_on_unload(unsub_exp)
-        entry.async_on_unload(unsub_sensor)
         entry.async_on_unload(self.client.disconnect)
 
         super().__init__(

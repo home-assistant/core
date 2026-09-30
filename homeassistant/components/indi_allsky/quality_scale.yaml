@@ -63,7 +63,9 @@ rules:
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
-  icon-translations: done
+  icon-translations:
+    status: exempt
+    comment: Entities define no custom icons.
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
