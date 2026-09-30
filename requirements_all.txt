@@ -470,6 +470,9 @@ aiounifi==96
 # homeassistant.components.usb
 aiousbwatcher==1.1.2
 
+# homeassistant.components.vitesy
+aiovitesy==1.1.0
+
 # homeassistant.components.vlc_telnet
 aiovlc==0.5.1
 
@@ -3224,7 +3227,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.17.0
+tesla-fleet-api==1.17.1
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3
