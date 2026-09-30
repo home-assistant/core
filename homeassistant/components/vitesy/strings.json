@@ -21,6 +21,14 @@
     }
   },
   "entity": {
+    "button": {
+      "filter_changed": {
+        "name": "Mark filter as changed"
+      },
+      "fridge_cleaned": {
+        "name": "Mark fridge as cleaned"
+      }
+    },
     "select": {
       "mode": {
         "name": "Mode",
@@ -29,7 +37,6 @@
           "eco": "Eco",
           "shelf": "Shelf"
         }
-      }
     },
     "sensor": {
       "air_quality_score": {
@@ -55,6 +62,9 @@
   "exceptions": {
     "invalid_auth": {
       "message": "Vitesy Hub credentials are no longer valid."
+    },
+    "reset_maintenance_failed": {
+      "message": "Could not reset the maintenance period on Vitesy Hub."
     },
     "set_mode_failed": {
       "message": "Could not change the mode on Vitesy Hub."
