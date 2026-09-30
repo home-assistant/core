@@ -234,6 +234,8 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         This can be removed once core integrations have dropped unneeded custom unit
         conversion.
         """
+        await super().async_prepare_to_add_to_hass()
+
         # Bail out if the sensor doesn't have a unique_id or a device class
         if self.unique_id is None or self.device_class is None:
             return
