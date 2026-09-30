@@ -28,7 +28,7 @@ class MelCloudHomeUnitEntity[_UnitT: (ATAUnit, ATWUnit)](MelCloudHomeEntity):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._unit_id = unit.id
-        self._attr_unique_id = unit.id
+        self._attr_unique_id = f"{unit.id}_{self.entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unit.id)},
             name=unit.name,

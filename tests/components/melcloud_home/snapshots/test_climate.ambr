@@ -205,7 +205,7 @@
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 937>,
     'translation_key': 'ata_unit',
-    'unique_id': 'ata-unit-uuid-1',
+    'unique_id': 'ata-unit-uuid-1_ata_unit',
     'unit_of_measurement': None,
   })
 # ---

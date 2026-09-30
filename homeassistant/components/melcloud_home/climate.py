@@ -13,6 +13,7 @@ from aiomelcloudhome import (
 
 from homeassistant.components.climate import (
     ClimateEntity,
+    ClimateEntityDescription,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -121,7 +122,9 @@ async def async_setup_entry(
 class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
     """Climate entity for a MELCloud Home Air-to-Air unit."""
 
-    _attr_translation_key = "ata_unit"
+    entity_description = ClimateEntityDescription(
+        key="ata_unit", translation_key="ata_unit"
+    )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_swing_modes = list(ATA_VANE_VERTICAL_TO_HA.values())
     _attr_swing_horizontal_modes = list(ATA_VANE_HORIZONTAL_TO_HA.values())
@@ -343,7 +346,9 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
 class ATWZoneClimateEntity(MelCloudHomeATWZoneEntity, ClimateEntity):
     """Climate entity for a MELCloud Home ATW zone."""
 
-    _attr_translation_key = "atw_zone"
+    entity_description = ClimateEntityDescription(
+        key="atw_zone", translation_key="atw_zone"
+    )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE

@@ -189,9 +189,8 @@ class ATASensor(MelCloudHomeATAUnitEntity, SensorEntity):
         unit: ATAUnit,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator, unit)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{unit.id}_{entity_description.key}"
+        super().__init__(coordinator, unit)
 
     @property
     @override
@@ -212,9 +211,8 @@ class ATWSensor(MelCloudHomeATWUnitEntity, SensorEntity):
         unit: ATWUnit,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator, unit)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{unit.id}_{entity_description.key}"
+        super().__init__(coordinator, unit)
 
     @property
     @override
@@ -235,7 +233,6 @@ class MelCloudHomeATATelemetrySensor(MelCloudHomeATAUnitEntity, SensorEntity):
         """Initialize the entity."""
         super().__init__(coordinator, unit)
         self._telemetry_coordinator = telemetry_coordinator
-        self._attr_unique_id = f"{unit.id}_{self.entity_description.key}"
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -298,7 +295,6 @@ class ATWEnergySensor(MelCloudHomeATWUnitEntity, SensorEntity):
         """Initialize the entity."""
         super().__init__(coordinator, unit)
         self._telemetry_coordinator = telemetry_coordinator
-        self._attr_unique_id = f"{unit.id}_{ENERGY_CONSUMED_DESCRIPTION.key}"
 
     @override
     async def async_added_to_hass(self) -> None:

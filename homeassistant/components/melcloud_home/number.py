@@ -213,9 +213,8 @@ class ATANumber(MelCloudHomeATAUnitEntity, NumberEntity):
         unit: ATAUnit,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator, unit)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{unit.id}_{entity_description.key}"
+        super().__init__(coordinator, unit)
 
     @property
     @override
@@ -259,9 +258,8 @@ class ATWNumber(MelCloudHomeATWUnitEntity, NumberEntity):
         unit: ATWUnit,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator, unit)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{unit.id}_{entity_description.key}"
+        super().__init__(coordinator, unit)
 
     @property
     @override
