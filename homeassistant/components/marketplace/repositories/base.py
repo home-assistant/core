@@ -396,23 +396,26 @@ class RepositoryManifest:
             setattr(self, key, value)
 
 
+@attr.s(auto_attribs=True)
 class RepositoryReleases:
-    """The releases of a repository."""
+    """The releases of a repository, newest first."""
 
-    objects: list[GitHubReleaseModel] = []
+    objects: list[GitHubReleaseModel] = attr.field(factory=list)
 
 
+@attr.s(auto_attribs=True)
 class RepositoryPath:
-    """RepositoryPath."""
+    """Where the content is, in the repository and on disk."""
 
     local: str = ""
     remote: str | None = None
 
 
+@attr.s(auto_attribs=True)
 class RepositoryContent:
-    """RepositoryContent."""
+    """The content a repository installs."""
 
-    path: RepositoryPath
+    path: RepositoryPath = attr.field(factory=RepositoryPath)
     single: bool = False
 
 
@@ -431,10 +434,9 @@ class Repository:
         self.marketplace = marketplace
         self.additional_info = ""
         self.data = RepositoryData()
-        self.content = RepositoryContent()
-        self.content.path = RepositoryPath()
-        self.content.path.remote = self.remote_path
-        self.content.single = self.single_file
+        self.content = RepositoryContent(
+            path=RepositoryPath(remote=self.remote_path), single=self.single_file
+        )
         self.repository_object: GitHubRepositoryModel | None = None
         self.updated_info = False
         self.force_branch = False

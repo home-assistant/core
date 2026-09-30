@@ -272,6 +272,18 @@ async def test_pending_update(marketplace: MarketplaceManager) -> None:
     assert repository.pending_update
 
 
+async def test_repositories_do_not_share_their_releases(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test the releases of one repository never show up in another."""
+    first = Repository(marketplace)
+    second = Repository(marketplace)
+
+    first.releases.objects.append(GitHubReleaseModel({"tag_name": "1.0.0"}))
+
+    assert second.releases.objects == []
+
+
 @pytest.mark.parametrize(
     ("ref", "category", "releases", "zip_release", "expected"),
     [
