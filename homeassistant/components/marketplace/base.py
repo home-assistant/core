@@ -647,7 +647,7 @@ class MarketplaceManager:
             _exception = exception
 
         if raise_exception and _exception is not None:
-            raise MarketplaceError(_exception)
+            raise MarketplaceError(_exception) from _exception
         return None
 
     @callback

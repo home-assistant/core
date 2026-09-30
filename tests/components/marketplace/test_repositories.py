@@ -564,9 +564,35 @@ async def test_download_count_from_release(marketplace: MarketplaceManager) -> N
         )
     ]
 
-    await repository.common_update_data(force=True, skip_releases=True)
+    repository.ref = "1.0.0"
+
+    repository._update_download_count()
 
     assert repository.data.downloads == 2000
+
+
+async def test_removed_selected_version_falls_back(
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a selected version GitHub no longer has falls back to the newest."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.selected_tag = "0.0.1"
+    url = f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}/git/trees/0.0.1?recursive=true"
+    response_mocker.add(
+        url,
+        mocked_response(
+            url, status=HTTPStatus.NOT_FOUND, json_content={"message": "Not Found"}
+        ),
+    )
+
+    await repository.common_update_data(force=True)
+
+    assert repository.data.selected_tag is None
+    assert repository.ref == "1.0.0"
+    assert repository.tree_ref == "1.0.0"
+    assert "Version 0.0.1 is no longer on GitHub, falling back to 1.0.0" in caplog.text
 
 
 @pytest.mark.parametrize(

@@ -17,6 +17,7 @@ import zipfile
 from aiogithubapi import (
     GitHubAuthenticationException,
     GitHubException,
+    GitHubNotFoundException,
     GitHubNotModifiedException,
     GitHubRatelimitException,
 )
@@ -662,21 +663,14 @@ class Repository:
 
     @concurrent(concurrenttasks=10)
     async def common_update(
-        self,
-        ignore_issues: bool = False,
-        force: bool = False,
-        skip_releases: bool = False,
+        self, ignore_issues: bool = False, force: bool = False
     ) -> bool:
         """Common information update steps of the repository."""
         self.logger.debug("%s Getting repository information", self.string)
 
         current_etag = self.data.etag_repository
         try:
-            await self.common_update_data(
-                ignore_issues=ignore_issues,
-                force=force,
-                skip_releases=skip_releases,
-            )
+            await self.common_update_data(ignore_issues=ignore_issues, force=force)
         except RepositoryExistsError:
             self.marketplace.repositories.rename(
                 self,
@@ -1383,33 +1377,37 @@ class Repository:
             releases.append(release)
         return releases
 
-    async def common_update_data(  # noqa: C901
-        self,
-        ignore_issues: bool = False,
-        force: bool = False,
-        retry: bool = False,
-        skip_releases: bool = False,
+    async def common_update_data(
+        self, ignore_issues: bool = False, force: bool = False
     ) -> None:
-        """Common update data."""
-        releases: list[GitHubReleaseModel] = []
+        """Refresh the repository, its releases and the tree of the version to install."""
+        if not await self._async_update_repository_object(
+            ignore_issues=ignore_issues, force=force
+        ):
+            return
+
+        if not ignore_issues:
+            self._raise_when_unusable()
+
+        await self._async_update_releases()
+        if not self.force_branch:
+            self.ref = self.version_to_install()
+        self._update_download_count()
+
+        await self._async_update_tree(ignore_issues=ignore_issues)
+
+    async def _async_update_repository_object(
+        self, *, ignore_issues: bool, force: bool
+    ) -> bool:
+        """Fetch the repository from GitHub, return False when it did not change."""
         try:
             repository_object, etag = await self.async_get_repository_object(
                 etag=None
                 if force or self.data.installed
                 else self.data.etag_repository,
             )
-            self.repository_object = repository_object
-            if self.data.full_name.lower() != repository_object.full_name.lower():
-                self.marketplace.common.renamed_repositories[self.data.full_name] = (
-                    repository_object.full_name
-                )
-                raise RepositoryExistsError  # noqa: TRY301 # handled below
-            self.data.update_data(repository_object.as_dict)
-            self.data.etag_repository = etag
         except NotModifiedError:
-            return None
-        except RepositoryExistsError:
-            raise RepositoryExistsError from None
+            return False
         except GitHubAnonymousRateLimitError:
             raise
         except MarketplaceError as exception:
@@ -1418,103 +1416,123 @@ class Repository:
             if not ignore_issues:
                 self.validate.errors.append("Repository does not exist.")
                 raise MarketplaceError(exception) from exception
+            return True
 
-        # Make sure the repository is not archived.
-        if self.data.archived and not ignore_issues:
+        self.repository_object = repository_object
+        if self.data.full_name.lower() != repository_object.full_name.lower():
+            self.marketplace.common.renamed_repositories[self.data.full_name] = (
+                repository_object.full_name
+            )
+            raise RepositoryExistsError
+
+        self.data.update_data(repository_object.as_dict)
+        self.data.etag_repository = etag
+        return True
+
+    def _raise_when_unusable(self) -> None:
+        """Refuse a repository that is archived or asked to be removed."""
+        if self.data.archived:
             self.validate.errors.append("Repository is archived.")
-            if self.data.full_name not in self.marketplace.common.archived_repositories:
-                self.marketplace.common.archived_repositories.add(self.data.full_name)
+            self.marketplace.common.archived_repositories.add(self.data.full_name)
             raise RepositoryArchivedError(f"{self} Repository is archived.")
 
-        if self.marketplace.repositories.is_removed(self.data.full_name):
-            removed = self.marketplace.repositories.removed_repository(
-                self.data.full_name
+        if not self.marketplace.repositories.is_removed(self.data.full_name):
+            return
+
+        removed = self.marketplace.repositories.removed_repository(self.data.full_name)
+        if removed.removal_type != "remove":
+            self.validate.errors.append("Repository has been requested to be removed.")
+            raise MarketplaceError(
+                f"{self} Repository has been requested to be removed."
             )
-            if removed.removal_type != "remove" and not ignore_issues:
-                self.validate.errors.append(
-                    "Repository has been requested to be removed."
-                )
-                raise MarketplaceError(
-                    f"{self} Repository has been requested to be removed."
-                )
 
-        if not skip_releases:  # pylint: disable=too-many-nested-blocks
-            try:
-                releases = await self.get_releases(prerelease=True, returnlimit=30)
-                if releases:
-                    self.data.prerelease = None
-                    for release in releases:
-                        if release.draft:
-                            continue
-                        if release.prerelease:
-                            if self.data.prerelease is None:
-                                self.data.prerelease = release.tag_name
-                        else:
-                            self.data.last_version = release.tag_name
-                            break
-
-                    self.data.releases = True
-
-                    filtered_releases = [
-                        release
-                        for release in releases
-                        if not release.draft
-                        and (self.data.show_beta or not release.prerelease)
-                    ]
-                    self.releases.objects = filtered_releases
-                    self.data.published_tags = [x.tag_name for x in filtered_releases]
-
-            except GitHubAnonymousRateLimitError:
-                raise
-            except GitHubRateLimitError:
-                # Running out of requests says nothing about the releases, the
-                # anonymous limit runs out on browsing alone.
-                self.logger.debug("%s Rate limited, keeping the releases", self.string)
-            except MarketplaceError:
-                self.data.releases = False
-
-        if not self.force_branch:
-            self.ref = self.version_to_install()
-        if self.data.releases:
-            for release in self.releases.objects or []:
-                if release.tag_name == self.ref:
-                    if assets := release.assets:
-                        if target_asset := self._find_target_asset(assets):
-                            self.data.downloads = target_asset.download_count
-
-        LOGGER.debug(
-            "%s Running checks against %s",
-            self.string,
-            ref_version(self.ref),
-        )
-
+    async def _async_update_releases(self) -> None:
+        """Take the newest version, pre-release and published versions from GitHub."""
         try:
-            tree = await self.get_tree(self.ref)
-            if not tree:
-                raise MarketplaceError("No files in tree")  # noqa: TRY301 # handled below
-            self.tree = tree
-            self.tree_ref = ref_version(self.ref)
-            self.treefiles = [entry.path for entry in tree]
+            releases = await self.get_releases(prerelease=True, returnlimit=30)
         except GitHubAnonymousRateLimitError:
             raise
-        except MarketplaceError as exception:
-            if (
-                not retry
-                and self.ref is not None
-                and str(exception).startswith("GitHub returned 404")
-            ):
+        except GitHubRateLimitError:
+            # Running out of requests says nothing about the releases, the
+            # anonymous limit runs out on browsing alone.
+            self.logger.debug("%s Rate limited, keeping the releases", self.string)
+            return
+        except MarketplaceError:
+            self.data.releases = False
+            return
+
+        if not releases:
+            return
+
+        # Newest first, a pre-release only counts when it is newer than the stable
+        self.data.prerelease = None
+        for release in releases:
+            if not release.prerelease:
+                self.data.last_version = release.tag_name
+                break
+            if self.data.prerelease is None:
+                self.data.prerelease = release.tag_name
+
+        self.data.releases = True
+        self.releases.objects = [
+            release
+            for release in releases
+            if self.data.show_beta or not release.prerelease
+        ]
+        self.data.published_tags = [
+            release.tag_name for release in self.releases.objects
+        ]
+
+    def _update_download_count(self) -> None:
+        """Take the download count from the asset of the release to install."""
+        if not self.data.releases:
+            return
+
+        for release in self.releases.objects or []:
+            if release.tag_name != self.ref:
+                continue
+            if target_asset := self._find_target_asset(release.assets):
+                self.data.downloads = target_asset.download_count
+            return
+
+    async def _async_update_tree(self, *, ignore_issues: bool) -> None:
+        """Fetch the tree of the version to install, the default one when it is gone."""
+        try:
+            try:
+                await self._async_fetch_tree()
+            except MarketplaceError as exception:
+                if not isinstance(exception.__cause__, GitHubNotFoundException):
+                    raise
+
+                removed_ref = self.ref
                 self.data.selected_tag = None
                 self.ref = self.version_to_install()
                 self.logger.warning(
-                    "%s Selected version/branch %s has been removed, falling back to default",
+                    "%s Version %s is no longer on GitHub, falling back to %s",
                     self.string,
+                    removed_ref,
                     self.ref,
                 )
-                return await self.common_update_data(ignore_issues, force, True)
-            if not self.marketplace.status.startup and not ignore_issues:
+                self._update_download_count()
+                await self._async_fetch_tree()
+        except GitHubAnonymousRateLimitError:
+            raise
+        except MarketplaceError as exception:
+            if ignore_issues:
+                return
+            if not self.marketplace.status.startup:
                 self.logger.error("%s %s", self.string, exception)
-            if not ignore_issues:
-                raise MarketplaceError(exception) from None
+            raise MarketplaceError(exception) from None
+
+    async def _async_fetch_tree(self) -> None:
+        """Fetch the tree of the version to install."""
+        LOGGER.debug("%s Running checks against %s", self.string, ref_version(self.ref))
+        if not (tree := await self.get_tree(self.ref)):
+            raise MarketplaceError("No files in tree")
+
+        self.tree = tree
+        self.tree_ref = ref_version(self.ref)
+        self.treefiles = [entry.path for entry in tree]
 
     def gather_files_to_download(self) -> list[FileInformation]:
         """Return a list of file objects to be downloaded."""
