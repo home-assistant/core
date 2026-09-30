@@ -28,6 +28,10 @@ POWER_THRESHOLD_ENTITY_ID = "number.smart_plug_energy_saving_power_threshold"
 POWER_THRESHOLD_COMPACT_ENTITY_ID = (
     "number.smart_plug_compact_energy_saving_power_threshold"
 )
+ENTER_DURATION_ENTITY_ID = "number.smart_plug_energy_saving_enter_duration"
+ENTER_DURATION_COMPACT_ENTITY_ID = (
+    "number.smart_plug_compact_energy_saving_enter_duration"
+)
 
 
 @pytest.mark.parametrize(
@@ -240,3 +244,95 @@ async def test_smart_plug_no_power_threshold_support(
 
     assert hass.states.get(POWER_THRESHOLD_ENTITY_ID) is None
     assert hass.states.get(POWER_THRESHOLD_COMPACT_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "smart_plugs": [
+                smart_plug_device(
+                    supports_energy_saving_mode=True, enter_duration_seconds=60
+                )
+            ],
+            "smart_plugs_compact": [
+                smart_plug_compact_device(
+                    supports_energy_saving_mode=True, enter_duration_seconds=120
+                )
+            ],
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smart_plug_enter_duration_value(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The enter duration is reported for both smart plug variants."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTER_DURATION_ENTITY_ID)
+    assert state is not None
+    assert state.state == "60.0"
+    state = hass.states.get(ENTER_DURATION_COMPACT_ENTITY_ID)
+    assert state is not None
+    assert state.state == "120.0"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "smart_plugs": [
+                smart_plug_device(
+                    supports_energy_saving_mode=True, enter_duration_seconds=60
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smart_plug_enter_duration_set_value(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Setting a value writes the enter duration to the device."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.smart_plugs[0]
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: ENTER_DURATION_ENTITY_ID, ATTR_VALUE: 300},
+        blocking=True,
+    )
+    device.async_set_enter_duration_seconds.assert_awaited_once_with(300)
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "smart_plugs": [smart_plug_device(enter_duration_seconds=60)],
+            "smart_plugs_compact": [
+                smart_plug_compact_device(
+                    supports_energy_saving_mode=True, enter_duration_seconds=None
+                )
+            ],
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smart_plug_no_enter_duration_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No entity is created without energy-saving or an enter duration."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTER_DURATION_ENTITY_ID) is None
+    assert hass.states.get(ENTER_DURATION_COMPACT_ENTITY_ID) is None
