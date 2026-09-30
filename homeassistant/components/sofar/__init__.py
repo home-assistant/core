@@ -5,14 +5,17 @@ import logging
 from typing import TYPE_CHECKING
 
 from modbus_connection import ModbusError
-from sofar_modbus.modern.device import SofarInverter, identify
+from sofar_modbus.modern.device import (
+    BATTERY_STRING_COMPONENTS,
+    SofarInverter,
+    identify,
+)
 from sofar_modbus.tuning import LinkTuner, TimedUnit
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorExtraStoredData,
-    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_TYPE, Platform
@@ -27,7 +30,6 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    BATTERY_COMPONENTS,
     CONF_UNIT_ID,
     DOMAIN,
     METER_ENERGY,
@@ -106,7 +108,7 @@ def _async_seed_high_water_marks(
     registry = er.async_get(hass)
     last_states = restore_state.async_get(hass).last_states
     for description in SENSOR_DESCRIPTIONS:
-        if description.state_class is not SensorStateClass.TOTAL_INCREASING:
+        if (total_fn := description.total_fn) is None:
             continue
         entity_id = registry.async_get_entity_id(
             SENSOR_DOMAIN, DOMAIN, f"{serial}_{description.key}"
@@ -118,9 +120,7 @@ def _async_seed_high_water_marks(
         extra = SensorExtraStoredData.from_dict(stored.extra_data.as_dict())
         if extra is None or not isinstance(extra.native_value, (int, float)):
             continue
-        getattr(device, description.component).seed_high_water(
-            description.key, float(extra.native_value)
-        )
+        total_fn(device).seed(float(extra.native_value))
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -202,7 +202,7 @@ def _battery_pack_number(serial: str, identifier: str) -> int | None:
         return None
     suffix = identifier.removeprefix(prefix)
     number = int(suffix) if suffix.isdecimal() else None
-    return number if number in BATTERY_COMPONENTS else None
+    return number if number in BATTERY_STRING_COMPONENTS else None
 
 
 async def async_remove_config_entry_device(

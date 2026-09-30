@@ -17,7 +17,3 @@ METER_ENERGY = "meter_energy"
 
 TYPE_SERIAL = "serial"
 TYPE_TCP = "tcp"
-
-BATTERY_COMPONENTS = {
-    n: "battery_1_2" if n <= 2 else "battery_3_8" for n in range(1, 9)
-}

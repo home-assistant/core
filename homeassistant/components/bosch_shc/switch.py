@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from boschshcpy import (
     BypassService,
+    CameraAmbientLightService,
     CameraLightService,
     PowerSwitchService,
     PrivacyModeService,
@@ -70,11 +71,36 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_value=CameraLightService.State.ON,
         should_poll=True,
     ),
+    "cameraeyes_cameralight": SHCSwitchEntityDescription(
+        key="cameraeyes_cameralight",
+        translation_key="camera_light",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="cameralight",
+        on_value=CameraLightService.State.ON,
+        should_poll=True,
+    ),
     "camera360": SHCSwitchEntityDescription(
         key="camera360",
         device_class=SwitchDeviceClass.SWITCH,
         on_key="privacymode",
         on_value=PrivacyModeService.State.DISABLED,
+        should_poll=True,
+    ),
+    "cameraoutdoorgen2": SHCSwitchEntityDescription(
+        key="cameraoutdoorgen2",
+        device_class=SwitchDeviceClass.SWITCH,
+        on_key="privacymode",
+        on_value=PrivacyModeService.State.DISABLED,
+        should_poll=True,
+    ),
+    "cameraoutdoorgen2_cameraambientlight": SHCSwitchEntityDescription(
+        key="cameraoutdoorgen2_cameraambientlight",
+        translation_key="camera_ambientlight",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="cameraambientlight",
+        on_value=CameraAmbientLightService.State.ON,
         should_poll=True,
     ),
     "child_lock": SHCSwitchEntityDescription(
@@ -283,9 +309,44 @@ async def async_setup_entry(
             device=switch,
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["cameraeyes_cameralight"],
+            unique_id_suffix="cameraeyes_cameralight",
+        )
+        for switch in session.device_helper.camera_eyes
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
             description=SWITCH_TYPES["camera360"],
         )
         for switch in session.device_helper.camera_360
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["cameraoutdoorgen2"],
+        )
+        for switch in session.device_helper.camera_outdoor_gen2
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["cameraoutdoorgen2_cameraambientlight"],
+            unique_id_suffix="cameraoutdoorgen2_cameraambientlight",
+        )
+        for switch in session.device_helper.camera_outdoor_gen2
     )
 
     entities.extend(

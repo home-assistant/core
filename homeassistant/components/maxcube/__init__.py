@@ -40,7 +40,7 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Required(CONF_GATEWAYS, default={}): probatio.All(
-                    cv.ensure_list, [CONFIG_GATEWAY]
+                    probatio.EnsureList(), [CONFIG_GATEWAY]
                 )
             }
         )

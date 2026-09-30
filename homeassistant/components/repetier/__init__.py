@@ -190,7 +190,7 @@ SENSOR_SCHEMA = probatio.Schema(
     {
         probatio.Optional(
             CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
-        ): probatio.All(cv.ensure_list, [probatio.In(SENSOR_TYPES)]),
+        ): probatio.All(probatio.EnsureList(), [probatio.In(SENSOR_TYPES)]),
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
@@ -198,7 +198,7 @@ SENSOR_SCHEMA = probatio.Schema(
 CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 probatio.Schema(
                     {

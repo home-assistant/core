@@ -1412,7 +1412,7 @@ async def test_zeroconf_removed(hass: HomeAssistant) -> None:
         patch.object(
             hass.config_entries.flow,
             "async_progress_by_init_data_type",
-            return_value=[{"flow_id": "mock_flow_id"}],
+            return_value=[{"flow_id": "mock_flow_id", "context": {}}],
         ) as mock_async_progress_by_init_data_type,
         patch.object(hass.config_entries.flow, "async_abort") as mock_async_abort,
         patch.object(
