@@ -1655,6 +1655,40 @@ async def test_repository_info_rate_limited_without_github(
 
 
 @pytest.mark.parametrize("github_token", [None])
+async def test_repository_info_shows_the_readme_when_rate_limited(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test the README still shows once the anonymous limit ran out."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.releases = True
+    # As after a restart: the tree that names the README was never listed
+    repository.treefiles = []
+    repository.additional_info = ""
+
+    url = f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}/releases"
+    response_mocker.add(
+        url,
+        mocked_response(url, status=HTTPStatus.FORBIDDEN, json_content=RATE_LIMITED),
+    )
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/info",
+            "repository_id": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    # The README comes from raw.githubusercontent.com, the limit does not cover it
+    assert response["result"]["additional_info"]
+
+
+@pytest.mark.parametrize("github_token", [None])
 @pytest.mark.usefixtures("stored_repositories")
 async def test_repository_uninstall_without_github(
     hass: HomeAssistant,

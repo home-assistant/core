@@ -98,6 +98,10 @@ async def marketplace_repository_info(
         except GitHubAnonymousRateLimitError:
             # Show what is known, the next visit tries again
             repository.logger.debug("%s Rate limited", repository.string)
+            if not repository.additional_info:
+                repository.additional_info = (
+                    await repository.async_get_readme_contents()
+                )
         except MarketplaceError as exception:
             repository.logger.error("%s %s", repository.string, exception)
             repository.updated_info = True

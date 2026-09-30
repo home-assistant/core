@@ -890,17 +890,20 @@ class Repository:
 
     async def async_get_readme_contents(self, *, version: str | None = None) -> str:
         """Get the content of the README, shown on the repository page."""
-        readme_files = [
-            filename for filename in README_FILENAMES if filename in self.treefiles
-        ]
-
-        if not readme_files:
-            return ""
-
-        return (
-            await self.get_documentation(filename=readme_files[0], version=version)
-            or ""
+        # Without the tree, which only the GitHub API lists, the usual names are
+        # tried. The files themselves are not counted against its rate limit.
+        readme_files = (
+            [filename for filename in README_FILENAMES if filename in self.treefiles]
+            if self.treefiles
+            else README_FILENAMES
         )
+
+        for filename in readme_files:
+            if content := await self.get_documentation(
+                filename=filename, version=version
+            ):
+                return content
+        return ""
 
     def remove(self) -> None:
         """Forget the repository, its files stay where they are."""
