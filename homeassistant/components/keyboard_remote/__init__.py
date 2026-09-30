@@ -269,8 +269,8 @@ class KeyboardRemoteManager:
             # conditions leading to missing device connections
             scanned = await self._async_scan_initial_devices()
 
-            self._monitor_task = self.hass.async_create_task(
-                self._async_monitor_devices()
+            self._monitor_task = self.hass.async_create_background_task(
+                self._async_monitor_devices(), "keyboard_remote device watcher"
             )
             self._started = True
 
@@ -768,8 +768,10 @@ class DeviceHandler:
         # Not eager: a device that fails immediately would otherwise run the
         # whole monitor body, including the teardown that clears this
         # attribute, before the assignment below overwrites it again.
-        self._monitor_task = self.hass.async_create_task(
-            self._async_monitor_input(), eager_start=False
+        self._monitor_task = self.hass.async_create_background_task(
+            self._async_monitor_input(),
+            f"keyboard_remote monitor {dev.path}",
+            eager_start=False,
         )
         self.hass.bus.async_fire(
             EVENT_KEYBOARD_REMOTE_CONNECTED,
@@ -890,13 +892,16 @@ class DeviceHandler:
                         )
 
                     if event.value == KEY_VALUE["key_down"] and self._emulate_key_hold:
-                        repeat_tasks[event.code] = self.hass.async_create_task(
-                            self._async_keyrepeat(
-                                dev,
-                                descriptor,
-                                event.code,
-                                self._emulate_key_hold_delay,
-                                self._emulate_key_hold_repeat,
+                        repeat_tasks[event.code] = (
+                            self.hass.async_create_background_task(
+                                self._async_keyrepeat(
+                                    dev,
+                                    descriptor,
+                                    event.code,
+                                    self._emulate_key_hold_delay,
+                                    self._emulate_key_hold_repeat,
+                                ),
+                                f"keyboard_remote key repeat {event.code}",
                             )
                         )
                     elif (
