@@ -56,7 +56,7 @@ ATTR_FROM = "from"
 ATTR_TO = "to"
 
 _OPTIONS_SCHEMA_DICT = {
-    probatio.Optional(ATTR_DEVICE_ID): probatio.All(cv.ensure_list, [cv.string]),
+    probatio.Optional(ATTR_DEVICE_ID): probatio.All(probatio.EnsureList(), [cv.string]),
     probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     probatio.Required(ATTR_COMMAND_CLASS): probatio.All(
         probatio.Coerce(int), probatio.In({cc.value: cc.name for cc in CommandClass})

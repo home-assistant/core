@@ -41,7 +41,11 @@ type EVENT_TYPE = Event[dict[str, Any]]
 # the protocol information. Ensure that protocol is in a list otherwise
 # segfault in pilight-daemon, https://github.com/pilight/pilight/issues/296
 RF_CODE_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_PROTOCOL): probatio.All(cv.ensure_list, [cv.string])},
+    {
+        probatio.Required(CONF_PROTOCOL): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        )
+    },
     extra=probatio.ALLOW_EXTRA,
 )
 

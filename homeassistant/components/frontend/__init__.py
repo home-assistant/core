@@ -161,10 +161,10 @@ CONFIG_SCHEMA = probatio.Schema(
                 probatio.Inclusive(CONF_GITHUB_TOKEN, "development_pr"): cv.string,
                 probatio.Optional(CONF_THEMES): probatio.All(dict, _validate_themes),
                 probatio.Optional(CONF_EXTRA_MODULE_URL): probatio.All(
-                    cv.ensure_list, [cv.string]
+                    probatio.EnsureList(), [cv.string]
                 ),
                 probatio.Optional(CONF_EXTRA_JS_URL_ES5): probatio.All(
-                    cv.ensure_list, [cv.string]
+                    probatio.EnsureList(), [cv.string]
                 ),
                 # We no longer use these options.
                 probatio.Optional(CONF_EXTRA_HTML_URL): cv.match_all,
@@ -947,7 +947,7 @@ class ManifestJSONView(HomeAssistantView):
         probatio.Required("category"): probatio.In(
             {"conditions", "entity", "entity_component", "services", "triggers"}
         ),
-        probatio.Optional("integration"): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional("integration"): probatio.All(probatio.EnsureList(), [str]),
     }
 )
 @websocket_api.async_response
@@ -1023,7 +1023,7 @@ def websocket_get_themes(
         "type": "frontend/get_translations",
         probatio.Required("language"): str,
         probatio.Required("category"): str,
-        probatio.Optional("integration"): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional("integration"): probatio.All(probatio.EnsureList(), [str]),
         probatio.Optional("config_flow"): bool,
     }
 )

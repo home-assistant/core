@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from homeassistant.components.collection_image.const import DOMAIN
 from homeassistant.components.collection_image.image import CollectionImageImageEntity
 from homeassistant.components.collection_image.services import (
@@ -9,11 +11,12 @@ from homeassistant.components.collection_image.services import (
     CollectionImageServiceArgument,
 )
 from homeassistant.components.media_source import PlayMedia
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import MediaSourceMocks, MediaSourceState
-from .const import DEFAULT_ENTITY_ID, MOCK_MEDIA_DIR_URI_1
+from .const import DEFAULT_ENTITY_ID, MOCK_MEDIA_DIR_URI_1, MOCK_MEDIA_IMAGE_URI_2
 from .helpers import directory, image
 
 from tests.common import Mock, MockConfigEntry
@@ -176,12 +179,13 @@ async def test_navigation(
 
     # Now there are no images, go to unavailable
     media_source_state.browse_results = {MOCK_MEDIA_DIR_URI_1: directory("My pictures")}
-    await hass.services.async_call(
-        DOMAIN,
-        CollectionImageService.SELECT_NEXT,
-        data,
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError, match="No image files were found"):
+        await hass.services.async_call(
+            DOMAIN,
+            CollectionImageService.SELECT_NEXT,
+            data,
+            blocking=True,
+        )
 
     state = hass.states.get(DEFAULT_ENTITY_ID)
     assert state and state.state == STATE_UNAVAILABLE
@@ -214,11 +218,72 @@ async def test_first_unavailable(
     assert state and state.state != STATE_UNAVAILABLE
 
     media_source_state.browse_results = {MOCK_MEDIA_DIR_URI_1: directory("My pictures")}
-    await hass.services.async_call(
-        DOMAIN,
-        CollectionImageService.SELECT_FIRST,
-        {ATTR_ENTITY_ID: DEFAULT_ENTITY_ID},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError, match="No image files were found"):
+        await hass.services.async_call(
+            DOMAIN,
+            CollectionImageService.SELECT_FIRST,
+            {ATTR_ENTITY_ID: DEFAULT_ENTITY_ID},
+            blocking=True,
+        )
     state = hass.states.get(DEFAULT_ENTITY_ID)
     assert state and state.state == STATE_UNAVAILABLE
+
+
+async def test_select_image(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_media_source: MediaSourceMocks,
+) -> None:
+    """Test that select_image updates the entity with the selected image."""
+    await _setup_integration(hass, config_entry)
+
+    await hass.services.async_call(
+        DOMAIN,
+        CollectionImageService.SELECT_IMAGE,
+        {
+            ATTR_ENTITY_ID: DEFAULT_ENTITY_ID,
+            CollectionImageServiceArgument.IMAGE: {
+                "media_content_id": MOCK_MEDIA_IMAGE_URI_2,
+                "media_content_type": "image/png",
+            },
+        },
+        blocking=True,
+    )
+
+    args, _kwargs = mock_media_source.resolve.call_args
+    assert args[1] == MOCK_MEDIA_IMAGE_URI_2
+    state = hass.states.get(DEFAULT_ENTITY_ID)
+    assert state and state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+
+
+async def test_select_image_invalid_media_type(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    media_source_state: MediaSourceState,
+    mock_media_source: MediaSourceMocks,
+) -> None:
+    """Test that select_image rejects media that is not an image."""
+    media_source_state.resolve_results[MOCK_MEDIA_IMAGE_URI_2] = PlayMedia(
+        url="",
+        mime_type="audio/mpeg",
+    )
+    await _setup_integration(hass, config_entry)
+
+    with pytest.raises(HomeAssistantError, match="which is not an image"):
+        await hass.services.async_call(
+            DOMAIN,
+            CollectionImageService.SELECT_IMAGE,
+            {
+                ATTR_ENTITY_ID: DEFAULT_ENTITY_ID,
+                CollectionImageServiceArgument.IMAGE: {
+                    "media_content_id": MOCK_MEDIA_IMAGE_URI_2,
+                    "media_content_type": "image/png",
+                },
+            },
+            blocking=True,
+        )
+
+    args, _kwargs = mock_media_source.resolve.call_args
+    assert args[1] == MOCK_MEDIA_IMAGE_URI_2
+    state = hass.states.get(DEFAULT_ENTITY_ID)
+    assert state and state.state == STATE_UNKNOWN

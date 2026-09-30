@@ -24,7 +24,7 @@ EVENT_IDTECK_PROX_KEYCARD = "idteck_prox_keycard"
 CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 probatio.Schema(
                     {

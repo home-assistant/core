@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_TOKEN): cv.string,
         probatio.Optional(CONF_EXTRA_PROJECTS, default=[]): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             probatio.Schema(
                 [
                     probatio.Schema(
@@ -66,12 +66,14 @@ PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
                             probatio.Optional(
                                 CONF_PROJECT_WHITELIST, default=[]
                             ): probatio.All(
-                                cv.ensure_list,
+                                probatio.EnsureList(),
                                 [probatio.All(cv.string, probatio.Lower)],
                             ),
                             probatio.Optional(
                                 CONF_PROJECT_LABEL_WHITELIST, default=[]
-                            ): probatio.All(cv.ensure_list, [probatio.All(cv.string)]),
+                            ): probatio.All(
+                                probatio.EnsureList(), [probatio.All(cv.string)]
+                            ),
                         }
                     )
                 ]
@@ -518,10 +520,15 @@ class TodoistProjectData:
             start = parse_due_date(task.due)
             if start is None:
                 continue
+            duration = (
+                timedelta(minutes=30)
+                if isinstance(start, datetime)
+                else timedelta(days=1)
+            )
             event = CalendarEvent(
                 summary=task.content,
                 start=start,
-                end=start + timedelta(days=1),
+                end=start + duration,
             )
             if (
                 event.start_datetime_local is not None
@@ -530,7 +537,7 @@ class TodoistProjectData:
                 continue
             if (
                 event.end_datetime_local is not None
-                and event.end_datetime_local < start_date
+                and event.end_datetime_local <= start_date
             ):
                 continue
             events.append(event)

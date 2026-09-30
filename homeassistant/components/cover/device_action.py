@@ -22,7 +22,8 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import ATTR_POSITION, ATTR_TILT_POSITION, DOMAIN, CoverEntityFeature
+from . import ATTR_POSITION, ATTR_TILT_POSITION, CoverEntityFeature
+from .const import DOMAIN
 
 CMD_ACTION_TYPES = {"open", "close", "stop", "open_tilt", "close_tilt"}
 POSITION_ACTION_TYPES = {"set_position", "set_tilt_position"}
