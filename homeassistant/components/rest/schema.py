@@ -360,8 +360,8 @@ def _SUBENTRY_FLOW_SCHEMA(rest_data: str | None) -> probatio.Schema:
     return probatio.Schema(
         {
             probatio.Optional(CONF_NAME): _RenderingTemplateSelector(),
-            probatio.Optional(CONF_ICON): _RenderingTemplateSelector(),
-            probatio.Optional(CONF_PICTURE): _RenderingTemplateSelector(),
+            probatio.Optional(CONF_ICON): _RenderingTemplateSelector(rest_data),
+            probatio.Optional(CONF_PICTURE): _RenderingTemplateSelector(rest_data),
             probatio.Required(CONF_REST_DATA): section(
                 probatio.Schema(
                     {
@@ -384,9 +384,10 @@ def _SUBENTRY_FLOW_SCHEMA(rest_data: str | None) -> probatio.Schema:
     )
 
 
-_AVAILABILITY_SCHEMA = {
-    probatio.Optional(CONF_AVAILABILITY): _RenderingTemplateSelector()
-}
+def _AVAILABILITY_SCHEMA(rest_data: str | None) -> probatio.Schema:
+    return probatio.Schema(
+        {probatio.Optional(CONF_AVAILABILITY): _RenderingTemplateSelector(rest_data)}
+    )
 
 
 def BINARY_SENSOR_SUBENTRY_FLOW_SCHEMA(rest_data: str | None) -> probatio.Schema:
@@ -401,12 +402,12 @@ def BINARY_SENSOR_SUBENTRY_FLOW_SCHEMA(rest_data: str | None) -> probatio.Schema
                 ),
             }
         )
-        .extend(_AVAILABILITY_SCHEMA)
+        .extend(_AVAILABILITY_SCHEMA(rest_data))
     )
 
 
 def SENSOR_SUBENTRY_FLOW_SCHEMA(rest_data: str | None) -> probatio.Schema:
-    """Generate the binary sensor subentry schema."""
+    """Generate the sensor subentry schema."""
 
     return (
         _SUBENTRY_FLOW_SCHEMA(rest_data)
@@ -451,5 +452,5 @@ def SENSOR_SUBENTRY_FLOW_SCHEMA(rest_data: str | None) -> probatio.Schema:
                 ),
             }
         )
-        .extend(_AVAILABILITY_SCHEMA)
+        .extend(_AVAILABILITY_SCHEMA(rest_data))
     )

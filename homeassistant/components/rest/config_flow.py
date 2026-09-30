@@ -331,7 +331,7 @@ class RestSubentryFlow(ConfigSubentryFlow):
         if len(entry.subentries) == 0:
             await entry.runtime_data.async_refresh()
         rest_data = None
-        if entry.runtime_data.rest.data is None:
+        if not entry.runtime_data.last_update_success:
             ex = cast(UpdateFailed, entry.runtime_data.last_exception)
             return self.async_abort(
                 reason=ex.translation_key or "endpoint_error",

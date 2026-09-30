@@ -1,6 +1,5 @@
 {
   "common": {
-    "abort_endpoint_error": "Error communicating with resource: {endpoint_error_message}. Unable to create entity until the resource is available.",
     "availability_description": "Defines a template to get the `available` state of the entity, see [Template integration documentation]({docs_url_availability}). If omitted will default to `available` if the last resource update was successful.",
     "availability_section": "Availability Options",
     "config_entry_not_loaded": "The configuration entry for this resource is not loaded, unable to create an entity until the entry is loaded.",
@@ -93,8 +92,8 @@
   "config_subentries": {
     "binary_sensor": {
       "abort": {
-        "abort_endpoint_error": "[%key:component::rest::common::abort_endpoint_error%]",
         "config_entry_not_loaded": "[%key:component::rest::common::config_entry_not_loaded%]",
+        "endpoint_error": "[%key:component::rest::common::endpoint_error%]",
         "timeout_error": "[%key:component::rest::common::timeout_error%]",
         "xml_parse_error": "[%key:component::rest::common::xml_parse_error%]"
       },
@@ -142,8 +141,8 @@
     },
     "sensor": {
       "abort": {
-        "abort_endpoint_error": "[%key:component::rest::common::abort_endpoint_error%]",
         "config_entry_not_loaded": "[%key:component::rest::common::config_entry_not_loaded%]",
+        "endpoint_error": "[%key:component::rest::common::endpoint_error%]",
         "timeout_error": "[%key:component::rest::common::timeout_error%]",
         "xml_parse_error": "[%key:component::rest::common::xml_parse_error%]"
       },
