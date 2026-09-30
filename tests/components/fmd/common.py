@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.fmd.const import DOMAIN
+from homeassistant.const import CONF_ID, CONF_URL
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -13,7 +14,6 @@ def get_mock_config_entry() -> MockConfigEntry:
 
     Returns a MockConfigEntry that can be modified before being added to hass.
     """
-    from homeassistant.const import CONF_ID, CONF_URL
 
     return MockConfigEntry(
         version=1,

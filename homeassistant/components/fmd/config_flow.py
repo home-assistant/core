@@ -73,65 +73,6 @@ def _normalize_artifacts(artifacts: Any) -> dict[str, Any]:
 class FMDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for FMD."""
 
-    async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle re-authentication with new credentials."""
-        errors: dict[str, str] = {}
-        entry_id = self.context.get("entry_id")
-        entry = self.hass.config_entries.async_get_entry(entry_id) if entry_id else None
-        entry_data = entry.data if entry else {}
-
-        if user_input is not None:
-            try:
-                # Authenticate and get artifacts (password-free storage)
-                artifacts = await authenticate_and_get_artifacts(
-                    user_input["url"],
-                    user_input["id"],
-                    user_input["password"],
-                )
-
-                artifacts = _normalize_artifacts(artifacts)
-
-                # Build new entry data with artifacts
-                new_data = {
-                    "url": user_input["url"],
-                    "id": user_input["id"],
-                    "artifacts": artifacts,
-                    # Preserve other config values
-                    "polling_interval": entry_data.get(
-                        "polling_interval", DEFAULT_POLLING_INTERVAL
-                    ),
-                    "allow_inaccurate_locations": entry_data.get(
-                        "allow_inaccurate_locations", False
-                    ),
-                    CONF_USE_IMPERIAL: entry_data.get(CONF_USE_IMPERIAL, False),
-                }
-
-                # Update the config entry with new artifacts (password removed)
-                if entry:
-                    self.hass.config_entries.async_update_entry(entry, data=new_data)
-                return self.async_abort(reason="reauth_successful")
-            except Exception:  # noqa: BLE001
-                errors["base"] = "cannot_connect"
-
-        data_schema = probatio.Schema(
-            {
-                probatio.Required("url", default=entry_data.get("url", "")): str,
-                probatio.Required("id", default=entry_data.get("id", "")): str,
-                probatio.Required("password"): str,
-            }
-        )
-
-        return self.async_show_form(
-            step_id="reauth",
-            data_schema=data_schema,
-            errors=errors,
-        )
-
-    VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:

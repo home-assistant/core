@@ -1,6 +1,8 @@
 """Fixtures for FMD integration tests."""
 
 from collections.abc import Generator
+from datetime import datetime
+import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -54,7 +56,6 @@ def mock_fmd_api():
     mock_device.get_picture_blobs = AsyncMock(return_value=[])
 
     # Mock PhotoResult for decode_picture
-    from datetime import datetime
 
     mock_photo_result = MagicMock()
     mock_photo_result.data = b"fake_image_data"
@@ -74,7 +75,6 @@ def mock_fmd_api():
     # Use side_effect to handle both the test dict inputs and default behavior
     def decrypt_blob_side_effect(blob_input):
         """Decrypt blob - if it's a dict (from test), return it as JSON bytes."""
-        import json
 
         if isinstance(blob_input, dict):
             # Test is passing a dict directly, convert it to JSON bytes
@@ -105,12 +105,6 @@ def mock_fmd_api():
 
     # Mock Device class constructor to return our mock_device
     # When called as Device(client, id), it should return mock_device
-    def device_constructor_side_effect(*args, **kwargs):
-        """Return the pre-configured mock_device regardless of arguments."""
-        return mock_device
-
-    device_class_mock = MagicMock(side_effect=device_constructor_side_effect)
-
     # Patch where FmdClient is USED (custom_components.fmd), not where it's defined (fmd_api)
     with (
         patch("homeassistant.components.fmd.FmdClient.create", create_mock),
@@ -123,7 +117,6 @@ def mock_fmd_api():
             "homeassistant.components.fmd.config_flow.FmdClient.from_auth_artifacts",
             from_artifacts_mock,
         ),
-        patch("homeassistant.components.fmd.button.Device", device_class_mock),
     ):
         # Yield a mock that has .create and .from_auth_artifacts attributes for test assertions
         mock_api_class = MagicMock()

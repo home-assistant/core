@@ -31,15 +31,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [
-    Platform.DEVICE_TRACKER,
-    Platform.NUMBER,
-    Platform.BUTTON,
-    Platform.SWITCH,
-    Platform.SENSOR,
-    Platform.SELECT,
-    Platform.TEXT,
-]
+PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
 
 
 @dataclass
@@ -49,12 +41,6 @@ class FmdRuntimeData:
     api: FmdClient
     device_info: DeviceInfo
     tracker: Any = None
-    photo_count_sensor: Any = None
-    photo_auto_cleanup_switch: Any = None
-    wipe_safety_switch: Any = None
-    max_photos_number: Any = None
-    wipe_pin_text: Any = None
-    lock_message_text: Any = None
 
 
 type FmdConfigEntry = ConfigEntry[FmdRuntimeData]

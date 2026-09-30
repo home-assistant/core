@@ -20,20 +20,6 @@
           "allow_inaccurate_locations": "Allow location updates even with poor accuracy",
           "use_imperial": "Convert distance/speed to imperial units (feet, miles, mph)"
         }
-      },
-      "reauth": {
-        "title": "Reauthenticate FMD",
-        "description": "Re-authenticate with your FMD server. New artifacts will be stored and the password removed.",
-        "data": {
-          "url": "[%key:component::fmd::config::step::user::data::url%]",
-          "id": "[%key:component::fmd::config::step::user::data::id%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "url": "[%key:component::fmd::config::step::user::data_description::url%]",
-          "id": "[%key:component::fmd::config::step::user::data_description::id%]",
-          "password": "Your FMD account password"
-        }
       }
     },
     "error": {
@@ -41,8 +27,7 @@
       "unknown": "An unexpected error occurred"
     },
     "abort": {
-      "already_configured": "FMD is already configured for this account ID",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "FMD is already configured for this account ID"
     }
   },
   "entity": {

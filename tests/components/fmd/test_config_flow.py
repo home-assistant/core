@@ -14,85 +14,9 @@ from homeassistant.components.fmd.const import DEFAULT_POLLING_INTERVAL, DOMAIN
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_URL
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
-
 
 @pytest.mark.asyncio
-async def test_reauth_flow_success(hass: HomeAssistant) -> None:
-    """Test the reauthentication flow succeeds and updates the entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"url": "http://test", "id": "user", "password": "oldpass"},
-    )
-    entry.add_to_hass(hass)
-    entry_id = entry.entry_id
-
-    # Patch new artifact auth helper
-    dummy_artifacts = {
-        "base_url": "http://test",
-        "fmd_id": "user",
-        "access_token": "token123",
-        "private_key": "KEY",
-        "password_hash": "HASH",
-        "session_duration": 3600,
-        "token_issued_at": 1234567890.0,
-    }
-    with patch(
-        "homeassistant.components.fmd.config_flow.authenticate_and_get_artifacts",
-        return_value=dummy_artifacts,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth", "entry_id": entry_id}
-        )
-        assert result["type"] == "form"
-        assert result["step_id"] == "reauth"
-
-        # Submit new credentials
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "url": "http://test",
-                "id": "user",
-                "password": "newpass",
-            },
-        )
-        assert result2["type"] == "abort"
-        assert result2["reason"] == "reauth_successful"
-
-
 @pytest.mark.asyncio
-async def test_reauth_flow_failure(hass: HomeAssistant) -> None:
-    """Test the reauthentication flow fails with invalid credentials."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"url": "http://test", "id": "user", "password": "oldpass"},
-    )
-    entry.add_to_hass(hass)
-    entry_id = entry.entry_id
-
-    with patch(
-        "homeassistant.components.fmd.config_flow.authenticate_and_get_artifacts",
-        side_effect=Exception("fail"),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth", "entry_id": entry_id}
-        )
-        assert result["type"] == "form"
-        assert result["step_id"] == "reauth"
-
-        # Submit invalid credentials
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "url": "http://test",
-                "id": "user",
-                "password": "badpass",
-            },
-        )
-        assert result2["type"] == "form"
-        assert result2["errors"]["base"] == "cannot_connect"
-
-
 async def test_form(hass: HomeAssistant, mock_fmd_api: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(

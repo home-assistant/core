@@ -13,6 +13,7 @@ from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_URL
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+from tests.components.fmd.common import setup_integration
 
 
 async def test_setup_entry(
@@ -168,7 +169,7 @@ async def test_setup_entry_missing_credentials_raises_config_entry_not_ready(
 
 
 @pytest.mark.parametrize(
-    "exc, expected_exception",
+    ("exc", "expected_exception"),
     [
         (AuthenticationError("bad"), "auth"),
         (OperationError("temporary"), "retry"),
@@ -256,13 +257,8 @@ async def test_artifact_export_failure_during_password_migration_logs_warning(
     mock_device.lock = AsyncMock()
     mock_device.decode_picture = AsyncMock()
     mock_device.get_picture_blobs = AsyncMock(return_value=[])
-    device_class_mock = MagicMock(return_value=mock_device)
-
     # Mock the FMD API client
-    with (
-        patch("homeassistant.components.fmd.FmdClient.create") as mock_create,
-        patch("homeassistant.components.fmd.button.Device", device_class_mock),
-    ):
+    with patch("homeassistant.components.fmd.FmdClient.create") as mock_create:
         mock_api = AsyncMock()
         mock_create.return_value = mock_api
 
@@ -327,12 +323,7 @@ async def test_artifact_export_generic_exception_during_migration(
     mock_device.lock = AsyncMock()
     mock_device.decode_picture = AsyncMock()
     mock_device.get_picture_blobs = AsyncMock(return_value=[])
-    device_class_mock = MagicMock(return_value=mock_device)
-
-    with (
-        patch("homeassistant.components.fmd.FmdClient.create") as mock_create,
-        patch("homeassistant.components.fmd.button.Device", device_class_mock),
-    ):
+    with patch("homeassistant.components.fmd.FmdClient.create") as mock_create:
         mock_api = AsyncMock()
         mock_create.return_value = mock_api
         mock_api.export_auth_artifacts = AsyncMock(
@@ -548,17 +539,15 @@ async def test_config_entry_unload_cleans_up_entities_and_data(
     hass: HomeAssistant,
     mock_fmd_api: AsyncMock,
 ) -> None:
-    """Test unloading a config entry cleans up entities and hass.data."""
-    from tests.components.fmd.common import setup_integration
+    """Test unloading a config entry cleans up entities."""
 
     await setup_integration(hass, mock_fmd_api)
 
     entry = hass.config_entries.async_entries("fmd")[0]
     entry_id = entry.entry_id
 
-    # Confirm entities exist before unload
-    assert hass.states.get("switch.fmd_test_user_photo_auto_cleanup") is not None
-    assert hass.states.get("sensor.fmd_test_user_photo_count") is not None
+    # Confirm the tracker exists before unload
+    assert hass.states.get("device_tracker.fmd_test_user") is not None
     assert entry.runtime_data.api is not None
 
     # Unload the config entry
@@ -566,13 +555,8 @@ async def test_config_entry_unload_cleans_up_entities_and_data(
     await hass.async_block_till_done()
     assert result is True
 
-    # Entities should be removed or unavailable (restored state)
-    state = hass.states.get("switch.fmd_test_user_photo_auto_cleanup")
-    assert state is None or (
-        state.state == "unavailable" and state.attributes.get("restored")
-    )
-
-    state = hass.states.get("sensor.fmd_test_user_photo_count")
+    # Tracker should be removed or unavailable (restored state)
+    state = hass.states.get("device_tracker.fmd_test_user")
     assert state is None or (
         state.state == "unavailable" and state.attributes.get("restored")
     )

@@ -1,6 +1,7 @@
 """Test FMD device tracker location logic."""
 
 import contextlib
+import json
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.fmd.const import DOMAIN
@@ -44,7 +45,6 @@ async def test_device_tracker_location_filtering(
     mock_fmd_api: AsyncMock,
 ) -> None:
     """Test location accuracy filtering."""
-    import json
 
     # Create mock encrypted blobs for two locations
     beacondb_data = {
@@ -500,8 +500,6 @@ async def test_empty_blob_warning_then_next_blob_used(
     # Get the tracker
     entry = hass.config_entries.async_entries("fmd")[0]
     tracker = entry.runtime_data.tracker
-
-    import json
 
     # First blob is empty, second is valid JSON string
     valid_blob = json.dumps(

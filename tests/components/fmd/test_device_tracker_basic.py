@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from fmd_api import AuthenticationError, FmdApiException, OperationError
 import pytest
 
 from homeassistant.components.device_tracker import SourceType
@@ -145,7 +146,6 @@ async def test_device_tracker_config_entry_not_ready(
     hass: HomeAssistant,
 ) -> None:
     """Test ConfigEntryNotReady on FmdClient.create failure."""
-    from unittest.mock import patch
 
     # Mock FmdClient.create to raise an exception
     async def mock_create_error(*args, **kwargs):
@@ -202,7 +202,6 @@ async def test_device_tracker_authentication_error(
     mock_fmd_api: AsyncMock,
 ) -> None:
     """Test AuthenticationError raises ConfigEntryAuthFailed."""
-    from fmd_api import AuthenticationError
 
     mock_fmd_api.create.return_value.get_locations.side_effect = AuthenticationError(
         "auth failed"
@@ -221,7 +220,6 @@ async def test_device_tracker_operation_error(
     mock_fmd_api: AsyncMock,
 ) -> None:
     """Test OperationError is handled gracefully."""
-    from fmd_api import OperationError
 
     mock_fmd_api.create.return_value.get_locations.side_effect = OperationError(
         "connection failed"
@@ -243,7 +241,6 @@ async def test_device_tracker_fmd_api_error(
     mock_fmd_api: AsyncMock,
 ) -> None:
     """Test FmdApiException is handled gracefully."""
-    from fmd_api import FmdApiException
 
     mock_fmd_api.create.return_value.get_locations.side_effect = FmdApiException(
         "API failed"
