@@ -1306,21 +1306,15 @@ class EntityPlatform:
 
         Each entity's update runs as its own task, tracked in
         `self._polling_tasks`. If a previous cycle's task for an entity is
-        still running when this cycle starts, that single entity is skipped
-        for this cycle (it keeps running in the background and is retried
-        once it finishes) instead of blocking or skipping every other
-        entity on the platform.
+        still running, only that entity is skipped this cycle (it keeps
+        running in the background and is retried once it finishes); every
+        other entity on the platform is still polled normally.
 
-        The polling timer reschedules itself unconditionally every
-        scan_interval, so this method can genuinely be called again while a
-        previous call for the same platform is still running (e.g. a
-        platform whose entities collectively take longer than
-        scan_interval to poll). This is intentional and relies on
-        Entity.async_device_update's own `_update_staged` guard to make a
-        second concurrent call for the same entity a no-op rather than
-        polling it twice at once; a stale outer cycle must be allowed to be
-        "overtaken" by a newer one for the recovery above to work when an
-        entity's update never returns at all.
+        This method can be called again while a previous call for the same
+        platform is still running (e.g. updates take longer than
+        scan_interval). `Entity.async_device_update`'s `_update_staged`
+        guard makes a second concurrent call for the same entity a no-op,
+        so a stale outer call can safely be "overtaken" by a newer one.
 
         This method must be run in the event loop.
         """
@@ -1346,12 +1340,10 @@ class EntityPlatform:
 
         if stale_entity_ids:
             # One or more entities are still running an update from a
-            # previous cycle. Log it, and if the platform limits concurrency
-            # via a semaphore that is fully exhausted (no free permits) and
-            # other entities are actually waiting for one, give up waiting
-            # on exactly one stale entity's permit so those entities are not
-            # blocked forever by a permit that a hung entity may never
-            # release.
+            # previous cycle. If the platform's concurrency semaphore is
+            # fully exhausted with other entities waiting, give up waiting
+            # on one stale entity's permit so they are not blocked forever
+            # by a permit a hung entity may never release.
             self.logger.warning(
                 "Updating %s %s took longer than the scheduled update interval "
                 "%s for %s; these entities will keep updating in the "
@@ -1367,41 +1359,33 @@ class EntityPlatform:
                 pollable_entities
                 and self.parallel_updates is not None
                 and self.parallel_updates._value == 0  # noqa: SLF001
+                and not any(
+                    getattr(
+                        self.entities.get(entity_id),
+                        "_update_permit_compensated",
+                        False,
+                    )
+                    for entity_id in stale_entity_ids
+                )
             ):
                 for entity_id in stale_entity_ids:
                     entity = self.entities.get(entity_id)
-                    if (
-                        entity is not None
-                        and getattr(entity, "_update_acquired", False)
-                        and not getattr(entity, "_update_permit_compensated", False)
+                    if entity is not None and getattr(
+                        entity, "_update_acquired", False
                     ):
-                        # This entity's own update() has been holding a
-                        # concurrency permit for at least a full scan
-                        # interval with no sign of finishing, and every
-                        # permit on the platform is currently accounted for,
-                        # so nobody else can make any progress at all.
-                        # Rather than swap in a whole new semaphore (which
-                        # would need to separately track every holder and
-                        # waiter, including in-flight service calls made
-                        # through Entity.async_request_call, to avoid
-                        # corrupting permit accounting), give up waiting for
-                        # this one permit and return it to the *same*
-                        # semaphore now. `_update_permit_compensated` tells
-                        # the entity's own `finally` block not to release
-                        # its permit a second time if the update does
-                        # eventually complete.
-                        #
-                        # This deliberately compensates for at most one
-                        # stuck entity per cycle (never more, even if
-                        # several are stale at once) and only when there is
-                        # no spare capacity and genuine pending work: doing
-                        # so necessarily allows one more update to run
-                        # concurrently with this hung one than
-                        # PARALLEL_UPDATES configures, which is unavoidable
-                        # if a permanently hung update should not be able to
-                        # block every other entity forever, but limiting it
-                        # to one at a time, only when actually needed, keeps
-                        # that overrun as small and gradual as possible.
+                        # Return this stuck entity's permit to the *same*
+                        # semaphore rather than swap in a new one (which
+                        # would need to separately re-track every holder
+                        # and waiter, including in-flight
+                        # Entity.async_request_call calls).
+                        # `_update_permit_compensated` stops the entity's
+                        # own `finally` block from double-releasing. The
+                        # `any(...)` check above caps this at one
+                        # outstanding compensated permit per platform: a
+                        # later, different stuck entity is only compensated
+                        # once this one's flag clears (finishes or is
+                        # removed), so the concurrency overrun is bounded
+                        # at a constant +1, never growing with more hangs.
                         entity._update_permit_compensated = True  # noqa: SLF001
                         self.parallel_updates.release()
                         break
@@ -1416,6 +1400,12 @@ class EntityPlatform:
             # own task so a hung entity can be identified and skipped by a
             # later cycle without waiting for it here.
             for entity in pollable_entities:
+                # A newer, independent call may already have started its own
+                # task for this entity while this (now stale) cycle was
+                # stuck awaiting an earlier one; don't overwrite it.
+                existing_task = self._polling_tasks.get(entity)
+                if existing_task is not None and not existing_task.done():
+                    continue
                 task = create_eager_task(
                     entity.async_update_ha_state(True), loop=self.hass.loop
                 )
