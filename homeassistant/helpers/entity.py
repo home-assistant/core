@@ -1164,11 +1164,8 @@ class Entity(
             if entry is None:
                 name = original_name
             else:
-                name = er.async_get_full_entity_name(
-                    self.hass,
-                    entry,
-                    original_name=original_name,
-                    legacy=True,
+                name = er.async_get_legacy_friendly_name(
+                    self.hass, entry, original_name=original_name
                 )
             self._cached_friendly_name = (original_name, name)
 

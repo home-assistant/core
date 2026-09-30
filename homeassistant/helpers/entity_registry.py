@@ -488,7 +488,7 @@ class RegistryEntry:
         if icon is not None:
             attrs[EntityStateAttribute.ICON] = icon
 
-        name = async_get_full_entity_name(hass, self, legacy=True)
+        name = async_get_legacy_friendly_name(hass, self)
         if name:
             attrs[EntityStateAttribute.FRIENDLY_NAME] = name
 
@@ -640,28 +640,17 @@ def _async_get_full_entity_name(
 
 
 @callback
-def async_get_full_entity_name(
+def async_get_legacy_friendly_name(
     hass: HomeAssistant,
     entry: RegistryEntry,
     original_name: str | UndefinedType | None = UNDEFINED,
-    *,
-    legacy: bool = False,
 ) -> str:
-    """Get full entity name for an entry."""
+    """Get the legacy friendly name for an entity entry."""
     original_name_unprefixed: str | UndefinedType | None = UNDEFINED
     if original_name is UNDEFINED or original_name == entry.original_name:
         original_name = entry.original_name
         original_name_unprefixed = entry.original_name_unprefixed
 
-    parts = (
-        (EntityNamePart.DEVICE, EntityNamePart.ENTITY)
-        if legacy
-        else (
-            EntityNamePart.PARENT_DEVICE,
-            EntityNamePart.DEVICE,
-            EntityNamePart.ENTITY,
-        )
-    )
     return _async_get_full_entity_name(
         hass,
         area_id=entry.area_id,
@@ -672,9 +661,34 @@ def async_get_full_entity_name(
         next_name_part=entry.next_name_part,
         original_name=original_name,
         original_name_unprefixed=original_name_unprefixed,
-        parts=parts,
+        parts=(EntityNamePart.DEVICE, EntityNamePart.ENTITY),
         use_legacy_naming=True,
-        use_next_name_part=not legacy,
+        use_next_name_part=False,
+    )
+
+
+@callback
+def _async_get_computed_entity_name_alias(
+    hass: HomeAssistant, entry: RegistryEntry
+) -> str:
+    """Get the computed name for an entity entry."""
+    return _async_get_full_entity_name(
+        hass,
+        area_id=entry.area_id,
+        device_id=entry.device_id,
+        fallback="",
+        has_entity_name=entry.has_entity_name,
+        name=entry.name,
+        next_name_part=entry.next_name_part,
+        original_name=entry.original_name,
+        original_name_unprefixed=entry.original_name_unprefixed,
+        parts=(
+            EntityNamePart.PARENT_DEVICE,
+            EntityNamePart.DEVICE,
+            EntityNamePart.ENTITY,
+        ),
+        use_legacy_naming=True,
+        use_next_name_part=True,
     )
 
 
@@ -702,7 +716,7 @@ def async_get_entity_aliases(
     aliases = []
     for alias in entry_aliases:
         if alias is COMPUTED_NAME:
-            alias = async_get_full_entity_name(hass, entry)
+            alias = _async_get_computed_entity_name_alias(hass, entry)
         aliases.append(alias.strip())
 
     return aliases
