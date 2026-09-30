@@ -5,8 +5,8 @@ import re
 from typing import Any, override
 
 from habluetooth import HaBleakClientWrapper
+import probatio
 from spinev_ble import ADVERTISED_NAME_PATTERN, BleTransport, SpinEvCharger, SpinEvError
-import voluptuous as vol
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -33,9 +33,9 @@ from .coordinator import SpinEvConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_CONNECTION_MODE): SelectSelector(
+        probatio.Required(CONF_CONNECTION_MODE): SelectSelector(
             SelectSelectorConfig(
                 options=[mode.value for mode in ConnectionMode],
                 mode=SelectSelectorMode.LIST,
@@ -167,8 +167,8 @@ class SpinEvConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_ADDRESS): vol.In(self._discovered)}
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_ADDRESS): probatio.In(self._discovered)}
             ),
             errors=errors,
         )
