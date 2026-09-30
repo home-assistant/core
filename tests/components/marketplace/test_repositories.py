@@ -33,6 +33,7 @@ from homeassistant.components.marketplace.exceptions import (
     GitHubAnonymousRateLimitError,
     MarketplaceError,
 )
+from homeassistant.components.marketplace.repositories import REPOSITORY_CLASSES
 from homeassistant.components.marketplace.repositories.base import (
     FileInformation,
     Repository,
@@ -273,31 +274,56 @@ async def test_pending_update(marketplace: MarketplaceManager) -> None:
 @pytest.mark.parametrize(
     ("ref", "category", "releases", "zip_release", "expected"),
     [
-        pytest.param("dummy", "plugin", True, False, True, id="plugin-release"),
-        pytest.param("main", "plugin", True, False, False, id="default-branch"),
-        pytest.param("dummy", "integration", True, False, False, id="wrong-category"),
-        pytest.param("dummy", "theme", True, False, False, id="theme-release"),
-        pytest.param("dummy", "plugin", False, False, False, id="no-releases"),
-        pytest.param("dummy", "plugin", False, True, True, id="zip-release"),
-        pytest.param("main", "plugin", False, True, False, id="zip-release-branch"),
+        pytest.param(
+            "dummy", RepositoryCategory.PLUGIN, True, False, True, id="plugin-release"
+        ),
+        pytest.param(
+            "main", RepositoryCategory.PLUGIN, True, False, False, id="default-branch"
+        ),
+        pytest.param(
+            "dummy",
+            RepositoryCategory.INTEGRATION,
+            True,
+            False,
+            False,
+            id="wrong-category",
+        ),
+        pytest.param(
+            "dummy", RepositoryCategory.THEME, True, False, False, id="theme-release"
+        ),
+        pytest.param(
+            "dummy", RepositoryCategory.PLUGIN, False, False, False, id="no-releases"
+        ),
+        pytest.param(
+            "dummy", RepositoryCategory.PLUGIN, False, True, True, id="zip-release"
+        ),
+        pytest.param(
+            "main",
+            RepositoryCategory.PLUGIN,
+            False,
+            True,
+            False,
+            id="zip-release-branch",
+        ),
     ],
 )
-def test_should_try_releases(
-    mock_repository: Repository,
+async def test_should_try_releases(
+    marketplace: MarketplaceManager,
     ref: str,
-    category: str,
+    category: RepositoryCategory,
     releases: bool,
     zip_release: bool,
     expected: bool,
 ) -> None:
     """Test when the Marketplace looks at releases instead of the repository tree."""
-    mock_repository.ref = ref
-    mock_repository.data.category = category
-    mock_repository.data.releases = releases
-    mock_repository.repository_manifest.zip_release = zip_release
-    mock_repository.repository_manifest.filename = "test.zip" if zip_release else None
+    repository = REPOSITORY_CLASSES[category](marketplace, "test/test")
+    repository.ref = ref
+    repository.data.default_branch = "main"
+    repository.data.releases = releases
+    repository.repository_manifest.zip_release = zip_release
+    repository.repository_manifest.filename = "test.zip" if zip_release else None
 
-    assert mock_repository.should_try_releases is expected
+    assert repository.should_try_releases is expected
 
 
 def test_gather_files_to_download(mock_repository: Repository) -> None:

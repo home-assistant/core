@@ -132,6 +132,29 @@ class IntegrationRepository(Repository):
         )
 
     @override
+    def _content_name(self) -> str | None:
+        """Return the name in the manifest.json of the integration."""
+        if self.data.manifest_name is not None:
+            return self.data.manifest_name
+        if "name" in self.integration_manifest:
+            return str(self.integration_manifest["name"])
+        return None
+
+    @override
+    def _category_directory(self) -> str | None:
+        """Return the custom_components folder."""
+        return f"{self.marketplace.core.config_path}/custom_components"
+
+    @override
+    async def remove_local_directory(self) -> bool:
+        """Remove the integration, its folder is named by its domain."""
+        if not self.data.domain:
+            self.logger.error("%s Missing domain", self.string)
+            return False
+
+        return await super().remove_local_directory()
+
+    @override
     async def async_pre_install(self) -> None:
         """Run pre install steps."""
         if not self.data.domain:

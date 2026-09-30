@@ -30,12 +30,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
 
 from ..const import DOMAIN, MAX_ARCHIVE_MEMBERS, MAX_DOWNLOAD_SIZE, RELEASE_LIMIT
-from ..enums import (
-    DisabledReason,
-    MarketplaceSignal,
-    RepositoryCategory,
-    RepositoryFile,
-)
+from ..enums import DisabledReason, MarketplaceSignal, RepositoryFile
 from ..exceptions import (
     CatalogContentUnresolvedError,
     GitHubAnonymousRateLimitError,
@@ -60,11 +55,7 @@ from ..utils.file_system import (
 from ..utils.logger import LOGGER
 from ..utils.path import entry_in_directory, is_safe, resolve_in_directory
 from ..utils.queue_manager import QueueManager
-from ..utils.tree import (
-    tree_entry_directory,
-    tree_entry_filename,
-    tree_entry_is_directory,
-)
+from ..utils.tree import tree_entry_filename, tree_entry_is_directory
 from ..utils.url import (
     github_archive,
     github_commit_archive,
@@ -432,6 +423,8 @@ class Repository:
     # otherwise, and whether it is a single file
     remote_path: str | None = None
     single_file: bool = False
+    # Only dashboard resources ship as release assets
+    ships_release_assets: bool = False
 
     def __init__(self, marketplace: MarketplaceManager) -> None:
         """Initialize the repository."""
@@ -478,11 +471,8 @@ class Repository:
         if self.repository_manifest.name is not None:
             return self.repository_manifest.name
 
-        if self.data.category == "integration":
-            if self.data.manifest_name is not None:
-                return self.data.manifest_name
-            if "name" in self.integration_manifest:
-                return str(self.integration_manifest["name"])
+        if (content_name := self._content_name()) is not None:
+            return content_name
 
         return (
             self.data.full_name.rsplit("/", maxsplit=1)[-1]
@@ -490,6 +480,10 @@ class Repository:
             .replace("_", " ")
             .title()
         )
+
+    def _content_name(self) -> str | None:
+        """Return the name the installed content gives itself, if any."""
+        return None
 
     @property
     def display_status(self) -> str:
@@ -582,8 +576,7 @@ class Repository:
         if manifest.zip_release and (manifest.filename or "").endswith(".zip"):
             return True
 
-        # Only dashboard resources ship as release assets
-        return self.data.category == "plugin" and bool(self.data.releases)
+        return self.ships_release_assets and bool(self.data.releases)
 
     async def validate_repository(self) -> bool:
         """Check the repository has content this category installs."""
@@ -946,14 +939,11 @@ class Repository:
         """Remove the installed content, return if that worked."""
 
         local_path = self.content.path.local
-        if self.data.category == "integration" and not self.data.domain:
-            self.logger.error("%s Missing domain", self.string)
-            return False
 
         def _checked_path() -> str:
             """Return the path to remove, resolving it touches the disk."""
             checked = local_path
-            if self.data.category == "template":
+            if self.single_file:
                 checked = str(entry_in_directory(checked, self.data.file_name))
 
             # The folder is named by remote input, removal stays inside its category
@@ -976,7 +966,7 @@ class Repository:
                     return False
                 self.logger.debug("%s Removing %s", self.string, local_path)
 
-                if self.data.category == "template":
+                if self.single_file:
                     await async_remove(self.marketplace.hass, local_path)
                 else:
                     await async_remove_directory(self.marketplace.hass, local_path)
@@ -999,16 +989,7 @@ class Repository:
 
     def _category_directory(self) -> str | None:
         """Return the folder the installs of this category are written to."""
-        configuration = self.marketplace.configuration
-        directories: dict[str, str] = {
-            RepositoryCategory.INTEGRATION: "custom_components",
-            RepositoryCategory.PLUGIN: configuration.plugin_path,
-            RepositoryCategory.THEME: configuration.theme_path,
-        }
-
-        if (directory := directories.get(self.data.category)) is None:
-            return None
-        return f"{self.marketplace.core.config_path}/{directory}"
+        return None
 
     async def async_pre_registration(self) -> None:
         """Run pre registration steps."""
@@ -1541,12 +1522,14 @@ class Repository:
 
         return self.gather_tree_files_to_download()
 
+    def _tree_of_the_content(self) -> list[GitHubGitTreeEntryModel]:
+        """Return the part of the tree the content is looked for in."""
+        return self.tree
+
     def gather_tree_files_to_download(self) -> list[FileInformation]:
         """Return the files of the repository tree to be downloaded."""
         files: list[FileInformation] = []
         tree = self.tree
-        category = self.data.category
-        remotelocation = self.content.path.remote
 
         if self.content.single:
             files.extend(
@@ -1556,32 +1539,7 @@ class Repository:
             )
             return files
 
-        if category == "plugin":
-            for entry in tree:
-                directory = tree_entry_directory(entry)
-                filename = tree_entry_filename(entry)
-                if directory in ["", "dist"]:
-                    if remotelocation == "dist" and not filename.startswith("dist"):
-                        continue
-                    if not remotelocation:
-                        if not filename.endswith(".js"):
-                            continue
-                        if directory != "":
-                            continue
-                    if not tree_entry_is_directory(entry):
-                        files.append(self._tree_file_information(entry))
-            if files:
-                return files
-
-        # The whole root is not the theme, only the file validation found in it
-        if (
-            category == "theme"
-            and self.repository_manifest.content_in_root
-            and not self.repository_manifest.filename
-        ):
-            tree = [entry for entry in tree if entry.path == self.data.file_name]
-
-        for entry in tree:
+        for entry in self._tree_of_the_content():
             if tree_entry_is_directory(entry):
                 continue
             if _path_below(entry.path, self.content.path.remote) is not None:
@@ -1801,14 +1759,9 @@ class Repository:
                 if asset.name == self.data.file_name:
                     return asset
 
-        if self.data.category == "plugin":
-            valid_filenames = (
-                f"{self.data.name}.js",
-                f"{self.data.name}-bundle.js",
-                f"{self.data.name}.umd.js",
-            )
+        if asset_names := self._release_asset_names():
             for asset in assets:
-                if asset.name in valid_filenames:
+                if asset.name in asset_names:
                     return asset
 
         if target_filename := self.repository_manifest.filename:
@@ -1817,6 +1770,10 @@ class Repository:
                     return asset
 
         return assets[0] if assets else None
+
+    def _release_asset_names(self) -> tuple[str, ...]:
+        """Return the names the release asset with the content can have."""
+        return ()
 
     def _branch_for_newest_commit(self, version: str) -> str:
         """Return the default branch when asked for the newest commit.

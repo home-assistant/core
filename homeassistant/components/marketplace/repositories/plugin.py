@@ -19,6 +19,11 @@ from ..const import (
 from ..enums import RepositoryCategory
 from ..exceptions import CatalogContentUnresolvedError, MarketplaceError
 from ..utils.decorator import concurrent
+from ..utils.tree import (
+    tree_entry_directory,
+    tree_entry_filename,
+    tree_entry_is_directory,
+)
 from ..utils.url import github_release_asset, ref_version
 from .base import FileInformation, Repository
 
@@ -28,6 +33,8 @@ if TYPE_CHECKING:
 
 class PluginRepository(Repository):
     """Dashboard resource repository."""
+
+    ships_release_assets = True
 
     def __init__(self, marketplace: MarketplaceManager, full_name: str) -> None:
         """Initialize."""
@@ -47,6 +54,46 @@ class PluginRepository(Repository):
     def directory(self) -> str:
         """Return the folder of the card, the one it was installed to."""
         return self.data.directory or self.data.full_name.rsplit("/", maxsplit=1)[-1]
+
+    @override
+    def _category_directory(self) -> str | None:
+        """Return the folder dashboard resources are installed to."""
+        configuration = self.marketplace.configuration
+        return f"{self.marketplace.core.config_path}/{configuration.plugin_path}"
+
+    @override
+    def _release_asset_names(self) -> tuple[str, ...]:
+        """Return the names a release asset of the dashboard resource can have."""
+        return (
+            f"{self.data.name}.js",
+            f"{self.data.name}-bundle.js",
+            f"{self.data.name}.umd.js",
+        )
+
+    @override
+    def gather_tree_files_to_download(self) -> list[FileInformation]:
+        """Return the dashboard resource files, from the root or the dist folder."""
+        if not self.content.single and (files := self._dashboard_resource_files()):
+            return files
+
+        return super().gather_tree_files_to_download()
+
+    def _dashboard_resource_files(self) -> list[FileInformation]:
+        """Return the files in the root or the dist folder that make the resource."""
+        remote = self.content.path.remote
+        files: list[FileInformation] = []
+        for entry in self.tree:
+            directory = tree_entry_directory(entry)
+            filename = tree_entry_filename(entry)
+            if directory not in ("", "dist") or tree_entry_is_directory(entry):
+                continue
+            if remote == "dist" and not filename.startswith("dist"):
+                continue
+            if not remote and (not filename.endswith(".js") or directory != ""):
+                continue
+
+            files.append(self._tree_file_information(entry))
+        return files
 
     @override
     async def async_pre_install(self) -> None:

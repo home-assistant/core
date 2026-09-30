@@ -23,6 +23,8 @@ from ..utils.url import ref_version
 from .base import Repository
 
 if TYPE_CHECKING:
+    from aiogithubapi.models.git_tree import GitHubGitTreeEntryModel
+
     from ..base import MarketplaceManager
 
 
@@ -48,6 +50,24 @@ class ThemeRepository(Repository):
     def directory(self) -> str:
         """Return the folder of the theme, the one it was installed to."""
         return self.data.directory or self.data.file_name.replace(".yaml", "")
+
+    @override
+    def _category_directory(self) -> str | None:
+        """Return the folder themes are installed to."""
+        configuration = self.marketplace.configuration
+        return f"{self.marketplace.core.config_path}/{configuration.theme_path}"
+
+    @override
+    def _tree_of_the_content(self) -> list[GitHubGitTreeEntryModel]:
+        """Return the tree, or only the theme file when the root is the content."""
+        # The whole root is not the theme, only the file validation found in it
+        if (
+            self.repository_manifest.content_in_root
+            and not self.repository_manifest.filename
+        ):
+            return [entry for entry in self.tree if entry.path == self.data.file_name]
+
+        return self.tree
 
     @override
     async def async_pre_install(self) -> None:
