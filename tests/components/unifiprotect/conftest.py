@@ -166,7 +166,6 @@ def mock_ufp_client(bootstrap: Bootstrap):
     # functionality from API client tests actually need
     client._stream_response = partial(ProtectApiClient._stream_response, client)
     client.get_camera_video = partial(ProtectApiClient.get_camera_video, client)
-    client.refresh_public_store = AsyncMock()
 
     nvr = client.bootstrap.nvr
     nvr._api = client
