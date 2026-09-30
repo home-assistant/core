@@ -93,7 +93,7 @@ async def test_retrieve_encryption_key_from_storage_with_device_mac(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
     await hass.async_block_till_done()
 
@@ -348,7 +348,7 @@ async def test_user_resolve_error(hass: HomeAssistant, mock_client: APIClient) -
         mock_client.device_info.side_effect = exc
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+            user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -454,7 +454,7 @@ async def test_user_provisioning_closed(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -490,7 +490,7 @@ async def test_user_connection_error(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -538,7 +538,7 @@ async def test_user_with_password(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -577,7 +577,7 @@ async def test_user_invalid_password(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -641,7 +641,7 @@ async def test_user_dashboard_has_wrong_key(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+            user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
         )
         await hass.async_block_till_done()
 
@@ -703,7 +703,7 @@ async def test_user_discovers_name_and_gets_key_from_dashboard(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+            user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
         )
         await hass.async_block_till_done()
 
@@ -761,7 +761,7 @@ async def test_user_discovers_name_and_gets_key_from_dashboard_fails(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+            user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
         )
         await hass.async_block_till_done()
 
@@ -822,7 +822,7 @@ async def test_user_discovers_name_and_dashboard_is_unavailable(
         await dashboard.async_get_dashboard(hass).async_refresh()
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+            user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
         )
         await hass.async_block_till_done()
 
@@ -861,7 +861,7 @@ async def test_login_connection_error(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -1194,7 +1194,7 @@ async def test_user_requires_psk(hass: HomeAssistant, mock_client: APIClient) ->
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -1246,7 +1246,7 @@ async def test_encryption_key_valid_psk(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -1291,7 +1291,7 @@ async def test_encryption_key_invalid_psk(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -1671,7 +1671,7 @@ async def test_user_flow_stale_storage_key_falls_back_to_dashboard(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+            user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
         )
         await hass.async_block_till_done()
 
@@ -1767,7 +1767,7 @@ async def test_user_flow_offline_device_stops_candidate_probing(
     ) as mock_get_encryption_key:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+            user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
         )
         await hass.async_block_till_done()
 
@@ -1807,7 +1807,7 @@ async def test_user_flow_manual_key_repairs_stale_storage(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
     await hass.async_block_till_done()
 
@@ -2741,7 +2741,7 @@ async def test_user_discovers_name_no_dashboard(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
     await hass.async_block_till_done()
 
@@ -2869,7 +2869,7 @@ async def test_user_flow_name_conflict_migrate(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
     await hass.async_block_till_done()
 
@@ -2928,7 +2928,7 @@ async def test_user_flow_name_conflict_overwrite(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
     assert result["type"] is FlowResultType.MENU
@@ -3404,7 +3404,7 @@ async def test_user_flow_starts_zwave_discovery(
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "192.168.1.100", CONF_PORT: 6053},
+            user_input={CONF_HOST: "192.168.1.100", CONF_PORT: 6053},
         )
 
     # Verify the entry was created
@@ -3478,7 +3478,7 @@ async def test_user_flow_no_zwave_discovery_without_home_id(
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "192.168.1.103", CONF_PORT: 6053},
+            user_input={CONF_HOST: "192.168.1.103", CONF_PORT: 6053},
         )
 
     # Verify the ESPHome entry was created
@@ -3535,7 +3535,7 @@ async def test_user_flow_no_zwave_discovery_without_capabilities(
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "192.168.1.101", CONF_PORT: 6053},
+            user_input={CONF_HOST: "192.168.1.101", CONF_PORT: 6053},
         )
 
     # Verify the entry was created
@@ -3594,7 +3594,7 @@ async def test_user_flow_zwave_discovery_aborts(
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "192.168.1.102", CONF_PORT: 6053},
+            user_input={CONF_HOST: "192.168.1.102", CONF_PORT: 6053},
         )
 
     # Verify the ESPHome entry was still created despite Z-Wave flow aborting
