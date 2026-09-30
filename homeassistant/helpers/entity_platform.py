@@ -1456,6 +1456,12 @@ class EntityPlatform:
                 entity.entity_id,
                 exc_info=result,
             )
+        elif isinstance(result, BaseException):
+            # gather(..., return_exceptions=True) can return other
+            # BaseException subclasses too; the tracked task is already
+            # cleared above, but these must still propagate instead of
+            # being silently suppressed.
+            raise result
 
     @property
     def domain(self) -> str:

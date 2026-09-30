@@ -649,6 +649,45 @@ async def test_polling_supports_unhashable_entities(hass: HomeAssistant) -> None
     await unhashable.async_remove()
 
 
+async def test_polling_reraises_base_exceptions_from_update(
+    hass: HomeAssistant,
+) -> None:
+    """Test a non-`Exception` `BaseException` from an update still propagates.
+
+    Regression contract: `asyncio.gather(..., return_exceptions=True)` also
+    captures `BaseException` subclasses that are not `Exception` or
+    `CancelledError`; these must still propagate instead of being silently
+    discarded. (`SystemExit`/`KeyboardInterrupt` are excluded here since
+    asyncio's `Task` re-raises those immediately out of the event loop
+    instead of ever returning them from `gather`.)
+    """
+    component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+    await component.async_setup({})
+
+    platform = list(component._platforms.values())[-1]
+
+    class _CustomBaseException(BaseException):
+        """A BaseException that is not Exception or CancelledError."""
+
+    async def _raise_custom_base_exception() -> None:
+        await asyncio.sleep(0)
+        raise _CustomBaseException
+
+    failing = MockEntity(should_poll=True)
+    failing.async_update = _raise_custom_base_exception
+    healthy = MockEntity(should_poll=True)
+    healthy.async_update = AsyncMock()
+
+    await component.async_add_entities([failing, healthy])
+
+    with pytest.raises(_CustomBaseException):
+        await platform._async_update_entity_states()
+
+    # The tracked task for the failing entity must still be cleared even
+    # though its exception was re-raised.
+    assert id(failing) not in platform._polling_tasks
+
+
 async def test_update_state_adds_entities(hass: HomeAssistant) -> None:
     """Test if updating poll entities cause an entity to be added works."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
