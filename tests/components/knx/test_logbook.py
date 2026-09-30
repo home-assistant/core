@@ -1,4 +1,4 @@
-"""Test KNX light activity attribution."""
+"""Test KNX activity attribution."""
 
 import asyncio
 from datetime import timedelta
@@ -9,10 +9,7 @@ from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.address import GroupAddress, IndividualAddress
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
-from homeassistant.components.knx.const import (
-    EVENT_KNX_TELEGRAM_RECEIVED,
-    KNX_MODULE_KEY,
-)
+from homeassistant.components.knx.const import EVENT_KNX_STATE_CHANGED, KNX_MODULE_KEY
 from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -34,18 +31,21 @@ from tests.typing import WebSocketGenerator
         pytest.param("1/1/2", GroupValueResponse, id="status-response"),
     ],
 )
-async def test_light_telegram_context(
+@pytest.mark.parametrize("platform", ["light", "switch"])
+async def test_telegram_context(
     hass: HomeAssistant,
     knx: KNXTestKit,
+    platform: str,
     address: str,
     telegram_type: type[GroupValueWrite | GroupValueResponse],
 ) -> None:
     """Attribute a switch value to the actual sender, including status senders."""
     await knx.setup_integration(
-        {"light": {"name": "test", "address": "1/1/1", "state_address": "1/1/2"}},
+        {platform: {"name": "test", "address": "1/1/1", "state_address": "1/1/2"}},
         state_updater=False,
     )
-    events = async_capture_events(hass, EVENT_KNX_TELEGRAM_RECEIVED)
+    await knx.receive_response("1/1/2", False)
+    events = async_capture_events(hass, EVENT_KNX_STATE_CHANGED)
     knx.xknx.telegrams.put_nowait(
         Telegram(
             destination_address=GroupAddress(address),
@@ -57,13 +57,14 @@ async def test_light_telegram_context(
     await knx.xknx.telegrams.join()
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.test")
+    state = hass.states.get(f"{platform}.test")
     assert state.state == STATE_ON
     assert len(events) == 1
     assert events[0].data == {
         "source": "1.1.23",
         "source_name": "",
         "destination": address,
+        "destination_name": "",
         "telegramtype": telegram_type.__name__,
     }
     assert state.context is events[0].context
@@ -72,50 +73,51 @@ async def test_light_telegram_context(
     # A matching status telegram must not replace the command's attribution.
     await knx.receive_write("1/1/2", True, source="1.1.40")
     assert len(events) == 1
-    assert hass.states.get("light.test").context is state.context
+    assert hass.states.get(f"{platform}.test").context is state.context
 
     await knx.receive_write("1/1/1", False, source="1.1.24")
     assert len(events) == 2
-    assert hass.states.get("light.test").context is events[1].context
+    assert hass.states.get(f"{platform}.test").context is events[1].context
     assert events[1].context.id != events[0].context.id
     assert events[1].data["source"] == "1.1.24"
 
 
-async def test_light_service_context(
-    hass: HomeAssistant, knx: KNXTestKit, hass_admin_user: MockUser
+@pytest.mark.parametrize("platform", ["light", "switch"])
+async def test_service_context(
+    hass: HomeAssistant, knx: KNXTestKit, hass_admin_user: MockUser, platform: str
 ) -> None:
     """Preserve HA causes and replace them when a physical switch takes over."""
-    await knx.setup_integration({"light": {"name": "test", "address": "1/1/1"}})
-    events = async_capture_events(hass, EVENT_KNX_TELEGRAM_RECEIVED)
+    await knx.setup_integration({platform: {"name": "test", "address": "1/1/1"}})
+    events = async_capture_events(hass, EVENT_KNX_STATE_CHANGED)
     service_context = Context(user_id=hass_admin_user.id, parent_id=Context().id)
 
     await hass.services.async_call(
-        "light",
+        platform,
         "turn_on",
-        {"entity_id": "light.test"},
+        {"entity_id": f"{platform}.test"},
         blocking=True,
         context=service_context,
     )
     await knx.assert_write("1/1/1", True)
-    assert hass.states.get("light.test").context is service_context
+    assert hass.states.get(f"{platform}.test").context is service_context
     assert not events
 
     # This happens inside HA's recent-context window.
     await knx.receive_write("1/1/1", False, source="1.1.23")
-    assert hass.states.get("light.test").context is events[0].context
+    assert hass.states.get(f"{platform}.test").context is events[0].context
     assert events[0].context.user_id is None
     assert events[0].context.parent_id is None
 
     next_context = Context(parent_id=Context().id)
     await hass.services.async_call(
-        "light",
+        platform,
         "turn_on",
-        {"entity_id": "light.test"},
+        {"entity_id": f"{platform}.test"},
         blocking=True,
         context=next_context,
     )
     await knx.assert_write("1/1/1", True)
-    assert hass.states.get("light.test").context is next_context
+    assert hass.states.get(f"{platform}.test").context is next_context
     assert len(events) == 1
 
 
@@ -132,7 +134,7 @@ async def test_light_brightness_does_not_reuse_sender(
             }
         }
     )
-    events = async_capture_events(hass, EVENT_KNX_TELEGRAM_RECEIVED)
+    events = async_capture_events(hass, EVENT_KNX_STATE_CHANGED)
     await knx.receive_write("1/1/1", True, source="1.1.23")
     context = hass.states.get("light.test").context
     assert context is events[0].context
@@ -158,7 +160,7 @@ async def test_shared_telegram_context(hass: HomeAssistant, knx: KNXTestKit) -> 
             ]
         }
     )
-    events = async_capture_events(hass, EVENT_KNX_TELEGRAM_RECEIVED)
+    events = async_capture_events(hass, EVENT_KNX_STATE_CHANGED)
     await knx.receive_write("1/1/1", True, source="1.1.23")
 
     assert len(events) == 1
@@ -177,7 +179,7 @@ async def test_ui_light_telegram_context(
         platform=Platform.LIGHT,
         knx_data={"ga_switch": {"write": "1/1/1"}},
     )
-    events = async_capture_events(hass, EVENT_KNX_TELEGRAM_RECEIVED)
+    events = async_capture_events(hass, EVENT_KNX_STATE_CHANGED)
     await knx.receive_write("1/1/1", True, source="1.1.23")
 
     assert len(events) == 1
@@ -217,7 +219,7 @@ async def test_light_live_activity(
     assert len(entries) == 1
     assert entries[0]["entity_id"] == "light.test"
     assert entries[0]["context_name"] == "1.1.23"
-    assert entries[0]["context_event_type"] == EVENT_KNX_TELEGRAM_RECEIVED
+    assert entries[0]["context_event_type"] == EVENT_KNX_STATE_CHANGED
 
 
 @pytest.mark.usefixtures("recorder_mock", "load_knxproj")
@@ -264,5 +266,5 @@ async def test_light_recorded_activity(
     assert entries[0]["entity_id"] == "light.test"
     assert entries[0]["context_name"] == expected_name
     assert entries[0]["context_domain"] == "knx"
-    assert entries[0]["context_event_type"] == EVENT_KNX_TELEGRAM_RECEIVED
+    assert entries[0]["context_event_type"] == EVENT_KNX_STATE_CHANGED
     assert "context_user_id" not in entries[0]

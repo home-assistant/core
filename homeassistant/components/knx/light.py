@@ -4,9 +4,8 @@ from typing import Any, cast, override
 
 from propcache.api import cached_property
 from xknx import XKNX
-from xknx.devices import Device as XknxDevice
 from xknx.devices.light import ColorTemperatureType, Light as XknxLight, XYYColor
-from xknx.telegram import Telegram, TelegramDirection
+from xknx.telegram import telegram_context
 from xknx.telegram.address import DeviceGroupAddress
 
 from homeassistant import config_entries
@@ -20,8 +19,8 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON, Platform
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.const import CONF_NAME, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     async_get_current_platform,
@@ -331,29 +330,6 @@ class _KnxLight(LightEntity):
     _attr_min_color_temp_kelvin: int
     _device: XknxLight
     _knx_module: KNXModule
-    _last_switch_telegram: Telegram | None = None
-
-    def after_update_callback(self, device: XknxDevice) -> None:
-        """Attribute on/off changes to the telegram updating the switch value."""
-        telegram = self._device.switch.telegram
-        new_telegram = telegram is not self._last_switch_telegram
-        self._last_switch_telegram = telegram
-        if (
-            new_telegram
-            and telegram is not None
-            and telegram.direction is TelegramDirection.INCOMING
-            and (old_state := self.hass.states.get(self.entity_id)) is not None
-            and old_state.state in (STATE_ON, STATE_OFF)
-            and old_state.state != (STATE_ON if self.is_on else STATE_OFF)
-        ):
-            self.async_set_context(
-                self._knx_module.telegrams.async_get_context(telegram)
-            )
-            self.async_write_ha_state()
-            # Later color or brightness updates must not inherit this sender.
-            self.async_set_context(Context())
-            return
-        self.async_write_ha_state()
 
     @property
     @override
@@ -480,118 +456,120 @@ class _KnxLight(LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        # LightEntity color translation will ensure that only attributes of supported
-        # color modes are passed to this method - so we can't set unsupported mode here
-        if color_temp := kwargs.get(ATTR_COLOR_TEMP_KELVIN):
-            self._attr_color_mode = ColorMode.COLOR_TEMP
-        if rgb := kwargs.get(ATTR_RGB_COLOR):
-            self._attr_color_mode = ColorMode.RGB
-        if rgbw := kwargs.get(ATTR_RGBW_COLOR):
-            self._attr_color_mode = ColorMode.RGBW
-        if hs_color := kwargs.get(ATTR_HS_COLOR):
-            self._attr_color_mode = ColorMode.HS
-        if xy_color := kwargs.get(ATTR_XY_COLOR):
-            self._attr_color_mode = ColorMode.XY
+        with telegram_context(self._context):
+            brightness = kwargs.get(ATTR_BRIGHTNESS)
+            # LightEntity color translation will ensure that only attributes of supported
+            # color modes are passed to this method - so we can't set unsupported mode here
+            if color_temp := kwargs.get(ATTR_COLOR_TEMP_KELVIN):
+                self._attr_color_mode = ColorMode.COLOR_TEMP
+            if rgb := kwargs.get(ATTR_RGB_COLOR):
+                self._attr_color_mode = ColorMode.RGB
+            if rgbw := kwargs.get(ATTR_RGBW_COLOR):
+                self._attr_color_mode = ColorMode.RGBW
+            if hs_color := kwargs.get(ATTR_HS_COLOR):
+                self._attr_color_mode = ColorMode.HS
+            if xy_color := kwargs.get(ATTR_XY_COLOR):
+                self._attr_color_mode = ColorMode.XY
 
-        if (
-            not self.is_on
-            and brightness is None
-            and color_temp is None
-            and rgb is None
-            and rgbw is None
-            and hs_color is None
-            and xy_color is None
-        ):
-            await self._device.set_on()
-            return
-
-        async def set_color(
-            rgb: tuple[int, int, int], white: int | None, brightness: int | None
-        ) -> None:
-            """Set color of light. Normalize colors for brightness when not writable."""
-            if self._device.brightness.writable:
-                # let the KNX light controller handle brightness
-                await self._device.set_color(rgb, white)
-                if brightness:
-                    await self._device.set_brightness(brightness)
+            if (
+                not self.is_on
+                and brightness is None
+                and color_temp is None
+                and rgb is None
+                and rgbw is None
+                and hs_color is None
+                and xy_color is None
+            ):
+                await self._device.set_on()
                 return
 
-            if brightness is None:
-                # normalize for brightness if brightness is derived from color
-                brightness = self.brightness or 255
-            rgb = cast(
-                tuple[int, int, int],
-                tuple(color * brightness // 255 for color in rgb),
-            )
-            white = white * brightness // 255 if white is not None else None
-            await self._device.set_color(rgb, white)
+            async def set_color(
+                rgb: tuple[int, int, int], white: int | None, brightness: int | None
+            ) -> None:
+                """Set color of light. Normalize colors for brightness when not writable."""
+                if self._device.brightness.writable:
+                    # let the KNX light controller handle brightness
+                    await self._device.set_color(rgb, white)
+                    if brightness:
+                        await self._device.set_brightness(brightness)
+                    return
 
-        # return after RGB(W) color has changed as it implicitly sets the brightness
-        if rgbw is not None:
-            await set_color(rgbw[:3], rgbw[3], brightness)
-            return
-        if rgb is not None:
-            await set_color(rgb, None, brightness)
-            return
-
-        if color_temp is not None:
-            color_temp = min(
-                self._attr_max_color_temp_kelvin,
-                max(self._attr_min_color_temp_kelvin, color_temp),
-            )
-            if self._device.supports_color_temperature:
-                await self._device.set_color_temperature(color_temp)
-            elif self._device.supports_tunable_white:
-                relative_ct = round(
-                    255
-                    * (color_temp - self._attr_min_color_temp_kelvin)
-                    / (
-                        self._attr_max_color_temp_kelvin
-                        - self._attr_min_color_temp_kelvin
-                    )
+                if brightness is None:
+                    # normalize for brightness if brightness is derived from color
+                    brightness = self.brightness or 255
+                rgb = cast(
+                    tuple[int, int, int],
+                    tuple(color * brightness // 255 for color in rgb),
                 )
-                await self._device.set_tunable_white(relative_ct)
+                white = white * brightness // 255 if white is not None else None
+                await self._device.set_color(rgb, white)
 
-        if xy_color is not None:
-            await self._device.set_xyy_color(
-                XYYColor(color=xy_color, brightness=brightness)
-            )
-            return
+            # return after RGB(W) color has changed as it implicitly sets the brightness
+            if rgbw is not None:
+                await set_color(rgbw[:3], rgbw[3], brightness)
+                return
+            if rgb is not None:
+                await set_color(rgb, None, brightness)
+                return
 
-        if hs_color is not None:
-            # round so only one telegram will be sent if the other matches state
-            hue = round(hs_color[0])
-            sat = round(hs_color[1])
-            await self._device.set_hs_color((hue, sat))
+            if color_temp is not None:
+                color_temp = min(
+                    self._attr_max_color_temp_kelvin,
+                    max(self._attr_min_color_temp_kelvin, color_temp),
+                )
+                if self._device.supports_color_temperature:
+                    await self._device.set_color_temperature(color_temp)
+                elif self._device.supports_tunable_white:
+                    relative_ct = round(
+                        255
+                        * (color_temp - self._attr_min_color_temp_kelvin)
+                        / (
+                            self._attr_max_color_temp_kelvin
+                            - self._attr_min_color_temp_kelvin
+                        )
+                    )
+                    await self._device.set_tunable_white(relative_ct)
 
-        if brightness is not None:
-            # brightness: 1..255; 0 brightness will call async_turn_off()
-            if self._device.brightness.writable:
-                await self._device.set_brightness(brightness)
+            if xy_color is not None:
+                await self._device.set_xyy_color(
+                    XYYColor(color=xy_color, brightness=brightness)
+                )
                 return
-            # brightness without color in kwargs; set via color
-            if self._attr_color_mode == ColorMode.XY:
-                await self._device.set_xyy_color(XYYColor(brightness=brightness))
-                return
-            # default to white if color not known for RGB(W)
-            if self._attr_color_mode == ColorMode.RGBW:
-                _rgbw = self.rgbw_color
-                if not _rgbw or not any(_rgbw):
-                    _rgbw = (0, 0, 0, 255)
-                await set_color(_rgbw[:3], _rgbw[3], brightness)
-                return
-            if self._attr_color_mode == ColorMode.RGB:
-                _rgb = self.rgb_color
-                if not _rgb or not any(_rgb):
-                    _rgb = (255, 255, 255)
-                await set_color(_rgb, None, brightness)
-                return
+
+            if hs_color is not None:
+                # round so only one telegram will be sent if the other matches state
+                hue = round(hs_color[0])
+                sat = round(hs_color[1])
+                await self._device.set_hs_color((hue, sat))
+
+            if brightness is not None:
+                # brightness: 1..255; 0 brightness will call async_turn_off()
+                if self._device.brightness.writable:
+                    await self._device.set_brightness(brightness)
+                    return
+                # brightness without color in kwargs; set via color
+                if self._attr_color_mode == ColorMode.XY:
+                    await self._device.set_xyy_color(XYYColor(brightness=brightness))
+                    return
+                # default to white if color not known for RGB(W)
+                if self._attr_color_mode == ColorMode.RGBW:
+                    _rgbw = self.rgbw_color
+                    if not _rgbw or not any(_rgbw):
+                        _rgbw = (0, 0, 0, 255)
+                    await set_color(_rgbw[:3], _rgbw[3], brightness)
+                    return
+                if self._attr_color_mode == ColorMode.RGB:
+                    _rgb = self.rgb_color
+                    if not _rgb or not any(_rgb):
+                        _rgb = (255, 255, 255)
+                    await set_color(_rgb, None, brightness)
+                    return
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self._device.set_off()
+        with telegram_context(self._context):
+            await self._device.set_off()
 
 
 class KnxYamlLight(_KnxLight, KnxYamlEntity):

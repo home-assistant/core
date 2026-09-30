@@ -5,7 +5,7 @@ from collections.abc import Callable
 from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
 from homeassistant.core import Event, HomeAssistant, callback
 
-from .const import DOMAIN, EVENT_KNX_TELEGRAM_RECEIVED
+from .const import DOMAIN, EVENT_KNX_STATE_CHANGED
 
 
 @callback
@@ -24,12 +24,12 @@ def async_describe_events(
             if event.data["source_name"]
             else source
         )
+        destination = event.data.get("destination_name") or event.data["destination"]
         return {
             LOGBOOK_ENTRY_NAME: name,
             LOGBOOK_ENTRY_MESSAGE: (
-                f"sent a {event.data['telegramtype']} telegram"
-                f" to {event.data['destination']}"
+                f"sent a {event.data['telegramtype']} telegram to {destination}"
             ),
         }
 
-    async_describe_event(DOMAIN, EVENT_KNX_TELEGRAM_RECEIVED, async_describe_telegram)
+    async_describe_event(DOMAIN, EVENT_KNX_STATE_CHANGED, async_describe_telegram)

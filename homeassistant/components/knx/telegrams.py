@@ -30,7 +30,7 @@ from .const import (
     CONF_KNX_TELEGRAM_DB_BACKEND,
     CONF_KNX_TELEGRAM_DB_POSTGRES_DSN,
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
-    EVENT_KNX_TELEGRAM_RECEIVED,
+    EVENT_KNX_STATE_CHANGED,
     KNX_TELEGRAM_BACKEND_POSTGRES,
     KNX_TELEGRAM_DB_PATH_SQLITE,
     SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
@@ -100,6 +100,36 @@ class TelegramDict(DecodedTelegramPayload):
     timestamp: str  # ISO format
 
 
+class KnxTelegramContext(Context):
+    """Incoming telegram metadata retained until its state change is recorded."""
+
+    __slots__ = ("logged", "telegram_data")
+
+    def __init__(self, telegram_data: TelegramDict) -> None:
+        """Snapshot project names using the already decoded telegram."""
+        super().__init__()
+        self.telegram_data = telegram_data
+        self.logged = False
+
+    @callback
+    def async_log(self, hass: HomeAssistant) -> None:
+        """Record at most one attribution event for this telegram."""
+        if self.logged:
+            return
+        self.logged = True
+        hass.bus.async_fire(
+            EVENT_KNX_STATE_CHANGED,
+            {
+                "source": self.telegram_data["source"],
+                "source_name": self.telegram_data["source_name"],
+                "destination": self.telegram_data["destination"],
+                "destination_name": self.telegram_data["destination_name"],
+                "telegramtype": self.telegram_data["telegramtype"],
+            },
+            context=self,
+        )
+
+
 class Telegrams:
     """Class to handle KNX telegrams."""
 
@@ -162,30 +192,6 @@ class Telegrams:
             )
         )
         self.last_ga_telegrams: dict[str, TelegramDict] = {}
-        self._last_entity_update: tuple[Telegram, Context] | None = None
-
-    @callback
-    def async_get_context(self, telegram: Telegram) -> Context:
-        """Describe a telegram and share its context across synchronous entity updates."""
-        if self._last_entity_update is not None:
-            last_telegram, context = self._last_entity_update
-            if last_telegram is telegram:
-                return context
-
-        context = Context()
-        self._last_entity_update = (telegram, context)
-        telegram_data = self.telegram_to_dict(telegram)
-        self.hass.bus.async_fire(
-            EVENT_KNX_TELEGRAM_RECEIVED,
-            {
-                "source": telegram_data["source"],
-                "source_name": telegram_data["source_name"],
-                "destination": telegram_data["destination"],
-                "telegramtype": telegram_data["telegramtype"],
-            },
-            context=context,
-        )
-        return context
 
     async def load_history(self) -> None:
         """Load history from store."""
@@ -352,6 +358,8 @@ class Telegrams:
     def _xknx_telegram_cb(self, telegram: Telegram) -> None:
         """Handle incoming and outgoing telegrams from xknx."""
         telegram_dict = self.telegram_to_dict(telegram)
+        if telegram.direction is TelegramDirection.INCOMING:
+            telegram.context = KnxTelegramContext(telegram_dict)
         if telegram_dict["payload"] is not None:
             # exclude GroupValueRead telegrams
             self.last_ga_telegrams[telegram_dict["destination"]] = telegram_dict
