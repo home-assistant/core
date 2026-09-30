@@ -293,3 +293,122 @@ async def test_energy_history_invalid_first_period(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+ENERGY_HISTORY_PERIODS = ENERGY_HISTORY["response"]["time_series"]
+ENERGY_HISTORY_STATES = {
+    "sensor.energy_site_grid_imported": "1.542",
+    "sensor.energy_site_home_usage": "62.264",
+    "sensor.energy_site_battery_charged": "43.68",
+    "sensor.energy_site_battery_discharged": "30.06",
+    "sensor.energy_site_solar_generated": "211.88",
+    "sensor.energy_site_grid_exported": "127.368",
+}
+
+
+def _energy_history(time_series: list[dict[str, Any]]) -> dict[str, Any]:
+    """Return an energy history response with the given periods."""
+    return {"response": {**ENERGY_HISTORY["response"], "time_series": time_series}}
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("history", "expected_states"),
+    [
+        pytest.param(
+            {"response": None},
+            dict.fromkeys(ENERGY_HISTORY_STATES, STATE_UNAVAILABLE),
+            id="no_data_no_response",
+        ),
+        pytest.param(
+            {"response": {"period": "day"}},
+            dict.fromkeys(ENERGY_HISTORY_STATES, STATE_UNAVAILABLE),
+            id="no_data_no_time_series",
+        ),
+        pytest.param(
+            _energy_history([]),
+            dict.fromkeys(ENERGY_HISTORY_STATES, STATE_UNAVAILABLE),
+            id="no_data_no_periods",
+        ),
+        pytest.param(
+            _energy_history(
+                [
+                    {"timestamp": period["timestamp"]}
+                    for period in ENERGY_HISTORY_PERIODS
+                ]
+            ),
+            dict.fromkeys(ENERGY_HISTORY_STATES, "0.0"),
+            id="all_fields_omitted",
+        ),
+        pytest.param(
+            _energy_history(
+                [
+                    ENERGY_HISTORY_PERIODS[0],
+                    {"timestamp": ENERGY_HISTORY_PERIODS[1]["timestamp"]},
+                ]
+            ),
+            {
+                "sensor.energy_site_grid_imported": "0.521",
+                "sensor.energy_site_home_usage": "20.932",
+                "sensor.energy_site_battery_charged": "16.88",
+                "sensor.energy_site_battery_discharged": "10.03",
+                "sensor.energy_site_solar_generated": "70.94",
+                "sensor.energy_site_grid_exported": "43.679",
+            },
+            id="partially_omitted_one_period",
+        ),
+        pytest.param(
+            _energy_history(
+                [
+                    {
+                        "timestamp": ENERGY_HISTORY_PERIODS[0]["timestamp"],
+                        "grid_energy_imported": 521,
+                    },
+                    {"timestamp": ENERGY_HISTORY_PERIODS[1]["timestamp"]},
+                ]
+            ),
+            {
+                "sensor.energy_site_grid_imported": "0.521",
+                "sensor.energy_site_home_usage": "0.0",
+                "sensor.energy_site_battery_charged": "0.0",
+                "sensor.energy_site_battery_discharged": "0.0",
+                "sensor.energy_site_solar_generated": "0.0",
+                "sensor.energy_site_grid_exported": "0.0",
+            },
+            id="partially_omitted_all_but_one_field",
+        ),
+    ],
+)
+async def test_energy_history_incomplete_response(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_energy_history: AsyncMock,
+    history: dict[str, Any],
+    expected_states: dict[str, str],
+) -> None:
+    """Test the states an incomplete response leaves after a complete one."""
+
+    freezer.move_to("2024-01-01 00:00:00+00:00")
+
+    await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
+
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert {
+        entity_id: hass.states.get(entity_id).state
+        for entity_id in ENERGY_HISTORY_STATES
+    } == ENERGY_HISTORY_STATES
+
+    mock_energy_history.return_value = history
+
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert {
+        entity_id: hass.states.get(entity_id).state
+        for entity_id in ENERGY_HISTORY_STATES
+    } == expected_states
