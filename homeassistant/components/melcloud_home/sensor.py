@@ -6,7 +6,7 @@ from datetime import datetime
 from itertools import chain
 from typing import override
 
-from aiomelcloudhome import ATAUnit, ATWUnit
+from aiomelcloudhome import ATAUnit, ATWOperationMode, ATWUnit
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -43,6 +43,14 @@ ENERGY_CONSUMED_DESCRIPTION = SensorEntityDescription(
     native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
     suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
 )
+
+ATW_OPERATION_STATUS: dict[ATWOperationMode, str] = {
+    ATWOperationMode.STOP: "idle",
+    ATWOperationMode.HOT_WATER: "heating_water",
+    ATWOperationMode.HEAT: "heating_zones",
+    ATWOperationMode.HEAT_ZONES: "heating_zones",
+    ATWOperationMode.COOL: "cooling",
+}
 
 OUTDOOR_TEMPERATURE_DESCRIPTION = SensorEntityDescription(
     key="outdoor_temperature",
@@ -125,6 +133,15 @@ ATW_SENSORS: tuple[MelCloudHomeSensorEntityDescription[ATWUnit], ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
         value_fn=lambda unit, _: unit.tank_water_temperature,
+    ),
+    MelCloudHomeSensorEntityDescription(
+        key="operation_status",
+        translation_key="operation_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(dict.fromkeys(ATW_OPERATION_STATUS.values())),
+        value_fn=lambda unit, _: (
+            ATW_OPERATION_STATUS[unit.operation_mode] if unit.operation_mode else None
+        ),
     ),
     *_common_sensor_descriptions(ATWUnit),
 )
