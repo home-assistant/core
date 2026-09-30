@@ -105,23 +105,23 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
             rest = create_rest_data_from_config_entry(self.hass, user_input)
             try:
                 await rest.async_update()
+                if rest.last_exception:
+                    errors["base"] = (
+                        "endpoint_error"
+                        if not isinstance(rest.last_exception, TimeoutError)
+                        else "timeout_error"
+                    )
+                    placeholders["endpoint_error_message"] = str(rest.last_exception)
+                else:
+                    try:
+                        if rest.data_without_xml() is None:
+                            errors["base"] = "no_json"
+                    except ExpatError as ex:
+                        errors["base"] = "xml_parse_error"
+                        placeholders["xml_parse_error_message"] = str(ex)
             except UnicodeDecodeError as exc:
                 errors[CONF_ENCODING] = "decoding_error"
                 placeholders["decoding_error_message"] = str(exc)
-            if rest.last_exception:
-                errors["base"] = (
-                    "endpoint_error"
-                    if not isinstance(rest.last_exception, TimeoutError)
-                    else "timeout_error"
-                )
-                placeholders["endpoint_error_message"] = str(rest.last_exception)
-            else:
-                try:
-                    if rest.data_without_xml() is None:
-                        errors["base"] = "no_json"
-                except ExpatError as ex:
-                    errors["base"] = "xml_parse_error"
-                    placeholders["xml_parse_error_message"] = str(ex)
             if not errors:
                 self._title = f"{user_input[CONF_METHOD]} {Template(user_input[CONF_RESOURCE], self.hass).async_render()}"
                 self._data = user_input

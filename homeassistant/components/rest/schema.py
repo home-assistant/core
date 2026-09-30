@@ -69,7 +69,7 @@ from .const import (
     DOMAIN,
     METHODS,
 )
-from .data import DEFAULT_TIMEOUT, RestData
+from .data import DEFAULT_TIMEOUT
 
 RESOURCE_SCHEMA = {
     probatio.Exclusive(CONF_RESOURCE, CONF_RESOURCE): cv.url,
@@ -138,10 +138,6 @@ CONFIG_SCHEMA = probatio.Schema(
     },
     extra=probatio.ALLOW_EXTRA,
 )
-
-
-class _RenderingTemplateSelectorConfig(selector.BaseSelectorConfig):
-    rest: RestData
 
 
 class _RenderingTemplateSelector(selector.TemplateSelector):
