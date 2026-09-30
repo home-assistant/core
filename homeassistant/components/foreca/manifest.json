@@ -1,7 +1,7 @@
 {
   "domain": "foreca",
   "name": "Foreca",
-  "codeowners": ["@foreca-dev/maintainers", "@EetuPelkonen"],
+  "codeowners": ["@EetuPelkonen"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/foreca",
   "integration_type": "service",
