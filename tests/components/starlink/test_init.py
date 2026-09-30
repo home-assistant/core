@@ -110,13 +110,7 @@ async def test_setup_with_unimplemented_location_or_sleep(
 async def test_sleep_entities_not_created_when_sleep_unimplemented(
     hass: HomeAssistant,
 ) -> None:
-    """Test sleep-related entities aren't created at all when unsupported.
-
-    Rather than creating a switch/time entities that would forever report
-    "unavailable" (or worse, a fabricated but non-functional "off"), don't
-    add them in the first place when the first refresh determines this
-    dish/plan doesn't support sleep config.
-    """
+    """Test sleep-related entities aren't created at all when unsupported."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_IP_ADDRESS: "1.2.3.4:0000"},
