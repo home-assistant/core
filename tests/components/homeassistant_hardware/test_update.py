@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 
 import aiohttp
 import pytest
-from universal_silabs_flasher.flasher import DeviceSpecificFlasher, Zbt1Flasher
+from universal_silabs_flasher.flasher import DeviceSpecificFlasher
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -30,6 +30,7 @@ from homeassistant.components.homeassistant_hardware.update import (
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    FlasherType,
     OwningIntegration,
 )
 from homeassistant.components.update import UpdateDeviceClass
@@ -176,7 +177,7 @@ async def mock_async_setup_update_entities(
 class MockFirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """Mock SkyConnect firmware update entity."""
 
-    _flasher_cls = Zbt1Flasher
+    _flasher_type = FlasherType.ZBT1
 
     def __init__(
         self,

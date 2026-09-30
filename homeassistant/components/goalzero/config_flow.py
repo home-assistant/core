@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from goalzero import Yeti, exceptions
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -87,14 +87,14 @@ class GoalZeroFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_HOST, default=user_input.get(CONF_HOST) or ""
                     ): str,
                     # Name field is no longer allowed in config flow schemas
                     # pylint: disable-next=home-assistant-config-flow-name-field
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_NAME, default=user_input.get(CONF_NAME) or DEFAULT_NAME
                     ): str,
                 }

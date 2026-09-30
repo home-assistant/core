@@ -9,8 +9,8 @@ from aiohttp.hdrs import AUTHORIZATION
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.html5.const import DOMAIN
-from homeassistant.components.html5.notify import ATTR_ACTION, ATTR_TAG, ATTR_TYPE
+from homeassistant.components.html5.const import ATTR_ACTION, ATTR_TAG, DOMAIN
+from homeassistant.components.html5.http import ATTR_TYPE
 from homeassistant.components.notify import ATTR_DATA, ATTR_TARGET
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN, Platform

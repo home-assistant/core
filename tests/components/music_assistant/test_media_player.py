@@ -12,10 +12,10 @@ from music_assistant_models.enums import (
 from music_assistant_models.errors import UserNotFoundError
 from music_assistant_models.media_items import Track
 from music_assistant_models.player import PlayerMedia
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
@@ -1128,7 +1128,7 @@ async def test_media_player_play_announcement_action_invalid_input(
 ) -> None:
     """Test play_announcement action requires either a url or a message with an entity."""
     await setup_integration_from_fixtures(hass, music_assistant_client)
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_ANNOUNCEMENT,

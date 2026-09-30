@@ -2,12 +2,11 @@
 
 from typing import TYPE_CHECKING
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.input_select import DOMAIN as INPUT_SELECT_DOMAIN
 from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
     ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL,
@@ -20,9 +19,9 @@ from .const import CONF_OPTION, DOMAIN
 
 IS_OPTION_SELECTED_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
-        vol.Required(CONF_OPTIONS): {
-            vol.Required(CONF_OPTION): vol.All(
-                cv.ensure_list, vol.Length(min=1), [str]
+        probatio.Required(CONF_OPTIONS): {
+            probatio.Required(CONF_OPTION): probatio.All(
+                probatio.EnsureList(), probatio.Length(min=1), [str]
             ),
         },
     }

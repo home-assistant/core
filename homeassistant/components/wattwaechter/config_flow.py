@@ -10,7 +10,7 @@ from aio_wattwaechter import (
     WattwaechterConnectionError,
 )
 from aio_wattwaechter.models import SystemInfo
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -167,9 +167,9 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
+                    probatio.Required(CONF_HOST): str,
                 }
             ),
             errors=errors,
@@ -209,9 +209,9 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_TOKEN): str,
+                    probatio.Required(CONF_TOKEN): str,
                 }
             ),
             errors=errors,
@@ -244,9 +244,9 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_TOKEN): str,
+                    probatio.Required(CONF_TOKEN): str,
                 }
             ),
             description_placeholders={"host": reauth_entry.data[CONF_HOST]},
@@ -276,10 +276,10 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates={CONF_HOST: user_input[CONF_HOST], CONF_TOKEN: token},
                 )
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_HOST): str,
-                vol.Optional(CONF_TOKEN): TextSelector(
+                probatio.Required(CONF_HOST): str,
+                probatio.Optional(CONF_TOKEN): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.PASSWORD)
                 ),
             }

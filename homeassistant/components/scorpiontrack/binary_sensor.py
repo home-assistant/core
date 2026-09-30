@@ -24,6 +24,7 @@ async def async_setup_entry(
     @callback
     def async_add_new_vehicles() -> None:
         """Add ignition sensors for vehicles newly included in the share."""
+        known_vehicles.intersection_update(coordinator.vehicles_by_id)
         new_vehicles = coordinator.vehicles_by_id.keys() - known_vehicles
         if not new_vehicles:
             return
