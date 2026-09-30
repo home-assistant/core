@@ -7062,6 +7062,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "steamvr_base_station": {
+      "name": "SteamVR Base Station",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "steinway_lyngdorf": {
       "name": "Steinway & Lyngdorf",
       "integration_type": "virtual",

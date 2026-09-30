@@ -1089,6 +1089,12 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "SPECIALIZED*",
     },
     {
+        "connectable": True,
+        "domain": "steamvr_base_station",
+        "local_name": "LHB-*",
+        "manufacturer_id": 1373,
+    },
+    {
         "connectable": False,
         "domain": "switchbot",
         "service_data_uuid": "00000d00-0000-1000-8000-00805f9b34fb",
