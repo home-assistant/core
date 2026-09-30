@@ -61,6 +61,8 @@ class WeatherFlowSensorEntityDescription(SensorEntityDescription):
     raw_data_conv_fn: Callable[[Any], datetime | StateType]
 
     device_attr: str | None = None
+    # No value means there is nothing to report, not that the device is unavailable.
+    none_is_unknown: bool = False
     event_subscriptions: list[str] = field(default_factory=lambda: [EVENT_OBSERVATION])
 
     def get_native_value(self, device: WeatherFlowDevice) -> datetime | StateType:
@@ -147,6 +149,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         translation_key="lightning_average_distance",
         suggested_display_precision=0,
+        none_is_unknown=True,
         raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
@@ -163,14 +166,18 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         suggested_display_precision=0,
+        none_is_unknown=True,
         event_subscriptions=[EVENT_STRIKE],
-        raw_data_conv_fn=lambda raw_data: raw_data.distance.magnitude,
+        raw_data_conv_fn=lambda raw_data: (
+            None if raw_data.distance is None else raw_data.distance.magnitude
+        ),
     ),
     WeatherFlowSensorEntityDescription(
         key="lightning_strike_last_energy",
         device_attr="last_lightning_strike_event",
         translation_key="lightning_strike_last_energy",
         state_class=SensorStateClass.MEASUREMENT,
+        none_is_unknown=True,
         event_subscriptions=[EVENT_STRIKE],
         raw_data_conv_fn=lambda raw_data: raw_data.energy,
     ),
@@ -179,6 +186,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         device_attr="last_lightning_strike_event",
         translation_key="lightning_strike_last_epoch",
         device_class=SensorDeviceClass.TIMESTAMP,
+        none_is_unknown=True,
         event_subscriptions=[EVENT_STRIKE],
         raw_data_conv_fn=lambda raw_data: raw_data.timestamp,
     ),
@@ -388,7 +396,9 @@ class WeatherFlowSensorEntity(SensorEntity):
     def _async_update_state(self) -> None:
         """Update entity state."""
         value = self.entity_description.get_native_value(self.device)
-        self._attr_available = value is not None
+        self._attr_available = (
+            value is not None or self.entity_description.none_is_unknown
+        )
         self._attr_native_value = value
         self.async_write_ha_state()
 
