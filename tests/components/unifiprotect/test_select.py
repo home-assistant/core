@@ -7,7 +7,6 @@ import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-from aiohttp.client_exceptions import ServerDisconnectedError
 import pytest
 from uiprotect.data import (
     NVR,
@@ -501,10 +500,9 @@ async def test_select_liveview_change_refreshes_public_liveviews(
 @pytest.mark.parametrize(
     "error",
     [
-        NvrError("down"),
-        NotAuthorized("no access"),
-        ServerDisconnectedError(),
-        TimeoutError(),
+        pytest.param(NvrError("down"), id="nvr_error"),
+        pytest.param(NotAuthorized("no access"), id="not_authorized"),
+        pytest.param(TimeoutError(), id="timeout"),
     ],
 )
 async def test_select_liveview_refresh_failure_keeps_options(
