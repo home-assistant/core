@@ -650,18 +650,72 @@ async def test_sensors_streaming_dc_charging_ended(
         ),
         pytest.param(
             [
+                {
+                    Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+                    Signal.AC_CHARGING_POWER: 0,
+                    Signal.DC_CHARGING_POWER: 0,
+                }
+            ],
+            "0",
+            id="no_power_from_either_source",
+        ),
+        pytest.param(
+            [
+                {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging"},
                 {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateDisconnected"},
                 {Signal.AC_CHARGING_POWER: 0.6},
             ],
             "0",
             id="late_ac_power_while_not_charging",
         ),
+        pytest.param(
+            [
+                {
+                    Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+                    Signal.AC_CHARGING_POWER: 7,
+                },
+                {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateStopped"},
+            ],
+            "0",
+            id="charging_stopped",
+        ),
+        pytest.param(
+            [
+                {
+                    Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+                    Signal.AC_CHARGING_POWER: 7,
+                },
+                {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateNoPower"},
+            ],
+            "0",
+            id="charging_lost_power",
+        ),
+        pytest.param(
+            [
+                {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging"},
+                {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateDisconnected"},
+                {Signal.DETAILED_CHARGE_STATE: None},
+                {Signal.AC_CHARGING_POWER: 0.6},
+            ],
+            "0",
+            id="late_ac_power_after_null_charge_state",
+        ),
+        pytest.param(
+            [
+                {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging"},
+                {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateDisconnected"},
+                {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateUnknown"},
+                {Signal.AC_CHARGING_POWER: 0.6},
+            ],
+            "0",
+            id="late_ac_power_after_unknown_charge_state",
+        ),
     ],
 )
 async def test_sensors_streaming_charger_power_sequence(
     hass: HomeAssistant,
     mock_add_listener: AsyncMock,
-    messages: list[dict[Signal, str | float]],
+    messages: list[dict[Signal, str | float | None]],
     expected_state: str,
 ) -> None:
     """Test charger power once each streamed message has been processed."""
@@ -680,40 +734,121 @@ async def test_sensors_streaming_charger_power_sequence(
 
 
 @pytest.mark.parametrize(
-    "messages",
+    "charge_state",
+    [
+        pytest.param(None, id="null"),
+        pytest.param("DetailedChargeStateUnknown", id="unknown"),
+    ],
+)
+async def test_sensors_streaming_charger_power_uninformative_charge_state(
+    hass: HomeAssistant,
+    mock_add_listener: AsyncMock,
+    charge_state: str | None,
+) -> None:
+    """Test charger power keeps updating when the charge state is not known."""
+    await setup_platform(hass, [Platform.SENSOR])
+    vin = VEHICLE_DATA_ALT["response"]["vin"]
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {
+                Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+                Signal.AC_CHARGING_POWER: 7,
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(CHARGER_POWER_ENTITY).state == "7"
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {Signal.DETAILED_CHARGE_STATE: charge_state},
+            "createdAt": "2024-10-04T10:45:18.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(CHARGER_POWER_ENTITY).state == "7"
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {Signal.AC_CHARGING_POWER: 8},
+            "createdAt": "2024-10-04T10:45:19.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(CHARGER_POWER_ENTITY).state == "8"
+
+
+@pytest.mark.parametrize(
+    ("restored_state", "messages", "expected_state"),
     [
         pytest.param(
+            "148.2",
             [{Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateDisconnected"}],
+            "0",
             id="charging_ended_before_any_charge_state",
         ),
         pytest.param(
+            "148.2",
             [
                 {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging"},
                 {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateDisconnected"},
             ],
+            "0",
             id="charging_ended_after_charging_state",
+        ),
+        pytest.param(
+            "148.2",
+            [
+                {
+                    Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+                    Signal.AC_CHARGING_POWER: 0,
+                }
+            ],
+            "148.2",
+            id="ac_power_zero_while_dc_charging",
+        ),
+        pytest.param(
+            "7.2",
+            [
+                {
+                    Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+                    Signal.DC_CHARGING_POWER: 0,
+                }
+            ],
+            "7.2",
+            id="dc_power_zero_while_ac_charging",
         ),
     ],
 )
 async def test_sensors_streaming_charger_power_restored(
     hass: HomeAssistant,
     mock_add_listener: AsyncMock,
-    messages: list[dict[Signal, str]],
+    restored_state: str,
+    messages: list[dict[Signal, str | float]],
+    expected_state: str,
 ) -> None:
-    """Test a charger power restored mid-session resets once charging stops."""
+    """Test a charger power restored mid-session is kept until it is superseded."""
     mock_restore_cache_with_extra_data(
         hass,
         (
             (
-                State(CHARGER_POWER_ENTITY, "148.2"),
-                {"native_value": 148.2, "native_unit_of_measurement": "kW"},
+                State(CHARGER_POWER_ENTITY, restored_state),
+                {
+                    "native_value": float(restored_state),
+                    "native_unit_of_measurement": "kW",
+                },
             ),
         ),
     )
     await setup_platform(hass, [Platform.SENSOR])
-    assert hass.states.get(CHARGER_POWER_ENTITY).state == "148.2"
+    assert hass.states.get(CHARGER_POWER_ENTITY).state == restored_state
 
-    # No power is streamed between the restart and the end of the session
+    # The charging power itself is not streamed again after the restart
     for message in messages:
         mock_add_listener.send(
             {
@@ -723,7 +858,7 @@ async def test_sensors_streaming_charger_power_restored(
             }
         )
         await hass.async_block_till_done()
-    assert hass.states.get(CHARGER_POWER_ENTITY).state == "0"
+    assert hass.states.get(CHARGER_POWER_ENTITY).state == expected_state
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

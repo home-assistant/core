@@ -205,17 +205,27 @@ def _listen_charger_power(
     """Listen for charger power, which arrives as AC or DC power."""
     power: dict[str, float | None] = {"ac": None, "dc": None}
     charging = True
+    reported = False
 
     def _update(key: str, value: float | None) -> None:
+        nonlocal reported
         # Power is not reliably reset when a charging session ends
         power[key] = value if charging or value is None else 0
         ac, dc = power["ac"], power["dc"]
+        # No power from one source says nothing about a restored power from the other
+        if not reported and None in (ac, dc) and not (ac or dc):
+            return
+        reported = True
         callback(dc or (ac if ac is not None else dc))
 
     def _update_charging(state: str | None) -> None:
         nonlocal charging
         was_charging = charging
-        charging = state in {"Starting", "Charging"}
+        # Null, Unknown and unrecognised states say nothing about charging
+        if state in {"Starting", "Charging"}:
+            charging = True
+        elif state in {"Disconnected", "NoPower", "Complete", "Stopped"}:
+            charging = False
         # The entity may hold a restored power that was never streamed here
         if was_charging and not charging:
             power["ac"] = power["dc"] = 0
