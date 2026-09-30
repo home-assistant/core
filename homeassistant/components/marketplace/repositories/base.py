@@ -2,7 +2,8 @@
 
 import asyncio
 from asyncio import Lock, sleep
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from functools import partial
 import io
@@ -10,7 +11,7 @@ import os
 from pathlib import Path
 import shutil
 import tempfile
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, Literal, override
 import zipfile
 
 from aiogithubapi import (
@@ -598,7 +599,18 @@ class Repository:
 
     async def validate_repository(self) -> bool:
         """Check the repository has content this category installs."""
-        return False
+        await self.common_validate()
+        self.resolve_content()
+        await self.async_read_content_details()
+
+        # Startup checks every repository, only a later check is worth a log line
+        if not self.marketplace.status.startup:
+            for error in self.validate.errors:
+                self.logger.error("%s %s", self.string, error)
+        return self.validate.success
+
+    async def async_read_content_details(self) -> None:
+        """Read what the resolved content tells about the repository."""
 
     @concurrent(concurrenttasks=10)
     async def update_repository(
@@ -944,15 +956,7 @@ class Repository:
 
         self.data.installed_version = None
         self.data.installed_commit = None
-        self.marketplace.async_dispatch(
-            MarketplaceSignal.REPOSITORY,
-            {
-                "id": 1337,
-                "action": "uninstall",
-                "repository": self.data.full_name,
-                "repository_id": self.data.id,
-            },
-        )
+        self.async_dispatch_changed("uninstall")
 
         await self.async_remove_entity_device()
         ir.async_delete_issue(self.marketplace.hass, DOMAIN, f"removed_{self.data.id}")
@@ -1069,22 +1073,48 @@ class Repository:
         self, install_repository: Callable[[], Awaitable[None]]
     ) -> None:
         """Run the install steps around writing the content."""
-        self.marketplace.async_dispatch(
-            MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
-            {"repository": self.data.full_name, "progress": 30},
-        )
+        self._async_dispatch_install_progress(30)
         self.logger.info("%s Running installation steps", self.string)
         await install_repository()
-        self.marketplace.async_dispatch(
-            MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
-            {"repository": self.data.full_name, "progress": 90},
-        )
+        self._async_dispatch_install_progress(90)
         self.logger.info("%s Installation steps completed", self.string)
         await self._async_post_install()
+
+    def _async_dispatch_install_progress(self, progress: int | Literal[False]) -> None:
+        """Tell how far the install is, False once it is no longer running."""
         self.marketplace.async_dispatch(
             MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
-            {"repository": self.data.full_name, "progress": False},
+            {"repository": self.data.full_name, "progress": progress},
         )
+
+    def async_dispatch_changed(self, action: str) -> None:
+        """Tell the panel the repository changed."""
+        self.marketplace.async_dispatch(
+            MarketplaceSignal.REPOSITORY,
+            {
+                "action": action,
+                "repository": self.data.full_name,
+                "repository_id": self.data.id,
+            },
+        )
+
+    @contextmanager
+    def _install_failure_names_the_version(self, version: str | None) -> Iterator[None]:
+        """Name the repository and version in the error of a failed install."""
+        try:
+            yield
+        except GitHubAnonymousRateLimitError, ReplacesBuiltInNotConfirmedError:
+            raise
+        except MarketplaceError as exception:
+            raise MarketplaceError(
+                f"Installing {self.data.full_name} with version {version} failed with ({exception})"
+            ) from exception
+
+    def _end_install(self) -> None:
+        """Forget the version picked for the install and end its progress."""
+        self.data.selected_tag = None
+        self.force_branch = False
+        self._async_dispatch_install_progress(False)
 
     async def async_post_installation(self) -> None:
         """Run post install steps."""
@@ -1159,10 +1189,7 @@ class Repository:
         """Write the content, putting back what was there when it fails."""
         # Checked here, the version being written decides where it goes
         await self._async_pre_install()
-        self.marketplace.async_dispatch(
-            MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
-            {"repository": self.data.full_name, "progress": 40},
-        )
+        self._async_dispatch_install_progress(40)
 
         persistent_directory = await self._async_back_up_persistent_directory()
         backup: Backup | None = None
@@ -1205,17 +1232,11 @@ class Repository:
             "%s Remote path is set to %s", self.string, self.content.path.remote
         )
 
-        self.marketplace.async_dispatch(
-            MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
-            {"repository": self.data.full_name, "progress": 50},
-        )
+        self._async_dispatch_install_progress(50)
 
         try:
             await download()
-            self.marketplace.async_dispatch(
-                MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
-                {"repository": self.data.full_name, "progress": 70},
-            )
+            self._async_dispatch_install_progress(70)
             self._raise_for_install_errors()
             await self.async_check_written_content()
 
@@ -1236,10 +1257,7 @@ class Repository:
                 ) from exception
             raise
 
-        self.marketplace.async_dispatch(
-            MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
-            {"repository": self.data.full_name, "progress": 80},
-        )
+        self._async_dispatch_install_progress(80)
 
         if backup is not None:
             await self.marketplace.hass.async_add_executor_job(backup.cleanup)
@@ -1890,37 +1908,23 @@ class Repository:
 
         await self._ensure_install_capabilities(ref)
         self.logger.info("Starting install, %s", ref)
-        if self.display_version_or_commit == "version":
-            self.marketplace.async_dispatch(
-                MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
-                {"repository": self.data.full_name, "progress": 10},
-            )
-            if not ref:
-                await self.update_repository(force=True)
-            else:
-                self.ref = ref
-            self.data.selected_tag = ref
-            self.force_branch = ref is not None
-            self.marketplace.async_dispatch(
-                MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
-                {"repository": self.data.full_name, "progress": 20},
-            )
-
         try:
-            await self.async_install(version=ref)
-        except GitHubAnonymousRateLimitError, ReplacesBuiltInNotConfirmedError:
-            raise
-        except MarketplaceError as exception:
-            raise MarketplaceError(
-                f"Installing {self.data.full_name} with version {ref or self.data.last_version or self.data.last_commit} failed with ({exception})"
-            ) from exception
+            if self.display_version_or_commit == "version":
+                self._async_dispatch_install_progress(10)
+                if not ref:
+                    await self.update_repository(force=True)
+                else:
+                    self.ref = ref
+                self.data.selected_tag = ref
+                self.force_branch = ref is not None
+                self._async_dispatch_install_progress(20)
+
+            with self._install_failure_names_the_version(
+                ref or self.data.last_version or self.data.last_commit
+            ):
+                await self.async_install(version=ref)
         finally:
-            self.data.selected_tag = None
-            self.force_branch = False
-            self.marketplace.async_dispatch(
-                MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
-                {"repository": self.data.full_name, "progress": False},
-            )
+            self._end_install()
 
     def _catalog_version(self, ref: str | None) -> str | None:
         """Return the catalog version to install without the GitHub API.
@@ -1951,19 +1955,13 @@ class Repository:
         # Without releases the catalog names the last commit instead
         commit = self.data.last_version is None
         self.logger.info("Starting install, %s", version)
-        self.marketplace.async_dispatch(
-            MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
-            {"repository": self.data.full_name, "progress": 10},
-        )
+        self._async_dispatch_install_progress(10)
 
         try:
             download = await self._async_prepare_catalog_install(version, commit=commit)
-            self.marketplace.async_dispatch(
-                MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
-                {"repository": self.data.full_name, "progress": 20},
-            )
+            self._async_dispatch_install_progress(20)
 
-            try:
+            with self._install_failure_names_the_version(version):
                 await self._async_run_install(
                     partial(
                         self._async_write_catalog_version,
@@ -1972,19 +1970,8 @@ class Repository:
                         commit=commit,
                     )
                 )
-            except GitHubAnonymousRateLimitError, ReplacesBuiltInNotConfirmedError:
-                raise
-            except MarketplaceError as exception:
-                raise MarketplaceError(
-                    f"Installing {self.data.full_name} with version {version} failed with ({exception})"
-                ) from exception
         finally:
-            self.data.selected_tag = None
-            self.force_branch = False
-            self.marketplace.async_dispatch(
-                MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS,
-                {"repository": self.data.full_name, "progress": False},
-            )
+            self._end_install()
 
     async def _async_prepare_catalog_install(
         self, version: str, *, commit: bool

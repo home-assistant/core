@@ -20,7 +20,7 @@ from homeassistant.loader import (
 from homeassistant.util.json import json_loads_object
 
 from ..const import DOMAIN, RESTART_ISSUE_PREFIX
-from ..enums import MarketplaceSignal, RepositoryCategory, RepositoryFile
+from ..enums import RepositoryCategory, RepositoryFile
 from ..exceptions import (
     AppRepositoryError,
     CatalogContentUnresolvedError,
@@ -225,22 +225,12 @@ class IntegrationRepository(Repository):
             )
 
     @override
-    async def validate_repository(self) -> bool:
-        """Check the repository has content this category installs."""
-        await self.common_validate()
-
-        self.resolve_content()
-
+    async def async_read_content_details(self) -> None:
+        """Take the domain and the name from the manifest.json of the integration."""
         if manifest := await self.async_get_integration_manifest():
             self._use_integration_manifest(manifest)
 
         self.content.path.local = self.localpath
-
-        if self.validate.errors:
-            for error in self.validate.errors:
-                if not self.marketplace.status.startup:
-                    self.logger.error("%s %s", self.string, error)
-        return self.validate.success
 
     @override
     @concurrent(concurrenttasks=10)
@@ -260,21 +250,10 @@ class IntegrationRepository(Repository):
             name = get_first_directory_in_directory(self.tree, "custom_components")
             self.content.path.remote = f"custom_components/{name}"
 
-        if manifest := await self.async_get_integration_manifest():
-            self._use_integration_manifest(manifest)
-
-        self.content.path.local = self.localpath
+        await self.async_read_content_details()
 
         if self.data.installed:
-            self.marketplace.async_dispatch(
-                MarketplaceSignal.REPOSITORY,
-                {
-                    "id": 1337,
-                    "action": "update",
-                    "repository": self.data.full_name,
-                    "repository_id": self.data.id,
-                },
-            )
+            self.async_dispatch_changed("update")
 
     @override
     def resolve_content(self) -> None:

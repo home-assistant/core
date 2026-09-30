@@ -15,7 +15,7 @@ from homeassistant.components.frontend import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml
 
-from ..enums import MarketplaceSignal, RepositoryCategory
+from ..enums import RepositoryCategory
 from ..exceptions import MarketplaceError
 from ..utils.decorator import concurrent
 from ..utils.tree import tree_entry_filename
@@ -110,19 +110,6 @@ class ThemeRepository(Repository):
         await self.marketplace.hass.async_add_executor_job(_check)
 
     @override
-    async def validate_repository(self) -> bool:
-        """Check the repository has content this category installs."""
-        await self.common_validate()
-
-        self.resolve_content()
-
-        if self.validate.errors:
-            for error in self.validate.errors:
-                if not self.marketplace.status.startup:
-                    self.logger.error("%s %s", self.string, error)
-        return self.validate.success
-
-    @override
     def resolve_content(self) -> None:
         """Point the content at the theme in the tree."""
         directory = "" if self.repository_manifest.content_in_root else "themes"
@@ -183,15 +170,7 @@ class ThemeRepository(Repository):
         self.content.path.local = self.localpath
 
         if self.data.installed:
-            self.marketplace.async_dispatch(
-                MarketplaceSignal.REPOSITORY,
-                {
-                    "id": 1337,
-                    "action": "update",
-                    "repository": self.data.full_name,
-                    "repository_id": self.data.id,
-                },
-            )
+            self.async_dispatch_changed("update")
 
     @override
     def update_filenames(self) -> None:

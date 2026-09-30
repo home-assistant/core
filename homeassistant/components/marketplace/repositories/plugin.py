@@ -16,7 +16,7 @@ from ..const import (
     LEGACY_DASHBOARD_RESOURCE_BASE,
     RESTART_ISSUE_PREFIX,
 )
-from ..enums import MarketplaceSignal, RepositoryCategory
+from ..enums import RepositoryCategory
 from ..exceptions import CatalogContentUnresolvedError, MarketplaceError
 from ..utils.decorator import concurrent
 from ..utils.url import github_release_asset, ref_version
@@ -79,19 +79,6 @@ class PluginRepository(Repository):
             )
 
     @override
-    async def validate_repository(self) -> bool:
-        """Check the repository has content this category installs."""
-        await self.common_validate()
-
-        self.resolve_content()
-
-        if self.validate.errors:
-            for error in self.validate.errors:
-                if not self.marketplace.status.startup:
-                    self.logger.error("%s %s", self.string, error)
-        return self.validate.success
-
-    @override
     async def async_post_installation(self) -> None:
         """Run post installation steps."""
         self.data.directory = self.directory
@@ -138,15 +125,7 @@ class PluginRepository(Repository):
             self.content.single = True
 
         if self.data.installed:
-            self.marketplace.async_dispatch(
-                MarketplaceSignal.REPOSITORY,
-                {
-                    "id": 1337,
-                    "action": "update",
-                    "repository": self.data.full_name,
-                    "repository_id": self.data.id,
-                },
-            )
+            self.async_dispatch_changed("update")
 
     @override
     def resolve_content(self) -> None:

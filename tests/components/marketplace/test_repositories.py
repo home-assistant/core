@@ -26,6 +26,7 @@ from homeassistant.components.marketplace.base import (
 from homeassistant.components.marketplace.const import DOMAIN, MAX_DOWNLOAD_SIZE
 from homeassistant.components.marketplace.enums import (
     DisabledReason,
+    MarketplaceSignal,
     RepositoryCategory,
 )
 from homeassistant.components.marketplace.exceptions import (
@@ -2374,6 +2375,68 @@ async def test_install_custom_repository(
     assert repository.data.installed_version == category_test_data["version_base"]
     assert github_api_calls(aioclient_mock)
     assert_api_usage(aioclient_mock, snapshot)
+
+
+@pytest.mark.parametrize("github_token", [None])
+@pytest.mark.parametrize(
+    ("is_default", "progress"),
+    [
+        pytest.param(True, [10, 20, 30, 40, 50, 70, 80, 90, False], id="catalog"),
+        # Without releases there is no version to resolve first
+        pytest.param(False, [30, 40, 50, 70, 80, 90, False], id="github_api"),
+    ],
+)
+async def test_install_reports_its_progress(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    is_default: bool,
+    progress: list[int | bool],
+) -> None:
+    """Test an install reports each step once and ends its progress once."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+
+    with (
+        patch.object(marketplace.repositories, "is_default", return_value=is_default),
+        patch.object(
+            marketplace, "async_dispatch", wraps=marketplace.async_dispatch
+        ) as dispatch,
+    ):
+        assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
+
+    assert [
+        call.args[1]["progress"]
+        for call in dispatch.call_args_list
+        if call.args[0] == MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS
+    ] == progress
+
+
+@pytest.mark.parametrize("github_token", [None])
+async def test_failed_version_lookup_ends_the_progress(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test an install failing before it writes anything is no longer running."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.releases = True
+
+    with (
+        patch.object(marketplace.repositories, "is_default", return_value=False),
+        patch.object(
+            repository, "update_repository", side_effect=MarketplaceError("Busy")
+        ),
+        patch.object(
+            marketplace, "async_dispatch", wraps=marketplace.async_dispatch
+        ) as dispatch,
+    ):
+        assert not (await _install(hass, hass_ws_client, repository.data.id))["success"]
+
+    assert [
+        call.args[1]["progress"]
+        for call in dispatch.call_args_list
+        if call.args[0] == MarketplaceSignal.REPOSITORY_INSTALL_PROGRESS
+    ] == [10, False]
 
 
 def _archive_without_content(repository: str) -> bytes:

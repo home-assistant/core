@@ -791,14 +791,7 @@ class MarketplaceManager:
             repository.data.id = repository_id
 
         elif check and repository.data.new:
-            self.async_dispatch(
-                MarketplaceSignal.REPOSITORY,
-                {
-                    "action": "registration",
-                    "repository": repository.data.full_name,
-                    "repository_id": repository.data.id,
-                },
-            )
+            repository.async_dispatch_changed("registration")
 
         self.repositories.register(repository)
         if check:
