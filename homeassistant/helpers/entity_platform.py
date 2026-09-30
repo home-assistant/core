@@ -294,10 +294,17 @@ class EntityPlatform:
         # Per-entity polling tasks from previous cycles that are still
         # running, keyed by `id(entity)` (works for unhashable entities,
         # and a removed entity's task is never confused with a different
-        # entity that later reuses the same entity_id). An entity with an
+        # entity that later reuses the same entity_id). Each value also
+        # records the polling cycle that created the task, so a stale,
+        # overtaken cycle can tell a sibling claimed the entity even after
+        # that sibling's task has already finished. An entity with an
         # unfinished task here is skipped by the next polling cycle
         # instead of blocking siblings.
-        self._polling_tasks: dict[int, asyncio.Task[None]] = {}
+        self._polling_tasks: dict[int, tuple[int, asyncio.Task[None]]] = {}
+        # Monotonically increasing id identifying each call to
+        # `_async_update_entity_states`, used to detect when a newer
+        # polling cycle has already claimed an entity.
+        self._next_polling_cycle_id = 0
 
         self.parallel_updates: asyncio.Semaphore | None = None
         self._update_in_sequence: bool = False
@@ -1326,6 +1333,9 @@ class EntityPlatform:
 
         This method must be run in the event loop.
         """
+        cycle_id = self._next_polling_cycle_id
+        self._next_polling_cycle_id += 1
+
         entities_to_poll = [
             entity
             for entity in self.entities.values()
@@ -1337,8 +1347,8 @@ class EntityPlatform:
         stale_entity_ids = {
             entity.entity_id
             for entity in entities_to_poll
-            if (task := self._polling_tasks.get(id(entity))) is not None
-            and not task.done()
+            if (existing := self._polling_tasks.get(id(entity))) is not None
+            and not existing[1].done()
         }
 
         pollable_entities = [
@@ -1379,16 +1389,20 @@ class EntityPlatform:
             # own task so a hung entity can be identified and skipped by a
             # later cycle without waiting for it here.
             for entity in pollable_entities:
-                # A newer, independent call may already have started its own
-                # task for this entity while this (now stale) cycle was
-                # stuck awaiting an earlier one; don't overwrite it.
-                existing_task = self._polling_tasks.get(id(entity))
-                if existing_task is not None and not existing_task.done():
+                # A newer, independent call may already have claimed this
+                # entity (started its own task for it) while this (now
+                # stale) cycle was stuck awaiting an earlier one. Compare
+                # cycle ids rather than checking if that task is done: a
+                # newer cycle's task can finish *during* this cycle's wait,
+                # and its claim must still win - otherwise this stale cycle
+                # would poll the entity a second time right after it.
+                existing = self._polling_tasks.get(id(entity))
+                if existing is not None and existing[0] > cycle_id:
                     continue
                 task = create_eager_task(
                     entity.async_update_ha_state(True), loop=self.hass.loop
                 )
-                self._polling_tasks[id(entity)] = task
+                self._polling_tasks[id(entity)] = (cycle_id, task)
                 (result,) = await asyncio.gather(task, return_exceptions=True)
                 self._async_handle_entity_update_result(entity, task, result)
             return
@@ -1403,7 +1417,7 @@ class EntityPlatform:
             for entity in pollable_entities
         ]
         for entity, task in new_tasks:
-            self._polling_tasks[id(entity)] = task
+            self._polling_tasks[id(entity)] = (cycle_id, task)
 
         results = await asyncio.gather(
             *(task for _, task in new_tasks), return_exceptions=True
@@ -1421,7 +1435,9 @@ class EntityPlatform:
         # Only clear the tracked task if it is still the one we started;
         # a fast-finishing entity could already have been re-scheduled by a
         # later cycle by the time we get here.
-        if self._polling_tasks.get(id(entity)) is task:
+        if (existing := self._polling_tasks.get(id(entity))) is not None and (
+            existing[1] is task
+        ):
             del self._polling_tasks[id(entity)]
         if isinstance(result, asyncio.CancelledError):
             # Deliberately not re-raised: this task was cancelled on its
