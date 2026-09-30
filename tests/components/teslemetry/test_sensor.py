@@ -1,7 +1,6 @@
 """Test the Teslemetry sensor platform."""
 
 from copy import deepcopy
-from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -701,7 +700,6 @@ async def test_energy_history_time_zone_fallback(
 )
 async def test_energy_history_update_entity_service(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
     mock_add_connection_listener: MagicMock,
     mock_energy_totals_stream: MagicMock,
@@ -709,10 +707,10 @@ async def test_energy_history_update_entity_service(
     expected_state: str,
     expected_last_reset: str | None,
 ) -> None:
-    """The generic update service keeps the streamed totals only while the stream is up.
+    """The generic update service leaves the history sensors as the stream set them.
 
-    The coordinator has nothing to fetch, so the service must not leave the
-    sensors unavailable on a healthy stream, nor revive them while it is down.
+    The stream is their only source, so the service must neither fail on a
+    healthy stream nor revive stale totals while it is down.
     """
     await setup_platform(hass, [Platform.SENSOR])
     await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
@@ -728,10 +726,6 @@ async def test_energy_history_update_entity_service(
         {ATTR_ENTITY_ID: ENERGY_HISTORY_ENTITY},
         blocking=True,
     )
-    # The coordinator debounces refresh requests, so let the deferred one land.
-    freezer.tick(timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
 
     assert "NotImplementedError" not in caplog.text
     assert (state := hass.states.get(ENERGY_HISTORY_ENTITY))
