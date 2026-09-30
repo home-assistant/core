@@ -15,7 +15,6 @@ import pytest
 from homeassistant.components.sma.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
 
 from . import MOCK_DEVICE, MOCK_MODBUS_OPTIONS, MOCK_USER_INPUT, setup_integration
 
@@ -118,27 +117,16 @@ async def test_modbus_setup_failure(
     mock_sma_client: MagicMock,
     mock_sma_modbus: MagicMock,
     mock_modbus_config_entry: MockConfigEntry,
-    issue_registry: ir.IssueRegistry,
     failing_step: str,
     exception: type[Exception],
 ) -> None:
-    """Test a Modbus failure keeps the sensors and creates a repair issue."""
+    """Test a Modbus failure keeps the sensors and closes the Modbus connection."""
     getattr(mock_sma_modbus, failing_step).side_effect = exception
 
     await setup_integration(hass, mock_modbus_config_entry)
 
     assert mock_modbus_config_entry.state is ConfigEntryState.LOADED
     mock_sma_modbus.close.assert_called_once()
-    issue = issue_registry.async_get_issue(
-        DOMAIN, f"modbus_unreachable_{mock_modbus_config_entry.entry_id}"
-    )
-    assert issue
-    assert issue.is_fixable
-
-    assert await hass.config_entries.async_unload(mock_modbus_config_entry.entry_id)
-    assert not issue_registry.async_get_issue(
-        DOMAIN, f"modbus_unreachable_{mock_modbus_config_entry.entry_id}"
-    )
 
 
 @pytest.mark.parametrize(

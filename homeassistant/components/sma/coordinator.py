@@ -21,10 +21,9 @@ from pysma.sensor import Sensors
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, ISSUE_MODBUS_UNREACHABLE
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,16 +102,6 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
         ) as err:
             _LOGGER.warning("Could not connect to SMA Modbus: %s", err)
             await self.sma_modbus.close()
-            ir.async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"{ISSUE_MODBUS_UNREACHABLE}_{self.config_entry.entry_id}",
-                data={"entry_id": self.config_entry.entry_id},
-                is_fixable=True,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key=ISSUE_MODBUS_UNREACHABLE,
-                translation_placeholders={"name": self.config_entry.title},
-            )
             return
 
         self._sma_modbus_controls = {
