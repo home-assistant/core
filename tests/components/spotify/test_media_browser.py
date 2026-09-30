@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from . import setup_integration
 from .conftest import SCOPES
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.mark.usefixtures("setup_credentials")
@@ -157,7 +157,7 @@ async def test_playlist_names_preserve_special_characters(
     name: str,
 ) -> None:
     """Test JSON parsing, setup and browsing preserve playlist, track and album names."""
-    playlist_data = json.loads(await async_load_fixture(hass, "playlist.json", DOMAIN))
+    playlist_data = await async_load_json_object_fixture(hass, "playlist.json", DOMAIN)
     playlist_data["name"] = name
     track_data = playlist_data["tracks"]["items"][0]["track"]
     track_data["name"] = name

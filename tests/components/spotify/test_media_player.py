@@ -62,6 +62,7 @@ from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_load_fixture,
+    async_load_json_object_fixture,
     snapshot_platform,
 )
 
@@ -242,7 +243,7 @@ async def test_playlist_item_schema_error_does_not_block_setup(
     items_key: str,
 ) -> None:
     """Test playlist deserialization failures do not block setup or playback."""
-    playlist_data = json.loads(await async_load_fixture(hass, "playlist.json", DOMAIN))
+    playlist_data = await async_load_json_object_fixture(hass, "playlist.json", DOMAIN)
     playlist_items = playlist_data.pop("tracks")
     for playlist_item in playlist_items["items"]:
         playlist_item["item"] = playlist_item.pop("track")
