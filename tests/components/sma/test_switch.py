@@ -1,21 +1,19 @@
 """Test the SMA switch platform."""
 
 from collections.abc import Generator
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pysma import (
     ModbusControl,
     SmaConnectionException,
-    SmaSunSpecException,
     SmaTimeoutException,
     SmaWriteException,
 )
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.sma.const import DEFAULT_SCAN_INTERVAL
+from homeassistant.components.sma.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     SERVICE_TURN_OFF,
@@ -30,11 +28,31 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from . import OPERATING_STATUS_OFF_TAG, setup_integration
+from . import (
+    MOCK_DEVICE,
+    MOCK_MODBUS_OPTIONS,
+    MOCK_USER_INPUT,
+    OPERATING_STATUS_OFF_TAG,
+    setup_integration,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 SWITCH_ENTITY_ID = "switch.sma_device_name_inverter_enabled"
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return a config entry with Modbus enabled."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_DEVICE.name,
+        unique_id=str(MOCK_DEVICE.serial),
+        data=MOCK_USER_INPUT,
+        options=MOCK_MODBUS_OPTIONS,
+        minor_version=2,
+        entry_id="sma_entry_123",
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -63,28 +81,37 @@ async def test_all_entities(
         )
 
 
-@pytest.mark.parametrize(
-    "modbus_config",
-    [
-        pytest.param({"get_control_schema.return_value": None}, id="not_supported"),
-        pytest.param({"connect.side_effect": SmaConnectionException}, id="no_modbus"),
-        pytest.param({"connect.side_effect": SmaTimeoutException}, id="timeout"),
-        pytest.param({"discover.side_effect": SmaSunSpecException}, id="no_sunspec"),
-    ],
-)
 async def test_not_supported(
     hass: HomeAssistant,
     mock_sma_client: MagicMock,
     mock_sma_modbus: MagicMock,
     mock_config_entry: MockConfigEntry,
-    modbus_config: dict[str, Any],
 ) -> None:
-    """Test the switch is not created without Modbus or a supported control."""
-    mock_sma_modbus.configure_mock(**modbus_config)
+    """Test the switch is not created when the control is not supported."""
+    mock_sma_modbus.get_control_schema.return_value = None
 
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(SWITCH_ENTITY_ID) is None
+
+
+async def test_no_switch_without_modbus(
+    hass: HomeAssistant,
+    mock_sma_client: MagicMock,
+    mock_sma_modbus: MagicMock,
+) -> None:
+    """Test the switch is not created when Modbus is not enabled."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=str(MOCK_DEVICE.serial),
+        data=MOCK_USER_INPUT,
+        minor_version=2,
+    )
+
+    await setup_integration(hass, entry)
+
+    assert hass.states.get(SWITCH_ENTITY_ID) is None
+    mock_sma_modbus.connect.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -152,25 +179,6 @@ async def test_turn_on_off_exceptions(
             {"entity_id": SWITCH_ENTITY_ID},
             blocking=True,
         )
-
-
-async def test_switch_added_after_delayed_discovery(
-    hass: HomeAssistant,
-    mock_sma_client: MagicMock,
-    mock_sma_modbus: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the switch is added once Modbus discovery later succeeds."""
-    mock_sma_modbus.get_control_schema.return_value = None
-    await setup_integration(hass, mock_config_entry)
-    assert hass.states.get(SWITCH_ENTITY_ID) is None
-
-    mock_sma_modbus.get_control_schema.return_value = (0, 1)
-    coordinator = mock_config_entry.runtime_data
-    await coordinator._async_discover_modbus()
-    await hass.async_block_till_done()
-
-    assert hass.states.get(SWITCH_ENTITY_ID) is not None
 
 
 async def test_unavailable_when_control_unreadable(

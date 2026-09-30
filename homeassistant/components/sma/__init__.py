@@ -8,15 +8,23 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_PORT,
     CONF_SSL,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_GROUP
+from .const import (
+    CONF_GROUP,
+    CONF_MODBUS,
+    CONF_MODBUS_UNIT_ID,
+    DOMAIN,
+    ISSUE_MODBUS_UNREACHABLE,
+)
 from .coordinator import SMADataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
@@ -42,10 +50,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SMAConfigEntry) -> bool:
         group=entry.data[CONF_GROUP],
     )
 
-    sma_modbus = SMAModbus(
-        host=entry.data[CONF_HOST],
-        port=502,  # Default, maybe add options for this later on
-        sma_unit_id=3,  # default, maybe add options for this later on
+    sma_modbus = (
+        SMAModbus(
+            host=entry.data[CONF_HOST],
+            port=entry.options[CONF_PORT],
+            sma_unit_id=entry.options[CONF_MODBUS_UNIT_ID],
+        )
+        if entry.options.get(CONF_MODBUS)
+        else None
     )
 
     coordinator = SMADataUpdateCoordinator(hass, entry, sma, sma_modbus)
@@ -68,6 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SMAConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: SMAConfigEntry) -> bool:
     """Unload a config entry."""
+    ir.async_delete_issue(hass, DOMAIN, f"{ISSUE_MODBUS_UNREACHABLE}_{entry.entry_id}")
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

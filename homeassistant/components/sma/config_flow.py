@@ -10,32 +10,52 @@ import probatio
 from pysma import (
     SmaAuthenticationException,
     SmaConnectionException,
+    SMAModbus,
     SmaReadException,
+    SmaSunSpecException,
+    SmaTimeoutException,
     SMAWebConnect,
 )
 from yarl import URL
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_PORT,
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import CONF_GROUP, DOMAIN, GROUPS
+from .const import (
+    CONF_GROUP,
+    CONF_MODBUS,
+    CONF_MODBUS_UNIT_ID,
+    DEFAULT_MODBUS_PORT,
+    DEFAULT_MODBUS_UNIT_ID,
+    DOMAIN,
+    GROUPS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,6 +96,53 @@ STEP_DISCOVERY_CONFIRM_DATA_SCHEMA = probatio.Schema(
 )
 
 
+OPTIONS_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_MODBUS, default=False): cv.boolean,
+        probatio.Required(CONF_PORT, default=DEFAULT_MODBUS_PORT): probatio.All(
+            NumberSelector(
+                NumberSelectorConfig(
+                    min=1, max=65535, step=1, mode=NumberSelectorMode.BOX
+                )
+            ),
+            probatio.Coerce(int),
+        ),
+        # SMA assigns device unit IDs 3-123; SunSpec answers on that ID + 123
+        probatio.Required(
+            CONF_MODBUS_UNIT_ID, default=DEFAULT_MODBUS_UNIT_ID
+        ): probatio.All(
+            NumberSelector(
+                NumberSelectorConfig(
+                    min=3, max=123, step=1, mode=NumberSelectorMode.BOX
+                )
+            ),
+            probatio.Coerce(int),
+        ),
+    }
+)
+
+
+async def validate_modbus(host: str, user_input: dict[str, Any]) -> dict[str, str]:
+    """Validate Modbus with SunSpec is reachable on the device, when enabled."""
+    if not user_input[CONF_MODBUS]:
+        return {}
+    sma_modbus = SMAModbus(
+        host=host,
+        port=user_input[CONF_PORT],
+        sma_unit_id=user_input[CONF_MODBUS_UNIT_ID],
+    )
+    try:
+        await sma_modbus.connect()
+        await sma_modbus.discover()
+    except SmaConnectionException, SmaTimeoutException:
+        return {"base": "modbus_cannot_connect"}
+    except SmaSunSpecException:
+        return {"base": "modbus_no_sunspec"}
+    finally:
+        await sma_modbus.close()
+    return {}
+
+
 async def validate_input(
     hass: HomeAssistant,
     user_input: dict[str, Any],
@@ -110,6 +177,13 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 2
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(config_entry: ConfigEntry) -> SmaOptionsFlow:
+        """Get the options flow for this handler."""
+        return SmaOptionsFlow()
 
     def __init__(self) -> None:
         """Initialize."""
@@ -324,5 +398,29 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
                 suggested_values=user_input,
             ),
             description_placeholders={CONF_HOST: self._data[CONF_HOST]},
+            errors=errors,
+        )
+
+
+class SmaOptionsFlow(OptionsFlowWithReload):
+    """Handle the SMA options, which enable Modbus."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the Modbus options."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            errors = await validate_modbus(
+                self.config_entry.data[CONF_HOST], user_input
+            )
+            if not errors:
+                return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, user_input or self.config_entry.options
+            ),
             errors=errors,
         )

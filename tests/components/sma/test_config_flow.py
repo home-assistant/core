@@ -2,11 +2,17 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pysma import SmaAuthenticationException, SmaConnectionException, SmaReadException
+from pysma import (
+    SmaAuthenticationException,
+    SmaConnectionException,
+    SmaReadException,
+    SmaSunSpecException,
+    SmaTimeoutException,
+)
 from pysma.helpers import DeviceInfo
 import pytest
 
-from homeassistant.components.sma.const import CONF_GROUP, DOMAIN
+from homeassistant.components.sma.const import CONF_GROUP, CONF_MODBUS, DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
@@ -24,6 +30,7 @@ from . import (
     MOCK_DEVICE,
     MOCK_DHCP_DISCOVERY,
     MOCK_DHCP_DISCOVERY_INPUT,
+    MOCK_MODBUS_OPTIONS,
     MOCK_USER_INPUT,
     MOCK_USER_REAUTH,
     MOCK_USER_RECONFIGURE,
@@ -524,3 +531,91 @@ async def test_reconfigure_mismatch_id(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_options_flow_enable_modbus(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_sma_modbus: MagicMock,
+) -> None:
+    """Test enabling Modbus validates the connection and stores the options."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], MOCK_MODBUS_OPTIONS
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options == MOCK_MODBUS_OPTIONS
+    mock_sma_modbus.discover.assert_called_once()
+    mock_sma_modbus.close.assert_called_once()
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_options_flow_disable_modbus(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_sma_modbus: MagicMock,
+) -> None:
+    """Test disabling Modbus skips the connection check."""
+    mock_config_entry.add_to_hass(hass)
+    options = {**MOCK_MODBUS_OPTIONS, CONF_MODBUS: False}
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], options
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options == options
+    mock_sma_modbus.connect.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    ("failing_step", "exception", "error"),
+    [
+        pytest.param(
+            "connect", SmaConnectionException, "modbus_cannot_connect", id="connect"
+        ),
+        pytest.param(
+            "connect", SmaTimeoutException, "modbus_cannot_connect", id="timeout"
+        ),
+        pytest.param(
+            "discover", SmaSunSpecException, "modbus_no_sunspec", id="no_sunspec"
+        ),
+    ],
+)
+async def test_options_flow_modbus_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_sma_modbus: MagicMock,
+    failing_step: str,
+    exception: type[Exception],
+    error: str,
+) -> None:
+    """Test Modbus errors in the options flow and recovering from them."""
+    mock_config_entry.add_to_hass(hass)
+    getattr(mock_sma_modbus, failing_step).side_effect = exception
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], MOCK_MODBUS_OPTIONS
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+    mock_sma_modbus.close.assert_called_once()
+
+    getattr(mock_sma_modbus, failing_step).side_effect = None
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], MOCK_MODBUS_OPTIONS
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options == MOCK_MODBUS_OPTIONS

@@ -21,9 +21,10 @@ from pysma.sensor import Sensors
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, ISSUE_MODBUS_UNREACHABLE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         sma: SMAWebConnect,
-        sma_modbus: SMAModbus,
+        sma_modbus: SMAModbus | None,
     ) -> None:
         """Initialize the SMA Data Update Coordinator."""
         super().__init__(
@@ -61,7 +62,6 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
         self.sma_modbus = sma_modbus
         self._sma_device_info = DeviceInfo()
         self._sensors = Sensors()
-        self._sma_modbus_connected = False
         self._sma_modbus_controls: dict[ModbusControl, tuple[float, float]] = {}
 
     @property
@@ -90,36 +90,36 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
                 translation_key="invalid_auth",
             ) from err
 
-        # Modbus is an optional, secondary connection that can take up to
-        # ~10s to time out when unsupported
-        # So, making it a background, just to be sure.:)
-        self.config_entry.async_create_background_task(
-            self.hass,
-            self._async_discover_modbus(),
-            "sma_modbus_discovery",
-        )
+        if self.sma_modbus is None:
+            return
 
-    async def _async_discover_modbus(self) -> None:
-        """Connect to and discover the SMA Modbus controls, if available."""
         try:
             await self.sma_modbus.connect()
             await self.sma_modbus.discover()
-
-            self._sma_modbus_controls = {
-                control: schema
-                for control in ModbusControl
-                if (schema := self.sma_modbus.get_control_schema(control)) is not None
-            }
-
-            self._sma_modbus_connected = True
-        except (SmaConnectionException, SmaTimeoutException) as err:
-            _LOGGER.debug("SMA Modbus connection failed: %s", err)
+        except (
+            SmaConnectionException,
+            SmaTimeoutException,
+            SmaSunSpecException,
+        ) as err:
+            _LOGGER.warning("Could not connect to SMA Modbus: %s", err)
+            await self.sma_modbus.close()
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"{ISSUE_MODBUS_UNREACHABLE}_{self.config_entry.entry_id}",
+                data={"entry_id": self.config_entry.entry_id},
+                is_fixable=True,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=ISSUE_MODBUS_UNREACHABLE,
+                translation_placeholders={"name": self.config_entry.title},
+            )
             return
-        except SmaSunSpecException as err:
-            _LOGGER.debug("SMA Modbus SunSpec discovery failed: %s", err)
-            return
-        else:
-            await self.async_request_refresh()
+
+        self._sma_modbus_controls = {
+            control: schema
+            for control in ModbusControl
+            if (schema := self.sma_modbus.get_control_schema(control)) is not None
+        }
 
     @override
     async def _async_update_data(self) -> SMACoordinatorData:
@@ -141,7 +141,7 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
             ) from err
 
         modbus_controls: dict[ModbusControl, float | None] = {}
-        if self._sma_modbus_connected:
+        if self.sma_modbus is not None:
             for control in self._sma_modbus_controls:
                 try:
                     modbus_controls[control] = await self.sma_modbus.get_control(
@@ -164,13 +164,12 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
         )
 
     async def async_close_sma_session(self) -> None:
-        """Close the SMA session."""
+        """Close the SMA session and the Modbus connection."""
+        if self.sma_modbus is not None:
+            await self.sma_modbus.close()
         try:
             await self.sma.close_session()
         except SmaConnectionException as err:
             _LOGGER.debug("Could not close the SMA session: %s", err)
             return
         _LOGGER.debug("SMA session closed")
-        if self._sma_modbus_connected:
-            await self.sma_modbus.close()
-            _LOGGER.debug("SMA Modbus connection closed")

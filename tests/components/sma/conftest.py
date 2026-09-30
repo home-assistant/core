@@ -46,7 +46,10 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_sma_modbus() -> Generator[MagicMock]:
     """Mock the SMA Modbus client."""
-    with patch("homeassistant.components.sma.SMAModbus", autospec=True) as modbus_cls:
+    with (
+        patch("homeassistant.components.sma.SMAModbus", autospec=True) as modbus_cls,
+        patch("homeassistant.components.sma.config_flow.SMAModbus", new=modbus_cls),
+    ):
         modbus_instance: MagicMock = modbus_cls.return_value
         modbus_instance.connect = AsyncMock(return_value=None)
         modbus_instance.discover = AsyncMock(return_value=None)

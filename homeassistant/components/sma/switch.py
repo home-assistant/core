@@ -14,7 +14,7 @@ from pysma.sensor import Sensor
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -57,28 +57,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up SMA switch entities."""
     coordinator = entry.runtime_data
-    added_controls: set[ModbusControl] = set()
-
-    @callback
-    def _add_new_entities() -> None:
-        """Add switches for controls discovered after initial setup."""
-        new_descriptions = [
-            description
-            for description in SWITCH_DESCRIPTIONS
-            if description.control not in added_controls
-            and description.control in coordinator.supported_modbus_controls
-        ]
-        if not new_descriptions:
-            return
-
-        added_controls.update(description.control for description in new_descriptions)
-        async_add_entities(
-            SMAModbusSwitch(coordinator, description, entry)
-            for description in new_descriptions
-        )
-
-    _add_new_entities()
-    entry.async_on_unload(coordinator.async_add_listener(_add_new_entities))
+    async_add_entities(
+        SMAModbusSwitch(coordinator, description, entry)
+        for description in SWITCH_DESCRIPTIONS
+        if description.control in coordinator.supported_modbus_controls
+    )
 
 
 async def _perform_modbus_action(
@@ -87,6 +70,8 @@ async def _perform_modbus_action(
     value: float,
 ) -> None:
     """Perform a Modbus action and refresh the coordinator."""
+    if TYPE_CHECKING:
+        assert coordinator.sma_modbus is not None
     try:
         await coordinator.sma_modbus.set_control(control, value)
     except (SmaConnectionException, SmaTimeoutException) as err:
