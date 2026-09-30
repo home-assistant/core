@@ -887,8 +887,6 @@ async def test_error_no_device_exposed_query(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("init_components")
 async def test_query_state_no_device_exposed(hass: HomeAssistant) -> None:
     """Test that a query without a name is answered when no entity is exposed."""
-    # No light is exposed, so the question is answered with nothing rather than
-    # reported as a "not exposed" error, which only named entities get.
     hass.states.async_set("light.kitchen_light", "off")
     expose_entity(hass, "light.kitchen_light", False)
 
