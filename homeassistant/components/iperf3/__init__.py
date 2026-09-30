@@ -73,7 +73,7 @@ PROTOCOLS = ["tcp", "udp"]
 HOST_CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_DURATION, default=DEFAULT_DURATION): probatio.Range(
             5, 10
         ),

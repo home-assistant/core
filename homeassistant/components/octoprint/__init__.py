@@ -105,7 +105,7 @@ CONFIG_SCHEMA = probatio.Schema(
                             probatio.Required(CONF_API_KEY): cv.string,
                             probatio.Required(CONF_HOST): cv.string,
                             probatio.Optional(CONF_SSL, default=False): cv.boolean,
-                            probatio.Optional(CONF_PORT, default=80): cv.port,
+                            probatio.Optional(CONF_PORT, default=80): probatio.Port(),
                             probatio.Optional(
                                 CONF_PATH, default="/"
                             ): ensure_valid_path,
