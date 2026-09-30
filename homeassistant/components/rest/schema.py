@@ -329,14 +329,16 @@ def RESOURCE_FLOW_SCHEMA(collapse_auth: bool = True) -> probatio.Schema:
                 ),
                 options=SectionConfig(collapsed=True),
             ),
-            probatio.Optional(
-                CONF_TIMEOUT, default=DEFAULT_TIMEOUT
-            ): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=0,
-                    mode=selector.NumberSelectorMode.BOX,
-                    unit_of_measurement=UnitOfTime.SECONDS,
-                )
+            probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): probatio.All(
+                selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=0,
+                        mode=selector.NumberSelectorMode.BOX,
+                        step=1,
+                        unit_of_measurement=UnitOfTime.SECONDS,
+                    ),
+                ),
+                cv.positive_int,
             ),
             probatio.Optional(
                 CONF_ENCODING, default=DEFAULT_ENCODING

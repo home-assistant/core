@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
 from types import MethodType
-from typing import Any, cast, override
+from typing import Any, override
 from xml.parsers.expat import ExpatError
 
 import probatio
@@ -42,7 +42,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import create_rest_data_from_config_entry
 from .const import (
@@ -332,11 +331,16 @@ class RestSubentryFlow(ConfigSubentryFlow):
             await entry.runtime_data.async_refresh()
         rest_data = None
         if not entry.runtime_data.last_update_success:
-            ex = cast(UpdateFailed, entry.runtime_data.last_exception)
+            ex = entry.runtime_data.last_exception
+            if isinstance(ex, HomeAssistantError):
+                return self.async_abort(
+                    reason=ex.translation_key or "endpoint_error",
+                    description_placeholders=ex.translation_placeholders
+                    or {"endpoint_error_message": str(ex)},
+                )
             return self.async_abort(
-                reason=ex.translation_key or "endpoint_error",
-                description_placeholders=ex.translation_placeholders
-                or {"endpoint_error_message": str(ex)},
+                reason="endpoint_error",
+                description_placeholders={"endpoint_error_message": str(ex)},
             )
         try:
             rest_data = entry.runtime_data.rest.data_without_xml()
