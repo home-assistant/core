@@ -2758,53 +2758,54 @@ async def test_missing_price_entity(
     assert state.state == "150.0"
 
 
-async def test_energy_cost_sensor_add_to_platform_abort(
-    recorder_mock: Recorder, hass: HomeAssistant
-) -> None:
-    """Test EnergyCostSensor.add_to_platform_abort sets the future."""
-    adapter = SourceAdapter(
-        source_type="grid",
-        flow_type="flow_from",
-        stat_energy_key="stat_energy_from",
-        total_money_key="stat_cost",
-        name_suffix="Cost",
-        entity_id_suffix="cost",
+def _make_cost_sensor() -> EnergyCostSensor:
+    """Build an EnergyCostSensor for the abort test."""
+    return EnergyCostSensor(
+        SourceAdapter(
+            source_type="grid",
+            flow_type="flow_from",
+            stat_energy_key="stat_energy_from",
+            total_money_key="stat_cost",
+            name_suffix="Cost",
+            entity_id_suffix="cost",
+        ),
+        {
+            "stat_energy_from": "sensor.energy",
+            "stat_cost": None,
+            "entity_energy_price": "sensor.price",
+            "number_energy_price": None,
+        },
     )
-    config = {
-        "stat_energy_from": "sensor.energy",
-        "stat_cost": None,
-        "entity_energy_price": "sensor.price",
-        "number_energy_price": None,
-    }
-
-    sensor = EnergyCostSensor(adapter, config)
-
-    # Future should not be done yet
-    assert not sensor.add_finished.done()
-
-    # Call abort
-    sensor.add_to_platform_abort()
-
-    # Future should now be done
-    assert sensor.add_finished.done()
 
 
-async def test_energy_power_sensor_add_to_platform_abort(
-    recorder_mock: Recorder, hass: HomeAssistant
-) -> None:
-    """Test EnergyPowerSensor.add_to_platform_abort sets the future."""
-    sensor = EnergyPowerSensor(
+def _make_power_sensor() -> EnergyPowerSensor:
+    """Build an EnergyPowerSensor for the abort test."""
+    return EnergyPowerSensor(
         source_type="battery",
         config={"stat_rate_inverted": "sensor.battery_power"},
         unique_id="test_unique_id",
         entity_id="sensor.test_power",
     )
 
-    # Future should not be done yet
+
+@pytest.mark.usefixtures("recorder_mock", "hass")
+@pytest.mark.parametrize(
+    "make_sensor",
+    [
+        pytest.param(_make_cost_sensor, id="cost"),
+        pytest.param(_make_power_sensor, id="power"),
+    ],
+)
+async def test_add_finished_resolved_on_abort(
+    make_sensor: Callable[[], EnergyCostSensor | EnergyPowerSensor],
+) -> None:
+    """Test an aborted add resolves add_finished so SensorManager does not hang."""
+    sensor = make_sensor()
+
     assert not sensor.add_finished.done()
 
-    # Call abort
+    # The entity platform calls add_to_platform_abort when an add is rejected; its
+    # on-remove callbacks must resolve the future SensorManager awaits in finish().
     sensor.add_to_platform_abort()
 
-    # Future should now be done
     assert sensor.add_finished.done()
