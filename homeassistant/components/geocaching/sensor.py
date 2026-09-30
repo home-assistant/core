@@ -135,6 +135,11 @@ async def async_setup_entry(
         on every update to pick up configured codes that were missing from
         the data at setup time or an earlier refresh.
         """
+        if coordinator.data is None:
+            # DataUpdateCoordinator.data is typed as non-optional, but it can
+            # genuinely be None, e.g. after coordinator.async_set_updated_data(None).
+            return  # type: ignore[unreachable]
+
         for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_TRACKED_CACHE):
             reference_code = subentry.data[CONF_CODE].strip().upper()
             if reference_code in added_cache_codes:

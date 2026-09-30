@@ -1,8 +1,10 @@
 """Test the Geocaching sensor platform."""
 
+import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from geocachingapi.models import GeocachingCache, GeocachingStatus, GeocachingTrackable
+import pytest
 
 from homeassistant.components.geocaching.const import (
     CONF_TRACKABLE_CODES,
@@ -374,6 +376,115 @@ async def test_entities_added_when_available_after_setup(
     assert entities_after == entities_before
     for entity_id in (*cache_entity_ids, trackable_entity_id):
         assert entity_id in entities_after
+
+
+async def test_listener_handles_missing_coordinator_data(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the entity-adding listener tolerates coordinator.data being None."""
+    cache_code = "GC12345"
+    missing_cache_code = "GC99999"
+    trackable_code = "TB12345"
+    config_entry = MockConfigEntry(
+        title="1234AB 1",
+        domain=DOMAIN,
+        data={"id": "mock_user", "auth_implementation": DOMAIN},
+        options={CONF_TRACKABLE_CODES: [trackable_code]},
+        unique_id="mock_user",
+        subentries_data=[
+            ConfigSubentryDataWithId(
+                data={CONF_CODE: cache_code},
+                subentry_type=SUBENTRY_TYPE_TRACKED_CACHE,
+                title=cache_code,
+                unique_id=cache_code,
+                subentry_id="cache-subentry",
+            ),
+            ConfigSubentryDataWithId(
+                data={CONF_CODE: missing_cache_code},
+                subentry_type=SUBENTRY_TYPE_TRACKED_CACHE,
+                title=missing_cache_code,
+                unique_id=missing_cache_code,
+                subentry_id="missing-cache-subentry",
+            ),
+        ],
+    )
+    config_entry.add_to_hass(hass)
+
+    owner = MagicMock()
+    owner.username = "CacheOwner"
+    cache = GeocachingCache(
+        reference_code=cache_code,
+        name="Test cache",
+        owner=owner,
+        favorite_points=10,
+    )
+    status = GeocachingStatus()
+    status.user.username = "mock_user"
+    status.user.reference_code = "PR12345"
+    status.tracked_caches = [cache]
+    # trackable_code is configured but absent from this refresh, so it is
+    # not yet in added_trackable_codes when data later disappears below.
+    status.trackables = {}
+
+    await _async_setup_geocaching_entry(hass, config_entry, status)
+
+    cache_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{cache_code}_favorite_points"
+    )
+    assert cache_entity_id is not None
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{missing_cache_code}_favorite_points"
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"PR12345_{trackable_code}_kilometers_traveled"
+        )
+        is None
+    )
+
+    coordinator = config_entry.runtime_data
+    coordinator.data = None
+
+    # Invoke our listener directly (bypassing the other, unrelated
+    # coordinator listeners entities register) so this test isolates its
+    # behavior specifically, per finding B.
+    tracked_entities_listener = next(
+        callback
+        for callback, _ in coordinator._listeners.values()
+        if callback.__name__ == "_async_add_tracked_entities"
+    )
+    caplog.clear()
+    with caplog.at_level(logging.ERROR):
+        tracked_entities_listener()
+        await hass.async_block_till_done()
+
+    assert not caplog.records
+
+    # Existing entities are untouched, and nothing was created for the
+    # codes that were still missing when the data disappeared.
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{cache_code}_favorite_points"
+        )
+        == cache_entity_id
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{missing_cache_code}_favorite_points"
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"PR12345_{trackable_code}_kilometers_traveled"
+        )
+        is None
+    )
 
 
 async def test_entities_are_unique_per_account(
