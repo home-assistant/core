@@ -7,7 +7,7 @@ import errno
 import threading
 from types import SimpleNamespace
 from typing import Any
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -1134,67 +1134,6 @@ async def test_read_failure_during_unplug_teardown(
         FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH
     )
     replugged.grab.assert_called_once()
-
-
-async def test_late_read_failure_keeps_newly_bound_device(
-    hass: HomeAssistant,
-    fake_input: FakeInput,
-) -> None:
-    """Test the old device's read failure leaves a device bound meanwhile alone.
-
-    A teardown frees the handler before awaiting ungrab. The watcher handles
-    events one at a time, so no device event can bind a new device in that
-    window today, and the test binds it on the handler directly.
-    """
-    old = fake_input.add(REMOTE_PATH, REMOTE_NAME)
-    entry = _remote_entry()
-    await _set_up(hass, entry)
-    handler = hass.data[DOMAIN]._handlers[entry.entry_id]
-    commands = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
-
-    # What a teardown does before its first await
-    handler._monitor_task = None
-    new = fake_input.add("/dev/input/event8", REMOTE_NAME)
-    await handler.async_device_start_monitoring(new)
-    await fake_input.send(old, OSError(errno.ENODEV, "No such device"))
-    await fake_input.press(new, 30, KEY_VALUE["key_up"])
-
-    new.close.assert_not_called()
-    assert [e.data[CONF_DEVICE_DESCRIPTOR] for e in commands] == ["/dev/input/event8"]
-
-
-async def test_key_repeat_reports_the_device_that_started_it(
-    hass: HomeAssistant,
-    fake_input: FakeInput,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test key hold events carry the descriptor of the device that started them.
-
-    A teardown can bind another device to the handler while the old device's
-    repeats still run. As above, no device event can do that today, so the
-    test runs the repeat directly with another descriptor on the handler.
-    """
-    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
-    await _set_up(hass, mock_config_entry)
-    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
-    handler._descriptor = "/dev/input/event9"
-    commands = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
-
-    # The initial delay, two repeats, then cancellation on the third repeat
-    with (
-        patch(
-            "homeassistant.components.keyboard_remote.asyncio.sleep",
-            side_effect=[None, None, None, asyncio.CancelledError],
-        ) as mock_sleep,
-        pytest.raises(asyncio.CancelledError),
-    ):
-        await handler._async_keyrepeat(kbd, FAKE_DEVICE_PATH, 30, 0.25, 0.03)
-    await hass.async_block_till_done()
-
-    assert mock_sleep.call_args_list == [call(0.25), call(0.03), call(0.03), call(0.03)]
-    assert [(e.data["type"], e.data[CONF_DEVICE_DESCRIPTOR]) for e in commands] == [
-        ("key_hold", FAKE_DEVICE_PATH)
-    ] * 3
 
 
 async def test_device_check_finishing_after_stop_grabs_nothing(

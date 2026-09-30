@@ -823,18 +823,10 @@ class DeviceHandler:
             },
         )
         _LOGGER.debug("Keyboard disconnected, %s", dev.name)
-        # The handler may already have been given a new device while this
-        # teardown waited on ungrab.
-        if self.dev is dev:
-            self.dev = None
+        self.dev = None
 
     async def _async_keyrepeat(
-        self,
-        dev: InputDevice,
-        descriptor: str | None,
-        code: int,
-        delay: float,
-        repeat: float,
+        self, dev: InputDevice, code: int, delay: float, repeat: float
     ) -> None:
         """Emulate keyboard delay/repeat by firing key hold events on a timer."""
         await asyncio.sleep(delay)
@@ -844,7 +836,7 @@ class DeviceHandler:
                 {
                     KEY_CODE: code,
                     "type": "key_hold",
-                    CONF_DEVICE_DESCRIPTOR: descriptor,
+                    CONF_DEVICE_DESCRIPTOR: self._descriptor,
                     CONF_DEVICE_NAME: dev.name,
                 },
             )
@@ -856,9 +848,6 @@ class DeviceHandler:
 
         dev = self.dev
         assert dev is not None
-        # Teardown can bind a new device to this handler while this task and
-        # its repeats still run, so report this device's descriptor throughout.
-        descriptor = self._descriptor
         repeat_tasks: dict[int, asyncio.Task] = {}
 
         try:
@@ -886,7 +875,7 @@ class DeviceHandler:
                             {
                                 KEY_CODE: event.code,
                                 "type": KEY_VALUE_NAME[event.value],
-                                CONF_DEVICE_DESCRIPTOR: descriptor,
+                                CONF_DEVICE_DESCRIPTOR: self._descriptor,
                                 CONF_DEVICE_NAME: dev.name,
                             },
                         )
@@ -896,7 +885,6 @@ class DeviceHandler:
                             self.hass.async_create_background_task(
                                 self._async_keyrepeat(
                                     dev,
-                                    descriptor,
                                     event.code,
                                     self._emulate_key_hold_delay,
                                     self._emulate_key_hold_repeat,
@@ -926,12 +914,7 @@ class DeviceHandler:
     ) -> None:
         """Release this handler's device after its monitor stopped reading."""
         await self._async_cancel_repeats(repeat_tasks)
-        # A teardown already running may have let a new device bind to this
-        # handler, and the failure callback would release that one.
-        if (
-            self._on_monitor_failure is not None
-            and self._monitor_task is asyncio.current_task()
-        ):
+        if self._on_monitor_failure is not None:
             await self._on_monitor_failure(self)
 
     async def _async_cancel_repeats(
