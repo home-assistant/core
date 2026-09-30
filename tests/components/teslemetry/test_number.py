@@ -23,16 +23,21 @@ from homeassistant.components.teslemetry.const import (
     LABS_CHARGE_ON_SOLAR_FEATURE,
 )
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
+from homeassistant.components.teslemetry.number import (
+    TeslemetryChargeOnSolarLowerLimitNumberEntity,
+)
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import assert_entities, reload_platform, setup_platform
+from . import assert_entities, mock_config_entry, reload_platform, setup_platform
 from .const import COMMAND_ERRORS, COMMAND_OK, VEHICLE_DATA, VEHICLE_DATA_ALT
 
 from tests.common import async_fire_time_changed
+
+VIN = "LRW3F7EK4NC700000"
 
 
 async def _async_enable_charge_on_solar_preview_feature(hass: HomeAssistant) -> None:
@@ -242,15 +247,22 @@ async def test_charge_on_solar_lower_limit_capped_by_charge_limit(
     assert state is not None
     assert state.attributes["max"] == 70
 
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 60},
+        blocking=True,
+    )
+
     # A subsequent drop below the stored value clamps it down too
     for call in listener.call_args_list:
-        call.args[0](10)
+        call.args[0](50)
     await hass.async_block_till_done()
 
     state = hass.states.get("number.test_charge_on_solar_lower_limit")
     assert state is not None
-    assert state.attributes["max"] == 10
-    assert state.state == "10"
+    assert state.attributes["max"] == 50
+    assert state.state == "50"
 
 
 async def test_charge_on_solar_lower_limit_capped_by_charge_limit_polling(
@@ -267,8 +279,15 @@ async def test_charge_on_solar_lower_limit_capped_by_charge_limit_polling(
     assert state is not None
     assert state.attributes["max"] == 80
 
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 70},
+        blocking=True,
+    )
+
     lowered_data = deepcopy(VEHICLE_DATA)
-    lowered_data["response"]["charge_state"]["charge_limit_soc"] = 10
+    lowered_data["response"]["charge_state"]["charge_limit_soc"] = 50
     mock_vehicle_data.return_value = lowered_data
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
@@ -276,18 +295,18 @@ async def test_charge_on_solar_lower_limit_capped_by_charge_limit_polling(
 
     state = hass.states.get("number.test_charge_on_solar_lower_limit")
     assert state is not None
-    assert state.attributes["max"] == 10
-    assert state.state == "10"
+    assert state.attributes["max"] == 50
+    assert state.state == "50"
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_charge_on_solar_lower_limit_old_firmware_ignores_coordinator(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_old_firmware")
+async def test_charge_on_solar_lower_limit_old_firmware_follows_polled_charge_limit(
     hass: HomeAssistant,
-    mock_old_firmware: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test an explicitly non-polling vehicle's lower limit entity ignores coordinator updates, even on pre-streaming firmware."""
+    """Test a stream-only vehicle on pre-streaming firmware is capped by the polled charge limit."""
     await _async_enable_charge_on_solar_preview_feature(hass)
-    entry = await setup_platform(hass, [Platform.NUMBER])
+    await setup_platform(hass, [Platform.NUMBER])
 
     # This vehicle's raw poll flag is off, so its coordinator gets no initial
     # refresh; the linked charge-limit entity has no value yet, so max falls
@@ -296,13 +315,18 @@ async def test_charge_on_solar_lower_limit_old_firmware_ignores_coordinator(
     assert state is not None
     assert state.attributes["max"] == 100
 
-    await entry.runtime_data.vehicles[0].coordinator.async_refresh()
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    # This vehicle is explicitly stream-only (poll=False); a coordinator
-    # refresh must not redraw this entity's own state.
-    state = hass.states.get("number.test_charge_on_solar_lower_limit")
-    assert state is not None
-    assert state.attributes["max"] == 100
+    assert hass.states.get("number.test_charge_limit").state == "80"
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 90},
+            blocking=True,
+        )
 
 
 async def test_charge_on_solar_lower_limit_restores_max_value(
@@ -459,6 +483,56 @@ async def test_charge_on_solar_lower_limit_reaches_vehicle_when_switch_disabled(
         )
 
 
+async def test_charge_on_solar_lower_limit_uses_stored_state_when_switch_disabled(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a number change reaches the vehicle after a restart with the switch long disabled."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    # No restore state exists for the disabled switch, as once it has expired.
+    hass_storage[f"{DOMAIN}.charge_on_solar.{entry.entry_id}"] = {
+        "version": 1,
+        "data": {VIN: {"enabled": True, "lower_limit": 35}},
+    }
+    entity_registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        f"{VIN}-charge_on_solar",
+        config_entry=entry,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    with patch(
+        "homeassistant.components.teslemetry.PLATFORMS",
+        [Platform.SWITCH, Platform.NUMBER],
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("switch.test_charge_on_solar") is None
+    assert (state := hass.states.get("number.test_charge_on_solar_lower_limit"))
+    assert state.state == "35"
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+        return_value=COMMAND_OK,
+    ) as command:
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 45},
+            blocking=True,
+        )
+        command.assert_called_once_with(
+            enabled=True,
+            lower_charge_limit=45,
+            upper_charge_limit=None,
+        )
+
+
 async def test_charge_on_solar_lower_limit_uses_live_charge_limit(
     hass: HomeAssistant,
 ) -> None:
@@ -565,16 +639,26 @@ async def test_charge_on_solar_switch_and_lower_limit_are_serialized(
 
     switch_call_started = asyncio.Event()
     release_switch_call = asyncio.Event()
+    lower_limit_reached_lock = asyncio.Event()
 
     async def slow_charge_on_solar(**kwargs: Any) -> dict[str, Any]:
         switch_call_started.set()
         await release_switch_call.wait()
         return COMMAND_OK
 
-    with patch(
-        "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
-        side_effect=slow_charge_on_solar,
-    ) as command:
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+            side_effect=slow_charge_on_solar,
+        ) as command,
+        # The scope check runs just before the lock, so once it fires the number
+        # either waits on the lock or runs ahead of the switch.
+        patch.object(
+            TeslemetryChargeOnSolarLowerLimitNumberEntity,
+            "raise_for_scope",
+            side_effect=lambda _scope: lower_limit_reached_lock.set(),
+        ),
+    ):
         turn_on = hass.async_create_task(
             hass.services.async_call(
                 SWITCH_DOMAIN,
@@ -599,10 +683,8 @@ async def test_charge_on_solar_switch_and_lower_limit_are_serialized(
             "test set charge-on-solar lower limit",
         )
 
-        # Give the number update every chance to run ahead of the switch
-        # finishing, if nothing is serializing them.
-        for _ in range(5):
-            await asyncio.sleep(0)
+        await lower_limit_reached_lock.wait()
+        assert command.call_count == 1
 
         release_switch_call.set()
         await turn_on

@@ -32,7 +32,11 @@ from .entity import (
     TeslemetryVehicleStreamEntity,
 )
 from .helpers import async_set_charge_on_solar, handle_command, handle_vehicle_command
-from .models import TeslemetryEnergyData, TeslemetryVehicleData
+from .models import (
+    TeslemetryChargeOnSolarStore,
+    TeslemetryEnergyData,
+    TeslemetryVehicleData,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -157,21 +161,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
 )
 
 
-def _async_remove_charge_on_solar_switch(
-    hass: HomeAssistant, entry: TeslemetryConfigEntry
-) -> None:
-    """Remove stale charge-on-solar switch entities."""
-    entity_registry = er.async_get(hass)
-    for entity_entry in er.async_entries_for_config_entry(
-        entity_registry, entry.entry_id
-    ):
-        if (
-            entity_entry.domain == SWITCH_DOMAIN
-            and entity_entry.translation_key == CHARGE_ON_SOLAR_SWITCH_KEY
-        ):
-            entity_registry.async_remove(entity_entry.entity_id)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
@@ -219,11 +208,23 @@ async def async_setup_entry(
         and Scope.VEHICLE_CMDS in entry.runtime_data.scopes
     ):
         entities.extend(
-            TeslemetryChargeOnSolarSwitchEntity(vehicle, entry.runtime_data.scopes)
+            TeslemetryChargeOnSolarSwitchEntity(
+                vehicle,
+                entry.runtime_data.charge_on_solar_store,
+                entry.runtime_data.scopes,
+            )
             for vehicle in entry.runtime_data.vehicles
         )
     else:
-        _async_remove_charge_on_solar_switch(hass, entry)
+        entity_registry = er.async_get(hass)
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
+        ):
+            if (
+                entity_entry.domain == SWITCH_DOMAIN
+                and entity_entry.translation_key == CHARGE_ON_SOLAR_SWITCH_KEY
+            ):
+                entity_registry.async_remove(entity_entry.entity_id)
 
     async_add_entities(entities)
 
@@ -435,9 +436,15 @@ class TeslemetryChargeOnSolarSwitchEntity(
     _attr_device_class = SwitchDeviceClass.SWITCH
     api: Vehicle
 
-    def __init__(self, data: TeslemetryVehicleData, scopes: list[Scope]) -> None:
+    def __init__(
+        self,
+        data: TeslemetryVehicleData,
+        store: TeslemetryChargeOnSolarStore,
+        scopes: list[Scope],
+    ) -> None:
         """Initialize the charge-on-solar switch."""
         self.scoped = Scope.VEHICLE_CMDS in scopes
+        self._store = store
         self._charge_limit_soc: int | None = None
         super().__init__(data, CHARGE_ON_SOLAR_SWITCH_KEY)
 
@@ -445,14 +452,7 @@ class TeslemetryChargeOnSolarSwitchEntity(
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-
-        if (state := await self.async_get_last_state()) is not None:
-            if state.state == "on":
-                self._attr_is_on = True
-            elif state.state == "off":
-                self._attr_is_on = False
-            if self._attr_is_on is not None:
-                self.vehicle.charge_on_solar_enabled = self._attr_is_on
+        self._attr_is_on = self.vehicle.charge_on_solar_enabled
 
         if (extra_data := await self.async_get_last_extra_data()) is not None:
             restored = TeslemetryChargeOnSolarSwitchExtraStoredData.from_dict(
@@ -505,6 +505,7 @@ class TeslemetryChargeOnSolarSwitchEntity(
                 charge_limit_soc=charge_limit,
             )
             self.vehicle.charge_on_solar_enabled = enabled
+            self._store.async_save(self.vehicle)
             self._attr_is_on = enabled
             self.async_write_ha_state()
 

@@ -158,15 +158,13 @@ async def async_set_charge_on_solar(
 
     Returns the lower limit actually sent, clamped to the upper bound if it is known.
     """
-    upper_charge_limit: int | None = None
     if charge_limit_soc is not None:
-        upper_charge_limit = max(30, min(charge_limit_soc, 100))
-        lower_charge_limit = min(lower_charge_limit, upper_charge_limit)
+        lower_charge_limit = min(lower_charge_limit, charge_limit_soc)
     await handle_vehicle_command(
         api.charge_on_solar(
             enabled=enabled,
             lower_charge_limit=lower_charge_limit,
-            upper_charge_limit=upper_charge_limit,
+            upper_charge_limit=charge_limit_soc,
         )
     )
     return lower_charge_limit
