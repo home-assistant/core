@@ -6,12 +6,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
 import aiounifi
-from aiounifi.interfaces.api_handlers import (
-    APIHandler,
-    CallbackType,
-    ItemEvent,
-    UnsubscribeType,
-)
+from aiounifi.interfaces.api_handlers import CallbackType, ItemEvent, UnsubscribeType
 from aiounifi.models.api import ApiItem
 from aiounifi.models.event import Event, EventKey
 
@@ -26,7 +21,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import ATTR_MANUFACTURER, DOMAIN
-from .coordinator import UnifiDataUpdateCoordinator
+from .coordinator import UnifiApiHandler, UnifiDataUpdateCoordinator
 
 if TYPE_CHECKING:
     from .hub import UnifiHub
@@ -97,8 +92,40 @@ def async_client_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
     )
 
 
+@callback
+def async_network_device_available_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if a device of the Integration API is online."""
+    device = hub.api.network.devices.get(obj_id)
+    return device is not None and device.state == "ONLINE"
+
+
+@callback
+def async_network_device_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
+    """Create device registry entry for a device of the Integration API."""
+    device = hub.api.network.devices[obj_id]
+    return DeviceInfo(
+        connections={(CONNECTION_NETWORK_MAC, obj_id)},
+        manufacturer=ATTR_MANUFACTURER,
+        model=device.model,
+        name=device.name or None,
+        sw_version=device.firmware_version,
+    )
+
+
+@callback
+def async_network_client_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
+    """Create device registry entry for a client of the Integration API."""
+    client = hub.api.network.clients[obj_id]
+    return DeviceInfo(
+        connections={(CONNECTION_NETWORK_MAC, obj_id)},
+        name=client.name or None,
+    )
+
+
 @dataclass(frozen=True, kw_only=True)
-class UnifiEntityDescription[HandlerT: APIHandler, ItemT: ApiItem](EntityDescription):
+class UnifiEntityDescription[HandlerT: UnifiApiHandler, ItemT: ApiItem](
+    EntityDescription
+):
     """UniFi Entity Description."""
 
     api_handler_fn: Callable[[aiounifi.Controller], HandlerT]
@@ -133,7 +160,7 @@ class UnifiEntityDescription[HandlerT: APIHandler, ItemT: ApiItem](EntityDescrip
     """If entity needs to do regular checks on state."""
 
 
-class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
+class UnifiEntity[HandlerT: UnifiApiHandler, ItemT: ApiItem](Entity):
     """Representation of a UniFi entity."""
 
     entity_description: UnifiEntityDescription[HandlerT, ItemT]
@@ -159,7 +186,12 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
 
         self._removed = False
 
-        self._attr_available = description.available_fn(hub, obj_id)
+        # A coordinator tells its listeners of the first failed poll only, so
+        # an entity created after one has to read the outcome itself
+        self._attr_available = (
+            description.available_fn(hub, obj_id)
+            and self.coordinator.last_update_success
+        )
         self._attr_device_info = description.device_info_fn(hub, obj_id)
         self._attr_should_poll = description.should_poll
         self._attr_unique_id = description.unique_id_fn(hub, obj_id)

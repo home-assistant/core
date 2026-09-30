@@ -1,15 +1,21 @@
 """Test UniFi Network diagnostics."""
 
+import json
+
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
 )
+from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
+
+from .conftest import DEFAULT_API_KEY
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -199,3 +205,19 @@ async def test_entry_diagnostics(
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry_setup
     ) == snapshot(exclude=props("created_at", "modified_at"))
+
+
+async def test_entry_diagnostics_api_key(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    network_api_config_entry_setup: MockConfigEntry,
+) -> None:
+    """Test the diagnostics of an entry set up with an API key redact the key."""
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, network_api_config_entry_setup
+    )
+
+    assert diagnostics["config"]["data"][CONF_API_KEY] == REDACTED
+    assert diagnostics["config"]["data"][CONF_HOST] == REDACTED
+    assert diagnostics["role_is_admin"] is True
+    assert DEFAULT_API_KEY not in json.dumps(diagnostics)
