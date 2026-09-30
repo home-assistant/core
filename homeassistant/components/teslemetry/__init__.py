@@ -300,19 +300,6 @@ def _setup_vehicle_repairs(
     )
 
 
-def _ble_subentry_for_vin(
-    entry: TeslemetryConfigEntry, vin: str
-) -> ConfigSubentry | None:
-    """Return the Bluetooth subentry for a vehicle, if one was added."""
-    for subentry in entry.subentries.values():
-        if (
-            subentry.subentry_type == SUBENTRY_TYPE_VEHICLE
-            and subentry.data.get(CONF_VIN) == vin
-        ):
-            return subentry
-    return None
-
-
 # Two failure shapes must be caught to fall back to cloud control: the library
 # wraps existing-key failures in PrivateKeyError, the create-race path raises raw errors.
 _BLE_KEY_ERRORS: Final = (
@@ -332,7 +319,15 @@ async def _async_resolve_vehicle_api(
     cloud_vehicle: Vehicle,
 ) -> Vehicle | VehicleRouter:
     """Return the API a vehicle's platforms should call."""
-    subentry = _ble_subentry_for_vin(entry, vin)
+    subentry = next(
+        (
+            subentry
+            for subentry in entry.subentries.values()
+            if subentry.subentry_type == SUBENTRY_TYPE_VEHICLE
+            and subentry.data.get(CONF_VIN) == vin
+        ),
+        None,
+    )
     if subentry is None or not (address := subentry.data.get(CONF_ADDRESS)):
         return cloud_vehicle
 

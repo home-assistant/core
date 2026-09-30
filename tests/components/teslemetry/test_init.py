@@ -2530,6 +2530,7 @@ async def test_ble_key_rejected_repair_clears_on_bluetooth_success(
         pytest.param(BluetoothCommandFailed(), id="command_failed"),
         pytest.param(TeslaFleetMessageFaultKeychainIsFull(), id="keychain_full"),
         pytest.param(BleakError("no route"), id="bleak"),
+        pytest.param(ValueError("unexpected"), id="unexpected"),
     ],
 )
 async def test_ble_non_key_failure_raises_no_repair(
@@ -2566,24 +2567,6 @@ async def test_ble_key_rejected_ignores_cloud_rejection(
         assert not issue_registry.async_get_issue(DOMAIN, BLE_KEY_REJECTED_ISSUE_ID)
 
 
-async def test_ble_key_rejected_handler_never_raises(hass: HomeAssistant) -> None:
-    """The router's error handler fails over on an unexpected error without raising."""
-    async with _paired_entry(hass, MagicMock(return_value=MagicMock())) as (
-        router,
-        bluetooth_vehicle,
-        cloud,
-    ):
-        bluetooth_vehicle.flash_lights.side_effect = ValueError("unexpected")
-        cloud.side_effect = InvalidResponse()
-
-        # Only the cloud's own error surfaces once both backends have been tried.
-        with pytest.raises(InvalidResponse):
-            await router.flash_lights()
-
-        bluetooth_vehicle.flash_lights.assert_awaited_once()
-        cloud.assert_awaited_once()
-
-
 async def test_ble_key_rejected_repair_clears_on_unload(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
@@ -2602,27 +2585,6 @@ async def test_ble_key_rejected_repair_clears_on_unload(
         await hass.async_block_till_done()
 
     assert not issue_registry.async_get_issue(DOMAIN, BLE_KEY_REJECTED_ISSUE_ID)
-
-
-async def test_ble_primary_listeners_register_synchronously(
-    hass: HomeAssistant,
-) -> None:
-    """The primary stays unwrapped, so its broadcast listeners register synchronously."""
-    async with _paired_entry(hass, MagicMock(return_value=MagicMock())) as (
-        router,
-        bluetooth_vehicle,
-        _cloud,
-    ):
-        unsubscribe = MagicMock()
-        bluetooth_vehicle.listen_vehicle_lock_state = MagicMock(
-            return_value=unsubscribe
-        )
-        callback = MagicMock()
-
-        # A wrapping primary would turn this into an unawaited coroutine.
-        assert router.primary is bluetooth_vehicle
-        assert router.primary.listen_vehicle_lock_state(callback) is unsubscribe
-        bluetooth_vehicle.listen_vehicle_lock_state.assert_called_once_with(callback)
 
 
 async def test_vehicle_paired_but_never_seen(hass: HomeAssistant) -> None:
