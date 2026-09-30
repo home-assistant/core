@@ -11,6 +11,7 @@ import pytest
 from homeassistant import setup
 from homeassistant.components.command_line import DOMAIN
 from homeassistant.components.command_line.sensor import CommandSensor
+from homeassistant.components.command_line.utils import render_template_args
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
@@ -1195,7 +1196,7 @@ async def test_template_render_unbalanced_quote_logs_and_skips(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "Error parsing command arguments" in caplog.text
+    assert "Error parsing command" in caplog.text
     entity_state = hass.states.get("sensor.test")
     assert entity_state
     assert entity_state.state == STATE_UNKNOWN
@@ -1247,3 +1248,113 @@ async def test_template_non_shell_metachar_uses_exec(
         issue.translation_key == "shell_command_template_deprecation"
         for issue in issue_registry.issues.values()
     )
+
+
+@pytest.mark.parametrize(
+    ("command", "assembled"),
+    [
+        # A redirect in the executable token must be detected too, not only in
+        # the rendered args, or exec would try to launch the literal token.
+        pytest.param(
+            "echo>/tmp/out {{ states.sensor.input_sensor.state }}",
+            "echo>/tmp/out safe_value",
+            id="redirect_in_executable",
+        ),
+        pytest.param(
+            "$HOME/bin/tool {{ states.sensor.input_sensor.state }}",
+            "$HOME/bin/tool safe_value",
+            id="variable_in_executable",
+        ),
+        # A leading assignment carries no metacharacter but still needs a shell.
+        pytest.param(
+            "FOO=bar tool {{ states.sensor.input_sensor.state }}",
+            "FOO=bar tool safe_value",
+            id="assignment_prefix",
+        ),
+    ],
+)
+async def test_template_shell_feature_in_executable_keeps_shell(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    command: str,
+    assembled: str,
+) -> None:
+    """Shell syntax in the executable token keeps the shell path and warns."""
+    hass.states.async_set("sensor.input_sensor", "safe_value")
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {"command_line": [{"sensor": {"name": "Test", "command": command}}]},
+    )
+    await hass.async_block_till_done()
+
+    with mock_asyncio_subprocess_run(b"safe_value\n") as mock_shell:
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_shell.assert_called_once_with(
+        assembled,
+        stdin=None,
+        stdout=-1,
+        close_fds=False,
+    )
+    assert any(
+        issue.translation_key == "shell_command_template_deprecation"
+        for issue in issue_registry.issues.values()
+    )
+
+
+async def test_template_quoted_executable_uses_exec(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """A quoted executable is unquoted for exec instead of taken literally."""
+    hass.states.async_set("sensor.input_sensor", "safe_value")
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": (
+                            '"/usr/bin/echo" {{ states.sensor.input_sensor.state }}'
+                        ),
+                    }
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    with mock_asyncio_subprocess_exec(b"safe_value\n") as mock_exec:
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_exec.assert_called_once_with(
+        "/usr/bin/echo",
+        "safe_value",
+        stdin=None,
+        stdout=-1,
+        close_fds=False,
+    )
+    assert not any(
+        issue.translation_key == "shell_command_template_deprecation"
+        for issue in issue_registry.issues.values()
+    )
+
+
+async def test_template_issue_id_stable_across_command_edits(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Editing the command to remove shell features clears the original issue."""
+    # A shell feature creates the issue for this entity.
+    render_template_args(hass, "echo {{ 'a|b' }}", "sensor", "Test")
+    assert [iid for (dom, iid) in issue_registry.issues if dom == DOMAIN]
+
+    # The same entity with an edited, safe command clears it; a command-derived
+    # id would instead leave the original issue behind.
+    render_template_args(hass, "echo {{ 'clean' }}", "sensor", "Test")
+    assert not [iid for (dom, iid) in issue_registry.issues if dom == DOMAIN]

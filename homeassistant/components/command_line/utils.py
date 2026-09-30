@@ -2,7 +2,7 @@
 
 import asyncio
 from contextlib import suppress
-import hashlib
+import re
 import shlex
 from typing import Literal, overload
 
@@ -29,11 +29,15 @@ _EXEC_FAILED_CODE = 127
 _SHELL_FEATURE_CHARS = frozenset("|&;<>()$`*?[]{}~#\n")
 _DEPRECATION_ISSUE_BREAKS_IN = "2027.4.0"
 _LEARN_MORE_URL = "https://www.home-assistant.io/integrations/command_line/"
+_ISSUE_ID_PREFIX = "shell_command_template_"
+# A leading VAR=value assignment only takes effect under a shell, so exec would
+# try to launch it as a program. Matched positionally on the first token.
+_ASSIGNMENT_PREFIX = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 
 
-def _has_shell_features(rendered_args: str) -> bool:
-    """Return True if rendered_args contains shell metacharacters."""
-    return any(c in _SHELL_FEATURE_CHARS for c in rendered_args)
+def _has_shell_features(command: str) -> bool:
+    """Return True if command contains shell metacharacters."""
+    return any(c in _SHELL_FEATURE_CHARS for c in command)
 
 
 @callback
@@ -66,6 +70,19 @@ def _update_issue(
         },
         learn_more_url=_LEARN_MORE_URL,
     )
+
+
+@callback
+def async_clear_shell_template_issues(hass: HomeAssistant) -> None:
+    """Delete all shell command template deprecation issues.
+
+    Called on reload so issues for removed or renamed entities are not left
+    stale. Entities that still need one recreate it on their next update.
+    """
+    registry = ir.async_get(hass)
+    for domain, issue_id in list(registry.issues):
+        if domain == DOMAIN and issue_id.startswith(_ISSUE_ID_PREFIX):
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
 @overload
@@ -221,28 +238,36 @@ def render_template_args(
         return command
 
     # Template substitution occurred. Determine the safe execution path.
-    # The name is part of the issue id so two entities that happen to share a
-    # command string get their own issue instead of collapsing into one.
-    command_hash = hashlib.sha256(command.encode()).hexdigest()[:8]
-    issue_id = f"shell_command_template_{platform}_{slugify(name)}_{command_hash}"
+    # The name makes the issue id unique per entity so two entities that happen
+    # to share a command string get their own issue. The id is kept stable
+    # across command edits so following the repair instructions clears it.
+    issue_id = f"{_ISSUE_ID_PREFIX}{platform}_{slugify(name)}"
 
-    if _has_shell_features(rendered_args):
-        # Shell features (pipes, redirects, etc.) detected in the rendered args.
+    # Classify and parse the whole command, not just the rendered args, so shell
+    # features and quoting in the executable token are handled too.
+    assembled = f"{prog} {rendered_args}"
+    if _has_shell_features(assembled):
+        # Shell features (pipes, redirects, etc.) detected in the command.
         # During the deprecation period, keep the shell path and notify the user.
         _update_issue(hass, issue_id, prog, platform, name, create=True)
-        assembled = f"{prog} {rendered_args}"
+        LOGGER.debug("Running command: %s", assembled)
+        return assembled
+
+    try:
+        exec_cmd = shlex.split(assembled)
+    except ValueError as ex:
+        # E.g. an unbalanced quote in the rendered value (like an apostrophe).
+        LOGGER.error("Error parsing command %s: %s", assembled, ex)
+        return None
+
+    if exec_cmd and _ASSIGNMENT_PREFIX.match(exec_cmd[0]):
+        # A leading VAR=value assignment only works under a shell.
+        _update_issue(hass, issue_id, prog, platform, name, create=True)
         LOGGER.debug("Running command: %s", assembled)
         return assembled
 
     # No shell features — use exec (shell=False) for security.
     _update_issue(hass, issue_id, prog, platform, name, create=False)
-    try:
-        split_args = shlex.split(rendered_args)
-    except ValueError as ex:
-        # E.g. an unbalanced quote in the rendered value (like an apostrophe).
-        LOGGER.error("Error parsing command arguments %s: %s", rendered_args, ex)
-        return None
-    exec_cmd = [prog, *split_args]
     LOGGER.debug("Running command: %s", shlex.join(exec_cmd))
     return exec_cmd
 
