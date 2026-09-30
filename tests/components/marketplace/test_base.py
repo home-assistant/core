@@ -284,3 +284,23 @@ async def test_panel_hears_when_the_marketplace_is_disabled_or_enabled(
         (MarketplaceSignal.CONFIG, {}),
         (MarketplaceSignal.CONFIG, {}),
     ]
+
+
+@pytest.mark.parametrize(
+    "warning_accepted",
+    [
+        {
+            "removed-while-unloaded": {
+                "version": WARNING_VERSION,
+                "accepted_at": "2026-09-01T12:00:00+00:00",
+            }
+        }
+    ],
+)
+async def test_acceptance_of_a_user_removed_while_unloaded_is_forgotten(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a user removed while the Marketplace was not loaded counts for nothing."""
+    assert marketplace.warning_acceptances == {}
+    assert marketplace.configuration.config_entry is not None
+    assert marketplace.configuration.config_entry.data[CONF_WARNING_ACCEPTED] == {}

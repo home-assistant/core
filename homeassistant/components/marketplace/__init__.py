@@ -42,6 +42,7 @@ from homeassistant.util.hass_dict import HassKey
 from .base import MarketplaceConfigEntry, MarketplaceManager
 from .const import (
     CLIENT_NAME,
+    CONF_WARNING_ACCEPTED,
     DOMAIN,
     LEGACY_DASHBOARD_RESOURCE_BASE,
     LEGACY_HACS_SYSTEM_ID,
@@ -294,7 +295,13 @@ async def _async_initialize_integration(
         async_at_started(hass=hass, at_start_cb=_async_start_tasks)
     )
 
-    # Automations install on the word of whoever accepted, not of a removed user
+    # Automations install on the word of whoever accepted, not of a removed user,
+    # also one removed while the Marketplace was not loaded
+    users = {user.id for user in await hass.auth.async_get_users()}
+    for user_id in list(config_entry.data.get(CONF_WARNING_ACCEPTED, {})):
+        if user_id not in users:
+            marketplace.async_forget_warning_acceptance(user_id)
+
     @callback
     def _async_forget_removed_user(event: Event) -> None:
         marketplace.async_forget_warning_acceptance(event.data["user_id"])

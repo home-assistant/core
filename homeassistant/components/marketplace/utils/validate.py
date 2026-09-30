@@ -8,8 +8,6 @@ from typing import Any
 from awesomeversion import AwesomeVersion
 import probatio
 
-from homeassistant.helpers.config_validation import url as url_validator
-
 
 @dataclass
 class Validate:
@@ -76,37 +74,6 @@ INTEGRATION_MANIFEST_VALUES = {
     "config_flow": probatio.Schema(bool),
     "name": probatio.Schema(str),
 }
-
-
-REPOSITORY_MANIFEST_JSON_SCHEMA = probatio.Schema(
-    {
-        probatio.Optional("content_in_root"): bool,
-        # Accepted for existing repositories, the Marketplace ignores it
-        probatio.Optional("country"): object,
-        probatio.Optional("filename"): str,
-        probatio.Optional("hacs"): str,
-        probatio.Optional("hide_default_branch"): bool,
-        probatio.Optional("homeassistant"): str,
-        probatio.Optional("persistent_directory"): str,
-        # Accepted for existing repositories, the README is always shown
-        probatio.Optional("render_readme"): bool,
-        probatio.Optional("zip_release"): bool,
-        probatio.Required("name"): str,
-    },
-    extra=probatio.PREVENT_EXTRA,
-)
-
-INTEGRATION_MANIFEST_JSON_SCHEMA = probatio.Schema(
-    {
-        probatio.Required("codeowners"): list,
-        probatio.Required("documentation"): url_validator,
-        probatio.Required("domain"): str,
-        probatio.Required("issue_tracker"): url_validator,
-        probatio.Required("name"): str,
-        probatio.Required("version"): probatio.Coerce(AwesomeVersion),
-    },
-    extra=probatio.ALLOW_EXTRA,
-)
 
 
 def validate_repo_data(schema: dict[Any, Any], extra: int) -> Callable[[Any], Any]:

@@ -1597,6 +1597,32 @@ async def test_repository_releases_rate_limited_without_github(
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 
+@pytest.mark.usefixtures("marketplace")
+async def test_repository_releases_rate_limited_with_github(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test a connected account is not told to connect GitHub for a higher limit."""
+    url = f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}/releases"
+    response_mocker.add(
+        url,
+        mocked_response(url, status=HTTPStatus.FORBIDDEN, json_content=RATE_LIMITED),
+    )
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/releases",
+            "repository_id": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["translation_key"] == "releases_failed"
+
+
 @pytest.mark.parametrize("github_token", [None])
 async def test_repository_info_rate_limited_without_github(
     hass: HomeAssistant,

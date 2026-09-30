@@ -14,7 +14,7 @@ from . import mocked_response
 from .conftest import MarketplaceResponses
 from .const import TOKEN, WARNING_ACCEPTANCE
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockUser
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
@@ -128,6 +128,13 @@ async def test_diagnostics_without_accepted_warning(
     assert diagnostics["marketplace"]["warning_reminders_due"] == 0
 
 
+@pytest.fixture
+def users_who_accepted(hass: HomeAssistant) -> None:
+    """Add the users the stored acceptances belong to, others are forgotten."""
+    for user_id in ("abc", "def", "ghi"):
+        MockUser(id=user_id).add_to_hass(hass)
+
+
 @pytest.mark.parametrize(
     "warning_accepted",
     [
@@ -138,7 +145,7 @@ async def test_diagnostics_without_accepted_warning(
         }
     ],
 )
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("users_who_accepted", "init_integration")
 async def test_diagnostics_of_several_acceptances(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

@@ -3,14 +3,11 @@
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from typing import Any
 
-from awesomeversion import AwesomeVersion
 from probatio.error import Invalid, MultipleInvalid
 import pytest
 
 from homeassistant.components.marketplace.const import DOMAIN
 from homeassistant.components.marketplace.utils.validate import (
-    INTEGRATION_MANIFEST_JSON_SCHEMA,
-    REPOSITORY_MANIFEST_JSON_SCHEMA,
     VALIDATE_FETCHED_V2_CRITICAL_REPO_SCHEMA,
     VALIDATE_FETCHED_V2_REMOVED_REPO_SCHEMA,
     VALIDATE_FETCHED_V2_REPO_DATA,
@@ -49,125 +46,6 @@ GOOD_INTEGRATION_DATA = GOOD_COMMON_DATA | {
 def without(data: dict[str, Any], key: str) -> dict[str, Any]:
     """Return a copy of the data without the given key."""
     return {name: value for name, value in data.items() if name != key}
-
-
-@pytest.mark.parametrize(
-    ("data", "expected"),
-    [
-        pytest.param(
-            {"name": "My awesome thing", "homeassistant": "1.2"},
-            {"name": "My awesome thing", "homeassistant": AwesomeVersion("1.2")},
-            id="homeassistant",
-        ),
-        pytest.param(
-            {"name": "My awesome thing", "hacs": "1.2"},
-            {"name": "My awesome thing", "hacs": AwesomeVersion("1.2")},
-            id="hacs",
-        ),
-        pytest.param(
-            {"name": "My awesome thing", "country": ["NO"]},
-            {"name": "My awesome thing", "country": ["NO"]},
-            id="country-list",
-        ),
-        pytest.param(
-            {"name": "My awesome thing", "country": "not_valid"},
-            {"name": "My awesome thing", "country": "not_valid"},
-            id="country-unknown",
-        ),
-        pytest.param(
-            {"name": "My awesome thing", "country": False},
-            {"name": "My awesome thing", "country": False},
-            id="country-wrong-type",
-        ),
-        pytest.param(
-            {"name": "My awesome thing", "render_readme": False},
-            {"name": "My awesome thing", "render_readme": False},
-            id="render_readme",
-        ),
-        pytest.param(
-            {"name": "My awesome thing"},
-            {"name": "My awesome thing"},
-            id="name-only",
-        ),
-        pytest.param(
-            {
-                "name": "My awesome thing",
-                "content_in_root": True,
-                "zip_release": True,
-                "filename": "my_super_awesome_thing.js",
-                "render_readme": True,
-                "hide_default_branch": True,
-                "country": ["NO", "SE", "DK"],
-                "persistent_directory": "userfiles",
-            },
-            {
-                "name": "My awesome thing",
-                "content_in_root": True,
-                "zip_release": True,
-                "filename": "my_super_awesome_thing.js",
-                "render_readme": True,
-                "hide_default_branch": True,
-                "country": ["NO", "SE", "DK"],
-                "persistent_directory": "userfiles",
-            },
-            id="everything",
-        ),
-    ],
-)
-def test_hacs_manifest_json_schema(
-    data: dict[str, Any], expected: dict[str, Any]
-) -> None:
-    """Test validating the hacs.json of a repository."""
-    assert REPOSITORY_MANIFEST_JSON_SCHEMA(data) == expected
-
-
-@pytest.mark.parametrize(
-    ("data", "match"),
-    [
-        pytest.param(
-            {"name": "My awesome thing", "not": "valid"},
-            r"extra keys not allowed|not a valid option",
-            id="extra-key",
-        ),
-        pytest.param({}, "required key not provided", id="missing-name"),
-    ],
-)
-def test_hacs_manifest_json_schema_bad_data(data: dict[str, Any], match: str) -> None:
-    """Test rejecting an invalid hacs.json."""
-    with pytest.raises(Invalid, match=match):
-        REPOSITORY_MANIFEST_JSON_SCHEMA(data)
-
-
-def test_integration_manifest_json_schema() -> None:
-    """Test validating the manifest.json of an integration repository."""
-    data = {
-        "issue_tracker": "https://hacs.xyz/",
-        "name": "My awesome thing",
-        "version": "1.2",
-        "domain": "myawesomething",
-        "codeowners": ["test"],
-        "documentation": "https://hacs.xyz/",
-    }
-
-    validated = INTEGRATION_MANIFEST_JSON_SCHEMA(data)
-
-    assert validated["version"] == AwesomeVersion("1.2")
-    assert validated == data
-
-
-def test_integration_manifest_json_schema_bad_data() -> None:
-    """Test rejecting an invalid integration manifest.json."""
-    with pytest.raises(Invalid, match="expected str"):
-        INTEGRATION_MANIFEST_JSON_SCHEMA(
-            {
-                "issue_tracker": "https://hacs.xyz/",
-                "name": "My awesome thing",
-                "version": "1.2",
-                "domain": None,
-                "codeowners": ["test"],
-                "documentation": "https://hacs.xyz/",
-            }
-        )
 
 
 def test_critical_repo_data_json_schema() -> None:

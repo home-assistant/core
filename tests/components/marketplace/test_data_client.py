@@ -26,10 +26,10 @@ from . import (
     mocked_response,
 )
 from .conftest import MarketplaceResponses
-from .const import REPOSITORY_PLUGIN_ID
+from .const import PROXY_HEADERS, REPOSITORY_PLUGIN_ID
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMockResponse
+from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 GOOD_COMMON_DATA = {
     "description": "abc",
@@ -162,7 +162,9 @@ async def test_request_status_handling(
 
 
 async def test_etag_is_sent_back(
-    marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test that the etag of a response is used for the next request."""
     url = "https://data-v2.hacs.xyz/integration/repositories.json"
@@ -174,6 +176,9 @@ async def test_etag_is_sent_back(
 
     with pytest.raises(NotModifiedError):
         await marketplace.data_client.get_repositories("integration")
+
+    # The mocked answer is a 304 anyway, the header is what saves the download
+    assert aioclient_mock.mock_calls[-1][3]["If-None-Match"] == PROXY_HEADERS["Etag"]
 
 
 @pytest.mark.parametrize(

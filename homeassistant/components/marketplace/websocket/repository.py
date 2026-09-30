@@ -499,11 +499,13 @@ async def marketplace_repository_releases(
 
     try:
         releases = await repository.async_get_releases()
-    except GitHubRateLimitError as exception:
+    except GitHubAnonymousRateLimitError as exception:
         _send_rate_limited(connection, msg["id"], exception)
         return
     except MarketplaceError as exception:
-        LOGGER.exception("Could not get the releases for %s", repository.string)
+        # With an account connected, connecting one is no way out, it is said as is
+        if not isinstance(exception, GitHubRateLimitError):
+            LOGGER.exception("Could not get the releases for %s", repository.string)
         send_translated_error(
             connection,
             msg["id"],

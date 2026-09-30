@@ -243,6 +243,23 @@ class PluginRepository(Repository):
         )
 
     @override
+    async def release_contents(
+        self, version: str | None = None
+    ) -> list[FileInformation] | None:
+        """Gather the assets of a release, and take its file name from them.
+
+        What a refresh found came from the newest release, an older one can
+        name its file otherwise.
+        """
+        contents = await super().release_contents(version)
+        names = {content.name for content in contents or []}
+        for filename in self._valid_filenames():
+            if filename in names:
+                self.data.file_name = filename
+                break
+        return contents
+
+    @override
     def update_filenames(self) -> None:
         """Get the filename to target."""
         if not self._update_filenames_from_release():

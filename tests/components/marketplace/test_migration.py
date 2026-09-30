@@ -39,7 +39,7 @@ from homeassistant.setup import async_setup_component
 from . import create_install_folders, setup_integration
 from .const import REPOSITORY_INTEGRATION_ID, TOKEN, WARNING_ACCEPTANCE
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, MockUser, load_json_object_fixture
 
 UPDATE_ENTITY_ID = "update.hacs_basic_integration"
 SWITCH_ENTITY_ID = "switch.hacs_basic_integration_pre_release"
@@ -444,6 +444,13 @@ async def test_duplicate_entries_keep_the_legacy_entities(
     assert entity.platform == DOMAIN
 
 
+@pytest.fixture
+def users_who_accepted(hass: HomeAssistant) -> None:
+    """Add the users the stored acceptances belong to, others are forgotten."""
+    for user_id in ("abc", "def", "ghi"):
+        MockUser(id=user_id).add_to_hass(hass)
+
+
 OLDER_WARNING_ACCEPTANCE = {
     "version": WARNING_VERSION,
     "accepted_at": "2026-03-01T00:00:00+00:00",
@@ -485,7 +492,7 @@ OLDER_WARNING_ACCEPTANCE = {
         ),
     ],
 )
-@pytest.mark.usefixtures("stored_repositories")
+@pytest.mark.usefixtures("stored_repositories", "users_who_accepted")
 async def test_duplicate_entries_keep_warning_acceptance(
     hass: HomeAssistant,
     oldest_data: dict[str, Any],

@@ -255,6 +255,8 @@ class IntegrationRepository(Repository):
         if not await self.common_update(ignore_issues, force) and not force:
             return
 
+        # Resolved again for every version, the last one may have had it elsewhere
+        self.content.path.remote = self.remote_path
         if self.repository_manifest.content_in_root:
             self.content.path.remote = ""
 

@@ -6,7 +6,7 @@ import io
 import json
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 import zipfile
 
 from aiogithubapi import GitHubAuthenticationException, GitHubReleaseAssetModel
@@ -1864,6 +1864,60 @@ def test_integration_manifest_values_of_the_wrong_type(
     repository._use_integration_manifest({"domain": "example", key: value})
 
     assert getattr(repository.data, attribute) == default
+
+
+async def test_card_release_takes_the_file_name_of_its_own_assets(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test an older release names its file itself, not after the newest one."""
+    repository = PluginRepository(marketplace, "owner/card")
+    # What the newest release named, before the older one is written
+    repository.data.file_name = "card.js"
+    release = MagicMock(
+        data={
+            "assets": [
+                {
+                    "name": "card-bundle.js",
+                    "browser_download_url": "https://example.com/card-bundle.js",
+                    "size": 10,
+                }
+            ]
+        }
+    )
+
+    with patch.object(
+        marketplace, "async_github_api_method", AsyncMock(return_value=release)
+    ):
+        await repository.release_contents("1.0.0")
+
+    assert repository.data.file_name == "card-bundle.js"
+
+
+async def test_integration_moving_out_of_the_root_is_found(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a version with its files in custom_components after one in the root."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    # What the previous version, with content_in_root, left behind
+    repository.content.path.remote = ""
+    repository.repository_manifest.content_in_root = False
+    repository.tree = _tree(
+        ("custom_components", True),
+        ("custom_components/example", True),
+        ("custom_components/example/manifest.json", False),
+    )
+
+    with (
+        patch.object(repository, "common_update", AsyncMock(return_value=True)),
+        patch.object(
+            repository,
+            "async_get_integration_manifest",
+            AsyncMock(return_value={"domain": "example"}),
+        ),
+    ):
+        await repository.update_repository(force=True)
+
+    assert repository.content.path.remote == "custom_components/example"
 
 
 async def test_integration_manifest_missing_file(
