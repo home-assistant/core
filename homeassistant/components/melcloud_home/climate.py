@@ -26,13 +26,6 @@ from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWZoneEntity
 
 PARALLEL_UPDATES = 1
 
-ATA_UNIT_DESCRIPTION = ClimateEntityDescription(
-    key="ata_unit", translation_key="ata_unit"
-)
-ATW_ZONE_DESCRIPTION = ClimateEntityDescription(
-    key="atw_zone", translation_key="atw_zone"
-)
-
 ATA_HVAC_MODE_TO_OPERATION: dict[HVACMode, ATAOperationMode] = {
     HVACMode.HEAT: ATAOperationMode.HEAT,
     HVACMode.COOL: ATAOperationMode.COOL,
@@ -112,10 +105,20 @@ async def async_setup_entry(
         coordinator,
         async_add_entities,
         lambda units: (
-            ATAClimateEntity(coordinator, ATA_UNIT_DESCRIPTION, unit) for unit in units
+            ATAClimateEntity(
+                coordinator,
+                ClimateEntityDescription(key="ata_unit", translation_key="ata_unit"),
+                unit,
+            )
+            for unit in units
         ),
         lambda units: (
-            ATWZoneClimateEntity(coordinator, ATW_ZONE_DESCRIPTION, unit, zone_number)
+            ATWZoneClimateEntity(
+                coordinator,
+                ClimateEntityDescription(key="atw_zone", translation_key="atw_zone"),
+                unit,
+                zone_number,
+            )
             for unit in units
             for zone_number in (
                 [1, 2]
