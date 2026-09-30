@@ -2,4 +2,3 @@
 
 CONF_SERIAL = "serial"
 DOMAIN = "openevse"
-INTEGRATION_TITLE = "OpenEVSE"

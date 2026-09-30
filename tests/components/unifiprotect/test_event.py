@@ -46,6 +46,7 @@ from .utils import (
     init_entry,
     make_public_camera,
     public_device_ws_message,
+    registered_keys,
     remove_entities,
     setup_public_camera,
 )
@@ -2430,16 +2431,6 @@ async def test_event_entities_unavailable_on_events_ws_disconnect(
     assert hass.states.get(motion_id).state != STATE_UNAVAILABLE
 
 
-def _event_keys(entity_registry: EntityRegistry, mac: str) -> set[str]:
-    """Return the description keys of a device's event entities."""
-    prefix = f"{mac}_"
-    return {
-        entry.unique_id.removeprefix(prefix)
-        for entry in entity_registry.entities.values()
-        if entry.domain == Platform.EVENT and entry.unique_id.startswith(prefix)
-    }
-
-
 async def test_smart_detection_events_need_advertised_types(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
@@ -2452,7 +2443,7 @@ async def test_smart_detection_events_need_advertised_types(
 
     await init_entry(hass, ufp, [doorbell])
 
-    keys = _event_keys(entity_registry, doorbell.mac)
+    keys = registered_keys(entity_registry, Platform.EVENT, doorbell.mac)
     assert "motion_detection" in keys
     assert not keys & {"smart_detection", "package"}
 
@@ -2491,7 +2482,7 @@ async def test_public_only_event_entities(
 
     await setup_public_only()
 
-    assert _event_keys(entity_registry, doorbell.mac) == expected
+    assert registered_keys(entity_registry, Platform.EVENT, doorbell.mac) == expected
 
 
 async def test_public_only_skips_private_event_classes(
@@ -2508,7 +2499,9 @@ async def test_public_only_skips_private_event_classes(
 
     await setup_public_only()
 
-    assert "vehicle" not in _event_keys(entity_registry, doorbell.mac)
+    assert "vehicle" not in registered_keys(
+        entity_registry, Platform.EVENT, doorbell.mac
+    )
 
 
 async def test_public_only_event_fires(
@@ -2568,4 +2561,6 @@ async def test_public_only_event_camera_added_after_setup(
     ufp_public_only.devices_ws_subscription(msg)
     await hass.async_block_till_done()
 
-    assert "motion_detection" in _event_keys(entity_registry, camera.mac)
+    assert "motion_detection" in registered_keys(
+        entity_registry, Platform.EVENT, camera.mac
+    )
