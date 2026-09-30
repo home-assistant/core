@@ -1,4 +1,7 @@
-"""Config flow for Generic hygrostat."""
+"""Config flow for Generic hygrostat.
+
+DEVELOPMENT OF THE GENERIC THERMOSTAT INTEGRATION IS FROZEN.
+"""
 
 from collections.abc import Mapping
 from datetime import timedelta
