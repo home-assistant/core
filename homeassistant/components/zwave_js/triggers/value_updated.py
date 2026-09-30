@@ -76,7 +76,7 @@ _CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_OPTIONS): probatio.All(
             _OPTIONS_SCHEMA_DICT,
-            cv.has_at_least_one_key(ATTR_ENTITY_ID, ATTR_DEVICE_ID),
+            probatio.AtLeastOne(ATTR_ENTITY_ID, ATTR_DEVICE_ID),
         ),
     },
 )
