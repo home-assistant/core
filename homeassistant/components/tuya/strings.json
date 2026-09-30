@@ -547,7 +547,12 @@
         }
       },
       "pump_mode": {
-        "name": "Mode"
+        "name": "Mode",
+        "state": {
+          "ai": "Auto inverter",
+          "backwash": "Backwash",
+          "mi": "Manual inverter"
+        }
       },
       "quick_heat_temperature": {
         "name": "Quick heat temperature",
