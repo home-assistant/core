@@ -2408,6 +2408,22 @@ class UnitOfMeasurementSelector(Selector[UnitOfMeasurementSelectorConfig]):
         probatio.In(_enum_options(Platform.SENSOR, "SensorDeviceClass"))(option)
         return option
 
+    @staticmethod
+    def _valid_context(
+        config: UnitOfMeasurementSelectorConfig,
+    ) -> UnitOfMeasurementSelectorConfig:
+        """Validate the context does not filter on a fixed option and raise if so."""
+        context = config.get("context", {})
+        for option, context_key in (
+            ("device_classes", "filter_device_class"),
+            ("state_classes", "filter_state_class"),
+        ):
+            if config.get(option) and context_key in context:
+                raise probatio.Invalid(
+                    f"Context key {context_key} can not be used with {option}"
+                )
+        return config
+
     CONFIG_SCHEMA = probatio.All(
         make_selector_config_schema(
             {
@@ -2423,6 +2439,7 @@ class UnitOfMeasurementSelector(Selector[UnitOfMeasurementSelectorConfig]):
                 },
             },
         ),
+        _valid_context,
     )
 
     def __init__(self, config: UnitOfMeasurementSelectorConfig | None = None) -> None:

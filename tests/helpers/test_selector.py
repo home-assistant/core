@@ -1859,6 +1859,42 @@ def test_state_class_selector_schema(
         ({"context": {"filter_entity": "entity_id"}}, pytest.raises(probatio.Invalid)),
         ({"context": {"filter_device_class": 1}}, pytest.raises(probatio.Invalid)),
         ({"context": "device_class"}, pytest.raises(probatio.Invalid)),
+        (
+            {
+                "device_classes": "temperature",
+                "context": {"filter_state_class": "state_class"},
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                "state_classes": "measurement",
+                "context": {"filter_device_class": "device_class"},
+            },
+            does_not_raise(),
+        ),
+        (
+            {"device_classes": None, "context": {"filter_device_class": "dc"}},
+            does_not_raise(),
+        ),
+        (
+            {"state_classes": [], "context": {"filter_state_class": "sc"}},
+            does_not_raise(),
+        ),
+        (
+            {
+                "device_classes": "temperature",
+                "context": {"filter_device_class": "device_class"},
+            },
+            pytest.raises(probatio.Invalid, match="filter_device_class"),
+        ),
+        (
+            {
+                "state_classes": ["measurement"],
+                "context": {"filter_state_class": "state_class"},
+            },
+            pytest.raises(probatio.Invalid, match="filter_state_class"),
+        ),
     ],
 )
 def test_uom_selector_validate_schema(
