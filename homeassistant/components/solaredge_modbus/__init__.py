@@ -12,7 +12,12 @@ from functools import partial
 from typing import TYPE_CHECKING
 
 from modbus_connection import ModbusUnit
-from solaredged import SolarEdge, SolarEdgeConnectionError, SolarEdgeError
+from solaredged import (
+    InverterExtended,
+    SolarEdge,
+    SolarEdgeConnectionError,
+    SolarEdgeError,
+)
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.const import Platform
@@ -34,8 +39,12 @@ from .const import (
     SETTINGS_SCAN_INTERVAL,
     SUBSYSTEM_BATTERIES,
     SUBSYSTEM_COMMON,
+    SUBSYSTEM_EXPORT_CONTROL,
+    SUBSYSTEM_GRID_STATUS,
     SUBSYSTEM_INVERTER,
     SUBSYSTEM_METERS,
+    SUBSYSTEM_POWER_CONTROL,
+    SUBSYSTEM_STORAGE_CONTROL,
 )
 from .coordinator import (
     SolarEdgeModbusConfigEntry,
@@ -148,15 +157,13 @@ async def async_setup_entry(
         attachments=_attachment_identities(solaredge),
     )
 
-    if silent := solaredge.unresponsive_blocks & {
-        SUBSYSTEM_BATTERIES,
-        SUBSYSTEM_METERS,
-    }:
+    if silent := solaredge.unresponsive_blocks & _probed_blocks(solaredge).keys():
         LOGGER.warning(
-            "%s did not answer for its %s while probing, so their entities are"
-            " missing until it does; reloading probes again",
+            "%s did not answer for %s while probing, so the entities those"
+            " would carry are missing; this is looked at again every %s minutes",
             entry.title,
             " and ".join(sorted(silent)),
+            int(ATTACHMENT_SCAN_INTERVAL.total_seconds() // 60),
         )
 
     _async_remove_stale_devices(hass, entry, solaredge, serial_number, silent=silent)
@@ -192,6 +199,24 @@ def _attachment_identities(solaredge: SolarEdge) -> frozenset[str]:
     )
 
 
+def _probed_blocks(solaredge: SolarEdge) -> dict[str, int]:
+    """Return what probing found, as far as this entry is built on it.
+
+    A block that answers decides which entities exist, and probing happens once
+    while setting up, so a block that was silent then leaves its platform empty
+    until the entry loads again. Counted rather than flagged, so what is there
+    once reads the same as what can be there three times.
+    """
+    return {
+        SUBSYSTEM_METERS: len(solaredge.meters),
+        SUBSYSTEM_BATTERIES: len(solaredge.batteries),
+        SUBSYSTEM_GRID_STATUS: isinstance(solaredge.inverter, InverterExtended),
+        SUBSYSTEM_STORAGE_CONTROL: solaredge.storage_control is not None,
+        SUBSYSTEM_EXPORT_CONTROL: solaredge.export_control is not None,
+        SUBSYSTEM_POWER_CONTROL: solaredge.power_control is not None,
+    }
+
+
 async def _async_reload_when_attachments_change(
     hass: HomeAssistant,
     entry: SolarEdgeModbusConfigEntry,
@@ -219,23 +244,21 @@ async def _async_reload_when_attachments_change(
         LOGGER.debug("%s: could not probe for attached hardware: %s", entry.title, err)
         return
 
-    for name, found, known in (
-        (SUBSYSTEM_METERS, len(probed.meters), len(solaredge.meters)),
-        (SUBSYSTEM_BATTERIES, len(probed.batteries), len(solaredge.batteries)),
-    ):
-        if found == known:
+    known = _probed_blocks(solaredge)
+    for name, found in _probed_blocks(probed).items():
+        if found == known[name]:
             continue
         # A block that stayed silent is taken for absent, which is not the same
         # as the inverter saying it is gone, and reloading on that would drop a
-        # device over one timeout.
-        if found < known and name in probed.unresponsive_blocks:
+        # device, or a whole platform, over one timeout.
+        if found < known[name] and name in probed.unresponsive_blocks:
             continue
 
         LOGGER.info(
             "%s: %s went from %s to %s, reloading to pick that up",
             entry.title,
             name,
-            known,
+            known[name],
             found,
         )
         hass.config_entries.async_schedule_reload(entry.entry_id)

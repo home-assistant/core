@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 
 from pytradfri import Gateway, RequestError
-from pytradfri.api.aiocoap_api import APIFactory
+from pytradfri.api.aiocoap_api import APIFactory, APIRequestProtocol
 from pytradfri.command import Command
 from pytradfri.device import Device
 
@@ -56,12 +56,12 @@ async def async_setup_entry(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
     )
 
-    api = factory.request
+    api: APIRequestProtocol = factory.request
     gateway = Gateway()
 
     try:
         gateway_info = await api(gateway.get_gateway_info(), timeout=TIMEOUT_API)
-        devices_commands: Command = await api(
+        devices_commands: list[Command[Device]] = await api(
             gateway.get_devices(), timeout=TIMEOUT_API
         )
         devices: list[Device] = await api(devices_commands, timeout=TIMEOUT_API)

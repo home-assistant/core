@@ -152,6 +152,25 @@ def _add_lock_state_notification_states(node_state: dict[str, Any]) -> dict[str,
     return updated_state
 
 
+def _add_glass_break_notification_states(
+    node_state: dict[str, Any],
+) -> dict[str, Any]:
+    """Return a node state with Home Security glass break notification states."""
+    updated_state = copy.deepcopy(node_state)
+    for value_data in updated_state["values"]:
+        if (
+            value_data.get("commandClass") == 113
+            and value_data.get("property") == "Home Security"
+        ):
+            value_data["metadata"]["states"] = {
+                "0": "idle",
+                "5": "Glass breakage detected (location provided)",
+                "6": "Glass breakage detected",
+            }
+            break
+    return updated_state
+
+
 def _set_opening_state_metadata_states(
     node_state: dict[str, Any], states: dict[str, str]
 ) -> dict[str, Any]:
@@ -328,6 +347,33 @@ async def test_notification_sensor(
 
     assert entity_entry
     assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+async def test_glass_break_notification_sensor(
+    hass: HomeAssistant,
+    client: MagicMock,
+    lock_schlage_be469_state: NodeDataType,
+) -> None:
+    """Test the glass break notification sensor device class."""
+    node = Node(
+        client,
+        _add_glass_break_notification_states(lock_schlage_be469_state),
+    )
+    client.driver.controller.nodes[node.node_id] = node
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    glass_break_states = [
+        state
+        for state in hass.states.async_all(BINARY_SENSOR_DOMAIN)
+        if state.attributes.get(ATTR_DEVICE_CLASS)
+        == BinarySensorDeviceClass.GLASS_BREAK
+    ]
+    assert len(glass_break_states) == 2
+    assert all(state.state == STATE_OFF for state in glass_break_states)
 
 
 @pytest.mark.parametrize(

@@ -102,4 +102,14 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
             data = await self.airthings.update_device(self.ble_device)
         except Exception as err:
             raise UpdateFailed(f"Unable to fetch data: {err}") from err
+
+        if not data.address:
+            # The device did not report its address, which means the read did not
+            # complete. Building entities from this would create a duplicate device
+            # and entities with an empty unique id prefix.
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="incomplete_read",
+            )
+
         return data

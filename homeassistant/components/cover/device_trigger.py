@@ -24,7 +24,8 @@ from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, CoverEntityFeature, CoverEntityStateAttribute, CoverState
+from . import CoverEntityFeature, CoverEntityStateAttribute, CoverState
+from .const import DOMAIN
 
 POSITION_TRIGGER_TYPES = {"position", "tilt_position"}
 STATE_TRIGGER_TYPES = {"opened", "closed", "opening", "closing"}

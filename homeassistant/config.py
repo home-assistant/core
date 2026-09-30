@@ -826,8 +826,8 @@ def _get_log_message_and_stack_print_pref(
                 hass, exception, platform_path, platform_config, link
             )
             if annotation := find_annotation(platform_config, exception.path):
-                placeholders["config_file"], line = annotation
-                placeholders["line"] = str(line)
+                placeholders["config_file"] = _relpath(hass, annotation[0])
+                placeholders["line"] = str(annotation[1])
         else:
             if TYPE_CHECKING:
                 assert isinstance(exception, HomeAssistantError)
@@ -835,8 +835,8 @@ def _get_log_message_and_stack_print_pref(
                 hass, exception, platform_path, platform_config, link
             )
             if annotation := find_annotation(platform_config, [platform_path]):
-                placeholders["config_file"], line = annotation
-                placeholders["line"] = str(line)
+                placeholders["config_file"] = _relpath(hass, annotation[0])
+                placeholders["line"] = str(annotation[1])
             show_stack_trace = True
         return (log_message, show_stack_trace, placeholders)
 

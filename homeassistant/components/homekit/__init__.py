@@ -424,9 +424,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> 
     async_dismiss_setup_message(hass, entry.entry_id)
     entry_data = entry.runtime_data
     homekit = entry_data.homekit
-
-    if homekit.status == STATUS_RUNNING:
-        await homekit.async_stop()
+    await homekit.async_stop()
 
     logged_shutdown_wait = False
     for _ in range(SHUTDOWN_TIMEOUT):
@@ -1144,12 +1142,14 @@ class HomeKit:
 
     async def async_stop(self, *args: Any) -> None:
         """Stop the accessory driver."""
+        # The dispatcher is connected before the start can bail out early.
+        if self._cancel_reload_dispatcher:
+            self._cancel_reload_dispatcher()
+            self._cancel_reload_dispatcher = None
         if self.status != STATUS_RUNNING:
             return
         async with self._reset_lock:
             self.status = STATUS_STOPPED
-            assert self._cancel_reload_dispatcher is not None
-            self._cancel_reload_dispatcher()
             _LOGGER.debug("Driver stop for %s", self._name)
             if self.driver:
                 await self.driver.async_stop()
