@@ -1,6 +1,6 @@
 """Calendar platform for Teslemetry integration."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, tzinfo
 from typing import Any, override
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
@@ -111,6 +111,8 @@ def _build_event(
 class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
     """Energy Site Tariff Schedule Calendar."""
 
+    _time_zone: tzinfo
+
     def __init__(
         self,
         data: Any,
@@ -122,11 +124,20 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
         self.charges: dict[str, dict[str, Any]] = {}
         super().__init__(data, key_base)
 
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Resolve the site timezone the tariff is defined in."""
+        name = self.coordinator.data.get("installation_time_zone")
+        self._time_zone = (
+            name and await dt_util.async_get_time_zone(name)
+        ) or dt_util.get_default_time_zone()
+        await super().async_added_to_hass()
+
     @property
     @override
     def event(self) -> CalendarEvent | None:
         """Return the current active tariff event."""
-        now = dt_util.now()
+        now = dt_util.now(self._time_zone)
         current_season_name = self._get_current_season(now)
 
         if not current_season_name or not self.seasons.get(current_season_name):
@@ -173,12 +184,14 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
         """Return calendar events (tariff periods) within a datetime range."""
         events: list[CalendarEvent] = []
 
-        start_date = dt_util.as_local(start_date)
-        end_date = dt_util.as_local(end_date)
+        start_date = start_date.astimezone(self._time_zone)
+        end_date = end_date.astimezone(self._time_zone)
 
         # Start one day earlier to catch TOU periods that cross midnight
         # from the previous evening into the query range.
-        current_day = dt_util.start_of_local_day(start_date) - timedelta(days=1)
+        current_day = start_date.replace(
+            hour=0, minute=0, second=0, microsecond=0
+        ) - timedelta(days=1)
         while current_day < end_date:
             season_name = self._get_current_season(current_day)
             if not season_name or not self.seasons.get(season_name):
@@ -215,7 +228,7 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
 
     def _get_current_season(self, date_to_check: datetime) -> str | None:
         """Determine the active season for a given date."""
-        local_date = dt_util.as_local(date_to_check)
+        local_date = date_to_check.astimezone(self._time_zone)
         year = local_date.year
 
         for season_name, season_data in self.seasons.items():

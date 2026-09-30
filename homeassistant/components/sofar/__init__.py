@@ -12,7 +12,6 @@ from homeassistant.components.modbus import async_get_unit
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorExtraStoredData,
-    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
@@ -50,18 +49,21 @@ PLATFORMS: list[Platform] = [
 
 _IDENTITY_ATTEMPTS = 3
 
+_REMOVED_SENSOR_KEYS = ("serial_number", "waiting_time")
+
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @callback
-def _async_remove_stale_waiting_time(hass: HomeAssistant, serial: str) -> None:
-    """Drop the removed waiting-time entity so it doesn't linger unavailable."""
+def _async_remove_stale_sensors(hass: HomeAssistant, serial: str) -> None:
+    """Drop removed sensors so they don't linger unavailable."""
     registry = er.async_get(hass)
-    entity_id = registry.async_get_entity_id(
-        SENSOR_DOMAIN, DOMAIN, f"{serial}_waiting_time"
-    )
-    if entity_id is not None:
-        registry.async_remove(entity_id)
+    for key in _REMOVED_SENSOR_KEYS:
+        entity_id = registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{serial}_{key}"
+        )
+        if entity_id is not None:
+            registry.async_remove(entity_id)
 
 
 @callback
@@ -101,7 +103,7 @@ def _async_seed_high_water_marks(
     registry = er.async_get(hass)
     last_states = restore_state.async_get(hass).last_states
     for description in SENSOR_DESCRIPTIONS:
-        if description.state_class is not SensorStateClass.TOTAL_INCREASING:
+        if (total_fn := description.total_fn) is None:
             continue
         entity_id = registry.async_get_entity_id(
             SENSOR_DOMAIN, DOMAIN, f"{serial}_{description.key}"
@@ -113,9 +115,7 @@ def _async_seed_high_water_marks(
         extra = SensorExtraStoredData.from_dict(stored.extra_data.as_dict())
         if extra is None or not isinstance(extra.native_value, (int, float)):
             continue
-        getattr(device, description.component).seed_high_water(
-            description.key, float(extra.native_value)
-        )
+        total_fn(device).seed(float(extra.native_value))
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -125,10 +125,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> bool:
-    """Set up Sofar Inverter Modbus from a config entry."""
+    """Set up Sofar from a config entry."""
     serial = entry.unique_id
     assert serial is not None
-    _async_remove_stale_waiting_time(hass, serial)
+    _async_remove_stale_sensors(hass, serial)
     inverter_type, model = identify(serial)
     if not inverter_type:
         raise ConfigEntryError(

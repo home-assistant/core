@@ -37,9 +37,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: todo
-    comment: Expand switch command exception handling in a follow-up PR.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -52,9 +50,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics:
-    status: todo
-    comment: Split into a follow-up PR after the initial integration lands.
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: |

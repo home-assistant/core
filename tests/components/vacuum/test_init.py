@@ -20,6 +20,7 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
+from homeassistant.components.vacuum.services import _async_clean_area
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -449,7 +450,7 @@ async def test_clean_area_no_registry_entry(hass: HomeAssistant) -> None:
         RuntimeError,
         match="Cannot perform area clean, registry entry is not set",
     ):
-        await StateVacuumEntity.async_internal_clean_area([mock_vacuum], call)
+        await _async_clean_area([mock_vacuum], call)
 
     with pytest.raises(
         RuntimeError,

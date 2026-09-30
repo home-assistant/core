@@ -54,7 +54,6 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     def device_info(self) -> dr.DeviceInfo:
         """Return device information."""
         serial = self.device.serial_number
-        assert serial is not None
         identity = self.device.identity
         return dr.DeviceInfo(
             identifiers={(DOMAIN, serial)},
@@ -180,8 +179,7 @@ class SofarRuntimeData:
         component_name = BATTERY_COMPONENTS[number]
         if component_name not in self.served_components:
             return False
-        component = getattr(self.readings.device, component_name)
-        return bool(getattr(component, f"battery_voltage_{number}", None))
+        return bool(self.readings.device.battery_string(number).voltage)
 
     def coordinator_for(self, component: str) -> SofarDataUpdateCoordinator:
         """Which coordinator owns a given component's data."""
