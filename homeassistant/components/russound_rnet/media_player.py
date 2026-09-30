@@ -51,7 +51,7 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
         probatio.Required(CONF_NAME): cv.string,
-        probatio.Required(CONF_PORT): cv.port,
+        probatio.Required(CONF_PORT): probatio.Port(),
         probatio.Required(CONF_ZONES): probatio.Schema({cv.positive_int: ZONE_SCHEMA}),
         probatio.Required(CONF_SOURCES): probatio.All(
             probatio.EnsureList(), [SOURCE_SCHEMA]

@@ -77,7 +77,7 @@ HTTP_SCHEMA: Final = probatio.All(
             # No default: the YAML migration needs to tell an explicitly
             # configured port apart from an omitted one, which it keeps on the
             # previous default port instead of the Supervisor default.
-            probatio.Optional(CONF_SERVER_PORT): cv.port,
+            probatio.Optional(CONF_SERVER_PORT): probatio.Port(),
             probatio.Optional(CONF_BASE_URL): cv.string,
             probatio.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
             probatio.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,

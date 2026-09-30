@@ -9,7 +9,6 @@ from pydroid_ipcam.exceptions import PyDroidIPCamException, Unauthorized
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_PORT, DOMAIN
@@ -17,7 +16,7 @@ from .const import DEFAULT_PORT, DOMAIN
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Inclusive(CONF_USERNAME, "authentication"): str,
         probatio.Inclusive(CONF_PASSWORD, "authentication"): str,
     }

@@ -117,7 +117,7 @@ MONITORS_SCHEMA = probatio.All(probatio.EnsureList(), [MONITOR_SCHEMA])
 
 COMPONENT_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_PORT): cv.port,
+        probatio.Required(CONF_PORT): probatio.Port(),
         probatio.Required(CONF_MONITORS): MONITORS_SCHEMA,
     }
 )

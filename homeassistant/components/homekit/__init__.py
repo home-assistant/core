@@ -205,7 +205,7 @@ BRIDGE_SCHEMA = probatio.All(
             probatio.Optional(CONF_NAME, default=BRIDGE_NAME): probatio.All(
                 cv.string, probatio.Length(min=3, max=25)
             ),
-            probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
             probatio.Optional(CONF_IP_ADDRESS): probatio.All(
                 ipaddress.ip_address, cv.string
             ),

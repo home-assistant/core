@@ -153,6 +153,11 @@
       "standby": {
         "name": "Standby"
       }
+    },
+    "water_heater": {
+      "hot_water": {
+        "name": "Hot water"
+      }
     }
   },
   "exceptions": {
