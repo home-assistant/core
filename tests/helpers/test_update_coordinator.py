@@ -711,6 +711,24 @@ async def test_stop_refresh_on_ha_stop(
     assert crd.data == 2
 
 
+async def test_no_refresh_after_ha_close(
+    hass: HomeAssistant, crd: update_coordinator.DataUpdateCoordinator[int]
+) -> None:
+    """Test a pending refresh does not fire once Home Assistant has closed."""
+    crd.async_add_listener(Mock())
+
+    async_fire_time_changed(hass, utcnow() + crd.update_interval)
+    await hass.async_block_till_done()
+    assert crd.data == 1
+
+    await hass.async_stop()
+
+    # Shared resources like the aiohttp session are closed at this point
+    async_fire_time_changed(hass, utcnow() + crd.update_interval * 2)
+    await hass.async_block_till_done()
+    assert crd.data == 1
+
+
 @pytest.mark.parametrize(
     "err_msg",
     [
