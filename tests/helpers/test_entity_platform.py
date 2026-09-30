@@ -179,9 +179,8 @@ async def test_overlapping_update_cycles_never_double_update_an_entity(
 ) -> None:
     """Test overlapping polling cycles never run the same entity's update twice.
 
-    Regression contract: if two `_async_update_entity_states` calls overlap
-    (e.g. a slow platform whose cycle time exceeds `scan_interval`), an
-    entity must never have its update code running concurrently with itself.
+    Regression contract: an entity must never have its update code running
+    concurrently with itself.
     """
     scan_interval = timedelta(seconds=1)
     component = EntityComponent(_LOGGER, DOMAIN, hass, scan_interval)
@@ -512,7 +511,7 @@ async def test_stale_poll_does_not_clobber_tracked_task_for_newer_cycle(
     # and legitimately in-flight, queued behind entity_a's permit.
     async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 2)
     await asyncio.sleep(0)
-    task_b = platform_handle._polling_tasks[id(entity_b)]
+    cycle_2_id, task_b = platform_handle._polling_tasks[id(entity_b)]
     assert not task_b.done()
     assert not b_started.is_set()
 
@@ -528,16 +527,90 @@ async def test_stale_poll_does_not_clobber_tracked_task_for_newer_cycle(
 
     # entity_b must still be tracked by its own, still-running task from
     # cycle 2 - not silently replaced or cleared by the fossil cycle-1 call.
-    assert platform_handle._polling_tasks.get(id(entity_b)) is task_b
+    assert platform_handle._polling_tasks.get(id(entity_b)) == (cycle_2_id, task_b)
     assert not task_b.done()
 
     # A later cycle must still correctly recognize entity_b as stale
     # (still legitimately in-flight), not silently drop it from tracking.
     async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 3)
     await asyncio.sleep(0)
-    assert platform_handle._polling_tasks.get(id(entity_b)) is task_b
+    assert platform_handle._polling_tasks.get(id(entity_b)) == (cycle_2_id, task_b)
 
     b_release.set()
+    await hass.async_block_till_done()
+
+
+async def test_stale_poll_does_not_repoll_entity_claimed_by_finished_newer_cycle(
+    hass: HomeAssistant,
+) -> None:
+    """Test a stale cycle does not repoll an entity a newer cycle already finished.
+
+    Regression contract: in sequential (`PARALLEL_UPDATES = 1`) mode, a
+    resumed, previously-stuck outer call must not poll an entity a second
+    time just because a newer, overlapping cycle's task for it has already
+    finished by the time the stale call resumes and reaches it.
+    """
+    scan_interval = timedelta(seconds=1)
+    platform = MockPlatform()
+    platform.PARALLEL_UPDATES = 1
+    mock_platform(hass, "platform.test_domain", platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass, scan_interval)
+    component._platforms = {}
+    await component.async_setup({DOMAIN: {"platform": "platform"}})
+    await hass.async_block_till_done()
+
+    platform_handle = list(component._platforms.values())[-1]
+
+    a_started = asyncio.Event()
+    a_release = asyncio.Event()
+
+    async def _hung_update() -> None:
+        a_started.set()
+        await a_release.wait()
+
+    entity_a = MockEntity(should_poll=True)
+    entity_a.async_update = _hung_update
+
+    entity_b = MockEntity(should_poll=True)
+    entity_b.async_update = AsyncMock()
+
+    await platform_handle.async_add_entities([entity_a, entity_b])
+
+    semaphore = entity_a.parallel_updates
+    assert semaphore is not None
+
+    # Cycle 1: this outer call gets stuck awaiting entity_a's own update,
+    # holding entity_a's task in its for-loop before it can ever reach
+    # entity_b.
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval)
+    await a_started.wait()
+    await asyncio.sleep(0)
+    assert semaphore._value == 0
+
+    # Cycle 2: a separate, newer outer call detects entity_a as stale and
+    # starts its own task for entity_b. With only one permit on the
+    # platform (still held by entity_a), entity_b's task queues behind it.
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 2)
+    await asyncio.sleep(0)
+    assert entity_b.async_update.call_count == 0
+    assert id(entity_b) in platform_handle._polling_tasks
+
+    # entity_a's update now finally completes and releases its permit.
+    # entity_b's queued task (from cycle 2) acquires it and runs to
+    # completion - all before the very first, ancient outer call (still
+    # suspended awaiting entity_a's original task from cycle 1) gets a
+    # chance to resume and continue its own for-loop on to entity_b, which
+    # it captured in its OWN, now-stale `pollable_entities` snapshot back
+    # in cycle 1. By now entity_b's task from cycle 2 has already finished,
+    # so a liveness-only check would wrongly let this stale cycle poll
+    # entity_b a second time in a row.
+    a_release.set()
+    for _ in range(5):
+        await asyncio.sleep(0)
+
+    assert entity_b.async_update.call_count == 1
+
     await hass.async_block_till_done()
 
 
