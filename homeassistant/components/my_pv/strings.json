@@ -80,6 +80,11 @@
           "5": "AUX relay"
         }
       }
+    },
+    "switch": {
+      "bstmode": {
+        "name": "Boost Mode"
+      }
     }
   },
   "exceptions": {
