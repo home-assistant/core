@@ -5,10 +5,12 @@ from typing import TYPE_CHECKING, Any
 import probatio
 
 from homeassistant.components import websocket_api
+from homeassistant.const import Platform
+from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from ..const import SIGNAL_REPOSITORY_INSTALLED
+from ..const import DOMAIN, SIGNAL_REPOSITORY_INSTALLED
 from ..enums import RepositoryCategory
 from ..exceptions import (
     GitHubAnonymousRateLimitError,
@@ -126,6 +128,10 @@ async def marketplace_repository_info(
                 "ref": repository.ref,
                 "replaces_built_in": await repository.async_replaces_built_in(),
                 "selected_tag": repository.data.selected_tag,
+                # The panel updates through it, like the update page does
+                "update_entity_id": er.async_get(hass).async_get_entity_id(
+                    Platform.UPDATE, DOMAIN, repository.data.id
+                ),
                 "version_or_commit": repository.display_version_or_commit,
             },
         )

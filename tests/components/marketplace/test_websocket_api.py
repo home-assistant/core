@@ -39,6 +39,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_TOKEN, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -420,6 +421,37 @@ async def test_repository_info(
 
     assert response["success"]
     assert response["result"] == snapshot(exclude=props("local_path"))
+
+
+@pytest.mark.usefixtures("stored_repositories")
+@pytest.mark.parametrize(
+    ("repository_id", "has_entity"),
+    [
+        pytest.param(REPOSITORY_INTEGRATION_ID, True, id="installed"),
+        pytest.param("1296266", False, id="not_installed"),
+    ],
+)
+async def test_repository_info_names_the_update_entity(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    repository_id: str,
+    has_entity: bool,
+) -> None:
+    """Test the page learns which update entity to open for an update."""
+    marketplace.repositories.get_by_id(repository_id).updated_info = True
+    entity_id = entity_registry.async_get_entity_id("update", DOMAIN, repository_id)
+    assert (entity_id is not None) is has_entity
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "marketplace/repository/info", "repository_id": repository_id}
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["update_entity_id"] == entity_id
 
 
 @pytest.mark.parametrize(

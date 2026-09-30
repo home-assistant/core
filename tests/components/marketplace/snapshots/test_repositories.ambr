@@ -161,6 +161,7 @@
       'electron',
       'api',
     ]),
+    'update_entity_id': None,
     'version_or_commit': 'version',
   })
 # ---
@@ -206,6 +207,7 @@
       'electron',
       'api',
     ]),
+    'update_entity_id': None,
     'version_or_commit': 'version',
   })
 # ---
