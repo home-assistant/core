@@ -909,10 +909,16 @@ class EntityPlatform:
             del self.entities[entity_id]
             del self.domain_entities[entity_id]
             del self.domain_platform_entities[entity_id]
-            # Also stop tracking any polling task for this entity so it is
-            # not kept alive indefinitely just by being a dict key here.
-            if (stale_task := self._polling_tasks.pop(id(entity), None)) is not None:
-                stale_task.cancel()
+            # Deliberately leave any in-flight polling task tracked rather
+            # than cancelling it: cancelling a task awaiting a synchronous
+            # update() in the executor doesn't stop that thread, it only
+            # forces the entity's `finally` to run early (clearing
+            # `_update_staged`, releasing its permit) while the real
+            # update keeps running - and an entity-id rename re-adds this
+            # same instance, so a new poll could then run concurrently
+            # with it. Leaving it tracked keeps the entity correctly
+            # treated as still-updating until its own update genuinely
+            # completes and clears the entry itself.
 
         entity.async_on_remove(remove_entity_cb)
 
@@ -1421,6 +1427,11 @@ class EntityPlatform:
         if self._polling_tasks.get(id(entity)) is task:
             del self._polling_tasks[id(entity)]
         if isinstance(result, asyncio.CancelledError):
+            # Deliberately not re-raised: this task was cancelled on its
+            # own (e.g. by hass shutdown), independently of the outer
+            # gather here. Other entities in the same polling cycle must
+            # still be handled normally rather than having their own
+            # results discarded because a sibling's task was cancelled.
             self.logger.warning(
                 "Polling for entity %s was cancelled",
                 entity.entity_id,
