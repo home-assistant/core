@@ -276,7 +276,7 @@ RFLINK_PLATFORM = {
                 probatio.Required(CONF_SENSOR_TYPE): cv.string,
                 probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
                 probatio.Optional(CONF_ALIASES, default=[]): probatio.All(
-                    cv.ensure_list, [cv.string]
+                    probatio.EnsureList(), [cv.string]
                 ),
             }
         )
