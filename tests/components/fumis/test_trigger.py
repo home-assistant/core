@@ -1,7 +1,7 @@
 """Tests for the Fumis triggers."""
 
 from dataclasses import replace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from fumis import FumisConnectionError, FumisInfo
@@ -200,6 +200,50 @@ async def test_trigger_before_stove_loaded(
     await _async_poll(hass, freezer)
 
     assert len(service_calls) == 1
+
+
+async def test_trigger_without_entities(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_fumis: MagicMock,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test the trigger keeps the stove polling when no entity listens to it."""
+    info = mock_fumis.update_info.return_value
+    mock_config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, UNIQUE_ID)},
+    )
+
+    with patch("homeassistant.components.fumis.PLATFORMS", []):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        await _async_setup_automation(hass, device.id)
+
+        mock_fumis.update_info.return_value = _info_with_alert(info, LOW_FUEL)
+        await _async_poll(hass, freezer)
+
+        assert len(service_calls) == 1
+
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        mock_fumis.update_info.return_value = _info_with_alert(info, NO_ALERT)
+        await _async_poll(hass, freezer)
+        mock_fumis.update_info.return_value = _info_with_alert(info, LOW_FUEL)
+        await _async_poll(hass, freezer)
+
+        assert len(service_calls) == 2
+
+        await hass.services.async_call(
+            automation.DOMAIN, "turn_off", {"entity_id": "all"}, blocking=True
+        )
+        polls = mock_fumis.update_info.call_count
+        await _async_poll(hass, freezer)
+
+        assert mock_fumis.update_info.call_count == polls
 
 
 @pytest.mark.usefixtures("init_integration")

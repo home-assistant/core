@@ -121,11 +121,25 @@ class FuelBecameLowTrigger(Trigger):
         """Track the low fuel alert of a single stove."""
         description = f"fuel became low on {device.name_by_user or device.name}"
         tracked_coordinator: FumisDataUpdateCoordinator | None = None
+        remove_coordinator_listener: CALLBACK_TYPE | None = None
         previous_alert: StoveAlert | UndefinedType | None = UNDEFINED
+
+        @callback
+        def async_track_coordinator(coordinator: FumisDataUpdateCoordinator) -> None:
+            """Keep the coordinator of the stove polling while attached."""
+            nonlocal tracked_coordinator, remove_coordinator_listener
+            if remove_coordinator_listener is not None:
+                remove_coordinator_listener()
+
+            # A coordinator only polls while something listens to it, and the
+            # stove might not have any enabled entities doing that.
+            tracked_coordinator = coordinator
+            remove_coordinator_listener = coordinator.async_add_listener(lambda: None)
+
         if entry.state is ConfigEntryState.LOADED:
-            tracked_coordinator = entry.runtime_data
+            async_track_coordinator(entry.runtime_data)
             # Another alert could be hiding the low fuel alert already.
-            if (alert := _get_alert(tracked_coordinator)) in (
+            if (alert := _get_alert(entry.runtime_data)) in (
                 StoveAlert.LOW_FUEL,
                 None,
             ):
@@ -136,13 +150,13 @@ class FuelBecameLowTrigger(Trigger):
             coordinator: FumisDataUpdateCoordinator,
         ) -> None:
             """Compare the stove alert against the previous update."""
-            nonlocal previous_alert, tracked_coordinator
+            nonlocal previous_alert
 
             # A new coordinator means the entry was reloaded. Its entities
             # were removed and added again, so there is nothing to compare
             # against, just like for an entity trigger.
             if coordinator is not tracked_coordinator:
-                tracked_coordinator = coordinator
+                async_track_coordinator(coordinator)
                 previous_alert = UNDEFINED
 
             alert = _get_alert(coordinator)
@@ -154,11 +168,20 @@ class FuelBecameLowTrigger(Trigger):
 
             previous_alert = alert
 
-        return async_dispatcher_connect(
+        remove_dispatcher = async_dispatcher_connect(
             self._hass,
             SIGNAL_COORDINATOR_UPDATED.format(entry.entry_id),
             async_coordinator_updated,
         )
+
+        @callback
+        def async_remove() -> None:
+            """Stop tracking the stove."""
+            remove_dispatcher()
+            if remove_coordinator_listener is not None:
+                remove_coordinator_listener()
+
+        return async_remove
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
