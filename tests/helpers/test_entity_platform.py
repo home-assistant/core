@@ -536,6 +536,205 @@ async def test_stale_poll_reset_does_not_strand_or_corrupt_queued_service_calls(
     assert semaphore._value == 1
 
 
+async def test_stale_poll_compensation_never_exceeds_one_outstanding_permit(
+    hass: HomeAssistant,
+) -> None:
+    """Test at most one manufactured permit is ever outstanding at a time.
+
+    Regression test: compensating a hung entity's permit necessarily lets
+    one more update run concurrently than PARALLEL_UPDATES configures.
+    Capping *when* a new compensation may start (only when the semaphore is
+    exhausted with pending demand) is not enough on its own: if a second,
+    independent entity later hangs while the first hung entity's permit is
+    still outstanding, compensating it too would let the concurrency
+    overrun keep growing with every additional entity that hangs over the
+    platform's lifetime. Instead, only one compensated permit may ever be
+    outstanding for a platform at a time; a second concurrently-hung entity
+    must wait for the first's compensation to clear (by finishing or being
+    removed) before it can be compensated itself.
+    """
+    scan_interval = timedelta(seconds=1)
+    platform = MockPlatform()
+    platform.PARALLEL_UPDATES = 1
+    mock_platform(hass, "platform.test_domain", platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass, scan_interval)
+    component._platforms = {}
+    await component.async_setup({DOMAIN: {"platform": "platform"}})
+    await hass.async_block_till_done()
+
+    platform_handle = list(component._platforms.values())[-1]
+
+    def _make_hung_entity() -> tuple[MockEntity, asyncio.Event, asyncio.Event]:
+        started = asyncio.Event()
+        release = asyncio.Event()
+
+        async def _hung_update() -> None:
+            started.set()
+            await release.wait()
+
+        entity = MockEntity(should_poll=True)
+        entity.async_update = _hung_update
+        return entity, started, release
+
+    hung1, hung1_started, hung1_release = _make_hung_entity()
+    healthy1 = MockEntity(should_poll=True)
+    healthy1.async_update = AsyncMock()
+
+    await platform_handle.async_add_entities([hung1, healthy1])
+
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval)
+    await hung1_started.wait()
+    await asyncio.sleep(0)
+
+    semaphore = hung1.parallel_updates
+    assert semaphore is not None
+    assert semaphore._value == 0
+
+    # First stale cycle: hung1 is compensated so healthy1 can proceed.
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 2)
+    await asyncio.sleep(0)
+    assert healthy1.async_update.call_count == 1
+    assert hung1._update_permit_compensated is True
+    assert semaphore._value == 1
+
+    # A second, independent entity now starts hanging while hung1's
+    # compensation is still outstanding (hung1 never finished or was
+    # removed).
+    hung2, hung2_started, hung2_release = _make_hung_entity()
+    healthy2 = MockEntity(should_poll=True)
+    healthy2.async_update = AsyncMock()
+    await platform_handle.async_add_entities([hung2, healthy2])
+
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 3)
+    await hung2_started.wait()
+    await asyncio.sleep(0)
+    assert semaphore._value == 0
+
+    # Several more cycles pass. hung1 is still stale and still marked
+    # compensated, so hung2 must NOT also be compensated: that would let
+    # the concurrency overrun keep growing with every additional entity
+    # that hangs. healthy2 must simply wait, exactly like it would have
+    # with PARALLEL_UPDATES = 1 before this feature existed at all.
+    for cycle in range(4, 7):
+        async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * cycle)
+        await asyncio.sleep(0)
+
+    assert hung2._update_permit_compensated is False
+    assert healthy2.async_update.call_count == 0
+    assert semaphore._value == 0
+
+    # Once hung1 finally finishes (its compensated permit is simply
+    # discarded, not double-released), its "slot" frees up and hung2 can be
+    # compensated in its place on a later cycle.
+    hung1_release.set()
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 8)
+    for _ in range(5):
+        await asyncio.sleep(0)
+
+    assert hung2._update_permit_compensated is True
+    assert healthy2.async_update.call_count >= 1
+    assert semaphore._value == 1
+
+    hung2_release.set()
+    await hass.async_block_till_done()
+    assert semaphore._value == 1
+
+
+async def test_stale_poll_does_not_clobber_tracked_task_for_newer_cycle(
+    hass: HomeAssistant,
+) -> None:
+    """Test a stale outer polling cycle does not clobber a newer cycle's task.
+
+    Regression test: `pollable_entities` is captured once at the very start
+    of `_async_update_entity_states`, before anything is awaited. In
+    sequential (`PARALLEL_UPDATES = 1`) mode, if this call gets stuck
+    awaiting one entity that never returns, a *different*, later outer
+    call can, in the meantime, have already started its own task for
+    another entity further down this call's own (now stale) snapshot list.
+    If the stuck entity's update eventually completes and this old call's
+    for-loop resumes, it must not blindly create a second, redundant task
+    for that other entity and overwrite the newer cycle's still-running
+    task in `self._polling_tasks` - doing so would corrupt stale-entity
+    bookkeeping for an entity that is, in fact, still being legitimately
+    polled by the newer cycle.
+    """
+    scan_interval = timedelta(seconds=1)
+    platform = MockPlatform()
+    platform.PARALLEL_UPDATES = 1
+    mock_platform(hass, "platform.test_domain", platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass, scan_interval)
+    component._platforms = {}
+    await component.async_setup({DOMAIN: {"platform": "platform"}})
+    await hass.async_block_till_done()
+
+    platform_handle = list(component._platforms.values())[-1]
+
+    def _make_hung_entity() -> tuple[MockEntity, asyncio.Event, asyncio.Event]:
+        started = asyncio.Event()
+        release = asyncio.Event()
+
+        async def _hung_update() -> None:
+            started.set()
+            await release.wait()
+
+        entity = MockEntity(should_poll=True)
+        entity.async_update = _hung_update
+        return entity, started, release
+
+    entity_a, a_started, a_release = _make_hung_entity()
+    entity_b, b_started, b_release = _make_hung_entity()
+    await platform_handle.async_add_entities([entity_a, entity_b])
+
+    semaphore = entity_a.parallel_updates
+    assert semaphore is not None
+
+    # Cycle 1: this outer call gets stuck awaiting entity_a's own update,
+    # holding entity_a's task in its for-loop before it can ever reach
+    # entity_b.
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval)
+    await a_started.wait()
+    await asyncio.sleep(0)
+    assert semaphore._value == 0
+
+    # Cycle 2: a separate, newer outer call detects entity_a as stale,
+    # compensates its permit, and starts its own task for entity_b - which
+    # itself now hangs too.
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 2)
+    await b_started.wait()
+    await asyncio.sleep(0)
+    assert entity_a._update_permit_compensated is True
+    assert semaphore._value == 0
+    task_b = platform_handle._polling_tasks[entity_b]
+    assert not task_b.done()
+
+    # entity_a's update now finally completes. The very first, ancient
+    # outer call (still suspended awaiting entity_a's original task from
+    # cycle 1) resumes and continues its own for-loop on to entity_b -
+    # which it captured in its OWN, now-stale `pollable_entities` snapshot
+    # back in cycle 1, before any of this happened.
+    a_release.set()
+    for _ in range(5):
+        await asyncio.sleep(0)
+
+    # entity_b must still be tracked by its own, still-running task from
+    # cycle 2 - not silently replaced or cleared by the fossil cycle-1 call.
+    assert platform_handle._polling_tasks.get(entity_b) is task_b
+    assert not task_b.done()
+
+    # A later cycle must still correctly recognize entity_b as stale
+    # (still legitimately in-flight), not silently drop it from tracking.
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 3)
+    await asyncio.sleep(0)
+    assert platform_handle._polling_tasks.get(entity_b) is task_b
+
+    b_release.set()
+    await hass.async_block_till_done()
+
+
 async def test_update_state_adds_entities(hass: HomeAssistant) -> None:
     """Test if updating poll entities cause an entity to be added works."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
