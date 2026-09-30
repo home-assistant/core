@@ -1,6 +1,7 @@
 """Common fixtures for the my-PV tests."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -13,7 +14,10 @@ from . import ELWA2_SERIAL_NUMBER
 from tests.common import MockConfigEntry
 
 SETUP_CONFIGURATION = {
-    "bstmode": {"type": "boolean"},
+    "bstmode": {
+        "type": "enumeration",
+        "options": {"0": "Off", "1": "On", "3": "Relais"},
+    },
     "bsttemp": {"type": "number", "step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0},
     "ww1boost": {"type": "number", "step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0},
     "ww_boost_h": {"type": "number", "step": 0.1, "unit": "°C", "min": 0.1, "max": 9.9},
@@ -24,7 +28,7 @@ SETUP_CONFIGURATION = {
 COMMAND_CONFIGURATION = {"reboot_device": {"type": "any"}}
 
 SETUP_VALUE = {
-    "bstmode": False,
+    "bstmode": "0",
     "bsttemp": 55.0,
     "ww1boost": 65.0,
     "ww_boost_h": 3.5,
@@ -32,16 +36,16 @@ SETUP_VALUE = {
 }
 
 
-def _setup_configuration_lookup(key):
-    return SETUP_CONFIGURATION.get(key)
+@pytest.fixture
+def setup_configuration() -> dict[str, Any]:
+    """The setup configuration."""
+    return SETUP_CONFIGURATION
 
 
-def _command_configuration_lookup(key):
-    return COMMAND_CONFIGURATION.get(key)
-
-
-def _setup_value_lookup(key):
-    return SETUP_VALUE.get(key)
+@pytest.fixture
+def setup_values() -> dict[str, Any]:
+    """The setup values."""
+    return SETUP_VALUE
 
 
 @pytest.fixture
@@ -69,7 +73,9 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_my_pv_client() -> Generator[AsyncMock]:
+def mock_my_pv_client(
+    setup_configuration: dict[str, Any], setup_values: dict[str, Any]
+) -> Generator[AsyncMock]:
     """Mock the my-PV client across the integration."""
     with (
         patch(
@@ -96,13 +102,11 @@ def mock_my_pv_client() -> Generator[AsyncMock]:
         client.firmware_version = "e0002200"
         client.current_temperature = 54.3
         client.target_temperature = 62.1
-        client.get_setup_configurations = Mock(return_value=SETUP_CONFIGURATION)
-        client.get_setup_configuration = Mock(side_effect=_setup_configuration_lookup)
-        client.get_setup_value = Mock(side_effect=_setup_value_lookup)
+        client.get_setup_configurations = Mock(return_value=setup_configuration)
+        client.get_setup_configuration = Mock(side_effect=setup_configuration.get)
+        client.get_setup_value = Mock(side_effect=setup_values.get)
         client.set_setup_value = AsyncMock()
-        client.get_command_configuration = Mock(
-            side_effect=_command_configuration_lookup
-        )
+        client.get_command_configuration = Mock(side_effect=COMMAND_CONFIGURATION.get)
         client.connected = True
         client.is_on = True
         client.send_command = AsyncMock(return_value=True)

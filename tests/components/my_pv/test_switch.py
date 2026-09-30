@@ -1,5 +1,6 @@
 """Test the my-PV switch platform."""
 
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
@@ -18,6 +19,18 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture
+def setup_configuration(setup_configuration: dict[str, Any]) -> dict[str, Any]:
+    """Return a setup configuration where bstmode is a boolean (switch)."""
+    return {**setup_configuration, "bstmode": {"type": "boolean"}}
+
+
+@pytest.fixture
+def setup_values(setup_values: dict[str, Any]) -> dict[str, Any]:
+    """Return setup values with a boolean bstmode."""
+    return {**setup_values, "bstmode": False}
 
 
 @pytest.mark.usefixtures("mock_my_pv_client")
