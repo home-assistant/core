@@ -5,13 +5,13 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-from zha.application.platforms import ENTITY_REGISTRY, ClusterMatch
 from zha.application.platforms.event import BaseEvent, EntityEventTriggeredEvent
 from zha.application.platforms.event.const import (
     ATTR_MULTI_PRESS_COUNT,
     ButtonEventType,
     EventDeviceClass as ZHAEventDeviceClass,
 )
+from zha.zigbee.device import DeviceEntityAddedEvent
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 from zigpy.device import Device
 from zigpy.profiles import zha
@@ -22,6 +22,7 @@ from homeassistant.components.event import (
     ATTR_EVENT_TYPES,
     EventDeviceClass,
 )
+from homeassistant.components.zha.const import DOMAIN
 from homeassistant.components.zha.helpers import (
     ZHADeviceProxy,
     ZHAGatewayProxy,
@@ -32,8 +33,6 @@ from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
-from .common import find_entity_id
-
 from tests.common import mock_restore_cache_with_extra_data
 
 ENTITY_ID = "event.fakemanufacturer_fakemodel_button"
@@ -42,13 +41,7 @@ ENTITY_ID = "event.fakemanufacturer_fakemodel_button"
 class FakeEvent(BaseEvent):
     """Event entity that can be triggered from tests."""
 
-    _unique_id_suffix = "fake"
     _attr_fallback_name = "Fake"
-    _attr_device_class = ZHAEventDeviceClass.BUTTON
-    _attr_event_types = [ButtonEventType.PRESS_END, ButtonEventType.MULTI_PRESS_END]
-    _cluster_match = ClusterMatch(
-        client_clusters=frozenset({general.OnOff.cluster_id}),
-    )
 
     def trigger(
         self, event_type: str, event_attributes: dict[str, Any] | None = None
@@ -57,16 +50,28 @@ class FakeEvent(BaseEvent):
         self._trigger_event(event_type, event_attributes)
 
 
-class FakeMotionEvent(FakeEvent):
-    """Event entity with a different device class."""
+class FakeButtonEvent(FakeEvent):
+    """Button event entity."""
 
+    _unique_id_suffix = "fake_button"
+    _attr_device_class = ZHAEventDeviceClass.BUTTON
+    _attr_event_types = [ButtonEventType.PRESS_END, ButtonEventType.MULTI_PRESS_END]
+
+
+class FakeMotionEvent(FakeEvent):
+    """Motion event entity."""
+
+    _unique_id_suffix = "fake_motion"
     _attr_device_class = ZHAEventDeviceClass.MOTION
+    _attr_event_types = ["motion"]
 
 
 class FakeNoDeviceClassEvent(FakeEvent):
     """Event entity without a device class."""
 
+    _unique_id_suffix = "fake_no_device_class"
     _attr_device_class = None
+    _attr_event_types = ["triggered"]
 
 
 @pytest.fixture(autouse=True)
@@ -94,33 +99,12 @@ def speed_up_radio_mgr() -> Generator[None]:
         yield
 
 
-@pytest.fixture
-def event_class() -> type[FakeEvent]:
-    """Return the fake event entity class to discover."""
-    return FakeEvent
-
-
-@pytest.fixture(autouse=True)
-def register_fake_event(event_class: type[FakeEvent]) -> Generator[None]:
-    """Make zha discover the fake event entity on the OnOff client cluster."""
-    with patch.dict(
-        ENTITY_REGISTRY,
-        {
-            general.OnOff.cluster_id: [
-                *ENTITY_REGISTRY[general.OnOff.cluster_id],
-                event_class,
-            ]
-        },
-    ):
-        yield
-
-
 async def _setup_device(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., Device],
-) -> tuple[str, FakeEvent]:
-    """Join a remote with an OnOff client cluster, return its event entity."""
+) -> ZHADeviceProxy:
+    """Join a device that event entities can be added to."""
     await setup_zha()
 
     gateway = get_zha_gateway(hass)
@@ -142,40 +126,71 @@ async def _setup_device(
     await gateway.async_device_initialized(zigpy_device)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    zha_device_proxy: ZHADeviceProxy = gateway_proxy.get_device_proxy(zigpy_device.ieee)
-    entity_id = find_entity_id(Platform.EVENT, zha_device_proxy, hass)
-    assert entity_id is not None
+    return gateway_proxy.get_device_proxy(zigpy_device.ieee)
 
-    zha_entity = next(
-        entity
-        for entity in zha_device_proxy.device.platform_entities.values()
-        if isinstance(entity, FakeEvent)
+
+async def _add_event(
+    hass: HomeAssistant,
+    zha_device_proxy: ZHADeviceProxy,
+    event_class: type[FakeEvent],
+) -> tuple[str, FakeEvent]:
+    """Add a fake event entity to a device."""
+    zha_device = zha_device_proxy.device
+    endpoint = zha_device.endpoints[1]
+
+    zha_entity = event_class(
+        endpoint=endpoint,
+        device=zha_device,
+        cluster=endpoint.zigpy_endpoint.out_clusters[general.OnOff.cluster_id],
     )
+    zha_device.platform_entities[(zha_entity.PLATFORM, zha_entity.unique_id)] = (
+        zha_entity
+    )
+    zha_device.emit(
+        DeviceEntityAddedEvent.event_type,
+        DeviceEntityAddedEvent(
+            platform=zha_entity.PLATFORM, unique_id=zha_entity.unique_id
+        ),
+    )
+    await hass.async_block_till_done()
+
+    entity_id = er.async_get(hass).async_get_entity_id(
+        Platform.EVENT, DOMAIN, zha_entity.unique_id
+    )
+    assert entity_id is not None
     return entity_id, zha_entity
 
 
 @pytest.mark.parametrize(
-    ("event_class", "device_class"),
+    ("event_class", "device_class", "event_types"),
     [
-        pytest.param(FakeEvent, EventDeviceClass.BUTTON, id="button"),
-        pytest.param(FakeMotionEvent, EventDeviceClass.MOTION, id="motion"),
-        pytest.param(FakeNoDeviceClassEvent, None, id="no_device_class"),
+        pytest.param(
+            FakeButtonEvent,
+            EventDeviceClass.BUTTON,
+            ["press_end", "multi_press_end"],
+            id="button",
+        ),
+        pytest.param(FakeMotionEvent, EventDeviceClass.MOTION, ["motion"], id="motion"),
+        pytest.param(FakeNoDeviceClassEvent, None, ["triggered"], id="no_device_class"),
     ],
 )
 async def test_event_entity(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., Device],
+    event_class: type[FakeEvent],
     device_class: EventDeviceClass | None,
+    event_types: list[str],
 ) -> None:
     """Test ZHA event entity is created with the capabilities of the zha entity."""
-    entity_id, _ = await _setup_device(hass, setup_zha, zigpy_device_mock)
+    zha_device_proxy = await _setup_device(hass, setup_zha, zigpy_device_mock)
+    entity_id, _ = await _add_event(hass, zha_device_proxy, event_class)
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
-    assert state.attributes[ATTR_EVENT_TYPES] == ["press_end", "multi_press_end"]
+    assert state.attributes[ATTR_EVENT_TYPES] == event_types
     assert state.attributes[ATTR_EVENT_TYPE] is None
 
 
@@ -186,7 +201,8 @@ async def test_event_triggered(
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test events triggered by the zha entity are fired in Home Assistant."""
-    entity_id, zha_entity = await _setup_device(hass, setup_zha, zigpy_device_mock)
+    zha_device_proxy = await _setup_device(hass, setup_zha, zigpy_device_mock)
+    entity_id, zha_entity = await _add_event(hass, zha_device_proxy, FakeButtonEvent)
 
     zha_entity.trigger(ButtonEventType.MULTI_PRESS_END, {ATTR_MULTI_PRESS_COUNT: 2})
     await hass.async_block_till_done()
@@ -204,6 +220,39 @@ async def test_event_triggered(
     assert state
     assert state.attributes[ATTR_EVENT_TYPE] == "press_end"
     assert ATTR_MULTI_PRESS_COUNT not in state.attributes
+
+
+@pytest.mark.freeze_time("2026-09-25 12:00:00+00:00")
+async def test_multiple_events(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
+    """Test event entities on the same device are triggered independently."""
+    zha_device_proxy = await _setup_device(hass, setup_zha, zigpy_device_mock)
+    button_id, button = await _add_event(hass, zha_device_proxy, FakeButtonEvent)
+    motion_id, motion = await _add_event(hass, zha_device_proxy, FakeMotionEvent)
+    assert button_id != motion_id
+
+    button.trigger(ButtonEventType.PRESS_END)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(button_id)
+    assert state
+    assert state.state == "2026-09-25T12:00:00.000+00:00"
+    state = hass.states.get(motion_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    motion.trigger("motion")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(button_id)
+    assert state
+    assert state.attributes[ATTR_EVENT_TYPE] == "press_end"
+    state = hass.states.get(motion_id)
+    assert state
+    assert state.attributes[ATTR_EVENT_TYPE] == "motion"
 
 
 async def test_event_restored(
@@ -225,7 +274,8 @@ async def test_event_restored(
         ],
     )
 
-    entity_id, _ = await _setup_device(hass, setup_zha, zigpy_device_mock)
+    zha_device_proxy = await _setup_device(hass, setup_zha, zigpy_device_mock)
+    entity_id, _ = await _add_event(hass, zha_device_proxy, FakeButtonEvent)
     assert entity_id == ENTITY_ID
 
     state = hass.states.get(entity_id)
@@ -242,7 +292,8 @@ async def test_event_removed(
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test removing the entity stops listening to the zha entity."""
-    entity_id, zha_entity = await _setup_device(hass, setup_zha, zigpy_device_mock)
+    zha_device_proxy = await _setup_device(hass, setup_zha, zigpy_device_mock)
+    entity_id, zha_entity = await _add_event(hass, zha_device_proxy, FakeButtonEvent)
     assert zha_entity._listeners[EntityEventTriggeredEvent.event]
 
     entity_registry.async_remove(entity_id)
