@@ -44,28 +44,21 @@ def test_invalid_base_schema(schema) -> None:
         selector.validate_selector(schema)
 
 
-def test_allowed_context_keys_not_shared_between_instances() -> None:
-    """Test allowed_context_keys is isolated between selector instances."""
-
-    class TestSelectorConfig(selector.BaseSelectorConfig, total=False):
-        """Test selector config class."""
-
-    class TestSelector(selector.Selector):
-        """Test selector used to verify instance isolation."""
-
-        CONFIG_SCHEMA = selector.make_selector_config_schema({})
-
-        selector_type = "test"
-
-        def __call__(self, data: Any) -> Any:
-            """Validate the passed selection."""
-            return data
-
-    test_selector = TestSelector(TestSelectorConfig())
-    other_selector = TestSelector(TestSelectorConfig())
-    test_selector.allowed_context_keys["some_key"] = set()
-    assert test_selector.allowed_context_keys
-    assert not other_selector.allowed_context_keys
+@pytest.mark.parametrize(
+    "selector_class",
+    [
+        pytest.param(selector.Selector, id="base"),
+        pytest.param(selector.AttributeSelector, id="attribute"),
+        pytest.param(selector.MediaSelector, id="media"),
+        pytest.param(selector.StateSelector, id="state"),
+    ],
+)
+def test_allowed_context_keys_read_only(
+    selector_class: type[selector.Selector],
+) -> None:
+    """Test allowed_context_keys cannot be modified."""
+    with pytest.raises(RuntimeError, match="Cannot modify ReadOnlyDict"):
+        selector_class.allowed_context_keys["some_key"] = set()
 
 
 def _test_selector(
