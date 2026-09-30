@@ -1978,19 +1978,19 @@ async def test_keyrepeat_fires_hold_events(
 
     events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
 
-    # Start keyrepeat with very short delays
-    task = hass.async_create_task(
-        handler._async_keyrepeat(mock_input_device, 30, 0.001, 0.001)
-    )
-    # Let it fire a few events
-    await asyncio.sleep(0.02)
-    task.cancel()
-    with suppress(asyncio.CancelledError):
-        await task
+    # The initial delay, two repeats, then cancellation on the third repeat
+    with (
+        patch(
+            "homeassistant.components.keyboard_remote.asyncio.sleep",
+            side_effect=[None, None, None, asyncio.CancelledError],
+        ) as mock_sleep,
+        pytest.raises(asyncio.CancelledError),
+    ):
+        await handler._async_keyrepeat(mock_input_device, 30, 0.25, 0.03)
     await hass.async_block_till_done()
 
-    # Should have fired at least one key_hold event
-    hold_events = [e for e in events if e.data["type"] == "key_hold"]
-    assert len(hold_events) >= 1
-    assert hold_events[0].data[KEY_CODE] == 30
-    assert hold_events[0].data[CONF_DEVICE_DESCRIPTOR] == FAKE_DEVICE_PATH
+    assert mock_sleep.call_args_list == [call(0.25), call(0.03), call(0.03), call(0.03)]
+    assert [(e.data["type"], e.data[KEY_CODE]) for e in events] == [
+        ("key_hold", 30)
+    ] * 3
+    assert events[0].data[CONF_DEVICE_DESCRIPTOR] == FAKE_DEVICE_PATH

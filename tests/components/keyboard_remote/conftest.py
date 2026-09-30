@@ -78,11 +78,6 @@ def make_key_event(
     return SimpleNamespace(type=event_type, code=code, value=value)
 
 
-def make_inotify_event(name: str, mask: int) -> SimpleNamespace:
-    """Create a mock inotify event."""
-    return SimpleNamespace(name=name, mask=mask)
-
-
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Create a mock config entry."""
@@ -104,7 +99,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture(autouse=True)
-def mock_inotify():
+def mock_inotify() -> Generator[MagicMock]:
     """Mock inotify to prevent real filesystem access."""
     with patch(
         "homeassistant.components.keyboard_remote.Inotify",
@@ -118,7 +113,7 @@ def mock_inotify():
 
 
 @pytest.fixture(autouse=True)
-def mock_list_devices():
+def mock_list_devices() -> Generator[None]:
     """Mock evdev list_devices to return empty list."""
     with patch(
         "evdev.list_devices",

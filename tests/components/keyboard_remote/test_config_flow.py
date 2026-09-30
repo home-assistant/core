@@ -503,65 +503,59 @@ async def test_import_with_name(hass: HomeAssistant) -> None:
     assert result["data"][CONF_DEVICE_NAME] == FAKE_DEVICE_NAME
 
 
+@pytest.mark.parametrize(
+    ("import_data", "resolved", "expected_unique_id", "expected_data"),
+    [
+        pytest.param(
+            {"device_descriptor": FAKE_DEVICE_REAL_PATH},
+            (FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, None),
+            FAKE_DEVICE_REAL_PATH,
+            {
+                CONF_DEVICE_PATH: FAKE_DEVICE_REAL_PATH,
+                CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
+                CONF_DEVICE_DESCRIPTOR: FAKE_DEVICE_REAL_PATH,
+            },
+            id="descriptor_without_by_id_link",
+        ),
+        pytest.param(
+            {"device_name": FAKE_DEVICE_NAME},
+            (None, None, None),
+            FAKE_DEVICE_NAME,
+            {CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
+            id="name_device_absent",
+        ),
+        # The resolved /dev/input/eventN is whatever the kernel assigned this
+        # boot, so storing it would let it outrank the configured name.
+        pytest.param(
+            {"device_name": FAKE_DEVICE_NAME},
+            (FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, None),
+            FAKE_DEVICE_NAME,
+            {CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
+            id="name_without_by_id_link",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_fallback_no_by_id(hass: HomeAssistant) -> None:
-    """Test YAML import falls back to raw path when no by-id link exists."""
+async def test_import_fallback_identity(
+    hass: HomeAssistant,
+    import_data: dict[str, str],
+    resolved: tuple[str | None, str | None, str | None],
+    expected_unique_id: str,
+    expected_data: dict[str, str],
+) -> None:
+    """Test YAML import falls back to the configured identity without a by-id link."""
     with patch(
         "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
-        return_value=(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, None),
+        return_value=resolved,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={"device_descriptor": FAKE_DEVICE_REAL_PATH},
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_DEVICE_PATH] == FAKE_DEVICE_REAL_PATH
-    assert result["data"][CONF_DEVICE_DESCRIPTOR] == FAKE_DEVICE_REAL_PATH
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_fallback_name_only(hass: HomeAssistant) -> None:
-    """Test YAML import with name when no by-id or device found."""
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
-        return_value=(None, None, None),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={"device_name": FAKE_DEVICE_NAME},
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=import_data
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == FAKE_DEVICE_NAME
-    assert CONF_DEVICE_PATH not in result["data"]
-    assert result["data"][CONF_DEVICE_NAME] == FAKE_DEVICE_NAME
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_name_only_discards_transient_path(hass: HomeAssistant) -> None:
-    """Test a name-only import stores no path when the device has no by-id link.
-
-    The resolved /dev/input/eventN is whatever the kernel assigned this boot and
-    can belong to an unrelated device after the next one, so storing it would
-    let it outrank the name the user actually configured.
-    """
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
-        return_value=(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, None),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={"device_name": FAKE_DEVICE_NAME},
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == FAKE_DEVICE_NAME
-    assert CONF_DEVICE_PATH not in result["data"]
-    assert result["data"][CONF_DEVICE_NAME] == FAKE_DEVICE_NAME
+    assert result["result"].unique_id == expected_unique_id
+    assert result["data"] == expected_data
 
 
 @pytest.mark.parametrize(
@@ -772,14 +766,11 @@ async def test_import_cannot_identify(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_already_configured(hass: HomeAssistant) -> None:
+async def test_import_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test YAML import aborts when device is already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=FAKE_BY_ID_BASENAME,
-        data={CONF_DEVICE_PATH: FAKE_DEVICE_PATH},
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
