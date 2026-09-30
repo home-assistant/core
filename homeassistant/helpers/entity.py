@@ -522,6 +522,12 @@ class Entity(
     _update_staged = False
     # Whether the entity has acquired a parallel_updates permit
     _update_acquired: bool = False
+    # Set by EntityPlatform when it has given up waiting for this entity's
+    # in-flight update to release its parallel_updates permit (e.g. a hung
+    # synchronous update()) and has released one on its behalf so other
+    # entities are not blocked forever. If the update does eventually
+    # finish, it must not release the permit a second time.
+    _update_permit_compensated: bool = False
 
     # _verified_state_writable is set to True if the entity has been verified
     # to be writable. This is used to avoid repeated checks.
@@ -1397,11 +1403,17 @@ class Entity(
             if warning:
                 update_warn.cancel()
             if semaphore:
-                # Clear the acquired flag before releasing the original semaphore
-                # instance so stale platform recovery cannot corrupt accounting.
                 if self._update_acquired:
                     self._update_acquired = False
-                semaphore.release()
+                # If EntityPlatform already released a permit on our behalf
+                # because it gave up waiting for us (see
+                # `_update_permit_compensated`'s docstring), releasing here
+                # too would over-release the semaphore above its configured
+                # limit. Skip our own release in that case.
+                if self._update_permit_compensated:
+                    self._update_permit_compensated = False
+                else:
+                    semaphore.release()
 
     @callback
     def async_on_remove(self, func: CALLBACK_TYPE) -> None:
