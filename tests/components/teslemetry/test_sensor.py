@@ -24,7 +24,7 @@ from homeassistant.const import (
     EntityCategory,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -39,7 +39,7 @@ from .const import (
     VEHICLE_DATA_ALT,
 )
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, mock_restore_cache_with_extra_data
 
 # VIN used across the Teslemetry test fixtures.
 VEHICLE_VIN = "LRW3F7EK4NC700000"
@@ -440,6 +440,7 @@ async def test_sensors_streaming_dc_charging(
         {
             "vin": vin,
             "data": {
+                Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
                 Signal.AC_CHARGING_ENERGY_IN: 0,
                 Signal.AC_CHARGING_POWER: 0,
                 Signal.DC_CHARGING_ENERGY_IN: 31.5,
@@ -477,6 +478,7 @@ async def test_sensors_streaming_ac_charging_energy_added(
         {
             "vin": VEHICLE_DATA_ALT["response"]["vin"],
             "data": {
+                Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
                 Signal.AC_CHARGING_ENERGY_IN: 1.543,
                 Signal.AC_CHARGING_POWER: 7,
                 Signal.DC_CHARGING_ENERGY_IN: 1.24,
@@ -563,17 +565,31 @@ async def test_sensors_streaming_dc_charging_ended(
             id="dc_power_with_charging_start",
         ),
         pytest.param(
-            [{Signal.DC_CHARGING_POWER: 150}, {Signal.DC_CHARGING_POWER: 0}],
+            [
+                {
+                    Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+                    Signal.DC_CHARGING_POWER: 150,
+                },
+                {Signal.DC_CHARGING_POWER: 0},
+            ],
             "0",
             id="dc_power_zero_without_ac",
         ),
         pytest.param(
             [
-                {Signal.DC_CHARGING_POWER: 150},
+                {
+                    Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+                    Signal.DC_CHARGING_POWER: 150,
+                },
                 {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateComplete"},
             ],
             "0",
             id="charging_ended_without_ac",
+        ),
+        pytest.param(
+            [{Signal.DC_CHARGING_POWER: 150}],
+            "150",
+            id="dc_power_before_any_charge_state",
         ),
         pytest.param(
             [
@@ -633,6 +649,35 @@ async def test_sensors_streaming_charger_power_sequence(
         )
         await hass.async_block_till_done()
     assert hass.states.get("sensor.test_charger_power").state == expected_state
+
+
+async def test_sensors_streaming_charger_power_restored(
+    hass: HomeAssistant,
+    mock_add_listener: AsyncMock,
+) -> None:
+    """Test a charger power restored mid-session resets once charging stops."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State("sensor.test_charger_power", "148.2"),
+                {"native_value": 148.2, "native_unit_of_measurement": "kW"},
+            ),
+        ),
+    )
+    await setup_platform(hass, [Platform.SENSOR])
+    assert hass.states.get("sensor.test_charger_power").state == "148.2"
+
+    # The session ends without any power being streamed since the restart
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateDisconnected"},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test_charger_power").state == "0"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

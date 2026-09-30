@@ -214,8 +214,10 @@ def _listen_charger_power(
 
     def _update_charging(state: str | None) -> None:
         nonlocal charging
+        was_charging = charging
         charging = state in {"Starting", "Charging"}
-        if not charging and (power["ac"] or power["dc"]):
+        # The entity may hold a restored power that was never streamed here
+        if was_charging and not charging:
             power["ac"] = power["dc"] = 0
             callback(0)
 
