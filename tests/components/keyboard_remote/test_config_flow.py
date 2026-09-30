@@ -1,11 +1,13 @@
 """Tests for the Keyboard Remote config flow."""
 
 import errno
+import math
 from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
 
+from homeassistant.components.keyboard_remote import CONFIG_SCHEMA
 from homeassistant.components.keyboard_remote.const import (
     CONF_DEVICE_DESCRIPTOR,
     CONF_DEVICE_NAME,
@@ -39,6 +41,7 @@ from .conftest import (
 from tests.common import MockConfigEntry
 
 BT_REMOTE_NAME = "BT Remote"
+BY_PATH_LINK = "/dev/input/by-path/pci-0000:00:14.0-usb-0:1:1.0-event-kbd"
 BT_REMOTE_PATH = "/dev/input/event7"
 REMOTE_REAL_PATH = "/dev/input/event6"
 REMOTE_BY_ID_BASENAME = "usb-Test_Remote-event-kbd"
@@ -57,8 +60,10 @@ def _offered(result: ConfigFlowResult) -> list[dict[str, str]]:
 
 
 async def _import(hass: HomeAssistant, data: dict[str, Any]) -> ConfigFlowResult:
+    """Import a YAML block as validated by the integration's schema."""
+    [block] = CONFIG_SCHEMA({DOMAIN: data})[DOMAIN]
     return await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=block
     )
 
 
@@ -177,14 +182,25 @@ async def test_user_step_all_configured(
     assert result["reason"] == "all_devices_configured"
 
 
+@pytest.mark.parametrize(
+    "uniq",
+    [pytest.param("", id="no_uniq"), pytest.param("aa:bb:cc:dd:ee:01", id="uniq")],
+)
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_step_all_configured_by_name(
-    hass: HomeAssistant, fake_input: FakeInput
+    hass: HomeAssistant, fake_input: FakeInput, uniq: str
 ) -> None:
-    """Test a device configured by name counts as found, not as missing."""
-    fake_input.add(BT_REMOTE_PATH, BT_REMOTE_NAME)
+    """Test a device an entry matches by name counts as found and configured.
+
+    A YAML entry configured by name matches any device of that name, also a
+    Bluetooth remote whose own entry would include its uniq.
+    """
+    fake_input.add(BT_REMOTE_PATH, BT_REMOTE_NAME, uniq=uniq)
     MockConfigEntry(
-        domain=DOMAIN, unique_id=BT_REMOTE_NAME, data={CONF_DEVICE_NAME: BT_REMOTE_NAME}
+        domain=DOMAIN,
+        source=SOURCE_IMPORT,
+        unique_id=BT_REMOTE_NAME,
+        data={CONF_DEVICE_NAME: BT_REMOTE_NAME},
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -399,7 +415,7 @@ async def test_user_step_device_configured_meanwhile(
 async def test_import_with_descriptor_and_by_id(
     hass: HomeAssistant, fake_input: FakeInput
 ) -> None:
-    """Test a YAML descriptor is stored with the by-id link it resolves to."""
+    """Test a YAML node descriptor is stored with the by-id link it resolves to."""
     fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
 
     result = await _import(
@@ -488,6 +504,19 @@ async def test_import_with_name_and_by_id(
             },
             id="descriptor_device_absent",
         ),
+        # A by-id descriptor is stable on its own, plugged in or not
+        pytest.param(
+            [],
+            None,
+            {"device_descriptor": FAKE_DEVICE_PATH},
+            FAKE_BY_ID_BASENAME,
+            {
+                CONF_DEVICE_PATH: FAKE_DEVICE_PATH,
+                CONF_DEVICE_NAME: FAKE_DEVICE_PATH,
+                CONF_DEVICE_DESCRIPTOR: FAKE_DEVICE_PATH,
+            },
+            id="by_id_descriptor_device_absent",
+        ),
         pytest.param(
             [],
             None,
@@ -516,6 +545,20 @@ async def test_import_with_name_and_by_id(
             {CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
             id="name_on_several_nodes",
         ),
+        # A by-path or custom udev link already tells apart identical devices
+        # that share one by-id link
+        pytest.param(
+            [(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_PATH)],
+            None,
+            {"device_descriptor": BY_PATH_LINK},
+            BY_PATH_LINK,
+            {
+                CONF_DEVICE_PATH: BY_PATH_LINK,
+                CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
+                CONF_DEVICE_DESCRIPTOR: BY_PATH_LINK,
+            },
+            id="by_path_descriptor",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -528,9 +571,10 @@ async def test_import_fallback_identity(
     expected_unique_id: str,
     expected_data: dict[str, str],
 ) -> None:
-    """Test YAML falls back to its configured identity without a single link."""
+    """Test YAML keeps its own identity unless it resolves to one by-id link."""
     for path, link in devices:
         fake_input.add(path, FAKE_DEVICE_NAME, link=link)
+    fake_input.links[BY_PATH_LINK] = FAKE_DEVICE_REAL_PATH
     fake_input.by_id_error = by_id_error
 
     result = await _import(hass, import_data)
@@ -540,13 +584,36 @@ async def test_import_fallback_identity(
     assert result["data"] == expected_data
 
 
-@pytest.mark.usefixtures("fake_input")
-async def test_import_cannot_identify(hass: HomeAssistant) -> None:
-    """Test a YAML block with neither descriptor nor name aborts."""
-    result = await _import(hass, {})
+@pytest.mark.parametrize(
+    "import_data",
+    [
+        pytest.param({"device_descriptor": FAKE_DEVICE_PATH}, id="by_id_descriptor"),
+        pytest.param({"device_descriptor": FAKE_DEVICE_REAL_PATH}, id="node"),
+        pytest.param({"device_name": FAKE_DEVICE_NAME}, id="name"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_import_again_while_unplugged_keeps_one_entry(
+    hass: HomeAssistant, fake_input: FakeInput, import_data: dict[str, str]
+) -> None:
+    """Test re-importing the same YAML with the device unplugged adds nothing.
+
+    The import runs on every start. Resolved while the device is unplugged,
+    the YAML would otherwise give a different identity than the first time.
+    """
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    await _import(hass, import_data)
+    [entry] = hass.config_entries.async_entries(DOMAIN)
+    unique_id, data = entry.unique_id, dict(entry.data)
+    fake_input.devices.clear()
+    fake_input.links.clear()
+
+    result = await _import(hass, import_data)
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_identify_device"
+    assert result["reason"] == "already_configured"
+    assert hass.config_entries.async_entries(DOMAIN) == [entry]
+    assert (entry.unique_id, dict(entry.data)) == (unique_id, data)
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -563,9 +630,29 @@ async def test_import_already_configured(
     assert result["reason"] == "already_configured"
 
 
+def _legacy_import_entry(import_data: dict[str, str], name: str) -> MockConfigEntry:
+    """Create an entry as imported from YAML before the device had a link."""
+    if descriptor := import_data.get("device_descriptor"):
+        data = {
+            CONF_DEVICE_PATH: descriptor,
+            CONF_DEVICE_NAME: name,
+            CONF_DEVICE_DESCRIPTOR: descriptor,
+        }
+    else:
+        data = {CONF_DEVICE_NAME: name}
+    return MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_IMPORT,
+        unique_id=descriptor or name,
+        title=name,
+        data=data,
+    )
+
+
 @pytest.mark.parametrize(
-    ("import_data", "legacy_unique_id"),
+    ("import_data", "first_name"),
     [
+        # The device was unplugged at the first import, so its name is unknown
         pytest.param(
             {"device_descriptor": FAKE_DEVICE_REAL_PATH},
             FAKE_DEVICE_REAL_PATH,
@@ -579,19 +666,14 @@ async def test_import_adopts_entry_created_before_by_id_existed(
     fake_input: FakeInput,
     mock_setup_entry: AsyncMock,
     import_data: dict[str, str],
-    legacy_unique_id: str,
+    first_name: str,
 ) -> None:
-    """Test a re-import migrates the earlier entry instead of duplicating it.
+    """Test a re-import moves the earlier entry onto the device's by-id link.
 
-    The first import can run before udev has created the by-id link, which
-    leaves the entry keyed by the raw descriptor or name. Once the link
-    exists, the same YAML resolves to the by-id basename.
+    The first import can run before udev created the link, which leaves the
+    entry keyed by the raw descriptor or name.
     """
-    existing = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=legacy_unique_id,
-        data={CONF_DEVICE_PATH: legacy_unique_id, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
-    )
+    existing = _legacy_import_entry(import_data, first_name)
     existing.add_to_hass(hass)
     fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
 
@@ -599,9 +681,10 @@ async def test_import_adopts_entry_created_before_by_id_existed(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert hass.config_entries.async_entries(DOMAIN) == [existing]
     assert existing.unique_id == FAKE_BY_ID_BASENAME
     assert existing.data[CONF_DEVICE_PATH] == FAKE_DEVICE_PATH
+    assert existing.data[CONF_DEVICE_NAME] == FAKE_DEVICE_NAME
     # Reloaded so the new identity is scanned for, not only matched on events
     await hass.async_block_till_done()
     mock_setup_entry.assert_called_once()
@@ -615,35 +698,26 @@ async def test_import_adopts_entry_created_before_by_id_existed(
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_adoption_refreshes_fallback_name(
+async def test_import_adoption_refreshes_fallback_title(
     hass: HomeAssistant, fake_input: FakeInput, title: str, expected_title: str
 ) -> None:
-    """Test adoption replaces the raw path stored as name while unplugged.
+    """Test adoption replaces the raw path the entry was titled with.
 
     A title the user has changed since is kept.
     """
-    existing = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=FAKE_DEVICE_REAL_PATH,
-        title=title,
-        data={
-            CONF_DEVICE_PATH: FAKE_DEVICE_REAL_PATH,
-            CONF_DEVICE_NAME: FAKE_DEVICE_REAL_PATH,
-            CONF_DEVICE_DESCRIPTOR: FAKE_DEVICE_REAL_PATH,
-        },
-    )
+    import_data = {"device_descriptor": FAKE_DEVICE_REAL_PATH}
+    existing = _legacy_import_entry(import_data, FAKE_DEVICE_REAL_PATH)
     existing.add_to_hass(hass)
+    hass.config_entries.async_update_entry(existing, title=title)
     fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
 
-    result = await _import(hass, {"device_descriptor": FAKE_DEVICE_REAL_PATH})
+    await _import(hass, import_data)
 
-    assert result["type"] is FlowResultType.ABORT
-    assert existing.data[CONF_DEVICE_NAME] == FAKE_DEVICE_NAME
     assert existing.title == expected_title
 
 
 @pytest.mark.parametrize(
-    ("import_data", "legacy_unique_id"),
+    ("import_data", "first_name"),
     [
         pytest.param(
             {"device_descriptor": FAKE_DEVICE_REAL_PATH},
@@ -659,7 +733,7 @@ async def test_import_does_not_adopt_onto_a_taken_unique_id(
     fake_input: FakeInput,
     mock_config_entry: MockConfigEntry,
     import_data: dict[str, str],
-    legacy_unique_id: str,
+    first_name: str,
 ) -> None:
     """Test the legacy entry is left alone when the by-id ID is already in use.
 
@@ -667,28 +741,64 @@ async def test_import_does_not_adopt_onto_a_taken_unique_id(
     so adopting would give both entries the same unique ID.
     """
     mock_config_entry.add_to_hass(hass)
-    legacy = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=legacy_unique_id,
-        data={CONF_DEVICE_PATH: legacy_unique_id, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
-    )
+    legacy = _legacy_import_entry(import_data, first_name)
     legacy.add_to_hass(hass)
+    unique_id, data = legacy.unique_id, dict(legacy.data)
     fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
 
     result = await _import(hass, import_data)
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
-    assert legacy.unique_id == legacy_unique_id
-    assert legacy.data[CONF_DEVICE_PATH] == legacy_unique_id
+    assert (legacy.unique_id, dict(legacy.data)) == (unique_id, data)
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_import_does_not_adopt_onto_another_device(
+    hass: HomeAssistant, fake_input: FakeInput
+) -> None:
+    """Test a node descriptor now naming a different device leaves the entry.
+
+    The kernel may hand the node to another device after a reboot, and the
+    entry knows the name of the device it was created for.
+    """
+    import_data = {"device_descriptor": FAKE_DEVICE_REAL_PATH}
+    legacy = _legacy_import_entry(import_data, "Old Keyboard")
+    legacy.add_to_hass(hass)
+    fake_input.add(FAKE_DEVICE_REAL_PATH, "USB Mouse", link=FAKE_DEVICE_PATH)
+
+    result = await _import(hass, import_data)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert legacy.unique_id == FAKE_DEVICE_REAL_PATH
+    assert legacy.data[CONF_DEVICE_NAME] == "Old Keyboard"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_import_leaves_entries_added_in_the_ui_alone(
+    hass: HomeAssistant, fake_input: FakeInput
+) -> None:
+    """Test a YAML name never rewrites an entry the user added in the UI."""
+    ui_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        unique_id=FAKE_DEVICE_NAME,
+        data={CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
+    )
+    ui_entry.add_to_hass(hass)
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+
+    await _import(hass, {"device_name": FAKE_DEVICE_NAME})
+
+    assert ui_entry.unique_id == FAKE_DEVICE_NAME
+    assert dict(ui_entry.data) == {CONF_DEVICE_NAME: FAKE_DEVICE_NAME}
 
 
 @pytest.mark.parametrize(
     ("delay", "repeat", "expected_delay", "expected_repeat"),
     [
         pytest.param(10, 0, 5.0, 0.001, id="above_and_below"),
-        pytest.param(0, 2, 0.01, 1.0, id="below_and_above"),
+        pytest.param(-1, 2, 0.01, 1.0, id="negative_and_above"),
+        pytest.param(math.nan, math.nan, 0.01, 0.001, id="not_a_number"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -703,7 +813,7 @@ async def test_import_clamps_hold_timing(
 ) -> None:
     """Test imported hold timing is fitted into the options form's range.
 
-    YAML accepted any number, and a value outside the range would make the
+    YAML takes any number, and a value outside the range would make the
     options form reject its own pre-filled value.
     """
     fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
@@ -719,8 +829,26 @@ async def test_import_clamps_hold_timing(
 
     assert result["options"][CONF_EMULATE_KEY_HOLD_DELAY] == expected_delay
     assert result["options"][CONF_EMULATE_KEY_HOLD_REPEAT] == expected_repeat
-    assert f"Imported emulate_key_hold_delay of {delay} is outside" in caplog.text
-    assert f"Imported emulate_key_hold_repeat of {repeat} is outside" in caplog.text
+    assert "Imported emulate_key_hold_delay of" in caplog.text
+    assert "Imported emulate_key_hold_repeat of" in caplog.text
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_import_without_key_types_uses_the_default(
+    hass: HomeAssistant, fake_input: FakeInput, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test an empty YAML type list imports the default key type.
+
+    An entry with no key types would never fire a command event.
+    """
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+
+    result = await _import(
+        hass, {"device_descriptor": FAKE_DEVICE_REAL_PATH, "type": []}
+    )
+
+    assert result["options"][CONF_KEY_TYPES] == DEFAULT_KEY_TYPES
+    assert "Imported type lists no key types" in caplog.text
 
 
 @pytest.mark.usefixtures("fake_input")

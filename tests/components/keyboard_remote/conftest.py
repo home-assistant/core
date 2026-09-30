@@ -211,7 +211,7 @@ class _FakeInotify:
         if (error := self._fake.watch_errors.get(path)) is not None:
             raise error
         # udev creates the by-id directory with its first link
-        if path == DEVINPUT_BY_ID and not self._fake.links:
+        if path == DEVINPUT_BY_ID and not self._fake.by_id_links:
             raise FileNotFoundError(errno.ENOENT, "No such file or directory", path)
         watch = SimpleNamespace(path=path, mask=mask)
         self.watches[path] = watch
@@ -264,6 +264,15 @@ class FakeInput:
         self._next_fd = 100
         self._listing_gate: tuple[threading.Event, threading.Event] | None = None
 
+    @property
+    def by_id_links(self) -> dict[str, str]:
+        """The links in /dev/input/by-id, other links like by-path aside."""
+        return {
+            link: target
+            for link, target in self.links.items()
+            if link.startswith(f"{DEVINPUT_BY_ID}/")
+        }
+
     def add(
         self,
         path: str,
@@ -300,7 +309,7 @@ class FakeInput:
         self._emit(os.path.basename(path), Mask.ATTRIB)
         await self.settle()
         if link is not None:
-            first_link = not self.links
+            first_link = not self.by_id_links
             self.links[link] = path
             if first_link:
                 self._emit("by-id", Mask.CREATE | Mask.ISDIR)
@@ -329,7 +338,7 @@ class FakeInput:
         dev.read_queue.put_nowait(OSError(errno.ENODEV, "No such device"))
         self._emit(os.path.basename(path), Mask.DELETE)
         if (
-            not self.links
+            not self.by_id_links
             and self.inotify is not None
             and (watch := self.inotify.watches.pop(DEVINPUT_BY_ID, None))
         ):
@@ -533,7 +542,7 @@ def fake_input(hass: HomeAssistant) -> Generator[FakeInput]:
 
     def _isdir(path: Any) -> bool:
         if _devinput_path(path) == DEVINPUT_BY_ID:
-            return bool(fake.links)
+            return bool(fake.by_id_links)
         return real_isdir(path)
 
     def _scandir(path: Any = ".") -> Any:
@@ -547,7 +556,7 @@ def fake_input(hass: HomeAssistant) -> Generator[FakeInput]:
                         name=os.path.basename(link),
                         is_symlink=lambda: True,
                     )
-                    for link in fake.links
+                    for link in fake.by_id_links
                 ]
             )
         return real_scandir(path)

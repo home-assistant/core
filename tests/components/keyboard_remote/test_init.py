@@ -4,7 +4,6 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import errno
-import math
 from pathlib import PurePath
 import threading
 from types import SimpleNamespace
@@ -109,13 +108,42 @@ def _connected(descriptor: str, name: str = FAKE_DEVICE_NAME) -> dict[str, str]:
     return {CONF_DEVICE_DESCRIPTOR: descriptor, CONF_DEVICE_NAME: name}
 
 
+@pytest.mark.parametrize(
+    "existing",
+    [
+        pytest.param([], id="new_entry"),
+        pytest.param(
+            [
+                MockConfigEntry(
+                    domain=DOMAIN,
+                    source=SOURCE_IMPORT,
+                    unique_id="usb-Test_Keyboard-event-kbd",
+                    data={
+                        CONF_DEVICE_PATH: FAKE_DEVICE_PATH,
+                        CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
+                        CONF_DEVICE_DESCRIPTOR: FAKE_DEVICE_REAL_PATH,
+                    },
+                    options=OPTIONS,
+                )
+            ],
+            id="already_imported",
+        ),
+    ],
+)
 async def test_yaml_import_creates_entry_and_deprecation_issue(
     hass: HomeAssistant,
     fake_input: FakeInput,
     issue_registry: ir.IssueRegistry,
+    existing: list[MockConfigEntry],
 ) -> None:
-    """Test a YAML device is imported as an entry and YAML is flagged deprecated."""
+    """Test a YAML device is imported once and YAML is flagged deprecated.
+
+    After the first start the import finds its entry, which must still flag
+    the YAML as deprecated.
+    """
     fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    for entry in existing:
+        entry.add_to_hass(hass)
 
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"device_descriptor": FAKE_DEVICE_REAL_PATH}}
@@ -124,49 +152,9 @@ async def test_yaml_import_creates_entry_and_deprecation_issue(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert [entry.data[CONF_DEVICE_PATH] for entry in entries] == [FAKE_DEVICE_PATH]
-    assert issue_registry.async_get_issue(
-        domain=HOMEASSISTANT_DOMAIN, issue_id=f"deprecated_yaml_{DOMAIN}"
-    )
-
-
-@pytest.mark.parametrize(
-    ("reason", "expected_issues"),
-    [
-        pytest.param(
-            "cannot_identify_device",
-            {"deprecated_yaml_import_issue_cannot_identify_device"},
-            id="cannot_identify_device",
-        ),
-        # Another block names the same device and is being imported
-        pytest.param("already_in_progress", set(), id="duplicate_block_in_progress"),
-        pytest.param("already_configured", set(), id="already_configured"),
-        pytest.param(
-            "not_implemented",
-            {"deprecated_yaml_import_issue_unknown"},
-            id="reason_without_issue_strings",
-        ),
-    ],
-)
-async def test_yaml_import_abort_issue(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    reason: str,
-    expected_issues: set[str],
-) -> None:
-    """Test an aborted YAML import raises the issue that has strings, or none."""
-    with patch.object(
-        hass.config_entries.flow,
-        "async_init",
-        return_value={"type": FlowResultType.ABORT, "reason": reason},
-    ):
-        assert await async_setup_component(
-            hass, DOMAIN, {DOMAIN: {"device_descriptor": FAKE_DEVICE_REAL_PATH}}
-        )
-        await hass.async_block_till_done()
-
-    assert {
-        issue_id for (domain, issue_id) in issue_registry.issues if domain == DOMAIN
-    } == expected_issues
+    assert set(issue_registry.issues) == {
+        (HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}")
+    }
 
 
 async def test_async_setup_no_yaml_config(hass: HomeAssistant) -> None:
@@ -218,6 +206,45 @@ async def test_async_setup_imports_each_normalized_block(hass: HomeAssistant) ->
     ]
 
 
+async def test_async_setup_accepts_values_the_import_fits(
+    hass: HomeAssistant,
+) -> None:
+    """Test YAML with unknown keys or odd numbers still imports.
+
+    An invalid config would keep every entry of the integration from loading,
+    so values the import can fit into the options are accepted.
+    """
+    with patch.object(
+        hass.config_entries.flow,
+        "async_init",
+        return_value={"type": FlowResultType.ABORT, "reason": "already_configured"},
+    ) as mock_init:
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    "device_descriptor": FAKE_DEVICE_REAL_PATH,
+                    "emulate_key_hold_dealy": 1,
+                    "type": [],
+                    "emulate_key_hold_delay": -1,
+                    "emulate_key_hold_repeat": "0.5",
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    [init] = mock_init.call_args_list
+    assert init.kwargs["data"] == {
+        "device_descriptor": FAKE_DEVICE_REAL_PATH,
+        "emulate_key_hold_dealy": 1,
+        "type": [],
+        "emulate_key_hold": False,
+        "emulate_key_hold_delay": -1.0,
+        "emulate_key_hold_repeat": 0.5,
+    }
+
+
 @pytest.mark.parametrize(
     "device_block",
     [
@@ -234,31 +261,16 @@ async def test_async_setup_imports_each_normalized_block(hass: HomeAssistant) ->
             id="delay_not_a_number",
         ),
         pytest.param({"type": "key_up"}, id="no_device"),
-        pytest.param(
-            {"device_descriptor": "/dev/input/event5", "type": []},
-            id="no_key_types",
-        ),
-        pytest.param(
-            {"device_descriptor": "/dev/input/event5", "emulate_key_hold_delay": -1},
-            id="negative_delay",
-        ),
-        pytest.param(
-            {
-                "device_descriptor": "/dev/input/event5",
-                "emulate_key_hold_repeat": math.nan,
-            },
-            id="repeat_not_a_number",
-        ),
+        pytest.param({"device_descriptor": ""}, id="empty_descriptor"),
     ],
 )
 async def test_async_setup_rejects_invalid_yaml(
     hass: HomeAssistant,
     device_block: dict[str, str],
 ) -> None:
-    """Test an invalid YAML block fails setup instead of being imported.
+    """Test a YAML block that cannot be used fails setup instead of importing.
 
-    Imported unchanged, an unknown key type crashed the monitor on the first
-    key press and left the device grabbed.
+    An unknown key type would crash the monitor on the first key press.
     """
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         assert not await async_setup_component(hass, DOMAIN, {DOMAIN: device_block})

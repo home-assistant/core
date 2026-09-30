@@ -3,7 +3,6 @@
     "abort": {
       "all_devices_configured": "All available input devices are already configured.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_identify_device": "Could not identify the device from the YAML configuration. Ensure the device is connected and the configuration is correct.",
       "no_devices": "No input devices found. Ensure input devices are connected and accessible."
     },
     "error": {
@@ -17,19 +16,9 @@
         "data_description": {
           "device_path": "Select the input device from the list of detected devices."
         },
-        "description": "Choose an input device to use as a keyboard remote. Devices without a stable ID, such as Bluetooth devices, are matched by their name.",
+        "description": "Choose an input device to use as a keyboard remote. Devices without a stable ID, such as Bluetooth devices, are identified by their address and name.",
         "title": "Select input device"
       }
-    }
-  },
-  "issues": {
-    "deprecated_yaml_import_issue_cannot_identify_device": {
-      "description": "Configuring Keyboard Remote using YAML is being removed but there was an error importing one of your device configurations: the device could not be identified.\n\nTo fix this issue:\n\n1. Ensure the device is connected\n2. Correct your YAML configuration\n3. Restart Home Assistant to try the import again\n\nAlternatively, remove the `keyboard_remote` key from your `configuration.yaml` and configure the integration via the [UI]({url}).",
-      "title": "Keyboard Remote YAML import failed"
-    },
-    "deprecated_yaml_import_issue_unknown": {
-      "description": "Configuring Keyboard Remote using YAML is being removed but an unknown error occurred while importing your configuration.\n\nTo fix this issue:\n\n1. Review and correct your YAML configuration\n2. Restart Home Assistant to try the import again\n\nAlternatively, remove the `keyboard_remote` key from your `configuration.yaml` and configure the integration via the [UI]({url}).",
-      "title": "Keyboard Remote YAML import failed"
     }
   },
   "options": {

@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from evdev import InputDevice
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_TYPE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import (
     CALLBACK_TYPE,
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -22,7 +22,6 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.start import async_at_start
@@ -82,15 +81,11 @@ def list_input_devices() -> list[str]:
 
 DATA_MANAGER: HassKey[KeyboardRemoteManager] = HassKey(DOMAIN)
 
-# Legacy YAML constants (used only for CONFIG_SCHEMA parsing)
-_DEVICE_DESCRIPTOR = "device_descriptor"
 _DEVICE_ID_GROUP = "Device description"
-_DEVICE_NAME = "device_name"
-_TYPE = "type"
-_EMULATE_KEY_HOLD = "emulate_key_hold"
-_EMULATE_KEY_HOLD_DELAY = "emulate_key_hold_delay"
-_EMULATE_KEY_HOLD_REPEAT = "emulate_key_hold_repeat"
 
+# Lenient apart from what makes a block unusable, as an invalid config would
+# keep every entry of the integration from loading. The import fits the
+# values into what the options accept.
 CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.All(
@@ -99,30 +94,33 @@ CONFIG_SCHEMA = probatio.Schema(
                 # All, not a list: a list accepts a block that passes any one
                 # of its validators, so an invalid block would pass unchanged.
                 probatio.All(
-                    probatio.AtLeastOne(_DEVICE_DESCRIPTOR, _DEVICE_NAME),
+                    probatio.AtLeastOne(CONF_DEVICE_DESCRIPTOR, CONF_DEVICE_NAME),
                     probatio.Schema(
                         {
                             probatio.Exclusive(
-                                _DEVICE_DESCRIPTOR, _DEVICE_ID_GROUP
-                            ): cv.string,
+                                CONF_DEVICE_DESCRIPTOR, _DEVICE_ID_GROUP
+                            ): probatio.All(cv.string, probatio.Length(min=1)),
                             probatio.Exclusive(
-                                _DEVICE_NAME, _DEVICE_ID_GROUP
-                            ): cv.string,
-                            probatio.Optional(_TYPE, default=["key_up"]): probatio.All(
-                                probatio.EnsureList(),
-                                [probatio.In(KEY_VALUE)],
-                                probatio.Length(min=1),
+                                CONF_DEVICE_NAME, _DEVICE_ID_GROUP
+                            ): probatio.All(cv.string, probatio.Length(min=1)),
+                            probatio.Optional(
+                                CONF_TYPE, default=DEFAULT_KEY_TYPES
+                            ): probatio.All(
+                                probatio.EnsureList(), [probatio.In(KEY_VALUE)]
                             ),
                             probatio.Optional(
-                                _EMULATE_KEY_HOLD, default=False
+                                CONF_EMULATE_KEY_HOLD, default=DEFAULT_EMULATE_KEY_HOLD
                             ): cv.boolean,
                             probatio.Optional(
-                                _EMULATE_KEY_HOLD_DELAY, default=0.250
-                            ): cv.positive_float,
+                                CONF_EMULATE_KEY_HOLD_DELAY,
+                                default=DEFAULT_EMULATE_KEY_HOLD_DELAY,
+                            ): probatio.Coerce(float),
                             probatio.Optional(
-                                _EMULATE_KEY_HOLD_REPEAT, default=0.033
-                            ): cv.positive_float,
-                        }
+                                CONF_EMULATE_KEY_HOLD_REPEAT,
+                                default=DEFAULT_EMULATE_KEY_HOLD_REPEAT,
+                            ): probatio.Coerce(float),
+                        },
+                        extra=probatio.ALLOW_EXTRA,
                     ),
                 )
             ],
@@ -146,35 +144,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def _async_import_yaml_device(
     hass: HomeAssistant, dev_block: dict[str, Any]
 ) -> None:
-    """Import a single YAML device block and create deprecation issues."""
-    result = await hass.config_entries.flow.async_init(
+    """Import a single YAML device block and flag YAML as deprecated."""
+    # The schema guarantees a usable block, so the import creates an entry or
+    # finds the one it created before
+    await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data=dev_block,
     )
-
-    # already_in_progress means another YAML block names the same device and
-    # is being imported right now, so this block is a duplicate, not an error.
-    if result.get("type") is FlowResultType.ABORT and (
-        reason := result.get("reason")
-    ) not in ("already_configured", "already_in_progress"):
-        if reason != "cannot_identify_device":
-            reason = "unknown"
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_import_issue_{reason}",
-            breaks_in_ha_version="2027.4.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_{reason}",
-            translation_placeholders={
-                "url": f"/config/integrations/dashboard/add?domain={DOMAIN}"
-            },
-        )
-        return
-
     ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
