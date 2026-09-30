@@ -42,6 +42,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.intent import IntentResponseType
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.singleton import singleton
 from homeassistant.util.hass_dict import HassKey
@@ -387,7 +388,10 @@ class EsphomeAssistSatellite(
                 "speech": intent_output["response"]["speech"]
                 .get("plain", {})
                 .get("speech", ""),
+                "response_type": intent_output["response"]["response_type"],
             }
+            if data_to_send["response_type"] == IntentResponseType.ERROR.value:
+                data_to_send["error_code"] = intent_output["response"]["data"]["code"]
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START:
             assert event.data is not None
             data_to_send = {"text": event.data["tts_input"]}
