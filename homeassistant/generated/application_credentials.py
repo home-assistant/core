@@ -33,6 +33,7 @@ APPLICATION_CREDENTIALS = [
     "neato",
     "nest",
     "netatmo",
+    "nuheat",
     "ondilo_ico",
     "onedrive",
     "onedrive_for_business",
