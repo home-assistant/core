@@ -10,7 +10,7 @@ from blanco_smart_home_api_client import (
     BlancoDeviceTypeError,
     BlancoInvalidTokenError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN, __version__ as HA_VERSION
@@ -30,10 +30,10 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_SERIAL): str,
-        vol.Required(CONF_SERVICE_CODE): str,
+        probatio.Required(CONF_SERIAL): str,
+        probatio.Required(CONF_SERVICE_CODE): str,
     }
 )
 
