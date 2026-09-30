@@ -5,7 +5,6 @@ from typing import Any, override
 from aiomelcloudhome import (
     ATAFanSpeed,
     ATAOperationMode,
-    ATAUnit,
     ATAVaneHorizontal,
     ATAVaneVertical,
     ATWZoneMode,
@@ -22,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import async_setup_unit_entities, perform_action
-from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
+from .coordinator import MelCloudHomeConfigEntry
 from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWZoneEntity
 
 PARALLEL_UPDATES = 1
@@ -135,26 +134,22 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
     _attr_swing_modes = list(ATA_VANE_VERTICAL_TO_HA.values())
     _attr_swing_horizontal_modes = list(ATA_VANE_HORIZONTAL_TO_HA.values())
 
-    def __init__(
-        self,
-        coordinator: MelCloudHomeCoordinator,
-        entity_description: ClimateEntityDescription,
-        unit: ATAUnit,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator, entity_description, unit)
+    @property
+    @override
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the features supported by this unit based on its settings."""
         features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.TURN_ON
             | ClimateEntityFeature.TURN_OFF
         )
-        if unit.settings is not None:
-            if unit.settings.get("VaneVerticalDirection") is not None:
+        if (settings := self.unit.settings) is not None:
+            if settings.get("VaneVerticalDirection") is not None:
                 features |= ClimateEntityFeature.SWING_MODE
-            if unit.settings.get("VaneHorizontalDirection") is not None:
+            if settings.get("VaneHorizontalDirection") is not None:
                 features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
-        self._attr_supported_features = features
+        return features
 
     @property
     @override
