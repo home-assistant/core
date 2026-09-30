@@ -966,6 +966,70 @@ async def test_coordinator_background_tasks_session_is_closed(
         assert msg in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("envoy_method", "exc", "msg", "time_step"),
+    [
+        pytest.param(
+            "interface_settings",
+            RuntimeError("Session is closed"),
+            "Client is closed when reading interface information",
+            MAC_VERIFICATION_DELAY,
+            id="mac_verification_sessionclosederror",
+        ),
+        pytest.param(
+            "setup",
+            RuntimeError("Session is closed"),
+            "Client is closed when reading firmware",
+            FIRMWARE_REFRESH_INTERVAL,
+            id="firmware_refresh_sessionclosederror",
+        ),
+    ],
+)
+@respx.mock
+async def test_coordinator_background_tasks_session_is_closed_not_loaded(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    envoy_method: str,
+    exc: Exception,
+    msg: str,
+    time_step: timedelta,
+) -> None:
+    """Test coordinator background task handling RuntimeError when config is not LOADED."""
+    await setup_integration(hass, config_entry)
+    logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
+        logging.DEBUG
+    )
+    caplog.set_level(logging.DEBUG)
+
+    def raise_error() -> None:
+        raise exc
+
+    with (
+        patch(
+            "aiohttp.ClientSession.closed",
+            new_callable=PropertyMock,
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.enphase_envoy.async_unload_entry",
+            return_value=False,
+        ) as mock_unload,
+    ):
+        await hass.config_entries.async_unload(config_entry.entry_id)
+        mock_unload.assert_awaited_once()
+
+        caplog.clear()
+        setattr(mock_envoy, envoy_method, raise_error)
+        freezer.tick(time_step)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert msg in caplog.text
+
+
 @respx.mock
 async def test_coordinator_background_task_start(
     hass: HomeAssistant,
