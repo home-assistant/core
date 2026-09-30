@@ -422,18 +422,18 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
             self._local_poll_in_progress = False
 
     def async_set_command_value(self, key: str, value: Any) -> None:
-        """Hold a paired site's successful command value until its source confirms it.
+        """Hold a paired site's successful command value until its source next reports.
 
-        A locally-owned key is held until the next LAN poll, any other key until
-        the next cloud site_info, so a poll in between cannot revert it.
+        A locally-owned key is held until the next successful LAN poll, and every
+        key until the next cloud site_info, so neither a poll in between nor a
+        failed LAN poll can revert it.
         """
         if self._local is None:
             return
         if key in LOCAL_SITE_INFO_KEYS:
             self._local_config = {**(self._local_config or {}), key: value}
             self._local_config_generation += 1
-        else:
-            self._cloud_optimistic[key] = value
+        self._cloud_optimistic[key] = value
         self.data = self._merged()
         self.async_update_listeners()
 
@@ -450,10 +450,10 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         return result
 
     def _merged(self) -> dict[str, Any]:
-        """Overlay the local config and pending cloud-owned command values."""
-        merged = merge_site_info(self._compose(), self._local_config)
-        merged.update(self._cloud_optimistic)
-        return merged
+        """Overlay the local config onto the cloud view and held command values."""
+        return merge_site_info(
+            self._compose() | self._cloud_optimistic, self._local_config
+        )
 
     def _ingest_site_info(self, site_info: dict[str, Any]) -> dict[str, Any]:
         """Split a full REST site_info response into both partitions.
