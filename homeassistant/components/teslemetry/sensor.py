@@ -209,8 +209,8 @@ def _listen_charger_power(
     def _update(key: str, value: float | None) -> None:
         # Power is not reliably reset when a charging session ends
         power[key] = value if charging or value is None else 0
-        dc = power["dc"]
-        callback(dc or (power["ac"] if power["ac"] is not None else dc))
+        ac, dc = power["ac"], power["dc"]
+        callback(dc or (ac if ac is not None else dc))
 
     def _update_charging(state: str | None) -> None:
         nonlocal charging
