@@ -1,22 +1,40 @@
 {
   "config": {
+    "abort": {
+      "auth_failed": "Last.fm authorization failed. Start authorization again to request a new token.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "The authorized Last.fm account ({authorized_user}) does not match the configured account ({configured_user}). Start authorization again and use the configured account."
+    },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "hidden_recent_tracks": "User has hidden their recent listening information. Disable \"Hide recent listening information\" at {privacy_settings_url}",
       "invalid_account": "Invalid username",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "auth_url": {
+        "description": "Select the link below to open Last.fm and authorize Home Assistant with your account, then return here and select Submit. Setup may continue automatically once the authorization is detected.",
+        "title": "Authorize Home Assistant with Last.fm"
+      },
       "friends": {
         "data": {
           "users": "Last.fm usernames"
         },
         "description": "Fill in other users you want to add."
       },
+      "reauth_confirm": {
+        "description": "Select Submit to retry connecting to Last.fm.",
+        "title": "Reconnect to Last.fm"
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_secret": "API secret",
           "main_user": "Last.fm username"
+        },
+        "data_description": {
+          "api_secret": "Optional. Lets the integration read listening information hidden by the user's Last.fm privacy settings."
         },
         "description": "Request an API account at {api_account_url}."
       }
