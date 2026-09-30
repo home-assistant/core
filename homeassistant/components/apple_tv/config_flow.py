@@ -25,7 +25,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -42,7 +42,9 @@ _LOGGER = logging.getLogger(__name__)
 
 DEVICE_INPUT = "device_input"
 
-INPUT_PIN_SCHEMA = probatio.Schema({probatio.Required(CONF_PIN, default=""): cv.string})
+INPUT_PIN_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PIN), default=""): cv.string}
+)
 
 DEFAULT_START_OFF = False
 
@@ -289,7 +291,9 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
     def _async_check_and_update_in_progress(self, host: str, unique_id: str) -> None:
         """Check for in-progress flows and update them with identifiers if needed."""
         if self.hass.config_entries.flow.async_has_matching_flow(self):
-            raise AbortFlow("already_in_progress")
+            raise AbortFlow(
+                "already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
 
     @override
     def is_matching(self, other_flow: Self) -> bool:

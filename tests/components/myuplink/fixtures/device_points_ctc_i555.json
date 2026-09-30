@@ -1,0 +1,208 @@
+[
+  {
+    "category": "Add. heat",
+    "parameterId": "61590",
+    "parameterName": "Lower Immersion heater / heating kW",
+    "parameterUnit": "",
+    "writable": true,
+    "timestamp": "2026-09-17T17:53:27+00:00",
+    "value": 3.0,
+    "strVal": "3",
+    "smartHomeCategories": [],
+    "minValue": null,
+    "maxValue": null,
+    "stepValue": 1.0,
+    "enumValues": [
+      {
+        "value": "0.0",
+        "text": "0.0",
+        "icon": ""
+      },
+      {
+        "value": "3.0",
+        "text": "3.0",
+        "icon": ""
+      }
+    ],
+    "scaleValue": "0.1",
+    "zoneId": null
+  },
+  {
+    "category": "Add. heat",
+    "parameterId": "61591",
+    "parameterName": "Upper Immersion heater / DHW kW",
+    "parameterUnit": "",
+    "writable": true,
+    "timestamp": "2026-09-17T17:53:27+00:00",
+    "value": 8.7,
+    "strVal": "8.7",
+    "smartHomeCategories": [],
+    "minValue": null,
+    "maxValue": null,
+    "stepValue": 1.0,
+    "enumValues": [
+      {
+        "value": "0.0",
+        "text": "0.0",
+        "icon": ""
+      },
+      {
+        "value": "0.3",
+        "text": "0.3",
+        "icon": ""
+      },
+      {
+        "value": "0.6",
+        "text": "0.6",
+        "icon": ""
+      },
+      {
+        "value": "0.9",
+        "text": "0.9",
+        "icon": ""
+      },
+      {
+        "value": "1.2",
+        "text": "1.2",
+        "icon": ""
+      },
+      {
+        "value": "1.5",
+        "text": "1.5",
+        "icon": ""
+      },
+      {
+        "value": "1.8",
+        "text": "1.8",
+        "icon": ""
+      },
+      {
+        "value": "2.1",
+        "text": "2.1",
+        "icon": ""
+      },
+      {
+        "value": "2.3",
+        "text": "2.3",
+        "icon": ""
+      },
+      {
+        "value": "2.6",
+        "text": "2.6",
+        "icon": ""
+      },
+      {
+        "value": "2.9",
+        "text": "2.9",
+        "icon": ""
+      },
+      {
+        "value": "3.2",
+        "text": "3.2",
+        "icon": ""
+      },
+      {
+        "value": "3.5",
+        "text": "3.5",
+        "icon": ""
+      },
+      {
+        "value": "3.8",
+        "text": "3.8",
+        "icon": ""
+      },
+      {
+        "value": "4.1",
+        "text": "4.1",
+        "icon": ""
+      },
+      {
+        "value": "4.4",
+        "text": "4.4",
+        "icon": ""
+      },
+      {
+        "value": "4.6",
+        "text": "4.6",
+        "icon": ""
+      },
+      {
+        "value": "4.9",
+        "text": "4.9",
+        "icon": ""
+      },
+      {
+        "value": "5.2",
+        "text": "5.2",
+        "icon": ""
+      },
+      {
+        "value": "5.5",
+        "text": "5.5",
+        "icon": ""
+      },
+      {
+        "value": "5.8",
+        "text": "5.8",
+        "icon": ""
+      },
+      {
+        "value": "6.1",
+        "text": "6.1",
+        "icon": ""
+      },
+      {
+        "value": "6.4",
+        "text": "6.4",
+        "icon": ""
+      },
+      {
+        "value": "6.7",
+        "text": "6.7",
+        "icon": ""
+      },
+      {
+        "value": "6.9",
+        "text": "6.9",
+        "icon": ""
+      },
+      {
+        "value": "7.2",
+        "text": "7.2",
+        "icon": ""
+      },
+      {
+        "value": "7.5",
+        "text": "7.5",
+        "icon": ""
+      },
+      {
+        "value": "7.8",
+        "text": "7.8",
+        "icon": ""
+      },
+      {
+        "value": "8.1",
+        "text": "8.1",
+        "icon": ""
+      },
+      {
+        "value": "8.4",
+        "text": "8.4",
+        "icon": ""
+      },
+      {
+        "value": "8.7",
+        "text": "8.7",
+        "icon": ""
+      },
+      {
+        "value": "9.0",
+        "text": "9.0",
+        "icon": ""
+      }
+    ],
+    "scaleValue": "0.1",
+    "zoneId": null
+  }
+]

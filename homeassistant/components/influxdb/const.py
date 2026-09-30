@@ -140,7 +140,7 @@ COMPONENT_CONFIG_SCHEMA_CONNECTION = {
     ),
     probatio.Optional(CONF_HOST): cv.string,
     probatio.Optional(CONF_PATH): cv.string,
-    probatio.Optional(CONF_PORT): cv.port,
+    probatio.Optional(CONF_PORT): probatio.Port(),
     probatio.Optional(CONF_SSL): cv.boolean,
     probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     probatio.Optional(CONF_SSL_CA_CERT): cv.isfile,
@@ -150,7 +150,7 @@ COMPONENT_CONFIG_SCHEMA_CONNECTION = {
     probatio.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
     probatio.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
     # Connection config for V2 API only.
-    probatio.Inclusive(CONF_TOKEN, "v2_authentication"): cv.string,
+    probatio.Inclusive(probatio.Secret(CONF_TOKEN), "v2_authentication"): cv.string,
     probatio.Inclusive(CONF_ORG, "v2_authentication"): cv.string,
     probatio.Optional(CONF_BUCKET, default=DEFAULT_BUCKET): cv.string,
 }

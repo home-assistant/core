@@ -76,7 +76,9 @@ VAPID_CLAIM_VALID_HOURS = 12
 
 DISMISS_SERVICE_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(ATTR_TARGET): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(ATTR_TARGET): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(ATTR_DATA): dict,
     }
 )
