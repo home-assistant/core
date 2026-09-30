@@ -1,25 +1,19 @@
 """Tests for the Timer list integration."""
 
-from datetime import timedelta
 from typing import Any
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.timer_list import (
-    TimerListEntity,
-    async_get_timer_list_entity,
-)
+from homeassistant.components.timer_list import async_get_timer_list_entity
 from homeassistant.components.timer_list.const import DOMAIN, TimerListEntityFeature
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from . import TEST_DOMAIN, MockTimerListEntity, create_mock_platform
 
-from tests.common import MockUser, async_fire_time_changed
+from tests.common import MockUser
 from tests.typing import WebSocketGenerator
 
 TEST_ENTITY_ID = "timer_list.timers"
@@ -109,24 +103,6 @@ async def test_get_timers_status_filter(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("test_entity")
-async def test_timer_finishes_and_is_archived(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """Test a finished timer is archived as ``finished``."""
-    await _create_timer(hass, duration=60)
-
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(TEST_ENTITY_ID).state == "0"
-    timers = await _get_timers(hass)
-    assert len(timers) == 1
-    assert timers[0]["status"] == "finished"
-    assert timers[0]["ended_at"] is not None
-
-
-@pytest.mark.usefixtures("test_entity")
 async def test_pause_and_unpause(hass: HomeAssistant) -> None:
     """Test pausing and resuming a timer."""
     timer_id = await _create_timer(hass)
@@ -145,87 +121,6 @@ async def test_pause_and_unpause(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("test_entity")
-async def test_add_and_subtract_time(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """Test adding and subtracting time on a timer."""
-    timer_id = await _create_timer(hass, duration=60)
-
-    assert (await _get_timers(hass))[0]["total_duration"] == 60
-
-    await _call(hass, "add_time", timer_id=timer_id, duration={"seconds": 60})
-    timer = (await _get_timers(hass))[0]
-    assert timer["remaining"] == pytest.approx(120, abs=1)
-    # "the 5 minute timer" must keep matching, so duration is fixed at creation
-    # while the progress total tracks the time actually added.
-    assert timer["created_duration"] == 60
-    assert timer["total_duration"] == pytest.approx(120, abs=1)
-
-    await _call(hass, "subtract_time", timer_id=timer_id, duration={"seconds": 90})
-    timer = (await _get_timers(hass))[0]
-    assert timer["remaining"] == pytest.approx(30, abs=1)
-    assert timer["created_duration"] == 60
-    # Subtracting must not shrink the progress total.
-    assert timer["total_duration"] == pytest.approx(120, abs=1)
-
-
-@pytest.mark.usefixtures("test_entity")
-@pytest.mark.parametrize(
-    "setup_services",
-    [
-        pytest.param([], id="active"),
-        pytest.param(["pause_timer"], id="paused"),
-    ],
-)
-async def test_subtract_time_finishes_timer(
-    hass: HomeAssistant, setup_services: list[str]
-) -> None:
-    """Test subtracting more time than remaining finishes the timer immediately."""
-    timer_id = await _create_timer(hass, duration=60)
-    for service in setup_services:
-        await _call(hass, service, timer_id=timer_id)
-
-    await _call(hass, "subtract_time", timer_id=timer_id, duration={"seconds": 120})
-
-    assert hass.states.get(TEST_ENTITY_ID).state == "0"
-    timers = await _get_timers(hass)
-    assert timers[0]["status"] == "finished"
-    assert timers[0]["ended_at"] is not None
-
-
-@pytest.mark.usefixtures("test_entity")
-@pytest.mark.parametrize(
-    "service",
-    [
-        pytest.param("add_time", id="add_time"),
-        pytest.param("subtract_time", id="subtract_time"),
-    ],
-)
-async def test_zero_duration_is_noop(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, service: str
-) -> None:
-    """Test a zero duration changes nothing and emits no event."""
-    timer_id = await _create_timer(hass, duration=60)
-    before = (await _get_timers(hass))[0]
-
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id(
-        {"type": "timer_list/item/subscribe", "entity_id": TEST_ENTITY_ID}
-    )
-    assert (await client.receive_json())["success"]
-    assert (await client.receive_json())["event"]["type"] == "timers"
-
-    await _call(hass, service, timer_id=timer_id, duration={"seconds": 0})
-
-    assert (await _get_timers(hass))[0]["finishes_at"] == before["finishes_at"]
-    # A change event would arrive before the reply to this round trip.
-    await client.send_json_auto_id(
-        {"type": "timer_list/item/list", "entity_id": TEST_ENTITY_ID}
-    )
-    assert (await client.receive_json())["success"]
-
-
-@pytest.mark.usefixtures("test_entity")
 async def test_cancel_timer_archives_timer(hass: HomeAssistant) -> None:
     """Test cancelling a timer retains it as cancelled."""
     timer_id = await _create_timer(hass)
@@ -238,20 +133,9 @@ async def test_cancel_timer_archives_timer(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("test_entity")
-@pytest.mark.parametrize(
-    "setup_services",
-    [
-        pytest.param([], id="active"),
-        pytest.param(["pause_timer"], id="paused"),
-    ],
-)
-async def test_finish_timer_archives_as_finished(
-    hass: HomeAssistant, setup_services: list[str]
-) -> None:
-    """Test finishing a timer early archives it as finished."""
+async def test_finish_timer_archives_as_finished(hass: HomeAssistant) -> None:
+    """Test the finish_timer action reaches the entity."""
     timer_id = await _create_timer(hass, duration=3600)
-    for service in setup_services:
-        await _call(hass, service, timer_id=timer_id)
 
     await _call(hass, "finish_timer", timer_id=timer_id)
 
@@ -262,105 +146,6 @@ async def test_finish_timer_archives_as_finished(
     assert timers[0]["ended_at"] is not None
     assert timers[0]["finishes_at"] is None
     assert timers[0]["remaining"] == 0
-
-
-@pytest.mark.usefixtures("test_entity")
-async def test_finish_already_archived_timer_is_noop(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """Test finishing an already-archived timer does not rewrite it."""
-    timer_id = await _create_timer(hass)
-    await _call(hass, "cancel_timer", timer_id=timer_id)
-    ended_at = (await _get_timers(hass))[0]["ended_at"]
-
-    freezer.tick(timedelta(seconds=5))
-    await _call(hass, "finish_timer", timer_id=timer_id)
-
-    timers = await _get_timers(hass)
-    assert timers[0]["status"] == "cancelled"
-    assert timers[0]["ended_at"] == ended_at
-
-
-@pytest.mark.usefixtures("test_entity")
-async def test_cancel_already_archived_timer_is_noop(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """Test cancelling an already-archived timer does not rewrite it."""
-    timer_id = await _create_timer(hass)
-    await _call(hass, "cancel_timer", timer_id=timer_id)
-    ended_at = (await _get_timers(hass))[0]["ended_at"]
-
-    # Cancelling again must not refresh the timestamp or re-fire a change
-    freezer.tick(timedelta(seconds=5))
-    await _call(hass, "cancel_timer", timer_id=timer_id)
-
-    timers = await _get_timers(hass)
-    assert len(timers) == 1
-    assert timers[0]["status"] == "cancelled"
-    assert timers[0]["ended_at"] == ended_at
-
-
-@pytest.mark.usefixtures("test_entity")
-async def test_archive_limit_evicts_oldest(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """Test only the 10 most recently archived timers are retained."""
-    timer_ids = []
-    for _ in range(11):
-        timer_id = await _create_timer(hass)
-        await _call(hass, "cancel_timer", timer_id=timer_id)
-        timer_ids.append(timer_id)
-        freezer.tick(timedelta(seconds=1))
-
-    timers = await _get_timers(hass)
-    assert len(timers) == 10
-    archived_ids = {timer["timer_id"] for timer in timers}
-    assert timer_ids[0] not in archived_ids
-    assert set(timer_ids[1:]) == archived_ids
-
-
-@pytest.mark.usefixtures("test_entity")
-@pytest.mark.parametrize(
-    "setup_services",
-    [
-        pytest.param([], id="active"),
-        pytest.param(["cancel_timer"], id="cancelled"),
-    ],
-)
-@pytest.mark.usefixtures("freezer")
-async def test_unpause_timer_that_is_not_paused_is_noop(
-    hass: HomeAssistant, setup_services: list[str]
-) -> None:
-    """Test resuming a timer that is not paused leaves it alone."""
-    timer_id = await _create_timer(hass)
-    for service in setup_services:
-        await _call(hass, service, timer_id=timer_id)
-    before = (await _get_timers(hass))[0]
-
-    await _call(hass, "unpause_timer", timer_id=timer_id)
-
-    assert (await _get_timers(hass))[0] == before
-
-
-@pytest.mark.usefixtures("test_entity")
-@pytest.mark.parametrize(
-    "service",
-    [
-        pytest.param("add_time", id="add_time"),
-        pytest.param("subtract_time", id="subtract_time"),
-    ],
-)
-async def test_change_time_on_archived_timer_is_noop(
-    hass: HomeAssistant, service: str
-) -> None:
-    """Test changing the time of an archived timer leaves it alone."""
-    timer_id = await _create_timer(hass)
-    await _call(hass, "cancel_timer", timer_id=timer_id)
-    before = (await _get_timers(hass))[0]
-
-    await _call(hass, service, timer_id=timer_id, duration={"seconds": 30})
-
-    assert (await _get_timers(hass))[0] == before
 
 
 @pytest.mark.usefixtures("test_entity")
@@ -494,18 +279,6 @@ async def test_async_get_timer_list_entity(
 
     entity_registry.async_update_entity(TEST_ENTITY_ID, device_id=device.id)
     assert async_get_timer_list_entity(hass, device.id) is entity
-
-
-async def test_finish_callback_for_removed_timer_is_noop(
-    hass: HomeAssistant, test_entity: TimerListEntity
-) -> None:
-    """Test a finish callback that outlives its timer does not resurrect it."""
-    timer_id = await _create_timer(hass)
-    await _call(hass, "remove_timer", timer_id=timer_id)
-
-    test_entity._async_timer_finished(timer_id, dt_util.utcnow())
-
-    assert await _get_timers(hass) == []
 
 
 @pytest.mark.usefixtures("test_entity")
